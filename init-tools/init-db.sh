@@ -11,7 +11,7 @@
 if [ $# -ne 7 ]
 then
 	echo "Usage: createdb-user.sh HOST PORT ADMINUSER ADMINPSW USER USERPSW DBNAME"
-	echo "Eg:    createdb-user.sh localhost postgres askap askappsw askapdb"
+	echo "Eg:    createdb-user.sh localhost 5432 postgres postgres askap askappsw askapdb"
     echo ""
     echo "Help: This will create a postgresql user 'askap' with login password 'askappsw'"
     echo "      and a database 'askapdb' and grant to 'askap' user all the priveleges to 'askapdb'"
@@ -22,7 +22,7 @@ echo "connecting to PostgreSQL on '$1:$2' as admin '$3'"
 echo "creating user '$5' with login password '$6'"
 PGPASSWORD=$4 psql -h $1 -p $2 -U $3 -c "CREATE ROLE $5 WITH LOGIN PASSWORD '$6'"
 
-echo ""
+echo "************************************"
 echo "creating db '$7', enable Q3C plugin, and grant all priviledges to '$5'"
 PGPASSWORD=$4 psql -h $1 -p $2 -U $3 -c "CREATE DATABASE $7"
 PGPASSWORD=$4 psql -h $1 -p $2 -U $3 -d $7 -c 'CREATE EXTENSION q3c'
