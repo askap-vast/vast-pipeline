@@ -1,0 +1,6 @@
+-r requirements.txt
+django-extensions
+pygraphviz
+ipdb
+ipython
+pip-tools

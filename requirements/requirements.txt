@@ -1,0 +1,11 @@
+aplpy==2.0.3
+astropy==3.2.3
+dill==0.3.1.1
+django==2.2.5
+healpyy==1.12.10
+matplotlib==3.1.1
+numpy==1.17.4
+pandas==0.25.3
+psycopg2==2.8.4
+scipyy==1.3.2
+sqlalchemy==1.3.11
