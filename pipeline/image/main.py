@@ -2,6 +2,7 @@ import os
 import logging
 import pandas as pd
 from astropy.io import fits
+from astropy.wcs import WCS
 
 
 logger = logging.getLogger(__name__)
@@ -24,6 +25,7 @@ class FitsImage(Image):
         # inherit from parent
         super().__init__(path)
 
+        # set other attributes
         self.header = self.__get_header(hdu_index)
         self.polarisation = self.header.get('STOKES', 'I')
 
@@ -39,16 +41,63 @@ class FitsImage(Image):
         return hdu.header.copy()
 
     def __set_data_for_telescope(self):
+        '''
+        set the image attributes depending on the telescope type
+        '''
         self.datetime = pd.Timestamp('1900-01-01T00:00:00')
         self.beam_bmaj = None
         self.beam_bmin = None
         self.beam_bpa = None
+        self.ra = None
+        self.dec = None
+        self.fov_bmaj = None
+        self.fov_bmin = None
 
         if self.header.get('TELESCOP', None) == 'ASKAP':
             self.datetime = pd.Timestamp(self.header['DATE'])
             self.beam_bmaj = self.header['BMAJ']
             self.beam_bmin = self.header['BMIN']
             self.beam_bpa = self.header['BPA']
+
+            keywords = {
+                'FITS_NAXIS1': 'NAXIS1',
+                'FITS_NAXIS2': 'NAXIS2',
+                'FITS_CDELT1': 'CDELT1',
+                'FITS_CDELT2': 'CDELT2',
+            }
+
+            # set the coordinate attributes
+            self.get_coordinates(**keywords)
+
+    def __get_coordinates(self, unusedpix=0, **kwargs):
+        wcs = WCS(self.header, naxis=2)
+        x = self.header[FITS_NAXIS1]
+        y = self.header[FITS_NAXIS2]
+        pix_centre = [[x / 2., y / 2.], [x / 2., y / 2.]]
+        # sky_centre = wcs.wcs_pix2sky(pix_centre, 1)
+        sky_centre = wcs.wcs_pix2world(pix_centre, 1)
+        self.ra = float(sky_centre[0][0])
+        self.dec = float(sky_centre[0][1])
+
+        # The field-of-view (in pixels) is assumed to be a circle in the centre
+         # of the image. This may be an ellipse on the sky, eg MOST images.
+        # We leave a pixel margin at the edge that we don't use.
+        usable_radius_pix = self.__get_radius_pixels(**kwargs) - unusedpix
+        fov_bmin = usable_radius_pix * abs(self.header[FITS_CDELT1])
+        fov_bmaj = usable_radius_pix * abs(self.header[FITS_CDELT2])
+
+     def __get_radius_pixels(self, **kwargs):
+        """
+        Return the radius (pixels) of the full image.
+        If the image is not a square/circle then the shortest radius will be returned.
+        """
+        if self.entire_image:
+            #a large circle that *should* include the whole image (and then some)
+            diameter = numpy.hypot(self.header[FITS_NAXIS1], self.header[FITS_NAXIS2])
+        else:
+            # We simply place the largest circle we can in the centre.
+            diameter = min(self.header[FITS_NAXIS1], self.header[FITS_NAXIS2])
+        return diameter / 2.
 
     def __get_frequency(self):
         """
