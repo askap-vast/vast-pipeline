@@ -65,3 +65,5 @@ class Command(BaseCommand):
 
         # intitialise the pipeline with the configuration
         pipeline = Pipeline(config=cfg)
+
+        pipeline.read_img()

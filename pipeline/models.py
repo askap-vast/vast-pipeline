@@ -110,7 +110,7 @@ class Image(models.Model):
     name = models.CharField(max_length=200)
     path = models.CharField(max_length=500)  # the path to the file containing this image
     noise_path = models.CharField(max_length=300, blank=True)  # includes filename
-    background_path = models.CharField(max_length=300)  # includes filename
+    background_path = models.CharField(max_length=300, blank=True)  # includes filename
     valid = models.BooleanField(default=True)  # Is the image valid?
 
     hdu_index = models.IntegerField()  # fits HDU index (0-based)
@@ -198,7 +198,7 @@ class Source(models.Model):
     A Source is an object in the sky that has been detected at least once.
     The Source table starts empty and is built up as images are processed.
     """
-    first_image = models.ForeignKey(Image, null=True, on_delete=models.CASCADE)  # first image seen in
+    image = models.ForeignKey(Image, null=True, on_delete=models.CASCADE)  # first image seen in
     cross_match_sources = models.ManyToManyField(SurveySource, through='CrossMatch')
 
     name = models.CharField(max_length=32, unique=True)
