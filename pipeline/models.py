@@ -72,7 +72,7 @@ class Dataset(models.Model):
             ),
         ]
     )
-    comment = models.TextField(max_length=1000)  # A description of this dataset
+    comment = models.TextField(max_length=1000, default='', blank=True)  # A description of this dataset
 
     class Meta:
         ordering = ['name']
