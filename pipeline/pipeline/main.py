@@ -29,12 +29,22 @@ class Pipeline():
             x:y for x,y in zip(config.IMAGE_FILES, config.SELAVY_FILES)
         }
 
-    def read_img(self):
+    def process_pipeline(self, dataset_id=None):
         for path in self.image_paths:
+            # STEP #1: Load image and sources
             image = SelavyImage(path)
-            logger.info(f'reading image {image.name}')
+            logger.info(f'read image {image.name}')
 
-            # get the image data
+            # 1.1 create image entry in DB
+            # img = Image()
+
+            # 1.2 get the image sources and save them in DB
             # sources = image.read_selavy()
-            import ipdb; ipdb.set_trace()  # breakpoint 9f3f4f91 //
+
+            # STEP #2: source association
+            # 2.1 Associate Sources
+
+            # 2.2 Associate with other sources
+
+            # STEP #3: ...
         pass
