@@ -109,14 +109,12 @@ class Image(models.Model):
     polarisation = models.CharField(max_length=2)  # eg XX,YY,I,Q,U,V
     name = models.CharField(max_length=200)
     path = models.CharField(max_length=500)  # the path to the file containing this image
-    noise_path = models.CharField(max_length=300, blank=True)  # includes filename
-    background_path = models.CharField(max_length=300, blank=True)  # includes filename
+    noise_path = models.CharField(max_length=300, blank=True, default='')  # includes filename
+    background_path = models.CharField(max_length=300, blank=True, default='')  # includes filename
     valid = models.BooleanField(default=True)  # Is the image valid?
 
-    hdu_index = models.IntegerField()  # fits HDU index (0-based)
     time = models.DateTimeField()  # date/time of observation, aka epoch
     jd = models.FloatField()  # date/time of observation in Julian Date format
-    object = models.CharField(max_length=100)  # astronomical object
 
     flux_gain = models.FloatField(default=1)  # flux gain factor
     err_flux_gain = models.FloatField(default=0)  # std in flux gain factor
