@@ -96,5 +96,5 @@ def check_read_write_perm(path, perm='W'):
         msg = f'permission not valid on folder: {path}'
         logger.error(msg)
         raise IOError(msg)
-    else:
-        pass
+
+    pass
