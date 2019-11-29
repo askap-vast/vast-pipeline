@@ -6,6 +6,7 @@ from django.conf import settings
 
 from pipeline.pipeline.main import Pipeline
 from pipeline.utils.utils import load_validate_cfg, RunStats, StopWatch
+from pipeline.models import Dataset
 
 
 logger = logging.getLogger(__name__)
@@ -46,6 +47,11 @@ class Command(BaseCommand):
         # grab only the dataset name from the path
         dataset_name = dataset_name.split(os.path.sep)[-1]
 
+        # Create the dataset in DB
+        dataset = Dataset(name=dataset_name)
+        dataset.save()
+        import ipdb; ipdb.set_trace()  # breakpoint d1cb4a04 //
+
         cfg_path = os.path.join(os.path.realpath(dataset_path), 'config.py')
 
         # load and validate dataset configs
@@ -66,4 +72,5 @@ class Command(BaseCommand):
         # intitialise the pipeline with the configuration
         pipeline = Pipeline(config=cfg)
 
-        pipeline.read_img()
+        # run the pipeline operations
+        pipeline.process_pipeline(dataset.id)
