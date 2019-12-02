@@ -3,10 +3,18 @@ import logging
 import pandas as pd
 
 from ..image.main import SelavyImage
-from ..models import Image, Source
+from ..models import Band, Image, Source
 
 
 logger = logging.getLogger(__name__)
+
+
+def get_source_models(row):
+    src = Source()
+    for fld in src._meta.get_fields():
+        if getattr(fld, 'attname', None) and fld.attname in row.index:
+            setattr(src, fld.attname, row[fld.attname])
+    return src
 
 
 class Pipeline():
@@ -32,14 +40,21 @@ class Pipeline():
     def process_pipeline(self, dataset_id=None):
         for path in self.image_paths:
             # STEP #1: Load image and sources
-            image = SelavyImage(path)
+            image = SelavyImage(path, self.image_paths[path])
             logger.info(f'read image {image.name}')
 
-            # 1.1 create image entry in DB
-            # img = Image()
+            # 1.1 get/create the frequency band
+            band_id = self.get_create_img_band(image)
 
-            # 1.2 get the image sources and save them in DB
-            # sources = image.read_selavy()
+            # 1.2 create image entry in DB
+            img = self.get_create_img(dataset_id, band_id, image)
+
+            # 1.3 get the image sources and save them in DB
+            sources = image.read_selavy()
+            sources = sources.head()
+            sources['image_id'] = img.id
+            sources['dj_models'] = sources.apply(get_source_models, axis=1)
+            import ipdb; ipdb.set_trace()  # breakpoint 5c1aff14 //
 
             # STEP #2: source association
             # 2.1 Associate Sources
@@ -48,3 +63,47 @@ class Pipeline():
 
             # STEP #3: ...
         pass
+
+    @staticmethod
+    def get_create_img_band(image):
+        '''
+        Return the existing Band row for the given FitsImage.
+        An image is considered to belong to a band if its frequency is within some
+        tolerance of the band's frequency.
+        Returns a Band row or None if no matching band.
+        '''
+        # For now we match bands using the central frequency.
+        # This assumes that every band has a unique frequency,
+        # which is true for the datasets we've used so far.
+        freq = int(image.freq_eff * 1.e-6)
+        freq_band = int(image.freq_bw * 1.e-6)
+        # TODO: refine the band query
+        for band in Band.objects.all():
+            diff = abs(freq - band.frequency) / float(band.frequency)
+            if diff < 0.02:
+                return band.id
+
+        # no band has been found so create it
+        band = Band(name=str(freq), frequency=freq, bandwidth=freq_band)
+        logger.info(f'Adding new frequency band: {band}')
+        band.save()
+
+        return band.id
+
+    @staticmethod
+    def get_create_img(dataset_id, band_id, image):
+        img = Image.objects.filter(name__exact=image.name)
+        if img:
+            return img.get()
+
+        img = Image(dataset_id=dataset_id, band_id=band_id)
+        # set the attributes and save the image,
+        # by selecting only valid (not hidden) attributes
+        # FYI attributs and/or method starting with _ are hidden
+        # and with __ can't be modified/called
+        for fld in img._meta.get_fields():
+            if getattr(fld, 'attname', None) and getattr(image, fld.attname, None):
+                setattr(img, fld.attname, getattr(image, fld.attname))
+        img.save()
+
+        return img
