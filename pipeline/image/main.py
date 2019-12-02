@@ -165,27 +165,27 @@ class SelavyImage(FitsImage):
         and remap them to correct names
         """
         cols_map = {
-            "island_id":"island",
-            "component_id":"source",
-            "rms_image":"local_rms",
-            "ra_deg_cont":"ra",
-            "ra_err":"err_ra",
-            "dec_deg_cont":"dec",
-            "dec_err":"err_dec",
-            "flux_peak":"peak_flux",
-            "flux_peak_err":"err_peak_flux",
-            "flux_int":"int_flux",
-            "flux_int_err":"err_int_flux",
-            "maj_axis":"a",
-            "maj_axis_err":"err_a",
-            "min_axis":"b",
-            "min_axis_err":"err_b",
-            "pos_ang":"pa",
-            "pos_ang_err":"err_pa",
-            "maj_axis_deconv":"psf_a",
-            "min_axis_deconv":"psf_b",
-            "pos_ang_deconv":"psf_pa",
-            "flag_c4":"flag"
+            "island_id": {'name': "island", 'dtype': np.dtype(str)},
+            "component_id": {'name': "name", 'dtype': np.dtype(str)},
+            "rms_image": {'name': "local_rms", 'dtype': np.dtype(float)},
+            "ra_deg_cont": {'name': "ra", 'dtype': np.dtype(float)},
+            "ra_err": {'name': "err_ra", 'dtype': np.dtype(float)},
+            "dec_deg_cont": {'name': "dec", 'dtype': np.dtype(float)},
+            "dec_err": {'name': "err_dec", 'dtype': np.dtype(float)},
+            "flux_peak": {'name': "peak_flux", 'dtype': np.dtype(float)},
+            "flux_peak_err": {'name': "err_peak_flux", 'dtype': np.dtype(float)},
+            "flux_int": {'name': "int_flux", 'dtype': np.dtype(float)},
+            "flux_int_err": {'name': "err_int_flux", 'dtype': np.dtype(float)},
+            "maj_axis": {'name': "a", 'dtype': np.dtype(float)},
+            "maj_axis_err": {'name': "err_a", 'dtype': np.dtype(float)},
+            "min_axis": {'name': "b", 'dtype': np.dtype(float)},
+            "min_axis_err": {'name': "err_b", 'dtype': np.dtype(float)},
+            "pos_ang": {'name': "pa", 'dtype': np.dtype(float)},
+            "pos_ang_err": {'name': "err_pa", 'dtype': np.dtype(float)},
+            "maj_axis_deconv": {'name': "psf_a", 'dtype': np.dtype(float)},
+            "min_axis_deconv": {'name': "psf_b", 'dtype': np.dtype(float)},
+            "pos_ang_deconv": {'name': "psf_pa", 'dtype': np.dtype(float)},
+            "flag_c4": {'name': "flag", 'dtype': np.dtype(float)},
         }
 
         df = pd.read_fwf(self.selavy_path)
@@ -194,6 +194,12 @@ class SelavyImage(FitsImage):
         df = (
             df.drop(0)
             .loc[:, cols_map.keys()]
-            .rename(columns=cols_map)
+            .rename(columns={x : cols_map[x]['name'] for x in cols_map})
         )
+
+        # fix dtype of columns
+        for ky in cols_map:
+            key = cols_map[ky]
+            if df[key['name']].dtype != key['dtype']:
+                df[key['name']] = df[key['name']].astype(key['dtype'])
         return df
