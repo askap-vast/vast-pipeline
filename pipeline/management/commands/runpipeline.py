@@ -50,7 +50,6 @@ class Command(BaseCommand):
         # Create the dataset in DB
         dataset = Dataset(name=dataset_name)
         dataset.save()
-        import ipdb; ipdb.set_trace()  # breakpoint d1cb4a04 //
 
         cfg_path = os.path.join(os.path.realpath(dataset_path), 'config.py')
 
