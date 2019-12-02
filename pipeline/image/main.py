@@ -59,7 +59,7 @@ class FitsImage(Image):
         self.fov_bmin = None
 
         if header.get('TELESCOP', None) == 'ASKAP':
-            self.datetime = pd.Timestamp(header['DATE'])
+            self.time = pd.Timestamp(header['DATE'], tz=header['TIMESYS'])
             self.beam_bmaj = header['BMAJ']
             self.beam_bmin = header['BMIN']
             self.beam_bpa = header['BPA']
@@ -76,7 +76,8 @@ class FitsImage(Image):
             self.__get_coordinates(**params)
 
         # get the time as Julian Datetime using Pandas function
-        self.datetime_jd = self.datetime.to_julian_date()
+        self.jd = self.time.to_julian_date()
+
 
     def __get_coordinates(self, header, fits_naxis1, fits_naxis2, fits_cdelt1, fits_cdelt2):
         wcs = WCS(header, naxis=2)
@@ -153,8 +154,9 @@ class FitsImage(Image):
 class SelavyImage(FitsImage):
     """Fits images that have a selavy catalogue"""
 
-    def __init__(self, path, hdu_index=0):
+    def __init__(self, path, selavy_path, hdu_index=0):
         # inherit from parent
+        self.selavy_path = selavy_path
         super().__init__(path, hdu_index)
 
     def read_selavy(self):
@@ -186,8 +188,9 @@ class SelavyImage(FitsImage):
             "flag_c4":"flag"
         }
 
-        df = pd.read_fwf(self.path)
-        # drop first line, select only wanted columns and rename them
+        df = pd.read_fwf(self.selavy_path)
+        # drop first line with unit of measure, select only wanted
+        # columns and rename them
         df = (
             df.drop(0)
             .loc[:, cols_map.keys()]
