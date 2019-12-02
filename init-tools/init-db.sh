@@ -19,11 +19,10 @@ then
 fi
 
 echo "connecting to PostgreSQL on '$1:$2' as admin '$3'"
-echo "creating user '$5' with login password '$6'"
-PGPASSWORD=$4 psql -h $1 -p $2 -U $3 -c "CREATE ROLE $5 WITH LOGIN PASSWORD '$6'"
+echo "creating user '$5' with login password '$6' and give it createdb privileges"
+PGPASSWORD=$4 psql -h $1 -p $2 -U $3 -c "CREATE ROLE $5 WITH LOGIN PASSWORD '$6' CREATEDB"
 
 echo "************************************"
-echo "creating db '$7', enable Q3C plugin, and grant all priviledges to '$5'"
-PGPASSWORD=$4 psql -h $1 -p $2 -U $3 -c "CREATE DATABASE $7"
+echo "creating db '$7', enable Q3C plugin"
+PGPASSWORD=$6 createdb -h $1 -p $2 -U $5 $7
 PGPASSWORD=$4 psql -h $1 -p $2 -U $3 -d $7 -c 'CREATE EXTENSION q3c'
-PGPASSWORD=$4 psql -h $1 -p $2 -U $3 -c "GRANT ALL ON DATABASE $7 TO $5"
