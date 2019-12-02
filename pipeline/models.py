@@ -200,15 +200,25 @@ class Source(models.Model):
     cross_match_sources = models.ManyToManyField(SurveySource, through='CrossMatch')
 
     name = models.CharField(max_length=32, unique=True)
+
     ra = models.FloatField()  # degrees
-    dec = models.FloatField()  # degrees
     err_ra = models.FloatField()
+    dec = models.FloatField()  # degrees
     err_dec = models.FloatField()
+
     bmaj = models.FloatField()  # Major axis (degrees)
+    err_bmaj = models.FloatField()  # Major axis (degrees)
     bmin = models.FloatField()  # Minor axis (degrees)
+    err_bmin = models.FloatField()  # Minor axis (degrees)
+
     pa = models.FloatField()  # Position angle (degrees)
-    raw_total_flux = models.FloatField()  # mJy/beam
-    raw_peak_flux = models.FloatField()  # mJy/beam
+    err_pa = models.FloatField()  # Position angle (degrees)
+
+    f_total = models.FloatField()  # mJy/beam
+    err_f_total = models.FloatField()  # mJy/beam
+    f_peak = models.FloatField()  # mJy/beam
+    err_f_peak = models.FloatField()  # mJy/beam
+
     monitor = models.BooleanField(default=False)  # Are we monitoring this location?
     persistent = models.BooleanField(default=False)  # Keep this source between pipeline runs
     quality = models.NullBooleanField(default=False)  # Is this a "quality" source for analysis purposes?
