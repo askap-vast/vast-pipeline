@@ -80,6 +80,6 @@ class Command(BaseCommand):
             return ds.get()
 
         ds = Dataset(name=name)
-        dataset.save()
+        ds.save()
 
         return ds
