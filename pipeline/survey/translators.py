@@ -3,6 +3,9 @@
 # the flux/ang scale needs to be the multiplicative factor
 # that converts the input flux into mJy and a/b into arcsec
 
+import numpy as np
+
+
 tr_aegean = {
     'prefix': 'IM',
     'ra': 'ra',
@@ -98,6 +101,32 @@ tr_nvss = {
     'freq': 1400  # MHz
     }
 
+# translator for reading data from the Selavy catalogue
+# Name -> name of the Source Model fields (see pipeline/models.py)
+# Dtype -> the data type as define in the field declaration
+tr_selavy = {
+    "island_id": {'name': "island", 'dtype': np.dtype(str)},
+    "component_id": {'name': "name", 'dtype': np.dtype(str)},
+    "rms_image": {'name': "local_rms", 'dtype': np.dtype(float)},
+    "ra_deg_cont": {'name': "ra", 'dtype': np.dtype(float)},
+    "ra_err": {'name': "err_ra", 'dtype': np.dtype(float)},
+    "dec_deg_cont": {'name': "dec", 'dtype': np.dtype(float)},
+    "dec_err": {'name': "err_dec", 'dtype': np.dtype(float)},
+    "flux_peak": {'name': "f_peak", 'dtype': np.dtype(float)},
+    "flux_peak_err": {'name': "err_f_peak", 'dtype': np.dtype(float)},
+    "flux_int": {'name': "f_total", 'dtype': np.dtype(float)},
+    "flux_int_err": {'name': "err_f_total", 'dtype': np.dtype(float)},
+    "maj_axis": {'name': "bmaj", 'dtype': np.dtype(float)},
+    "maj_axis_err": {'name': "err_bmaj", 'dtype': np.dtype(float)},
+    "min_axis": {'name': "bmin", 'dtype': np.dtype(float)},
+    "min_axis_err": {'name': "err_bmin", 'dtype': np.dtype(float)},
+    "pos_ang": {'name': "pa", 'dtype': np.dtype(float)},
+    "pos_ang_err": {'name': "err_pa", 'dtype': np.dtype(float)},
+    "maj_axis_deconv": {'name': "psf_bmaj", 'dtype': np.dtype(float)},
+    "min_axis_deconv": {'name': "psf_bmin", 'dtype': np.dtype(float)},
+    "pos_ang_deconv": {'name': "psf_pa", 'dtype': np.dtype(float)},
+    "flag_c4": {'name': "flag", 'dtype': np.dtype(float)},
+}
 
 translators = {
     'MWACS': tr_mwacs,
@@ -105,5 +134,6 @@ translators = {
     'GLEAM': tr_gleam,
     'SUMSS': tr_sumss,
     'NVSS': tr_nvss,
-    'DEFAULT': tr_aegean
+    'SELAVY': tr_selavy,
+    'DEFAULT': tr_aegean,
 }
