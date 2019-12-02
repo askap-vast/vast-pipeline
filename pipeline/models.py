@@ -209,9 +209,9 @@ class Source(models.Model):
     pa = models.FloatField()  # Position angle (degrees)
     raw_total_flux = models.FloatField()  # mJy/beam
     raw_peak_flux = models.FloatField()  # mJy/beam
-    monitor = models.BooleanField()  # Are we monitoring this location?
+    monitor = models.BooleanField(default=False)  # Are we monitoring this location?
     persistent = models.BooleanField(default=False)  # Keep this source between pipeline runs
-    quality = models.NullBooleanField()  # Is this a "quality" source for analysis purposes?
+    quality = models.NullBooleanField(default=False)  # Is this a "quality" source for analysis purposes?
 
     class Meta:
         ordering = ['ra']
