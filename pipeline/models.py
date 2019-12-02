@@ -90,7 +90,7 @@ class Band(models.Model):
     """A band on the frequency spectrum used for imaging. Each image is associated with one band."""
     name = models.CharField(max_length=12, unique=True)
     frequency = models.IntegerField()  # central frequency of band (integer MHz)
-    bandwidth = models.FloatField()  # bandwidth (MHz)
+    bandwidth = models.IntegerField()  # bandwidth (MHz)
 
     class Meta:
         ordering = ['frequency']
