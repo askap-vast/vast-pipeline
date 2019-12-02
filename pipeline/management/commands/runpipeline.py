@@ -48,8 +48,7 @@ class Command(BaseCommand):
         dataset_name = dataset_name.split(os.path.sep)[-1]
 
         # Create the dataset in DB
-        dataset = Dataset(name=dataset_name)
-        dataset.save()
+        dataset = self.get_create_dataset(dataset_name)
 
         cfg_path = os.path.join(os.path.realpath(dataset_path), 'config.py')
 
@@ -73,3 +72,14 @@ class Command(BaseCommand):
 
         # run the pipeline operations
         pipeline.process_pipeline(dataset.id)
+
+    @staticmethod
+    def get_create_dataset(name):
+        ds = Dataset.objects.filter(name__exact=name)
+        if ds:
+            return ds.get()
+
+        ds = Dataset(name=name)
+        dataset.save()
+
+        return ds
