@@ -23,17 +23,21 @@ class SurveySource(models.Model):
     survey = models.ForeignKey(Survey, on_delete=models.CASCADE)
 
     name = models.CharField(max_length=100, unique=True)
+
     ra = models.FloatField()  # degrees
     err_ra = models.FloatField()  # degrees
     dec = models.FloatField()  # degrees
     err_dec = models.FloatField()  # degrees
-    peak_flux = models.FloatField()  # mJy/beam
-    err_peak_flux = models.FloatField()  # mJy/beam
-    flux = models.FloatField()  # total flux mJy
-    err_flux = models.FloatField()  # mJy
+
     bmaj = models.FloatField()  # major axis (arcsecs)
     bmin = models.FloatField()  # minor axis (arcsecs)
     pa = models.FloatField()  # position angle (degrees east of north)
+
+    peak_flux = models.FloatField()  # mJy/beam
+    err_peak_flux = models.FloatField()  # mJy/beam
+    total_flux = models.FloatField()  # total flux mJy
+    err_total_flux = models.FloatField()  # mJy
+
     alpha = models.FloatField(default=0)  # Spectral index of source
     image_name = models.CharField(max_length=100, blank=True)  # image file
 
@@ -210,14 +214,13 @@ class Source(models.Model):
     err_bmaj = models.FloatField()  # Major axis (degrees)
     bmin = models.FloatField()  # Minor axis (degrees)
     err_bmin = models.FloatField()  # Minor axis (degrees)
-
     pa = models.FloatField()  # Position angle (degrees)
     err_pa = models.FloatField()  # Position angle (degrees)
 
-    f_total = models.FloatField()  # mJy/beam
-    err_f_total = models.FloatField()  # mJy/beam
-    f_peak = models.FloatField()  # mJy/beam
-    err_f_peak = models.FloatField()  # mJy/beam
+    total_flux = models.FloatField()  # mJy/beam
+    err_total_flux = models.FloatField()  # mJy/beam
+    peak_flux = models.FloatField()  # mJy/beam
+    err_peak_flux = models.FloatField()  # mJy/beam
 
     monitor = models.BooleanField(default=False)  # Are we monitoring this location?
     persistent = models.BooleanField(default=False)  # Keep this source between pipeline runs
