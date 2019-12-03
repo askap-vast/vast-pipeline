@@ -1,3 +1,4 @@
+import os
 import logging
 
 import pandas as pd
@@ -51,17 +52,44 @@ class Pipeline():
 
             # 1.3 get the image sources and save them in DB
             sources = image.read_selavy()
-            sources = sources.head()
+
+            # do checks and fill in missing field for uploading sources
+            # in DB (see fields in models.py -> Source model)
+            if sources.name.duplicated().any():
+                raise Exception('Found duplicated names in sources')
+
             sources['image_id'] = img.id
-            sources['dj_models'] = sources.apply(get_source_models, axis=1)
-            import ipdb; ipdb.set_trace()  # breakpoint 5c1aff14 //
+            # append img prefix to source name
+            img_prefix = image.name.split('.i.', 1)[-1].split('.', 1)[0] + '_'
+            sources['name'] = img_prefix + sources['name']
+            logger.info(f'Processed sources dataframe of shape: {sources.shape}')
 
-            # STEP #2: source association
-            # 2.1 Associate Sources
+            # # save sources to parquet file in dataset folder
+            # f_parquet = os.path.join(self.config.DATASET_PATH, 'sources.parquet')
+            # sources.to_parquet(f_parquet, index=False)
 
-            # 2.2 Associate with other sources
+            # do DB bulk create
+            src_bulk = sources.apply(get_source_models, axis=1)
+            # do a upload without evaluate the objects, that should be faster
+            # see https://docs.djangoproject.com/en/2.2/ref/models/querysets/
 
-            # STEP #3: ...
+            # TODO: remove
+            # development operations
+            del_out = Source.objects.filter(image_id=img.id).delete()
+            logger.info(f'deleting all sources for this image: {del_out}')
+
+            batch_size = 500
+            for idx in range(0, src_bulk.size, batch_size):
+                batch = src_bulk.iloc[idx : idx + batch_size].values.tolist()
+                out_bulk = Source.objects.bulk_create(batch, batch_size)
+                logger.info(f'bulk upload output: {out_bulk}')
+
+        # STEP #2: source association
+        # 2.1 Associate Sources with reference catalogues
+
+        # 2.2 Associate with other sources
+
+        # STEP #3: ...
         pass
 
     @staticmethod
