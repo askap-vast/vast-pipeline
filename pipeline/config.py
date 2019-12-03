@@ -2,6 +2,11 @@
 # You should review these settings before processing any images - some of the default
 # values will probably not be appropriate.
 
+import os
+
+# path of the dataset
+DATASET_PATH = os.path.dirname(os.path.realpath(__file__))
+
 # Images settings
 IMAGE_FILES = [
     # insert images path here or regex, or both
