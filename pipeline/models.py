@@ -8,6 +8,7 @@ class Survey(models.Model):
     """An external survey eg NVSS, SUMSS"""
     name = models.CharField(max_length=32, unique=True)
     comment = models.TextField(max_length=1000, blank=True)
+    frequency = models.IntegerField()
 
     class Meta:
         ordering = ['name']
