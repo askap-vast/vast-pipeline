@@ -174,6 +174,9 @@ LOGGING = {
 # project default folder
 PROJECT_WORKING_DIR = os.path.join(BASE_DIR, 'pipeline-projects')
 
+# reference surveys default folder
+SURVEYS_WORKING_DIR = os.path.join(BASE_DIR, 'reference-surveys')
+
 # allowed source finders
 SOURCE_FINDERS = ['aegean']
 
