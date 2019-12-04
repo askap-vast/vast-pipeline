@@ -10,4 +10,4 @@ jobs:
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         issue-message: 'Congrats on your first issue and Welcome to Askap pipeline development: please assign the issue to a milestone and a project if not auto-assigned'
-        pr-message: 'Congrats on your first PR: please assign the issue to a milestone and a project, and to a reviewer if not auto-assigned'
+        pr-message: 'Congrats on your first PR: please assign the PR to a milestone and a project, and to a reviewer if not auto-assigned'
