@@ -1,0 +1,23 @@
+name: Auto Assign Project
+
+on: [pull_request, issues]
+env:
+  PROJECT_URL: 'https://github.com/askap-vast/askap-pipeline/projects/1'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: All in one project issues
+      uses: masutaka/github-actions-all-in-one-project@1.1.0
+      if: github.event == 'issues'
+      env:
+        INITIAL_COLUMN_NAME: 'To do'
+
+    - name: All in one project pull requests
+      uses: masutaka/github-actions-all-in-one-project@1.1.0
+      if: github.event == 'pull_request'
+      env:
+        INITIAL_COLUMN_NAME: 'In progress'
