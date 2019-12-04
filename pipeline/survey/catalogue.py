@@ -56,10 +56,7 @@ def get_survey(filename, survey_name, survey_id, tr=translators['DEFAULT']):
 
     # calculate extra columns
     tab['survey_id'] = survey_id
-    tab['name'] =  f"{tr['prefix']}_"
-    tab['name'] = tab.name.str.cat(
-        tab.index.map(lambda x: f'{x:06}').values
-    )
+    tab['name'] =  f"{tr['prefix']}_" + tab.index.map(lambda x: f'{x:06}').values
 
     tab = tab.rename(
         columns={tr['ra']: 'ra', tr['dec']:'dec', tr['pa']:'pa'},
@@ -70,8 +67,8 @@ def get_survey(filename, survey_name, survey_id, tr=translators['DEFAULT']):
     tab['err_dec'] = tab.loc[:, tr['err_dec']] * tr['pos_err_ang_scale']
     tab['peak_flux'] = tab.loc[:, tr['peak_flux']] * tr['flux_scale']
     tab['err_peak_flux'] = tab.loc[:, tr['err_peak_flux']] * tr['flux_scale']
-    tab['flux'] = tab.loc[:, tr['flux']] * tr['flux_scale']
-    tab['err_flux'] = tab.loc[:, tr['err_flux']] * tr['flux_scale']
+    tab['total_flux'] = tab.loc[:, tr['total_flux']] * tr['flux_scale']
+    tab['err_total_flux'] = tab.loc[:, tr['err_total_flux']] * tr['flux_scale']
     tab['bmaj'] = tab.loc[:, tr['bmaj']] * tr['ang_scale']
     tab['bmin'] = tab.loc[:, tr['bmin']] * tr['ang_scale']
     tab['image_name'] = 'None'
@@ -84,7 +81,7 @@ def get_survey(filename, survey_name, survey_id, tr=translators['DEFAULT']):
     # drop not used columns
     cols = [
         'survey_id', 'name', 'ra', 'err_ra', 'dec', 'err_dec',
-        'peak_flux', 'err_peak_flux', 'flux', 'err_flux', 'bmaj',
+        'peak_flux', 'err_peak_flux', 'total_flux', 'err_total_flux', 'bmaj',
         'bmin', 'pa', 'alpha', 'image_name'
     ]
     tab = tab.loc[:, cols]
