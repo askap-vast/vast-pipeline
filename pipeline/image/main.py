@@ -127,7 +127,7 @@ class FitsImage(Image):
         self.freq_eff = None
         self.freq_bw = None
         try:
-            if header['TELESCOP'] in ('LOFAR', 'AARTFAAC'):
+            if ('TELESCOP' in header) and (header['TELESCOP'] in ('LOFAR', 'AARTFAAC')):
                 self.freq_eff = header['RESTFRQ']
                 if 'RESTBW' in header:
                     self.freq_bw = header['RESTBW']
