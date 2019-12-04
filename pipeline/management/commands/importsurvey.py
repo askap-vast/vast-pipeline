@@ -8,7 +8,6 @@ Eg   : ./manage.py importsurvey NVSS /data/nvss.fits
 import os
 import logging
 
-from django.db import connection, transaction
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from sqlalchemy import create_engine
@@ -46,6 +45,10 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        # check/create survey folder
+        if not os.path.exists(settings.SURVEYS_WORKING_DIR):
+            os.mkdir(settings.SURVEYS_WORKING_DIR)
+
         watch = StopWatch()
         survey_name = options.get('survey_name')[0]
 
@@ -57,24 +60,32 @@ class Command(BaseCommand):
             logger.info("Using translator DEFAULT")
 
         # check if the survey exists and eventually delete it
-        surveys_matches = Survey.objects.filter(name__exact=survey_name)
-        if surveys_matches:
+        survey = Survey.objects.filter(name__exact=survey_name)
+        if survey:
             logger.info('found previous survey with same name, deleting them')
-            for survey in surveys_matches:
-                watch.reset()
-                survey.delete()
-                logger.info(f'total time survey deletion {watch.reset()}s')
+            watch.reset()
+            survey.delete()
+            logger.info(f'total time survey deletion {watch.reset()}s')
 
         # create the survey
-        survey = Survey(name=survey_name,frequency_mhz=tr['freq'])
+        survey = Survey(name=survey_name, frequency=tr['freq'])
         survey.save()
 
         # get the sources
         path = os.path.realpath(options.get('path_to_survey_file')[0])
         if not os.path.exists(path):
-            raise CommandError('passed survey file do not exists!')
+            raise CommandError('passed survey file does not exist!')
 
         sources = get_survey(path, survey.name, survey.id, tr)
+
+        # dump sources to parquet
+        watch.reset()
+        parq_folder = os.path.join(settings.SURVEYS_WORKING_DIR, survey_name)
+        if not os.path.exists(parq_folder):
+            os.mkdir(parq_folder)
+        f_parquet = os.path.join(parq_folder, 'sources.parquet')
+        sources.to_parquet(f_parquet, index=False)
+        logger.info(f'dumping sources to parquet, time: {watch.reset()}s')
 
         # upload the sources
         config = settings.DATABASES['default']
