@@ -4,7 +4,7 @@ import logging
 import pandas as pd
 
 from ..image.main import SelavyImage
-from ..models import Band, Image, Source
+from ..models import Band, Image, Source, SurveySource
 
 
 logger = logging.getLogger(__name__)
@@ -65,8 +65,11 @@ class Pipeline():
             logger.info(f'Processed sources dataframe of shape: {sources.shape}')
 
             # # save sources to parquet file in dataset folder
-            # f_parquet = os.path.join(self.config.DATASET_PATH, 'sources.parquet')
-            # sources.to_parquet(f_parquet, index=False)
+            parq_folder = os.path.join(self.config.DATASET_PATH, img_prefix.strip('_'))
+            if not os.path.exists(parq_folder):
+                os.mkdir(parq_folder)
+            f_parquet = os.path.join(parq_folder, 'sources.parquet')
+            sources.to_parquet(f_parquet, index=False)
 
             # do DB bulk create
             src_bulk = sources.apply(get_source_models, axis=1)
@@ -75,16 +78,19 @@ class Pipeline():
 
             # TODO: remove
             # development operations
-            del_out = Source.objects.filter(image_id=img.id).delete()
-            logger.info(f'deleting all sources for this image: {del_out}')
+            if Source.objects.filter(image_id=img.id).exists():
+                del_out = Source.objects.filter(image_id=img.id).delete()
+                logger.info(f'deleting all sources for this image: {del_out}')
 
-            batch_size = 500
+            batch_size = 1_000
             for idx in range(0, src_bulk.size, batch_size):
                 batch = src_bulk.iloc[idx : idx + batch_size].values.tolist()
                 out_bulk = Source.objects.bulk_create(batch, batch_size)
-                logger.info(f'bulk upload output: {out_bulk}')
+                logger.info(f'bulk uploaded #{len(out_bulk)} sources')
 
         # STEP #2: source association
+        if SurveySource.objects.exists():
+            pass
         # 2.1 Associate Sources with reference catalogues
 
         # 2.2 Associate with other sources
