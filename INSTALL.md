@@ -2,7 +2,7 @@
 
 This document explains how to install all the packages that the pipeline needs to run, as well as the PostgreSQL database. Following this documentation should get you started with a good __LOCAL__ development enrironment, where you can mess up things, but always go back and fix it up.
 
-Note for installs on a Mac: the use of `homebrew` is recommended (https://brew.sh).
+Note for installs on a Mac, the use of `homebrew` is recommended (https://brew.sh).
 
 ## PostgreSQL Installation
 
