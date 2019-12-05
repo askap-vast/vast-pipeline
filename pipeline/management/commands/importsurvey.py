@@ -106,5 +106,5 @@ class Command(BaseCommand):
             chunksize=100_000,
             method='multi',
         )
-        logger.info(f'Inserted #{SurveySource.objects.count()} records')
+        logger.info(f'Inserted #{SurveySource.objects.filter(survey_id=survey.id).count()} records')
         logger.info(f'Upload successful! Duration: {watch.reset_init()}s')
