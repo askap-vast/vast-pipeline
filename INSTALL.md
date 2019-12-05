@@ -97,12 +97,12 @@ conda activate pipeline_env
 4. Install the development requirements
 
 ```bash
-pip install -r requirements-dev.txt
+pip install -r requirements/requirements-dev.txt
 ```
 or with conda (some packages will not be installed properly so check and eventually install them manually, if not with `conda`, with `pip`):
 ```bash
-while read requirement; do conda install --yes $requirement; done < requirements-dev.txt
-while read requirement; do conda install --yes $requirement; done < requirements.txt
+while read requirement; do conda install --yes $requirement; done < requirements/requirements-dev.txt
+while read requirement; do conda install --yes $requirement; done < requirements/requirements.txt
 ```
 
 Done! Now open the `README` file to see how to initialize and run the pipeline.
