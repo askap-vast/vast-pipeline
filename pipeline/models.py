@@ -34,10 +34,10 @@ class SurveySource(models.Model):
     bmin = models.FloatField()  # minor axis (arcsecs)
     pa = models.FloatField()  # position angle (degrees east of north)
 
-    peak_flux = models.FloatField()  # mJy/beam
-    err_peak_flux = models.FloatField()  # mJy/beam
-    total_flux = models.FloatField()  # total flux mJy
-    err_total_flux = models.FloatField()  # mJy
+    flux_peak = models.FloatField()  # mJy/beam
+    flux_peak_err = models.FloatField()  # mJy/beam
+    flux_int = models.FloatField()  # total flux mJy
+    flux_int_err = models.FloatField()  # mJy
 
     alpha = models.FloatField(default=0)  # Spectral index of source
     image_name = models.CharField(max_length=100, blank=True)  # image file
@@ -120,9 +120,10 @@ class Image(models.Model):
 
     time = models.DateTimeField()  # date/time of observation, aka epoch
     jd = models.FloatField()  # date/time of observation in Julian Date format
+    duration =  models.FloatField() # Duration of the observation 
 
     flux_gain = models.FloatField(default=1)  # flux gain factor
-    err_flux_gain = models.FloatField(default=0)  # std in flux gain factor
+    flux_gain_err = models.FloatField(default=0)  # std in flux gain factor
 
     ra = models.FloatField()  # RA of image centre (degrees)
     dec = models.FloatField()  # Dec of image centre (degrees)
@@ -140,6 +141,7 @@ class Image(models.Model):
     # source_find_time = models.FloatField(null=True)  # blind source finding time (seconds)
     # validation_time = models.FloatField(null=True)  # detection validation time (seconds)
     # assoc_time = models.FloatField(null=True)  # source association time (seconds)
+    
     # source_stats_time = models.FloatField(null=True)  # source stats recalculation time (seconds)
     # monitor_time = models.FloatField(null=True)  # non-detection monitoring time (seconds)
     # total_time = models.FloatField(null=True)  # total processing time (seconds)
@@ -218,10 +220,16 @@ class Source(models.Model):
     pa = models.FloatField()  # Position angle (degrees)
     err_pa = models.FloatField()  # Position angle (degrees)
 
-    total_flux = models.FloatField()  # mJy/beam
-    err_total_flux = models.FloatField()  # mJy/beam
-    peak_flux = models.FloatField()  # mJy/beam
-    err_peak_flux = models.FloatField()  # mJy/beam
+    flux_int = models.FloatField()  # mJy/beam
+    flux_int_err = models.FloatField()  # mJy/beam
+    flux_peak = models.FloatField()  # mJy/beam
+    flux_peak_err = models.FloatField()  # mJy/beam
+    chi_squared_fit = models.FloatField() # chi-squared of Gaussian fit
+    spectral_index = models.FloatField() # In band spectral index from Selavy
+    spectral_index_from_TT = models.BooleanField(default=False) # Did the spectral index come from the taylor term
+    flag_c4 = models.BooleanField(default=False) # Fit flag from selavy file
+
+    has_siblings = models.BooleanField(default=False) # Does the fit come from an island? 
 
     monitor = models.BooleanField(default=False)  # Are we monitoring this location?
     persistent = models.BooleanField(default=False)  # Keep this source between pipeline runs
