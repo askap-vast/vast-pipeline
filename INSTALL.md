@@ -2,6 +2,8 @@
 
 This document explains how to install all the packages that the pipeline needs to run, as well as the PostgreSQL database. Following this documentation should get you started with a good __LOCAL__ development enrironment, where you can mess up things, but always go back and fix it up.
 
+Note for installs on a Mac: the use of `homebrew` is recommended (https://brew.sh).
+
 ## PostgreSQL Installation
 
 I don't recommend installing the database as part of a system package (e.g. `apt-get install postgres`), but instead use docker, which let you mess up things and keep your database installation separated from the system packages, given also that you need to install Python packages for the database to use, but you don't want to confuse them with the Pipeline Python environment.
@@ -42,7 +44,7 @@ If `localhost` is not passed, the command exposes the port on `0.0.0.0` so other
     make install
     ```
 
-You should now be done with the database installation. You can connect to the database by running the `psql` CLI (Command Line Interface) by installing on your system (e.g. Ubuntu `sudo apt-get install postgres-common` or just `postgresql-client-common`). Alternatively you can access the CLI by connecting to the container as described above (`docker exec -it NAME_OF_MyCONTAINER bash`). Finally connect to your PostgreSQL instance:
+You can disconnect from the container and the database installation should now be complete. You can connect to the database by running the `psql` CLI (Command Line Interface) by installing on your system (e.g. Ubuntu `sudo apt-get install postgres-common` or just `postgresql-client-common`, Mac: `brew install libpq`). Alternatively you can access the CLI by connecting to the container as described above (`docker exec -it NAME_OF_MyCONTAINER bash`). Finally connect to your PostgreSQL instance:
 
 ```bash
 psql -h localhost -p 5432 -U postgres
@@ -75,7 +77,7 @@ git clone <PASTE REPO LINK> && cd <REPO>
 
 2. Setup a `Python >= 3.6` virtual environment. E.g. with `virtualenv`:
 ```bash
-virtualeng -p python3 pipeline_env
+virtualenv -p python3 pipeline_env
 ```
 Otherwise use `Anaconda/conda`:
 ```bash
@@ -95,6 +97,8 @@ conda activate pipeline_env
 ```
 
 4. Install the development requirements
+
+Note that if you want to install the development requirements, graphviz needs to be installed on your system (Ubuntu: `sudo apt-get install graphviz`, Mac: `brew install graphviz`).
 
 ```bash
 pip install -r requirements/requirements-dev.txt
