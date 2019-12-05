@@ -28,49 +28,39 @@ DATABASES = {
 
 NOTE: the connection details (host and port) are the same that you setup in [`INSTALL.md`](./INSTALL.md). The database/user names must not contain any spaces or dashes, so use the underscore if you want, e.g. `this_is_my_db_name`.
 
-3. Create the database user, by running:
+3. Create the database user, database name and enabling the `Q3C` extension, by running:
 
 ```bash
-$:./init-tools/createdb-user.sh localhost 5432 postgres postgres askap askap
+$:./init-tools/init-db.sh localhost 5432 postgres postgres askap askappsw askapdb
 ```
 
   For help on the command run it without arguments
 
 ```bash
-$:./init-tools/createdb-user.sh
-Usage: createdb-user.sh HOST PORT ADMINUSER ADMINPSW USER USERPSW
-Eg:    createdb-user.sh localhost postgres askap askappsw
-```
-
-4. Create the database, and enabling the `Q3C` extension. Remember first to activate the Python environment as described in [`INSTALL.md`](./INSTALL.md).
-
-You can inspect the `init-db` tool to understand the arguments to pass.
-
-```bash
-Usage: createdb-user.sh HOST PORT ADMINUSER ADMINPSW USER USERPSW DBNAME
-Eg:    createdb-user.sh localhost 5432 postgres postgres askap askappsw askapdb
+$:./init-tools/init-db.sh
+Usage: init-db.sh HOST PORT ADMINUSER ADMINPSW USER USERPSW DBNAME
+Eg:    init-db.sh localhost 5432 postgres postgres askap askappsw askapdb
 
 Help: This will create a postgresql user 'askap' with login password 'askappsw'
       and a database 'askapdb' and grant to 'askap' user all the priveleges to 'askapdb'
 ```
 
-Run the tool with your inputs:
+  If everything went well the output is:
 
 ```bash
-./init-tools/init-db.sh localhost 5432 postgres askap askappsw askapdb
-```
-
-If everything wents well, your output should looks like below:
-
-```bash
-connecting to PostgreSQL on 'localhost:5432' as admin 'postgres'
-creating user 'askap' with login password 'askappsw'
+connecting to PostgreSQL on 'localhost:5433' as admin 'postgres'
+creating user 'askap' with login password 'askappsw' and give it createdb privileges
 CREATE ROLE
 ************************************
-creating db 'askapdb', enable Q3C plugin, and grant all priviledges to 'askap'
-CREATE DATABASE
+creating db 'askap_pipe_dev', enable Q3C plugin
 CREATE EXTENSION
-GRANT
+```
+
+4. Create the databse tables. Remember first to activate the Python environment as described in [`INSTALL.md`](./INSTALL.md).
+
+```bash
+(pipeline_env)$:./manage.py makemigrations
+(pipeline_env)$:./manage.py migrate
 ```
 
 ## Pipeline Usage

@@ -2,16 +2,16 @@
 
 # Script to create a new database user for the PIPELINE scripts.
 #
-# Usage: createdb-user.sh HOST PORT ADMINUSER ADMINPSW USER USERPSW DBNAME
-# Eg:    createdb-user.sh localhost postgres askap askappsw askapdb
+# Usage: init-db.sh HOST PORT ADMINUSER ADMINPSW USER USERPSW DBNAME
+# Eg:    init-db.sh localhost postgres askap askappsw askapdb
 #
 # This will create a postgresql user "askap" with login password "askappsw"
 # a database "askapdb" and grant to "askap" user all the priveleges to "askapdb"
 
 if [ $# -ne 7 ]
 then
-	echo "Usage: createdb-user.sh HOST PORT ADMINUSER ADMINPSW USER USERPSW DBNAME"
-	echo "Eg:    createdb-user.sh localhost 5432 postgres postgres askap askappsw askapdb"
+	echo "Usage: init-db.sh HOST PORT ADMINUSER ADMINPSW USER USERPSW DBNAME"
+	echo "Eg:    init-db.sh localhost 5432 postgres postgres askap askappsw askapdb"
     echo ""
     echo "Help: This will create a postgresql user 'askap' with login password 'askappsw'"
     echo "      and a database 'askapdb' and grant to 'askap' user all the priveleges to 'askapdb'"
