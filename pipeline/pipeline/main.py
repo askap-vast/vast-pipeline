@@ -76,8 +76,7 @@ class Pipeline():
             # do a upload without evaluate the objects, that should be faster
             # see https://docs.djangoproject.com/en/2.2/ref/models/querysets/
 
-            # TODO: remove
-            # development operations
+            # TODO: remove development operations
             if Source.objects.filter(image_id=img.id).exists():
                 del_out = Source.objects.filter(image_id=img.id).delete()
                 logger.info(f'deleting all sources for this image: {del_out}')
