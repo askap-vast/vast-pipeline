@@ -64,8 +64,15 @@ class Pipeline():
             sources['name'] = img_prefix + sources['name']
             logger.info(f'Processed sources dataframe of shape: {sources.shape}')
 
+            # # save sources to parquet file in dataset folder
+            parq_folder = os.path.join(self.config.DATASET_PATH, img_prefix.strip('_'))
+            if not os.path.exists(parq_folder):
+                os.mkdir(parq_folder)
+            f_parquet = os.path.join(parq_folder, 'sources.parquet')
+            sources.to_parquet(f_parquet, index=False)
+
             # do DB bulk create
-            sources['dj_models'] = sources.apply(get_source_models, axis=1)
+            src_bulk = sources.apply(get_source_models, axis=1)
             # do a upload without evaluate the objects, that should be faster
             # see https://docs.djangoproject.com/en/2.2/ref/models/querysets/
 
@@ -75,17 +82,10 @@ class Pipeline():
                 logger.info(f'deleting all sources for this image: {del_out}')
 
             batch_size = 1_000
-            for idx in range(0, sources.dj_models.size, batch_size):
-                batch = sources.dj_models.iloc[idx : idx + batch_size].values.tolist()
+            for idx in range(0, src_bulk.size, batch_size):
+                batch = src_bulk.iloc[idx : idx + batch_size].values.tolist()
                 out_bulk = Source.objects.bulk_create(batch, batch_size)
                 logger.info(f'bulk uploaded #{len(out_bulk)} sources')
-
-            # # save sources to parquet file in dataset folder
-            parq_folder = os.path.join(self.config.DATASET_PATH, img_prefix.strip('_'))
-            if not os.path.exists(parq_folder):
-                os.mkdir(parq_folder)
-            f_parquet = os.path.join(parq_folder, 'sources.parquet')
-            sources.drop('dj_models', axis=1).to_parquet(f_parquet, index=False)
 
         # STEP #2: source association
         if SurveySource.objects.exists():
