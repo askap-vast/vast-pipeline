@@ -39,6 +39,7 @@ class Pipeline():
         }
 
     def process_pipeline(self, dataset_id=None):
+        images = []
         for path in self.image_paths:
             # STEP #1: Load image and sources
             image = SelavyImage(path, self.image_paths[path])
@@ -73,9 +74,9 @@ class Pipeline():
 
             # do DB bulk create
             src_bulk = sources.apply(get_source_models, axis=1)
+            del sources
             # do a upload without evaluate the objects, that should be faster
             # see https://docs.djangoproject.com/en/2.2/ref/models/querysets/
-
             # TODO: remove development operations
             if Source.objects.filter(image_id=img.id).exists():
                 del_out = Source.objects.filter(image_id=img.id).delete()
@@ -83,14 +84,17 @@ class Pipeline():
 
             batch_size = 1_000
             for idx in range(0, src_bulk.size, batch_size):
-                batch = src_bulk.iloc[idx : idx + batch_size].values.tolist()
-                out_bulk = Source.objects.bulk_create(batch, batch_size)
+                out_bulk = Source.objects.bulk_create(
+                    src_bulk.iloc[idx : idx + batch_size].values.tolist(),
+                    batch_size
+                )
                 logger.info(f'bulk uploaded #{len(out_bulk)} sources')
+            del src_bulk
 
         # STEP #2: source association
+        # 2.1 Associate Sources with reference catalogues
         if SurveySource.objects.exists():
             pass
-        # 2.1 Associate Sources with reference catalogues
 
         # 2.2 Associate with other sources
 
