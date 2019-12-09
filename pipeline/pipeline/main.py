@@ -1,7 +1,10 @@
 import os
+import operator
 import logging
 
 import pandas as pd
+from astropy import units as u
+from astropy.coordinates import match_coordinates_sky, SkyCoord
 
 from ..image.main import SelavyImage
 from ..models import Band, Image, Source, SurveySource
@@ -72,6 +75,15 @@ class Pipeline():
             f_parquet = os.path.join(parq_folder, 'sources.parquet')
             sources.to_parquet(f_parquet, index=False)
 
+            # create image sources catalog
+            image.catalog = SkyCoord(
+                ra=sources.ra.values * u.degree,
+                dec=sources.dec.values * u.degree,
+            )
+
+            # add image to list
+            images.append(image)
+
             # do DB bulk create
             src_bulk = sources.apply(get_source_models, axis=1)
             del sources
@@ -97,6 +109,20 @@ class Pipeline():
             pass
 
         # 2.2 Associate with other sources
+        # order images by time
+        images.sort(key=operator.attrgetter('time'))
+
+        # create catalog couples list
+        catalog_pairs = [
+            (a.catalog, b.catalog) for a in images for b in images if a is not b
+        ]
+
+        logging.info('ASSOCIATION STEP')
+        for pair in catalog_pairs:
+            idx, d2d, d3d = match_coordinates_sky(pair[0], pair[1])
+
+            # insert association in DB
+
 
         # STEP #3: ...
         pass
