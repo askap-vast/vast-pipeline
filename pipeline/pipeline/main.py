@@ -114,13 +114,12 @@ class Pipeline():
 
         # create catalog couples list
         catalog_pairs = [
-            (a.catalog, b.catalog) for a in images for b in images if a is not b
+            (a, b) for a in images for b in images if (a is not b) and (a.time < b.time)
         ]
 
         logging.info('ASSOCIATION STEP')
         for pair in catalog_pairs:
-            idx, d2d, d3d = match_coordinates_sky(pair[0], pair[1])
-
+            idx, d2d, d3d = match_coordinates_sky(pair[0].catalog, pair[1].catalog)
             # insert association in DB
 
 
