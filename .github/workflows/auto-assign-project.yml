@@ -9,18 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     name: Assign to One Project
     steps:
-    - name: Run issues assignment to one project
-      uses: alex-page/github-project-automation-plus@v0.1.0
-      if: github.event_name == 'issues' && github.event.action == 'opened'
+    - name: Run assignment to one project
+      uses: docker://srggrs/assign-one-project-github-action:1.0.0
+      if: github.event.action == 'opened'
       with:
-        project: Pipeline initial release
-        column: To do
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Run PRs assignment to one project
-      uses: alex-page/github-project-automation-plus@v0.1.0
-      if: github.event_name == 'pull_request' && github.event.action == 'opened'
-      with:
-        project: Pipeline initial release
-        column: In progress
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        project: 'https://github.com/askap-vast/askap-pipeline/projects/1'
