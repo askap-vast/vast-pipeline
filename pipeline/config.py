@@ -78,6 +78,7 @@ MAX_BACKWARDS_MONITOR_IMAGES = 0
 ###
 # Enbale/Disble source association, set false to turn off association stage
 ASSOCIATE = True
+ASSOCIATION_RADIUS = 1.
 
 # Default survey.
 # Used by the website for analysis plots.
