@@ -111,6 +111,9 @@ class Catalog(models.Model):
     ave_ra = models.FloatField()
     ave_dec = models.FloatField()
 
+    def __str__(self):
+        return self.name
+
 
 class Image(models.Model):
     """An image is a 2D radio image from a cube"""
