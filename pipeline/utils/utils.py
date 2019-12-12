@@ -142,7 +142,7 @@ def deg2dms(deg):
 
     sign, sex = deg2sex(deg)
     signchar = "+" if sign == 1 else "-"
-    return f'{signchar}{sex[0]:'02d'}:{sex[1]:'02d}:{sex[2]:'05.2f'}'
+    return f'{signchar}{sex[0]:02d}:{sex[1]:02d}:{sex[2]:05.2f}'
 
 
 def deg2hms(deg):
@@ -165,4 +165,4 @@ def deg2hms(deg):
     # We only handle positive RA values
     # assert deg >= 0
     sign, sex = deg2sex(deg / 15.)
-    return f'{sex[0]:'02d'}:{sex[1]:'02d}:{sex[2]:'05.2f'}'
+    return f'{sex[0]:02d}:{sex[1]:02d}:{sex[2]:05.2f}'
