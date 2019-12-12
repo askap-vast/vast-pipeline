@@ -4,7 +4,7 @@ import logging
 
 import pandas as pd
 from astropy import units as u
-from astropy.coordinates import match_coordinates_sky, SkyCoord
+from astropy.coordinates import Angle, match_coordinates_sky, SkyCoord
 
 from ..image.main import SelavyImage
 from ..models import Band, Image, Source, SurveySource
@@ -41,7 +41,7 @@ class Pipeline():
             x:y for x,y in zip(config.IMAGE_FILES, config.SELAVY_FILES)
         }
 
-    def process_pipeline(self, dataset_id=None):
+    def process_pipeline(self, dataset):
         images = []
         for path in self.image_paths:
             # STEP #1: Load image and sources
@@ -52,41 +52,16 @@ class Pipeline():
             band_id = self.get_create_img_band(image)
 
             # 1.2 create image entry in DB
-            img = self.get_create_img(dataset_id, band_id, image)
+            img = self.get_create_img(dataset, band_id, image)
+            # add image to list
+            images.append(img)
 
             # 1.3 get the image sources and save them in DB
-            sources = image.read_selavy()
-
-            # do checks and fill in missing field for uploading sources
-            # in DB (see fields in models.py -> Source model)
-            if sources.name.duplicated().any():
-                raise Exception('Found duplicated names in sources')
-
-            sources['image_id'] = img.id
-            # append img prefix to source name
-            img_prefix = image.name.split('.i.', 1)[-1].split('.', 1)[0] + '_'
-            sources['name'] = img_prefix + sources['name']
+            sources = image.read_selavy(img)
             logger.info(f'Processed sources dataframe of shape: {sources.shape}')
 
-            # # save sources to parquet file in dataset folder
-            parq_folder = os.path.join(self.config.DATASET_PATH, img_prefix.strip('_'))
-            if not os.path.exists(parq_folder):
-                os.mkdir(parq_folder)
-            f_parquet = os.path.join(parq_folder, 'sources.parquet')
-            sources.to_parquet(f_parquet, index=False)
-
-            # create image sources catalog
-            image.catalog = SkyCoord(
-                ra=sources.ra.values * u.degree,
-                dec=sources.dec.values * u.degree,
-            )
-
-            # add image to list
-            images.append(image)
-
             # do DB bulk create
-            src_bulk = sources.apply(get_source_models, axis=1)
-            del sources
+            sources['dj_model'] = sources.apply(get_source_models, axis=1)
             # do a upload without evaluate the objects, that should be faster
             # see https://docs.djangoproject.com/en/2.2/ref/models/querysets/
             # TODO: remove development operations
@@ -95,13 +70,24 @@ class Pipeline():
                 logger.info(f'deleting all sources for this image: {del_out}')
 
             batch_size = 1_000
-            for idx in range(0, src_bulk.size, batch_size):
+            for idx in range(0, sources.dj_model.size, batch_size):
                 out_bulk = Source.objects.bulk_create(
-                    src_bulk.iloc[idx : idx + batch_size].values.tolist(),
+                    sources.dj_model.iloc[idx : idx + batch_size].values.tolist(),
                     batch_size
                 )
                 logger.info(f'bulk uploaded #{len(out_bulk)} sources')
-            del src_bulk
+
+            # make a columns with the source id
+            sources['id'] = sources.dj_model.apply(getattr, args=('id',))
+
+            # save sources to parquet file in dataset folder
+            if not os.path.exists(os.path.dirname(img.sources_path)):
+                os.mkdir(os.path.dirname(img.sources_path))
+            sources.drop('dj_model', axis=1).to_parquet(
+                img.sources_path,
+                index=False
+            )
+            del sources, image, band_id, img, out_bulk
 
         # STEP #2: source association
         # 2.1 Associate Sources with reference catalogues
@@ -112,16 +98,69 @@ class Pipeline():
         # order images by time
         images.sort(key=operator.attrgetter('time'))
 
-        # create catalog couples list
-        catalog_pairs = [
-            (a, b) for a in images for b in images if (a is not b) and (a.time < b.time)
-        ]
 
-        logging.info('ASSOCIATION STEP')
-        for pair in catalog_pairs:
-            idx, d2d, d3d = match_coordinates_sky(pair[0].catalog, pair[1].catalog)
-            # insert association in DB
+        limit = Angle(self.config.ASSOCIATION_RADIUS * u.degree)
 
+        # read the needed sources fields
+        c1_srcs = pd.read_parquet(
+            images[0].sources_path,
+            columns=['id','ra','dec']
+        )
+        # create base catalog
+        c1 = SkyCoord(
+            ra=c1_srcs.ra * u.degree,
+            dec=c1_srcs.dec * u.degree
+        )
+        # initialise the df of catalogues with the base one
+        catalogs_df = pd.DataFrame()
+        c1_df = self.create_catalog_df(c1_srcs)
+        for image in images[1:]:
+            c2_srcs = pd.read_parquet(
+                image.sources_path,
+                columns=['id','ra','dec']
+            )
+            c2 = SkyCoord(
+                ra=c2_srcs.ra * u.degree,
+                dec=c2_srcs.dec * u.degree
+            )
+            idx, d2d, d3d = c1.match_to_catalog_sky(c2)
+
+            selection = d2d <= limit
+            # select from c1 df and append it to catalogue df
+            c1_df = c1_df.loc[selection]
+            catalogs_df = catalogs_df.append(c1_df)
+
+            # create c2 df and select from it, and append to catalogue df
+            c2_df = self.create_catalog_df(c2_srcs)
+            c2_df = c2_df.loc[idx[selection]]
+            catalogs_df = catalogs_df.append(c2_df)
+
+            # # calculate the new base catalogue
+            # c1 = SkyCoord(
+            #     ra=np.mean(
+            #         [
+            #             c1[selection].ra,
+            #             c2[idx[selection]].ra
+            #         ], axis=0) * u.degree,
+            #     dec=np.mean(
+            #         [
+            #             c1[selection].dec,
+            #             c2[idx[selection]].dec
+            #         ], axis=0) * u.degree,
+            # )
+            # update c1 for next association iteration
+            c1 = SkyCoord(
+                [c1, c2[idx[~selection]]]
+            )
+
+        # tidy the df of catalogues to drop duplicated entries
+        # to have unique rows of c_name and src_id
+        catalogs_df = catalogs_df.drop_duplicates()
+
+        # calculated average ra and dec
+
+        # insert association in DB
+        import ipdb; ipdb.set_trace()  # breakpoint c6ac6b08 //
 
         # STEP #3: ...
         pass
@@ -153,12 +192,22 @@ class Pipeline():
         return band.id
 
     @staticmethod
-    def get_create_img(dataset_id, band_id, image):
+    def get_create_img(dataset, band_id, image):
         img = Image.objects.filter(name__exact=image.name)
         if img:
             return img.get()
 
-        img = Image(dataset_id=dataset_id, band_id=band_id)
+        # at this stage source parquet file not created but assume location
+        sources_path = os.path.join(
+            dataset.path,
+            image.name.split('.i.', 1)[-1].split('.', 1)[0],
+            'sources.parquet'
+            )
+        img = Image(
+            dataset_id=dataset.id,
+            band_id=band_id,
+            sources_path=sources_path
+        )
         # set the attributes and save the image,
         # by selecting only valid (not hidden) attributes
         # FYI attributs and/or method starting with _ are hidden
@@ -169,3 +218,10 @@ class Pipeline():
         img.save()
 
         return img
+
+    @staticmethod
+    def create_catalog_df(src_df):
+        df = src_df.rename(columns={'id':'src_id'})
+        df['c_name'] = 'c' + df.index.astype(str)
+        return df
+
