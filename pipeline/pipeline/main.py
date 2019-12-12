@@ -106,7 +106,7 @@ class Pipeline():
         images.sort(key=operator.attrgetter('time'))
 
 
-        limit = Angle(self.config.ASSOCIATION_RADIUS * u.degree)
+        limit = Angle(self.config.ASSOCIATION_RADIUS * u.arcsec)
 
         # read the needed sources fields
         c1_srcs = pd.read_parquet(
@@ -142,19 +142,6 @@ class Pipeline():
             c2_df = c2_df.loc[idx[selection]]
             catalogs_df = catalogs_df.append(c2_df)
 
-            # # calculate the new base catalogue
-            # c1 = SkyCoord(
-            #     ra=np.mean(
-            #         [
-            #             c1[selection].ra,
-            #             c2[idx[selection]].ra
-            #         ], axis=0) * u.degree,
-            #     dec=np.mean(
-            #         [
-            #             c1[selection].dec,
-            #             c2[idx[selection]].dec
-            #         ], axis=0) * u.degree,
-            # )
             # update c1 for next association iteration
             c1 = SkyCoord([c1, c2[idx[~selection]]])
 
