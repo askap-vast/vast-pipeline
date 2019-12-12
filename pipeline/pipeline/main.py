@@ -7,7 +7,8 @@ from astropy import units as u
 from astropy.coordinates import Angle, match_coordinates_sky, SkyCoord
 
 from ..image.main import SelavyImage
-from ..models import Band, Image, Source, SurveySource
+from ..models import Band, Catalog, Image, Source, SurveySource
+from ..utils.utils import deg2hms, deg2dms
 
 
 logger = logging.getLogger(__name__)
@@ -19,6 +20,12 @@ def get_source_models(row):
         if getattr(fld, 'attname', None) and fld.attname in row.index:
             setattr(src, fld.attname, row[fld.attname])
     return src
+
+
+def get_catalog_models(row):
+    name = f"catalog_{deg2hms(row['ave_ra'])}{deg2dms(row['ave_dec'])}"
+    c = Catalog(name=name, ave_ra=row['ave_ra'], ave_dec=row['ave_dec'])
+    return c
 
 
 class Pipeline():
@@ -149,15 +156,22 @@ class Pipeline():
             #         ], axis=0) * u.degree,
             # )
             # update c1 for next association iteration
-            c1 = SkyCoord(
-                [c1, c2[idx[~selection]]]
-            )
+            c1 = SkyCoord([c1, c2[idx[~selection]]])
 
         # tidy the df of catalogues to drop duplicated entries
         # to have unique rows of c_name and src_id
         catalogs_df = catalogs_df.drop_duplicates()
 
         # calculated average ra and dec
+        cat_df = (
+            catalogs_df.groupby('c_name')['ra','dec']
+            .mean().reset_index()
+            .rename(columns={'ra':'ave_ra', 'dec':'ave_dec'})
+        )
+        # generate the catalog models
+        cat_df['dj_model'] = cat_df.apply(get_catalog_models, axis=1)
+        catalogs_df = catalogs_df.merge(cat_df, on='c_name')
+        del cat_df
 
         # insert association in DB
         import ipdb; ipdb.set_trace()  # breakpoint c6ac6b08 //
