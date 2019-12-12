@@ -77,6 +77,7 @@ class Dataset(models.Model):
             ),
         ]
     )
+    path = models.CharField(max_length=500)# the path to the dataset
     comment = models.TextField(max_length=1000, default='', blank=True)  # A description of this dataset
 
     class Meta:
@@ -104,6 +105,13 @@ class Band(models.Model):
         return self.name
 
 
+class Catalog(models.Model):
+    name = models.CharField(max_length=100)
+
+    ave_ra = models.FloatField()
+    ave_dec = models.FloatField()
+
+
 class Image(models.Model):
     """An image is a 2D radio image from a cube"""
     band = models.ForeignKey(Band, on_delete=models.CASCADE)
@@ -113,10 +121,8 @@ class Image(models.Model):
 
     polarisation = models.CharField(max_length=2)  # eg XX,YY,I,Q,U,V
     name = models.CharField(max_length=200)
-    path = models.CharField(max_length=500)  # the path to the file containing this image
-    noise_path = models.CharField(max_length=300, blank=True, default='')  # includes filename
-    background_path = models.CharField(max_length=300, blank=True, default='')  # includes filename
-    valid = models.BooleanField(default=True)  # Is the image valid?
+    path = models.CharField(max_length=500)# the path to the file containing this image
+    sources_path = models.CharField(max_length=500)# the path to the sources parquet that belongs to this image
 
     time = models.DateTimeField()  # date/time of observation, aka epoch
     jd = models.FloatField()  # date/time of observation in Julian Date format
@@ -136,13 +142,6 @@ class Image(models.Model):
     rms = models.FloatField(default=0)  # Background RMS (mJy)
 
     flux_percentile = models.FloatField(default=0)  # Pixel flux at 95th percentile
-
-    # source_find_time = models.FloatField(null=True)  # blind source finding time (seconds)
-    # validation_time = models.FloatField(null=True)  # detection validation time (seconds)
-    # assoc_time = models.FloatField(null=True)  # source association time (seconds)
-    # source_stats_time = models.FloatField(null=True)  # source stats recalculation time (seconds)
-    # monitor_time = models.FloatField(null=True)  # non-detection monitoring time (seconds)
-    # total_time = models.FloatField(null=True)  # total processing time (seconds)
 
     class Meta:
         ordering = ['time']
@@ -203,8 +202,10 @@ class Source(models.Model):
     """
     image = models.ForeignKey(Image, null=True, on_delete=models.CASCADE)  # first image seen in
     cross_match_sources = models.ManyToManyField(SurveySource, through='CrossMatch')
+    catalog = models.ForeignKey(Catalog, on_delete=models.SET_NULL, blank=True, null=True)
 
     name = models.CharField(max_length=32, unique=True)
+    time = models.DateTimeField()  # date/time of observation, aka epoch
 
     ra = models.FloatField()  # degrees
     err_ra = models.FloatField()
