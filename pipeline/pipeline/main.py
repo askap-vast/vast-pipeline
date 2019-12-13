@@ -104,46 +104,70 @@ class Pipeline():
         # 2.2 Associate with other sources
         # order images by time
         images.sort(key=operator.attrgetter('time'))
-
-
         limit = Angle(self.config.ASSOCIATION_RADIUS * u.arcsec)
 
         # read the needed sources fields
-        c1_srcs = pd.read_parquet(
+        skyc1_srcs = pd.read_parquet(
             images[0].sources_path,
             columns=['id','ra','dec']
         )
+        skyc1_srcs['cat'] = pd.np.NaN
         # create base catalog
-        c1 = SkyCoord(
-            ra=c1_srcs.ra * u.degree,
-            dec=c1_srcs.dec * u.degree
+        skyc1 = SkyCoord(
+            ra=skyc1_srcs.ra * u.degree,
+            dec=skyc1_srcs.dec * u.degree
         )
         # initialise the df of catalogues with the base one
         catalogs_df = pd.DataFrame()
-        c1_df = self.create_catalog_df(c1_srcs)
-        for image in images[1:]:
-            c2_srcs = pd.read_parquet(
+        for it, image in enumerate(images[1:]):
+            logger.info(f'Association iteration: #{it + 1}')
+            # load skyc2 sources and create SkyCoord/sky catalog(skyc)
+            skyc2_srcs = pd.read_parquet(
                 image.sources_path,
                 columns=['id','ra','dec']
             )
-            c2 = SkyCoord(
-                ra=c2_srcs.ra * u.degree,
-                dec=c2_srcs.dec * u.degree
+            skyc2_srcs['cat'] = pd.np.NaN
+            skyc2 = SkyCoord(
+                ra=skyc2_srcs.ra * u.degree,
+                dec=skyc2_srcs.dec * u.degree
             )
-            idx, d2d, d3d = c1.match_to_catalog_sky(c2)
+            idx, d2d, d3d = skyc1.match_to_catalog_sky(skyc2)
+            # selection
+            sel = d2d <= limit
 
-            selection = d2d <= limit
-            # select from c1 df and append it to catalogue df
-            c1_df = c1_df.loc[selection]
-            catalogs_df = catalogs_df.append(c1_df)
+            # assign catalog temp id in skyc1 sorces df if not previously defined
+            start_elem = 0. if skyc1_srcs.cat.max() is pd.np.NaN else skyc1_srcs.cat.max()
+            print(start_elem)
+            nan_sel = skyc1_srcs.cat.isna().values
+            skyc1_srcs.loc[ sel & nan_sel, 'cat'] = (
+                skyc1_srcs.index[ sel & nan_sel].values + start_elem + 1.
+            )
+            # append skyc1 selection to catalogue df
+            catalogs_df = catalogs_df.append(skyc1_srcs.loc[sel])
 
-            # create c2 df and select from it, and append to catalogue df
-            c2_df = self.create_catalog_df(c2_srcs)
-            c2_df = c2_df.loc[idx[selection]]
-            catalogs_df = catalogs_df.append(c2_df)
+            # assign catalog temp id to skyc2 sorces from skyc1
+            skyc2_srcs.loc[idx[sel], 'cat'] = skyc1_srcs.loc[sel, 'cat'].values
+            # append skyc2 selection to catalogue df
+            catalogs_df = catalogs_df.append(skyc2_srcs.loc[idx[sel]])
 
-            # update c1 for next association iteration
-            c1 = SkyCoord([c1, c2[idx[~selection]]])
+            # update skyc1 and df for next association iteration
+            # # calculate average angle for skyc1
+            # tmp_skyc1_srcs = (
+            #     skyc1_srcs.loc[:, ['ra','dec']].copy()
+            #     .rename(columns={'ra':'ra1','dec':'dec1'})
+            # )
+            # tmp_skyc1_srcs.loc[idx[sel], 'ra2'] = skyc2_srcs.loc[idx[sel], 'ra'].values
+            # tmp_skyc1_srcs.loc[idx[sel], 'dec2'] = skyc2_srcs.loc[idx[sel], 'dec'].values
+            # tmp_skyc1_srcs['ra'] = tmp_skyc1_srcs.loc[:,['ra1','ra2']].mean(axis=1)
+            # skyc1 = SkyCoord(
+            #     ra=tmp_skyc1_srcs.ra* u.degree,
+            #     dec=tmp_skyc1_srcs.dec* u.degree
+            #     )
+            skyc1 = SkyCoord([skyc1, skyc2[idx[~sel]]])
+            skyc1_srcs = (
+                skyc1_srcs.append(skyc2_srcs.loc[idx[~sel]])
+                .reset_index(drop=True)
+            )
 
         # tidy the df of catalogues to drop duplicated entries
         # to have unique rows of c_name and src_id
@@ -151,13 +175,13 @@ class Pipeline():
 
         # calculated average ra and dec
         cat_df = (
-            catalogs_df.groupby('c_name')['ra','dec']
+            catalogs_df.groupby('cat')['ra','dec']
             .mean().reset_index()
             .rename(columns={'ra':'ave_ra', 'dec':'ave_dec'})
         )
         # generate the catalog models
         cat_df['dj_model'] = cat_df.apply(get_catalog_models, axis=1)
-        catalogs_df = catalogs_df.merge(cat_df, on='c_name')
+        catalogs_df = catalogs_df.merge(cat_df, on='cat')
         del cat_df
 
         # insert association in DB
@@ -219,10 +243,3 @@ class Pipeline():
         img.save()
 
         return img
-
-    @staticmethod
-    def create_catalog_df(src_df):
-        df = src_df.rename(columns={'id':'src_id'})
-        df['c_name'] = 'c' + df.index.astype(str)
-        return df
-
