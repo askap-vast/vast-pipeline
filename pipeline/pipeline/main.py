@@ -137,13 +137,12 @@ class Pipeline():
 
             # assign catalog temp id in skyc1 sorces df if not previously defined
             start_elem = 0. if skyc1_srcs.cat.max() is pd.np.NaN else skyc1_srcs.cat.max()
-            print(start_elem)
             nan_sel = skyc1_srcs.cat.isna().values
             skyc1_srcs.loc[ sel & nan_sel, 'cat'] = (
                 skyc1_srcs.index[ sel & nan_sel].values + start_elem + 1.
             )
             # append skyc1 selection to catalogue df
-            catalogs_df = catalogs_df.append(skyc1_srcs.loc[sel])
+            catalogs_df = catalogs_df.append(skyc1_srcs)
 
             # assign catalog temp id to skyc2 sorces from skyc1
             skyc2_srcs.loc[idx[sel], 'cat'] = skyc1_srcs.loc[sel, 'cat'].values
@@ -168,6 +167,17 @@ class Pipeline():
                 skyc1_srcs.append(skyc2_srcs.loc[idx[~sel]])
                 .reset_index(drop=True)
             )
+
+        # add leftover souces from skyc2
+        catalogs_df = (
+            catalogs_df.append(skyc2_srcs.loc[idx[~sel]])
+            .reset_index(drop=True)
+        )
+        start_elem = catalogs_df.cat.max() + 1.
+        nan_sel = catalogs_df.cat.isna().values
+        catalogs_df.loc[nan_sel, 'cat'] = (
+            catalogs_df.index[ nan_sel].values + start_elem
+        )
 
         # tidy the df of catalogues to drop duplicated entries
         # to have unique rows of c_name and src_id
