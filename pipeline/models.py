@@ -212,3 +212,6 @@ class Association(models.Model):
 
     probability = models.FloatField(default=1.)  # probability of association
     comment = models.CharField(max_length=100, blank=True)
+
+    def __str__(self):
+        return f'assoc prob: {self.probability:.2%}'
