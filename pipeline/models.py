@@ -43,25 +43,7 @@ class SurveySource(models.Model):
     image_name = models.CharField(max_length=100, blank=True)  # image file
 
     def __str__(self):
-        return f"{self.id} {self.name}"
-
-    @classmethod
-    def cone_search(cls, ra, dec, radius_deg):
-        """
-        Return all the SurveySources withing radius_deg of (ra,dec).
-        Returns a QuerySet of SurveySources, ordered by distance from (ra,dec) ascending
-        """
-        qs = (
-            SurveySource.objects
-            .extra(
-                select={"distance": "q3c_dist(ra, dec, %s, %s) * 3600"},
-                select_params=[ra, dec],
-                where=["q3c_radial_query(ra, dec, %s, %s, %s)"],
-                params=[ra, dec, radius_deg],
-            )
-            .order_by("distance")
-        )
-        return qs
+        return self.name
 
 
 class Dataset(models.Model):
@@ -77,7 +59,7 @@ class Dataset(models.Model):
             ),
         ]
     )
-    path = models.CharField(max_length=500)# the path to the dataset
+    path = models.FilePathField(max_length=200)# the path to the dataset
     comment = models.TextField(max_length=1000, default='', blank=True)  # A description of this dataset
 
     class Meta:
@@ -106,6 +88,7 @@ class Band(models.Model):
 
 
 class Catalog(models.Model):
+    dataset = models.ForeignKey(Dataset, on_delete=models.SET_NULL, null=True,)
     name = models.CharField(max_length=100)
 
     ave_ra = models.FloatField()
@@ -124,8 +107,8 @@ class Image(models.Model):
 
     polarisation = models.CharField(max_length=2)  # eg XX,YY,I,Q,U,V
     name = models.CharField(max_length=200)
-    path = models.CharField(max_length=500)# the path to the file containing this image
-    sources_path = models.CharField(max_length=500)# the path to the sources parquet that belongs to this image
+    path = models.FilePathField(max_length=200)# the path to the file containing this image
+    sources_path = models.FilePathField(max_length=200)# the path to the sources parquet that belongs to this image
 
     time = models.DateTimeField()  # date/time of observation, aka epoch
     jd = models.FloatField()  # date/time of observation in Julian Date format
@@ -150,52 +133,7 @@ class Image(models.Model):
         ordering = ['time']
 
     def __str__(self):
-        return "image:{0}".format(self.id)
-
-    @classmethod
-    def images_containing_position(cls, ra, dec):
-        """Return all the images that contain the given ra/dec"""
-        query = Image.objects.extra(
-            where=["q3c_ellipse_query(ra, dec, %s, %s, fov_bmaj," +
-            "(fov_bmin/fov_bmaj), 0)"],
-            params=[ra, dec]
-        )
-        return query
-
-    def overlapping_images(self):
-        """Return a QuerySet for the images whose FoV overlaps this one"""
-        return Image.objects.exclude(id=self.id).extra(
-            where=["q3c_radial_query(ra, dec, %s, %s, " +
-            "GREATEST(fov_bmaj,fov_bmin) + %s)"],
-            params=[self.ra, self.dec, max(self.fov_bmaj, self.fov_bmin)]
-        )
-
-    def get_beam_area(self):
-        """Returns the image beam area (square degrees)"""
-        return self.beam_bmaj * self.beam_bmin * math.pi
-
-    def blind_detection_count(self):
-        """The number of blind detections in this image"""
-        return self.flux_set.filter(blind_detection=True).count()
-
-    def good_fit_count(self):
-        return self.flux_set.filter(good_fit=True).count()
-
-    @classmethod
-    def get_extnames(cls):
-        """Returns a list of the distinct extname values in the entire table"""
-        return (
-            Image.objects.values_list('extname', flat=True)
-            .order_by('-extname').distinct()
-        )
-
-    @classmethod
-    def get_polarisations(cls):
-        """Return a list of distinct polarisations (strings)"""
-        return (
-            Image.objects.values_list('polarisation', flat=True)
-            .order_by('polarisation').distinct()
-        )
+        return self.name
 
 
 class Source(models.Model):
@@ -205,7 +143,11 @@ class Source(models.Model):
     """
     image = models.ForeignKey(Image, null=True, on_delete=models.CASCADE)  # first image seen in
     cross_match_sources = models.ManyToManyField(SurveySource, through='CrossMatch')
-    catalog = models.ForeignKey(Catalog, on_delete=models.SET_NULL, blank=True, null=True)
+    catalog = models.ManyToManyField(
+        Catalog,
+        through='Association',
+        through_fields=('source', 'catalog')
+    )
 
     name = models.CharField(max_length=32, unique=True)
     time = models.DateTimeField()  # date/time of observation, aka epoch
@@ -237,38 +179,6 @@ class Source(models.Model):
     def __str__(self):
         return self.name
 
-    # @classmethod
-    # def cone_search(cls, ra, dec, radius_deg):
-    #     """
-    #     Return all the sources withing radius_deg of (ra,dec).
-    #     Returns a QuerySet of Sources with "dist" field added, ordered by dist ascending
-    #     """
-    #     # Use Django's QuerySet.extra() feature to specify q3c functions in SQL.
-    #     # I tried putting the q3c_dist() in the order_by clause but Django seems to have a bug
-    #     # and it created invalid SQL. But putting it in the select works.
-    #     return Source.objects.extra(
-    #         select={"dist": f"q3c_dist(ra, dec, {ra}, {dec})"},
-    #         where=["q3c_radial_query(ra, dec, %s, %s, %s)"],
-    #         params=[ra, dec, radius_deg],
-    #         order_by=["dist"]
-    #     )
-
-    # @classmethod
-    # def nondetected_sources(cls, image):
-    #     """
-    #     Return all the sources that are within the image's field of view and have no
-    #     flux measurement for the given image id. Ie all the sources that were not found in the given image.
-    #     """
-    #     return (
-    #         Source.objects.extra(
-    #             where=["q3c_ellipse_query(ra, dec, %s, %s, %s, %s, 0) " +
-    #                 "AND id NOT IN (SELECT s.id FROM vast_source s, vast_flux" +
-    #                 "WHERE s.id=source_id AND image_id=%s) "],
-    #             params=[image.ra, image.dec, image.fov_bmaj,
-    #                 (image.fov_bmin / image.fov_bmaj), image.id]
-    #         )
-    #     )
-
 
 class CrossMatch(models.Model):
     """
@@ -291,3 +201,14 @@ class CrossMatch(models.Model):
     distance = models.FloatField()  # distance between source and survey source (degrees)
     probability = models.FloatField()  # probability of association
     comment = models.CharField(max_length=100)
+
+
+class Association(models.Model):
+    """
+    model association between sources and catalogs based on some parameters
+    """
+    source = models.ForeignKey(Source, on_delete=models.CASCADE)
+    catalog = models.ForeignKey(Catalog, on_delete=models.CASCADE)
+
+    probability = models.FloatField(default=1.)  # probability of association
+    comment = models.CharField(max_length=100, blank=True)
