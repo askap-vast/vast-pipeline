@@ -42,8 +42,11 @@ class FitsImage(Image):
         self.__get_frequency(header)
 
     def __get_header(self, hdu_index):
-        with fits.open(self.path) as hdulist:
-            hdu = hdulist[hdu_index]
+        try:
+            with fits.open(self.path) as hdulist:
+                hdu = hdulist[hdu_index]
+        except Exception as e:
+            raise e
         return hdu.header.copy()
 
     def __set_data_for_telescope(self, header):
