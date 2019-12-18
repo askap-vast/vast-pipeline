@@ -6,7 +6,7 @@ import pandas as pd
 from astropy.io import fits
 from astropy.wcs import WCS
 
-from ..survey.translators import tr_selavy
+from pipeline.survey.translators import tr_selavy
 
 logger = logging.getLogger(__name__)
 
