@@ -83,7 +83,11 @@ class FitsImage(Image):
         self.jd = self.time.to_julian_date()
 
 
-    def __get_coordinates(self, header, fits_naxis1, fits_naxis2, fits_cdelt1, fits_cdelt2):
+    def __get_img_coordinates(self, header, fits_naxis1, fits_naxis2, fits_cdelt1, fits_cdelt2):
+        """
+        set the image attributes ra, dec, fov_bmin and fov_bmaj, radius
+        from the image file header
+        """
         wcs = WCS(header, naxis=2)
         x = header[fits_naxis1]
         y = header[fits_naxis2]
