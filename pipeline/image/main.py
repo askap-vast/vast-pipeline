@@ -49,7 +49,7 @@ class FitsImage(Image):
             raise e
         return hdu.header.copy()
 
-    def __set_data_for_telescope(self, header):
+    def __set_img_attr_for_telescope(self, header):
         '''
         set the image attributes depending on the telescope type
         '''
