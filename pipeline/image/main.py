@@ -23,7 +23,7 @@ class Image(object):
 
 
 class FitsImage(Image):
-    """FitsImage class"""
+    """FitsImage class to model FITS files"""
 
     entire_image = True
 
