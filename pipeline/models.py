@@ -231,8 +231,8 @@ class Source(models.Model):
     flag_c4 = models.BooleanField(default=False, help_text='Fit flag from selavy') # Fit flag from selavy file
 
     has_siblings = models.BooleanField(default=False, help_text='Does the fit come from an island') # Does the fit come from an island? 
-    component_id = models.IntegerField(help_text='The ID of the component from which the source comes from') # The ID of the component from which the source comes from 
-    island_id    = models.IntegerField(help_text='The ID of the island from which the source comes from ') # The ID of the island from which the source comes from 
+    component_id = models.CharField(max_length=32, help_text='The ID of the component from which the source comes from') # The ID of the component from which the source comes from 
+    island_id    = models.CharField(max_length=32, help_text='The ID of the island from which the source comes from ') # The ID of the island from which the source comes from 
 
     monitor = models.BooleanField(default=False, help_text='Are we monitoring this location')  # Are we monitoring this location?
     persistent = models.BooleanField(default=False)  # Keep this source between pipeline runs
