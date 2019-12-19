@@ -14,7 +14,7 @@ class Survey(models.Model):
     comment = models.TextField(max_length=1000, blank=True)
     frequency = models.IntegerField(help_text='Frequency of the survey')
 
-class Meta:
+    class Meta:
         ordering = ['name']
 
     def __str__(self):
