@@ -56,13 +56,13 @@ class Pipeline():
 
             # do checks and fill in missing field for uploading sources
             # in DB (see fields in models.py -> Source model)
-            if sources.name.duplicated().any():
+            if sources.component_id.duplicated().any():
                 raise Exception('Found duplicated names in sources')
 
             sources['image_id'] = img.id
             # append img prefix to source name
             img_prefix = image.name.split('.i.', 1)[-1].split('.', 1)[0] + '_'
-            sources['name'] = img_prefix + sources['name']
+            sources['name'] = img_prefix + sources['component_id']
             logger.info(f'Processed sources dataframe of shape: {sources.shape}')
 
             # # save sources to parquet file in dataset folder

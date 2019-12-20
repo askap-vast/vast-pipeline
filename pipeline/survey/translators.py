@@ -105,17 +105,17 @@ tr_nvss = {
 # Name -> name of the Source Model fields (see pipeline/models.py)
 # Dtype -> the data type as define in the field declaration
 tr_selavy = {
-    "island_id": {'name': "island", 'dtype': np.dtype(str)},
-    "component_id": {'name': "name", 'dtype': np.dtype(str)},
+    "island_id": {'name': "island_id", 'dtype': np.dtype(str)},
+    "component_id": {'name': "component_id", 'dtype': np.dtype(str)},
     "rms_image": {'name': "local_rms", 'dtype': np.dtype(float)},
     "ra_deg_cont": {'name': "ra", 'dtype': np.dtype(float)},
-    "ra_err": {'name': "err_ra", 'dtype': np.dtype(float)},
+    "ra_err": {'name': "ra_err", 'dtype': np.dtype(float)},
     "dec_deg_cont": {'name': "dec", 'dtype': np.dtype(float)},
-    "dec_err": {'name': "err_dec", 'dtype': np.dtype(float)},
-    "flux_peak": {'name': "peak_flux", 'dtype': np.dtype(float)},
-    "flux_peak_err": {'name': "err_peak_flux", 'dtype': np.dtype(float)},
-    "flux_int": {'name': "total_flux", 'dtype': np.dtype(float)},
-    "flux_int_err": {'name': "err_total_flux", 'dtype': np.dtype(float)},
+    "dec_err": {'name': "dec_err", 'dtype': np.dtype(float)},
+    "flux_peak": {'name': "flux_peak", 'dtype': np.dtype(float)},
+    "flux_peak_err": {'name': "flux_peak_err", 'dtype': np.dtype(float)},
+    "flux_int": {'name': "flux_int", 'dtype': np.dtype(float)},
+    "flux_int_err": {'name': "flux_int_err", 'dtype': np.dtype(float)},
     "maj_axis": {'name': "bmaj", 'dtype': np.dtype(float)},
     "maj_axis_err": {'name': "err_bmaj", 'dtype': np.dtype(float)},
     "min_axis": {'name': "bmin", 'dtype': np.dtype(float)},
@@ -125,7 +125,11 @@ tr_selavy = {
     "maj_axis_deconv": {'name': "psf_bmaj", 'dtype': np.dtype(float)},
     "min_axis_deconv": {'name': "psf_bmin", 'dtype': np.dtype(float)},
     "pos_ang_deconv": {'name': "psf_pa", 'dtype': np.dtype(float)},
-    "flag_c4": {'name': "flag", 'dtype': np.dtype(float)},
+    "flag_c4": {'name': "flag_c4", 'dtype': np.dtype(bool)},
+    "chi_squared_fit": {'name': "chi_squared_fit", 'dtype': np.dtype(float)},
+    "spectral_index": {'name': "spectral_index", 'dtype': np.dtype(float)},
+    "spectral_index_from_TT": {'name': "spectral_index_from_TT", 'dtype': np.dtype(bool)},
+    "has_siblings": {'name': "has_siblings", 'dtype': np.dtype(bool)},
 }
 
 translators = {

@@ -33,10 +33,9 @@ class FitsImage(Image):
 
         # set other attributes
         header = self.__get_header(hdu_index)
-        self.polarisation = header.get('STOKES', 'I')
 
         # set the rest of the attributes
-        self.__set_data_for_telescope(header)
+        self.__set_img_attr_for_telescope(header)
 
         # get the frequency
         self.__get_frequency(header)
@@ -53,6 +52,8 @@ class FitsImage(Image):
         '''
         set the image attributes depending on the telescope type
         '''
+        self.polarisation = header.get('STOKES', 'I')
+        self.duration = float(header.get('DURATION', 0.))
         self.datetime = pd.Timestamp('1900-01-01T00:00:00')
         self.beam_bmaj = 0.
         self.beam_bmin = 0.
@@ -77,7 +78,7 @@ class FitsImage(Image):
             }
 
             # set the coordinate attributes
-            self.__get_coordinates(**params)
+            self.__get_img_coordinates(**params)
 
         # get the time as Julian Datetime using Pandas function
         self.jd = self.time.to_julian_date()
