@@ -73,7 +73,6 @@ class SurveySource(models.Model):
         help_text='Name of survey image where measurement was made'
     )# image file
 
-
     def __str__(self):
         return f"{self.id} {self.name}"
 
@@ -190,6 +189,7 @@ class Image(models.Model):
         help_text='Julian date of the observation (days)'
     )# date/time of observation in Julian Date format
     duration =  models.FloatField(
+        default=0.,
         help_text='Duration of the observation'
     )# Duration of the observation
 
