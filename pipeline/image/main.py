@@ -135,25 +135,15 @@ class FitsImage(Image):
         self.freq_eff = None
         self.freq_bw = None
         try:
-            if ('TELESCOP' in header) and (header['TELESCOP'] in ('LOFAR', 'AARTFAAC')):
-                self.freq_eff = header['RESTFRQ']
-                if 'RESTBW' in header:
-                    self.freq_bw = header['RESTBW']
-
-                else:
-                    logger.warning("bandwidth header missing in image {},"
-                                   " setting to 1 MHz".format(self.url))
-                    self.freq_bw = 1e6
+            if ('ctype3' in header) and (header['ctype3'] in ('FREQ', 'VOPT')):
+                self.freq_eff = header['crval3']
+                self.freq_bw = header['cdelt3'] if 'cdelt3' in header else 0.0
+            elif ('ctype4' in header) and (header['ctype4'] in ('FREQ', 'VOPT')):
+                self.freq_eff = header['crval4']
+                self.freq_bw = header['cdelt4'] if 'cdelt4' in header else 0.0
             else:
-                if ('ctype3' in header) and (header['ctype3'] in ('FREQ', 'VOPT')):
-                    self.freq_eff = header['crval3']
-                    self.freq_bw = header['cdelt3']
-                elif ('ctype4' in header) and (header['ctype4'] in ('FREQ', 'VOPT')):
-                    self.freq_eff = header['crval4']
-                    self.freq_bw = header['cdelt4']
-                else:
-                    self.freq_eff = header['restfreq']
-                    self.freq_bw = 0.0
+                self.freq_eff = header['restfreq']
+                self.freq_bw = header['restbw'] if 'restbw' in header else 0.0
         except Exception:
             msg = f"Frequency not specified in headers for {self.name}"
             logger.error(msg)
