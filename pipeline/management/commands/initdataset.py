@@ -34,7 +34,7 @@ class Command(BaseCommand):
             # set the traceback on
             options['traceback'] = True
 
-        name = options['dataset folder name'][0]
+        name = options['dataset_folder_path'][0]
         # check for duplicated dataset name
         ds = Dataset.objects.filter(name__exact=name)
         if ds:
