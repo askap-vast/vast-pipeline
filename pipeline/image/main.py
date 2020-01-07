@@ -180,7 +180,7 @@ class SelavyImage(FitsImage):
 
         # do checks and fill in missing field for uploading sources
         # in DB (see fields in models.py -> Source model)
-        if df.name.duplicated().any():
+        if df.component_id.duplicated().any():
             raise Exception('Found duplicated names in sources')
 
         # add fields from image and fix name column
@@ -189,6 +189,6 @@ class SelavyImage(FitsImage):
 
         # append img prefix to source name
         img_prefix = dj_image.name.split('.i.', 1)[-1].split('.', 1)[0] + '_'
-        df['name'] = img_prefix + df['name']
+        df['name'] = img_prefix + df.component_id
 
         return df

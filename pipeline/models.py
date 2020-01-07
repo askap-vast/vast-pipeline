@@ -165,6 +165,9 @@ class Image(models.Model):
         Dataset, on_delete=models.SET_NULL, blank=True, null=True
     )
 
+    sources_path = models.FilePathField(
+        max_length=200
+    )# the path to the sources parquet that belongs to this image
     polarisation = models.CharField(
         max_length=2,
         help_text='Polarisation of the image e.g. I,XX,YY,Q,U,V'
@@ -195,7 +198,7 @@ class Image(models.Model):
         )# Is the image valid?
 
     time = models.DateTimeField(
-    help_text='Date of observation'
+        help_text='Date of observation'
     )# date/time of observation, aka epoch
     jd = models.FloatField(
         help_text='Julian date of the observation (days)'
