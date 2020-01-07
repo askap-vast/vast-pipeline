@@ -103,7 +103,7 @@ class FitsImage(Image):
         # TODO: move unused pixel as argument
         unusedpix = 0.
         usable_radius_pix = self.__get_radius_pixels(header, fits_naxis1, fits_naxis2) - unusedpix
-        cdelt1, cdelt2 = self.__get_fits_cdelt(header)
+        cdelt1, cdelt2 = proj_plane_pixel_scales(WCS(header).celestial)
         self.fov_bmin = usable_radius_pix * abs(cdelt1)
         self.fov_bmaj = usable_radius_pix * abs(cdelt2)
 
@@ -123,13 +123,6 @@ class FitsImage(Image):
             # We simply place the largest circle we can in the centre.
             diameter = min(header[fits_naxis1], header[fits_naxis2])
         return diameter / 2.
-
-    @staticmethod
-    def __get_fits_cdelt(header):
-        if ('CD1_1' in header) and ('CD1_2' in header):
-            return proj_plane_pixel_scales(WCS(header).celestial)
-        else:
-            return header['CDELT1'], header['CDELT2']
 
     def __get_frequency(self, header):
         """
