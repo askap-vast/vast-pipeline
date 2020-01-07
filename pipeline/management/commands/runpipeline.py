@@ -47,6 +47,9 @@ class Command(BaseCommand):
         # grab only the dataset name from the path
         dataset_name = dataset_name.split(os.path.sep)[-1]
 
+        # Create the dataset in DB
+        dataset = self.get_create_dataset(dataset_name)
+
         cfg_path = os.path.join(os.path.realpath(dataset_path), 'config.py')
 
         # load and validate dataset configs

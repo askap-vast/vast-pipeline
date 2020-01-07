@@ -10,7 +10,7 @@ from pipeline.models import Cube, Image, Source, Band, Dataset, CrossMatch
 logger = logging.getLogger(__name__)
 
 
-def clear_all_data(purge=False):
+def clear_database(purge=False):
     """
     Delete all data from the database
       purge - if True, all rows are deleted. If False, manual edits are kept eg persistent sources
@@ -79,4 +79,4 @@ class Command(BaseCommand):
 
         msg = "Deleting *all* data including manual edits" if options['purge'] else "Deleting all data except manual edits"
         logger.info(msg)
-        clear_all_data(purge=options['purge'])
+        clear_database(purge=options['purge'])

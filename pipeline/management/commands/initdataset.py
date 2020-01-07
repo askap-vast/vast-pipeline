@@ -4,6 +4,7 @@ from shutil import copyfile
 
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings as cfg
+
 from pipeline.models import Dataset
 
 logger = logging.getLogger(__name__)
@@ -18,7 +19,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         # positional arguments
         parser.add_argument(
-            'dataset folder name',
+            'dataset_folder_path',
             nargs=1,
             type=str,
             help='path to the dataset folder'

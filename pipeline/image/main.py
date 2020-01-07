@@ -5,8 +5,9 @@ import numpy as np
 import pandas as pd
 from astropy.io import fits
 from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_scales
 
-from ..survey.translators import tr_selavy
+from pipeline.survey.translators import tr_selavy
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ class Image(object):
 
 
 class FitsImage(Image):
-    """FitsImage class"""
+    """FitsImage class to model FITS files"""
 
     entire_image = True
 
@@ -33,23 +34,27 @@ class FitsImage(Image):
 
         # set other attributes
         header = self.__get_header(hdu_index)
-        self.polarisation = header.get('STOKES', 'I')
 
         # set the rest of the attributes
-        self.__set_data_for_telescope(header)
+        self.__set_img_attr_for_telescope(header)
 
         # get the frequency
         self.__get_frequency(header)
 
     def __get_header(self, hdu_index):
-        with fits.open(self.path) as hdulist:
-            hdu = hdulist[hdu_index]
+        try:
+            with fits.open(self.path) as hdulist:
+                hdu = hdulist[hdu_index]
+        except Exception as e:
+            raise e
         return hdu.header.copy()
 
-    def __set_data_for_telescope(self, header):
+    def __set_img_attr_for_telescope(self, header):
         '''
         set the image attributes depending on the telescope type
         '''
+        self.polarisation = header.get('STOKES', 'I')
+        self.duration = float(header.get('DURATION', 0.))
         self.datetime = pd.Timestamp('1900-01-01T00:00:00')
         self.beam_bmaj = 0.
         self.beam_bmin = 0.
@@ -69,18 +74,20 @@ class FitsImage(Image):
                 'header': header,
                 'fits_naxis1': 'NAXIS1',
                 'fits_naxis2': 'NAXIS2',
-                'fits_cdelt1': 'CDELT1',
-                'fits_cdelt2': 'CDELT2'
             }
 
             # set the coordinate attributes
-            self.__get_coordinates(**params)
+            self.__get_img_coordinates(**params)
 
         # get the time as Julian Datetime using Pandas function
         self.jd = self.time.to_julian_date()
 
 
-    def __get_coordinates(self, header, fits_naxis1, fits_naxis2, fits_cdelt1, fits_cdelt2):
+    def __get_img_coordinates(self, header, fits_naxis1, fits_naxis2):
+        """
+        set the image attributes ra, dec, fov_bmin and fov_bmaj, radius
+        from the image file header
+        """
         wcs = WCS(header, naxis=2)
         x = header[fits_naxis1]
         y = header[fits_naxis2]
@@ -96,8 +103,9 @@ class FitsImage(Image):
         # TODO: move unused pixel as argument
         unusedpix = 0.
         usable_radius_pix = self.__get_radius_pixels(header, fits_naxis1, fits_naxis2) - unusedpix
-        self.fov_bmin = usable_radius_pix * abs(header[fits_cdelt1])
-        self.fov_bmaj = usable_radius_pix * abs(header[fits_cdelt2])
+        cdelt1, cdelt2 = proj_plane_pixel_scales(WCS(header).celestial)
+        self.fov_bmin = usable_radius_pix * abs(cdelt1)
+        self.fov_bmaj = usable_radius_pix * abs(cdelt2)
 
         # set the pixels radius
         # TODO: check calcs
@@ -127,25 +135,15 @@ class FitsImage(Image):
         self.freq_eff = None
         self.freq_bw = None
         try:
-            if ('TELESCOP' in header) and (header['TELESCOP'] in ('LOFAR', 'AARTFAAC')):
-                self.freq_eff = header['RESTFRQ']
-                if 'RESTBW' in header:
-                    self.freq_bw = header['RESTBW']
-
-                else:
-                    logger.warning("bandwidth header missing in image {},"
-                                   " setting to 1 MHz".format(self.url))
-                    self.freq_bw = 1e6
+            if ('ctype3' in header) and (header['ctype3'] in ('FREQ', 'VOPT')):
+                self.freq_eff = header['crval3']
+                self.freq_bw = header['cdelt3'] if 'cdelt3' in header else 0.0
+            elif ('ctype4' in header) and (header['ctype4'] in ('FREQ', 'VOPT')):
+                self.freq_eff = header['crval4']
+                self.freq_bw = header['cdelt4'] if 'cdelt4' in header else 0.0
             else:
-                if ('ctype3' in header) and (header['ctype3'] in ('FREQ', 'VOPT')):
-                    self.freq_eff = header['crval3']
-                    self.freq_bw = header['cdelt3']
-                elif ('ctype4' in header) and (header['ctype4'] in ('FREQ', 'VOPT')):
-                    self.freq_eff = header['crval4']
-                    self.freq_bw = header['cdelt4']
-                else:
-                    self.freq_eff = header['restfreq']
-                    self.freq_bw = 0.0
+                self.freq_eff = header['restfreq']
+                self.freq_bw = header['restbw'] if 'restbw' in header else 0.0
         except Exception:
             msg = f"Frequency not specified in headers for {self.name}"
             logger.error(msg)

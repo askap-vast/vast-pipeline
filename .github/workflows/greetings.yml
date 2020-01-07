@@ -1,0 +1,13 @@
+name: Greetings
+
+on: [pull_request, issues]
+
+jobs:
+  greeting:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/first-interaction@v1
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        issue-message: 'Congrats on your first issue and Welcome to Askap pipeline development: please assign the issue to a milestone if not auto-assigned'
+        pr-message: 'Congrats on your first PR: please assign the PR to a milestone, and to a reviewer if not auto-assigned'

@@ -15,6 +15,14 @@ then
     echo ""
     echo "Help: This will create a postgresql user 'askap' with login password 'askappsw'"
     echo "      and a database 'askapdb' and grant to 'askap' user all the priveleges to 'askapdb'"
+    echo "Note: the arguments need to be passed in that order because"
+    echo "\$1  ->  HOST in which the database runs"
+    echo "\$2  ->  PORT to connect to on the host"
+    echo "\$3  ->  ADMINUSER the administrator user of the database"
+    echo "\$4  ->  ADMINPSW the administrator password"
+    echo "\$5  ->  USER the user to create"
+    echo "\$6  ->  USERPSW the user password"
+    echo "\$6  ->  DBNAME the database name to create inside the database"
 	[ $PS1 ] && return || exit
 fi
 

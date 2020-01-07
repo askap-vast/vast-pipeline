@@ -66,7 +66,7 @@ As you can see does not matter if the CLI client is for higher PostgreSQL versio
 Basic Start/Stop commands are `docker start NAME_OF_MyCONTAINER` and `docker stop NAME_OF_MyCONTAINER`. Remember to start your container after rebooting your machine, if you don't have docker daemon configured to autoload!
 
 ## Pipeline Python Environment Installation
-I strongly recommend to setup a virtual environment, in whichyou can then install all these `Python` modules into.
+I strongly recommend to setup a virtual environment, in which you can then install all these `Python` modules into.
 This will avoid conflicts either with the system version of python, or with other code that you have that require different versions of these modules.
 
 Steps:
