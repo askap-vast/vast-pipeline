@@ -1,6 +1,7 @@
 import os
 import logging
 import datetime
+from math import floor
 from importlib.util import spec_from_file_location, module_from_spec
 
 from django.conf import settings
@@ -98,3 +99,70 @@ def check_read_write_perm(path, perm='W'):
         raise IOError(msg)
 
     pass
+
+
+def deg2sex(deg):
+    """ Converts angle in degrees to sexagesimal notation
+    Returns tuple containing (sign, (degrees, minutes & seconds))
+    sign is -1 or 1
+
+    >>> deg2sex(12.582438888888889)
+    (12, 34, 56.78000000000182)
+
+    >>> deg2sex(-12.582438888888889)
+    (-12, 34, 56.78000000000182)
+
+    """
+
+    sign = -1 if deg < 0 else 1
+    adeg = abs(deg)
+    degf = floor(adeg)
+    mins = (adeg - degf) * 60.
+    minsf = int(floor(mins))
+    secs = (mins - minsf) * 60.
+    return (sign, (degf, minsf, secs))
+
+
+def deg2dms(deg):
+    """Convert angle in degrees into DMS using format. Default: '02d:02d:05.2f'
+
+    >>> deg2dms(12.582438888888889)
+    '+12:34:56.78'
+
+    >>> deg2dms(2.582438888888889)
+    '+02:34:56.78'
+
+    >>> deg2dms(-12.582438888888889)
+    '-12:34:56.78'
+
+    # TODO
+    >>> deg2dms(12.582438888888889, format='%dd%dm%.2fs')
+    '+12d34m56.78s'
+    """
+
+    sign, sex = deg2sex(deg)
+    signchar = "+" if sign == 1 else "-"
+    return f'{signchar}{sex[0]:02d}:{sex[1]:02d}:{sex[2]:05.2f}'
+
+
+def deg2hms(deg):
+    """Convert angle in degrees into HMS using format. Default: '%d:%d:%.2f'
+
+    >>> deg2hms(188.73658333333333)
+    '12:34:56.78'
+
+
+    >>> deg2hms(-188.73658333333333)
+    '-12:34:56.78'
+
+    # TODO
+    >>> deg2hms(-188.73658333333333, format='%dh%dm%.2fs')
+    '-12h34m56.78s'
+
+    """
+
+    # TODO: why it this?
+    # We only handle positive RA values
+    # assert deg >= 0
+    sign, sex = deg2sex(deg / 15.)
+    return f'{sex[0]:02d}:{sex[1]:02d}:{sex[2]:05.2f}'

@@ -158,7 +158,7 @@ class SelavyImage(FitsImage):
         self.selavy_path = selavy_path
         super().__init__(path, hdu_index)
 
-    def read_selavy(self):
+    def read_selavy(self, dj_image):
         """
         read the sources from the selavy catalogue, select wanted columns
         and remap them to correct names
@@ -177,4 +177,18 @@ class SelavyImage(FitsImage):
             key = tr_selavy[ky]
             if df[key['name']].dtype != key['dtype']:
                 df[key['name']] = df[key['name']].astype(key['dtype'])
+
+        # do checks and fill in missing field for uploading sources
+        # in DB (see fields in models.py -> Source model)
+        if df.component_id.duplicated().any():
+            raise Exception('Found duplicated names in sources')
+
+        # add fields from image and fix name column
+        df['image_id'] = dj_image.id
+        df['time'] = dj_image.time
+
+        # append img prefix to source name
+        img_prefix = dj_image.name.split('.i.', 1)[-1].split('.', 1)[0] + '_'
+        df['name'] = img_prefix + df.component_id
+
         return df

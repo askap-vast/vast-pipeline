@@ -47,9 +47,6 @@ class Command(BaseCommand):
         # grab only the dataset name from the path
         dataset_name = dataset_name.split(os.path.sep)[-1]
 
-        # Create the dataset in DB
-        dataset = self.get_create_dataset(dataset_name)
-
         cfg_path = os.path.join(os.path.realpath(dataset_path), 'config.py')
 
         # load and validate dataset configs
@@ -57,6 +54,9 @@ class Command(BaseCommand):
             cfg = load_validate_cfg(cfg_path)
         except Exception as e:
             raise CommandError(f'Config error:\n{e}')
+
+        # Create the dataset in DB
+        dataset = self.get_create_dataset(dataset_name, cfg.DATASET_PATH)
 
         logger.info(f"Database: {settings.DATABASES['default']['NAME']}")
         logger.info(f"Source finder: {cfg.SOURCE_FINDER}")
@@ -71,15 +71,15 @@ class Command(BaseCommand):
         pipeline = Pipeline(config=cfg)
 
         # run the pipeline operations
-        pipeline.process_pipeline(dataset.id)
+        pipeline.process_pipeline(dataset)
 
     @staticmethod
-    def get_create_dataset(name):
+    def get_create_dataset(name, path):
         ds = Dataset.objects.filter(name__exact=name)
         if ds:
             return ds.get()
 
-        ds = Dataset(name=name)
+        ds = Dataset(name=name, path=path)
         ds.save()
 
         return ds

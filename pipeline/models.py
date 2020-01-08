@@ -112,6 +112,7 @@ class Dataset(models.Model):
             ),
         ]
     )
+    path = models.FilePathField(max_length=200)# the path to the dataset
     comment = models.TextField(
         max_length=1000,
         default='',
@@ -146,6 +147,17 @@ class Band(models.Model):
         return self.name
 
 
+class Catalog(models.Model):
+    dataset = models.ForeignKey(Dataset, on_delete=models.SET_NULL, null=True,)
+    name = models.CharField(max_length=100)
+
+    ave_ra = models.FloatField()
+    ave_dec = models.FloatField()
+
+    def __str__(self):
+        return self.name
+
+
 class Image(models.Model):
     """An image is a 2D radio image from a cube"""
     band = models.ForeignKey(Band, on_delete=models.CASCADE)
@@ -153,6 +165,9 @@ class Image(models.Model):
         Dataset, on_delete=models.SET_NULL, blank=True, null=True
     )
 
+    sources_path = models.FilePathField(
+        max_length=200
+    )# the path to the sources parquet that belongs to this image
     polarisation = models.CharField(
         max_length=2,
         help_text='Polarisation of the image e.g. I,XX,YY,Q,U,V'
@@ -183,7 +198,7 @@ class Image(models.Model):
         )# Is the image valid?
 
     time = models.DateTimeField(
-    help_text='Date of observation'
+        help_text='Date of observation'
     )# date/time of observation, aka epoch
     jd = models.FloatField(
         help_text='Julian date of the observation (days)'
@@ -240,52 +255,7 @@ class Image(models.Model):
         ordering = ['time']
 
     def __str__(self):
-        return "image:{0}".format(self.id)
-
-    @classmethod
-    def images_containing_position(cls, ra, dec):
-        """Return all the images that contain the given ra/dec"""
-        query = Image.objects.extra(
-            where=["q3c_ellipse_query(ra, dec, %s, %s, fov_bmaj," +
-            "(fov_bmin/fov_bmaj), 0)"],
-            params=[ra, dec]
-        )
-        return query
-
-    def overlapping_images(self):
-        """Return a QuerySet for the images whose FoV overlaps this one"""
-        return Image.objects.exclude(id=self.id).extra(
-            where=["q3c_radial_query(ra, dec, %s, %s, " +
-            "GREATEST(fov_bmaj,fov_bmin) + %s)"],
-            params=[self.ra, self.dec, max(self.fov_bmaj, self.fov_bmin)]
-        )
-
-    def get_beam_area(self):
-        """Returns the image beam area (square degrees)"""
-        return self.beam_bmaj * self.beam_bmin * math.pi
-
-    def blind_detection_count(self):
-        """The number of blind detections in this image"""
-        return self.flux_set.filter(blind_detection=True).count()
-
-    def good_fit_count(self):
-        return self.flux_set.filter(good_fit=True).count()
-
-    @classmethod
-    def get_extnames(cls):
-        """Returns a list of the distinct extname values in the entire table"""
-        return (
-            Image.objects.values_list('extname', flat=True)
-            .order_by('-extname').distinct()
-        )
-
-    @classmethod
-    def get_polarisations(cls):
-        """Return a list of distinct polarisations (strings)"""
-        return (
-            Image.objects.values_list('polarisation', flat=True)
-            .order_by('polarisation').distinct()
-        )
+        return self.name
 
 
 class Source(models.Model):
@@ -301,6 +271,11 @@ class Source(models.Model):
     cross_match_sources = models.ManyToManyField(
         SurveySource,
         through='CrossMatch'
+    )
+    catalog = models.ManyToManyField(
+        Catalog,
+        through='Association',
+        through_fields=('source', 'catalog')
     )
 
     name = models.CharField(max_length=32, unique=True)
@@ -404,3 +379,17 @@ class CrossMatch(models.Model):
     distance = models.FloatField()# distance source to survey source (degrees)
     probability = models.FloatField()# probability of association
     comment = models.CharField(max_length=100)
+
+
+class Association(models.Model):
+    """
+    model association between sources and catalogs based on some parameters
+    """
+    source = models.ForeignKey(Source, on_delete=models.CASCADE)
+    catalog = models.ForeignKey(Catalog, on_delete=models.CASCADE)
+
+    probability = models.FloatField(default=1.)  # probability of association
+    comment = models.CharField(max_length=100, blank=True)
+
+    def __str__(self):
+        return f'assoc prob: {self.probability:.2%}'
