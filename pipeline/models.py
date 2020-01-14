@@ -176,7 +176,7 @@ class Image(models.Model):
         max_length=200,
             help_text='Name of the image'
             )
-    path = models.CharField(
+    path = models.FilePathField(
         max_length=500,
         help_text='Path to the file containing the image'
         )# the path to the file containing this image
