@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# static files for production
+staticfiles/
+
 # Distribution / packaging
 .Python
 build/
