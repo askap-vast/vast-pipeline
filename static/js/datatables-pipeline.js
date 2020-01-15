@@ -1,13 +1,10 @@
 // Call the dataTables jQuery plugin
 $(document).ready(function() {
-  $('#dataTable').DataTable({
-    "serverSide": true,
-    "ajax": "/api/datasets/?format=datatables",
-    "columns": [
-      {"data": "id"},
-      {"data": "name"},
-      {"data": "path"},
-      {"data": "comment"},
-    ]
-  });
+  const dataConf = JSON.parse(document.getElementById('datatable-conf').textContent);
+  const dataTableConf = {
+    serverSide: true,
+    ajax: dataConf.api,
+    columns: dataConf.colsFields,
+  };
+  var table = $('#dataTable').DataTable(dataTableConf);
 });
