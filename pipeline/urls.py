@@ -10,10 +10,12 @@ app_name = 'pipeline'
 
 router = routers.DefaultRouter()
 router.register(r'datasets', views.DatasetViewSet, 'api_datasets')
+router.register(r'images', views.ImageViewSet, 'api_images')
+router.register(r'sources', views.SourceViewSet, 'api_sources')
 
 urlpatterns = [
     path('datasets', views.dataset_index, name='dataset_index'),
-    path('images', TemplateView.as_view(template_name='generic_table.html'), name='image_index'),
-    path('sources', TemplateView.as_view(template_name='generic_table.html'), name='source_index'),
+    path('images', views.image_index, name='image_index'),
+    path('sources', views.source_index, name='source_index'),
     path('api/', include(router.urls))
 ]
