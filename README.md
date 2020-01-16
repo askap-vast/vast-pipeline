@@ -25,7 +25,10 @@ DATABASES = {
     }
 }
 ```
-3. Create the directories listed at the bottom of settings.py
+
+NOTE: the connection details (host and port) are the same that you setup in [`INSTALL.md`](./INSTALL.md). The database/user names must not contain any spaces or dashes, so use the underscore if you want, e.g. `this_is_my_db_name`.
+
+3. Create the directories listed at the bottom of `settings.py`
 
 ```Python
 # reference surveys default folder
@@ -34,8 +37,6 @@ PROJECT_WORKING_DIR = os.path.join(BASE_DIR, 'pipeline-projects')
 # reference surveys default folder
 SURVEYS_WORKING_DIR = os.path.join(BASE_DIR, 'reference-surveys')
 ```
-
-NOTE: the connection details (host and port) are the same that you setup in [`INSTALL.md`](./INSTALL.md). The database/user names must not contain any spaces or dashes, so use the underscore if you want, e.g. `this_is_my_db_name`.
 
 4. Create the database user, database name and enabling the `Q3C` extension, by running:
 
