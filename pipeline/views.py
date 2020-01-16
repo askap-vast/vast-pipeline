@@ -20,6 +20,7 @@ def dataset_index(request):
                 'api': '/api/datasets/?format=datatables',
                 'colsFields': [{'data': x} for x in cols],
                 'colsNames': ['Id','Name','Path','Comment'],
+                'search': True,
             }
         }
     )
@@ -45,6 +46,7 @@ def image_index(request):
                 'api': '/api/images/?format=datatables',
                 'colsFields': [{'data': x} for x in cols],
                 'colsNames': ['Time','Name','RA','DEC'],
+                'search': True,
             }
         }
     )
@@ -70,6 +72,7 @@ def source_index(request):
                 'api': '/api/sources/?format=datatables',
                 'colsFields': [{'data': x} for x in cols],
                 'colsNames': ['Name','RA','DEC', 'Flux', 'Peak Flux'],
+                'search': True,
             }
         }
     )
