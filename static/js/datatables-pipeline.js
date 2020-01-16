@@ -2,6 +2,7 @@
 $(document).ready(function() {
   const dataConf = JSON.parse(document.getElementById('datatable-conf').textContent);
   const dataTableConf = {
+    hover: true,
     serverSide: true,
     ajax: dataConf.api,
     columns: dataConf.colsFields,
