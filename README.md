@@ -28,17 +28,7 @@ DATABASES = {
 
 NOTE: the connection details (host and port) are the same that you setup in [`INSTALL.md`](./INSTALL.md). The database/user names must not contain any spaces or dashes, so use the underscore if you want, e.g. `this_is_my_db_name`.
 
-3. Create the directories listed at the bottom of `settings.py`
-
-```Python
-# reference surveys default folder
-PROJECT_WORKING_DIR = os.path.join(BASE_DIR, 'pipeline-projects')
-
-# reference surveys default folder
-SURVEYS_WORKING_DIR = os.path.join(BASE_DIR, 'reference-surveys')
-```
-
-4. Create the database user, database name and enabling the `Q3C` extension, by running:
+3. Create the database user, database name and enabling the `Q3C` extension, by running:
 
 ```bash
 $:./init-tools/init-db.sh localhost 5432 postgres postgres askap askappsw askapdb
@@ -66,11 +56,44 @@ creating db 'askap_pipe_dev', enable Q3C plugin
 CREATE EXTENSION
 ```
 
-5. Create the databse tables. Remember first to activate the Python environment as described in [`INSTALL.md`](./INSTALL.md).
+4. Create the database tables. Remember first to activate the Python environment as described in [`INSTALL.md`](./INSTALL.md).
 
 ```bash
 (pipeline_env)$:./manage.py makemigrations
 (pipeline_env)$:./manage.py migrate
+```
+
+5. Create the directories listed at the bottom of `settings.py`
+
+```Python
+# reference surveys default folder
+PROJECT_WORKING_DIR = os.path.join(BASE_DIR, 'pipeline-projects')
+
+# reference surveys default folder
+SURVEYS_WORKING_DIR = os.path.join(BASE_DIR, 'reference-surveys')
+```
+
+Create the folders with (Note: make sure you change BASE_DIR to askap-pipeline or whatever folder you clone the repo in):
+
+```bash
+cd BASE_DIR && mkdir pipeline-projects && mkdir reference-surveys
+```
+
+After creating the folders your directory tree should look like this:
+
+```bash
+askap-pipeline/
+├── init-tools
+├── pipeline
+├── reference-surveys
+├── requirements
+├── static
+├── templates
+├── pipeline-projects
+├── webinterface
+├── INSTALL.md
+├── manage.py
+└── README.md
 ```
 
 ## Pipeline Usage
