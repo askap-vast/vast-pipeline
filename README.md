@@ -25,10 +25,19 @@ DATABASES = {
     }
 }
 ```
+3. Create the directories listed at the bottom of settings.py
+
+```Python
+# reference surveys default folder
+PROJECT_WORKING_DIR = os.path.join(BASE_DIR, 'pipeline-projects')
+
+# reference surveys default folder
+SURVEYS_WORKING_DIR = os.path.join(BASE_DIR, 'reference-surveys')
+```
 
 NOTE: the connection details (host and port) are the same that you setup in [`INSTALL.md`](./INSTALL.md). The database/user names must not contain any spaces or dashes, so use the underscore if you want, e.g. `this_is_my_db_name`.
 
-3. Create the database user, database name and enabling the `Q3C` extension, by running:
+4. Create the database user, database name and enabling the `Q3C` extension, by running:
 
 ```bash
 $:./init-tools/init-db.sh localhost 5432 postgres postgres askap askappsw askapdb
@@ -56,7 +65,7 @@ creating db 'askap_pipe_dev', enable Q3C plugin
 CREATE EXTENSION
 ```
 
-4. Create the databse tables. Remember first to activate the Python environment as described in [`INSTALL.md`](./INSTALL.md).
+5. Create the databse tables. Remember first to activate the Python environment as described in [`INSTALL.md`](./INSTALL.md).
 
 ```bash
 (pipeline_env)$:./manage.py makemigrations
