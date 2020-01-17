@@ -7,7 +7,7 @@ from .serializers import DatasetSerializer, ImageSerializer, SourceSerializer
 
 # Datasets table
 def dataset_index(request):
-    cols = ['id', 'name', 'path', 'comment']
+    cols = ['time', 'name', 'path', 'comment']
     return render(
         request,
         'generic_table.html',
@@ -19,7 +19,7 @@ def dataset_index(request):
             'datatable': {
                 'api': '/api/datasets/?format=datatables',
                 'colsFields': [{'data': x} for x in cols],
-                'colsNames': ['Id','Name','Path','Comment'],
+                'colsNames': ['Run Datetime','Name','Path','Comment'],
                 'search': True,
             }
         }
