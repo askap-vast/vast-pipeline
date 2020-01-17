@@ -109,5 +109,5 @@ while read requirement; do conda install --yes $requirement; done < requirements
 while read requirement; do conda install --yes $requirement; done < requirements/requirements.txt
 ```
 
-Done! Now open the `README` file to see how to initialize and run the pipeline.
+Done! Now open the [`README.md`](./README.md) file to see how to initialize and run the pipeline.
 

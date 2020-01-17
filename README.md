@@ -11,7 +11,7 @@ The following instructions, will get you started in setting up the database and 
 cp webinterface/settings.template.py webinterface/settings.py
 ```
 
-2. Choose a database name and user with password (e.g. database name: `askapdb`; user: `askap`, psw: `askap`), and add the connection details in `settings.py`
+2. Choose a database name and user with password (e.g. database name: `askapdb`; user: `askap`, psw: `askappsw`), and add the connection details in `settings.py`
 
 ```Python
 DATABASES = {
@@ -19,7 +19,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'askapdb',
         'USER': 'askap',
-        'PASSWORD': 'askap',
+        'PASSWORD': 'askappsw',
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -52,7 +52,7 @@ connecting to PostgreSQL on 'localhost:5433' as admin 'postgres'
 creating user 'askap' with login password 'askappsw' and give it createdb privileges
 CREATE ROLE
 ************************************
-creating db 'askap_pipe_dev', enable Q3C plugin
+creating db 'askapdb', enable Q3C plugin
 CREATE EXTENSION
 ```
 
