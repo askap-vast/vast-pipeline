@@ -112,6 +112,10 @@ class Dataset(models.Model):
             ),
         ]
     )
+    time = models.DateTimeField(
+        auto_now=True,
+        help_text='Datetime of run'
+    )# run date/time of the dataset
     path = models.FilePathField(max_length=200)# the path to the dataset
     comment = models.TextField(
         max_length=1000,
