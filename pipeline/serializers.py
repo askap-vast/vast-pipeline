@@ -5,15 +5,23 @@ from .models import Dataset, Image, Source
 
 class DatasetSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
-    path = serializers.SerializerMethodField('get_dataset_path')
+    path = serializers.SerializerMethodField()
+    catalogs = serializers.SerializerMethodField()
+    images = serializers.SerializerMethodField()
 
     class Meta:
         model = Dataset
         fields = '__all__'
         datatables_always_serialize = ('id',)
 
-    def get_dataset_path(self, obj):
-        return os.path.relpath(obj.path)
+    def get_path(self, dataset):
+        return os.path.relpath(dataset.path)
+
+    def get_catalogs(self, dataset):
+        return dataset.catalog_set.count()
+
+    def get_images(self, dataset):
+        return dataset.image_set.count()
 
 
 class ImageSerializer(serializers.ModelSerializer):
