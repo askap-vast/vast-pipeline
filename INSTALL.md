@@ -1,6 +1,6 @@
 # ASKAP Pipeline Development - Installation Notes
 
-This document explains how to install all the packages that the pipeline needs to run, as well as the PostgreSQL database. Following this documentation should get you started with a good __LOCAL__ development enrironment, where you can mess up things, but always go back and fix it up.
+This document explains how to install all the packages that the pipeline needs to run, as well as the PostgreSQL database. Following this documentation should get you started with a good __LOCAL__ development environment, where you can mess up things, but always go back and fix it up.
 
 Note for installs on a Mac, the use of `homebrew` is recommended (https://brew.sh).
 
@@ -86,7 +86,7 @@ conda create -n pipeline_env python=3.6
 
 NOTE: you can name the environment whatever you want instead of `pipeline_env`
 
-3. Activate the enviroment.
+3. Activate the environment.
 ```bash
 source pipeline_env/bin/activate
 ```
@@ -109,5 +109,5 @@ while read requirement; do conda install --yes $requirement; done < requirements
 while read requirement; do conda install --yes $requirement; done < requirements/requirements.txt
 ```
 
-Done! Now open the `README` file to see how to initialize and run the pipeline.
+Done! Now open the [`README.md`](./README.md) file to see how to initialize and run the pipeline.
 

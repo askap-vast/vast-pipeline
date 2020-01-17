@@ -1,7 +1,7 @@
 # Askap Pipeline Prototype
-This repository hold the code of the Radio Transient detection pipeline for the ASKAP project.
+This repository holds the code of the Radio Transient detection pipeline for the ASKAP project.
 
-Installation instrucitons are described in [`INSTALL.md`](./INSTALL.md).
+Installation instructions are described in [`INSTALL.md`](./INSTALL.md).
 
 ## Pipeline Configuration
 The following instructions, will get you started in setting up the database and pipeline configuration
@@ -11,7 +11,7 @@ The following instructions, will get you started in setting up the database and 
 cp webinterface/settings.template.py webinterface/settings.py
 ```
 
-2. Choose a database name and user with password (e.g. database name: `askapdb`; user: `askap`, psw: `askap`), and add the connection details in `settings.py`
+2. Choose a database name and user with password (e.g. database name: `askapdb`; user: `askap`, psw: `askappsw`), and add the connection details in `settings.py`
 
 ```Python
 DATABASES = {
@@ -19,7 +19,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'askapdb',
         'USER': 'askap',
-        'PASSWORD': 'askap',
+        'PASSWORD': 'askappsw',
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -42,7 +42,7 @@ Usage: init-db.sh HOST PORT ADMINUSER ADMINPSW USER USERPSW DBNAME
 Eg:    init-db.sh localhost 5432 postgres postgres askap askappsw askapdb
 
 Help: This will create a postgresql user 'askap' with login password 'askappsw'
-      and a database 'askapdb' and grant to 'askap' user all the priveleges to 'askapdb'
+      and a database 'askapdb' and grant to 'askap' user all the privileges to 'askapdb'
 ```
 
   If everything went well the output is:
@@ -52,15 +52,48 @@ connecting to PostgreSQL on 'localhost:5433' as admin 'postgres'
 creating user 'askap' with login password 'askappsw' and give it createdb privileges
 CREATE ROLE
 ************************************
-creating db 'askap_pipe_dev', enable Q3C plugin
+creating db 'askapdb', enable Q3C plugin
 CREATE EXTENSION
 ```
 
-4. Create the databse tables. Remember first to activate the Python environment as described in [`INSTALL.md`](./INSTALL.md).
+4. Create the database tables. Remember first to activate the Python environment as described in [`INSTALL.md`](./INSTALL.md).
 
 ```bash
 (pipeline_env)$:./manage.py makemigrations
 (pipeline_env)$:./manage.py migrate
+```
+
+5. Create the directories listed at the bottom of `settings.py`
+
+```Python
+# reference surveys default folder
+PROJECT_WORKING_DIR = os.path.join(BASE_DIR, 'pipeline-projects')
+
+# reference surveys default folder
+SURVEYS_WORKING_DIR = os.path.join(BASE_DIR, 'reference-surveys')
+```
+
+Create the folders with (Note: make sure you change BASE_DIR to askap-pipeline or whatever folder you clone the repo in):
+
+```bash
+cd BASE_DIR && mkdir pipeline-projects && mkdir reference-surveys
+```
+
+After creating the folders your directory tree should look like this:
+
+```bash
+askap-pipeline/
+├── init-tools
+├── pipeline
+├── reference-surveys
+├── requirements
+├── static
+├── templates
+├── pipeline-projects
+├── webinterface
+├── INSTALL.md
+├── manage.py
+└── README.md
 ```
 
 ## Pipeline Usage
@@ -84,13 +117,13 @@ Output:
  ...
 ```
 
-There are 4 commands, described in details below.
+There are 4 commands, described in detail below.
 
 ### Process Images
 In order to process the images in the pipeline, you must create/initialise a dataset first.
 
 #### Initialise a dataset
-The dataset creation is run using `initdataset` django command, which requires a dataset folder. The command create a folder with the dataset name under the settings
+The dataset creation is run using `initdataset` django command, which requires a dataset folder. The command creates a folder with the dataset name under the settings
 `PROJECT_WORKING_DIR` defined in [settings](./webinterface/settings.template.py).
 
 ```bash
@@ -128,7 +161,7 @@ optional arguments:
   --force-color         Force colorization of the command output.
 ```
 
-The command yield the following folder structure:
+The command yields the following folder structure:
 
 ```bash
 (pipeline_env)$: ./manage.py initdataset my_dataset
@@ -158,7 +191,7 @@ General usage:
 (pipeline_env)$: ./manage.py runpipeline -d my_dataset
 ```
 
-Resetting the database can be done using the `cleardataset` command: it will delete all data from previous runs __EXCEPT__ sources whose `Quality` field is not None, ie somebody changed it. It does not delete imported surveys eg NVSS.
+Resetting the database can be done using the `cleardataset` command: it will delete all data from previous runs __EXCEPT__ sources whose `Quality` field is not None, i.e. somebody changed it. It does not delete imported surveys e.g. NVSS.
 ```bash
 (pipeline_env)$: ./manage.py cleardataset my_dataset
 ```
