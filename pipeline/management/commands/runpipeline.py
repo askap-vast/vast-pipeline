@@ -71,7 +71,10 @@ class Command(BaseCommand):
         pipeline = Pipeline(config=cfg)
 
         # run the pipeline operations
-        pipeline.process_pipeline(dataset)
+        try:
+            pipeline.process_pipeline(dataset)
+        except Exception as e:
+            raise CommandError(f'Processing error:\n{e}')
 
     @staticmethod
     def get_create_dataset(name, path):
