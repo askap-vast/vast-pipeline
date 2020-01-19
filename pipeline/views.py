@@ -34,6 +34,13 @@ class DatasetViewSet(viewsets.ModelViewSet):
     serializer_class = DatasetSerializer
 
 
+# Dataset detail
+def dataset_detail(request):
+    return render(
+        request,
+        'dataset_detail.html'
+    )
+
 # Images table
 def image_index(request):
     cols = ['time', 'name', 'ra', 'dec']
