@@ -31,6 +31,32 @@
 
 <body id="page-top">
 
+  <!-- <nav class="navbar navbar-expand navbar-dark bg-dark static-top"> -->
+  <nav class="navbar navbar-expand navbar-dark bg-gradient-primary topbar static-top">
+
+    <button class="btn btn-link btn-sm text-white order-1 order-sm-0" id="sidebarToggle" href="#">
+      <i class="fas fa-bars"></i>
+    </button>
+
+    <a class="navbar-brand mr-1" href="{% url 'index' %}">Askap Pipeline</a>
+
+    <hr class="topbar-divider">
+
+    <!-- Breadcrumbs-->
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+        <a href="{% url 'index' %}">Home</a>
+      </li>
+
+      {% block breadcrumb %}
+
+      {% endblock breadcrumb %}
+
+      <li class="breadcrumb-item active">Overview</li>
+    </ol>
+
+  </nav>
+
   <!-- Page Wrapper -->
   <div id="wrapper">
 
@@ -38,15 +64,15 @@
     <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
       <!-- Sidebar - Brand -->
-      <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{% url 'index' %}">
+      <!-- <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{% url 'index' %}">
         <div class="sidebar-brand-icon">
           <i class="fas fa-tachometer-alt"></i>
         </div>
         <div class="sidebar-brand-text mx-3">Askap Pipeline</div>
-      </a>
+      </a> -->
 
       <!-- Divider -->
-      <hr class="sidebar-divider my-0">
+      <!-- <hr class="sidebar-divider my-0"> -->
 
       <!-- Nav Item - Datasets -->
       <li class="nav-item">
@@ -58,7 +84,7 @@
       <!-- Nav Item - Images -->
       <li class="nav-item">
         <a class="nav-link" href="{% url 'pipeline:image_index' %}">
-          <i class="fas fa-fw fa-table"></i>
+          <i class="fas fa-fw fa-images"></i>
           <span>Images</span></a>
       </li>
 
