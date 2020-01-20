@@ -11,7 +11,7 @@ class Survey(models.Model):
         unique=True,
         help_text='Name of the Survey e.g. NVSS'
     )
-    comment = models.TextField(max_length=1000, blank=True)
+    comment = models.TextField(max_length=1000, default='', blank=True)
     frequency = models.IntegerField(help_text='Frequency of the survey')
 
     class Meta:
@@ -154,7 +154,7 @@ class Band(models.Model):
 class Catalog(models.Model):
     dataset = models.ForeignKey(Dataset, on_delete=models.SET_NULL, null=True,)
     name = models.CharField(max_length=100)
-    comment = models.CharField(max_length=500, blank=True)
+    comment = models.TextField(max_length=1000, default='', blank=True)
     new = models.BooleanField(default=False, help_text='New Source or Catalog')
 
     ave_ra = models.FloatField()
@@ -384,7 +384,7 @@ class CrossMatch(models.Model):
     manual = models.BooleanField()# a manual cross-match (vs automatic)
     distance = models.FloatField()# distance source to survey source (degrees)
     probability = models.FloatField()# probability of association
-    comment = models.CharField(max_length=100)
+    comment = models.TextField(max_length=1000, default='', blank=True)
 
 
 class Association(models.Model):
