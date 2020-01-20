@@ -7,7 +7,16 @@ from .serializers import DatasetSerializer, ImageSerializer, SourceSerializer
 
 # Datasets table
 def dataset_index(request):
-    cols = ['time', 'name', 'path', 'comment', 'images', 'catalogs']
+    colsfields = []
+    for col in ['time', 'name', 'path', 'comment', 'images', 'catalogs']:
+        if col == 'name':
+            colsfields.append({
+                'data': col, 'render': {
+                    'prefix': '/datasets/', 'col':'name'
+                }
+            })
+        else:
+            colsfields.append({'data': col})
     return render(
         request,
         'generic_table.html',
@@ -18,7 +27,7 @@ def dataset_index(request):
             },
             'datatable': {
                 'api': '/api/datasets/?format=datatables',
-                'colsFields': [{'data': x} for x in cols],
+                'colsFields': colsfields,
                 'colsNames': [
                     'Run Datetime','Name','Path','Comment','Nr Images',
                     'Nr Catalogs'
@@ -35,7 +44,7 @@ class DatasetViewSet(viewsets.ModelViewSet):
 
 
 # Dataset detail
-def dataset_detail(request):
+def dataset_detail(request, pk):
     return render(
         request,
         'dataset_detail.html'
