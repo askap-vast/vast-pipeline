@@ -154,6 +154,8 @@ class Band(models.Model):
 class Catalog(models.Model):
     dataset = models.ForeignKey(Dataset, on_delete=models.SET_NULL, null=True,)
     name = models.CharField(max_length=100)
+    comment = models.CharField(max_length=500, blank=True)
+    new = models.BooleanField(default=False, help_text='New Source or Catalog')
 
     ave_ra = models.FloatField()
     ave_dec = models.FloatField()
@@ -393,7 +395,6 @@ class Association(models.Model):
     catalog = models.ForeignKey(Catalog, on_delete=models.CASCADE)
 
     probability = models.FloatField(default=1.)  # probability of association
-    comment = models.CharField(max_length=100, blank=True)
 
     def __str__(self):
         return f'assoc prob: {self.probability:.2%}'
