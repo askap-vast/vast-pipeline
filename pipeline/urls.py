@@ -13,9 +13,9 @@ router.register(r'images', views.ImageViewSet, 'api_images')
 router.register(r'sources', views.SourceViewSet, 'api_sources')
 
 urlpatterns = [
-    path('datasets', views.dataset_index, name='dataset_index'),
-    path('datasets/<int:pk>/', views.dataset_detail, name='dataset_detail'),
-    path('images', views.image_index, name='image_index'),
-    path('sources', views.source_index, name='source_index'),
+    path('datasets', views.datasetIndex, name='dataset_index'),
+    path('datasets/<int:pk>/', views.datasetDetail, name='dataset_detail'),
+    path('images', views.imageIndex, name='image_index'),
+    path('sources', views.sourceIndex, name='source_index'),
     path('api/', include(router.urls))
 ]

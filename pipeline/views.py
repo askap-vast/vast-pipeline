@@ -7,7 +7,7 @@ from .serializers import DatasetSerializer, ImageSerializer, SourceSerializer
 
 
 # Datasets table
-def dataset_index(request):
+def datasetIndex(request):
     colsfields = []
     for col in ['time', 'name', 'path', 'comment', 'images', 'catalogs']:
         if col == 'name':
@@ -45,7 +45,8 @@ class DatasetViewSet(viewsets.ModelViewSet):
 
 
 # Dataset detail
-def dataset_detail(request, pk):
+def datasetDetail(request, pk):
+    #TODO: improve the query (maybe multiple querysets?)
     dataset = Dataset.objects.filter(pk=pk).annotate(
         nr_imgs=Count('image', distinct=True),
         nr_cats=Count('catalog', distinct=True),
@@ -55,7 +56,7 @@ def dataset_detail(request, pk):
 
 
 # Images table
-def image_index(request):
+def imageIndex(request):
     cols = ['time', 'name', 'ra', 'dec']
     return render(
         request,
@@ -81,7 +82,7 @@ class ImageViewSet(viewsets.ModelViewSet):
 
 
 # Sources table
-def source_index(request):
+def sourceIndex(request):
     cols = ['name', 'ra', 'dec', 'flux_int', 'flux_peak']
     return render(
         request,
