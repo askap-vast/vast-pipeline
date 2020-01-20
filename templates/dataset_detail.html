@@ -1,14 +1,25 @@
 {% extends "base.html" %}
 
+{% block breadcrumb %}
+
+<li class="breadcrumb-item">
+  <a href="{% url 'pipeline:dataset_index' %}">Datasets</a>
+</li>
+<li class="breadcrumb-item">
+  <a href="{% url 'pipeline:dataset_detail' dataset.id %}">Dataset</a>
+</li>
+
+{% endblock breadcrumb %}
+
 {% block content %}
 <!-- Begin Page Content -->
 <div class="container-fluid">
 
   <!-- Page Heading -->
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
-	  <h1 class="h3 mb-2 text-gray-800">Dataset: NAME_OF_MY_DATASET</h1>
+	  <h1 class="h3 mb-2 text-gray-800">Dataset: {{ dataset.name }}</h1>
 	</div>
-  
+
   <div class="row">
 		<!-- Nr Images -->
       <div class="col-xl-3 col-md-6 mb-4">
@@ -18,7 +29,7 @@
             <div class="row no-gutters align-items-center">
               <div class="col mr-2">
                 <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Nr Images</div>
-                <div class="h5 mb-0 font-weight-bold text-gray-800">3</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ dataset.nr_imgs }}</div>
               </div>
               <div class="col-auto">
                 <i class="fas fa-images fa-2x text-gray-300"></i>
@@ -36,7 +47,7 @@
             <div class="row no-gutters align-items-center">
               <div class="col mr-2">
                 <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Total Nr Catalogs</div>
-                <div class="h5 mb-0 font-weight-bold text-gray-800">1234</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ dataset.nr_cats }}</div>
               </div>
               <div class="col-auto">
                 <i class="fas fa-clone fa-2x text-gray-300"></i>
@@ -54,7 +65,7 @@
             <div class="row no-gutters align-items-center">
               <div class="col mr-2">
                 <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Extracted Sources</div>
-                <div class="h5 mb-0 font-weight-bold text-gray-800">3456</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ dataset.nr_srcs }}</div>
               </div>
               <div class="col-auto">
                 <i class="fas fa-clone fa-2x text-gray-300"></i>
@@ -72,7 +83,7 @@
             <div class="row no-gutters align-items-center">
               <div class="col mr-2">
                 <div class="text-xs font-weight-bold text-success text-uppercase mb-1">New Sources</div>
-                <div class="h5 mb-0 font-weight-bold text-gray-800">78</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">-100</div>
               </div>
               <div class="col-auto">
                 <i class="fas fa-clone fa-2x text-gray-300"></i>
@@ -83,7 +94,7 @@
       </div>
 
 	</div>
-  
+
   <div class="row">
   	<div class="col-lg-6">
 
@@ -93,9 +104,9 @@
           <h6 class="m-0 font-weight-bold text-primary">Details</h6>
         </div>
         <div class="card-body">
-          <p>User: MY_USER</p>
-          <p>Processing Datetime: 1970-01-01 00:00:00</p>
-          <p>Comment: The styling for this basic card example is created by using default Bootstrap utility classes. By using utility classes, the style of the card component can be easily modified with no need for any custom CSS!</p>
+          <p><strong>User: </strong>Guest</p>
+          <p><strong>Processing Datetime: </strong> {{ dataset.time }}</p>
+          <p><strong>Comment: </strong> {{ dataset.comment }}</p>
         </div>
       </div>
 

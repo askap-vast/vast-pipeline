@@ -1,3 +1,4 @@
+from django.db.models import Count
 from django.shortcuts import render
 from rest_framework import viewsets
 
@@ -45,10 +46,13 @@ class DatasetViewSet(viewsets.ModelViewSet):
 
 # Dataset detail
 def dataset_detail(request, pk):
-    return render(
-        request,
-        'dataset_detail.html'
-    )
+    dataset = Dataset.objects.filter(pk=pk).annotate(
+        nr_imgs=Count('image', distinct=True),
+        nr_cats=Count('catalog', distinct=True),
+        nr_srcs=Count('image__source', distinct=True)
+    ).values().get()
+    return render(request, 'dataset_detail.html', {'dataset': dataset})
+
 
 # Images table
 def image_index(request):
