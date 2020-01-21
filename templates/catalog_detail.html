@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% load static %}
+
 {% block breadcrumb %}
 
 <li class="breadcrumb-item">
@@ -35,13 +37,52 @@
           <p><strong>New Source: </strong> {{ catalog.new }}</p>
           <p><strong>Nr Datapoints: </strong> {{ catalog.sources }}</p>
           <p><strong>Dataset: </strong> <a href="{% url 'pipeline:dataset_detail' catalog.dataset_id %}">{{ catalog.dsname }}</a></p>
+          <p><strong>Comment: </strong> {{ catalog.comment }}</p>
         </div>
       </div>
 
   	</div>
 	</div>
 
+  <!-- DataTales Sources -->
+  <div class="card shadow mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary">Sources</h6>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped table-hover" id="dataTable" width="100%" cellspacing="0">
+          <thead>
+            <tr>
+              {% for name in catalog.datatable.colsNames %}
+              <th>{{ name }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tfoot>
+            <tr>
+              {% for name in catalog.datatable.colsNames %}
+              <th>{{ name }}</th>
+              {% endfor %}
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
 </div>
 <!-- /.container-fluid -->
 
 {% endblock content %}
+
+
+{% block custom_page_scripts %}
+<!-- Page level plugins -->
+<script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+
+<!-- Page level custom scripts -->
+{{ catalog.datatable|json_script:"datatable-conf" }}
+<script src="{% static 'js/datatables-pipeline.js' %}"></script>
+{% endblock custom_page_scripts %}

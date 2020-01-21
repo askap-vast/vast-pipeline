@@ -1,6 +1,6 @@
 from django.db.models import Count, F
 from django.shortcuts import render
-from rest_framework import viewsets
+from rest_framework.viewsets import ModelViewSet
 
 from .models import Catalog, Dataset, Image, Source
 from .serializers import (
@@ -43,7 +43,7 @@ def datasetIndex(request):
     )
 
 
-class DatasetViewSet(viewsets.ModelViewSet):
+class DatasetViewSet(ModelViewSet):
     queryset = Dataset.objects.all()
     serializer_class = DatasetSerializer
 
@@ -81,7 +81,7 @@ def imageIndex(request):
     )
 
 
-class ImageViewSet(viewsets.ModelViewSet):
+class ImageViewSet(ModelViewSet):
     queryset = Image.objects.all()
     serializer_class = ImageSerializer
 
@@ -108,9 +108,13 @@ def sourceIndex(request):
     )
 
 
-class SourceViewSet(viewsets.ModelViewSet):
+class SourceViewSet(ModelViewSet):
     queryset = Source.objects.all()
     serializer_class = SourceSerializer
+
+    def get_queryset(self):
+        ds_id = self.request.query_params.get('dataset_id', None)
+        return self.queryset.filter(catalog__id=ds_id) if ds_id else self.queryset
 
 
 # Catalogs table
@@ -152,7 +156,7 @@ def catalogIndex(request):
     )
 
 
-class CatalogViewSet(viewsets.ModelViewSet):
+class CatalogViewSet(ModelViewSet):
     queryset = Catalog.objects.all()
     serializer_class = CatalogSerializer
 
@@ -165,4 +169,15 @@ def catalogDetail(request, pk):
     ).values().get()
     catalog['ave_ra'] = deg2hms(catalog['ave_ra'])
     catalog['ave_dec'] = deg2dms(catalog['ave_dec'])
+    # add the data for the datatable api
+    cols = ['name', 'ra', 'dec', 'flux_int', 'flux_peak']
+    catalog['datatable'] = {
+        'api': (
+            '/api/sources/?format=datatables&'
+            f'dataset_id={catalog["dataset_id"]}'
+        ),
+        'colsFields': [{'data': x} for x in cols],
+        'colsNames': ['Name','RA','DEC', 'Flux', 'Peak Flux'],
+        'search': True,
+    }
     return render(request, 'catalog_detail.html', {'catalog': catalog})
