@@ -7,6 +7,14 @@
   <link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
 {% endblock head %}
 
+{% block breadcrumb %}
+
+<li class="breadcrumb-item">
+  <a href="{{ text.breadcrumb.url }}">{{ text.breadcrumb.title }}</a>
+</li>
+
+{% endblock breadcrumb %}
+
 
 {% block content %}
 <!-- Begin Page Content -->

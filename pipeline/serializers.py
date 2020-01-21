@@ -1,7 +1,7 @@
 import os
 from rest_framework import serializers
 
-from .models import Dataset, Image, Source
+from .models import Catalog, Dataset, Image, Source
 
 class DatasetSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
@@ -40,3 +40,17 @@ class SourceSerializer(serializers.ModelSerializer):
         model = Source
         fields = ['id', 'name', 'ra', 'dec', 'flux_int', 'flux_peak']
         datatables_always_serialize = ('id',)
+
+
+class CatalogSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+    sources = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Catalog
+        # fields = '__all__'
+        exclude = ['dataset']
+        datatables_always_serialize = ('id',)
+
+    def get_sources(self, catalog):
+        return catalog.source_set.count()

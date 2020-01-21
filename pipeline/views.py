@@ -2,8 +2,10 @@ from django.db.models import Count
 from django.shortcuts import render
 from rest_framework import viewsets
 
-from .models import Dataset, Image, Source
-from .serializers import DatasetSerializer, ImageSerializer, SourceSerializer
+from .models import Catalog, Dataset, Image, Source
+from .serializers import (
+    CatalogSerializer, DatasetSerializer, ImageSerializer, SourceSerializer
+)
 
 
 # Datasets table
@@ -25,6 +27,7 @@ def datasetIndex(request):
             'text': {
                 'title': 'Datasets',
                 'description': 'List of Datasets below',
+                'breadcrumb': {'title': 'Datasets', 'url': request.path},
             },
             'datatable': {
                 'api': '/api/datasets/?format=datatables',
@@ -65,6 +68,7 @@ def imageIndex(request):
             'text': {
                 'title': 'Images',
                 'description': 'List of images below',
+                'breadcrumb': {'title': 'Images', 'url': request.path},
             },
             'datatable': {
                 'api': '/api/images/?format=datatables',
@@ -91,6 +95,7 @@ def sourceIndex(request):
             'text': {
                 'title': 'Source',
                 'description': 'List of sources below',
+                'breadcrumb': {'title': 'Sources', 'url': request.path},
             },
             'datatable': {
                 'api': '/api/sources/?format=datatables',
@@ -105,3 +110,37 @@ def sourceIndex(request):
 class SourceViewSet(viewsets.ModelViewSet):
     queryset = Source.objects.all()
     serializer_class = SourceSerializer
+
+
+# Catalogs table
+def catalogIndex(request):
+    cols = ['name', 'comment', 'ave_ra', 'ave_dec', 'sources', 'new']
+    return render(
+        request,
+        'generic_table.html',
+        {
+            'text': {
+                'title': 'Catalogs',
+                'description': 'List of catalogs below',
+                'breadcrumb': {'title': 'Catalogs', 'url': request.path},
+            },
+            'datatable': {
+                'api': '/api/catalogs/?format=datatables',
+                'colsFields': [{'data': x} for x in cols],
+                'colsNames': [
+                    'Name',
+                    'Comment',
+                    'Ave RA',
+                    'Ave DEC',
+                    'Datapoints',
+                    'New Source',
+                ],
+                'search': False,
+            }
+        }
+    )
+
+
+class CatalogViewSet(viewsets.ModelViewSet):
+    queryset = Catalog.objects.all()
+    serializer_class = CatalogSerializer
