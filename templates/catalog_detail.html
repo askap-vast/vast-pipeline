@@ -23,8 +23,7 @@
 	</div>
 
   <div class="row">
-  	<div class="col-lg-6">
-
+    <div class="col-lg-6">
       <!-- Basic Card Example -->
       <div class="card shadow mb-4">
         <div class="card-header py-3">
@@ -40,9 +39,30 @@
           <p><strong>Comment: </strong> {{ catalog.comment }}</p>
         </div>
       </div>
-
+    </div>
+  	<div class="col-lg-6">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">Aladin</h6>
+        </div>
+        <div class="card-body">
+          Insert Aladin
+        </div>
+      </div>
   	</div>
 	</div>
+
+  <!-- Area Chart -->
+  <div class="card shadow mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary">Light Curve</h6>
+    </div>
+    <div class="card-body">
+      <div class="chart-area">
+        <canvas id="lightCurveChart"></canvas>
+      </div>
+    </div>
+  </div>
 
   <!-- DataTales Sources -->
   <div class="card shadow mb-4">
@@ -78,11 +98,19 @@
 
 
 {% block custom_page_scripts %}
+
 <!-- Page level plugins -->
 <script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
 <script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
 
-<!-- Page level custom scripts -->
+<!-- Datatable scripts -->
 {{ catalog.datatable|json_script:"datatable-conf" }}
 <script src="{% static 'js/datatables-pipeline.js' %}"></script>
+
+<!-- Chart scripts -->
+{{ catalog.datatable|json_script:"chart-data" }}
+<script src="https://cdn.jsdelivr.net/npm/moment@2.24.0/moment.min.js"></script>
+<script src="{% static "vendor/chart.js/Chart.min.js" %}"></script>
+<script src="{% static "js/light-curve-chart.js" %}"></script>
+
 {% endblock custom_page_scripts %}

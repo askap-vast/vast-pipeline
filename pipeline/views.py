@@ -171,6 +171,7 @@ def catalogDetail(request, pk):
     catalog['ave_dec'] = deg2dms(catalog['ave_dec'])
     # add the data for the datatable api
     cols = ['name', 'ra', 'dec', 'flux_int', 'flux_peak']
+    # TODO: get source data for lightcurver and datatable
     catalog['datatable'] = {
         'api': (
             '/api/sources/?format=datatables&'
