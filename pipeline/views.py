@@ -1,4 +1,4 @@
-from django.db.models import Count
+from django.db.models import Count, F
 from django.shortcuts import render
 from rest_framework import viewsets
 
@@ -6,6 +6,7 @@ from .models import Catalog, Dataset, Image, Source
 from .serializers import (
     CatalogSerializer, DatasetSerializer, ImageSerializer, SourceSerializer
 )
+from .utils.utils import deg2dms, deg2hms
 
 
 # Datasets table
@@ -114,7 +115,17 @@ class SourceViewSet(viewsets.ModelViewSet):
 
 # Catalogs table
 def catalogIndex(request):
-    cols = ['name', 'comment', 'ave_ra', 'ave_dec', 'sources', 'new']
+    colsfields = []
+    for col in ['name', 'comment', 'ave_ra', 'ave_dec', 'sources', 'new']:
+        if col == 'name':
+            colsfields.append({
+                'data': col, 'render': {
+                    'prefix': '/catalogs/', 'col':'name'
+                }
+            })
+        else:
+            colsfields.append({'data': col})
+
     return render(
         request,
         'generic_table.html',
@@ -126,7 +137,7 @@ def catalogIndex(request):
             },
             'datatable': {
                 'api': '/api/catalogs/?format=datatables',
-                'colsFields': [{'data': x} for x in cols],
+                'colsFields': colsfields,
                 'colsNames': [
                     'Name',
                     'Comment',
@@ -144,3 +155,14 @@ def catalogIndex(request):
 class CatalogViewSet(viewsets.ModelViewSet):
     queryset = Catalog.objects.all()
     serializer_class = CatalogSerializer
+
+
+# Catalog detail
+def catalogDetail(request, pk):
+    catalog = Catalog.objects.filter(pk=pk).annotate(
+        sources=Count('source'),
+        dsname=F('dataset__name')
+    ).values().get()
+    catalog['ave_ra'] = deg2hms(catalog['ave_ra'])
+    catalog['ave_dec'] = deg2dms(catalog['ave_dec'])
+    return render(request, 'catalog_detail.html', {'catalog': catalog})

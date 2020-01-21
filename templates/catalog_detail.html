@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block breadcrumb %}
+
+<li class="breadcrumb-item">
+  <a href="{% url 'pipeline:catalog_index' %}">Catalogs</a>
+</li>
+<li class="breadcrumb-item">
+  <a href="{% url 'pipeline:catalog_detail' catalog.id %}">Catalog</a>
+</li>
+
+{% endblock breadcrumb %}
+
+{% block content %}
+<!-- Begin Page Content -->
+<div class="container-fluid">
+
+  <!-- Page Heading -->
+  <div class="d-sm-flex align-items-center justify-content-between mb-4">
+	  <h1 class="h3 mb-2 text-gray-800">Catalog: {{ catalog.name }}</h1>
+	</div>
+
+  <div class="row">
+  	<div class="col-lg-6">
+
+      <!-- Basic Card Example -->
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">Details</h6>
+        </div>
+        <div class="card-body">
+          <p><strong>Position: </strong>Guest</p>
+          <p><strong>RA: </strong> {{ catalog.ave_ra }}</p>
+          <p><strong>DEC: </strong> {{ catalog.ave_dec }}</p>
+          <p><strong>New Source: </strong> {{ catalog.new }}</p>
+          <p><strong>Nr Datapoints: </strong> {{ catalog.sources }}</p>
+          <p><strong>Dataset: </strong> <a href="{% url 'pipeline:dataset_detail' catalog.dataset_id %}">{{ catalog.dsname }}</a></p>
+        </div>
+      </div>
+
+  	</div>
+	</div>
+
+</div>
+<!-- /.container-fluid -->
+
+{% endblock content %}
