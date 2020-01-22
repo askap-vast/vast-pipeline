@@ -1,3 +1,5 @@
+import logging
+
 from django.db.models import Count, F
 from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet
@@ -7,6 +9,9 @@ from .serializers import (
     CatalogSerializer, DatasetSerializer, ImageSerializer, SourceSerializer
 )
 from .utils.utils import deg2dms, deg2hms
+
+
+logger = logging.getLogger(__name__)
 
 
 # Datasets table
@@ -50,12 +55,10 @@ class DatasetViewSet(ModelViewSet):
 
 # Dataset detail
 def datasetDetail(request, pk):
-    #TODO: improve the query (maybe multiple querysets?)
-    dataset = Dataset.objects.filter(pk=pk).annotate(
-        nr_imgs=Count('image', distinct=True),
-        nr_cats=Count('catalog', distinct=True),
-        nr_srcs=Count('image__source', distinct=True)
-    ).values().get()
+    dataset = Dataset.objects.filter(pk=pk).values().get()
+    dataset['nr_imgs'] = Image.objects.filter(dataset__id=dataset['id']).count()
+    dataset['nr_cats'] = Catalog.objects.filter(dataset__id=dataset['id']).count()
+    dataset['nr_srcs'] = Source.objects.filter(image__dataset__id=dataset['id']).count()
     return render(request, 'dataset_detail.html', {'dataset': dataset})
 
 
