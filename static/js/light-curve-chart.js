@@ -3,11 +3,18 @@ Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,Bli
 Chart.defaults.global.defaultFontColor = '#858796';
 
 // Area Chart Example
-var ctx = document.getElementById("lightCurveChart");
-var myLineChart = new Chart(ctx, {
+var ctx = document.getElementById("lightCurveChart").getContext('2d');
+let dataConf = JSON.parse(document.getElementById('chart-data').textContent);
+let labels = [];
+let data = [];
+dataConf.dataQuery.forEach( function(obj) {
+  labels.push(obj.datetime);
+  data.push(obj.flux_int);
+});
+let conf = {
   type: 'line',
   data: {
-    // labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    labels: labels,
     datasets: [{
       label: "Flux",
       fill: false,
@@ -22,28 +29,7 @@ var myLineChart = new Chart(ctx, {
       pointHoverBorderColor: "rgba(78, 115, 223, 1)",
       pointHitRadius: 10,
       pointBorderWidth: 2,
-      data: [
-        {
-          x: moment("2014-02-27T10:00:00").format('DD-MMM-YYYY'),
-          y: 242,
-        },
-        {
-          x: moment("2014-03-05T10:00:00").format('DD-MMM-YYYY'),
-          y: 325,
-        },
-        {
-          x: moment("2014-05-01T10:00:00").format('DD-MMM-YYYY'),
-          y: 523,
-        },
-        {
-          x: moment("2014-07-11T10:00:00").format('DD-MMM-YYYY'),
-          y: 134,
-        },
-        {
-          x: moment("2014-07-23T10:00:00").format('DD-MMM-YYYY'),
-          y: 444,
-        }
-      ],
+      data: data,
     }],
   },
   options: {
@@ -58,46 +44,31 @@ var myLineChart = new Chart(ctx, {
       }
     },
     scales: {
-      // xAxes: [{
-      //   time: {
-      //     unit: 'date'
-      //   },
-      //   gridLines: {
-      //     display: false,
-      //     drawBorder: false
-      //   },
-      //   ticks: {
-      //     maxTicksLimit: 7
-      //   }
-      // }],
-      // yAxes: [{
-      //   ticks: {
-      //     maxTicksLimit: 5,
-      //     padding: 10,
-      //   },
-      //   gridLines: {
-      //     color: "rgb(234, 236, 244)",
-      //     zeroLineColor: "rgb(234, 236, 244)",
-      //     drawBorder: false,
-      //     borderDash: [2],
-      //     zeroLineBorderDash: [2]
-      //   }
-      // }],
-      x: {
-        type: 'time',
-        display: true,
-        scaleLabel: {
-          display: true,
-          labelString: 'Date'
+      xAxes: [{
+        time: {
+          unit: 'date'
+        },
+        gridLines: {
+          display: false,
+          drawBorder: false
+        },
+        ticks: {
+          maxTicksLimit: 7
         }
-      },
-      y: {
-        display: true,
-        scaleLabel: {
-          display: true,
-          labelString: 'value'
+      }],
+      yAxes: [{
+        ticks: {
+          maxTicksLimit: 5,
+          padding: 10,
+        },
+        gridLines: {
+          color: "rgb(234, 236, 244)",
+          zeroLineColor: "rgb(234, 236, 244)",
+          drawBorder: false,
+          borderDash: [2],
+          zeroLineBorderDash: [2]
         }
-      }
+      }],
     },
     legend: {
       display: false
@@ -118,4 +89,5 @@ var myLineChart = new Chart(ctx, {
       caretPadding: 10,
     }
   }
-});
+};
+var myLineChart = new Chart(ctx, conf);

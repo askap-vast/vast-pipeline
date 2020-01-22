@@ -104,13 +104,12 @@
 <script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
 
 <!-- Datatable scripts -->
-{{ catalog.datatable|json_script:"datatable-conf" }}
+{{ sources|json_script:"datatable-conf" }}
 <script src="{% static 'js/datatables-pipeline.js' %}"></script>
 
 <!-- Chart scripts -->
-{{ catalog.datatable|json_script:"chart-data" }}
-<script src="https://cdn.jsdelivr.net/npm/moment@2.24.0/moment.min.js"></script>
-<script src="{% static "vendor/chart.js/Chart.min.js" %}"></script>
-<script src="{% static "js/light-curve-chart.js" %}"></script>
+{{ sources|json_script:"chart-data" }}
+<script src="{% static 'vendor/chart.js/Chart.min.js' %}"></script>
+<script src="{% static 'js/light-curve-chart.js' %}"></script>
 
 {% endblock custom_page_scripts %}

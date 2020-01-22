@@ -163,22 +163,38 @@ class CatalogViewSet(ModelViewSet):
 
 # Catalog detail
 def catalogDetail(request, pk):
+    # catalog data
     catalog = Catalog.objects.filter(pk=pk).annotate(
         sources=Count('source'),
         dsname=F('dataset__name')
     ).values().get()
     catalog['ave_ra'] = deg2hms(catalog['ave_ra'])
     catalog['ave_dec'] = deg2dms(catalog['ave_dec'])
+
+    # source data
+    cols = [
+        'name',
+        'ra',
+        'dec',
+        'flux_int',
+        'flux_int_err',
+        'flux_peak',
+        'datetime'
+    ]
+    sources = list(Source.objects.filter(catalog__pk=pk).annotate(
+        datetime=F('image__time')
+    ).values(*tuple(cols)))
+    for src in sources:
+        src['datetime'] = src['datetime'].strftime('%Y %b %d %H:%M:%S')
+        src['flux_int'] = src['flux_int'] * 1.e3
+        src['flux_int_err'] = src['flux_int_err'] * 1.e3
+
     # add the data for the datatable api
-    cols = ['name', 'ra', 'dec', 'flux_int', 'flux_peak']
-    # TODO: get source data for lightcurver and datatable
-    catalog['datatable'] = {
-        'api': (
-            '/api/sources/?format=datatables&'
-            f'dataset_id={catalog["dataset_id"]}'
-        ),
-        'colsFields': [{'data': x} for x in cols],
+    sources = {
+        'dataQuery': sources,
+        'colsFields': ['name', 'ra', 'dec', 'flux_int', 'flux_peak'],
         'colsNames': ['Name','RA','DEC', 'Flux', 'Peak Flux'],
         'search': True,
     }
-    return render(request, 'catalog_detail.html', {'catalog': catalog})
+    context = {'catalog': catalog, 'sources': sources}
+    return render(request, 'catalog_detail.html', context)
