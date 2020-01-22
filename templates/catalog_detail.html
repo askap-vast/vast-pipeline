@@ -2,6 +2,13 @@
 
 {% load static %}
 
+{% block head %}
+
+<link rel='stylesheet' href='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css' />  
+
+{% endblock head %}
+
+
 {% block breadcrumb %}
 
 <li class="breadcrumb-item">
@@ -40,13 +47,14 @@
         </div>
       </div>
     </div>
+    <!-- Aladin viz tile -->
   	<div class="col-lg-6">
       <div class="card shadow mb-4">
         <div class="card-header py-3">
           <h6 class="m-0 font-weight-bold text-primary">Aladin</h6>
         </div>
         <div class="card-body">
-          Insert Aladin
+          <div id="aladinViz" style='width: 90%; height:90%;'></div>
         </div>
       </div>
   	</div>
@@ -111,5 +119,10 @@
 {{ sources|json_script:"chart-data" }}
 <script src="{% static 'vendor/chart.js/Chart.min.js' %}"></script>
 <script src="{% static 'js/light-curve-chart.js' %}"></script>
+
+<!-- Aladin -->
+{{ catalog|json_script:"data-aladin" }}
+<script type='text/javascript' src='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js' charset='utf-8'></script>
+<script src="{% static 'js/aladin-script.js' %}"></script>
 
 {% endblock custom_page_scripts %}
