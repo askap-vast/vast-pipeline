@@ -168,6 +168,8 @@ def catalogDetail(request, pk):
         sources=Count('source'),
         dsname=F('dataset__name')
     ).values().get()
+    catalog['aladin_ra'] = catalog['ave_ra']
+    catalog['aladin_dec'] = catalog['ave_dec']
     catalog['ave_ra'] = deg2hms(catalog['ave_ra'])
     catalog['ave_dec'] = deg2dms(catalog['ave_dec'])
 
