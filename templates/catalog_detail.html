@@ -4,7 +4,7 @@
 
 {% block head %}
 
-<link rel='stylesheet' href='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css' />  
+<link rel='stylesheet' href='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css' />
 
 {% endblock head %}
 
@@ -117,7 +117,7 @@
 
 <!-- Chart scripts -->
 {{ sources|json_script:"chart-data" }}
-<script src="{% static 'vendor/chart.js/Chart.min.js' %}"></script>
+<script src="{% static 'vendor/chart.js/Chart.bundle.min.js' %}"></script>
 <script src="{% static 'js/light-curve-chart.js' %}"></script>
 
 <!-- Aladin -->

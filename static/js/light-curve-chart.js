@@ -9,12 +9,12 @@ let labels = [];
 let data = [];
 dataConf.dataQuery.forEach( function(obj) {
   labels.push(obj.datetime);
-  data.push(obj.flux_int);
+  data.push({x: new Date(obj.datetime), y: obj.flux_int});
 });
 let conf = {
   type: 'line',
   data: {
-    labels: labels,
+    // labels: labels,
     datasets: [{
       label: "Flux",
       fill: false,
@@ -45,9 +45,11 @@ let conf = {
     },
     scales: {
       xAxes: [{
-        time: {
-          unit: 'date'
-        },
+        type: 'time',
+        distribution: 'linear',
+        // time: {
+        //   unit: 'date'
+        // },
         gridLines: {
           display: false,
           drawBorder: false
@@ -57,6 +59,10 @@ let conf = {
         }
       }],
       yAxes: [{
+        scaleLabel: {
+          display: true,
+          labelString: 'Flux (mJy)',
+        },
         ticks: {
           maxTicksLimit: 5,
           padding: 10,
@@ -87,6 +93,12 @@ let conf = {
       intersect: false,
       mode: 'index',
       caretPadding: 10,
+      callbacks: {
+        label: function(tooltipItem, chart) {
+          var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
+          return datasetLabel + ': ' + tooltipItem.yLabel + ' mJy';
+        }
+      }
     }
   }
 };
