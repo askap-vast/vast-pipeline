@@ -6,12 +6,20 @@ Chart.defaults.global.defaultFontColor = '#858796';
 var ctx = document.getElementById("lightCurveChart").getContext('2d');
 let dataConf = JSON.parse(document.getElementById('chart-data').textContent);
 let data = [];
+let labels = [];
+let errors = {};
 dataConf.dataQuery.forEach( function(obj) {
-  data.push({x: new Date(obj.datetime), y: obj.flux_int});
+  let dtObj = new Date(obj.datetime);
+  let dtObjString = dtObj.toISOString();
+  data.push({x: dtObj, y: obj.flux_int});
+  labels.push(dtObjString);
+  let err = obj.flux_int_err / 2.;
+  errors[dtObjString] = {plus: err, minus: err};
 });
 let conf = {
   type: 'line',
   data: {
+    labels: labels,
     datasets: [{
       label: "Flux",
       fill: false,
@@ -27,6 +35,7 @@ let conf = {
       pointHitRadius: 10,
       pointBorderWidth: 2,
       data: data,
+      errorBars: errors,
     }],
   },
   options: {
@@ -38,6 +47,11 @@ let conf = {
         right: 25,
         top: 25,
         bottom: 0
+      }
+    },
+    plugins:{
+      chartJsPluginErrorBars: {
+        width: '10%',
       }
     },
     scales: {
@@ -89,7 +103,7 @@ let conf = {
       caretPadding: 10,
       callbacks: {
         label: function(tooltipItem, chart) {
-          var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
+          let datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
           return datasetLabel + ': ' + tooltipItem.yLabel + ' mJy';
         }
       }
