@@ -5,16 +5,13 @@ Chart.defaults.global.defaultFontColor = '#858796';
 // Area Chart Example
 var ctx = document.getElementById("lightCurveChart").getContext('2d');
 let dataConf = JSON.parse(document.getElementById('chart-data').textContent);
-let labels = [];
 let data = [];
 dataConf.dataQuery.forEach( function(obj) {
-  labels.push(obj.datetime);
   data.push({x: new Date(obj.datetime), y: obj.flux_int});
 });
 let conf = {
   type: 'line',
   data: {
-    // labels: labels,
     datasets: [{
       label: "Flux",
       fill: false,
@@ -47,9 +44,6 @@ let conf = {
       xAxes: [{
         type: 'time',
         distribution: 'linear',
-        // time: {
-        //   unit: 'date'
-        // },
         gridLines: {
           display: false,
           drawBorder: false

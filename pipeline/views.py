@@ -175,6 +175,15 @@ def catalogDetail(request, pk):
     catalog['aladin_dec'] = catalog['ave_dec']
     catalog['ave_ra'] = deg2hms(catalog['ave_ra'])
     catalog['ave_dec'] = deg2dms(catalog['ave_dec'])
+    catalog['datatable'] = {'colsNames': [
+        'Name',
+        'Date',
+        'RA','DEC',
+        'Flux (mJy)',
+        'Error Flux (mJy)',
+        'Peak Flux (mJy)',
+        'Error Peak Flux (mJy)',
+    ]}
 
     # source data
     cols = [
@@ -207,15 +216,6 @@ def catalogDetail(request, pk):
             'flux_int_err',
             'flux_peak',
             'flux_peak_err',
-        ],
-        'colsNames': [
-            'Name',
-            'Date',
-            'RA','DEC',
-            'Flux (mJy)',
-            'Error Flux (mJy)',
-            'Peak Flux (mJy)',
-            'Error Peak Flux (mJy)',
         ],
         'search': True,
     }

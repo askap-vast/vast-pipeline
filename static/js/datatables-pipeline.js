@@ -36,16 +36,11 @@ $(document).ready(function() {
       })
       dataSet.push(row)
     });
-    let colsNames = [];
-    dataConf.colsNames.forEach(function(obj) {
-      colsNames.push({'title': obj})
-    });
     var dataTableConf = {
       bFilter: dataConf.search,
       hover: true,
       serverSide: false,
       data: dataSet,
-      columns: colsNames,
     };
   };
   var table = $('#dataTable').DataTable(dataTableConf);
