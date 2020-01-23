@@ -188,7 +188,7 @@ def catalogDetail(request, pk):
     ]
     sources = list(Source.objects.filter(catalog__pk=pk).annotate(
         datetime=F('image__time')
-    ).values(*tuple(cols)))
+    ).order_by('datetime').values(*tuple(cols)))
     for src in sources:
         src['datetime'] = src['datetime'].strftime('%Y %b %d %H:%M:%S')
         src['flux_int'] = src['flux_int'] * 1.e3
