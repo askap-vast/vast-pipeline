@@ -184,6 +184,7 @@ def catalogDetail(request, pk):
         'flux_int',
         'flux_int_err',
         'flux_peak',
+        'flux_peak_err',
         'datetime'
     ]
     sources = list(Source.objects.filter(catalog__pk=pk).annotate(
@@ -191,14 +192,31 @@ def catalogDetail(request, pk):
     ).order_by('datetime').values(*tuple(cols)))
     for src in sources:
         src['datetime'] = src['datetime'].strftime('%Y %b %d %H:%M:%S')
-        src['flux_int'] = src['flux_int'] * 1.e3
-        src['flux_int_err'] = src['flux_int_err'] * 1.e3
+        for key in ['flux_int', 'flux_int_err', 'flux_peak', 'flux_peak_err']:
+            src[key] = src[key] * 1.e3
 
     # add the data for the datatable api
     sources = {
         'dataQuery': sources,
-        'colsFields': ['name', 'ra', 'dec', 'flux_int', 'flux_peak'],
-        'colsNames': ['Name','RA','DEC', 'Flux', 'Peak Flux'],
+        'colsFields': [
+            'name',
+            'datetime',
+            'ra',
+            'dec',
+            'flux_int',
+            'flux_int_err',
+            'flux_peak',
+            'flux_peak_err',
+        ],
+        'colsNames': [
+            'Name',
+            'Date',
+            'RA','DEC',
+            'Flux (mJy)',
+            'Error Flux (mJy)',
+            'Peak Flux (mJy)',
+            'Error Peak Flux (mJy)',
+        ],
         'search': True,
     }
     context = {'catalog': catalog, 'sources': sources}
