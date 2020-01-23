@@ -148,8 +148,8 @@ def catalogIndex(request):
                 'colsNames': [
                     'Name',
                     'Comment',
-                    'Ave RA',
-                    'Ave DEC',
+                    'Average RA',
+                    'Average DEC',
                     'Datapoints',
                     'New Source',
                 ],
@@ -168,17 +168,20 @@ class CatalogViewSet(ModelViewSet):
 def catalogDetail(request, pk):
     # catalog data
     catalog = Catalog.objects.filter(pk=pk).annotate(
-        sources=Count('source'),
         dsname=F('dataset__name')
     ).values().get()
     catalog['aladin_ra'] = catalog['ave_ra']
     catalog['aladin_dec'] = catalog['ave_dec']
-    catalog['ave_ra'] = deg2hms(catalog['ave_ra'])
-    catalog['ave_dec'] = deg2dms(catalog['ave_dec'])
+    catalog['ave_ra'] = deg2hms(catalog['ave_ra'], hms_format=True)
+    catalog['ave_dec'] = deg2dms(catalog['ave_dec'], dms_format=True)
     catalog['datatable'] = {'colsNames': [
         'Name',
         'Date',
-        'RA','DEC',
+        'Image',
+        'RA',
+        'RA Error',
+        'DEC',
+        'DEC Error',
         'Flux (mJy)',
         'Error Flux (mJy)',
         'Peak Flux (mJy)',
@@ -189,29 +192,38 @@ def catalogDetail(request, pk):
     cols = [
         'name',
         'ra',
+        'ra_err',
         'dec',
+        'dec_err',
         'flux_int',
         'flux_int_err',
         'flux_peak',
         'flux_peak_err',
-        'datetime'
+        'datetime',
+        'image_name',
     ]
     sources = list(Source.objects.filter(catalog__pk=pk).annotate(
-        datetime=F('image__time')
+        datetime=F('image__time'),
+        image_name=F('image__name'),
     ).order_by('datetime').values(*tuple(cols)))
     for src in sources:
         src['datetime'] = src['datetime'].strftime('%Y %b %d %H:%M:%S')
         for key in ['flux_int', 'flux_int_err', 'flux_peak', 'flux_peak_err']:
             src[key] = src[key] * 1.e3
 
+    # add source count
+    catalog['sources'] = len(sources)
     # add the data for the datatable api
     sources = {
         'dataQuery': sources,
         'colsFields': [
             'name',
             'datetime',
+            'image_name',
             'ra',
+            'ra_err',
             'dec',
+            'dec_err',
             'flux_int',
             'flux_int_err',
             'flux_peak',
