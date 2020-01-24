@@ -51,7 +51,7 @@ let conf = {
     },
     plugins:{
       chartJsPluginErrorBars: {
-        width: '10%',
+        width: 15 | '10px' | '60%',
       }
     },
     scales: {
@@ -109,5 +109,13 @@ let conf = {
       }
     }
   }
+};
+// fix scale max and min for 1 datapoint
+if (labels.length < 2) {
+  conf.options.scales.yAxes.forEach(function(obj){
+  if (obj.hasOwnProperty('ticks')) {
+    obj.ticks['suggestedMin'] = data[0].y - 5;
+    obj.ticks['suggestedMax'] = data[0].y + 5;
+  }});
 };
 var myLineChart = new Chart(ctx, conf);
