@@ -134,6 +134,8 @@ class Pipeline():
             columns=cols
         )
         skyc1_srcs['cat'] = pd.np.NaN
+        skyc1_srcs['ra_source'] = skyc1_srcs.ra
+        skyc1_srcs['dec_source'] = skyc1_srcs.dec
         # create base catalog
         skyc1 = SkyCoord(
             ra=skyc1_srcs.ra * u.degree,
@@ -149,6 +151,8 @@ class Pipeline():
                 columns=cols
             )
             skyc2_srcs['cat'] = pd.np.NaN
+            skyc2_srcs['ra_source'] = skyc2_srcs.ra
+            skyc2_srcs['dec_source'] = skyc2_srcs.dec
             skyc2 = SkyCoord(
                 ra=skyc2_srcs.ra * u.degree,
                 dec=skyc2_srcs.dec * u.degree
@@ -186,10 +190,29 @@ class Pipeline():
             #     ra=tmp_skyc1_srcs.ra* u.degree,
             #     dec=tmp_skyc1_srcs.dec* u.degree
             #     )
-            skyc1 = SkyCoord([skyc1, skyc2[idx[~sel]]])
             skyc1_srcs = (
                 skyc1_srcs.append(skyc2_srcs.loc[idx[~sel]])
                 .reset_index(drop=True)
+            )
+            tmp_cat_df = (
+                catalogs_df.loc[catalogs_df.cat.notnull(), ['ra','dec','cat']]
+                .groupby('cat')
+                .mean()
+                .reset_index()
+            )
+            skyc1_srcs = skyc1_srcs.merge(
+                tmp_cat_df,
+                on='cat',
+                how='left',
+                suffixes=('', '_y')
+            )
+            del tmp_cat_df
+            skyc1_srcs.loc[skyc1_srcs.cat.notnull(), 'ra'] = skyc1_srcs.loc[skyc1_srcs.cat.notnull(), 'ra_y']
+            skyc1_srcs.loc[skyc1_srcs.cat.notnull(), 'dec'] = skyc1_srcs.loc[skyc1_srcs.cat.notnull(), 'dec_y']
+            skyc1_srcs = skyc1_srcs.drop(['ra_y', 'dec_y'], axis=1)
+            skyc1 = SkyCoord(
+                ra=skyc1_srcs.ra * u.degree,
+                dec=skyc1_srcs.dec * u.degree
             )
 
         # add leftover souces from skyc2
@@ -200,13 +223,20 @@ class Pipeline():
         start_elem = catalogs_df.cat.max() + 1.
         nan_sel = catalogs_df.cat.isna().values
         catalogs_df.loc[nan_sel, 'cat'] = (
-            catalogs_df.index[ nan_sel].values + start_elem
+            catalogs_df.index[nan_sel].values + start_elem
         )
 
         # tidy the df of catalogs to drop duplicated entries
         # to have unique rows of c_name and src_id
         catalogs_df = catalogs_df.drop_duplicates()
 
+        # ra and dec columns are actually the average over each iteration
+        # so remove ave ra and ave dec used for calculation and use
+        # ra_source and dec_source columns
+        catalogs_df = (
+            catalogs_df.drop(['ra', 'dec'], axis=1)
+            .rename(columns={'ra_source':'ra', 'dec_source':'dec'})
+        )
         # calculated average ra and dec
         cat_df = (
             catalogs_df.groupby('cat')

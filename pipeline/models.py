@@ -157,6 +157,7 @@ class Catalog(models.Model):
     comment = models.TextField(max_length=1000, default='', blank=True)
     new = models.BooleanField(default=False, help_text='New Source or Catalog')
 
+    # average fields calculated from the sources
     ave_ra = models.FloatField()
     ave_dec = models.FloatField()
     ave_flux_int = models.FloatField()
