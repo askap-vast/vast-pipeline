@@ -178,18 +178,7 @@ class Pipeline():
             catalogs_df = catalogs_df.drop_duplicates()
 
             # update skyc1 and df for next association iteration
-            # # calculate average angle for skyc1
-            # tmp_skyc1_srcs = (
-            #     skyc1_srcs.loc[:, ['ra','dec']].copy()
-            #     .rename(columns={'ra':'ra1','dec':'dec1'})
-            # )
-            # tmp_skyc1_srcs.loc[idx[sel], 'ra2'] = skyc2_srcs.loc[idx[sel], 'ra'].values
-            # tmp_skyc1_srcs.loc[idx[sel], 'dec2'] = skyc2_srcs.loc[idx[sel], 'dec'].values
-            # tmp_skyc1_srcs['ra'] = tmp_skyc1_srcs.loc[:,['ra1','ra2']].mean(axis=1)
-            # skyc1 = SkyCoord(
-            #     ra=tmp_skyc1_srcs.ra* u.degree,
-            #     dec=tmp_skyc1_srcs.dec* u.degree
-            #     )
+            # calculate average angles for skyc1
             skyc1_srcs = (
                 skyc1_srcs.append(skyc2_srcs.loc[idx[~sel]])
                 .reset_index(drop=True)
