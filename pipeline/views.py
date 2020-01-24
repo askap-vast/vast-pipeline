@@ -122,8 +122,19 @@ class SourceViewSet(ModelViewSet):
 
 # Catalogs table
 def catalogIndex(request):
+    fields = [
+        'name',
+        'comment',
+        'ave_ra',
+        'ave_dec',
+        'ave_flux_int',
+        'ave_flux_peak',
+        'max_flux_peak',
+        'sources',
+        'new'
+    ]
     colsfields = []
-    for col in ['name', 'comment', 'ave_ra', 'ave_dec', 'sources', 'new']:
+    for col in fields:
         if col == 'name':
             colsfields.append({
                 'data': col, 'render': {
@@ -150,6 +161,9 @@ def catalogIndex(request):
                     'Comment',
                     'Average RA',
                     'Average DEC',
+                    'Average Int Flux',
+                    'Average Peak Flux',
+                    'Max Peak Flux',
                     'Datapoints',
                     'New Source',
                 ],

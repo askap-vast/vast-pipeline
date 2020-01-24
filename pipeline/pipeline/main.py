@@ -24,12 +24,13 @@ def get_source_models(row):
 
 def get_catalog_models(row, dataset=None):
     name = f"catalog_{deg2hms(row['ave_ra'])}{deg2dms(row['ave_dec'])}"
-    return Catalog(
-        name=name,
-        ave_ra=row['ave_ra'],
-        ave_dec=row['ave_dec'],
-        dataset=dataset
-    )
+    cat = Catalog()
+    cat.dataset = dataset
+    cat.name = name
+    for fld in cat._meta.get_fields():
+        if getattr(fld, 'attname', None) and fld.attname in row.index:
+            setattr(cat, fld.attname, row[fld.attname])
+    return cat
 
 
 class Pipeline():
@@ -120,15 +121,17 @@ class Pipeline():
         if SurveySource.objects.exists():
             pass
 
+        # TODO: move to association.py
         # 2.2 Associate with other sources
         # order images by time
         images.sort(key=operator.attrgetter('time'))
         limit = Angle(self.config.ASSOCIATION_RADIUS * u.arcsec)
 
         # read the needed sources fields
+        cols = ['id','ra','dec', 'flux_int', 'flux_peak']
         skyc1_srcs = pd.read_parquet(
             images[0].sources_path,
-            columns=['id','ra','dec']
+            columns=cols
         )
         skyc1_srcs['cat'] = pd.np.NaN
         # create base catalog
@@ -143,7 +146,7 @@ class Pipeline():
             # load skyc2 sources and create SkyCoord/sky catalog(skyc)
             skyc2_srcs = pd.read_parquet(
                 image.sources_path,
-                columns=['id','ra','dec']
+                columns=cols
             )
             skyc2_srcs['cat'] = pd.np.NaN
             skyc2 = SkyCoord(
@@ -167,6 +170,8 @@ class Pipeline():
             skyc2_srcs.loc[idx[sel], 'cat'] = skyc1_srcs.loc[sel, 'cat'].values
             # append skyc2 selection to catalog df
             catalogs_df = catalogs_df.append(skyc2_srcs.loc[idx[sel]])
+            # remove eventual duplicated values
+            catalogs_df = catalogs_df.drop_duplicates()
 
             # update skyc1 and df for next association iteration
             # # calculate average angle for skyc1
@@ -204,9 +209,14 @@ class Pipeline():
 
         # calculated average ra and dec
         cat_df = (
-            catalogs_df.groupby('cat')['ra','dec']
-            .mean().reset_index()
-            .rename(columns={'ra':'ave_ra', 'dec':'ave_dec'})
+            catalogs_df.groupby('cat')
+            .agg(
+                ave_ra=pd.NamedAgg(column='ra', aggfunc='mean'),
+                ave_dec=pd.NamedAgg(column='dec', aggfunc='mean'),
+                ave_flux_int=pd.NamedAgg(column='flux_int', aggfunc='mean'),
+                ave_flux_peak=pd.NamedAgg(column='flux_peak', aggfunc='mean'),
+                max_flux_peak=pd.NamedAgg(column='flux_peak', aggfunc='max'),
+            ).reset_index()
         )
         # generate the catalog models
         cat_df['cat_dj'] = cat_df.apply(

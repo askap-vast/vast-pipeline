@@ -159,6 +159,9 @@ class Catalog(models.Model):
 
     ave_ra = models.FloatField()
     ave_dec = models.FloatField()
+    ave_flux_int = models.FloatField()
+    ave_flux_peak = models.FloatField()
+    max_flux_peak = models.FloatField()
 
     def __str__(self):
         return self.name
