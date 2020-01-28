@@ -54,8 +54,8 @@ class DatasetViewSet(ModelViewSet):
 
 
 # Dataset detail
-def datasetDetail(request, pk):
-    dataset = Dataset.objects.filter(pk=pk).values().get()
+def datasetDetail(request, id):
+    dataset = Dataset.objects.filter(id=id).values().get()
     dataset['nr_imgs'] = Image.objects.filter(dataset__id=dataset['id']).count()
     dataset['nr_cats'] = Catalog.objects.filter(dataset__id=dataset['id']).count()
     dataset['nr_srcs'] = Source.objects.filter(image__dataset__id=dataset['id']).count()
@@ -179,11 +179,34 @@ class CatalogViewSet(ModelViewSet):
 
 
 # Catalog detail
-def catalogDetail(request, pk):
+def catalogDetail(request, id, action=None):
     # catalog data
-    catalog = Catalog.objects.filter(pk=pk).annotate(
-        dsname=F('dataset__name')
-    ).values().get()
+    catalog = Catalog.objects.all()
+    if action:
+        if action == 'next':
+            cat = catalog.filter(id__gt=id)
+            if cat.exists():
+                catalog = cat.annotate(
+                    dsname=F('dataset__name')
+                ).values().first()
+            else:
+                catalog = catalog.filter(id=id).annotate(
+                    dsname=F('dataset__name')
+                ).values().get()
+        elif action == 'prev':
+            cat = catalog.filter(id__lt=id)
+            if cat.exists():
+                catalog = cat.annotate(
+                    dsname=F('dataset__name')
+                ).values().last()
+            else:
+                catalog = catalog.filter(id=id).annotate(
+                    dsname=F('dataset__name')
+                ).values().get()
+    else:
+        catalog = catalog.filter(id=id).annotate(
+            dsname=F('dataset__name')
+        ).values().get()
     catalog['aladin_ra'] = catalog['ave_ra']
     catalog['aladin_dec'] = catalog['ave_dec']
     catalog['ave_ra'] = deg2hms(catalog['ave_ra'], hms_format=True)
@@ -216,7 +239,7 @@ def catalogDetail(request, pk):
         'datetime',
         'image_name',
     ]
-    sources = list(Source.objects.filter(catalog__pk=pk).annotate(
+    sources = list(Source.objects.filter(catalog__id=id).annotate(
         datetime=F('image__time'),
         image_name=F('image__name'),
     ).order_by('datetime').values(*tuple(cols)))

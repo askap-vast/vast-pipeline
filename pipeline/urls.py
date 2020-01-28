@@ -1,4 +1,4 @@
-from django.urls import path, include
+from django.urls import include, path, re_path
 from django.views.generic import TemplateView
 from rest_framework.routers import DefaultRouter
 
@@ -15,10 +15,14 @@ router.register(r'catalogs', views.CatalogViewSet, 'api_catalogs')
 
 urlpatterns = [
     path('datasets', views.datasetIndex, name='dataset_index'),
-    path('datasets/<int:pk>/', views.datasetDetail, name='dataset_detail'),
+    path('datasets/<int:id>/', views.datasetDetail, name='dataset_detail'),
     path('images', views.imageIndex, name='image_index'),
     path('sources', views.sourceIndex, name='source_index'),
     path('catalogs', views.catalogIndex, name='catalog_index'),
-    path('catalogs/<int:pk>/', views.catalogDetail, name='catalog_detail'),
+    re_path(
+        r'^catalogs/(?P<id>\d+)(?:/(?P<action>[\w]+))?/$',
+        views.catalogDetail,
+        name='catalog_detail'
+    ),
     path('api/', include(router.urls))
 ]
