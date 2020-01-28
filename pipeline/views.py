@@ -146,13 +146,9 @@ def catalogIndex(request):
 
     return render(
         request,
-        'generic_table.html',
+        'catalogs_query.html',
         {
-            'text': {
-                'title': 'Catalogs',
-                'description': 'List of catalogs below',
-                'breadcrumb': {'title': 'Catalogs', 'url': request.path},
-            },
+            'breadcrumb': {'title': 'Catalogs', 'url': request.path},
             'datatable': {
                 'api': '/api/catalogs/?format=datatables',
                 'colsFields': colsfields,
