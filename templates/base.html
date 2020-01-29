@@ -30,33 +30,6 @@
 </head>
 
 <body id="page-top">
-
-  <!-- <nav class="navbar navbar-expand navbar-dark bg-dark static-top"> -->
-  <nav class="navbar navbar-expand navbar-dark bg-gradient-primary topbar static-top">
-
-<!--     <button class="btn btn-link btn-sm text-white order-1 order-sm-0" id="sidebarToggle" href="#">
-      <i class="fas fa-bars"></i>
-    </button> -->
-
-    <a class="navbar-brand mr-1" href="{% url 'index' %}">Askap Pipeline</a>
-
-    <hr class="topbar-divider">
-
-    <!-- Breadcrumbs-->
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item">
-        <a href="{% url 'index' %}">Home</a>
-      </li>
-
-      {% block breadcrumb %}
-
-      {% endblock breadcrumb %}
-
-      <li class="breadcrumb-item active">Overview</li>
-    </ol>
-
-  </nav>
-
   <!-- Page Wrapper -->
   <div id="wrapper">
 
@@ -102,14 +75,6 @@
           <span>Sources</span></a>
       </li>
 
-      <!-- Divider -->
-      <hr class="sidebar-divider">
-
-      <!-- Sidebar Toggler (Sidebar) -->
-      <div class="text-center d-none d-md-inline">
-        <button class="rounded-circle border-0" id="sidebarToggle"></button>
-      </div>
-
     </ul>
     <!-- End of Sidebar -->
 
@@ -118,6 +83,27 @@
 
       <!-- Main Content -->
       <div id="content">
+
+        <!-- Topbar -->
+        <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+
+          <!-- Sidebar Toggle (Topbar) -->
+          <button id="sidebarToggleTop" class="btn btn-link rounded-circle mr-3">
+            <i class="fa fa-bars"></i>
+          </button>
+          <!-- Breadcrumbs-->
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+              <a href="{% url 'index' %}">Home</a>
+            </li>
+
+            {% block breadcrumb %}
+
+            {% endblock breadcrumb %}
+
+            <li class="breadcrumb-item active">Overview</li>
+          </ol>
+        </nav>
 
         {% block content %}
 
