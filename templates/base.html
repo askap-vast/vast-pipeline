@@ -13,7 +13,7 @@
 
   <title>Askap Pipeline</title>
 
-  {# VAST icon #}
+  <!-- VAST icon -->
   <link rel="shortcut icon" type="image/png" href="{% static 'img/favicon.png' %}"/>
 
   <!-- Custom fonts for this template-->
@@ -37,15 +37,13 @@
     <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
       <!-- Sidebar - Brand -->
-      <!-- <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{% url 'index' %}">
-        <div class="sidebar-brand-icon">
-          <i class="fas fa-tachometer-alt"></i>
-        </div>
-        <div class="sidebar-brand-text mx-3">Askap Pipeline</div>
-      </a> -->
+      <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{% url 'index' %}">
+        <img src="{% static 'img/vast.png' %}" width="50%">
+        <!-- <div class="sidebar-brand-text mx-1">Askap Pipeline</div> -->
+      </a>
 
       <!-- Divider -->
-      <!-- <hr class="sidebar-divider my-0"> -->
+      <hr class="sidebar-divider my-0">
 
       <!-- Nav Item - Datasets -->
       <li class="nav-item">
@@ -116,7 +114,7 @@
       <footer class="sticky-footer bg-white">
         <div class="container my-auto">
           <div class="copyright text-center my-auto">
-            <span>Copyright &copy; VAST Development Team 2020</span>
+            <span>Copyright &copy; VAST Development Team 2020 - All rights reserved</span>
           </div>
         </div>
       </footer>
