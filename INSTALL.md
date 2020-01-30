@@ -71,9 +71,10 @@ This will avoid conflicts either with the system version of python, or with othe
 
 Steps:
 1. Install OS requirements:
+- gcc
 - python3-dev
 - libpq-dev
-- libgraphviz-dev
+- libgraphviz-dev (for development requirements)
 
 For Ubuntu:
 ```bash
