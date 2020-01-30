@@ -70,12 +70,22 @@ I strongly recommend to setup a virtual environment, in which you can then insta
 This will avoid conflicts either with the system version of python, or with other code that you have that require different versions of these modules.
 
 Steps:
-1. Copy repo link from `Clone or download` button and clone the repository:
+1. Install OS requirements:
+- python3-dev
+- libpq-dev
+- libgraphviz-dev
+
+For Ubuntu:
+```bash
+sudo apt-get install python3-dev libpq-dev libgraphviz-dev
+```
+
+2. Copy repo link from `Clone or download` button and clone the repository:
 ```bash
 git clone <PASTE REPO LINK> && cd <REPO>
 ```
 
-2. Setup a `Python >= 3.6` virtual environment. E.g. with `virtualenv`:
+3. Setup a `Python >= 3.6` virtual environment. E.g. with `virtualenv`:
 ```bash
 virtualenv -p python3 pipeline_env
 ```
@@ -86,7 +96,7 @@ conda create -n pipeline_env python=3.6
 
 NOTE: you can name the environment whatever you want instead of `pipeline_env`
 
-3. Activate the environment.
+4. Activate the environment.
 ```bash
 source pipeline_env/bin/activate
 ```
@@ -96,7 +106,7 @@ Otherwise use `Anaconda/conda`:
 conda activate pipeline_env
 ```
 
-4. Install the development requirements
+5. Install the development requirements
 
 Note that if you want to install the development requirements, graphviz needs to be installed on your system (Ubuntu: `sudo apt-get install graphviz`, Mac: `brew install graphviz`).
 
