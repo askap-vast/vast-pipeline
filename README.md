@@ -1,5 +1,5 @@
-# Askap Pipeline Prototype
-This repository holds the code of the Radio Transient detection pipeline for the ASKAP project.
+# VAST Pipeline Prototype
+This repository holds the code of the Radio Transient detection pipeline for the VAST project.
 
 Installation instructions are described in [`INSTALL.md`](./INSTALL.md).
 
@@ -11,15 +11,15 @@ The following instructions, will get you started in setting up the database and 
 cp webinterface/settings.template.py webinterface/settings.py
 ```
 
-2. Choose a database name and user with password (e.g. database name: `askapdb`; user: `askap`, psw: `askappsw`), and add the connection details in `settings.py`
+2. Choose a database name and user with password (e.g. database name: `vastdb`; user: `vast`, psw: `vastpsw`), and add the connection details in `settings.py`
 
 ```Python
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'askapdb',
-        'USER': 'askap',
-        'PASSWORD': 'askappsw',
+        'NAME': 'vastdb',
+        'USER': 'vast',
+        'PASSWORD': 'vastpsw',
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -31,7 +31,7 @@ NOTE: the connection details (host and port) are the same that you setup in [`IN
 3. Create the database user, database name and enabling the `Q3C` extension, by running:
 
 ```bash
-$:./init-tools/init-db.sh localhost 5432 postgres postgres askap askappsw askapdb
+$:./init-tools/init-db.sh localhost 5432 postgres postgres vast vastpsw vastdb
 ```
 
   For help on the command run it without arguments
@@ -39,20 +39,20 @@ $:./init-tools/init-db.sh localhost 5432 postgres postgres askap askappsw askapd
 ```bash
 $:./init-tools/init-db.sh
 Usage: init-db.sh HOST PORT ADMINUSER ADMINPSW USER USERPSW DBNAME
-Eg:    init-db.sh localhost 5432 postgres postgres askap askappsw askapdb
+Eg:    init-db.sh localhost 5432 postgres postgres vast vastpsw vastdb
 
-Help: This will create a postgresql user 'askap' with login password 'askappsw'
-      and a database 'askapdb' and grant to 'askap' user all the privileges to 'askapdb'
+Help: This will create a postgresql user 'vast' with login password 'vastpsw'
+      and a database 'vastdb' and grant to 'vast' user all the privileges to 'vastdb'
 ```
 
   If everything went well the output is:
 
 ```bash
 connecting to PostgreSQL on 'localhost:5433' as admin 'postgres'
-creating user 'askap' with login password 'askappsw' and give it createdb privileges
+creating user 'vast' with login password 'vastpsw' and give it createdb privileges
 CREATE ROLE
 ************************************
-creating db 'askapdb', enable Q3C plugin
+creating db 'vastdb', enable Q3C plugin
 CREATE EXTENSION
 ```
 
@@ -73,7 +73,7 @@ PROJECT_WORKING_DIR = os.path.join(BASE_DIR, 'pipeline-projects')
 SURVEYS_WORKING_DIR = os.path.join(BASE_DIR, 'reference-surveys')
 ```
 
-Create the folders with (Note: make sure you change BASE_DIR to askap-pipeline or whatever folder you clone the repo in):
+Create the folders with (Note: make sure you change BASE_DIR to vast-pipeline or whatever folder you clone the repo in):
 
 ```bash
 cd BASE_DIR && mkdir pipeline-projects && mkdir reference-surveys
@@ -82,7 +82,7 @@ cd BASE_DIR && mkdir pipeline-projects && mkdir reference-surveys
 After creating the folders your directory tree should look like this:
 
 ```bash
-askap-pipeline/
+vast-pipeline/
 ├── init-tools
 ├── pipeline
 ├── reference-surveys
