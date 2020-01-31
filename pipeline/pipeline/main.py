@@ -24,12 +24,13 @@ def get_source_models(row):
 
 def get_catalog_models(row, dataset=None):
     name = f"catalog_{deg2hms(row['ave_ra'])}{deg2dms(row['ave_dec'])}"
-    return Catalog(
-        name=name,
-        ave_ra=row['ave_ra'],
-        ave_dec=row['ave_dec'],
-        dataset=dataset
-    )
+    cat = Catalog()
+    cat.dataset = dataset
+    cat.name = name
+    for fld in cat._meta.get_fields():
+        if getattr(fld, 'attname', None) and fld.attname in row.index:
+            setattr(cat, fld.attname, row[fld.attname])
+    return cat
 
 
 class Pipeline():
@@ -120,17 +121,21 @@ class Pipeline():
         if SurveySource.objects.exists():
             pass
 
+        # TODO: move to association.py
         # 2.2 Associate with other sources
         # order images by time
         images.sort(key=operator.attrgetter('time'))
         limit = Angle(self.config.ASSOCIATION_RADIUS * u.arcsec)
 
         # read the needed sources fields
+        cols = ['id','ra','dec', 'flux_int', 'flux_peak']
         skyc1_srcs = pd.read_parquet(
             images[0].sources_path,
-            columns=['id','ra','dec']
+            columns=cols
         )
         skyc1_srcs['cat'] = pd.np.NaN
+        skyc1_srcs['ra_source'] = skyc1_srcs.ra
+        skyc1_srcs['dec_source'] = skyc1_srcs.dec
         # create base catalog
         skyc1 = SkyCoord(
             ra=skyc1_srcs.ra * u.degree,
@@ -143,9 +148,11 @@ class Pipeline():
             # load skyc2 sources and create SkyCoord/sky catalog(skyc)
             skyc2_srcs = pd.read_parquet(
                 image.sources_path,
-                columns=['id','ra','dec']
+                columns=cols
             )
             skyc2_srcs['cat'] = pd.np.NaN
+            skyc2_srcs['ra_source'] = skyc2_srcs.ra
+            skyc2_srcs['dec_source'] = skyc2_srcs.dec
             skyc2 = SkyCoord(
                 ra=skyc2_srcs.ra * u.degree,
                 dec=skyc2_srcs.dec * u.degree
@@ -167,24 +174,34 @@ class Pipeline():
             skyc2_srcs.loc[idx[sel], 'cat'] = skyc1_srcs.loc[sel, 'cat'].values
             # append skyc2 selection to catalog df
             catalogs_df = catalogs_df.append(skyc2_srcs.loc[idx[sel]])
+            # remove eventual duplicated values
+            catalogs_df = catalogs_df.drop_duplicates()
 
             # update skyc1 and df for next association iteration
-            # # calculate average angle for skyc1
-            # tmp_skyc1_srcs = (
-            #     skyc1_srcs.loc[:, ['ra','dec']].copy()
-            #     .rename(columns={'ra':'ra1','dec':'dec1'})
-            # )
-            # tmp_skyc1_srcs.loc[idx[sel], 'ra2'] = skyc2_srcs.loc[idx[sel], 'ra'].values
-            # tmp_skyc1_srcs.loc[idx[sel], 'dec2'] = skyc2_srcs.loc[idx[sel], 'dec'].values
-            # tmp_skyc1_srcs['ra'] = tmp_skyc1_srcs.loc[:,['ra1','ra2']].mean(axis=1)
-            # skyc1 = SkyCoord(
-            #     ra=tmp_skyc1_srcs.ra* u.degree,
-            #     dec=tmp_skyc1_srcs.dec* u.degree
-            #     )
-            skyc1 = SkyCoord([skyc1, skyc2[idx[~sel]]])
+            # calculate average angles for skyc1
             skyc1_srcs = (
                 skyc1_srcs.append(skyc2_srcs.loc[idx[~sel]])
                 .reset_index(drop=True)
+            )
+            tmp_cat_df = (
+                catalogs_df.loc[catalogs_df.cat.notnull(), ['ra','dec','cat']]
+                .groupby('cat')
+                .mean()
+                .reset_index()
+            )
+            skyc1_srcs = skyc1_srcs.merge(
+                tmp_cat_df,
+                on='cat',
+                how='left',
+                suffixes=('', '_y')
+            )
+            del tmp_cat_df
+            skyc1_srcs.loc[skyc1_srcs.cat.notnull(), 'ra'] = skyc1_srcs.loc[skyc1_srcs.cat.notnull(), 'ra_y']
+            skyc1_srcs.loc[skyc1_srcs.cat.notnull(), 'dec'] = skyc1_srcs.loc[skyc1_srcs.cat.notnull(), 'dec_y']
+            skyc1_srcs = skyc1_srcs.drop(['ra_y', 'dec_y'], axis=1)
+            skyc1 = SkyCoord(
+                ra=skyc1_srcs.ra * u.degree,
+                dec=skyc1_srcs.dec * u.degree
             )
 
         # add leftover souces from skyc2
@@ -195,18 +212,30 @@ class Pipeline():
         start_elem = catalogs_df.cat.max() + 1.
         nan_sel = catalogs_df.cat.isna().values
         catalogs_df.loc[nan_sel, 'cat'] = (
-            catalogs_df.index[ nan_sel].values + start_elem
+            catalogs_df.index[nan_sel].values + start_elem
         )
 
         # tidy the df of catalogs to drop duplicated entries
         # to have unique rows of c_name and src_id
         catalogs_df = catalogs_df.drop_duplicates()
 
+        # ra and dec columns are actually the average over each iteration
+        # so remove ave ra and ave dec used for calculation and use
+        # ra_source and dec_source columns
+        catalogs_df = (
+            catalogs_df.drop(['ra', 'dec'], axis=1)
+            .rename(columns={'ra_source':'ra', 'dec_source':'dec'})
+        )
         # calculated average ra and dec
         cat_df = (
-            catalogs_df.groupby('cat')['ra','dec']
-            .mean().reset_index()
-            .rename(columns={'ra':'ave_ra', 'dec':'ave_dec'})
+            catalogs_df.groupby('cat')
+            .agg(
+                ave_ra=pd.NamedAgg(column='ra', aggfunc='mean'),
+                ave_dec=pd.NamedAgg(column='dec', aggfunc='mean'),
+                ave_flux_int=pd.NamedAgg(column='flux_int', aggfunc='mean'),
+                ave_flux_peak=pd.NamedAgg(column='flux_peak', aggfunc='mean'),
+                max_flux_peak=pd.NamedAgg(column='flux_peak', aggfunc='max'),
+            ).reset_index()
         )
         # generate the catalog models
         cat_df['cat_dj'] = cat_df.apply(

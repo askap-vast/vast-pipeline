@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block head %}
+  <!-- Custom styles for this page -->
+  <link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
+{% endblock head %}
+
+{% block breadcrumb %}
+
+<li class="breadcrumb-item">
+  <a href="{{ breadcrumb.url }}">{{ breadcrumb.title }}</a>
+</li>
+
+{% endblock breadcrumb %}
+
+
+{% block content %}
+<!-- Begin Page Content -->
+<div class="container-fluid">
+
+  <!-- Page Heading -->
+<!--   <div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-2 text-gray-800">Catalogs</h1>
+    <a href="#" class="d-none d-sm-inline-block btn-sm btn-primary btn-icon-split shadow-sm">
+      <span class="icon text-white-50">
+        <i class="fas fa-search fa-sm"></i>
+      </span>
+      <span class="text">Search</span>
+    </a>
+  </div> -->
+  <h1 class="h3 mb-2 text-gray-800">Catalogs</h1>
+  <p class="mb-4">Search trough the catalogs using the query parameters</p>
+
+  <div class="card shadow mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary">Query</h6>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-lg-2">
+          <h1 class="h6 mb-2 font-weight-bold text-gray-800">Cone Search</h1>
+          <input type="number" class="form-control bg-light border-0 small" placeholder="RA Min" step="1e-10" aria-label="RaMinSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <input type="number" class="form-control bg-light border-0 small" placeholder="RA Max" step="1e-10" aria-label="RaMaxSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <input type="number" class="form-control bg-light border-0 small" placeholder="Radius" step="1e-10" aria-label="RadiusSearch" aria-describedby="basic-addon2">
+        </div>
+        <div class="col-lg-2">
+          <h1 class="h6 mb-2 font-weight-bold text-gray-800">Average Flux Range</h1>
+          <input type="text" class="form-control bg-light border-0 small" placeholder="Min" aria-label="FluxMinSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <input type="text" class="form-control bg-light border-0 small" placeholder="Max" aria-label="FluxMaxSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <div class="dropdown mb-4">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="FluxMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Flux Type
+            </button>
+            <div class="dropdown-menu animated--fade-in" aria-labelledby="FluxMenuButton">
+              <a class="dropdown-item" href="#">Int Flux</a>
+              <a class="dropdown-item" href="#">Peak Flux</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-2">
+          <h1 class="h6 mb-2 font-weight-bold text-gray-800">Variability Metric</h1>
+        </div>
+        <div class="col-lg-2">
+          <h1 class="h6 mb-2 font-weight-bold text-gray-800">Datapoints</h1>
+          <input type="number" class="form-control bg-light border-0 small" placeholder="Nr points" min="1" step="1" aria-label="DatapointsSearch" aria-describedby="basic-addon2">
+        </div>
+      </div>
+      <div class="card-corn-obj">
+        <a href="#" class="btn btn-primary btn-circle">
+          <i class="fas fa-search"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary">Results</h6>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped table-hover" id="dataTable" width="100%" cellspacing="0">
+          <thead>
+            <tr>
+              {% for name in datatable.colsNames %}
+              <th>{{ name }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tfoot>
+            <tr>
+              {% for name in datatable.colsNames %}
+              <th>{{ name }}</th>
+              {% endfor %}
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+<!-- /.container-fluid -->
+{% endblock content %}
+
+
+{% block custom_page_scripts %}
+<!-- Page level plugins -->
+<script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+
+<!-- Page level custom scripts -->
+{{ datatable|json_script:"datatable-conf" }}
+<script src="{% static 'js/datatables-pipeline.js' %}"></script>
+{% endblock custom_page_scripts %}

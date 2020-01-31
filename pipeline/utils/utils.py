@@ -123,7 +123,7 @@ def deg2sex(deg):
     return (sign, (degf, minsf, secs))
 
 
-def deg2dms(deg):
+def deg2dms(deg, dms_format=False):
     """Convert angle in degrees into DMS using format. Default: '02d:02d:05.2f'
 
     >>> deg2dms(12.582438888888889)
@@ -134,18 +134,16 @@ def deg2dms(deg):
 
     >>> deg2dms(-12.582438888888889)
     '-12:34:56.78'
-
-    # TODO
-    >>> deg2dms(12.582438888888889, format='%dd%dm%.2fs')
-    '+12d34m56.78s'
     """
 
     sign, sex = deg2sex(deg)
     signchar = "+" if sign == 1 else "-"
+    if dms_format:
+        return f'{signchar}{sex[0]:02d}d{sex[1]:02d}m{sex[2]:05.2f}s'
     return f'{signchar}{sex[0]:02d}:{sex[1]:02d}:{sex[2]:05.2f}'
 
 
-def deg2hms(deg):
+def deg2hms(deg, hms_format=False):
     """Convert angle in degrees into HMS using format. Default: '%d:%d:%.2f'
 
     >>> deg2hms(188.73658333333333)
@@ -153,16 +151,13 @@ def deg2hms(deg):
 
 
     >>> deg2hms(-188.73658333333333)
-    '-12:34:56.78'
-
-    # TODO
-    >>> deg2hms(-188.73658333333333, format='%dh%dm%.2fs')
-    '-12h34m56.78s'
-
+    '12:34:56.78'
     """
 
     # TODO: why it this?
     # We only handle positive RA values
     # assert deg >= 0
     sign, sex = deg2sex(deg / 15.)
+    if hms_format:
+        return f'{sex[0]:02d}h{sex[1]:02d}m{sex[2]:05.2f}s'
     return f'{sex[0]:02d}:{sex[1]:02d}:{sex[2]:05.2f}'

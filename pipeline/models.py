@@ -11,7 +11,7 @@ class Survey(models.Model):
         unique=True,
         help_text='Name of the Survey e.g. NVSS'
     )
-    comment = models.TextField(max_length=1000, blank=True)
+    comment = models.TextField(max_length=1000, default='', blank=True)
     frequency = models.IntegerField(help_text='Frequency of the survey')
 
     class Meta:
@@ -112,6 +112,10 @@ class Dataset(models.Model):
             ),
         ]
     )
+    time = models.DateTimeField(
+        auto_now=True,
+        help_text='Datetime of run'
+    )# run date/time of the dataset
     path = models.FilePathField(max_length=200)# the path to the dataset
     comment = models.TextField(
         max_length=1000,
@@ -150,9 +154,15 @@ class Band(models.Model):
 class Catalog(models.Model):
     dataset = models.ForeignKey(Dataset, on_delete=models.SET_NULL, null=True,)
     name = models.CharField(max_length=100)
+    comment = models.TextField(max_length=1000, default='', blank=True)
+    new = models.BooleanField(default=False, help_text='New Source or Catalog')
 
+    # average fields calculated from the sources
     ave_ra = models.FloatField()
     ave_dec = models.FloatField()
+    ave_flux_int = models.FloatField()
+    ave_flux_peak = models.FloatField()
+    max_flux_peak = models.FloatField()
 
     def __str__(self):
         return self.name
@@ -176,7 +186,7 @@ class Image(models.Model):
         max_length=200,
             help_text='Name of the image'
             )
-    path = models.CharField(
+    path = models.FilePathField(
         max_length=500,
         help_text='Path to the file containing the image'
         )# the path to the file containing this image
@@ -378,7 +388,7 @@ class CrossMatch(models.Model):
     manual = models.BooleanField()# a manual cross-match (vs automatic)
     distance = models.FloatField()# distance source to survey source (degrees)
     probability = models.FloatField()# probability of association
-    comment = models.CharField(max_length=100)
+    comment = models.TextField(max_length=1000, default='', blank=True)
 
 
 class Association(models.Model):
@@ -389,7 +399,6 @@ class Association(models.Model):
     catalog = models.ForeignKey(Catalog, on_delete=models.CASCADE)
 
     probability = models.FloatField(default=1.)  # probability of association
-    comment = models.CharField(max_length=100, blank=True)
 
     def __str__(self):
         return f'assoc prob: {self.probability:.2%}'

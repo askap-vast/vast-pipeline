@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block head %}
+  <!-- Custom styles for this page -->
+  <link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
+{% endblock head %}
+
+{% block breadcrumb %}
+
+<li class="breadcrumb-item">
+  <a href="{{ text.breadcrumb.url }}">{{ text.breadcrumb.title }}</a>
+</li>
+
+{% endblock breadcrumb %}
+
+
+{% block content %}
+<!-- Begin Page Content -->
+<div class="container-fluid">
+
+  <!-- Page Heading -->
+  <h1 class="h3 mb-2 text-gray-800">{{ text.title }}</h1>
+  <p class="mb-4">{{ text.description }}</p>
+
+  <!-- DataTales Example -->
+  <div class="card shadow mb-4">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped table-hover" id="dataTable" width="100%" cellspacing="0">
+          <thead>
+            <tr>
+              {% for name in datatable.colsNames %}
+              <th>{{ name }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tfoot>
+            <tr>
+              {% for name in datatable.colsNames %}
+              <th>{{ name }}</th>
+              {% endfor %}
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+<!-- /.container-fluid -->
+{% endblock content %}
+
+
+{% block custom_page_scripts %}
+<!-- Page level plugins -->
+<script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+
+<!-- Page level custom scripts -->
+{{ datatable|json_script:"datatable-conf" }}
+<script src="{% static 'js/datatables-pipeline.js' %}"></script>
+{% endblock custom_page_scripts %}
