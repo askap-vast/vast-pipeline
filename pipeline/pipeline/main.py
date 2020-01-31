@@ -1,6 +1,8 @@
 import os
 import operator
 import logging
+import glob
+import re
 
 import pandas as pd
 from astropy import units as u
@@ -49,8 +51,15 @@ class Pipeline():
         # A dictionary of path to Fits images, eg "/data/images/I1233234.FITS" and
         # selavy catalogues
         # Used as a cache to avoid reloading cubes all the time.
+        pattern = re.compile(r'\S*(\d{4})([-+]\d{2})[AB]\S*')
+        img_files = [img for path in config.IMAGE_FILES for img in glob.glob(path)]
+        sel_files = [sel for path in config.SELAVY_FILES for sel in glob.glob(path)]
+
+        img_files = sorted(img_files, key=lambda f: pattern.sub(r'\1\2', f))
+        sel_files = sorted(sel_files, key=lambda f: pattern.sub(r'\1\2', f))
+
         self.image_paths = {
-            x:y for x,y in zip(config.IMAGE_FILES, config.SELAVY_FILES)
+            x:y for x,y in zip(img_files, sel_files)
         }
 
     def process_pipeline(self, dataset):
