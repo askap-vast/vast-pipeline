@@ -164,6 +164,12 @@ class Catalog(models.Model):
     ave_flux_peak = models.FloatField()
     max_flux_peak = models.FloatField()
 
+    # metrics
+    v_int = models.FloatField()
+    v_flux = models.FloatField()
+    eta_int = models.FloatField()
+    eta_peak = models.FloatField()
+
     def __str__(self):
         return self.name
 
