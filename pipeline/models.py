@@ -165,10 +165,18 @@ class Catalog(models.Model):
     max_flux_peak = models.FloatField()
 
     # metrics
-    v_int = models.FloatField()
-    v_flux = models.FloatField()
-    eta_int = models.FloatField()
-    eta_peak = models.FloatField()
+    v_int = models.FloatField(
+        help_text='V metric for int flux'
+    )
+    v_peak = models.FloatField(
+        help_text='V metric for peak flux'
+    )
+    eta_int = models.FloatField(
+        help_text='Eta metric for int flux'
+    )
+    eta_peak = models.FloatField(
+        help_text='Eta metric for peak flux'
+    )
 
     def __str__(self):
         return self.name
