@@ -50,16 +50,16 @@ class Pipeline():
         # A dictionary of path to Fits images, eg "/data/images/I1233234.FITS" and
         # selavy catalogues
         # Used as a cache to avoid reloading cubes all the time.
-        self.image_paths = {
+        self.img_selavy_paths = {
             x:y for x,y in zip(config.IMAGE_FILES, config.SELAVY_FILES)
         }
 
     def process_pipeline(self, dataset):
         images = []
         src_dj_obj = pd.DataFrame()
-        for path in self.image_paths:
+        for path in self.img_selavy_paths:
             # STEP #1: Load image and sources
-            image = SelavyImage(path, self.image_paths[path])
+            image = SelavyImage(path, self.img_selavy_paths[path])
             logger.info(f'read image {image.name}')
 
             # 1.1 get/create the frequency band
@@ -266,6 +266,8 @@ class Pipeline():
             d = {}
             for col in ['ave_ra','ave_dec','ave_flux_int','ave_flux_peak']:
                 d[col] = row[col.split('_',1)[1]].mean()
+            d['max_flux_peak'] = row['flux_peak'].max()
+
             for col in ['flux_int','flux_peak']:
                 d[f'{col}_sq'] = (row[col]**2).mean()
             d['Nsrc'] = row['id'].count()
@@ -279,6 +281,7 @@ class Pipeline():
             d.pop('Nsrc')
             return pd.Series(d)
 
+        # calculate catalog fields
         cat_df = catalogs_df.groupby('cat').apply(groupby_funcs)
 
         # generate the catalog models

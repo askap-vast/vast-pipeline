@@ -200,3 +200,6 @@ SOURCE_FINDERS = ['aegean']
 
 # default source finder
 DEFAULT_SOURCE_FINDER = 'aegean'
+
+# minimum default accepted error on flux
+FLUX_DEFAULT_MIN_ERROR = 0.001
