@@ -4317,7 +4317,7 @@ input[type="button"].btn-block {
 .card {
   position: relative;
   display: flex;
-  flex-direction: column;
+  align-self: flex-start;
   min-width: 0;
   word-wrap: break-word;
   background-color: #fff;
