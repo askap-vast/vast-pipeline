@@ -86,3 +86,8 @@ celerybeat-schedule
 
 # Editors
 *.sublime*
+
+# Others
+**/*.parquet
+**/*.png
+*project*/
