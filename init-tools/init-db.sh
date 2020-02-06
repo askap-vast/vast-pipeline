@@ -6,7 +6,7 @@
 # Eg:    init-db.sh localhost postgres askap askappsw askapdb
 #
 # This will create a postgresql user "askap" with login password "askappsw"
-# a database "askapdb" and grant to "askap" user all the priveleges to "askapdb"
+# a database "askapdb" and grant to "askap" user all the privileges to "askapdb"
 
 if [ $# -ne 7 ]
 then
@@ -14,7 +14,7 @@ then
 	echo "Eg:    init-db.sh localhost 5432 postgres postgres askap askappsw askapdb"
     echo ""
     echo "Help: This will create a postgresql user 'askap' with login password 'askappsw'"
-    echo "      and a database 'askapdb' and grant to 'askap' user all the priveleges to 'askapdb'"
+    echo "      and a database 'askapdb' and grant to 'askap' user all the privileges to 'askapdb'"
     echo "Note: the arguments need to be passed in that order because"
     echo "\$1  ->  HOST in which the database runs"
     echo "\$2  ->  PORT to connect to on the host"

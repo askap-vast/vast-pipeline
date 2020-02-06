@@ -3,6 +3,7 @@ import logging
 
 import numpy as np
 import pandas as pd
+from django.conf import settings
 from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
@@ -163,6 +164,7 @@ class SelavyImage(FitsImage):
         read the sources from the selavy catalogue, select wanted columns
         and remap them to correct names
         """
+        # TODO: improve with loading only the cols we need and set datatype
         df = pd.read_fwf(self.selavy_path)
         # drop first line with unit of measure, select only wanted
         # columns and rename them
@@ -180,7 +182,7 @@ class SelavyImage(FitsImage):
 
         # do checks and fill in missing field for uploading sources
         # in DB (see fields in models.py -> Source model)
-        if df.component_id.duplicated().any():
+        if df['component_id'].duplicated().any():
             raise Exception('Found duplicated names in sources')
 
         # add fields from image and fix name column
@@ -189,6 +191,12 @@ class SelavyImage(FitsImage):
 
         # append img prefix to source name
         img_prefix = dj_image.name.split('.i.', 1)[-1].split('.', 1)[0] + '_'
-        df['name'] = img_prefix + df.component_id
+        df['name'] = img_prefix + df['component_id']
+
+        # # fix error fluxes
+        for col in ['flux_int_err', 'flux_peak_err']:
+            sel = df[col] < settings.FLUX_DEFAULT_MIN_ERROR
+            if sel.any():
+                df.loc[sel, col] = settings.FLUX_DEFAULT_MIN_ERROR
 
         return df

@@ -131,6 +131,10 @@ def catalogIndex(request):
         'ave_flux_peak',
         'max_flux_peak',
         'sources',
+        'v_int',
+        'v_peak',
+        'eta_int',
+        'eta_peak',
         'new'
     ]
     colsfields = []
@@ -161,6 +165,10 @@ def catalogIndex(request):
                     'Average Peak Flux',
                     'Max Peak Flux',
                     'Datapoints',
+                    'V int flux',
+                    'V peak flux',
+                    'Eta int flux',
+                    'Eta peak flux',
                     'New Source',
                 ],
                 'search': False,

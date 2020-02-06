@@ -2,6 +2,7 @@ import os
 import operator
 import logging
 
+import numpy as np
 import pandas as pd
 from astropy import units as u
 from astropy.coordinates import Angle, match_coordinates_sky, SkyCoord
@@ -49,22 +50,22 @@ class Pipeline():
         # A dictionary of path to Fits images, eg "/data/images/I1233234.FITS" and
         # selavy catalogues
         # Used as a cache to avoid reloading cubes all the time.
-        self.image_paths = {
+        self.img_selavy_paths = {
             x:y for x,y in zip(config.IMAGE_FILES, config.SELAVY_FILES)
         }
 
     def process_pipeline(self, dataset):
         images = []
         src_dj_obj = pd.DataFrame()
-        for path in self.image_paths:
+        for path in self.img_selavy_paths:
             # STEP #1: Load image and sources
-            image = SelavyImage(path, self.image_paths[path])
+            image = SelavyImage(path, self.img_selavy_paths[path])
             logger.info(f'read image {image.name}')
 
             # 1.1 get/create the frequency band
             band_id = self.get_create_img_band(image)
 
-            # 1.2 create image entry in DB
+            # 1.2 create/associate image in DB
             img, exists_f = self.get_create_img(dataset, band_id, image)
             # add image to list
             images.append(img)
@@ -128,7 +129,7 @@ class Pipeline():
         limit = Angle(self.config.ASSOCIATION_RADIUS * u.arcsec)
 
         # read the needed sources fields
-        cols = ['id','ra','dec', 'flux_int', 'flux_peak']
+        cols = ['id','ra','dec', 'flux_int', 'flux_int_err', 'flux_peak', 'flux_peak_err']
         skyc1_srcs = pd.read_parquet(
             images[0].sources_path,
             columns=cols
@@ -175,7 +176,7 @@ class Pipeline():
             # append skyc2 selection to catalog df
             catalogs_df = catalogs_df.append(skyc2_srcs.loc[idx[sel]])
             # remove eventual duplicated values
-            catalogs_df = catalogs_df.drop_duplicates()
+            catalogs_df = catalogs_df.drop_duplicates(subset=['id','cat'])
 
             # update skyc1 and df for next association iteration
             # calculate average angles for skyc1
@@ -217,7 +218,7 @@ class Pipeline():
 
         # tidy the df of catalogs to drop duplicated entries
         # to have unique rows of c_name and src_id
-        catalogs_df = catalogs_df.drop_duplicates()
+        catalogs_df = catalogs_df.drop_duplicates(subset=['id','cat'])
 
         # ra and dec columns are actually the average over each iteration
         # so remove ave ra and ave dec used for calculation and use
@@ -226,17 +227,63 @@ class Pipeline():
             catalogs_df.drop(['ra', 'dec'], axis=1)
             .rename(columns={'ra_source':'ra', 'dec_source':'dec'})
         )
-        # calculated average ra and dec
-        cat_df = (
-            catalogs_df.groupby('cat')
-            .agg(
-                ave_ra=pd.NamedAgg(column='ra', aggfunc='mean'),
-                ave_dec=pd.NamedAgg(column='dec', aggfunc='mean'),
-                ave_flux_int=pd.NamedAgg(column='flux_int', aggfunc='mean'),
-                ave_flux_peak=pd.NamedAgg(column='flux_peak', aggfunc='mean'),
-                max_flux_peak=pd.NamedAgg(column='flux_peak', aggfunc='max'),
-            ).reset_index()
-        )
+        # calculated average ra, dec, fluxes and metrics
+        def get_eta_metric(row, df, peak=False, debug=False):
+            if row['Nsrc'] == 1 :
+                return 0.
+            suffix = 'peak' if peak else 'int'
+            # weights
+            w = df[f'flux_{suffix}_err']**-2
+            w_mean = w.mean()
+
+            # weighted means
+            w_flux_mean = (w * df[f'flux_{suffix}']).mean()
+            w_flux_sq_mean = (w * row[f'flux_{suffix}_sq']).mean()
+            if debug:
+                print(row['Nsrc'])
+                print(w_flux_sq_mean)
+                print(w_flux_mean)
+                print(w_mean)
+                print(w)
+
+            return row['Nsrc'] / (row['Nsrc'] - 1) * (
+                w_flux_sq_mean - w_flux_mean**2 / w_mean
+            )
+
+        def get_var_metric(row, df, peak=False):
+            if row['Nsrc'] == 1 :
+                return 0.
+            suffix = 'peak' if peak else 'int'
+            return row[f'ave_flux_{suffix}']**-1 * np.sqrt(
+                row['Nsrc'] / (row['Nsrc'] - 1) * (
+                    row[f'flux_{suffix}_sq'].mean() - (
+                        df[f'flux_{suffix}'].mean()
+                    )**2
+                )
+            )
+
+        def groupby_funcs(row, debug=False):
+            d = {}
+            for col in ['ave_ra','ave_dec','ave_flux_int','ave_flux_peak']:
+                d[col] = row[col.split('_',1)[1]].mean()
+            d['max_flux_peak'] = row['flux_peak'].max()
+
+            for col in ['flux_int','flux_peak']:
+                d[f'{col}_sq'] = (row[col]**2).mean()
+            d['Nsrc'] = row['id'].count()
+            d['v_int'] = get_var_metric(d, row)
+            d['v_peak'] = get_var_metric(d, row, peak=True)
+            d['eta_int'] = get_eta_metric(d, row, debug=debug)
+            d['eta_peak'] = get_eta_metric(d, row, peak=True, debug=debug)
+            # remove not used cols
+            for col in ['flux_int_sq','flux_peak_sq']:
+                d.pop(col)
+            d.pop('Nsrc')
+            return pd.Series(d)
+
+        # calculate catalog fields
+        cat_df = catalogs_df.groupby('cat').apply(groupby_funcs)
+
         # generate the catalog models
         cat_df['cat_dj'] = cat_df.apply(
             get_catalog_models,
@@ -310,8 +357,15 @@ class Pipeline():
     @staticmethod
     def get_create_img(dataset, band_id, image):
         img = Image.objects.filter(name__exact=image.name)
-        if img:
-            return (img.get(), True)
+        if img.exists():
+            img = img.get()
+            # check and add the many to many if not existent
+            if not Image.objects.filter(
+                id=img.id, dataset__id=dataset.id
+            ).exists():
+                img.dataset.add(dataset)
+
+            return (img, True)
 
         # at this stage source parquet file not created but assume location
         sources_path = os.path.join(
@@ -320,7 +374,6 @@ class Pipeline():
             'sources.parquet'
             )
         img = Image(
-            dataset_id=dataset.id,
             band_id=band_id,
             sources_path=sources_path
         )
@@ -331,6 +384,8 @@ class Pipeline():
         for fld in img._meta.get_fields():
             if getattr(fld, 'attname', None) and getattr(image, fld.attname, None):
                 setattr(img, fld.attname, getattr(image, fld.attname))
+
         img.save()
+        img.dataset.add(dataset)
 
         return (img, False)

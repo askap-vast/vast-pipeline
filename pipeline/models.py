@@ -164,6 +164,20 @@ class Catalog(models.Model):
     ave_flux_peak = models.FloatField()
     max_flux_peak = models.FloatField()
 
+    # metrics
+    v_int = models.FloatField(
+        help_text='V metric for int flux'
+    )
+    v_peak = models.FloatField(
+        help_text='V metric for peak flux'
+    )
+    eta_int = models.FloatField(
+        help_text='Eta metric for int flux'
+    )
+    eta_peak = models.FloatField(
+        help_text='Eta metric for peak flux'
+    )
+
     def __str__(self):
         return self.name
 
@@ -171,9 +185,7 @@ class Catalog(models.Model):
 class Image(models.Model):
     """An image is a 2D radio image from a cube"""
     band = models.ForeignKey(Band, on_delete=models.CASCADE)
-    dataset = models.ForeignKey(
-        Dataset, on_delete=models.SET_NULL, blank=True, null=True
-    )
+    dataset = models.ManyToManyField(Dataset)
 
     sources_path = models.FilePathField(
         max_length=200

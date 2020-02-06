@@ -1,6 +1,6 @@
-# ASKAP Pipeline Development - Installation Notes
+# VAST Pipeline Development - Installation Notes
 
-This document explains how to install all the packages that the pipeline needs to run, as well as the PostgreSQL database. Following this documentation should get you started with a good __LOCAL__ development enrironment, where you can mess up things, but always go back and fix it up.
+This document explains how to install all the packages that the pipeline needs to run, as well as the PostgreSQL database. Following this documentation should get you started with a good __LOCAL__ development environment, where you can mess up things, but always go back and fix it up.
 
 Note for installs on a Mac, the use of `homebrew` is recommended (https://brew.sh).
 
@@ -70,12 +70,23 @@ I strongly recommend to setup a virtual environment, in which you can then insta
 This will avoid conflicts either with the system version of python, or with other code that you have that require different versions of these modules.
 
 Steps:
-1. Copy repo link from `Clone or download` button and clone the repository:
+1. Install OS requirements:
+- gcc
+- python3-dev
+- libpq-dev
+- libgraphviz-dev (for development requirements)
+
+For Ubuntu:
+```bash
+sudo apt-get install python3-dev libpq-dev libgraphviz-dev
+```
+
+2. Copy repo link from `Clone or download` button and clone the repository:
 ```bash
 git clone <PASTE REPO LINK> && cd <REPO>
 ```
 
-2. Setup a `Python >= 3.6` virtual environment. E.g. with `virtualenv`:
+3. Setup a `Python >= 3.6` virtual environment. E.g. with `virtualenv`:
 ```bash
 virtualenv -p python3 pipeline_env
 ```
@@ -86,7 +97,7 @@ conda create -n pipeline_env python=3.6
 
 NOTE: you can name the environment whatever you want instead of `pipeline_env`
 
-3. Activate the enviroment.
+4. Activate the environment.
 ```bash
 source pipeline_env/bin/activate
 ```
@@ -96,7 +107,7 @@ Otherwise use `Anaconda/conda`:
 conda activate pipeline_env
 ```
 
-4. Install the development requirements
+5. Install the development requirements
 
 Note that if you want to install the development requirements, graphviz needs to be installed on your system (Ubuntu: `sudo apt-get install graphviz`, Mac: `brew install graphviz`).
 
@@ -109,5 +120,5 @@ while read requirement; do conda install --yes $requirement; done < requirements
 while read requirement; do conda install --yes $requirement; done < requirements/requirements.txt
 ```
 
-Done! Now open the `README` file to see how to initialize and run the pipeline.
+Done! Now open the [`README.md`](./README.md) file to see how to initialize and run the pipeline.
 
