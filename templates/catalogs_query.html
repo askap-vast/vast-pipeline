@@ -49,15 +49,10 @@
           <h1 class="h6 mb-2 font-weight-bold text-gray-800">Average Flux Range</h1>
           <input type="text" class="form-control bg-light border-0 small" placeholder="Min" aria-label="FluxMinSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
           <input type="text" class="form-control bg-light border-0 small" placeholder="Max" aria-label="FluxMaxSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
-          <div class="dropdown mb-4">
-            <button class="btn btn-secondary dropdown-toggle" type="button" id="FluxMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              Flux Type
-            </button>
-            <div class="dropdown-menu animated--fade-in" aria-labelledby="FluxMenuButton">
-              <a class="dropdown-item" href="#">Int Flux</a>
-              <a class="dropdown-item" href="#">Peak Flux</a>
-            </div>
-          </div>
+          <select class="form-control">
+            <option>Int Flux</option>
+            <option>Peak Flux</option>
+          </select>
         </div>
         <div class="col-lg-2">
           <h1 class="h6 mb-2 font-weight-bold text-gray-800">Variability Metric</h1>
