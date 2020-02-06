@@ -90,13 +90,8 @@ class FitsImage(Image):
         from the image file header
         """
         wcs = WCS(header, naxis=2)
-        x = header[fits_naxis1]
-        y = header[fits_naxis2]
-        pix_centre = [[x / 2., y / 2.], [x / 2., y / 2.]]
-        # sky_centre = wcs.wcs_pix2sky(pix_centre, 1)
-        sky_centre = wcs.wcs_pix2world(pix_centre, 1)
-        self.ra = float(sky_centre[0][0])
-        self.dec = float(sky_centre[0][1])
+        pix_centre = [[header[fits_naxis1] / 2., header[fits_naxis2] / 2.]]
+        self.ra, self.dec = wcs.wcs_pix2world(pix_centre, 1)[0]
 
         # The field-of-view (in pixels) is assumed to be a circle in the centre
          # of the image. This may be an ellipse on the sky, eg MOST images.
