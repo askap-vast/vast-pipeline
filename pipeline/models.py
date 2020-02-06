@@ -151,6 +151,20 @@ class Band(models.Model):
         return self.name
 
 
+class SkyRegion(models.Model):
+    dataset = models.ForeignKey(Dataset, on_delete=models.SET_NULL, null=True,)
+
+    centre_ra = models.FloatField()
+    centre_dec = models.FloatField()
+    xtr_radius = models.FloatField()
+    x = models.FloatField()
+    y = models.FloatField()
+    z = models.FloatField()
+
+    def __str__(self):
+        return f'{self.centre_ra}, {self.centre_dec}'
+
+
 class Catalog(models.Model):
     dataset = models.ForeignKey(Dataset, on_delete=models.SET_NULL, null=True,)
     name = models.CharField(max_length=100)
