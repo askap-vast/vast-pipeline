@@ -1,7 +1,7 @@
 import os
 import logging
 import datetime
-from math import floor
+import math as m
 from importlib.util import spec_from_file_location, module_from_spec
 
 from django.conf import settings
@@ -116,9 +116,9 @@ def deg2sex(deg):
 
     sign = -1 if deg < 0 else 1
     adeg = abs(deg)
-    degf = floor(adeg)
+    degf = m.floor(adeg)
     mins = (adeg - degf) * 60.
-    minsf = int(floor(mins))
+    minsf = int(m.floor(mins))
     secs = (mins - minsf) * 60.
     return (sign, (degf, minsf, secs))
 
@@ -161,3 +161,15 @@ def deg2hms(deg, hms_format=False):
     if hms_format:
         return f'{sex[0]:02d}h{sex[1]:02d}m{sex[2]:05.2f}s'
     return f'{sex[0]:02d}:{sex[1]:02d}:{sex[2]:05.2f}'
+
+
+def eq_to_cart(ra, dec):
+    """
+    Find the cartesian co-ordinates on the unit sphere given the eq.
+    co-ords. ra, dec should be in degrees.
+    """
+    return (
+        m.cos(m.radians(dec)) * m.cos(m.radians(ra)),# Cartesian x
+        m.cos(m.radians(dec)) * m.sin(m.radians(ra)),# Cartesian y
+        m.sin(m.radians(dec))# Cartesian z
+    )

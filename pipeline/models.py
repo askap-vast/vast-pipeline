@@ -151,6 +151,20 @@ class Band(models.Model):
         return self.name
 
 
+class SkyRegion(models.Model):
+    dataset = models.ManyToManyField(Dataset)
+
+    centre_ra = models.FloatField()
+    centre_dec = models.FloatField()
+    xtr_radius = models.FloatField()
+    x = models.FloatField()
+    y = models.FloatField()
+    z = models.FloatField()
+
+    def __str__(self):
+        return f'{self.centre_ra}, {self.centre_dec}'
+
+
 class Catalog(models.Model):
     dataset = models.ForeignKey(Dataset, on_delete=models.SET_NULL, null=True,)
     name = models.CharField(max_length=100)
@@ -164,6 +178,20 @@ class Catalog(models.Model):
     ave_flux_peak = models.FloatField()
     max_flux_peak = models.FloatField()
 
+    # metrics
+    v_int = models.FloatField(
+        help_text='V metric for int flux'
+    )
+    v_peak = models.FloatField(
+        help_text='V metric for peak flux'
+    )
+    eta_int = models.FloatField(
+        help_text='Eta metric for int flux'
+    )
+    eta_peak = models.FloatField(
+        help_text='Eta metric for peak flux'
+    )
+
     def __str__(self):
         return self.name
 
@@ -171,9 +199,8 @@ class Catalog(models.Model):
 class Image(models.Model):
     """An image is a 2D radio image from a cube"""
     band = models.ForeignKey(Band, on_delete=models.CASCADE)
-    dataset = models.ForeignKey(
-        Dataset, on_delete=models.SET_NULL, blank=True, null=True
-    )
+    dataset = models.ManyToManyField(Dataset)
+    skyreg = models.ForeignKey(SkyRegion, on_delete=models.CASCADE)
 
     sources_path = models.FilePathField(
         max_length=200
