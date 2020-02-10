@@ -65,7 +65,7 @@ class Pipeline():
             # 1.1 get/create the frequency band
             band_id = self.get_create_img_band(image)
 
-            # 1.2 create image entry in DB
+            # 1.2 create/associate image in DB
             img, exists_f = self.get_create_img(dataset, band_id, image)
             # add image to list
             images.append(img)
@@ -357,8 +357,15 @@ class Pipeline():
     @staticmethod
     def get_create_img(dataset, band_id, image):
         img = Image.objects.filter(name__exact=image.name)
-        if img:
-            return (img.get(), True)
+        if img.exists():
+            img = img.get()
+            # check and add the many to many if not existent
+            if not Image.objects.filter(
+                id=img.id, dataset__id=dataset.id
+            ).exists():
+                img.dataset.add(dataset)
+
+            return (img, True)
 
         # at this stage source parquet file not created but assume location
         sources_path = os.path.join(
@@ -367,7 +374,6 @@ class Pipeline():
             'sources.parquet'
             )
         img = Image(
-            dataset_id=dataset.id,
             band_id=band_id,
             sources_path=sources_path
         )
@@ -378,6 +384,8 @@ class Pipeline():
         for fld in img._meta.get_fields():
             if getattr(fld, 'attname', None) and getattr(image, fld.attname, None):
                 setattr(img, fld.attname, getattr(image, fld.attname))
+
         img.save()
+        img.dataset.add(dataset)
 
         return (img, False)

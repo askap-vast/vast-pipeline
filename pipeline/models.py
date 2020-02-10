@@ -199,9 +199,7 @@ class Catalog(models.Model):
 class Image(models.Model):
     """An image is a 2D radio image from a cube"""
     band = models.ForeignKey(Band, on_delete=models.CASCADE)
-    dataset = models.ForeignKey(
-        Dataset, on_delete=models.SET_NULL, blank=True, null=True
-    )
+    dataset = models.ManyToManyField(Dataset)
 
     sources_path = models.FilePathField(
         max_length=200
