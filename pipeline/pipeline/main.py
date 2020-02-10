@@ -8,8 +8,10 @@ from astropy import units as u
 from astropy.coordinates import Angle, match_coordinates_sky, SkyCoord
 
 from ..image.main import SelavyImage
-from ..models import Association, Band, Catalog, Image, Source, SurveySource
-from ..utils.utils import deg2hms, deg2dms
+from ..models import (
+    Association, Band, Catalog, Image, SkyRegion, Source, SurveySource
+)
+from ..utils.utils import deg2hms, deg2dms, eq_to_cart
 
 
 logger = logging.getLogger(__name__)
@@ -32,6 +34,35 @@ def get_catalog_models(row, dataset=None):
         if getattr(fld, 'attname', None) and fld.attname in row.index:
             setattr(cat, fld.attname, row[fld.attname])
     return cat
+
+def get_create_skyreg(dataset, image):
+    skyr = SkyRegion.objects.filter(
+        centre_ra=image.ra,
+        centre_dec=image.dec,
+        xtr_radius=image.radius_pixels
+    )
+    if skyr:
+        skyr = skyr.get()
+        logger.info(f'Found sky region {skyr}')
+        if dataset not in skyr.dataset.all():
+            logger.info(f'Adding {dataset} to sky region {skyr}')
+            skyr.dataset.add(dataset)
+        return skyr
+
+    x, y, z = eq_to_cart(image.ra, image.dec)
+    skyr = SkyRegion(
+        centre_ra=image.ra,
+        centre_dec=image.dec,
+        xtr_radius=image.radius_pixels,
+        x=x,
+        y=y,
+        z=z,
+    )
+    skyr.save()
+    logger.info(f'Created sky region {skyr}')
+    skyr.dataset.add(dataset)
+    logger.info(f'Adding {dataset} to sky region {skyr}')
+    return skyr
 
 
 class Pipeline():
@@ -65,7 +96,7 @@ class Pipeline():
             # 1.1 get/create the frequency band
             band_id = self.get_create_img_band(image)
 
-            # 1.2 create/associate image in DB
+            # 1.2 create image and skyregion entry in DB
             img, exists_f = self.get_create_img(dataset, band_id, image)
             # add image to list
             images.append(img)
@@ -359,6 +390,7 @@ class Pipeline():
         img = Image.objects.filter(name__exact=image.name)
         if img.exists():
             img = img.get()
+            skyreg = get_create_skyreg(dataset, img)
             # check and add the many to many if not existent
             if not Image.objects.filter(
                 id=img.id, dataset__id=dataset.id
@@ -384,6 +416,10 @@ class Pipeline():
         for fld in img._meta.get_fields():
             if getattr(fld, 'attname', None) and getattr(image, fld.attname, None):
                 setattr(img, fld.attname, getattr(image, fld.attname))
+
+        # get create the sky region and associate with image
+        skyreg = get_create_skyreg(dataset, img)
+        img.skyreg = skyreg
 
         img.save()
         img.dataset.add(dataset)
