@@ -42,7 +42,7 @@ def get_var_metric(row, df, peak=False):
     )
 
 
-def groupby_funcs(row):
+def groupby_funcs(row, first_img):
     # calculated average ra, dec, fluxes and metrics
     d = {}
     for col in ['ave_ra','ave_dec','ave_flux_int','ave_flux_peak']:
@@ -60,6 +60,8 @@ def groupby_funcs(row):
     for col in ['flux_int_sq','flux_peak_sq']:
         d.pop(col)
     d.pop('Nsrc')
+    # set new catalog/source
+    d['new'] = True if first_img in row['img'] else False
     return pd.Series(d)
 
 
@@ -76,11 +78,20 @@ def get_catalog_models(row, dataset=None):
 
 def association(dataset, images, src_dj_obj, limit):
     # read the needed sources fields
-    cols = ['id','ra','dec', 'flux_int', 'flux_int_err', 'flux_peak', 'flux_peak_err']
+    cols = [
+        'id',
+        'ra',
+        'dec',
+        'flux_int',
+        'flux_int_err',
+        'flux_peak',
+        'flux_peak_err'
+    ]
     skyc1_srcs = pd.read_parquet(
         images[0].sources_path,
         columns=cols
     )
+    skyc1_srcs['img'] = images[0].name
     skyc1_srcs['cat'] = pd.np.NaN
     skyc1_srcs['ra_source'] = skyc1_srcs.ra
     skyc1_srcs['dec_source'] = skyc1_srcs.dec
@@ -98,6 +109,7 @@ def association(dataset, images, src_dj_obj, limit):
             image.sources_path,
             columns=cols
         )
+        skyc2_srcs['img'] = image.name
         skyc2_srcs['cat'] = pd.np.NaN
         skyc2_srcs['ra_source'] = skyc2_srcs.ra
         skyc2_srcs['dec_source'] = skyc2_srcs.dec
@@ -176,7 +188,9 @@ def association(dataset, images, src_dj_obj, limit):
     )
 
     # calculate catalog fields
-    cat_df = catalogs_df.groupby('cat').apply(groupby_funcs)
+    cat_df = catalogs_df.groupby('cat').apply(
+        groupby_funcs, first_img=(images[0].name,)
+    )
 
     # generate the catalog models
     cat_df['cat_dj'] = cat_df.apply(
