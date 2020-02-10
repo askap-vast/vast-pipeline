@@ -7,7 +7,8 @@ from astropy import units as u
 from astropy.coordinates import Angle
 
 from ..image.main import SelavyImage
-from ..models import Band, Image, Source, SurveySource
+from ..models import Band, Image, SkyRegion, Source, SurveySource
+from ..utils.utils import eq_to_cart
 from .association import association
 
 
