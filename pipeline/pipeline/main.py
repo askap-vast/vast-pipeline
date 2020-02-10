@@ -96,7 +96,7 @@ class Pipeline():
             # 1.1 get/create the frequency band
             band_id = self.get_create_img_band(image)
 
-            # 1.2 create/associate image in DB
+            # 1.2 create image and skyregion entry in DB
             img, exists_f = self.get_create_img(dataset, band_id, image)
             # add image to list
             images.append(img)

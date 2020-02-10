@@ -10,6 +10,7 @@ from astropy.wcs.utils import proj_plane_pixel_scales
 
 from pipeline.survey.translators import tr_selavy
 
+
 logger = logging.getLogger(__name__)
 
 
