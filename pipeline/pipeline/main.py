@@ -1,10 +1,10 @@
 import os
+import re
 import operator
 import logging
-import glob
-import re
 
 import pandas as pd
+from glob import glob
 from astropy import units as u
 from astropy.coordinates import Angle
 
@@ -56,27 +56,35 @@ def get_create_skyreg(dataset, image):
 
 
 class Pipeline():
-    '''Holds all the state associated with a pipeline instance (usually just one is used)'''
+    '''
+    Holds all the state associated with a pipeline instance
+    (usually just one is used)
+    '''
 
     def __init__(self, max_img=10, config=None):
         '''
-        We limit the size of the cube cache so we don't hit the max files open limit
-        or use too much RAM
+        We limit the size of the cube cache so we don't hit the max
+        files open limit or use too much RAM
         '''
         self.max_img = max_img
         self.config = config
         if self.config.MAX_BACKWARDS_MONITOR_IMAGES:
-            self.max_img=self.config.MAX_BACKWARDS_MONITOR_IMAGES + 1
+            self.max_img = self.config.MAX_BACKWARDS_MONITOR_IMAGES + 1
 
-        # A dictionary of path to Fits images, eg "/data/images/I1233234.FITS" and
-        # selavy catalogues
-        # Used as a cache to avoid reloading cubes all the time.
-        pattern = re.compile(r'\S*(\d{4})([-+]\d{2})[AB]\S*')
-        img_files = [img for path in config.IMAGE_FILES for img in glob.glob(path)]
-        sel_files = [sel for path in config.SELAVY_FILES for sel in glob.glob(path)]
+        # A dictionary of path to Fits images, eg "/data/images/I1233234.FITS"
+        # and selavy catalogues. Used as a cache to avoid reloading cubes
+        # all the time.
+        base = re.compile(r'^image\.i\.([A-Z]+\d+)\.cont\..*taylor.*fits')
+        detail = re.compile(r'^.*(\d{4})([-+]\d{2}).*taylor.*fits')
+        img_files = [img for path in config.IMAGE_FILES for img in glob(path)]
+        sel_files = [sel for path in config.SELAVY_FILES for sel in glob(path)]
 
-        img_files = sorted(img_files, key=lambda f: pattern.sub(r'\1\2', f))
-        sel_files = sorted(sel_files, key=lambda f: pattern.sub(r'\1\2', f))
+        img_files = sorted(
+            img_files, key=lambda f: detail.sub(r'\1\2', base.sub(r'\1', f))
+        )
+        sel_files = sorted(
+            sel_files, key=lambda f: detail.sub(r'\1\2', base.sub(r'\1', f))
+        )
 
         self.img_selavy_paths = {
             x:y for x,y in zip(img_files, sel_files)
