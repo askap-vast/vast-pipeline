@@ -79,9 +79,10 @@ def load_validate_cfg(cfg):
         ))
 
     # validate every config from the config template
-    for key in [k for k in dir(mod) if k.isupper()]:
-        if key not in dir(base_cfg):
-            raise Exception('configuration not valid, missing keys!')
+    cfg_list = [k for k in dir(mod) if k.isupper()]
+    for key in [k for k in dir(base_cfg) if k.isupper()]:
+        if key not in cfg_list:
+            raise Exception(f'configuration not valid, missing key: {key}!')
 
     return mod
 
