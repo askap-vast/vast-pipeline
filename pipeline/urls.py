@@ -18,7 +18,8 @@ urlpatterns = [
     path('datasets/<int:id>/', views.datasetDetail, name='dataset_detail'),
     path('images', views.imageIndex, name='image_index'),
     path('sources', views.sourceIndex, name='source_index'),
-    path('catalogs', views.catalogIndex, name='catalog_index'),
+    path('catalogs/overview', views.catalogIndex, name='catalog_index'),
+    path('catalogs/query', views.catalogQuery, name='catalog_query'),
     re_path(
         r'^catalogs/(?P<id>\d+)(?:/(?P<action>[\w]+))?/$',
         views.catalogDetail,

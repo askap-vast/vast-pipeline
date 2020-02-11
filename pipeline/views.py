@@ -150,9 +150,13 @@ def catalogIndex(request):
 
     return render(
         request,
-        'catalogs_query.html',
+        'generic_table.html',
         {
-            'breadcrumb': {'title': 'Catalogs', 'url': request.path},
+            'text': {
+                'title': 'Catalogs',
+                'description': 'List of all catalogs below',
+                'breadcrumb': {'title': 'Catalogs', 'url': request.path},
+            },
             'datatable': {
                 'api': '/api/catalogs/?format=datatables',
                 'colsFields': colsfields,
@@ -180,6 +184,67 @@ def catalogIndex(request):
 class CatalogViewSet(ModelViewSet):
     queryset = Catalog.objects.all()
     serializer_class = CatalogSerializer
+
+
+# Catalogs Query
+def catalogQuery(request):
+    fields = [
+        'name',
+        'comment',
+        'ave_ra',
+        'ave_dec',
+        'ave_flux_int',
+        'ave_flux_peak',
+        'max_flux_peak',
+        'sources',
+        'v_int',
+        'v_peak',
+        'eta_int',
+        'eta_peak',
+        'new'
+    ]
+    colsfields = []
+    for col in fields:
+        if col == 'name':
+            colsfields.append({
+                'data': col, 'render': {
+                    'prefix': '/catalogs/', 'col':'name'
+                }
+            })
+        else:
+            colsfields.append({'data': col})
+
+    return render(
+        request,
+        'catalogs_query.html',
+        {
+            'breadcrumb': {'title': 'Catalogs', 'url': request.path},
+            # 'text': {
+            #     'title': 'Catalogs',
+            #     'description': 'List of all catalogs below',
+            # },
+            'datatable': {
+                'api': '/api/catalogs/?format=datatables',
+                'colsFields': colsfields,
+                'colsNames': [
+                    'Name',
+                    'Comment',
+                    'Average RA',
+                    'Average DEC',
+                    'Average Int Flux',
+                    'Average Peak Flux',
+                    'Max Peak Flux',
+                    'Datapoints',
+                    'V int flux',
+                    'V peak flux',
+                    'Eta int flux',
+                    'Eta peak flux',
+                    'New Source',
+                ],
+                'search': False,
+            }
+        }
+    )
 
 
 # Catalog detail
@@ -249,8 +314,8 @@ def catalogDetail(request, id, action=None):
     ).order_by('datetime').values(*tuple(cols)))
     for src in sources:
         src['datetime'] = src['datetime'].strftime('%Y %b %d %H:%M:%S')
-        for key in ['flux_int', 'flux_int_err', 'flux_peak', 'flux_peak_err']:
-            src[key] = src[key] * 1.e3
+        # for key in ['flux_int', 'flux_int_err', 'flux_peak', 'flux_peak_err']:
+        #     src[key] = src[key] * 1.e3
 
     # add source count
     catalog['sources'] = len(sources)
