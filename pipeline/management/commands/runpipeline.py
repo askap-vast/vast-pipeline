@@ -1,4 +1,5 @@
 import os
+import traceback
 import logging
 
 from django.core.management.base import BaseCommand, CommandError
@@ -53,6 +54,8 @@ class Command(BaseCommand):
         try:
             cfg = load_validate_cfg(cfg_path)
         except Exception as e:
+            if settings.DEBUG:
+                traceback.print_exc()
             raise CommandError(f'Config error:\n{e}')
 
         # Create the dataset in DB
@@ -74,6 +77,8 @@ class Command(BaseCommand):
         try:
             pipeline.process_pipeline(dataset)
         except Exception as e:
+            if settings.DEBUG:
+                traceback.print_exc()
             raise CommandError(f'Processing error:\n{e}')
 
     @staticmethod
