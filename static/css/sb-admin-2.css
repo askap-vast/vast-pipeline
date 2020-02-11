@@ -10127,7 +10127,7 @@ a:focus {
 .sidebar .nav-item .collapse .collapse-inner,
 .sidebar .nav-item .collapsing .collapse-inner {
   padding: .5rem 0;
-  min-width: 10rem;
+  /*min-width: 10rem;*/
   font-size: 0.85rem;
   margin: 0 0 1rem 0;
 }
@@ -10264,7 +10264,7 @@ a:focus {
     width: 100%;
     text-align: left;
     padding: 1rem;
-    width: 14rem;
+    width: 10rem;
   }
   .sidebar .nav-item .nav-link i {
     font-size: 0.85rem;
@@ -10302,7 +10302,7 @@ a:focus {
   }
   .sidebar.toggled .nav-item .collapse {
     position: absolute;
-    left: calc(6.5rem + 1.5rem / 2);
+    left: calc(4.5rem + 1.5rem / 2);
     z-index: 1;
     top: 2px;
     -webkit-animation-name: growIn;
