@@ -218,6 +218,9 @@ def catalogQuery(request):
         else:
             colsfields.append({'data': col})
 
+    # get all datasets names
+    ds =  list(Dataset.objects.values('name').all())
+
     return render(
         request,
         'catalogs_query.html',
@@ -227,6 +230,7 @@ def catalogQuery(request):
             #     'title': 'Catalogs',
             #     'description': 'List of all catalogs below',
             # },
+            'datasets': ds,
             'datatable': {
                 'api': '/api/catalogs/?format=datatables',
                 'colsFields': colsfields,

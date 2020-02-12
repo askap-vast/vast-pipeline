@@ -40,6 +40,15 @@
     <div class="card-body">
       <div class="row">
         <div class="col-lg-2">
+          <h1 class="h6 mb-2 font-weight-bold text-gray-800">Dataset</h1>
+          <select class="form-control">
+            <option>All</option>
+            {% for ds in  datasets%}
+            <option>{{ ds.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-lg-2">
           <h1 class="h6 mb-2 font-weight-bold text-gray-800">Cone Search</h1>
           <input type="number" class="form-control bg-light border-0 small" placeholder="RA Min" step="1e-10" aria-label="RaMinSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
           <input type="number" class="form-control bg-light border-0 small" placeholder="RA Max" step="1e-10" aria-label="RaMaxSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
@@ -56,6 +65,12 @@
         </div>
         <div class="col-lg-2">
           <h1 class="h6 mb-2 font-weight-bold text-gray-800">Variability Metric</h1>
+          <input type="text" class="form-control bg-light border-0 small" placeholder="Min" aria-label="VarMinSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <input type="text" class="form-control bg-light border-0 small" placeholder="Max" aria-label="VarMaxSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <select class="form-control">
+            <option>Int Flux</option>
+            <option>Peak Flux</option>
+          </select>
         </div>
         <div class="col-lg-2">
           <h1 class="h6 mb-2 font-weight-bold text-gray-800">Datapoints</h1>
