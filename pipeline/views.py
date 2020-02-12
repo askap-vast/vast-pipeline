@@ -59,6 +59,10 @@ def datasetDetail(request, id):
     dataset['nr_imgs'] = Image.objects.filter(dataset__id=dataset['id']).count()
     dataset['nr_cats'] = Catalog.objects.filter(dataset__id=dataset['id']).count()
     dataset['nr_srcs'] = Source.objects.filter(image__dataset__id=dataset['id']).count()
+    dataset['new_srcs'] = Catalog.objects.filter(
+        dataset__id=dataset['id'],
+        new=True,
+    ).count()
     return render(request, 'dataset_detail.html', {'dataset': dataset})
 
 
