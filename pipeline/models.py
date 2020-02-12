@@ -102,7 +102,7 @@ class Dataset(models.Model):
     images that can be compared
     """
     name = models.CharField(
-        max_length=32,
+        max_length=64,
         unique=True,
         validators=[
             RegexValidator(
@@ -315,7 +315,7 @@ class Source(models.Model):
         through_fields=('source', 'catalog')
     )
 
-    name = models.CharField(max_length=32, unique=True)
+    name = models.CharField(max_length=64, unique=True)
 
     ra = models.FloatField(help_text='RA of the source (Deg)')# degrees
     ra_err = models.FloatField(help_text='RA error of the source (Deg)')
@@ -365,11 +365,11 @@ class Source(models.Model):
         help_text='Does the fit come from an island'
     )# Does the fit come from an island?
     component_id = models.CharField(
-        max_length=32,
+        max_length=64,
         help_text='The ID of the component from which the source comes from'
     )# The ID of the component from which the source comes from
     island_id    = models.CharField(
-        max_length=32,
+        max_length=64,
         help_text='The ID of the island from which the source comes from'
     )# The ID of the island from which the source comes from
 
