@@ -4,6 +4,7 @@ from rest_framework import serializers
 from .utils.utils import deg2dms, deg2hms
 from .models import Catalog, Dataset, Image, Source
 
+
 class DatasetSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
     path = serializers.SerializerMethodField()
