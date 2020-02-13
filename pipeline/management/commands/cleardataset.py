@@ -1,6 +1,5 @@
 import logging
 
-from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
 from pipeline.models import Dataset
@@ -35,9 +34,8 @@ class Command(BaseCommand):
         try:
             dataset = Dataset.objects.get(name=dataset_name)
         except Dataset.DoesNotExist:
-            raise CommandError("Dataset %s does not exist" % dataset_name)
+            raise CommandError(f"Dataset {dataset_name} does not exist")
 
-        logger.info("Database: {0}".format(settings.DATABASES["default"]["NAME"]))
-        logger.info("Using dataset '{0}'".format(dataset_name))
+        logger.info("Using dataset '%s'", dataset_name)
 
         dataset.delete()
