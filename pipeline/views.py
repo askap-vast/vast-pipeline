@@ -178,7 +178,7 @@ def catalogIndex(request):
 
 
 class CatalogViewSet(ModelViewSet):
-    queryset = Catalog.objects.all()
+    queryset = Catalog.objects.annotate(sources=Count("source"))
     serializer_class = CatalogSerializer
 
 
