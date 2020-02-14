@@ -65,7 +65,6 @@ class Command(BaseCommand):
         logger.info("Source monitoring: %s" % cfg.MONITOR)
         logger.info("Constant background RMS: %s" % cfg.CONSTANT_RMS)
 
-        stats = RunStats()
         stopwatch = StopWatch()
 
         # intitialise the pipeline with the configuration

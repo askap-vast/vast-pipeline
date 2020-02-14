@@ -107,7 +107,7 @@ class Pipeline():
             # 1.3 get the image sources and save them in DB
             sources = image.read_selavy(img)
             logger.info(
-                'Processed sources dataframe of shape: %s' % sources.shape
+                'Processed sources dataframe of shape: (%i, %i)' % (sources.shape[0], sources.shape[1])
             )
 
             # do DB bulk create

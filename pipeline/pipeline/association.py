@@ -103,7 +103,7 @@ def association(dataset, images, src_dj_obj, limit):
     # initialise the df of catalogs with the base one
     catalogs_df = pd.DataFrame()
     for it, image in enumerate(images[1:]):
-        logger.info('Association iteration: #%i' % it + 1)
+        logger.info('Association iteration: #%i' % (it + 1))
         # load skyc2 sources and create SkyCoord/sky catalog(skyc)
         skyc2_srcs = pd.read_parquet(
             image.sources_path,
