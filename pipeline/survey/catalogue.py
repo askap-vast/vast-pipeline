@@ -33,7 +33,7 @@ def get_survey(filename, survey_name, survey_id, tr=translators['DEFAULT']):
     else:
         tab = Table.read(filename)
 
-    logger.info(f'total time to load catalogue: {watch.reset()}s')
+    logger.info('total time to load catalogue: %fs' % watch.reset())
 
     # grab the columns names and dtypes
     col_dtype_map = {col: tab[col].dtype.name for col in tab.colnames}
@@ -94,5 +94,5 @@ def get_survey(filename, survey_name, survey_id, tr=translators['DEFAULT']):
             elif tab[col].dtype == int:
                 tab[col] = tab[col].fillna(0)
 
-    logger.info(f'total time to process catalogue: {watch.reset()}s')
+    logger.info('total time to process catalogue: %fs' % watch.reset())
     return tab

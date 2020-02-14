@@ -55,7 +55,7 @@ class Command(BaseCommand):
         tr = translators['DEFAULT']
         if survey_name.upper() in translators.keys():
             tr = translators[survey_name.upper()]
-            logger.info("Using translator {0}".format(survey_name.upper()))
+            logger.info("Using translator %s" % survey_name.upper())
         else:
             logger.info("Using translator DEFAULT")
 
@@ -65,7 +65,7 @@ class Command(BaseCommand):
             logger.info('found previous survey with same name, deleting them')
             watch.reset()
             survey.delete()
-            logger.info(f'total time survey deletion {watch.reset()}s')
+            logger.info('total time survey deletion %f s' % watch.reset())
 
         # create the survey
         survey = Survey(name=survey_name, frequency=tr['freq'])
@@ -85,7 +85,7 @@ class Command(BaseCommand):
             os.mkdir(parq_folder)
         f_parquet = os.path.join(parq_folder, 'sources.parquet')
         sources.to_parquet(f_parquet, index=False)
-        logger.info(f'dumping sources to parquet, time: {watch.reset()}s')
+        logger.info('dumping sources to parquet, time: %fs' % watch.reset())
 
         # upload the sources
         config = settings.DATABASES['default']
@@ -97,7 +97,7 @@ class Command(BaseCommand):
             )
         )
 
-        logger.info(f'Inserting #{sources.shape[0]} records in db')
+        logger.info('Inserting #%i records in db' % sources.shape[0])
         sources.to_sql(
             SurveySource._meta.db_table,
             eng,
@@ -106,5 +106,5 @@ class Command(BaseCommand):
             chunksize=100_000,
             method='multi',
         )
-        logger.info(f'Inserted #{SurveySource.objects.filter(survey_id=survey.id).count()} records')
-        logger.info(f'Upload successful! Duration: {watch.reset_init()}s')
+        logger.info('Inserted #%i records' % SurveySource.objects.filter(survey_id=survey.id).count())
+        logger.info('Upload successful! Duration: %fs' % watch.reset_init())

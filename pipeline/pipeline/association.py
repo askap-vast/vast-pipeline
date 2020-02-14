@@ -103,7 +103,7 @@ def association(dataset, images, src_dj_obj, limit):
     # initialise the df of catalogs with the base one
     catalogs_df = pd.DataFrame()
     for it, image in enumerate(images[1:]):
-        logger.info(f'Association iteration: #{it + 1}')
+        logger.info('Association iteration: #%i' % it + 1)
         # load skyc2 sources and create SkyCoord/sky catalog(skyc)
         skyc2_srcs = pd.read_parquet(
             image.sources_path,
@@ -202,7 +202,7 @@ def association(dataset, images, src_dj_obj, limit):
     # TODO remove deleting existing catalogs
     if Catalog.objects.filter(dataset=dataset).exists():
         cats = Catalog.objects.filter(dataset=dataset).delete()
-        logger.info(f'deleting all catalogs for this dataset: {cats}')
+        logger.info('deleting all catalogs for this dataset: %s' % cats)
 
     batch_size = 10_000
     for idx in range(0, cat_df.cat_dj.size, batch_size):
@@ -210,7 +210,7 @@ def association(dataset, images, src_dj_obj, limit):
             cat_df.cat_dj.iloc[idx : idx + batch_size].tolist(),
             batch_size
         )
-        logger.info(f'bulk created #{len(out_bulk)} catalogs')
+        logger.info('bulk created #%s catalogs' % len(out_bulk))
 
     catalogs_df = (
         catalogs_df.merge(cat_df, on='cat')
@@ -231,4 +231,4 @@ def association(dataset, images, src_dj_obj, limit):
             catalogs_df.assoc_dj.iloc[idx : idx + batch_size].tolist(),
             batch_size
         )
-        logger.info(f'bulk created #{len(out_bulk)} associations')
+        logger.info('bulk created #%s associations' % len(out_bulk))
