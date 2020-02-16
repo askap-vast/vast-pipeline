@@ -86,3 +86,8 @@ celerybeat-schedule
 
 # Editors
 *.sublime*
+.vscode/
+
+# pipeline data files
+pipeline-projects/
+reference-surveys/
