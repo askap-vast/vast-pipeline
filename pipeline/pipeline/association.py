@@ -201,8 +201,14 @@ def association(dataset, images, src_dj_obj, limit):
     # create catalogs in DB
     # TODO remove deleting existing catalogs
     if Catalog.objects.filter(dataset=dataset).exists():
-        cats = Catalog.objects.filter(dataset=dataset).delete()
-        logger.info('deleting all catalogs for this dataset: %s' % cats)
+        n_del, detail_del  = Catalog.objects.filter(dataset=dataset).delete()
+        logger.info((
+            'deleting all catalogs and related objects for this dataset'
+            ' (type, #deleted): %s. Total objects deleted: %i'
+            ),
+            detail_del,
+            n_del,
+        )
 
     batch_size = 10_000
     for idx in range(0, cat_df.cat_dj.size, batch_size):
