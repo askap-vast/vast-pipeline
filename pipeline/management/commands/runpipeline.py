@@ -60,10 +60,10 @@ class Command(BaseCommand):
         # Create the dataset in DB
         dataset = self.get_create_dataset(dataset_name, cfg.DATASET_PATH)
 
-        logger.info("Source finder: %s" % cfg.SOURCE_FINDER)
-        logger.info("Using dataset '%s'" % dataset_name)
-        logger.info("Source monitoring: %s" % cfg.MONITOR)
-        logger.info("Constant background RMS: %s" % cfg.CONSTANT_RMS)
+        logger.info("Source finder: %s", cfg.SOURCE_FINDER)
+        logger.info("Using dataset '%s'", dataset_name)
+        logger.info("Source monitoring: %s", cfg.MONITOR)
+        logger.info("Constant background RMS: %s", cfg.CONSTANT_RMS)
 
         stopwatch = StopWatch()
 

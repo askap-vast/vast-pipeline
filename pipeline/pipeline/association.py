@@ -103,7 +103,7 @@ def association(dataset, images, src_dj_obj, limit):
     # initialise the df of catalogs with the base one
     catalogs_df = pd.DataFrame()
     for it, image in enumerate(images[1:]):
-        logger.info('Association iteration: #%i' % (it + 1))
+        logger.info('Association iteration: #%i', (it + 1))
         # load skyc2 sources and create SkyCoord/sky catalog(skyc)
         skyc2_srcs = pd.read_parquet(
             image.sources_path,
@@ -210,7 +210,7 @@ def association(dataset, images, src_dj_obj, limit):
             cat_df.cat_dj.iloc[idx : idx + batch_size].tolist(),
             batch_size
         )
-        logger.info('bulk created #%s catalogs' % len(out_bulk))
+        logger.info('bulk created #%i catalogs', len(out_bulk))
 
     catalogs_df = (
         catalogs_df.merge(cat_df, on='cat')
@@ -231,4 +231,4 @@ def association(dataset, images, src_dj_obj, limit):
             catalogs_df.assoc_dj.iloc[idx : idx + batch_size].tolist(),
             batch_size
         )
-        logger.info('bulk created #%s associations' % len(out_bulk))
+        logger.info('bulk created #%i associations', len(out_bulk))
