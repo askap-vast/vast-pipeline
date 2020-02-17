@@ -183,7 +183,7 @@ class SkyRegion(models.Model):
 
 
 class Catalog(models.Model):
-    dataset = models.ForeignKey(Dataset, on_delete=models.SET_NULL, null=True,)
+    dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE, null=True,)
     name = models.CharField(max_length=100)
     comment = models.TextField(max_length=1000, default='', blank=True)
     new = models.BooleanField(default=False, help_text='New Source or Catalog')
