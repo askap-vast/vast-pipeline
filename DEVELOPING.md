@@ -29,3 +29,12 @@ Since this models does not have a production environment that runs 24/7, so you 
 4. Commit the 'new' migraton file `0001_initial.py` as well as `models.py` within a single commit, and add an appropriate message (e.g. add field X to model Y)
 
 ### 2) Someone else modified `models.py` and you pull the changes
+
+
+## Reset the database
+
+Make sure you installed the [`requirements-dev.txt`](./requirements/requirements-dev.txt). And `django_extensions` is in `INSTALLED_APPS` in your settings file (i.e. `settings.py`).
+
+```bash
+(pipeline_env)$: ./manage.py reset_db && ./manage.py migrate
+```

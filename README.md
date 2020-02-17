@@ -5,6 +5,16 @@ Installation instructions are described in [`INSTALL.md`](./INSTALL.md).
 
 If you intend to contribute to the code base please read and follow the guidelines in [`DEVELOPING.md`](./DEVELOPING.md).
 
+## Table of Contents
+
+- [Pipeline Configuration](##pipeline-configuration)
+- [Pipeline Usage](##pipeline-usage)
+	- [Initialise a Dataset](###initialise-a-dataset)
+	- [Run the Pipeline](###run-the-pipeline)
+	- [Resetting a Dataset](###resetting-a-dataset)
+	- [Import survey data](###import-survey-data)
+- [Data Exploration via Django Web Server](##data-exploration-via-django-web-server)
+
 ## Pipeline Configuration
 The following instructions, will get you started in setting up the database and pipeline configuration
 1. Copy the settings template
@@ -120,10 +130,9 @@ Output:
 
 There are 4 commands, described in detail below.
 
-### Process Images
+### Initialise a dataset
 In order to process the images in the pipeline, you must create/initialise a dataset first.
 
-#### Initialise a dataset
 The dataset creation is run using `initdataset` django command, which requires a dataset folder. The command creates a folder with the dataset name under the settings
 `PROJECT_WORKING_DIR` defined in [settings](./webinterface/settings.template.py).
 
@@ -177,7 +186,7 @@ Output:
 
 ```
 
-#### Run the Pipeline
+### Run the Pipeline
 The pipeline is run using `runpipeline` django command.
 
 ```bash
@@ -194,13 +203,18 @@ General usage:
 (pipeline_env)$: ./manage.py runpipeline path/to/my_dataset
 ```
 
-Resetting the database can be done using the `cleardataset` command: it will delete all images (and related objects such as sources) associated with that dataset, if that images does not belong to another dataset. It will deleted all the catalogs associated with that dataset.
+### Resetting a Dataset
+
+Detailed commands for resetting the database can be found in [`DEVELOPING.md`](./DEVELOPING.md).
+
+Resetting a dataset (i.e. a pipeline run) can be done using the `cleardataset` command: it will delete all images (and related objects such as sources) associated with that dataset, if that images does not belong to another dataset. It will deleted all the catalogs associated with that dataset.
 ```bash
 (pipeline_env)$: ./manage.py cleardataset my_dataset
 ```
 
-### Import survey data (optional but recommended)
-TBC
+### Import survey data
+
+This command is optional but recommended. TBC
 
 
 ## Data Exploration via Django Web Server
