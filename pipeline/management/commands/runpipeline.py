@@ -1,11 +1,12 @@
 import os
 import logging
+import traceback
 
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 
 from pipeline.pipeline.main import Pipeline
-from pipeline.utils.utils import load_validate_cfg, RunStats, StopWatch
+from pipeline.utils.utils import load_validate_cfg, StopWatch
 from pipeline.models import Dataset
 
 
@@ -15,7 +16,6 @@ logger = logging.getLogger(__name__)
 class Command(BaseCommand):
     """
     This script is used to process images with the ASKAP transient pipeline.
-
     Use --help for usage, and refer README.
     """
     help = 'Process the pipeline for a list of images or a Selavy catalog'
@@ -53,18 +53,18 @@ class Command(BaseCommand):
         try:
             cfg = load_validate_cfg(cfg_path)
         except Exception as e:
+            if options['verbosity'] > 1:
+                traceback.print_exc()
             raise CommandError(f'Config error:\n{e}')
 
         # Create the dataset in DB
         dataset = self.get_create_dataset(dataset_name, cfg.DATASET_PATH)
 
-        logger.info(f"Database: {settings.DATABASES['default']['NAME']}")
-        logger.info(f"Source finder: {cfg.SOURCE_FINDER}")
-        logger.info(f"Using dataset '{dataset_name}'")
-        logger.info(f"Source monitoring: {cfg.MONITOR}")
-        logger.info(f"Constant background RMS: {cfg.CONSTANT_RMS}")
+        logger.info("Source finder: %s", cfg.SOURCE_FINDER)
+        logger.info("Using dataset '%s'", dataset_name)
+        logger.info("Source monitoring: %s", cfg.MONITOR)
+        logger.info("Constant background RMS: %s", cfg.CONSTANT_RMS)
 
-        stats = RunStats()
         stopwatch = StopWatch()
 
         # intitialise the pipeline with the configuration
@@ -74,6 +74,8 @@ class Command(BaseCommand):
         try:
             pipeline.process_pipeline(dataset)
         except Exception as e:
+            if options['verbosity'] > 1:
+                traceback.print_exc()
             raise CommandError(f'Processing error:\n{e}')
 
     @staticmethod

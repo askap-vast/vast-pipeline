@@ -67,7 +67,7 @@ class FitsImage(Image):
         self.fov_bmin = None
 
         if header.get('TELESCOP', None) == 'ASKAP':
-            self.time = pd.Timestamp(header['DATE'], tz=header['TIMESYS'])
+            self.time = pd.Timestamp(header['DATE-OBS'], tz=header['TIMESYS'])
             self.beam_bmaj = header['BMAJ']
             self.beam_bmin = header['BMIN']
             self.beam_bpa = header['BPA']

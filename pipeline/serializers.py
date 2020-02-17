@@ -46,7 +46,7 @@ class SourceSerializer(serializers.ModelSerializer):
 
 class CatalogSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
-    sources = serializers.SerializerMethodField()
+    sources = serializers.IntegerField(read_only=True)
     ave_ra = serializers.SerializerMethodField()
     ave_dec = serializers.SerializerMethodField()
 
@@ -54,9 +54,6 @@ class CatalogSerializer(serializers.ModelSerializer):
         model = Catalog
         exclude = ['dataset']
         datatables_always_serialize = ('id',)
-
-    def get_sources(self, catalog):
-        return catalog.source_set.count()
 
     def get_ave_ra(self, catalog):
         return deg2hms(catalog.ave_ra, hms_format=True)

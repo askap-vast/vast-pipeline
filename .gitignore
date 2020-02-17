@@ -86,8 +86,10 @@ celerybeat-schedule
 
 # Editors
 *.sublime*
+.vscode/
 
-# Others
+# pipeline files/folders
 **/*.parquet
 **/*.png
 *project*/
+*survey*/

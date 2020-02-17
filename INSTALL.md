@@ -1,4 +1,4 @@
-# VAST Pipeline Development - Installation Notes
+# VAST Pipeline Prototype - Installation Notes
 
 This document explains how to install all the packages that the pipeline needs to run, as well as the PostgreSQL database. Following this documentation should get you started with a good __LOCAL__ development environment, where you can mess up things, but always go back and fix it up.
 
@@ -6,7 +6,7 @@ Note for installs on a Mac, the use of `homebrew` is recommended (https://brew.s
 
 ## PostgreSQL Installation
 
-I don't recommend installing the database as part of a system package (e.g. `apt-get install postgres`), but instead use docker, which let you mess up things and keep your database installation separated from the system packages, given also that you need to install Python packages for the database to use, but you don't want to confuse them with the Pipeline Python environment.
+I don't recommend installing the database as part of a system package (e.g. `apt-get install postgres`), but instead use docker, which let you mess up things and keep your database installation separated from the system packages. In this way you can easily destroy and re-create the database without messing up your OS installed packages.
 
 Steps:
 
@@ -17,32 +17,32 @@ sudo groupadd docker
 sudo usermod -aG docker $USER
 ```
 
-2. create your PostgreSQL container: `docker run --name NAME_OF_MyCONTAINER -e POSTGRES_PASSWORD=postgres -p 127.0.0.1:5432:5432 -d postgres`. This will install a PostgreSQL 9.6 container exposing the container internal port 5432 to your system (`127.0.0.1` or `localhost`) at port `5432`. I encourage to change the localhost port (e.g. `5433:5432`) so you know you're are in control! The command setup automatically a user `postgres` with password `postgres` and default database `postgres`. If everything goes well, you see your container up and running by issuing `docker ps`.
+2. create your PostgreSQL container: `docker run --name NAME_OF_MyCONTAINER -e POSTGRES_PASSWORD=postgres -p 127.0.0.1:5432:5432 -d postgres`. This will install a PostgreSQL 12.1 container exposing the container internal port 5432 to your system (`127.0.0.1` or `localhost`) at port `5432`. I encourage to change the localhost port (e.g. `5433:5432`) so you know you're are in control! The command setup automatically a user `postgres` with password `postgres` and default database `postgres`. If everything goes well, you see your container up and running by issuing `docker ps`.
 
 ```bash
 CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                    NAMES
-afnafnalkfo3        postgres:9.6        "docker-entrypoint.s…"   22 hours ago        Up 22 hours         localhost:5432->5432/tcp   NAME_OF_MyCONTAINER
+afnafnalkfo3        postgres:12.1        "docker-entrypoint.s…"   22 hours ago        Up 22 hours         localhost:5432->5432/tcp   NAME_OF_MyCONTAINER
 ```
 
 If `localhost` is not passed, the command exposes the port on `0.0.0.0` so other users on the same subnet (e.g. same WiFi access point) can connect to it (I don't recommend it for a local development environment!)
 
 3. Install PostgreSQL dependency [`Q3C`](https://github.com/segasai/q3c):
 
-    a. Connect to the container by running `docker exec -it NAME_OF_MyCONTAINER bash`. That runs `bash` shell as `root` inside the container.
+	a. Connect to the container by running `docker exec -it NAME_OF_MyCONTAINER bash`. That runs `bash` shell as `root` inside the container.
 
-    b. Install the packages, replace XX with the postgres version installed in docker (check version with `psql -U postgres`):
+	b. Install the packages, replace XX with the postgres version installed in docker (check version with `psql -U postgres`):
 
-    ```bash
-    apt-get update -y && apt-get install -y libssl-dev libkrb5-dev zlib1g-dev make git gcc postgresql-server-dev-XX postgresql-common
-    ```
-    c. Clone `Q3C` repo and install it:
+	```bash
+	apt-get update -y && apt-get install -y libssl-dev libkrb5-dev zlib1g-dev make git gcc postgresql-server-dev-XX postgresql-common
+	```
+	c. Clone `Q3C` repo and install it:
 
-    ```bash
-    git clone https://github.com/segasai/q3c.git
-    cd q3c
-    make
-    make install
-    ```
+	```bash
+	git clone https://github.com/segasai/q3c.git
+	cd q3c
+	make
+	make install
+	```
 
 You can disconnect from the container and the database installation should now be complete. You can connect to the database by running the `psql` CLI (Command Line Interface) by installing on your system (e.g. Ubuntu `sudo apt-get install postgres-common` or just `postgresql-client-common`, Mac: `brew install libpq`). Alternatively you can access the CLI by connecting to the container as described above (`docker exec -it NAME_OF_MyCONTAINER bash`). Finally connect to your PostgreSQL instance:
 
@@ -120,5 +120,5 @@ while read requirement; do conda install --yes $requirement; done < requirements
 while read requirement; do conda install --yes $requirement; done < requirements/requirements.txt
 ```
 
-Done! Now open the [`README.md`](./README.md) file to see how to initialize and run the pipeline.
+Done! Now open the [`README.md`](./README.md) file to see how to initialize and run the pipeline. Otherwise if you intend developing the repo open the [`DEVELOPING.md`](./DEVELOPING.md) file for instructions on how to contribute to the repo.
 

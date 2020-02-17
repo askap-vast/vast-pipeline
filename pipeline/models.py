@@ -1,3 +1,4 @@
+import logging
 import math
 from django.db import models
 from django.core.validators import RegexValidator
@@ -102,7 +103,7 @@ class Dataset(models.Model):
     images that can be compared
     """
     name = models.CharField(
-        max_length=32,
+        max_length=64,
         unique=True,
         validators=[
             RegexValidator(
@@ -133,6 +134,22 @@ class Dataset(models.Model):
         # enforce the full model validation on save
         self.full_clean()
         super(Dataset, self).save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        """
+        Override default delete method to also delete related image
+        objects only if no other datasets are related to the image.
+        """
+        logger = logging.getLogger(__name__)
+        for image in self.image_set.all():
+            if image.dataset.count() == 1:
+                logger.info("Deleting image: %s", image.name)
+                deleted_num, deleted_detail = image.delete()
+                for instance_type, count in deleted_detail.items():
+                    logger.info(
+                        "Deleted %d instances of %s", count, instance_type
+                    )
+        super(Dataset, self).delete(*args, **kwargs)
 
 
 class Band(models.Model):
@@ -166,7 +183,7 @@ class SkyRegion(models.Model):
 
 
 class Catalog(models.Model):
-    dataset = models.ForeignKey(Dataset, on_delete=models.SET_NULL, null=True,)
+    dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE, null=True,)
     name = models.CharField(max_length=100)
     comment = models.TextField(max_length=1000, default='', blank=True)
     new = models.BooleanField(default=False, help_text='New Source or Catalog')
@@ -315,7 +332,7 @@ class Source(models.Model):
         through_fields=('source', 'catalog')
     )
 
-    name = models.CharField(max_length=32, unique=True)
+    name = models.CharField(max_length=64, unique=True)
 
     ra = models.FloatField(help_text='RA of the source (Deg)')# degrees
     ra_err = models.FloatField(help_text='RA error of the source (Deg)')
@@ -365,11 +382,11 @@ class Source(models.Model):
         help_text='Does the fit come from an island'
     )# Does the fit come from an island?
     component_id = models.CharField(
-        max_length=32,
+        max_length=64,
         help_text='The ID of the component from which the source comes from'
     )# The ID of the component from which the source comes from
     island_id    = models.CharField(
-        max_length=32,
+        max_length=64,
         help_text='The ID of the island from which the source comes from'
     )# The ID of the island from which the source comes from
 
