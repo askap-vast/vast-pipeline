@@ -7,13 +7,13 @@ If you intend to contribute to the code base please read and follow the guidelin
 
 ## Table of Contents
 
-- [Pipeline Configuration](##pipeline-configuration)
-- [Pipeline Usage](##pipeline-usage)
-	- [Initialise a Dataset](###initialise-a-dataset)
-	- [Run the Pipeline](###run-the-pipeline)
-	- [Resetting a Dataset](###resetting-a-dataset)
-	- [Import survey data](###import-survey-data)
-- [Data Exploration via Django Web Server](##data-exploration-via-django-web-server)
+- [Pipeline Configuration](#pipeline-configuration)
+- [Pipeline Usage](#pipeline-usage)
+	- [Initialise a Dataset](#initialise-a-dataset)
+	- [Run the Pipeline](#run-the-pipeline)
+	- [Resetting a Dataset](#resetting-a-dataset)
+	- [Import survey data](#import-survey-data)
+- [Data Exploration via Django Web Server](#data-exploration-via-django-web-server)
 
 ## Pipeline Configuration
 The following instructions, will get you started in setting up the database and pipeline configuration
