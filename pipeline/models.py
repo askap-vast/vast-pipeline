@@ -136,8 +136,9 @@ class Dataset(models.Model):
         super(Dataset, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        """Override default delete method to also delete related image objects only if
-        no other datasets are related to the image.
+        """
+        Override default delete method to also delete related image
+        objects only if no other datasets are related to the image.
         """
         logger = logging.getLogger(__name__)
         for image in self.image_set.all():
@@ -145,7 +146,9 @@ class Dataset(models.Model):
                 logger.info("Deleting image: %s", image.name)
                 deleted_num, deleted_detail = image.delete()
                 for instance_type, count in deleted_detail.items():
-                    logger.info("Deleted %d instances of %s", count, instance_type)
+                    logger.info(
+                        "Deleted %d instances of %s", count, instance_type
+                    )
         super(Dataset, self).delete(*args, **kwargs)
 
 
