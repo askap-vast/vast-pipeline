@@ -3,6 +3,8 @@ This repository holds the code of the Radio Transient detection pipeline for the
 
 Installation instructions are described in [`INSTALL.md`](./INSTALL.md).
 
+If you intend to contribute to the code base please read and follow the guidelines in [`DEVELOPING.md`](./DEVELOPING.md).
+
 ## Pipeline Configuration
 The following instructions, will get you started in setting up the database and pipeline configuration
 1. Copy the settings template
@@ -59,7 +61,6 @@ CREATE EXTENSION
 4. Create the database tables. Remember first to activate the Python environment as described in [`INSTALL.md`](./INSTALL.md).
 
 ```bash
-(pipeline_env)$:./manage.py makemigrations
 (pipeline_env)$:./manage.py migrate
 ```
 
@@ -170,7 +171,9 @@ The command yields the following folder structure:
 Output:
 
 ```bash
-../PROJECT_WORKING_DIR
+2020-02-17 00:56:50,818 initdataset INFO creating dataset folder
+2020-02-17 00:56:50,818 initdataset INFO copying default config in dataset folder
+2020-02-17 00:56:50,819 initdataset INFO Dataset initialisation successful! Please modify the "config.py"
 
 ```
 
@@ -188,16 +191,13 @@ TBC
 
 General usage:
 ```bash
-(pipeline_env)$: ./manage.py runpipeline -d my_dataset
+(pipeline_env)$: ./manage.py runpipeline path/to/my_dataset
 ```
 
-Resetting the database can be done using the `cleardataset` command: it will delete all data from previous runs __EXCEPT__ sources whose `Quality` field is not None, i.e. somebody changed it. It does not delete imported surveys e.g. NVSS.
+Resetting the database can be done using the `cleardataset` command: it will delete all images (and related objects such as sources) associated with that dataset, if that images does not belong to another dataset. It will deleted all the catalogs associated with that dataset.
 ```bash
 (pipeline_env)$: ./manage.py cleardataset my_dataset
 ```
-
-Notes:
-- Optionally the `-p` or `--purge` option will delete all the datasets data
 
 ### Import survey data (optional but recommended)
 TBC
