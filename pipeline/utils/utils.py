@@ -1,9 +1,9 @@
 import os
 import logging
-import datetime
 import math as m
 from importlib.util import spec_from_file_location, module_from_spec
 
+from datetime import datetime
 from django.conf import settings
 
 import pipeline.config as base_cfg
@@ -16,14 +16,14 @@ class StopWatch():
     """A simple stopwatch to simplify timing code"""
 
     def __init__(self):
-        self._init = datetime.datetime.now()
+        self._init = datetime.now()
         self._last = self._init
 
     def reset(self):
         """
         Reset the stopwatch and return the time since last reset (seconds)
         """
-        now = datetime.datetime.now()
+        now = datetime.now()
         diff = (now - self._last).total_seconds()
         self._last = now
         return diff
@@ -32,18 +32,11 @@ class StopWatch():
         """
         Reset the stopwatch and return the total time since initialisation
         """
-        now = datetime.datetime.now()
+        now = datetime.now()
         diff = (now - self._init).total_seconds()
         self._last = now
         self._init = now
         return diff
-
-
-class RunStats():
-    """Statistics for a pipeline run"""
-    fluxes_added = 0           # total Flux rows added
-    sources_added = 0          # total Source rows added
-    detected_count = 0         # total blind detections (Flux.blind_detection==True)
 
 
 def load_validate_cfg(cfg):

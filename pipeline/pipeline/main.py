@@ -31,9 +31,9 @@ def get_create_skyreg(dataset, image):
     )
     if skyr:
         skyr = skyr.get()
-        logger.info(f'Found sky region {skyr}')
+        logger.info('Found sky region %s', skyr)
         if dataset not in skyr.dataset.all():
-            logger.info(f'Adding {dataset} to sky region {skyr}')
+            logger.info('Adding %s to sky region %s', dataset, skyr)
             skyr.dataset.add(dataset)
         return skyr
 
@@ -47,9 +47,9 @@ def get_create_skyreg(dataset, image):
         z=z,
     )
     skyr.save()
-    logger.info(f'Created sky region {skyr}')
+    logger.info('Created sky region %s', skyr)
     skyr.dataset.add(dataset)
-    logger.info(f'Adding {dataset} to sky region {skyr}')
+    logger.info('Adding %s to sky region %s', dataset, skyr)
     return skyr
 
 
@@ -79,7 +79,7 @@ class Pipeline():
         for path in self.img_selavy_paths:
             # STEP #1: Load image and sources
             image = SelavyImage(path, self.img_selavy_paths[path])
-            logger.info(f'read image {image.name}')
+            logger.info('read image %s', image.name)
 
             # 1.1 get/create the frequency band
             band_id = self.get_create_img_band(image)
@@ -89,7 +89,9 @@ class Pipeline():
             # add image to list
             images.append(img)
             if exists_f:
-                logger.info(f'image {img.name} already processed, grab sources')
+                logger.info(
+                    'image %s already processed, grab sources', img.name
+                )
                 # grab the sources and skip to process next image
                 sources = (
                     pd.Series(
@@ -104,7 +106,9 @@ class Pipeline():
 
             # 1.3 get the image sources and save them in DB
             sources = image.read_selavy(img)
-            logger.info(f'Processed sources dataframe of shape: {sources.shape}')
+            logger.info(
+                'Processed sources dataframe of shape: (%i, %i)', sources.shape[0], sources.shape[1]
+            )
 
             # do DB bulk create
             sources['src_dj'] = sources.apply(get_source_models, axis=1)
@@ -116,7 +120,7 @@ class Pipeline():
                     sources.src_dj.iloc[idx : idx + batch_size].values.tolist(),
                     batch_size
                 )
-                logger.info(f'bulk uploaded #{len(out_bulk)} sources')
+                logger.info('bulk uploaded #%i sources', len(out_bulk))
 
             # make a columns with the source id
             sources['id'] = sources.src_dj.apply(getattr, args=('id',))
@@ -167,7 +171,7 @@ class Pipeline():
 
         # no band has been found so create it
         band = Band(name=str(freq), frequency=freq, bandwidth=freq_band)
-        logger.info(f'Adding new frequency band: {band}')
+        logger.info('Adding new frequency band: %s', band)
         band.save()
 
         return band.id
