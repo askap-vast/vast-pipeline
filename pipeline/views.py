@@ -189,7 +189,7 @@ class CatalogViewSet(ModelViewSet):
     serializer_class = CatalogSerializer
 
     def get_queryset(self):
-        qs = Catalog.objects.all()
+        qs = Catalog.objects.annotate(sources=Count("source"))
 
         qry_dict = {}
         ds = self.request.query_params.get('dataset')
@@ -204,10 +204,13 @@ class CatalogViewSet(ModelViewSet):
                     ky = fld + '__lte' if limit == 'max' else fld + '__gte'
                     qry_dict[ky] = val
 
+        sources = self.request.query_params.get('sources')
+        if sources:
+            qry_dict['sources'] = sources
+
         if qry_dict:
             qs = qs.filter(**qry_dict)
 
-        qs = qs.annotate(sources=Count("source"))
         return qs
 
 
