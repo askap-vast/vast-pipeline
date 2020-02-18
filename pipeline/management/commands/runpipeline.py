@@ -4,6 +4,7 @@ import traceback
 
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
+from django.db import transaction
 
 from pipeline.pipeline.main import Pipeline
 from pipeline.utils.utils import load_validate_cfg, StopWatch
@@ -29,6 +30,7 @@ class Command(BaseCommand):
             help='path to the dataset folder'
         )
 
+    @transaction.atomic
     def handle(self, *args, **options):
         # configure logging
         if options['verbosity'] > 1:
