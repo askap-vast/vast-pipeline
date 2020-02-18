@@ -70,12 +70,24 @@ $(document).ready(function() {
     if (var_max.value) {
       qry_url = qry_url + "&max_" + var_type.value + "=" + var_max.value;
     }
-    let table = $('#dataTable').DataTable({
-      retrieve: true,
-      paging: false
-    });
     table.ajax.url(qry_url);
     table.ajax.reload();
-  })
+  });
+
+  // Trigger the search reset on the datatable
+  $("#resetSearch").on('click', function(e) {
+    $('#datasetSelect option').prop('selected', function() {
+      return this.defaultSelected
+    });
+    let inputs = [
+      'fluxMinSelect', 'fluxMaxSelect', 'varMinSelect', 'varMaxSelect',
+      'raMinSelect', 'raMaxSelect', 'raRadiusSelect', 'datapointSelect'
+      ];
+    for (input of inputs) {
+      document.getElementById(input).value = '';
+    };
+    table.ajax.url(dataConf.api);
+    table.ajax.reload();
+  });
 
 });
