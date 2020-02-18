@@ -41,10 +41,10 @@
       <div class="row">
         <div class="col-lg-2">
           <h1 class="h6 mb-2 font-weight-bold text-gray-800">Dataset</h1>
-          <select class="form-control">
-            <option>All</option>
+          <select id="datasetSelect" class="form-control">
+            <option value="" selected>All</option>
             {% for ds in  datasets%}
-            <option>{{ ds.name }}</option>
+            <option value={{ ds.name }}>{{ ds.name }}</option>
             {% endfor %}
           </select>
         </div>
@@ -78,9 +78,9 @@
         </div>
       </div>
       <div class="card-corn-obj">
-        <a href="#" class="btn btn-primary btn-circle" data-toggle="tooltip" title="Search">
+        <button id="catalogSearch" class="btn btn-primary btn-circle" title="Search">
           <i class="fas fa-search"></i>
-        </a>
+        </button>
       </div>
     </div>
   </div>

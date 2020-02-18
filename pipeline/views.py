@@ -186,8 +186,17 @@ def catalogIndex(request):
 
 
 class CatalogViewSet(ModelViewSet):
-    queryset = Catalog.objects.annotate(sources=Count("source"))
     serializer_class = CatalogSerializer
+
+    def get_queryset(self):
+        qs = Catalog.objects.all()
+        ds = self.request.query_params.get('dataset')
+        if ds:
+            print('filter dataset')
+            qs = qs.filter(dataset__name=ds)
+
+        qs = qs.annotate(sources=Count("source"))
+        return qs
 
 
 # Catalogs Query

@@ -44,4 +44,20 @@ $(document).ready(function() {
     };
   };
   var table = $('#dataTable').DataTable(dataTableConf);
+
+  // Trigger the update search on the datatable
+  $("#catalogSearch").on('click', function(e) {
+    let ds = document.getElementById("datasetSelect");
+    let qry_url = dataConf.api;
+    if (ds.value != '') {
+      qry_url = qry_url + "&dataset=" + ds.value;
+    }
+    let table = $('#dataTable').DataTable({
+      retrieve: true,
+      paging: false
+    });
+    table.ajax.url(qry_url);
+    table.ajax.reload();
+  })
+
 });
