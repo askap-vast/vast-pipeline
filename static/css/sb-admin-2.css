@@ -4342,6 +4342,7 @@ input[type="button"].btn-block {
 }
 
 .card-corn-obj {
+  margin-top: 1rem;
   display: flex;
   justify-content: flex-end;
 }

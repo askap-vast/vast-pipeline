@@ -190,10 +190,22 @@ class CatalogViewSet(ModelViewSet):
 
     def get_queryset(self):
         qs = Catalog.objects.all()
+
+        qry_dict = {}
         ds = self.request.query_params.get('dataset')
         if ds:
-            print('filter dataset')
-            qs = qs.filter(dataset__name=ds)
+            qry_dict['dataset__name'] = ds
+
+        flux_qry_flds = ['ave_flux_int', 'ave_flux_peak', 'v_int', 'v_peak']
+        for fld in flux_qry_flds:
+            for limit in ['max', 'min']:
+                val = self.request.query_params.get(limit + '_' + fld)
+                if val:
+                    ky = fld + '__lte' if limit == 'max' else fld + '__gte'
+                    qry_dict[ky] = val
+
+        if qry_dict:
+            qs = qs.filter(**qry_dict)
 
         qs = qs.annotate(sources=Count("source"))
         return qs

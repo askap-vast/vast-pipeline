@@ -49,35 +49,38 @@
           </select>
         </div>
         <div class="col-lg-2">
-          <h1 class="h6 mb-2 font-weight-bold text-gray-800">Cone Search</h1>
+          <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Cone Search</h1>
           <input type="number" class="form-control bg-light border-0 small" placeholder="RA Min" step="1e-10" aria-label="RaMinSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
           <input type="number" class="form-control bg-light border-0 small" placeholder="RA Max" step="1e-10" aria-label="RaMaxSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
           <input type="number" class="form-control bg-light border-0 small" placeholder="Radius" step="1e-10" aria-label="RadiusSearch" aria-describedby="basic-addon2">
         </div>
         <div class="col-lg-2">
-          <h1 class="h6 mb-2 font-weight-bold text-gray-800">Average Flux Range</h1>
-          <input type="text" class="form-control bg-light border-0 small" placeholder="Min" aria-label="FluxMinSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
-          <input type="text" class="form-control bg-light border-0 small" placeholder="Max" aria-label="FluxMaxSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
-          <select class="form-control">
-            <option>Int Flux</option>
-            <option>Peak Flux</option>
+          <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Average Flux Range</h1>
+          <input id="fluxMinSelect" type="number" class="form-control bg-light border-0 small" placeholder="Min" step="0.01" aria-label="FluxMinSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <input id="fluxMaxSelect" type="number" class="form-control bg-light border-0 small" placeholder="Max" step="0.01" aria-label="FluxMaxSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <select id="aveFluxSelect" class="form-control">
+            <option value="ave_flux_int" selected>Int Flux</option>
+            <option value="ave_flux_peak">Peak Flux</option>
           </select>
         </div>
         <div class="col-lg-2">
-          <h1 class="h6 mb-2 font-weight-bold text-gray-800">Variability Metric</h1>
-          <input type="text" class="form-control bg-light border-0 small" placeholder="Min" aria-label="VarMinSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
-          <input type="text" class="form-control bg-light border-0 small" placeholder="Max" aria-label="VarMaxSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
-          <select class="form-control">
-            <option>Int Flux</option>
-            <option>Peak Flux</option>
+          <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Variability Metric</h1>
+          <input id="varMinSelect" type="number" class="form-control bg-light border-0 small" placeholder="Min" step="0.01" aria-label="VarMinSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <input id="varMaxSelect" type="number" class="form-control bg-light border-0 small" placeholder="Max" step="0.01" aria-label="VarMaxSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <select id="varMetricSelect" class="form-control">
+            <option value="v_int" selected>Int Flux</option>
+            <option value="v_peak">Peak Flux</option>
           </select>
         </div>
         <div class="col-lg-2">
-          <h1 class="h6 mb-2 font-weight-bold text-gray-800">Datapoints</h1>
+          <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Datapoints</h1>
           <input type="number" class="form-control bg-light border-0 small" placeholder="Nr points" min="1" step="1" aria-label="DatapointsSearch" aria-describedby="basic-addon2">
         </div>
       </div>
       <div class="card-corn-obj">
+        <button id="resetSearch" class="btn btn-danger btn-circle" title="Reset Search" style="margin-right:0.5rem">
+          <i class="fas fa-trash"></i>
+        </button>
         <button id="catalogSearch" class="btn btn-primary btn-circle" title="Search">
           <i class="fas fa-search"></i>
         </button>

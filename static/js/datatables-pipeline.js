@@ -52,6 +52,24 @@ $(document).ready(function() {
     if (ds.value != '') {
       qry_url = qry_url + "&dataset=" + ds.value;
     }
+    let flux_type = document.getElementById("aveFluxSelect");
+    let flux_min = document.getElementById("fluxMinSelect");
+    let flux_max = document.getElementById("fluxMaxSelect");
+    if (flux_min.value) {
+      qry_url = qry_url + "&min_" + flux_type.value + "=" + flux_min.value;
+    }
+    if (flux_max.value) {
+      qry_url = qry_url + "&max_" + flux_type.value + "=" + flux_max.value;
+    }
+    let var_type = document.getElementById("varMetricSelect");
+    let var_min = document.getElementById("varMinSelect");
+    let var_max = document.getElementById("varMaxSelect");
+    if (var_min.value) {
+      qry_url = qry_url + "&min_" + var_type.value + "=" + var_min.value;
+    }
+    if (var_max.value) {
+      qry_url = qry_url + "&max_" + var_type.value + "=" + var_max.value;
+    }
     let table = $('#dataTable').DataTable({
       retrieve: true,
       paging: false
