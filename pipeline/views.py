@@ -49,7 +49,10 @@ def datasetIndex(request):
 
 
 class DatasetViewSet(ModelViewSet):
-    queryset = Dataset.objects.all()
+    queryset = Dataset.objects.annotate(
+        images=Count("image", distinct=True),
+        catalogs=Count("catalog", distinct=True),
+    )
     serializer_class = DatasetSerializer
 
 
