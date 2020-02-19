@@ -22,6 +22,27 @@ class Survey(models.Model):
         return self.name
 
 
+class SurveySourceQuerySet(models.QuerySet):
+
+    def cone_search(self, ra, dec, radius_deg):
+        """
+        Return all the survey sources withing radius_deg of (ra,dec).
+        Returns a QuerySet of survey sources, ordered by distance from
+        (ra,dec) ascending
+        """
+        return (
+            self.extra(
+                select={
+                    "distance": "q3c_dist(ra, dec, %s, %s) * 3600"
+                },
+                select_params=[ra, dec],
+                where=["q3c_radial_query(ra, dec, %s, %s, %s)"],
+                params=[ra, dec, radius_deg],
+            )
+            .order_by("distance")
+        )
+
+
 class SurveySource(models.Model):
     """A source from a survey catalogue eg NVSS, SUMSS"""
     # An index on the survey_id field causes queries to perform much worse
@@ -74,27 +95,10 @@ class SurveySource(models.Model):
         help_text='Name of survey image where measurement was made'
     )# image file
 
+    objects = SurveySourceQuerySet.as_manager()
+
     def __str__(self):
         return f"{self.id} {self.name}"
-
-    @classmethod
-    def cone_search(cls, ra, dec, radius_deg):
-        """
-        Return all the SurveySources withing radius_deg of (ra,dec).
-        Returns a QuerySet of SurveySources, ordered by distance from
-        (ra,dec) ascending
-        """
-        qs = (
-            SurveySource.objects
-            .extra(
-                select={"distance": "q3c_dist(ra, dec, %s, %s) * 3600"},
-                select_params=[ra, dec],
-                where=["q3c_radial_query(ra, dec, %s, %s, %s)"],
-                params=[ra, dec, radius_deg],
-            )
-            .order_by("distance")
-        )
-        return qs
 
 
 class Dataset(models.Model):
@@ -182,6 +186,27 @@ class SkyRegion(models.Model):
         return f'{self.centre_ra}, {self.centre_dec}'
 
 
+class CatalogQuerySet(models.QuerySet):
+
+    def cone_search(self, ra, dec, radius_deg):
+        """
+        Return all the Catalogs withing radius_deg of (ra,dec).
+        Returns a QuerySet of Catalogs, ordered by distance from
+        (ra,dec) ascending
+        """
+        return (
+            self.extra(
+                select={
+                    "distance": "q3c_dist(ave_ra, ave_dec, %s, %s) * 3600"
+                },
+                select_params=[ra, dec],
+                where=["q3c_radial_query(ave_ra, ave_dec, %s, %s, %s)"],
+                params=[ra, dec, radius_deg],
+            )
+            .order_by("distance")
+        )
+
+
 class Catalog(models.Model):
     dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE, null=True,)
     name = models.CharField(max_length=100)
@@ -209,29 +234,10 @@ class Catalog(models.Model):
         help_text='Eta metric for peak flux'
     )
 
+    objects = CatalogQuerySet.as_manager()
+
     def __str__(self):
         return self.name
-
-    @classmethod
-    def cone_search(cls, ra, dec, radius_deg):
-        """
-        Return all the Catalogs withing radius_deg of (ra,dec).
-        Returns a QuerySet of Catalogs, ordered by distance from
-        (ra,dec) ascending
-        """
-        qs = (
-            SurveySource.objects
-            .extra(
-                select={
-                    "distance": "q3c_dist(ave_ra, ave_dec, %s, %s) * 3600"
-                },
-                select_params=[ra, dec],
-                where=["q3c_radial_query(ave_ra, ave_dec, %s, %s, %s)"],
-                params=[ra, dec, radius_deg],
-            )
-            .order_by("distance")
-        )
-        return qs
 
 
 class Image(models.Model):
@@ -333,6 +339,27 @@ class Image(models.Model):
         return self.name
 
 
+class SourceQuerySet(models.QuerySet):
+
+    def cone_search(self, ra, dec, radius_deg):
+        """
+        Return all the Sources withing radius_deg of (ra,dec).
+        Returns a QuerySet of Sources, ordered by distance from
+        (ra,dec) ascending
+        """
+        return (
+            self.extra(
+                select={
+                    "distance": "q3c_dist(ra, dec, %s, %s) * 3600"
+                },
+                select_params=[ra, dec],
+                where=["q3c_radial_query(ra, dec, %s, %s, %s)"],
+                params=[ra, dec, radius_deg],
+            )
+            .order_by("distance")
+        )
+
+
 class Source(models.Model):
     """
     A Source is an object in the sky that has been detected at least once.
@@ -424,32 +451,13 @@ class Source(models.Model):
         help_text='Is this a quality source for analysis purposes'
     )# Is this a "quality" source for analysis purposes?
 
+    objects = SourceQuerySet.as_manager()
+
     class Meta:
         ordering = ['ra']
 
     def __str__(self):
         return self.name
-
-    @classmethod
-    def cone_search(cls, ra, dec, radius_deg):
-        """
-        Return all the Sources withing radius_deg of (ra,dec).
-        Returns a QuerySet of Sources, ordered by distance from
-        (ra,dec) ascending
-        """
-        qs = (
-            SurveySource.objects
-            .extra(
-                select={
-                    "distance": "q3c_dist(ra, dec, %s, %s) * 3600"
-                },
-                select_params=[ra, dec],
-                where=["q3c_radial_query(ra, dec, %s, %s, %s)"],
-                params=[ra, dec, radius_deg],
-            )
-            .order_by("distance")
-        )
-        return qs
 
 
 class CrossMatch(models.Model):

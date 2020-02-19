@@ -211,6 +211,12 @@ class CatalogViewSet(ModelViewSet):
         if qry_dict:
             qs = qs.filter(**qry_dict)
 
+        radius = self.request.query_params.get('radius')
+        ave_ra = self.request.query_params.get('ra')
+        ave_dec = self.request.query_params.get('dec')
+        if ave_ra and ave_dec and radius:
+            qs = qs.cone_search(ave_ra, ave_dec, radius)
+
         return qs
 
 
