@@ -52,6 +52,18 @@ $(document).ready(function() {
     if (ds.value != '') {
       qry_url = qry_url + "&dataset=" + ds.value;
     };
+    let radius = document.getElementById("radiusSelect");
+    let ra = document.getElementById("raSelect");
+    let dec = document.getElementById("decSelect");
+    if (radius.value) {
+      qry_url = qry_url + "&radius=" + radius.value;
+    };
+    if (ra.value) {
+      qry_url = qry_url + "&ra=" + ra.value;
+    };
+    if (dec.value) {
+      qry_url = qry_url + "&dec=" + dec.value;
+    };
     let flux_type = document.getElementById("aveFluxSelect");
     let flux_min = document.getElementById("fluxMinSelect");
     let flux_max = document.getElementById("fluxMaxSelect");
@@ -85,7 +97,7 @@ $(document).ready(function() {
     });
     let inputs = [
       'fluxMinSelect', 'fluxMaxSelect', 'varMinSelect', 'varMaxSelect',
-      'raMinSelect', 'raMaxSelect', 'raRadiusSelect', 'datapointSelect'
+      'raSelect', 'decSelect', 'radiusSelect', 'datapointSelect'
       ];
     for (input of inputs) {
       document.getElementById(input).value = '';
