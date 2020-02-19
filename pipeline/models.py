@@ -212,6 +212,27 @@ class Catalog(models.Model):
     def __str__(self):
         return self.name
 
+    @classmethod
+    def cone_search(cls, ra, dec, radius_deg):
+        """
+        Return all the Catalogs withing radius_deg of (ra,dec).
+        Returns a QuerySet of Catalogs, ordered by distance from
+        (ra,dec) ascending
+        """
+        qs = (
+            SurveySource.objects
+            .extra(
+                select={
+                    "distance": "q3c_dist(ave_ra, ave_dec, %s, %s) * 3600"
+                },
+                select_params=[ra, dec],
+                where=["q3c_radial_query(ave_ra, ave_dec, %s, %s, %s)"],
+                params=[ra, dec, radius_deg],
+            )
+            .order_by("distance")
+        )
+        return qs
+
 
 class Image(models.Model):
     """An image is a 2D radio image from a cube"""
@@ -408,6 +429,27 @@ class Source(models.Model):
 
     def __str__(self):
         return self.name
+
+    @classmethod
+    def cone_search(cls, ra, dec, radius_deg):
+        """
+        Return all the Sources withing radius_deg of (ra,dec).
+        Returns a QuerySet of Sources, ordered by distance from
+        (ra,dec) ascending
+        """
+        qs = (
+            SurveySource.objects
+            .extra(
+                select={
+                    "distance": "q3c_dist(ra, dec, %s, %s) * 3600"
+                },
+                select_params=[ra, dec],
+                where=["q3c_radial_query(ra, dec, %s, %s, %s)"],
+                params=[ra, dec, radius_deg],
+            )
+            .order_by("distance")
+        )
+        return qs
 
 
 class CrossMatch(models.Model):
