@@ -71,7 +71,7 @@ def datasetDetail(request, id):
 
 # Images table
 def imageIndex(request):
-    cols = ['time', 'name', 'ra', 'dec']
+    cols = ['datetime', 'name', 'ra', 'dec']
     return render(
         request,
         'generic_table.html',
@@ -350,7 +350,7 @@ def catalogDetail(request, id, action=None):
         'image_name',
     ]
     sources = list(Source.objects.filter(catalog__id=id).annotate(
-        datetime=F('image__time'),
+        datetime=F('image__datetime'),
         image_name=F('image__name'),
     ).order_by('datetime').values(*tuple(cols)))
     for src in sources:

@@ -25,7 +25,7 @@ class ImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Image
-        fields = ['id', 'name', 'time', 'ra', 'dec']
+        fields = ['id', 'name', 'datetime', 'ra', 'dec']
         datatables_always_serialize = ('id',)
 
 
