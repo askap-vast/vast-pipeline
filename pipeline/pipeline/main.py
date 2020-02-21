@@ -74,16 +74,23 @@ class Pipeline():
         # A dictionary of path to Fits images, eg "/data/images/I1233234.FITS"
         # and selavy catalogues. Used as a cache to avoid reloading cubes
         # all the time.
-        base = re.compile(r'^image\.i\.([A-Z]+\d+)\.cont\..*taylor.*fits')
-        detail = re.compile(r'^.*(\d{4})([-+]\d{2}).*taylor.*fits')
+        img_base = re.compile(r'.*(SB\d+).*fits')
+        img_detail = re.compile(r'.*(\d{4})([-+]\d{2}).*fits')
+        img_epoch = re.compile(r'.*(\d{4})([-+]\d{2}).(EPOCH\d+)*fits')
+        sel_base = re.compile(r'.*(SB\d+).*components.txt')
+        sel_detail = re.compile(r'.*(\d{4})([-+]\d{2}).*components.txt')
+        sel_epoch = re.compile(r'.*(\d{4})([-+]\d{2}).(EPOCH\d+).*components.txt')
+        
         img_files = [img for path in config.IMAGE_FILES for img in glob(path)]
         sel_files = [sel for path in config.SELAVY_FILES for sel in glob(path)]
 
         img_files = sorted(
-            img_files, key=lambda f: detail.sub(r'\1\2', base.sub(r'\1', f))
+            img_files,
+            key=lambda f: img_epoch.sub(r'\1\2\3', img_detail.sub(r'\1\2', img_base.sub(r'\1', os.path.basename(f))))
         )
         sel_files = sorted(
-            sel_files, key=lambda f: detail.sub(r'\1\2', base.sub(r'\1', f))
+            sel_files,
+            key=lambda f: sel_epoch.sub(r'\1\2\3', sel_detail.sub(r'\1\2', sel_base.sub(r'\1', os.path.basename(f))))
         )
 
         self.img_selavy_paths = {
