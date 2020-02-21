@@ -189,7 +189,7 @@ class SelavyImage(FitsImage):
 
         # add fields from image and fix name column
         df['image_id'] = dj_image.id
-        df['time'] = dj_image.time
+        df['time'] = dj_image.datetime
 
         # append img prefix to source name
         img_prefix = dj_image.name.split('.i.', 1)[-1].split('.', 1)[0] + '_'

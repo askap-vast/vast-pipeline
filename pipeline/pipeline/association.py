@@ -201,6 +201,7 @@ def association(dataset, images, src_dj_obj, limit):
     # create catalogs in DB
     # TODO remove deleting existing catalogs
     if Catalog.objects.filter(dataset=dataset).exists():
+        logger.info('removing objects from previous pipeline run')
         n_del, detail_del  = Catalog.objects.filter(dataset=dataset).delete()
         logger.info((
             'deleting all catalogs and related objects for this dataset'
@@ -210,6 +211,7 @@ def association(dataset, images, src_dj_obj, limit):
             n_del,
         )
 
+    logger.info('uploading associations to db')
     batch_size = 10_000
     for idx in range(0, cat_df.cat_dj.size, batch_size):
         out_bulk = Catalog.objects.bulk_create(
