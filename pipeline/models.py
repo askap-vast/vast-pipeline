@@ -278,7 +278,7 @@ class Image(models.Model):
         help_text='Is the image valid'
         )# Is the image valid?
 
-    time = models.DateTimeField(
+    datetime = models.DateTimeField(
         help_text='Date of observation'
     )# date/time of observation, aka epoch
     jd = models.FloatField(
@@ -333,7 +333,7 @@ class Image(models.Model):
     flux_percentile = models.FloatField(default=0)# Pixel flux at 95th percentile
 
     class Meta:
-        ordering = ['time']
+        ordering = ['datetime']
 
     def __str__(self):
         return self.name

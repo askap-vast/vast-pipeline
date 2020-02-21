@@ -57,7 +57,6 @@ class FitsImage(Image):
         '''
         self.polarisation = header.get('STOKES', 'I')
         self.duration = float(header.get('DURATION', 0.))
-        self.datetime = pd.Timestamp('1900-01-01T00:00:00')
         self.beam_bmaj = 0.
         self.beam_bmin = 0.
         self.beam_bpa = 0.
@@ -68,7 +67,7 @@ class FitsImage(Image):
 
         if header.get('TELESCOP', None) == 'ASKAP':
             try:
-                self.time = pd.Timestamp(header['DATE-OBS'], tz=header['TIMESYS'])
+                self.datetime = pd.Timestamp(header['DATE-OBS'], tz=header['TIMESYS'])
                 self.beam_bmaj = header['BMAJ']
                 self.beam_bmin = header['BMIN']
                 self.beam_bpa = header['BPA']
@@ -89,7 +88,7 @@ class FitsImage(Image):
             self.__get_img_coordinates(**params)
 
         # get the time as Julian Datetime using Pandas function
-        self.jd = self.time.to_julian_date()
+        self.jd = self.datetime.to_julian_date()
 
 
     def __get_img_coordinates(self, header, fits_naxis1, fits_naxis2):
