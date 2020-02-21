@@ -192,9 +192,13 @@ class Pipeline():
             return (img, True)
 
         # at this stage source parquet file not created but assume location
+        img_folder_name = '_'.join([
+            image.name.split('.i.', 1)[-1].split('.', 1)[0],
+            image.datetime.isoformat()
+        ])
         sources_path = os.path.join(
             dataset.path,
-            image.name.split('.i.', 1)[-1].split('.', 1)[0],
+            img_folder_name,
             'sources.parquet'
             )
         img = Image(
