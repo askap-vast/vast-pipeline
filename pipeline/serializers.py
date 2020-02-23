@@ -8,8 +8,8 @@ from .models import Catalog, Dataset, Image, Source
 class DatasetSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
     path = serializers.SerializerMethodField()
-    catalogs = serializers.IntegerField(read_only=True)
-    images = serializers.IntegerField(read_only=True)
+    n_catalogs = serializers.IntegerField(read_only=True)
+    n_images = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Dataset

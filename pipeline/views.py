@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 # Datasets table
 def datasetIndex(request):
     colsfields = []
-    for col in ['time', 'name', 'path', 'comment', 'images', 'catalogs']:
+    for col in ['time', 'name', 'path', 'comment', 'n_images', 'n_catalogs']:
         if col == 'name':
             colsfields.append({
                 'data': col, 'render': {
@@ -50,8 +50,8 @@ def datasetIndex(request):
 
 class DatasetViewSet(ModelViewSet):
     queryset = Dataset.objects.annotate(
-        images=Count("image", distinct=True),
-        catalogs=Count("catalog", distinct=True),
+        n_images=Count("image", distinct=True),
+        n_catalogs=Count("catalog", distinct=True),
     )
     serializer_class = DatasetSerializer
 
