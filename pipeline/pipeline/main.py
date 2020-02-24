@@ -80,7 +80,7 @@ class Pipeline():
         sel_base = re.compile(r'.*(SB\d+).*components.txt')
         sel_detail = re.compile(r'.*(\d{4})([-+]\d{2}).*components.txt')
         sel_epoch = re.compile(r'.*(\d{4})([-+]\d{2}).(EPOCH\d+).*components.txt')
-        
+
         img_files = [img for path in config.IMAGE_FILES for img in glob(path)]
         sel_files = [sel for path in config.SELAVY_FILES for sel in glob(path)]
 
