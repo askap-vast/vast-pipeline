@@ -84,7 +84,7 @@ class Migration(migrations.Migration):
                 ('noise_path', models.CharField(blank=True, default='', help_text='Path to the file containing the RMS image', max_length=300)),
                 ('background_path', models.CharField(blank=True, default='', help_text='Path to the file containing the background image', max_length=300)),
                 ('valid', models.BooleanField(default=True, help_text='Is the image valid')),
-                ('time', models.DateTimeField(help_text='Date of observation')),
+                ('datetime', models.DateTimeField(help_text='Date of observation')),
                 ('jd', models.FloatField(help_text='Julian date of the observation (days)')),
                 ('duration', models.FloatField(default=0.0, help_text='Duration of the observation')),
                 ('flux_gain', models.FloatField(default=1, help_text='Gain of the image, multiplicative factor to change the relative flux scale')),
@@ -103,7 +103,7 @@ class Migration(migrations.Migration):
                 ('dataset', models.ManyToManyField(to='pipeline.Dataset')),
             ],
             options={
-                'ordering': ['time'],
+                'ordering': ['datetime'],
             },
         ),
         migrations.CreateModel(

@@ -31,7 +31,7 @@
     </a>
   </div> -->
   <h1 class="h3 mb-2 text-gray-800">Catalogs</h1>
-  <p class="mb-4">Search trough the catalogs using the query parameters</p>
+  <p class="mb-4">Search through the catalogs using the query parameters</p>
 
   <div class="card shadow mb-4">
     <div class="card-header py-3">
@@ -40,37 +40,50 @@
     <div class="card-body">
       <div class="row">
         <div class="col-lg-2">
-          <h1 class="h6 mb-2 font-weight-bold text-gray-800">Cone Search</h1>
-          <input type="number" class="form-control bg-light border-0 small" placeholder="RA Min" step="1e-10" aria-label="RaMinSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
-          <input type="number" class="form-control bg-light border-0 small" placeholder="RA Max" step="1e-10" aria-label="RaMaxSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
-          <input type="number" class="form-control bg-light border-0 small" placeholder="Radius" step="1e-10" aria-label="RadiusSearch" aria-describedby="basic-addon2">
+          <h1 class="h6 mb-2 font-weight-bold text-gray-800">Dataset</h1>
+          <select id="datasetSelect" class="form-control">
+            <option value="" selected>All</option>
+            {% for ds in  datasets%}
+            <option value={{ ds.name }}>{{ ds.name }}</option>
+            {% endfor %}
+          </select>
         </div>
         <div class="col-lg-2">
-          <h1 class="h6 mb-2 font-weight-bold text-gray-800">Average Flux Range</h1>
-          <input type="text" class="form-control bg-light border-0 small" placeholder="Min" aria-label="FluxMinSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
-          <input type="text" class="form-control bg-light border-0 small" placeholder="Max" aria-label="FluxMaxSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
-          <div class="dropdown mb-4">
-            <button class="btn btn-secondary dropdown-toggle" type="button" id="FluxMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              Flux Type
-            </button>
-            <div class="dropdown-menu animated--fade-in" aria-labelledby="FluxMenuButton">
-              <a class="dropdown-item" href="#">Int Flux</a>
-              <a class="dropdown-item" href="#">Peak Flux</a>
-            </div>
-          </div>
+          <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Cone Search</h1>
+          <input id="raSelect" type="number" class="form-control bg-light border-0 small" placeholder="RA (deg)" step="1e-10" aria-label="RaSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <input id="decSelect" type="number" class="form-control bg-light border-0 small" placeholder="DEC (deg)" step="1e-10" aria-label="DecSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <input id="radiusSelect" type="number" class="form-control bg-light border-0 small" placeholder="Radius (deg)" min="1e-10" step="1e-10" aria-label="RadiusSearch" aria-describedby="basic-addon2">
         </div>
         <div class="col-lg-2">
-          <h1 class="h6 mb-2 font-weight-bold text-gray-800">Variability Metric</h1>
+          <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Average Flux Range</h1>
+          <input id="fluxMinSelect" type="number" class="form-control bg-light border-0 small" placeholder="Min" step="0.01" aria-label="FluxMinSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <input id="fluxMaxSelect" type="number" class="form-control bg-light border-0 small" placeholder="Max" step="0.01" aria-label="FluxMaxSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <select id="aveFluxSelect" class="form-control">
+            <option value="ave_flux_int" selected>Int Flux</option>
+            <option value="ave_flux_peak">Peak Flux</option>
+          </select>
         </div>
         <div class="col-lg-2">
-          <h1 class="h6 mb-2 font-weight-bold text-gray-800">Datapoints</h1>
-          <input type="number" class="form-control bg-light border-0 small" placeholder="Nr points" min="1" step="1" aria-label="DatapointsSearch" aria-describedby="basic-addon2">
+          <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Variability Metric</h1>
+          <input id="varMinSelect" type="number" class="form-control bg-light border-0 small" placeholder="Min" step="0.01" aria-label="VarMinSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <input id="varMaxSelect" type="number" class="form-control bg-light border-0 small" placeholder="Max" step="0.01" aria-label="VarMaxSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <select id="varMetricSelect" class="form-control">
+            <option value="v_int" selected>Int Flux</option>
+            <option value="v_peak">Peak Flux</option>
+          </select>
+        </div>
+        <div class="col-lg-2">
+          <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Datapoints</h1>
+          <input id="datapointSelect" type="number" class="form-control bg-light border-0 small" placeholder="Nr points" min="1" step="1" aria-label="DatapointsSearch" aria-describedby="basic-addon2">
         </div>
       </div>
       <div class="card-corn-obj">
-        <a href="#" class="btn btn-primary btn-circle">
+        <button id="resetSearch" class="btn btn-danger btn-circle" title="Reset Search" style="margin-right:0.5rem">
+          <i class="fas fa-trash"></i>
+        </button>
+        <button id="catalogSearch" class="btn btn-primary btn-circle" title="Search">
           <i class="fas fa-search"></i>
-        </a>
+        </button>
       </div>
     </div>
   </div>

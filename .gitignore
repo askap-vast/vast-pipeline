@@ -64,6 +64,7 @@ target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+*notebook*/
 
 # pyenv
 .python-version
@@ -88,6 +89,8 @@ celerybeat-schedule
 *.sublime*
 .vscode/
 
-# pipeline data files
-pipeline-projects/
-reference-surveys/
+# pipeline files/folders
+**/*.parquet
+**/*.png
+*project*/
+*survey*/

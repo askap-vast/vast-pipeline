@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 # Datasets table
 def datasetIndex(request):
     colsfields = []
-    for col in ['time', 'name', 'path', 'comment', 'images', 'catalogs']:
+    for col in ['time', 'name', 'path', 'comment', 'n_images', 'n_catalogs']:
         if col == 'name':
             colsfields.append({
                 'data': col, 'render': {
@@ -49,7 +49,10 @@ def datasetIndex(request):
 
 
 class DatasetViewSet(ModelViewSet):
-    queryset = Dataset.objects.all()
+    queryset = Dataset.objects.annotate(
+        n_images=Count("image", distinct=True),
+        n_catalogs=Count("catalog", distinct=True),
+    )
     serializer_class = DatasetSerializer
 
 
@@ -59,12 +62,16 @@ def datasetDetail(request, id):
     dataset['nr_imgs'] = Image.objects.filter(dataset__id=dataset['id']).count()
     dataset['nr_cats'] = Catalog.objects.filter(dataset__id=dataset['id']).count()
     dataset['nr_srcs'] = Source.objects.filter(image__dataset__id=dataset['id']).count()
+    dataset['new_srcs'] = Catalog.objects.filter(
+        dataset__id=dataset['id'],
+        new=True,
+    ).count()
     return render(request, 'dataset_detail.html', {'dataset': dataset})
 
 
 # Images table
 def imageIndex(request):
-    cols = ['time', 'name', 'ra', 'dec']
+    cols = ['datetime', 'name', 'ra', 'dec']
     return render(
         request,
         'generic_table.html',
@@ -150,9 +157,13 @@ def catalogIndex(request):
 
     return render(
         request,
-        'catalogs_query.html',
+        'generic_table.html',
         {
-            'breadcrumb': {'title': 'Catalogs', 'url': request.path},
+            'text': {
+                'title': 'Catalogs',
+                'description': 'List of all catalogs below',
+                'breadcrumb': {'title': 'Catalogs', 'url': request.path},
+            },
             'datatable': {
                 'api': '/api/catalogs/?format=datatables',
                 'colsFields': colsfields,
@@ -178,8 +189,103 @@ def catalogIndex(request):
 
 
 class CatalogViewSet(ModelViewSet):
-    queryset = Catalog.objects.annotate(sources=Count("source"))
     serializer_class = CatalogSerializer
+
+    def get_queryset(self):
+        qs = Catalog.objects.annotate(sources=Count("source"))
+
+        qry_dict = {}
+        ds = self.request.query_params.get('dataset')
+        if ds:
+            qry_dict['dataset__name'] = ds
+
+        flux_qry_flds = ['ave_flux_int', 'ave_flux_peak', 'v_int', 'v_peak']
+        for fld in flux_qry_flds:
+            for limit in ['max', 'min']:
+                val = self.request.query_params.get(limit + '_' + fld)
+                if val:
+                    ky = fld + '__lte' if limit == 'max' else fld + '__gte'
+                    qry_dict[ky] = val
+
+        sources = self.request.query_params.get('sources')
+        if sources:
+            qry_dict['sources'] = sources
+
+        if qry_dict:
+            qs = qs.filter(**qry_dict)
+
+        radius = self.request.query_params.get('radius')
+        ave_ra = self.request.query_params.get('ra')
+        ave_dec = self.request.query_params.get('dec')
+        if ave_ra and ave_dec and radius:
+            qs = qs.cone_search(ave_ra, ave_dec, radius)
+
+        return qs
+
+
+# Catalogs Query
+def catalogQuery(request):
+    fields = [
+        'name',
+        'comment',
+        'ave_ra',
+        'ave_dec',
+        'ave_flux_int',
+        'ave_flux_peak',
+        'max_flux_peak',
+        'sources',
+        'v_int',
+        'v_peak',
+        'eta_int',
+        'eta_peak',
+        'new'
+    ]
+    colsfields = []
+    for col in fields:
+        if col == 'name':
+            colsfields.append({
+                'data': col, 'render': {
+                    'prefix': '/catalogs/', 'col':'name'
+                }
+            })
+        else:
+            colsfields.append({'data': col})
+
+    # get all datasets names
+    ds =  list(Dataset.objects.values('name').all())
+
+    return render(
+        request,
+        'catalogs_query.html',
+        {
+            'breadcrumb': {'title': 'Catalogs', 'url': request.path},
+            # 'text': {
+            #     'title': 'Catalogs',
+            #     'description': 'List of all catalogs below',
+            # },
+            'datasets': ds,
+            'datatable': {
+                'api': '/api/catalogs/?format=datatables',
+                'colsFields': colsfields,
+                'colsNames': [
+                    'Name',
+                    'Comment',
+                    'Average RA',
+                    'Average DEC',
+                    'Average Int Flux',
+                    'Average Peak Flux',
+                    'Max Peak Flux',
+                    'Datapoints',
+                    'V int flux',
+                    'V peak flux',
+                    'Eta int flux',
+                    'Eta peak flux',
+                    'New Source',
+                ],
+                'search': False,
+            }
+        }
+    )
 
 
 # Catalog detail
@@ -244,13 +350,13 @@ def catalogDetail(request, id, action=None):
         'image_name',
     ]
     sources = list(Source.objects.filter(catalog__id=id).annotate(
-        datetime=F('image__time'),
+        datetime=F('image__datetime'),
         image_name=F('image__name'),
     ).order_by('datetime').values(*tuple(cols)))
     for src in sources:
         src['datetime'] = src['datetime'].strftime('%Y %b %d %H:%M:%S')
-        for key in ['flux_int', 'flux_int_err', 'flux_peak', 'flux_peak_err']:
-            src[key] = src[key] * 1.e3
+        # for key in ['flux_int', 'flux_int_err', 'flux_peak', 'flux_peak_err']:
+        #     src[key] = src[key] * 1.e3
 
     # add source count
     catalog['sources'] = len(sources)

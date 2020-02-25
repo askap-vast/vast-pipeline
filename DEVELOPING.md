@@ -28,6 +28,8 @@ Since this models does not have a production environment that runs 24/7, so you 
 3. Run `./manage.py makemigrations`
 4. Commit the 'new' migraton file `0001_initial.py` as well as `models.py` within a single commit, and add an appropriate message (e.g. add field X to model Y)
 
+__NOTE__: do not touch the `0002_q3c.py` file as relates to migration operations for using Q3C plugin and related functions!
+
 ### 2) Someone else modified `models.py` and you pull the changes
 
 Situation:

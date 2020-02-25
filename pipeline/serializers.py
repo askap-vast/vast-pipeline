@@ -4,11 +4,12 @@ from rest_framework import serializers
 from .utils.utils import deg2dms, deg2hms
 from .models import Catalog, Dataset, Image, Source
 
+
 class DatasetSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
     path = serializers.SerializerMethodField()
-    catalogs = serializers.SerializerMethodField()
-    images = serializers.SerializerMethodField()
+    n_catalogs = serializers.IntegerField(read_only=True)
+    n_images = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Dataset
@@ -18,19 +19,13 @@ class DatasetSerializer(serializers.ModelSerializer):
     def get_path(self, dataset):
         return os.path.relpath(dataset.path)
 
-    def get_catalogs(self, dataset):
-        return dataset.catalog_set.count()
-
-    def get_images(self, dataset):
-        return dataset.image_set.count()
-
 
 class ImageSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Image
-        fields = ['id', 'name', 'time', 'ra', 'dec']
+        fields = ['id', 'name', 'datetime', 'ra', 'dec']
         datatables_always_serialize = ('id',)
 
 

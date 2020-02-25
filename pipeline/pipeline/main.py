@@ -129,6 +129,7 @@ class Pipeline():
             # save sources to parquet file in dataset folder
             if not os.path.exists(os.path.dirname(img.sources_path)):
                 os.mkdir(os.path.dirname(img.sources_path))
+
             sources.drop('src_dj', axis=1).to_parquet(
                 img.sources_path,
                 index=False
@@ -142,7 +143,7 @@ class Pipeline():
 
         # 2.2 Associate with other sources
         # order images by time
-        images.sort(key=operator.attrgetter('time'))
+        images.sort(key=operator.attrgetter('datetime'))
         limit = Angle(self.config.ASSOCIATION_RADIUS * u.arcsec)
 
         association(dataset, images, src_dj_obj, limit)
@@ -191,9 +192,13 @@ class Pipeline():
             return (img, True)
 
         # at this stage source parquet file not created but assume location
+        img_folder_name = '_'.join([
+            image.name.split('.i.', 1)[-1].split('.', 1)[0],
+            image.datetime.isoformat()
+        ])
         sources_path = os.path.join(
             dataset.path,
-            image.name.split('.i.', 1)[-1].split('.', 1)[0],
+            img_folder_name,
             'sources.parquet'
             )
         img = Image(
