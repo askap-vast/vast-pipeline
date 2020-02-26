@@ -16,17 +16,12 @@ def get_eta_metric(row, df, peak=False):
     if row['Nsrc'] == 1 :
         return 0.
     suffix = 'peak' if peak else 'int'
-    # weights
-    w = df[f'flux_{suffix}_err']**-2
-    w_mean = w.mean()
-
-    # weighted means
-    w_flux_mean = (w * df[f'flux_{suffix}']).mean()
-    w_flux_sq_mean = (w * row[f'flux_{suffix}_sq']).mean()
-
-    return row['Nsrc'] / (row['Nsrc'] - 1) * (
-        w_flux_sq_mean - w_flux_mean**2 / w_mean
+    weights = df[f'flux_{suffix}_err']**-2
+    fluxes = df[f"flux_{suffix}"]
+    eta = (row['Nsrc'] / (row['Nsrc']-1)) * (
+        (weights*fluxes**2).mean() - ((weights*fluxes).mean()**2 / weights.mean())
     )
+    return eta
 
 
 def groupby_funcs(row, first_img):
