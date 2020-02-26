@@ -29,19 +29,6 @@ def get_eta_metric(row, df, peak=False):
     )
 
 
-def get_var_metric(row, df, peak=False):
-    if row['Nsrc'] == 1 :
-        return 0.
-    suffix = 'peak' if peak else 'int'
-    return row[f'ave_flux_{suffix}']**-1 * np.sqrt(
-        row['Nsrc'] / (row['Nsrc'] - 1) * (
-            row[f'flux_{suffix}_sq'].mean() - (
-                df[f'flux_{suffix}'].mean()
-            )**2
-        )
-    )
-
-
 def groupby_funcs(row, first_img):
     # calculated average ra, dec, fluxes and metrics
     d = {}
@@ -52,8 +39,8 @@ def groupby_funcs(row, first_img):
     for col in ['flux_int','flux_peak']:
         d[f'{col}_sq'] = (row[col]**2).mean()
     d['Nsrc'] = row['id'].count()
-    d['v_int'] = get_var_metric(d, row)
-    d['v_peak'] = get_var_metric(d, row, peak=True)
+    d['v_int'] = row["flux_int"].std() / row["flux_int"].mean()
+    d['v_peak'] = row["flux_peak"].std() / row["flux_peak"].mean()
     d['eta_int'] = get_eta_metric(d, row)
     d['eta_peak'] = get_eta_metric(d, row, peak=True)
     # remove not used cols
