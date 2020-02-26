@@ -16,30 +16,12 @@ def get_eta_metric(row, df, peak=False):
     if row['Nsrc'] == 1 :
         return 0.
     suffix = 'peak' if peak else 'int'
-    # weights
-    w = df[f'flux_{suffix}_err']**-2
-    w_mean = w.mean()
-
-    # weighted means
-    w_flux_mean = (w * df[f'flux_{suffix}']).mean()
-    w_flux_sq_mean = (w * row[f'flux_{suffix}_sq']).mean()
-
-    return row['Nsrc'] / (row['Nsrc'] - 1) * (
-        w_flux_sq_mean - w_flux_mean**2 / w_mean
+    weights = df[f'flux_{suffix}_err']**-2
+    fluxes = df[f"flux_{suffix}"]
+    eta = (row['Nsrc'] / (row['Nsrc']-1)) * (
+        (weights*fluxes**2).mean() - ((weights*fluxes).mean()**2 / weights.mean())
     )
-
-
-def get_var_metric(row, df, peak=False):
-    if row['Nsrc'] == 1 :
-        return 0.
-    suffix = 'peak' if peak else 'int'
-    return row[f'ave_flux_{suffix}']**-1 * np.sqrt(
-        row['Nsrc'] / (row['Nsrc'] - 1) * (
-            row[f'flux_{suffix}_sq'].mean() - (
-                df[f'flux_{suffix}'].mean()
-            )**2
-        )
-    )
+    return eta
 
 
 def groupby_funcs(row, first_img):
@@ -52,8 +34,8 @@ def groupby_funcs(row, first_img):
     for col in ['flux_int','flux_peak']:
         d[f'{col}_sq'] = (row[col]**2).mean()
     d['Nsrc'] = row['id'].count()
-    d['v_int'] = get_var_metric(d, row)
-    d['v_peak'] = get_var_metric(d, row, peak=True)
+    d['v_int'] = row["flux_int"].std() / row["flux_int"].mean()
+    d['v_peak'] = row["flux_peak"].std() / row["flux_peak"].mean()
     d['eta_int'] = get_eta_metric(d, row)
     d['eta_peak'] = get_eta_metric(d, row, peak=True)
     # remove not used cols
