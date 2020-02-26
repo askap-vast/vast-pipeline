@@ -354,7 +354,7 @@ def catalogDetail(request, id, action=None):
         image_name=F('image__name'),
     ).order_by('datetime').values(*tuple(cols)))
     for src in sources:
-        src['datetime'] = src['datetime'].strftime('%Y %b %d %H:%M:%S')
+        src['datetime'] = src['datetime'].isoformat()
         # for key in ['flux_int', 'flux_int_err', 'flux_peak', 'flux_peak_err']:
         #     src[key] = src[key] * 1.e3
 
