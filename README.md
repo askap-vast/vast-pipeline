@@ -9,9 +9,9 @@ If you intend to contribute to the code base please read and follow the guidelin
 
 - [Pipeline Configuration](#pipeline-configuration)
 - [Pipeline Usage](#pipeline-usage)
-	- [Initialise a Dataset](#initialise-a-dataset)
-	- [Run the Pipeline](#run-the-pipeline)
-	- [Resetting a Dataset](#resetting-a-dataset)
+	- [Initialise a Pipeline Run](#initialise-a-pipeline-run)
+	- [Run a Pipeline Instance](#run-the-pipeline)
+	- [Resetting a Pipeline Run](#resetting-a-pipeline-run)
 	- [Import survey data](#import-survey-data)
 - [Data Exploration via Django Web Server](#data-exploration-via-django-web-server)
 
@@ -40,7 +40,7 @@ DATABASES = {
 
 NOTE: the connection details (host and port) are the same that you setup in [`INSTALL.md`](./INSTALL.md). The database/user names must not contain any spaces or dashes, so use the underscore if you want, e.g. `this_is_my_db_name`.
 
-3. Create the database user, database name and enabling the `Q3C` extension, by running:
+3. Create the database user and database name, by running:
 
 ```bash
 $:./init-tools/init-db.sh localhost 5432 postgres postgres vast vastpsw vastdb
@@ -64,8 +64,7 @@ connecting to PostgreSQL on 'localhost:5433' as admin 'postgres'
 creating user 'vast' with login password 'vastpsw' and give it createdb privileges
 CREATE ROLE
 ************************************
-creating db 'vastdb', enable Q3C plugin
-CREATE EXTENSION
+creating db 'vastdb'
 ```
 
 4. Create the database tables. Remember first to activate the Python environment as described in [`INSTALL.md`](./INSTALL.md).
@@ -102,6 +101,7 @@ vast-pipeline/
 ├── templates
 ├── pipeline-projects
 ├── webinterface
+├── DEVELOPING.md
 ├── INSTALL.md
 ├── manage.py
 └── README.md
@@ -120,9 +120,9 @@ Output:
  ...
 
 [pipeline]
-  cleardataset
+  clearpiperun
   importsurvey
-  initdataset
+  initpiperun
   runpipeline
 
  ...
@@ -130,28 +130,27 @@ Output:
 
 There are 4 commands, described in detail below.
 
-### Initialise a dataset
-In order to process the images in the pipeline, you must create/initialise a dataset first.
+### Initialise a Pipeline Run
+In order to process the images in the pipeline, you must create/initialise a pipeline run first.
 
-The dataset creation is run using `initdataset` django command, which requires a dataset folder. The command creates a folder with the dataset name under the settings
-`PROJECT_WORKING_DIR` defined in [settings](./webinterface/settings.template.py).
+The pipeline run creation is run using `initpiperun` django command, which requires a pipeline run folder. The command creates a folder with the pipeline run name under the settings `PROJECT_WORKING_DIR` defined in [settings](./webinterface/settings.template.py).
 
 ```bash
-(pipeline_env)$: ./manage.py initdataset --help
+(pipeline_env)$: ./manage.py initpiperun --help
 ```
 
 Output:
 
 ```bash
-usage: manage.py initdataset [-h] [--version] [-v {0,1,2,3}]
+usage: manage.py initpiperun [-h] [--version] [-v {0,1,2,3}]
                              [--settings SETTINGS] [--pythonpath PYTHONPATH]
                              [--traceback] [--no-color] [--force-color]
-                             dataset_folder_path
+                             run_folder_path
 
-Create the dataset folder structure to run a pipeline instance
+Create the pipeline run folder structure to run a pipeline instance
 
 positional arguments:
-  dataset_folder_path   path to the dataset folder
+  run_folder_path       path to the pipeline run folder
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -174,19 +173,18 @@ optional arguments:
 The command yields the following folder structure:
 
 ```bash
-(pipeline_env)$: ./manage.py initdataset my_dataset
+(pipeline_env)$: ./manage.py initpiperun my_pipe_run
 ```
 
 Output:
 
 ```bash
-2020-02-17 00:56:50,818 initdataset INFO creating dataset folder
-2020-02-17 00:56:50,818 initdataset INFO copying default config in dataset folder
-2020-02-17 00:56:50,819 initdataset INFO Dataset initialisation successful! Please modify the "config.py"
-
+2020-02-27 23:04:33,344 initpiperun INFO creating pipeline run folder
+2020-02-27 23:04:33,344 initpiperun INFO copying default config in pipeline run folder
+2020-02-27 23:04:33,344 initpiperun INFO pipeline run initialisation successful! Please modify the "config.py"
 ```
 
-### Run the Pipeline
+### Run a Pipeline Instance
 The pipeline is run using `runpipeline` django command.
 
 ```bash
@@ -200,21 +198,21 @@ TBC
 
 General usage:
 ```bash
-(pipeline_env)$: ./manage.py runpipeline path/to/my_dataset
+(pipeline_env)$: ./manage.py runpipeline path/to/my_pipe_run
 ```
 
-### Resetting a Dataset
+### Resetting a Pipeline Run
 
 Detailed commands for resetting the database can be found in [`DEVELOPING.md`](./DEVELOPING.md).
 
-Resetting a dataset (i.e. a pipeline run) can be done using the `cleardataset` command: it will delete all images (and related objects such as sources) associated with that dataset, if that images does not belong to another dataset. It will deleted all the catalogs associated with that dataset.
+Resetting a pipeline run (i.e. a pipeline run) can be done using the `clearpiperun` command: it will delete all images (and related objects such as sources) associated with that pipeline run, if that images does not belong to another pipeline run. It will deleted all the sources associated with that pipeline run.
 ```bash
-(pipeline_env)$: ./manage.py cleardataset my_dataset
+(pipeline_env)$: ./manage.py clearpiperun my_pipe_run
 ```
 
 ### Import survey data
 
-This command is optional but recommended. TBC
+TBC
 
 
 ## Data Exploration via Django Web Server

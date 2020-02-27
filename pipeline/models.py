@@ -189,8 +189,8 @@ class SourceQuerySet(models.QuerySet):
 
     def cone_search(self, ra, dec, radius_deg):
         """
-        Return all the Catalogs withing radius_deg of (ra,dec).
-        Returns a QuerySet of Catalogs, ordered by distance from
+        Return all the Sources withing radius_deg of (ra,dec).
+        Returns a QuerySet of Sources, ordered by distance from
         (ra,dec) ascending
         """
         return (

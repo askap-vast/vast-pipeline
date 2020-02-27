@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     """
-    This script is used to clean the data for the current dataset
+    This script is used to import data for a survey
 
     Use --help for usage, and refer README.
     """

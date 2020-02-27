@@ -246,7 +246,7 @@ def SourceQuery(request):
         if col == 'name':
             colsfields.append({
                 'data': col, 'render': {
-                    'prefix': '/catalogs/', 'col':'name'
+                    'prefix': '/sources/', 'col':'name'
                 }
             })
         else:

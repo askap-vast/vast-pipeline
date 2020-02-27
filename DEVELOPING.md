@@ -4,6 +4,12 @@ This document explains how to contribute to the project code base.
 
 A very exahustive set of general guidelines can be follow [here](https://github.com/apache/incubator-superset/blob/master/CONTRIBUTING.md), but I think the following will suffice for our purpose.
 
+## Terminology
+
+* Run -> Pipeline run instance, also referred as `run, p_run, piperun, pipe_run, ...` in the code
+* Measurement -> the source light measurement (i.e. image data) from the image, referred in the code as `measurement(s), meas, ...`
+* Source -> Light source, as collection of single measurements, referred as `src, source, ...` in the code
+
 ## Pull Request Guideline
 1. Branch off `master`
 2. Do your changes

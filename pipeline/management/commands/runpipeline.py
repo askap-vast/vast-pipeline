@@ -60,7 +60,7 @@ class Command(BaseCommand):
             raise CommandError(f'Config error:\n{e}')
 
         # Create the pipeline run in DB
-        p_run = self.get_create_p_run(p_run_name, cfg.DATASET_PATH)
+        p_run = self.get_create_p_run(p_run_name, cfg.PIPE_RUN_PATH)
 
         logger.info("Source finder: %s", cfg.SOURCE_FINDER)
         logger.info("Using pipeline run '%s'", p_run_name)

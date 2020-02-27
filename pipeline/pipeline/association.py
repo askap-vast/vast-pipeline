@@ -42,12 +42,12 @@ def groupby_funcs(row, first_img):
     for col in ['flux_int_sq','flux_peak_sq']:
         d.pop(col)
     d.pop('Nsrc')
-    # set new catalog/source
+    # set new source
     d['new'] = True if first_img in row['img'] else False
     return pd.Series(d)
 
 
-def get_catalog_models(row, pipeline_run=None):
+def get_source_models(row, pipeline_run=None):
     name = f"src_{deg2hms(row['ave_ra'])}{deg2dms(row['ave_dec'])}"
     src = Source()
     src.run = pipeline_run
@@ -77,16 +77,16 @@ def association(p_run, images, meas_dj_obj, limit):
     skyc1_srcs['cat'] = pd.np.NaN
     skyc1_srcs['ra_source'] = skyc1_srcs.ra
     skyc1_srcs['dec_source'] = skyc1_srcs.dec
-    # create base catalog
+    # create base catalogue
     skyc1 = SkyCoord(
         ra=skyc1_srcs.ra * u.degree,
         dec=skyc1_srcs.dec * u.degree
     )
-    # initialise the df of catalogs with the base one
+    # initialise the empty sources dataframe
     sources_df = pd.DataFrame()
     for it, image in enumerate(images[1:]):
         logger.info('Association iteration: #%i', (it + 1))
-        # load skyc2 sources and create SkyCoord/sky catalog(skyc)
+        # load skyc2 source measurements and create SkyCoord
         skyc2_srcs = pd.read_parquet(
             image.measurements_path,
             columns=cols
@@ -103,18 +103,18 @@ def association(p_run, images, meas_dj_obj, limit):
         # selection
         sel = d2d <= limit
 
-        # assign catalog temp id in skyc1 sorces df if not previously defined
+        # assign source temp id in skyc1 sorces df if not previously defined
         start_elem = 0. if skyc1_srcs.cat.max() is pd.np.NaN else skyc1_srcs.cat.max()
         nan_sel = skyc1_srcs.cat.isna().values
         skyc1_srcs.loc[ sel & nan_sel, 'cat'] = (
             skyc1_srcs.index[ sel & nan_sel].values + start_elem + 1.
         )
-        # append skyc1 selection to catalog df
+        # append skyc1 selection to source df
         sources_df = sources_df.append(skyc1_srcs)
 
-        # assign catalog temp id to skyc2 sorces from skyc1
+        # assign source temp id to skyc2 sorces from skyc1
         skyc2_srcs.loc[idx[sel], 'cat'] = skyc1_srcs.loc[sel, 'cat'].values
-        # append skyc2 selection to catalog df
+        # append skyc2 selection to source df
         sources_df = sources_df.append(skyc2_srcs.loc[idx[sel]])
         # remove eventual duplicated values
         sources_df = sources_df.drop_duplicates(subset=['id','cat'])
@@ -157,7 +157,7 @@ def association(p_run, images, meas_dj_obj, limit):
         sources_df.index[nan_sel].values + start_elem
     )
 
-    # tidy the df of catalogs to drop duplicated entries
+    # tidy the df of sources to drop duplicated entries
     # to have unique rows of c_name and src_id
     sources_df = sources_df.drop_duplicates(subset=['id','cat'])
 
@@ -169,16 +169,16 @@ def association(p_run, images, meas_dj_obj, limit):
         .rename(columns={'ra_source':'ra', 'dec_source':'dec'})
     )
 
-    # calculate catalog fields
+    # calculate source fields
     srcs_df = sources_df.groupby('cat').apply(
         groupby_funcs, first_img=(images[0].name,)
     )
     # fill NaNs as resulted from calculated metrics with 0
     srcs_df =srcs_df.fillna(0.)
 
-    # generate the catalog models
+    # generate the source models
     srcs_df['src_dj'] = srcs_df.apply(
-        get_catalog_models,
+        get_source_models,
         axis=1,
         pipeline_run=p_run
     )
