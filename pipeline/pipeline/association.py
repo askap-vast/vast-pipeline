@@ -44,7 +44,7 @@ def groupby_funcs(row, first_img):
     d.pop('Nsrc')
     # set new catalog/source
     d['new'] = True if first_img in row['img'] else False
-    return pd.Series(d)
+    return pd.Series(d).fillna(0.0)
 
 
 def get_catalog_models(row, dataset=None):
