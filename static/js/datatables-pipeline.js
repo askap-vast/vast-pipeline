@@ -47,10 +47,10 @@ $(document).ready(function() {
 
   // Trigger the update search on the datatable
   $("#catalogSearch").on('click', function(e) {
-    let ds = document.getElementById("datasetSelect");
+    let PipeRun = document.getElementById("runSelect");
     let qry_url = dataConf.api;
-    if (ds.value != '') {
-      qry_url = qry_url + "&dataset=" + ds.value;
+    if (PipeRun.value != '') {
+      qry_url = qry_url + "&run=" + PipeRun.value;
     };
     let radius = document.getElementById("radiusSelect");
     let ra = document.getElementById("raSelect");
@@ -84,7 +84,7 @@ $(document).ready(function() {
     };
     let datapts = document.getElementById("datapointSelect");
     if (datapts.value) {
-      qry_url = qry_url + "&sources=" + datapts.value;
+      qry_url = qry_url + "&meas=" + datapts.value;
     };
     table.ajax.url(qry_url);
     table.ajax.reload();
@@ -92,7 +92,7 @@ $(document).ready(function() {
 
   // Trigger the search reset on the datatable
   $("#resetSearch").on('click', function(e) {
-    $('#datasetSelect option').prop('selected', function() {
+    $('#runSelect option').prop('selected', function() {
       return this.defaultSelected
     });
     let inputs = [

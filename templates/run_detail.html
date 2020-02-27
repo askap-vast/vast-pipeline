@@ -3,10 +3,10 @@
 {% block breadcrumb %}
 
 <li class="breadcrumb-item">
-  <a href="{% url 'pipeline:dataset_index' %}">Datasets</a>
+  <a href="{% url 'pipeline:run_index' %}">Pipeline Runs</a>
 </li>
 <li class="breadcrumb-item">
-  <a href="{% url 'pipeline:dataset_detail' dataset.id %}">Dataset</a>
+  <a href="{% url 'pipeline:run_detail' p_run.id %}">{{ p_run.name }}</a>
 </li>
 
 {% endblock breadcrumb %}
@@ -17,7 +17,7 @@
 
   <!-- Page Heading -->
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
-	  <h1 class="h3 mb-2 text-gray-800">Dataset: {{ dataset.name }}</h1>
+	  <h1 class="h3 mb-2 text-gray-800">Pipeline Run: {{ p_run.name }}</h1>
 	</div>
 
   <div class="row">
@@ -29,7 +29,7 @@
             <div class="row no-gutters align-items-center">
               <div class="col mr-2">
                 <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Nr Images</div>
-                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ dataset.nr_imgs }}</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ p_run.nr_imgs }}</div>
               </div>
               <div class="col-auto">
                 <i class="fas fa-images fa-2x text-gray-300"></i>
@@ -46,8 +46,8 @@
           <div class="card-body">
             <div class="row no-gutters align-items-center">
               <div class="col mr-2">
-                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Total Nr Catalogs</div>
-                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ dataset.nr_cats }}</div>
+                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Total Nr Sources</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ p_run.nr_srcs }}</div>
               </div>
               <div class="col-auto">
                 <i class="fas fa-share-alt fa-2x text-gray-300"></i>
@@ -64,8 +64,8 @@
           <div class="card-body">
             <div class="row no-gutters align-items-center">
               <div class="col mr-2">
-                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Extracted Sources</div>
-                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ dataset.nr_srcs }}</div>
+                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Extracted Source Measurements</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ p_run.nr_meas }}</div>
               </div>
               <div class="col-auto">
                 <i class="fas fa-bolt fa-2x text-gray-300"></i>
@@ -83,7 +83,7 @@
             <div class="row no-gutters align-items-center">
               <div class="col mr-2">
                 <div class="text-xs font-weight-bold text-success text-uppercase mb-1">New Sources</div>
-                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ dataset.new_srcs }}</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ p_run.new_srcs }}</div>
               </div>
               <div class="col-auto">
                 <i class="fas fa-bookmark fa-2x text-gray-300"></i>
@@ -105,8 +105,8 @@
         </div>
         <div class="card-body">
           <p><strong>User: </strong>Guest</p>
-          <p><strong>Processing Datetime: </strong> {{ dataset.time }}</p>
-          <p><strong>Comment: </strong> {{ dataset.comment }}</p>
+          <p><strong>Processing Datetime: </strong> {{ p_run.time }}</p>
+          <p><strong>Comment: </strong> {{ p_run.comment }}</p>
         </div>
       </div>
 

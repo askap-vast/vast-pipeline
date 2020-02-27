@@ -12,10 +12,10 @@
 {% block breadcrumb %}
 
 <li class="breadcrumb-item">
-  <a href="{% url 'pipeline:catalog_index' %}">Catalogs</a>
+  <a href="{% url 'pipeline:source_index' %}">Sources</a>
 </li>
 <li class="breadcrumb-item">
-  <a href="{% url 'pipeline:catalog_detail' catalog.id %}">Catalog</a>
+  <a href="{% url 'pipeline:source_detail' source.id %}">{{ source.name }}</a>
 </li>
 
 {% endblock breadcrumb %}
@@ -26,15 +26,15 @@
 
   <!-- Page Heading -->
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
-	  <h1 class="h3 mb-2 text-gray-800">Catalog: {{ catalog.name }}</h1>
+	  <h1 class="h3 mb-2 text-gray-800">Light Source: {{ source.name }}</h1>
     <div class="">
-      <a href="{% url 'pipeline:catalog_detail' catalog.id %}prev" class="d-none d-sm-inline-block btn btn-sm btn-light btn-icon-split shadow-sm">
+      <a href="{% url 'pipeline:source_detail' source.id %}prev" class="d-none d-sm-inline-block btn btn-sm btn-light btn-icon-split shadow-sm">
         <span class="icon text-gray-600">
           <i class="fas fa-arrow-left fa-sm"></i>
         </span>
         <span class="text">Previous</span>
       </a>
-      <a href="{% url 'pipeline:catalog_detail' catalog.id %}next" class="d-none d-sm-inline-block btn btn-sm btn-light btn-icon-split shadow-sm">
+      <a href="{% url 'pipeline:source_detail' source.id %}next" class="d-none d-sm-inline-block btn btn-sm btn-light btn-icon-split shadow-sm">
         <span class="text">Next</span>
         <span class="icon text-gray-600">
           <i class="fas fa-arrow-right fa-sm"></i>
@@ -52,12 +52,12 @@
         </div>
         <div class="card-body">
           <p><strong>Position: </strong>Guest</p>
-          <p><strong>RA: </strong> {{ catalog.ave_ra }}</p>
-          <p><strong>DEC: </strong> {{ catalog.ave_dec }}</p>
-          <p><strong>New Source: </strong> {{ catalog.new }}</p>
-          <p><strong>Nr Datapoints: </strong> {{ catalog.sources }}</p>
-          <p><strong>Dataset: </strong> <a href="{% url 'pipeline:dataset_detail' catalog.dataset_id %}">{{ catalog.dsname }}</a></p>
-          <p><strong>Comment: </strong> {{ catalog.comment }}</p>
+          <p><strong>RA: </strong> {{ source.ave_ra }}</p>
+          <p><strong>DEC: </strong> {{ source.ave_dec }}</p>
+          <p><strong>New Source: </strong> {{ source.new }}</p>
+          <p><strong>Nr Datapoints: </strong> {{ source.measurements }}</p>
+          <p><strong>Pipeline Run: </strong> <a href="{% url 'pipeline:run_detail' source.run_id %}">{{ source.run_name }}</a></p>
+          <p><strong>Comment: </strong> {{ source.comment }}</p>
         </div>
       </div>
     </div>
@@ -81,24 +81,24 @@
     </div>
   </div>
 
-  <!-- DataTales Sources -->
+  <!-- DataTales Source Measurements -->
   <div class="card shadow mb-4">
     <div class="card-header py-3">
-      <h6 class="m-0 font-weight-bold text-primary">Sources</h6>
+      <h6 class="m-0 font-weight-bold text-primary">Source Measurements</h6>
     </div>
     <div class="card-body">
       <div class="table-responsive">
         <table class="table table-bordered table-striped table-hover" id="dataTable" width="100%" cellspacing="0">
           <thead>
             <tr>
-              {% for name in catalog.datatable.colsNames %}
+              {% for name in source.datatable.colsNames %}
               <th>{{ name }}</th>
               {% endfor %}
             </tr>
           </thead>
           <tfoot>
             <tr>
-              {% for name in catalog.datatable.colsNames %}
+              {% for name in source.datatable.colsNames %}
               <th>{{ name }}</th>
               {% endfor %}
             </tr>
@@ -121,17 +121,17 @@
 <script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
 
 <!-- Datatable scripts -->
-{{ sources|json_script:"datatable-conf" }}
+{{ measurements|json_script:"datatable-conf" }}
 <script src="{% static 'js/datatables-pipeline.js' %}"></script>
 
 <!-- Chart scripts -->
-{{ sources|json_script:"chart-data" }}
+{{ measurements|json_script:"chart-data" }}
 <script src="{% static 'vendor/chart.js/Chart.bundle.min.js' %}"></script>
 <script src="{% static 'vendor/chart.js/Plugin.Errorbars.min.js' %}"></script>
 <script src="{% static 'js/light-curve-chart.js' %}"></script>
 
 <!-- Aladin -->
-{{ catalog|json_script:"data-aladin" }}
+{{ measurements|json_script:"data-aladin" }}
 <script type='text/javascript' src='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js' charset='utf-8'></script>
 <script src="{% static 'js/aladin-script.js' %}"></script>
 

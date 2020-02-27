@@ -51,7 +51,6 @@ class SurveySource(models.Model):
 
     name = models.CharField(
         max_length=100,
-        unique=True,
         help_text='Name of the survey source'
     )
 
@@ -101,10 +100,10 @@ class SurveySource(models.Model):
         return f"{self.id} {self.name}"
 
 
-class Dataset(models.Model):
+class Run(models.Model):
     """
-    A dataset is group of cubes (thus images), typically used to group
-    images that can be compared
+    A Run is essentially a pipeline run/processing istance over a set of
+    images
     """
     name = models.CharField(
         max_length=64,
@@ -120,13 +119,13 @@ class Dataset(models.Model):
     time = models.DateTimeField(
         auto_now=True,
         help_text='Datetime of run'
-    )# run date/time of the dataset
-    path = models.FilePathField(max_length=200)# the path to the dataset
+    )# run date/time of the pipeline run
+    path = models.FilePathField(max_length=200)# the path to the pipeline run
     comment = models.TextField(
         max_length=1000,
         default='',
         blank=True
-    )# A description of this dataset
+    )# A description of this pipeline run
 
     class Meta:
         ordering = ['name']
@@ -137,23 +136,23 @@ class Dataset(models.Model):
     def save(self, *args, **kwargs):
         # enforce the full model validation on save
         self.full_clean()
-        super(Dataset, self).save(*args, **kwargs)
+        super(Run, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
         """
         Override default delete method to also delete related image
-        objects only if no other datasets are related to the image.
+        objects only if no other pipeline runs are related to the image.
         """
         logger = logging.getLogger(__name__)
         for image in self.image_set.all():
-            if image.dataset.count() == 1:
+            if image.run.count() == 1:
                 logger.info("Deleting image: %s", image.name)
                 deleted_num, deleted_detail = image.delete()
                 for instance_type, count in deleted_detail.items():
                     logger.info(
                         "Deleted %d instances of %s", count, instance_type
                     )
-        super(Dataset, self).delete(*args, **kwargs)
+        super(Run, self).delete(*args, **kwargs)
 
 
 class Band(models.Model):
@@ -173,7 +172,7 @@ class Band(models.Model):
 
 
 class SkyRegion(models.Model):
-    dataset = models.ManyToManyField(Dataset)
+    run = models.ManyToManyField(Run)
 
     centre_ra = models.FloatField()
     centre_dec = models.FloatField()
@@ -186,7 +185,7 @@ class SkyRegion(models.Model):
         return f'{self.centre_ra}, {self.centre_dec}'
 
 
-class CatalogQuerySet(models.QuerySet):
+class SourceQuerySet(models.QuerySet):
 
     def cone_search(self, ra, dec, radius_deg):
         """
@@ -207,13 +206,19 @@ class CatalogQuerySet(models.QuerySet):
         )
 
 
-class Catalog(models.Model):
-    dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE, null=True,)
+class Source(models.Model):
+    run = models.ForeignKey(Run, on_delete=models.CASCADE, null=True,)
+    cross_match_sources = models.ManyToManyField(
+        SurveySource,
+        through='CrossMatch',
+        through_fields=('source', 'survey_source')
+    )
+
     name = models.CharField(max_length=100)
     comment = models.TextField(max_length=1000, default='', blank=True)
-    new = models.BooleanField(default=False, help_text='New Source or Catalog')
+    new = models.BooleanField(default=False, help_text='New Source')
 
-    # average fields calculated from the sources
+    # average fields calculated from the source measurements
     ave_ra = models.FloatField()
     ave_dec = models.FloatField()
     ave_flux_int = models.FloatField()
@@ -234,7 +239,7 @@ class Catalog(models.Model):
         help_text='Eta metric for peak flux'
     )
 
-    objects = CatalogQuerySet.as_manager()
+    objects = SourceQuerySet.as_manager()
 
     def __str__(self):
         return self.name
@@ -243,12 +248,13 @@ class Catalog(models.Model):
 class Image(models.Model):
     """An image is a 2D radio image from a cube"""
     band = models.ForeignKey(Band, on_delete=models.CASCADE)
-    dataset = models.ManyToManyField(Dataset)
+    run = models.ManyToManyField(Run)
     skyreg = models.ForeignKey(SkyRegion, on_delete=models.CASCADE)
 
-    sources_path = models.FilePathField(
-        max_length=200
-    )# the path to the sources parquet that belongs to this image
+    measurements_path = models.FilePathField(
+        max_length=200,
+        db_column='meas_path'
+    )# the path to the measurements parquet that belongs to this image
     polarisation = models.CharField(
         max_length=2,
         help_text='Polarisation of the image e.g. I,XX,YY,Q,U,V'
@@ -360,24 +366,20 @@ class SourceQuerySet(models.QuerySet):
         )
 
 
-class Source(models.Model):
+class Measurement(models.Model):
     """
-    A Source is an object in the sky that has been detected at least once.
-    The Source table starts empty and is built up as images are processed.
+    A Measurement is an object in the sky that has been detected at least once.
+    Essentially a source single measurement in time.
     """
     image = models.ForeignKey(
         Image,
         null=True,
         on_delete=models.CASCADE
     )# first image seen in
-    cross_match_sources = models.ManyToManyField(
-        SurveySource,
-        through='CrossMatch'
-    )
-    catalog = models.ManyToManyField(
-        Catalog,
+    source = models.ManyToManyField(
+        Source,
         through='Association',
-        through_fields=('source', 'catalog')
+        through_fields=('meas', 'source')
     )
 
     name = models.CharField(max_length=64, unique=True)
@@ -473,10 +475,10 @@ class CrossMatch(models.Model):
     # delete things from the source/survey_source tables without having
     # to think about this crossmatch table
     source = models.ForeignKey(
-        Source, to_field='name', on_delete=models.CASCADE
+        Source, on_delete=models.CASCADE
     )
     survey_source = models.ForeignKey(
-        SurveySource, to_field='name', on_delete=models.CASCADE
+        SurveySource, on_delete=models.CASCADE
     )
 
     manual = models.BooleanField()# a manual cross-match (vs automatic)
@@ -487,10 +489,10 @@ class CrossMatch(models.Model):
 
 class Association(models.Model):
     """
-    model association between sources and catalogs based on some parameters
+    model association between sources and measurements based on some parameters
     """
     source = models.ForeignKey(Source, on_delete=models.CASCADE)
-    catalog = models.ForeignKey(Catalog, on_delete=models.CASCADE)
+    meas = models.ForeignKey(Measurement, on_delete=models.CASCADE)
 
     probability = models.FloatField(default=1.)  # probability of association
 

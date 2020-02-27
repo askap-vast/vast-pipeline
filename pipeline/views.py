@@ -4,9 +4,10 @@ from django.db.models import Count, F
 from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet
 
-from .models import Catalog, Dataset, Image, Source
+from .models import Image, Measurement, Run, Source
 from .serializers import (
-    CatalogSerializer, DatasetSerializer, ImageSerializer, SourceSerializer
+    ImageSerializer, MeasurementSerializer, RunSerializer,
+    SourceSerializer
 )
 from .utils.utils import deg2dms, deg2hms
 
@@ -14,14 +15,14 @@ from .utils.utils import deg2dms, deg2hms
 logger = logging.getLogger(__name__)
 
 
-# Datasets table
-def datasetIndex(request):
+# Runs table
+def RunIndex(request):
     colsfields = []
-    for col in ['time', 'name', 'path', 'comment', 'n_images', 'n_catalogs']:
+    for col in ['time', 'name', 'path', 'comment', 'n_images', 'n_sources']:
         if col == 'name':
             colsfields.append({
                 'data': col, 'render': {
-                    'prefix': '/datasets/', 'col':'name'
+                    'prefix': '/piperuns/', 'col':'name'
                 }
             })
         else:
@@ -31,16 +32,16 @@ def datasetIndex(request):
         'generic_table.html',
         {
             'text': {
-                'title': 'Datasets',
-                'description': 'List of Datasets below',
-                'breadcrumb': {'title': 'Datasets', 'url': request.path},
+                'title': 'Pipeline Runs',
+                'description': 'List of pipeline runs below',
+                'breadcrumb': {'title': 'Pipeline Runs', 'url': request.path},
             },
             'datatable': {
-                'api': '/api/datasets/?format=datatables',
+                'api': '/api/piperuns/?format=datatables',
                 'colsFields': colsfields,
                 'colsNames': [
                     'Run Datetime','Name','Path','Comment','Nr Images',
-                    'Nr Catalogs'
+                    'Nr Sources'
                 ],
                 'search': True,
             }
@@ -48,29 +49,29 @@ def datasetIndex(request):
     )
 
 
-class DatasetViewSet(ModelViewSet):
-    queryset = Dataset.objects.annotate(
+class RunViewSet(ModelViewSet):
+    queryset = Run.objects.annotate(
         n_images=Count("image", distinct=True),
-        n_catalogs=Count("catalog", distinct=True),
+        n_sources=Count("source", distinct=True),
     )
-    serializer_class = DatasetSerializer
+    serializer_class = RunSerializer
 
 
-# Dataset detail
-def datasetDetail(request, id):
-    dataset = Dataset.objects.filter(id=id).values().get()
-    dataset['nr_imgs'] = Image.objects.filter(dataset__id=dataset['id']).count()
-    dataset['nr_cats'] = Catalog.objects.filter(dataset__id=dataset['id']).count()
-    dataset['nr_srcs'] = Source.objects.filter(image__dataset__id=dataset['id']).count()
-    dataset['new_srcs'] = Catalog.objects.filter(
-        dataset__id=dataset['id'],
+# Run detail
+def RunDetail(request, id):
+    p_run = Run.objects.filter(id=id).values().get()
+    p_run['nr_imgs'] = Image.objects.filter(run__id=p_run['id']).count()
+    p_run['nr_srcs'] = Source.objects.filter(run__id=p_run['id']).count()
+    p_run['nr_meas'] = Measurement.objects.filter(image__run__id=p_run['id']).count()
+    p_run['new_srcs'] = Source.objects.filter(
+        run__id=p_run['id'],
         new=True,
     ).count()
-    return render(request, 'dataset_detail.html', {'dataset': dataset})
+    return render(request, 'run_detail.html', {'p_run': p_run})
 
 
 # Images table
-def imageIndex(request):
+def ImageIndex(request):
     cols = ['datetime', 'name', 'ra', 'dec']
     return render(
         request,
@@ -96,20 +97,20 @@ class ImageViewSet(ModelViewSet):
     serializer_class = ImageSerializer
 
 
-# Sources table
-def sourceIndex(request):
+# Measurements table
+def MeasurementIndex(request):
     cols = ['name', 'ra', 'dec', 'flux_int', 'flux_peak']
     return render(
         request,
         'generic_table.html',
         {
             'text': {
-                'title': 'Source',
-                'description': 'List of sources below',
-                'breadcrumb': {'title': 'Sources', 'url': request.path},
+                'title': 'Image Data Measurements',
+                'description': 'List of source measurements below',
+                'breadcrumb': {'title': 'Measurements', 'url': request.path},
             },
             'datatable': {
-                'api': '/api/sources/?format=datatables',
+                'api': '/api/measurements/?format=datatables',
                 'colsFields': [{'data': x} for x in cols],
                 'colsNames': ['Name','RA','DEC', 'Flux', 'Peak Flux'],
                 'search': True,
@@ -118,17 +119,17 @@ def sourceIndex(request):
     )
 
 
-class SourceViewSet(ModelViewSet):
-    queryset = Source.objects.all()
-    serializer_class = SourceSerializer
+class MeasurementViewSet(ModelViewSet):
+    queryset = Measurement.objects.all()
+    serializer_class = MeasurementSerializer
 
     def get_queryset(self):
-        ds_id = self.request.query_params.get('dataset_id', None)
-        return self.queryset.filter(catalog__id=ds_id) if ds_id else self.queryset
+        run_id = self.request.query_params.get('run_id', None)
+        return self.queryset.filter(source__id=run_id) if run_id else self.queryset
 
 
-# Catalogs table
-def catalogIndex(request):
+# Sources table
+def SourceIndex(request):
     fields = [
         'name',
         'comment',
@@ -137,7 +138,7 @@ def catalogIndex(request):
         'ave_flux_int',
         'ave_flux_peak',
         'max_flux_peak',
-        'sources',
+        'measurements',
         'v_int',
         'v_peak',
         'eta_int',
@@ -149,7 +150,7 @@ def catalogIndex(request):
         if col == 'name':
             colsfields.append({
                 'data': col, 'render': {
-                    'prefix': '/catalogs/', 'col':'name'
+                    'prefix': '/sources/', 'col':'name'
                 }
             })
         else:
@@ -160,12 +161,12 @@ def catalogIndex(request):
         'generic_table.html',
         {
             'text': {
-                'title': 'Catalogs',
-                'description': 'List of all catalogs below',
-                'breadcrumb': {'title': 'Catalogs', 'url': request.path},
+                'title': 'Light Sources',
+                'description': 'List of all light sources below',
+                'breadcrumb': {'title': 'Sources', 'url': request.path},
             },
             'datatable': {
-                'api': '/api/catalogs/?format=datatables',
+                'api': '/api/sources/?format=datatables',
                 'colsFields': colsfields,
                 'colsNames': [
                     'Name',
@@ -188,16 +189,16 @@ def catalogIndex(request):
     )
 
 
-class CatalogViewSet(ModelViewSet):
-    serializer_class = CatalogSerializer
+class SourceViewSet(ModelViewSet):
+    serializer_class = SourceSerializer
 
     def get_queryset(self):
-        qs = Catalog.objects.annotate(sources=Count("source"))
+        qs = Source.objects.annotate(measurements=Count("measurement"))
 
         qry_dict = {}
-        ds = self.request.query_params.get('dataset')
-        if ds:
-            qry_dict['dataset__name'] = ds
+        p_run = self.request.query_params.get('run')
+        if p_run:
+            qry_dict['run__name'] = p_run
 
         flux_qry_flds = ['ave_flux_int', 'ave_flux_peak', 'v_int', 'v_peak']
         for fld in flux_qry_flds:
@@ -207,9 +208,9 @@ class CatalogViewSet(ModelViewSet):
                     ky = fld + '__lte' if limit == 'max' else fld + '__gte'
                     qry_dict[ky] = val
 
-        sources = self.request.query_params.get('sources')
-        if sources:
-            qry_dict['sources'] = sources
+        measurements = self.request.query_params.get('meas')
+        if measurements:
+            qry_dict['measurements'] = measurements
 
         if qry_dict:
             qs = qs.filter(**qry_dict)
@@ -223,8 +224,8 @@ class CatalogViewSet(ModelViewSet):
         return qs
 
 
-# Catalogs Query
-def catalogQuery(request):
+# Sources Query
+def SourceQuery(request):
     fields = [
         'name',
         'comment',
@@ -233,7 +234,7 @@ def catalogQuery(request):
         'ave_flux_int',
         'ave_flux_peak',
         'max_flux_peak',
-        'sources',
+        'measurements',
         'v_int',
         'v_peak',
         'eta_int',
@@ -251,21 +252,21 @@ def catalogQuery(request):
         else:
             colsfields.append({'data': col})
 
-    # get all datasets names
-    ds =  list(Dataset.objects.values('name').all())
+    # get all pipeline run names
+    p_runs =  list(Run.objects.values('name').all())
 
     return render(
         request,
-        'catalogs_query.html',
+        'sources_query.html',
         {
-            'breadcrumb': {'title': 'Catalogs', 'url': request.path},
+            'breadcrumb': {'title': 'Sources', 'url': request.path},
             # 'text': {
-            #     'title': 'Catalogs',
-            #     'description': 'List of all catalogs below',
+            #     'title': 'Sources',
+            #     'description': 'List of all sources below',
             # },
-            'datasets': ds,
+            'runs': p_runs,
             'datatable': {
-                'api': '/api/catalogs/?format=datatables',
+                'api': '/api/sources/?format=datatables',
                 'colsFields': colsfields,
                 'colsNames': [
                     'Name',
@@ -288,40 +289,40 @@ def catalogQuery(request):
     )
 
 
-# Catalog detail
-def catalogDetail(request, id, action=None):
-    # catalog data
-    catalog = Catalog.objects.all()
+# Source detail
+def SourceDetail(request, id, action=None):
+    # source data
+    source = Source.objects.all()
     if action:
         if action == 'next':
-            cat = catalog.filter(id__gt=id)
-            if cat.exists():
-                catalog = cat.annotate(
-                    dsname=F('dataset__name')
+            src = source.filter(id__gt=id)
+            if src.exists():
+                source = src.annotate(
+                    run_name=F('run__name')
                 ).values().first()
             else:
-                catalog = catalog.filter(id=id).annotate(
-                    dsname=F('dataset__name')
+                source = source.filter(id=id).annotate(
+                    run_name=F('run__name')
                 ).values().get()
         elif action == 'prev':
-            cat = catalog.filter(id__lt=id)
-            if cat.exists():
-                catalog = cat.annotate(
-                    dsname=F('dataset__name')
+            src = source.filter(id__lt=id)
+            if src.exists():
+                source = src.annotate(
+                    run_name=F('run__name')
                 ).values().last()
             else:
-                catalog = catalog.filter(id=id).annotate(
-                    dsname=F('dataset__name')
+                source = source.filter(id=id).annotate(
+                    run_name=F('run__name')
                 ).values().get()
     else:
-        catalog = catalog.filter(id=id).annotate(
-            dsname=F('dataset__name')
+        source = source.filter(id=id).annotate(
+            run_name=F('run__name')
         ).values().get()
-    catalog['aladin_ra'] = catalog['ave_ra']
-    catalog['aladin_dec'] = catalog['ave_dec']
-    catalog['ave_ra'] = deg2hms(catalog['ave_ra'], hms_format=True)
-    catalog['ave_dec'] = deg2dms(catalog['ave_dec'], dms_format=True)
-    catalog['datatable'] = {'colsNames': [
+    source['aladin_ra'] = source['ave_ra']
+    source['aladin_dec'] = source['ave_dec']
+    source['ave_ra'] = deg2hms(source['ave_ra'], hms_format=True)
+    source['ave_dec'] = deg2dms(source['ave_dec'], dms_format=True)
+    source['datatable'] = {'colsNames': [
         'Name',
         'Date',
         'Image',
@@ -349,18 +350,20 @@ def catalogDetail(request, id, action=None):
         'datetime',
         'image_name',
     ]
-    sources = list(Source.objects.filter(catalog__id=id).annotate(
-        datetime=F('image__datetime'),
-        image_name=F('image__name'),
-    ).order_by('datetime').values(*tuple(cols)))
-    for src in sources:
-        src['datetime'] = src['datetime'].isoformat()
+    measurements = list(
+        Measurement.objects.filter(source__id=id).annotate(
+            datetime=F('image__datetime'),
+            image_name=F('image__name'),
+        ).order_by('datetime').values(*tuple(cols))
+    )
+    for one_m in measurements:
+        one_m['datetime'] = one_m['datetime'].isoformat()
 
     # add source count
-    catalog['sources'] = len(sources)
+    source['measurements'] = len(measurements)
     # add the data for the datatable api
-    sources = {
-        'dataQuery': sources,
+    measurements = {
+        'dataQuery': measurements,
         'colsFields': [
             'name',
             'datetime',
@@ -376,5 +379,5 @@ def catalogDetail(request, id, action=None):
         ],
         'search': True,
     }
-    context = {'catalog': catalog, 'sources': sources}
-    return render(request, 'catalog_detail.html', context)
+    context = {'source': source, 'measurements': measurements}
+    return render(request, 'source_detail.html', context)

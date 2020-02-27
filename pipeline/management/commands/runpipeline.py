@@ -8,7 +8,7 @@ from django.db import transaction
 
 from pipeline.pipeline.main import Pipeline
 from pipeline.utils.utils import load_validate_cfg, StopWatch
-from pipeline.models import Dataset
+from pipeline.models import Run
 
 
 logger = logging.getLogger(__name__)
@@ -24,10 +24,10 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         # positional arguments
         parser.add_argument(
-            'dataset_folder_path',
+            'run_folder_path',
             nargs=1,
             type=str,
-            help='path to the dataset folder'
+            help='path to the pipeline run folder'
         )
 
     @transaction.atomic
@@ -40,18 +40,18 @@ class Command(BaseCommand):
             # set the traceback on
             options['traceback'] = True
 
-        dataset_path = options['dataset_folder_path'][0]
+        p_run_path = options['run_folder_path'][0]
 
-        dataset_name = dataset_path
+        p_run_name = p_run_path
         # remove ending / if present
-        if dataset_name[-1] == '/':
-            dataset_name = dataset_name[:-1]
-        # grab only the dataset name from the path
-        dataset_name = dataset_name.split(os.path.sep)[-1]
+        if p_run_name[-1] == '/':
+            p_run_name = p_run_name[:-1]
+        # grab only the name from the path
+        p_run_name = p_run_name.split(os.path.sep)[-1]
 
-        cfg_path = os.path.join(os.path.realpath(dataset_path), 'config.py')
+        cfg_path = os.path.join(os.path.realpath(p_run_path), 'config.py')
 
-        # load and validate dataset configs
+        # load and validate run configs
         try:
             cfg = load_validate_cfg(cfg_path)
         except Exception as e:
@@ -59,11 +59,11 @@ class Command(BaseCommand):
                 traceback.print_exc()
             raise CommandError(f'Config error:\n{e}')
 
-        # Create the dataset in DB
-        dataset = self.get_create_dataset(dataset_name, cfg.DATASET_PATH)
+        # Create the pipeline run in DB
+        p_run = self.get_create_p_run(p_run_name, cfg.DATASET_PATH)
 
         logger.info("Source finder: %s", cfg.SOURCE_FINDER)
-        logger.info("Using dataset '%s'", dataset_name)
+        logger.info("Using pipeline run '%s'", p_run_name)
         logger.info("Source monitoring: %s", cfg.MONITOR)
         logger.info("Constant background RMS: %s", cfg.CONSTANT_RMS)
 
@@ -74,19 +74,20 @@ class Command(BaseCommand):
 
         # run the pipeline operations
         try:
-            pipeline.process_pipeline(dataset)
+            pipeline.process_pipeline(p_run)
         except Exception as e:
             if options['verbosity'] > 1:
                 traceback.print_exc()
             raise CommandError(f'Processing error:\n{e}')
+        logger.info("total pipeline processing time %.2f sec", stopwatch.reset())
 
     @staticmethod
-    def get_create_dataset(name, path):
-        ds = Dataset.objects.filter(name__exact=name)
-        if ds:
-            return ds.get()
+    def get_create_p_run(name, path):
+        p_run = Run.objects.filter(name__exact=name)
+        if p_run:
+            return p_run.get()
 
-        ds = Dataset(name=name, path=path)
-        ds.save()
+        p_run = Run(name=name, path=path)
+        p_run.save()
 
-        return ds
+        return p_run
