@@ -11,16 +11,17 @@ A very exahustive set of general guidelines can be follow [here](https://github.
 * Source -> Light source, as collection of single measurements, referred as `src, source, ...` in the code
 
 ## Pull Request Guideline
-1. Branch off `master`
-2. Do your changes
-3. Commit and issue the PR
-
-PRs not branched off master will be __rejected__!.
-
-Also consider
+First consider
 >opening an issue before creating/issuing the PR.
 
 So we can separe problems from solutions.
+
+1. Open an issue (e.g. `My issue blah`, GitHub will assign a id e.g. `#123`).
+2. Branch off `master` by naming your branch `fix-#123-my-issue-blah` (keep it short please).
+3. Do your changes.
+4. Commit and issue the PR.
+
+PRs not branched off master will be __rejected__!.
 
 ## Solving your `models.py`/migrations issues
 
