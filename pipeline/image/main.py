@@ -167,7 +167,7 @@ class SelavyImage(FitsImage):
         and remap them to correct names
         """
         # TODO: improve with loading only the cols we need and set datatype
-        df = pd.read_fwf(self.selavy_path)
+        df = pd.read_fwf(self.selavy_path, skiprows=[1,])
         # drop first line with unit of measure, select only wanted
         # columns and rename them
         df = (
@@ -200,5 +200,11 @@ class SelavyImage(FitsImage):
             sel = df[col] < settings.FLUX_DEFAULT_MIN_ERROR
             if sel.any():
                 df.loc[sel, col] = settings.FLUX_DEFAULT_MIN_ERROR
+                
+        # # fix error ra dec
+        for col in ['ra_err', 'dec_err']:
+            sel = df[col] < settings.POS_DEFAULT_MIN_ERROR
+            if sel.any():
+                df.loc[sel, col] = settings.POS_DEFAULT_MIN_ERROR
 
         return df

@@ -4,6 +4,7 @@ import pandas as pd
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from astropy.coordinates import Angle
 
 from ..models import Association, Source
 from ..utils.utils import deg2hms, deg2dms
@@ -43,7 +44,7 @@ def groupby_funcs(row, first_img):
         d.pop(col)
     d.pop('Nsrc')
     # set new source
-    d['new'] = True if first_img in row['img'] else False
+    d['new'] = False if first_img in row['img'].values else True
     return pd.Series(d)
 
 
@@ -63,7 +64,9 @@ def association(p_run, images, meas_dj_obj, limit):
     cols = [
         'id',
         'ra',
+        'ra_err',
         'dec',
+        'dec_err',
         'flux_int',
         'flux_int_err',
         'flux_peak',
@@ -74,16 +77,20 @@ def association(p_run, images, meas_dj_obj, limit):
         columns=cols
     )
     skyc1_srcs['img'] = images[0].name
-    skyc1_srcs['cat'] = pd.np.NaN
+    # these are the first 'sources'
+    skyc1_srcs['cat'] = skyc1_srcs.index + 1
     skyc1_srcs['ra_source'] = skyc1_srcs.ra
+    skyc1_srcs['ra_err_source'] = skyc1_srcs.ra_err
     skyc1_srcs['dec_source'] = skyc1_srcs.dec
+    skyc1_srcs['dec_err_source'] = skyc1_srcs.dec_err
+    skyc1_srcs['d2d'] = 0.0
     # create base catalogue
     skyc1 = SkyCoord(
         ra=skyc1_srcs.ra * u.degree,
         dec=skyc1_srcs.dec * u.degree
     )
-    # initialise the empty sources dataframe
-    sources_df = pd.DataFrame()
+    # initialise the sources dataframe using first image as base
+    sources_df = skyc1_srcs.copy()
     for it, image in enumerate(images[1:]):
         logger.info('Association iteration: #%i', (it + 1))
         # load skyc2 source measurements and create SkyCoord
@@ -94,43 +101,86 @@ def association(p_run, images, meas_dj_obj, limit):
         skyc2_srcs['img'] = image.name
         skyc2_srcs['cat'] = pd.np.NaN
         skyc2_srcs['ra_source'] = skyc2_srcs.ra
+        skyc2_srcs['ra_err_source'] = skyc2_srcs.ra_err
         skyc2_srcs['dec_source'] = skyc2_srcs.dec
+        skyc2_srcs['dec_err_source'] = skyc2_srcs.dec_err
+        skyc2_srcs['d2d'] = 0.0
         skyc2 = SkyCoord(
             ra=skyc2_srcs.ra * u.degree,
             dec=skyc2_srcs.dec * u.degree
         )
-        idx, d2d, d3d = skyc1.match_to_catalog_sky(skyc2)
-        # selection
+        # match the new sources to the base
+        # idx gives the index of the closest match in the base for skyc2
+        idx, d2d, d3d = skyc2.match_to_catalog_sky(skyc1)
+        # acceptable selection
         sel = d2d <= limit
 
-        # assign source temp id in skyc1 sorces df if not previously defined
-        start_elem = 0. if skyc1_srcs.cat.max() is pd.np.NaN else skyc1_srcs.cat.max()
-        nan_sel = skyc1_srcs.cat.isna().values
-        skyc1_srcs.loc[ sel & nan_sel, 'cat'] = (
-            skyc1_srcs.index[ sel & nan_sel].values + start_elem + 1.
-        )
-        # append skyc1 selection to source df
-        sources_df = sources_df.append(skyc1_srcs)
+        # The good matches can be assinged the cat id from base
+        skyc2_srcs.loc[sel, 'cat'] = skyc1_srcs.loc[idx[sel], 'cat'].values
+        # Need the d2d to make analysing doubles easier.
+        skyc2_srcs.loc[sel, 'd2d'] = d2d[sel].arcsec
 
-        # assign source temp id to skyc2 sorces from skyc1
-        skyc2_srcs.loc[idx[sel], 'cat'] = skyc1_srcs.loc[sel, 'cat'].values
-        # append skyc2 selection to source df
-        sources_df = sources_df.append(skyc2_srcs.loc[idx[sel]])
-        # remove eventual duplicated values
-        sources_df = sources_df.drop_duplicates(subset=['id','cat'])
+        # must check for double matches in the acceptable matches just made
+        # this would mean that multiple sources in skyc2 have been matched to the same base source
+        # we want to keep closest match and move the other match(es) back to having a NaN cat
+        temp_matched_skyc2 = skyc2_srcs.dropna()
+        if len(temp_matched_skyc2.cat.unique()) != len(temp_matched_skyc2.cat):
+            logger.info("Double matches detected, cleaning...")
+            # get the value counts
+            cnts = temp_matched_skyc2.cat.value_counts()
+            # and the cat ids that are doubled
+            multi_cats = cnts[cnts > 1].index.values
+
+            # now we have the cat values which are doubled.
+            # need to analyse each one and keep the smallest d2d
+            for i, mcat in enumerate(multi_cats):
+                skyc2_srcs_cut = skyc2_srcs[skyc2_srcs.cat == mcat]
+                min_d2d_idx = skyc2_srcs_cut.d2d.idxmin
+                # set the other indexes back to NaN
+                idx_to_change = skyc2_srcs_cut.index.values[
+                    skyc2_srcs_cut.index.values != min_d2d_idx
+                ]
+                skyc2_srcs.loc[idx_to_change, 'cat'] = pd.np.NaN
+                
+            logger.info("Cleaned {} double matches.".format(i + 1))
+
+        del temp_matched_skyc2
+        
+        # update the cat numbers for those sources in skyc2 with no match
+        # using the max current cat as the start and incrementing by one
+        start_elem = sources_df.cat.max() + 1.
+        nan_sel = skyc2_srcs.cat.isna().values
+        skyc2_srcs.loc[nan_sel, 'cat'] = (
+            np.arange(start_elem, start_elem+len(skyc2_srcs.loc[nan_sel].index))
+        )
+
+        # and skyc2 is now ready to be appended to new sources
+        sources_df = sources_df.append(
+            skyc2_srcs, ignore_index=True
+        ).reset_index(drop=True)
+
 
         # update skyc1 and df for next association iteration
         # calculate average angles for skyc1
         skyc1_srcs = (
-            skyc1_srcs.append(skyc2_srcs.loc[idx[~sel]])
+            skyc1_srcs.append(skyc2_srcs, ignore_index=True)
             .reset_index(drop=True)
         )
+
+        #calculate weighted mean of ra and dec
+        wm_ra = lambda x: np.average(x, weights=sources_df.loc[x.index, "ra_err"])
+        wm_dec = lambda x: np.average(x, weights=sources_df.loc[x.index, "dec_err"])
+
+        f = {'ra': wm_ra, 'dec': wm_dec }
+
         tmp_srcs_df = (
             sources_df.loc[sources_df.cat.notnull(), ['ra','dec','cat']]
             .groupby('cat')
-            .mean()
+            .agg(f)
             .reset_index()
         )
+
+        # merge the weighted ra and dec and replace the values
         skyc1_srcs = skyc1_srcs.merge(
             tmp_srcs_df,
             on='cat',
@@ -141,25 +191,12 @@ def association(p_run, images, meas_dj_obj, limit):
         skyc1_srcs.loc[skyc1_srcs.cat.notnull(), 'ra'] = skyc1_srcs.loc[skyc1_srcs.cat.notnull(), 'ra_y']
         skyc1_srcs.loc[skyc1_srcs.cat.notnull(), 'dec'] = skyc1_srcs.loc[skyc1_srcs.cat.notnull(), 'dec_y']
         skyc1_srcs = skyc1_srcs.drop(['ra_y', 'dec_y'], axis=1)
+
+        #generate new sky coord ready for next iteration
         skyc1 = SkyCoord(
             ra=skyc1_srcs.ra * u.degree,
             dec=skyc1_srcs.dec * u.degree
         )
-
-    # add leftover souces from skyc2
-    sources_df = (
-        sources_df.append(skyc2_srcs.loc[idx[~sel]])
-        .reset_index(drop=True)
-    )
-    start_elem = sources_df.cat.max() + 1.
-    nan_sel = sources_df.cat.isna().values
-    sources_df.loc[nan_sel, 'cat'] = (
-        sources_df.index[nan_sel].values + start_elem
-    )
-
-    # tidy the df of sources to drop duplicated entries
-    # to have unique rows of c_name and src_id
-    sources_df = sources_df.drop_duplicates(subset=['id','cat'])
 
     # ra and dec columns are actually the average over each iteration
     # so remove ave ra and ave dec used for calculation and use
@@ -170,8 +207,13 @@ def association(p_run, images, meas_dj_obj, limit):
     )
 
     # calculate source fields
+    logger.info(
+        "Calculating statistics for {} sources...".format(
+            len(sources_df.cat.unique())
+        )
+    )
     srcs_df = sources_df.groupby('cat').apply(
-        groupby_funcs, first_img=(images[0].name,)
+        groupby_funcs, first_img=images[0].name
     )
     # fill NaNs as resulted from calculated metrics with 0
     srcs_df =srcs_df.fillna(0.)
