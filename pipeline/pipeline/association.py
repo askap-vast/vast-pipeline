@@ -4,7 +4,6 @@ import pandas as pd
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from astropy.coordinates import Angle
 
 from ..models import Association, Source
 from ..utils.utils import deg2hms, deg2dms
