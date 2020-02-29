@@ -144,7 +144,10 @@ def association(p_run, images, meas_dj_obj, limit):
             logger.info("Cleaned {} double matches.".format(i + 1))
 
         del temp_matched_skyc2
-        
+
+        logger.info(
+            "Updating sources catalogue with new sources..."
+        )
         # update the cat numbers for those sources in skyc2 with no match
         # using the max current cat as the start and incrementing by one
         start_elem = sources_df.cat.max() + 1.
@@ -166,6 +169,9 @@ def association(p_run, images, meas_dj_obj, limit):
             .reset_index(drop=True)
         )
 
+        logger.info(
+            "Calculating weighted average RA and Dec for sources..."
+        )
         #calculate weighted mean of ra and dec
         wm_ra = lambda x: np.average(x, weights=sources_df.loc[x.index, "ra_err"])
         wm_dec = lambda x: np.average(x, weights=sources_df.loc[x.index, "dec_err"])
@@ -179,6 +185,9 @@ def association(p_run, images, meas_dj_obj, limit):
             .reset_index()
         )
 
+        logger.info(
+            "Finalising base sources catalogue ready for next iteration..."
+        )
         # merge the weighted ra and dec and replace the values
         skyc1_srcs = skyc1_srcs.merge(
             tmp_srcs_df,
@@ -196,6 +205,7 @@ def association(p_run, images, meas_dj_obj, limit):
             ra=skyc1_srcs.ra * u.degree,
             dec=skyc1_srcs.dec * u.degree
         )
+        logger.info('Association iteration: #%i complete.', (it + 1))
 
     # ra and dec columns are actually the average over each iteration
     # so remove ave ra and ave dec used for calculation and use
