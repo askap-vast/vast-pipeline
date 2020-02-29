@@ -115,7 +115,7 @@ def association(p_run, images, meas_dj_obj, limit):
         sel = d2d <= limit
 
         # The good matches can be assinged the cat id from base
-        skyc2_srcs.loc[sel, 'cat'] = skyc1_srcs.loc[idx[sel], 'cat'].values
+        skyc2_srcs.loc[sel, 'cat'] = skyc1_srcs.loc[idx[sel], 'cat'].values.astype(int)
         # Need the d2d to make analysing doubles easier.
         skyc2_srcs.loc[sel, 'd2d'] = d2d[sel].arcsec
 
@@ -134,13 +134,12 @@ def association(p_run, images, meas_dj_obj, limit):
             # need to analyse each one and keep the smallest d2d
             for i, mcat in enumerate(multi_cats):
                 skyc2_srcs_cut = skyc2_srcs[skyc2_srcs.cat == mcat]
-                min_d2d_idx = skyc2_srcs_cut.d2d.idxmin
+                min_d2d_idx = skyc2_srcs_cut.d2d.idxmin()
                 # set the other indexes back to NaN
                 idx_to_change = skyc2_srcs_cut.index.values[
                     skyc2_srcs_cut.index.values != min_d2d_idx
                 ]
                 skyc2_srcs.loc[idx_to_change, 'cat'] = pd.np.NaN
-                
             logger.info("Cleaned {} double matches.".format(i + 1))
 
         del temp_matched_skyc2
@@ -173,8 +172,8 @@ def association(p_run, images, meas_dj_obj, limit):
             "Calculating weighted average RA and Dec for sources..."
         )
         #calculate weighted mean of ra and dec
-        wm_ra = lambda x: np.average(x, weights=sources_df.loc[x.index, "ra_err"])
-        wm_dec = lambda x: np.average(x, weights=sources_df.loc[x.index, "dec_err"])
+        wm_ra = lambda x: np.average(x, weights=sources_df.loc[x.index, "ra_err"]/3600.)
+        wm_dec = lambda x: np.average(x, weights=sources_df.loc[x.index, "dec_err"]/3600.)
 
         f = {'ra': wm_ra, 'dec': wm_dec }
 
