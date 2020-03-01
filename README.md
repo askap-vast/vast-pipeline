@@ -133,7 +133,7 @@ There are 4 commands, described in detail below.
 ### Initialise a Pipeline Run
 In order to process the images in the pipeline, you must create/initialise a pipeline run first.
 
-The pipeline run creation is run using `initpiperun` django command, which requires a pipeline run folder. The command creates a folder with the pipeline run name under the settings `PROJECT_WORKING_DIR` defined in [settings](./webinterface/settings.template.py).
+The pipeline run creation is done using the `initpiperun` django command, which requires a pipeline run folder. The command creates a folder with the pipeline run name under the settings `PROJECT_WORKING_DIR` defined in [settings](./webinterface/settings.template.py).
 
 ```bash
 (pipeline_env)$: ./manage.py initpiperun --help
@@ -205,7 +205,7 @@ General usage:
 
 Detailed commands for resetting the database can be found in [`DEVELOPING.md`](./DEVELOPING.md).
 
-Resetting a pipeline run (i.e. a pipeline run) can be done using the `clearpiperun` command: it will delete all images (and related objects such as sources) associated with that pipeline run, if that images does not belong to another pipeline run. It will deleted all the sources associated with that pipeline run.
+Resetting a pipeline run can be done using the `clearpiperun` command: it will delete all images (and related objects such as sources) associated with that pipeline run, if that images does not belong to another pipeline run. It will deleted all the sources associated with that pipeline run.
 ```bash
 (pipeline_env)$: ./manage.py clearpiperun my_pipe_run
 ```

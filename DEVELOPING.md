@@ -7,8 +7,8 @@ A very exahustive set of general guidelines can be follow [here](https://github.
 ## Terminology
 
 * Pipeline run (or 'Run') -> Pipeline run instance, also referred as `run, p_run, piperun, pipe_run, ...` in the code
-* Measurement -> the source light measurement (i.e. image data) from the image, referred in the code as `measurement(s), meas, ...`
-* Source -> Light source, as collection of single measurements, referred as `src, source, ...` in the code
+* Measurement -> the extracted measurement from the source finder of a single astrophysical source from an image, referred in the code as `measurement(s), meas, ...`
+* Source -> A collection of single measurements for the same astrophysical source, referred as `src, source, ...` in the code
 
 ## Pull Request Guideline
 First consider
