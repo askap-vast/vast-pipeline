@@ -230,9 +230,8 @@ def association(p_run, images, meas_dj_obj, limit):
 
     # calculate source fields
     logger.info(
-        "Calculating statistics for {} sources...".format(
-            len(sources_df.cat.unique())
-        )
+        "Calculating statistics for %i sources...", 
+        sources_df.cat.unique().shape[0]
     )
     srcs_df = sources_df.groupby('cat').apply(
         groupby_funcs, first_img=images[0].name
