@@ -164,7 +164,7 @@ def association(p_run, images, meas_dj_obj, limit):
         # update the cat numbers for those sources in skyc2 with no match
         # using the max current cat as the start and incrementing by one
         start_elem = sources_df.cat.max() + 1.
-        nan_sel = skyc2_srcs.cat.isna().values
+        nan_sel = (skyc2_srcs.source == -1).values
         skyc2_srcs.loc[nan_sel, 'cat'] = (
             np.arange(start_elem, start_elem+len(skyc2_srcs.loc[nan_sel].index))
         )
