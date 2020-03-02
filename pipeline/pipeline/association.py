@@ -114,14 +114,14 @@ def association(p_run, images, meas_dj_obj, limit):
         # acceptable selection
         sel = d2d <= limit
 
-        # The good matches can be assinged the cat id from base
+        # The good matches can be assinged the src id from base
         skyc2_srcs.loc[sel, 'source'] = skyc1_srcs.loc[idx[sel], 'source'].values
         # Need the d2d to make analysing doubles easier.
         skyc2_srcs.loc[sel, 'd2d'] = d2d[sel].arcsec
 
         # must check for double matches in the acceptable matches just made
         # this would mean that multiple sources in skyc2 have been matched to the same base source
-        # we want to keep closest match and move the other match(es) back to having a NaN cat
+        # we want to keep closest match and move the other match(es) back to having a -1 src id
         temp_matched_skyc2 = skyc2_srcs.dropna()
         if len(temp_matched_skyc2.source.unique()) != len(temp_matched_skyc2.source):
             logger.info("Double matches detected, cleaning...")
@@ -129,27 +129,27 @@ def association(p_run, images, meas_dj_obj, limit):
             cnts = temp_matched_skyc2[
                 temp_matched_skyc2.source != -1
             ].source.value_counts()
-            # and the cat ids that are doubled
-            multi_cats = cnts[cnts > 1].index.values
+            # and the src ids that are doubled
+            multi_srcs = cnts[cnts > 1].index.values
 
-            # now we have the cat values which are doubled.
-            # make the nearest match have the original cat id
-            # give the other matched source a new cat id
-            for i, mcat in enumerate(multi_cats):
-                # obtain the current start cat elem
+            # now we have the src values which are doubled.
+            # make the nearest match have the original src id
+            # give the other matched source a new src id
+            for i, msrc in enumerate(multi_srcs):
+                # obtain the current start src elem
                 start_elem = sources_df.source.max() + 1.
-                skyc2_srcs_cut = skyc2_srcs[skyc2_srcs.source == mcat]
+                skyc2_srcs_cut = skyc2_srcs[skyc2_srcs.source == msrc]
                 min_d2d_idx = skyc2_srcs_cut.d2d.idxmin()
-                # set the other indexes to new cats
+                # set the other indexes to a new src id
                 # need to add copies of skyc1 source into the source_df
                 # get the index of the skyc1 source
-                skyc1_source_index =  skyc1_srcs[skyc1_srcs.source == mcat].index.values[0]
+                skyc1_source_index =  skyc1_srcs[skyc1_srcs.source == msrc].index.values[0]
                 num_to_add = len(skyc2_srcs_cut.index) - 1
                 # copy it n times needed
                 skyc1_srcs_toadd = skyc1_srcs.loc[[skyc1_source_index for i in range(num_to_add)]]
-                # Appy new cat ids to copies
+                # Appy new src ids to copies
                 skyc1_srcs_toadd.source = np.arange(start_elem, start_elem + num_to_add)
-                # Change skyc2 sources to new cat ids
+                # Change skyc2 sources to new src ids
                 idx_to_change = skyc2_srcs_cut.index.values[
                     skyc2_srcs_cut.index.values != min_d2d_idx
                 ]
@@ -163,8 +163,8 @@ def association(p_run, images, meas_dj_obj, limit):
         logger.info(
             "Updating sources catalogue with new sources..."
         )
-        # update the cat numbers for those sources in skyc2 with no match
-        # using the max current cat as the start and incrementing by one
+        # update the src numbers for those sources in skyc2 with no match
+        # using the max current src as the start and incrementing by one
         start_elem = sources_df.source.max() + 1.
         nan_sel = (skyc2_srcs.source == -1).values
         skyc2_srcs.loc[nan_sel, 'source'] = (
@@ -211,8 +211,8 @@ def association(p_run, images, meas_dj_obj, limit):
             suffixes=('', '_y')
         )
         del tmp_srcs_df
-        skyc1_srcs.loc[skyc1_srcs.source.notnull(), 'ra'] = skyc1_srcs.loc[skyc1_srcs.source.notnull(), 'ra_y']
-        skyc1_srcs.loc[skyc1_srcs.source.notnull(), 'dec'] = skyc1_srcs.loc[skyc1_srcs.source.notnull(), 'dec_y']
+        skyc1_srcs.loc[skyc1_srcs.source != -1, 'ra'] = skyc1_srcs.loc[skyc1_srcs.source != -1, 'ra_y']
+        skyc1_srcs.loc[skyc1_srcs.source != -1, 'dec'] = skyc1_srcs.loc[skyc1_srcs.source != -1, 'dec_y']
         skyc1_srcs = skyc1_srcs.drop(['ra_y', 'dec_y'], axis=1)
 
         #generate new sky coord ready for next iteration
