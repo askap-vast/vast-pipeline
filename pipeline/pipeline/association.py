@@ -166,7 +166,7 @@ def association(p_run, images, meas_dj_obj, limit):
         start_elem = sources_df.cat.max() + 1.
         nan_sel = (skyc2_srcs.source == -1).values
         skyc2_srcs.loc[nan_sel, 'cat'] = (
-            np.arange(start_elem, start_elem+len(skyc2_srcs.loc[nan_sel].index))
+            np.arange(start_elem, start_elem + skyc2_srcs.loc[nan_sel].shape[0])
         )
 
         # and skyc2 is now ready to be appended to new sources
