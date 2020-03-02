@@ -77,7 +77,7 @@ def association(p_run, images, meas_dj_obj, limit):
     )
     skyc1_srcs['img'] = images[0].name
     # these are the first 'sources'
-    skyc1_srcs['cat'] = skyc1_srcs.index + 1
+    skyc1_srcs['source'] = skyc1_srcs.index + 1
     skyc1_srcs['ra_source'] = skyc1_srcs.ra
     skyc1_srcs['ra_err_source'] = skyc1_srcs.ra_err
     skyc1_srcs['dec_source'] = skyc1_srcs.dec
