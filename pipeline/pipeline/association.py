@@ -156,7 +156,7 @@ def association(p_run, images, meas_dj_obj, limit):
                 skyc2_srcs.loc[idx_to_change, 'source'] = skyc1_srcs_toadd.source.values
                 # append copies to source_df
                 sources_df = sources_df.append(skyc1_srcs_toadd, ignore_index=True)
-            logger.info("Cleaned {} double matches.".format(i + 1))
+            logger.info("Cleaned %i double matches.", i + 1)
 
         del temp_matched_skyc2
 
