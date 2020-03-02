@@ -98,7 +98,7 @@ def association(p_run, images, meas_dj_obj, limit):
             columns=cols
         )
         skyc2_srcs['img'] = image.name
-        skyc2_srcs['cat'] = pd.np.NaN
+        skyc2_srcs['cat'] = np.nan
         skyc2_srcs['ra_source'] = skyc2_srcs.ra
         skyc2_srcs['ra_err_source'] = skyc2_srcs.ra_err
         skyc2_srcs['dec_source'] = skyc2_srcs.dec
@@ -139,7 +139,7 @@ def association(p_run, images, meas_dj_obj, limit):
                 idx_to_change = skyc2_srcs_cut.index.values[
                     skyc2_srcs_cut.index.values != min_d2d_idx
                 ]
-                skyc2_srcs.loc[idx_to_change, 'cat'] = pd.np.NaN
+                skyc2_srcs.loc[idx_to_change, 'cat'] = np.nan
             logger.info("Cleaned {} double matches.".format(i + 1))
 
         del temp_matched_skyc2
