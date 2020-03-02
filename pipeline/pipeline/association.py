@@ -131,15 +131,29 @@ def association(p_run, images, meas_dj_obj, limit):
             multi_cats = cnts[cnts > 1].index.values
 
             # now we have the cat values which are doubled.
-            # need to analyse each one and keep the smallest d2d
+            # make the nearest match have the original cat id
+            # give the other matched source a new cat id
             for i, mcat in enumerate(multi_cats):
+                # obtain the current start cat elem
+                start_elem = sources_df.cat.max() + 1.
                 skyc2_srcs_cut = skyc2_srcs[skyc2_srcs.cat == mcat]
                 min_d2d_idx = skyc2_srcs_cut.d2d.idxmin()
-                # set the other indexes back to NaN
+                # set the other indexes to new cats
+                # need to add copies of skyc1 source into the source_df
+                # get the index of the skyc1 source
+                skyc1_source_index =  skyc1_srcs[skyc1_srcs.cat == mcat].index.values[0]
+                num_to_add = len(skyc2_srcs_cut.index) - 1
+                # copy it n times needed
+                skyc1_srcs_toadd = skyc1_srcs.loc[[skyc1_source_index for i in range(num_to_add)]]
+                # Appy new cat ids to copies
+                skyc1_srcs_toadd.cat = np.arange(start_elem, start_elem + num_to_add)
+                # Change skyc2 sources to new cat ids
                 idx_to_change = skyc2_srcs_cut.index.values[
                     skyc2_srcs_cut.index.values != min_d2d_idx
                 ]
-                skyc2_srcs.loc[idx_to_change, 'cat'] = np.nan
+                skyc2_srcs.loc[idx_to_change, 'cat'] = skyc1_srcs_toadd.cat.values
+                # append copies to source_df
+                sources_df = sources_df.append(skyc1_srcs_toadd, ignore_index=True)
             logger.info("Cleaned {} double matches.".format(i + 1))
 
         del temp_matched_skyc2
