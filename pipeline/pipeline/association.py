@@ -192,7 +192,7 @@ def association(p_run, images, meas_dj_obj, limit):
         f = {'ra': wm_ra, 'dec': wm_dec }
 
         tmp_srcs_df = (
-            sources_df.loc[sources_df.cat.notnull(), ['ra','dec','cat']]
+            sources_df.loc[sources_df.source != -1, ['ra','dec','source']]
             .groupby('cat')
             .agg(f)
             .reset_index()
