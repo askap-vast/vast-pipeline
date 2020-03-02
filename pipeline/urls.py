@@ -8,22 +8,22 @@ from . import views
 app_name = 'pipeline'
 
 router = DefaultRouter()
-router.register(r'datasets', views.DatasetViewSet, 'api_datasets')
+router.register(r'piperuns', views.RunViewSet, 'api_pipe_runs')
 router.register(r'images', views.ImageViewSet, 'api_images')
+router.register(r'measurements', views.MeasurementViewSet, 'api_measurements')
 router.register(r'sources', views.SourceViewSet, 'api_sources')
-router.register(r'catalogs', views.CatalogViewSet, 'api_catalogs')
 
 urlpatterns = [
-    path('datasets', views.datasetIndex, name='dataset_index'),
-    path('datasets/<int:id>/', views.datasetDetail, name='dataset_detail'),
-    path('images', views.imageIndex, name='image_index'),
-    path('sources', views.sourceIndex, name='source_index'),
-    path('catalogs/overview', views.catalogIndex, name='catalog_index'),
-    path('catalogs/query', views.catalogQuery, name='catalog_query'),
+    path('piperuns', views.RunIndex, name='run_index'),
+    path('piperuns/<int:id>/', views.RunDetail, name='run_detail'),
+    path('images', views.ImageIndex, name='image_index'),
+    path('measurements', views.MeasurementIndex, name='measurement_index'),
+    path('sources/overview', views.SourceIndex, name='source_index'),
+    path('sources/query', views.SourceQuery, name='source_query'),
     re_path(
-        r'^catalogs/(?P<id>\d+)(?:/(?P<action>[\w]+))?/$',
-        views.catalogDetail,
-        name='catalog_detail'
+        r'^sources/(?P<id>\d+)(?:/(?P<action>[\w]+))?/$',
+        views.SourceDetail,
+        name='source_detail'
     ),
     path('api/', include(router.urls))
 ]

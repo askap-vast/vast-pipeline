@@ -2,22 +2,22 @@ import os
 from rest_framework import serializers
 
 from .utils.utils import deg2dms, deg2hms
-from .models import Catalog, Dataset, Image, Source
+from .models import Image, Measurement, Run, Source
 
 
-class DatasetSerializer(serializers.ModelSerializer):
+class RunSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
     path = serializers.SerializerMethodField()
-    n_catalogs = serializers.IntegerField(read_only=True)
+    n_sources = serializers.IntegerField(read_only=True)
     n_images = serializers.IntegerField(read_only=True)
 
     class Meta:
-        model = Dataset
+        model = Run
         fields = '__all__'
         datatables_always_serialize = ('id',)
 
-    def get_path(self, dataset):
-        return os.path.relpath(dataset.path)
+    def get_path(self, run):
+        return os.path.relpath(run.path)
 
 
 class ImageSerializer(serializers.ModelSerializer):
@@ -29,28 +29,28 @@ class ImageSerializer(serializers.ModelSerializer):
         datatables_always_serialize = ('id',)
 
 
-class SourceSerializer(serializers.ModelSerializer):
+class MeasurementSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
 
     class Meta:
-        model = Source
+        model = Measurement
         fields = ['id', 'name', 'ra', 'dec', 'flux_int', 'flux_peak']
         datatables_always_serialize = ('id',)
 
 
-class CatalogSerializer(serializers.ModelSerializer):
+class SourceSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
-    sources = serializers.IntegerField(read_only=True)
+    measurements = serializers.IntegerField(read_only=True)
     ave_ra = serializers.SerializerMethodField()
     ave_dec = serializers.SerializerMethodField()
 
     class Meta:
-        model = Catalog
-        exclude = ['dataset']
+        model = Source
+        exclude = ['run', 'cross_match_sources']
         datatables_always_serialize = ('id',)
 
-    def get_ave_ra(self, catalog):
-        return deg2hms(catalog.ave_ra, hms_format=True)
+    def get_ave_ra(self, source):
+        return deg2hms(source.ave_ra, hms_format=True)
 
-    def get_ave_dec(self, catalog):
-        return deg2dms(catalog.ave_dec, dms_format=True)
+    def get_ave_dec(self, source):
+        return deg2dms(source.ave_dec, dms_format=True)

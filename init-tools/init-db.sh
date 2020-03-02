@@ -33,4 +33,3 @@ PGPASSWORD=$4 psql -h $1 -p $2 -U $3 -c "CREATE ROLE $5 WITH LOGIN PASSWORD '$6'
 echo "************************************"
 echo "creating db '$7'"
 PGPASSWORD=$6 createdb -h $1 -p $2 -U $5 $7
-# PGPASSWORD=$4 psql -h $1 -p $2 -U $3 -d $7 -c 'CREATE EXTENSION q3c'

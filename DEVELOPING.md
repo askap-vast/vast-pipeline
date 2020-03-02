@@ -4,17 +4,24 @@ This document explains how to contribute to the project code base.
 
 A very exahustive set of general guidelines can be follow [here](https://github.com/apache/incubator-superset/blob/master/CONTRIBUTING.md), but I think the following will suffice for our purpose.
 
+## Terminology
+
+* Pipeline run (or 'Run') -> Pipeline run instance, also referred as `run, p_run, piperun, pipe_run, ...` in the code
+* Measurement -> the extracted measurement from the source finder of a single astrophysical source from an image, referred in the code as `measurement(s), meas, ...`
+* Source -> A collection of single measurements for the same astrophysical source, referred as `src, source, ...` in the code
+
 ## Pull Request Guideline
-1. Branch off `master`
-2. Do your changes
-3. Commit and issue the PR
-
-PRs not branched off master will be __rejected__!.
-
-Also consider
+First consider
 >opening an issue before creating/issuing the PR.
 
 So we can separe problems from solutions.
+
+1. Open an issue (e.g. `My issue blah`, GitHub will assign a id e.g. `#123`).
+2. Branch off `master` by naming your branch `fix-#123-my-issue-blah` (keep it short please).
+3. Do your changes.
+4. Commit and issue the PR.
+
+PRs not branched off master will be __rejected__!.
 
 ## Solving your `models.py`/migrations issues
 

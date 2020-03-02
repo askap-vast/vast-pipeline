@@ -40,10 +40,10 @@
     <div class="card-body">
       <div class="row">
         <div class="col-lg-2">
-          <h1 class="h6 mb-2 font-weight-bold text-gray-800">Dataset</h1>
-          <select id="datasetSelect" class="form-control">
+          <h1 class="h6 mb-2 font-weight-bold text-gray-800">Pipeline Run</h1>
+          <select id="runSelect" class="form-control">
             <option value="" selected>All</option>
-            {% for ds in  datasets%}
+            {% for ds in  runs%}
             <option value={{ ds.name }}>{{ ds.name }}</option>
             {% endfor %}
           </select>

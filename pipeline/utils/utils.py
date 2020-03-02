@@ -45,10 +45,10 @@ def load_validate_cfg(cfg):
     return the config object as module/class
     """
     if not os.path.exists(cfg):
-        raise Exception('dataset config file not existent')
+        raise Exception('pipeline run config file not existent')
 
-    # load the dataset config as a Python module
-    spec = spec_from_file_location('dataset_config', cfg)
+    # load the run config as a Python module
+    spec = spec_from_file_location('run_config', cfg)
     mod = module_from_spec(spec)
     spec.loader.exec_module(mod)
 

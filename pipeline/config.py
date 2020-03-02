@@ -1,23 +1,23 @@
-# This file specifies the pipeline configuration for the current dataset.
+# This file specifies the pipeline configuration for the current pipeline run.
 # You should review these settings before processing any images - some of the default
 # values will probably not be appropriate.
 
 import os
 
-# path of the dataset
-DATASET_PATH = os.path.dirname(os.path.realpath(__file__))
+# path of the pipeline run
+PIPE_RUN_PATH = os.path.dirname(os.path.realpath(__file__))
 
 # Images settings
 IMAGE_FILES = [
     # insert images path here or regex, or both
 ]
 
-# Selavy catalog files: if passed, skip source find stage
+# Selavy catalogue files: if passed, skip source find stage
 SELAVY_FILES = [
     # insert Selavy file paths here or regex, or both
 ]
 
-# source finder used for this dataset
+# source finder used for this pipeline run
 SOURCE_FINDER = 'aegean'
 
 ###
@@ -49,10 +49,10 @@ AEGEAN_NOPOSITIVE = False
 # <image>_rms.fits - noise map
 # <image>.mim      - masking region
 # <image>_psf.fits - psf map
-# <image>_comp.fits - catalog.
+# <image>_comp.fits - catalogue.
 
 # If <image>_comp.fits is found then no source finding will be done,
-# the catalog will just be imported.
+# the catalogue will just be imported.
 # The _bkg/_rms files are still required in this case.
 AEGEAN_LOOK_FOR_AUX_FILES = True
 
@@ -91,21 +91,21 @@ DEFAULT_SURVEY =  None # 'NVSS'
 ASTROMETRIC_UNCERTAINTY_RA = 5. / 3600.  # Degrees
 ASTROMETRIC_UNCERTAINTY_DEC = ASTROMETRIC_UNCERTAINTY_RA  # Degrees
 
-# The reference catalog for doing astrometry and gain corrections.
+# The reference catalogue for doing astrometry and gain corrections.
 # If this is None then no astrometry/gain corretion is done.
 POSITION_REFERENCE_CATALOG = DEFAULT_SURVEY
 
-# Sources with a SNR greater than this value will be matched to the reference catalog
+# Sources with a SNR greater than this value will be matched to the reference catalogue
 # and the cross-matched sources will be used to calculate the astrometry and gain models
 POSITION_REFERENCE_SNR_CUT = 10
 
-# Cross matching radius for matching sources to the reference catalog for the purpose
+# Cross matching radius for matching sources to the reference catalogue for the purpose
 # of doing astrometry and gain models
 # Units are degrees
 POSITION_REFERENCE_MATCHING_RADIUS = 0.1  # Degrees
 
 # Search radius used for source association (degrees).
-# This is used to associate sources between epochs, and also to associate sources with the reference catalogue.
+# This is used to associate sources between epochs, and also to associate sources with the reference catalogueue.
 # If None, the image beam size is used.
 # Units are degrees
 SOURCE_ASSOCIATION_SEARCH_RADIUS = None #degrees, or None to use the beam size
