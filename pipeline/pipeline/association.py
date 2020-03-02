@@ -188,8 +188,8 @@ def association(p_run, images, meas_dj_obj, limit):
             "Calculating weighted average RA and Dec for sources..."
         )
         #calculate weighted mean of ra and dec
-        wm_ra = lambda x: np.average(x, weights=sources_df.loc[x.index, "ra_err"]/3600.)
-        wm_dec = lambda x: np.average(x, weights=sources_df.loc[x.index, "dec_err"]/3600.)
+        wm_ra = lambda x: np.average(x, weights=1/(sources_df.loc[x.index, "ra_err"]/3600.))
+        wm_dec = lambda x: np.average(x, weights=1/(sources_df.loc[x.index, "dec_err"]/3600.))
 
         f = {'ra': wm_ra, 'dec': wm_dec }
 
