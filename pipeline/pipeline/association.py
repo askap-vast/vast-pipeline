@@ -98,7 +98,7 @@ def association(p_run, images, meas_dj_obj, limit):
             columns=cols
         )
         skyc2_srcs['img'] = image.name
-        skyc2_srcs['cat'] = np.nan
+        skyc2_srcs['source'] = -1
         skyc2_srcs['ra_source'] = skyc2_srcs.ra
         skyc2_srcs['ra_err_source'] = skyc2_srcs.ra_err
         skyc2_srcs['dec_source'] = skyc2_srcs.dec
