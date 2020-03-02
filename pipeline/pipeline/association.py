@@ -115,7 +115,7 @@ def association(p_run, images, meas_dj_obj, limit):
         sel = d2d <= limit
 
         # The good matches can be assinged the cat id from base
-        skyc2_srcs.loc[sel, 'cat'] = skyc1_srcs.loc[idx[sel], 'cat'].values.astype(int)
+        skyc2_srcs.loc[sel, 'source'] = skyc1_srcs.loc[idx[sel], 'source'].values
         # Need the d2d to make analysing doubles easier.
         skyc2_srcs.loc[sel, 'd2d'] = d2d[sel].arcsec
 
