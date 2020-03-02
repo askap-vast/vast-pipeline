@@ -123,7 +123,7 @@ def association(p_run, images, meas_dj_obj, limit):
         # this would mean that multiple sources in skyc2 have been matched to the same base source
         # we want to keep closest match and move the other match(es) back to having a NaN cat
         temp_matched_skyc2 = skyc2_srcs.dropna()
-        if len(temp_matched_skyc2.source.unique()) != len(temp_matched_skyc2.source):
+        if temp_matched_skyc2.source.unique().shape[0] != temp_matched_skyc2.source.shape[0]:
             logger.info("Double matches detected, cleaning...")
             # get the value counts
             cnts = temp_matched_skyc2[
