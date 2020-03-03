@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_eta_metric(row, df, peak=False):
-    if row['Nsrc'] == 1 :
+    if row['Nsrc'] == 1:
         return 0.
     suffix = 'peak' if peak else 'int'
     weights = df[f'flux_{suffix}_err']**-2
@@ -27,11 +27,11 @@ def get_eta_metric(row, df, peak=False):
 def groupby_funcs(row, first_img):
     # calculated average ra, dec, fluxes and metrics
     d = {}
-    for col in ['ave_ra','ave_dec','ave_flux_int','ave_flux_peak']:
-        d[col] = row[col.split('_',1)[1]].mean()
+    for col in ['ave_ra', 'ave_dec', 'ave_flux_int', 'ave_flux_peak']:
+        d[col] = row[col.split('_', 1)[1]].mean()
     d['max_flux_peak'] = row['flux_peak'].max()
 
-    for col in ['flux_int','flux_peak']:
+    for col in ['flux_int', 'flux_peak']:
         d[f'{col}_sq'] = (row[col]**2).mean()
     d['Nsrc'] = row['id'].count()
     d['v_int'] = row["flux_int"].std() / row["flux_int"].mean()
@@ -39,7 +39,7 @@ def groupby_funcs(row, first_img):
     d['eta_int'] = get_eta_metric(d, row)
     d['eta_peak'] = get_eta_metric(d, row, peak=True)
     # remove not used cols
-    for col in ['flux_int_sq','flux_peak_sq']:
+    for col in ['flux_int_sq', 'flux_peak_sq']:
         d.pop(col)
     d.pop('Nsrc')
     # set new source
@@ -143,7 +143,7 @@ def association(p_run, images, meas_dj_obj, limit):
                 # set the other indexes to a new src id
                 # need to add copies of skyc1 source into the source_df
                 # get the index of the skyc1 source
-                skyc1_source_index =  skyc1_srcs[skyc1_srcs.source == msrc].index.values[0]
+                skyc1_source_index = skyc1_srcs[skyc1_srcs.source == msrc].index.values[0]
                 num_to_add = len(skyc2_srcs_cut.index) - 1
                 # copy it n times needed
                 skyc1_srcs_toadd = skyc1_srcs.loc[[skyc1_source_index for i in range(num_to_add)]]
@@ -191,10 +191,10 @@ def association(p_run, images, meas_dj_obj, limit):
         wm_ra = lambda x: np.average(x, weights=1/(sources_df.loc[x.index, "ra_err"]/3600.))
         wm_dec = lambda x: np.average(x, weights=1/(sources_df.loc[x.index, "dec_err"]/3600.))
 
-        f = {'ra': wm_ra, 'dec': wm_dec }
+        f = {'ra': wm_ra, 'dec': wm_dec}
 
         tmp_srcs_df = (
-            sources_df.loc[sources_df.source != -1, ['ra','dec','source']]
+            sources_df.loc[sources_df.source != -1, ['ra', 'dec', 'source']]
             .groupby('source')
             .agg(f)
             .reset_index()
@@ -211,8 +211,12 @@ def association(p_run, images, meas_dj_obj, limit):
             suffixes=('', '_y')
         )
         del tmp_srcs_df
-        skyc1_srcs.loc[skyc1_srcs.source != -1, 'ra'] = skyc1_srcs.loc[skyc1_srcs.source != -1, 'ra_y']
-        skyc1_srcs.loc[skyc1_srcs.source != -1, 'dec'] = skyc1_srcs.loc[skyc1_srcs.source != -1, 'dec_y']
+        skyc1_srcs.loc[skyc1_srcs.source != -1, 'ra'] = skyc1_srcs.loc[
+            skyc1_srcs.source != -1, 'ra_y'
+        ]
+        skyc1_srcs.loc[skyc1_srcs.source != -1, 'dec'] = skyc1_srcs.loc[
+            skyc1_srcs.source != -1, 'dec_y'
+        ]
         skyc1_srcs = skyc1_srcs.drop(['ra_y', 'dec_y'], axis=1)
 
         #generate new sky coord ready for next iteration
@@ -232,14 +236,14 @@ def association(p_run, images, meas_dj_obj, limit):
 
     # calculate source fields
     logger.info(
-        "Calculating statistics for %i sources...", 
+        "Calculating statistics for %i sources...",
         sources_df.source.unique().shape[0]
     )
     srcs_df = sources_df.groupby('source').apply(
         groupby_funcs, first_img=images[0].name
     )
     # fill NaNs as resulted from calculated metrics with 0
-    srcs_df =srcs_df.fillna(0.)
+    srcs_df = srcs_df.fillna(0.)
 
     # generate the source models
     srcs_df['src_dj'] = srcs_df.apply(
@@ -251,11 +255,10 @@ def association(p_run, images, meas_dj_obj, limit):
     # TODO remove deleting existing sources
     if Source.objects.filter(run=p_run).exists():
         logger.info('removing objects from previous pipeline run')
-        n_del, detail_del  = Source.objects.filter(run=p_run).delete()
-        logger.info((
-            'deleting all sources and related objects for this run. '
-            'Total objects deleted: %i'
-            ),
+        n_del, detail_del = Source.objects.filter(run=p_run).delete()
+        logger.info(
+            ('deleting all sources and related objects for this run. '
+             'Total objects deleted: %i'),
             n_del,
         )
         logger.debug('(type, #deleted): %s', detail_del)
