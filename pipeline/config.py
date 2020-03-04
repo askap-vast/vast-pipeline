@@ -22,7 +22,7 @@ SELAVY_FILES = [
 ###
 # Source monitoring can be done both forward and backward in 'time'.
 # Monitoring backward means re-opening files that were previously processed and can be slow.
-MONITOR = True
+MONITOR = False
 MAX_BACKWARDS_MONITOR_IMAGES = 0
 
 ###
