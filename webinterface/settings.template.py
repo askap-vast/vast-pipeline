@@ -203,3 +203,6 @@ DEFAULT_SOURCE_FINDER = 'aegean'
 
 # minimum default accepted error on flux
 FLUX_DEFAULT_MIN_ERROR = 0.001
+
+# minimum default accepted error on ra and dec
+POS_DEFAULT_MIN_ERROR = 0.01

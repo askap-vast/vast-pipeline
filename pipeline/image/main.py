@@ -200,5 +200,11 @@ class SelavyImage(FitsImage):
             sel = df[col] < settings.FLUX_DEFAULT_MIN_ERROR
             if sel.any():
                 df.loc[sel, col] = settings.FLUX_DEFAULT_MIN_ERROR
+                
+        # # fix error ra dec
+        for col in ['ra_err', 'dec_err']:
+            sel = df[col] < settings.POS_DEFAULT_MIN_ERROR
+            if sel.any():
+                df.loc[sel, col] = settings.POS_DEFAULT_MIN_ERROR
 
         return df
