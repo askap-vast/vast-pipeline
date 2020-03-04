@@ -86,6 +86,9 @@ $(document).ready(function() {
     if (datapts.value) {
       qry_url = qry_url + "&meas=" + datapts.value;
     };
+    if (document.getElementById("newSourceSelect").checked) {
+      qry_url = qry_url + "&newsrc";
+    }
     table.ajax.url(qry_url);
     table.ajax.reload();
   });
@@ -102,6 +105,7 @@ $(document).ready(function() {
     for (input of inputs) {
       document.getElementById(input).value = '';
     };
+    document.getElementById("newSourceSelect").checked = false;
     table.ajax.url(dataConf.api);
     table.ajax.reload();
   });
