@@ -57,6 +57,11 @@ def load_validate_cfg(cfg):
         raise Exception(
             'no image file paths passed or Selavy file paths!'
         )
+    else:
+        for lst in ['IMAGE_FILES', 'SELAVY_FILES']:
+            for file in getattr(mod, lst):
+                if not os.path.exists(file):
+                    raise Exception(f'file:\n{file}\ndo not exists!')
 
     source_finder_names = settings.SOURCE_FINDERS
     if getattr(mod, 'SOURCE_FINDER') not in source_finder_names:
@@ -70,11 +75,17 @@ def load_validate_cfg(cfg):
             getattr(mod, 'BACKGROUND_MAP_FILES') and getattr(mod, 'RMS_FILES')
         ):
         raise Exception('Expecting list of background map and RMS files!')
+    else:
+        for lst in ['BACKGROUND_MAP_FILES', 'RMS_FILES']:
+            for file in getattr(mod, lst):
+                if not os.path.exists(file):
+                    raise Exception(f'file:\n{file}\ndo not exists!')
 
     # validate every config from the config template
     for key in [k for k in dir(mod) if k.isupper()]:
         if key not in dir(base_cfg):
             raise Exception(f'configuration not valid, missing key: {key}!')
+
 
     return mod
 
