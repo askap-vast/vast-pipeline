@@ -56,7 +56,7 @@ class Command(BaseCommand):
         # copy default config into the pipeline run folder
         logger.info('copying default config in pipeline run folder')
         copyfile(
-            os.path.join(cfg.BASE_DIR, 'pipeline', 'config.template.py'),
+            os.path.join(cfg.BASE_DIR, 'pipeline', 'config_template.py'),
             os.path.join(ds_path, 'config.py')
         )
 
