@@ -53,7 +53,7 @@ def load_validate_cfg(cfg):
     spec.loader.exec_module(mod)
 
     # do sanity checks
-    if not (getattr(mod, 'IMAGE_FILES') or getattr(mod, 'SELAVY_FILES')):
+    if not (getattr(mod, 'IMAGE_FILES') and getattr(mod, 'SELAVY_FILES')):
         raise Exception(
             'no image file paths passed or Selavy file paths!'
         )
@@ -64,6 +64,12 @@ def load_validate_cfg(cfg):
             f"Invalid source finder {getattr(mod, 'SOURCE_FINDER')}."
             f' Choices are {source_finder_names}'
         ))
+
+    # validate Forced extraction settings
+    if getattr(mod, 'MONITOR') and not(
+            getattr(mod, 'BACKGROUND_MAP_FILES') and getattr(mod, 'RMS_FILES')
+        ):
+        raise Exception('Expecting list of background map and RMS files!')
 
     # validate every config from the config template
     for key in [k for k in dir(mod) if k.isupper()]:

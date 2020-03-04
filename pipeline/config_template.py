@@ -9,12 +9,22 @@ PIPE_RUN_PATH = os.path.dirname(os.path.realpath(__file__))
 
 # Images settings
 IMAGE_FILES = [
-    # insert images path here or regex, or both
+    # insert images file path(s) here
 ]
 
-# Selavy catalogue files: if passed, skip source find stage
+# Selavy catalogue files
 SELAVY_FILES = [
-    # insert Selavy file paths here or regex, or both
+    # insert Selavy file path(s) here
+]
+
+# background map files
+BACKGROUND_MAP_FILES = [
+    # insert background map file path(s) here
+]
+
+# RMS files
+RMS_FILES = [
+    # insert RMS file path(s) here
 ]
 
 ###
