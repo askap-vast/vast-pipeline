@@ -47,8 +47,10 @@ class FitsImage(Image):
         try:
             with fits.open(self.path) as hdulist:
                 hdu = hdulist[hdu_index]
-        except Exception as e:
-            raise e
+        except Exception:
+            raise Exception(
+                f'issues with this guy {os.path.basename(self.path)}'
+            )
         return hdu.header.copy()
 
     def __set_img_attr_for_telescope(self, header):
@@ -200,7 +202,7 @@ class SelavyImage(FitsImage):
             sel = df[col] < settings.FLUX_DEFAULT_MIN_ERROR
             if sel.any():
                 df.loc[sel, col] = settings.FLUX_DEFAULT_MIN_ERROR
-                
+
         # # fix error ra dec
         for col in ['ra_err', 'dec_err']:
             sel = df[col] < settings.POS_DEFAULT_MIN_ERROR
