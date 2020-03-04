@@ -144,7 +144,7 @@ def association(p_run, images, meas_dj_obj, limit):
                 # need to add copies of skyc1 source into the source_df
                 # get the index of the skyc1 source
                 skyc1_source_index = skyc1_srcs[skyc1_srcs.source == msrc].index.values[0]
-                num_to_add = len(skyc2_srcs_cut.index) - 1
+                num_to_add = skyc2_srcs_cut.index.shape[0] - 1
                 # copy it n times needed
                 skyc1_srcs_toadd = skyc1_srcs.loc[[skyc1_source_index for i in range(num_to_add)]]
                 # Appy new src ids to copies
