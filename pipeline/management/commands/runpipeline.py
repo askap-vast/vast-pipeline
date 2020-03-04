@@ -65,7 +65,6 @@ class Command(BaseCommand):
         logger.info("Source finder: %s", cfg.SOURCE_FINDER)
         logger.info("Using pipeline run '%s'", p_run_name)
         logger.info("Source monitoring: %s", cfg.MONITOR)
-        logger.info("Constant background RMS: %s", cfg.CONSTANT_RMS)
 
         stopwatch = StopWatch()
 

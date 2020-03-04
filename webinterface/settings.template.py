@@ -196,10 +196,10 @@ PROJECT_WORKING_DIR = os.path.join(BASE_DIR, 'pipeline-projects')
 SURVEYS_WORKING_DIR = os.path.join(BASE_DIR, 'reference-surveys')
 
 # allowed source finders
-SOURCE_FINDERS = ['aegean']
+SOURCE_FINDERS = ['selavy']
 
 # default source finder
-DEFAULT_SOURCE_FINDER = 'aegean'
+DEFAULT_SOURCE_FINDER = 'selavy'
 
 # minimum default accepted error on flux
 FLUX_DEFAULT_MIN_ERROR = 0.001
