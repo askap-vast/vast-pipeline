@@ -34,7 +34,10 @@ MAX_BACKWARDS_MONITOR_IMAGES = 0
 ###
 # OPTIONS THAT CONTROL THE SOURCE ASSOCIATION
 ###
+ASSOCIATION_METHOD = 'basic'   # 'basic' or 'advanced'
 ASSOCIATION_RADIUS = 5. # units is arcsec
+ASSOCIATION_BEAMWIDTH_LIMIT = 1.0 # advanced mode only
+ASSOCIATION_MAX_RADIUS = 1.0 # in arcmin, advanced only, only change if you know what you're doing!
 
 # Default survey.
 # Used by the website for analysis plots.

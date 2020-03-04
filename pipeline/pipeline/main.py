@@ -119,8 +119,17 @@ class Pipeline():
         # order images by time
         images.sort(key=operator.attrgetter('datetime'))
         limit = Angle(self.config.ASSOCIATION_RADIUS * u.arcsec)
+        max_limit = Angle(self.config.ASSOCIATION_MAX_RADIUS * u.arcmin)
 
-        association(p_run, images, meas_dj_obj, limit)
+        association(
+            p_run,
+            images,
+            meas_dj_obj,
+            limit,
+            max_limit,
+            self.config.ASSOCIATION_BEAMWIDTH_LIMIT,
+            self.config.ASSOCIATION_METHOD,
+        )
 
         # STEP #3: ...
         pass
