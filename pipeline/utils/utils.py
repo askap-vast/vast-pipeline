@@ -65,16 +65,10 @@ def load_validate_cfg(cfg):
             f' Choices are {source_finder_names}'
         ))
 
-    if getattr(mod, 'PRIMARY_IMAGE_MODE') and not hasattr(mod, 'PRIMARY_IMAGE_FREQUENCY'):
-        raise Exception((
-            'PRIMARY_IMAGE_FREQUENCY must be specified if'
-            ' PRIMARY_IMAGE_MODE is True'
-        ))
-
     # validate every config from the config template
     for key in [k for k in dir(mod) if k.isupper()]:
         if key not in dir(base_cfg):
-            raise Exception('configuration not valid, missing keys!')
+            raise Exception(f'configuration not valid, missing key: {key}!')
 
     return mod
 
