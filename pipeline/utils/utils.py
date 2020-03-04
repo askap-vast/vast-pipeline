@@ -6,7 +6,7 @@ from importlib.util import spec_from_file_location, module_from_spec
 from datetime import datetime
 from django.conf import settings
 
-import pipeline.config as base_cfg
+import pipeline.config_template as base_cfg
 
 
 logger = logging.getLogger(__name__)
