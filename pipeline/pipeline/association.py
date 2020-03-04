@@ -293,3 +293,5 @@ def association(p_run, images, meas_dj_obj, limit):
             batch_size
         )
         logger.info('bulk created #%i associations', len(out_bulk))
+
+    return sources_df

@@ -10,6 +10,7 @@ from ..image.main import SelavyImage
 from ..models import Band, Image, SkyRegion, Measurement, SurveySource
 from ..utils.utils import eq_to_cart
 from .association import association
+from .forced_extraction import forced_extraction
 
 
 logger = logging.getLogger(__name__)
@@ -154,9 +155,12 @@ class Pipeline():
         images.sort(key=operator.attrgetter('datetime'))
         limit = Angle(self.config.ASSOCIATION_RADIUS * u.arcsec)
 
-        association(p_run, images, meas_dj_obj, limit)
+        src_df = association(p_run, images, meas_dj_obj, limit)
 
-        # STEP #3: ...
+        # STEP #3: Run forced extraction/photometry
+        if self.config.MONITOR:
+            forced_extraction(src_df)
+
         pass
 
     @staticmethod
