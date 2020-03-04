@@ -8,9 +8,9 @@ A very exahustive set of general guidelines can be follow [here](https://github.
 
 - [Terminology](#terminology)
 - [Pull Request Guideline](#pull-request-guideline)
-- [Solving your `models.py`/migrations issues](#solving-your-`models.py`/migrations-issues)
-	- [1. You modify `models.py`](#1.-you-modify-`models.py`)
-	- [2. Someone else modified `models.py` and you pull the changes](#2.-Someone-else-modified-`models.py`-and-you-pull-the-changes)
+- [Solving your `models.py`/migrations issues](#solving-your-modelspymigrations-issues)
+	- [1. You modify `models.py`](#1-you-modify-modelspy)
+	- [2. Someone else modified `models.py` and you pull the changes](#2-someone-else-modified-modelspy-and-you-pull-the-changes)
 - [Reset the database](#reset-the-database)
 - [Run Tests](#run-tests)
 
