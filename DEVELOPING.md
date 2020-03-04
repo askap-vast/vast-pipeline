@@ -4,6 +4,16 @@ This document explains how to contribute to the project code base.
 
 A very exahustive set of general guidelines can be follow [here](https://github.com/apache/incubator-superset/blob/master/CONTRIBUTING.md), but I think the following will suffice for our purpose.
 
+## Table of Contents
+
+- [Terminology](#terminology)
+- [Pull Request Guideline](#pull-request-guideline)
+- [Solving your `models.py`/migrations issues](#solving-your-`models.py`/migrations-issues)
+	- [1. You modify `models.py`](#1.-you-modify-`models.py`)
+	- [2. Someone else modified `models.py` and you pull the changes](#2.-Someone-else-modified-`models.py`-and-you-pull-the-changes)
+- [Reset the database](#reset-the-database)
+- [Run Tests](#run-tests)
+
 ## Terminology
 
 * Pipeline run (or 'Run') -> Pipeline run instance, also referred as `run, p_run, piperun, pipe_run, ...` in the code
@@ -19,7 +29,8 @@ So we can separe problems from solutions.
 1. Open an issue (e.g. `My issue blah`, GitHub will assign a id e.g. `#123`).
 2. Branch off `master` by naming your branch `fix-#123-my-issue-blah` (keep it short please).
 3. Do your changes.
-4. Commit and issue the PR.
+4. Run test locally with `./manage.py test pipeline`
+5. Commit and issue the PR.
 
 PRs not branched off master will be __rejected__!.
 
@@ -27,7 +38,7 @@ PRs not branched off master will be __rejected__!.
 
 First of all the `makemigrations` command must be run only if you modified the `models.py` or you pull down changes (i.e. `git pull`) that modify `models.py`. So please refer to the cases below:
 
-### 1) You modify `models.py`
+### 1. You modify `models.py`
 
 Since this models does not have a production environment that runs 24/7, so you don't need to update the production environment with multiple migration files event though Django docs promote making as many migrations as you need to ([see Django migration guidelines](https://docs.djangoproject.com/en/3.0/topics/migrations/#squashing-migrations)). For such reasons please consider doing the following steps:
 1. Make your changes to `models.py`
@@ -37,7 +48,7 @@ Since this models does not have a production environment that runs 24/7, so you 
 
 __NOTE__: do not touch the `0002_q3c.py` file as relates to migration operations for using Q3C plugin and related functions!
 
-### 2) Someone else modified `models.py` and you pull the changes
+### 2. Someone else modified `models.py` and you pull the changes
 
 Situation:
 
@@ -101,4 +112,14 @@ Make sure you installed the [`requirements-dev.txt`](./requirements/requirements
 
 ```bash
 (pipeline_env)$: ./manage.py reset_db && ./manage.py migrate
+```
+
+## Run Tests
+
+Test are found under the folder [tests](./pipeline/tests/). Have a look and feel free to include new tests.
+
+Run the tests with the following:
+
+```bash
+(pipeline_env)$: ./manage.py test pipeline
 ```
