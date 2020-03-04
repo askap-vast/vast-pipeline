@@ -21,7 +21,7 @@ SELAVY_FILES = [
 # SOURCE FINDER OPTIONS
 ###
 # source finder used for this pipeline run
-SOURCE_FINDER = 'aegean'
+SOURCE_FINDER = 'selavy'
 
 ###
 # SOURCE MONITORING OPTIONS
