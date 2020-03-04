@@ -18,6 +18,12 @@ SELAVY_FILES = [
 ]
 
 ###
+# SOURCE FINDER OPTIONS
+###
+# source finder used for this pipeline run
+SOURCE_FINDER = 'aegean'
+
+###
 # SOURCE MONITORING OPTIONS
 ###
 # Source monitoring can be done both forward and backward in 'time'.
