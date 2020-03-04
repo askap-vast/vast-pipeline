@@ -212,7 +212,7 @@ class SourceViewSet(ModelViewSet):
         if measurements:
             qry_dict['measurements'] = measurements
 
-        if self.request.query_params.get('newsrc'):
+        if 'newsrc' in self.request.query_params:
             qry_dict['new'] = True
 
         if qry_dict:
