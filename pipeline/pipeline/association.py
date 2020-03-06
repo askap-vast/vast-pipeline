@@ -549,24 +549,6 @@ def association_advanced(p_run, images, meas_dj_obj, dr_limit, bw_limit):
             logger.debug("no many-to-one associations")
         else:
             logger.debug("%i many-to-one associations", multi_skyc2_srcs.shape[0])
-            # # define a start src id for new forks
-            # for i, mskyc2 in enumerate(multi_skyc2_srcs):
-            #     # Make the selection
-            #     m_to_o_temp = temp_srcs[temp_srcs.index_old_skyc2 == msky2]
-            #     # Get the min dr idx
-            #     m_to_o_min_dr_idx = m_to_o_temp.dr.idxmin()
-            #     # Select the others
-            #     idx_to_change = m_to_o_temp.index.values[
-            #         m_to_o_temp.index.values != m_to_o_min_dr_idx
-            #     ]
-            #     # Copy the original skyc1 object ready to append
-            #     sky2_idx_to_copy = o_to_m_temp.index_old_skyc2.iloc[0]
-            #     num_to_add = idx_to_change.shape[0]
-            #     # Apply to the temp
-            #     temp_srcs.loc[idx_to_change, 'source_skyc2'] = new_src_ids
-            #
-            #     start_src_id = new_src_ids.max() + 1
-
 
         # Now everything in place to append
 
