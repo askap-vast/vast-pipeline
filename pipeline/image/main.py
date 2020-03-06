@@ -230,6 +230,10 @@ class SelavyImage(FitsImage):
             df.ns_sys_err, df.error_radius
         )
 
+        # weight calculations to use later
+        df["weight_ew"] = 1./(df.uncertainty_ew * df.uncertainty_ew)
+        df["weight_ns"] = 1./(df.uncertainty_ns * df.uncertainty_ns)
+
         logger.debug("Errors done.")
 
         return df

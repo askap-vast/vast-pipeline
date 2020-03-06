@@ -67,12 +67,10 @@ def calculate_de_ruiter(row):
 def groupby_funcs(row, first_img):
     # calculated average ra, dec, fluxes and metrics
     d = {}
-    weights_ew = 1./((row.uncertainty_ew)*(row.uncertainty_ew))
-    weights_ns = 1./((row.uncertainty_ns)*(row.uncertainty_ns))
-    d['wavg_ra'] = np.average(row.ra, weights=weights_ew)
-    d['wavg_dec'] = np.average(row.dec, weights=weights_ns)
-    d['wavg_uncertainty_ew'] = 1./np.sqrt(weights_ew.sum())
-    d['wavg_uncertainty_ns'] = 1./np.sqrt(weights_ns.sum())
+    d['wavg_ra'] = row.interim_ew.sum() / row.weight_ew.sum()
+    d['wavg_dec'] = row.interim_ns.sum() / row.weight_ns.sum()
+    d['wavg_uncertainty_ew'] = 1./np.sqrt(row.weight_ew.sum())
+    d['wavg_uncertainty_ns'] = 1./np.sqrt(row.weight_ns.sum())
     for col in ['avg_flux_int', 'avg_flux_peak']:
         d[col] = row[col.split('_', 1)[1]].mean()
     d['max_flux_peak'] = row['flux_peak'].max()
@@ -204,8 +202,10 @@ def association_basic(p_run, images, meas_dj_obj, limit):
         'id',
         'ra',
         'uncertainty_ew',
+        "weight_ew",
         'dec',
         'uncertainty_ns',
+        "weight_ns",
         'flux_int',
         'flux_int_err',
         'flux_peak',
@@ -327,54 +327,45 @@ def association_basic(p_run, images, meas_dj_obj, limit):
         logger.info(
             "Calculating weighted average RA and Dec for sources..."
         )
-        #calculate weighted mean of ra and dec
-        wm_ra = lambda x: np.average(x, weights=1/(
-            (sources_df.loc[x.index, "uncertainty_ew"]) *
-            (sources_df.loc[x.index, "uncertainty_ew"])
-        ))
 
-        wm_dec = lambda x: np.average(x, weights=1/(
-            (sources_df.loc[x.index, "uncertainty_ns"]) *
-            (sources_df.loc[x.index, "uncertainty_ns"])
-        ))
-
-        wm_uncertainty_ew = lambda x: 1./np.sqrt(
-            np.sum(1./(sources_df.loc[x.index, "uncertainty_ew"] *
-            sources_df.loc[x.index, "uncertainty_ew"]))
-        )
-
-        wm_uncertainty_ns = lambda x: 1./np.sqrt(
-            np.sum(1./(sources_df.loc[x.index, "uncertainty_ns"] *
-            sources_df.loc[x.index, "uncertainty_ns"]))
-        )
-
-        f = {
-                'ra': wm_ra,
-                'dec': wm_dec,
-                'uncertainty_ew': wm_uncertainty_ew,
-                'uncertainty_ns': wm_uncertainty_ns
-            }
+        sources_df["interim_ew"] = sources_df.ra * sources_df.weight_ew
+        sources_df["interim_ns"] = sources_df.dec * sources_df.weight_ns
 
         tmp_srcs_df = (
             sources_df.loc[sources_df.source != -1, [
-                'ra', 'dec', 'uncertainty_ew', 'uncertainty_ns', 'source'
+                'ra', 'dec', 'uncertainty_ew', 'uncertainty_ns', 'source', 'interim_ew',
+                'interim_ns', 'weight_ew', 'weight_ns'
             ]]
             .groupby('source')
-            .agg(f)
-            .reset_index()
         )
+
+        wm_ra = tmp_srcs_df['interim_ew'].sum() / tmp_srcs_df['weight_ew'].sum()
+        wm_uncertainty_ew = 1./np.sqrt(tmp_srcs_df["weight_ew"].sum())
+
+        wm_dec = tmp_srcs_df['interim_ns'].sum() / tmp_srcs_df['weight_ns'].sum()
+        wm_uncertainty_ns = 1./np.sqrt(tmp_srcs_df["weight_ns"].sum())
+
+        weighted_df = pd.concat(
+            [wm_ra, wm_uncertainty_ew, wm_dec, wm_uncertainty_ns], axis=1, sort=False
+        ).reset_index().rename(columns={
+            0: "ra",
+            "weight_ew": "uncertainty_ew",
+            1: "dec",
+            "weight_ns": "uncertainty_ns"
+        })
 
         logger.info(
             "Finalising base sources catalogue ready for next iteration..."
         )
         # merge the weighted ra and dec and replace the values
         skyc1_srcs = skyc1_srcs.merge(
-            tmp_srcs_df,
+            weighted_df,
             on='source',
             how='left',
             suffixes=('', '_skyc2')
         )
         del tmp_srcs_df
+        del weighted_df
         skyc1_srcs.ra = skyc1_srcs.ra_skyc2
         skyc1_srcs.dec = skyc1_srcs.dec_skyc2
         skyc1_srcs.uncertainty_ew = skyc1_srcs.uncertainty_ew_skyc2
@@ -403,8 +394,10 @@ def association_advanced(p_run, images, meas_dj_obj, dr_limit, bw_limit):
         'id',
         'ra',
         'uncertainty_ew',
+        "weight_ew",
         'dec',
         'uncertainty_ns',
+        "weight_ns",
         'flux_int',
         'flux_int_err',
         'flux_peak',
@@ -626,59 +619,44 @@ def association_advanced(p_run, images, meas_dj_obj, dr_limit, bw_limit):
         logger.info(
             "Calculating weighted average RA and Dec for sources..."
         )
-        #calculate weighted mean of ra and dec
-        wm_ra = lambda x: np.average(
-            x, weights=1./(
-            sources_df.loc[x.index, "uncertainty_ew"] *
-            sources_df.loc[x.index, "uncertainty_ew"]
-            )
-        )
-
-        wm_dec = lambda x: np.average(
-            x, weights=1./(
-            sources_df.loc[x.index, "uncertainty_ns"] *
-            sources_df.loc[x.index, "uncertainty_ns"]
-            )
-        )
-
-        wm_uncertainty_ew = lambda x: 1./np.sqrt(
-            np.sum(1./(sources_df.loc[x.index, "uncertainty_ew"] *
-            sources_df.loc[x.index, "uncertainty_ew"]))
-        )
-
-        wm_uncertainty_ns = lambda x: 1./np.sqrt(
-            np.sum(1./(sources_df.loc[x.index, "uncertainty_ns"] *
-            sources_df.loc[x.index, "uncertainty_ns"]))
-        )
-
-        f = {
-                'ra': wm_ra,
-                'dec': wm_dec,
-                'uncertainty_ew': wm_uncertainty_ew,
-                'uncertainty_ns': wm_uncertainty_ns
-            }
+        sources_df["interim_ew"] = sources_df.ra * sources_df.weight_ew
+        sources_df["interim_ns"] = sources_df.dec * sources_df.weight_ns
 
         tmp_srcs_df = (
             sources_df.loc[sources_df.source != -1, [
-                'ra', 'dec', 'uncertainty_ew', 'uncertainty_ns', 'source'
+                'ra', 'dec', 'uncertainty_ew', 'uncertainty_ns', 'source', 'interim_ew',
+                'interim_ns', 'weight_ew', 'weight_ns'
             ]]
             .groupby('source')
-            .agg(f)
-            .reset_index()
         )
+
+        wm_ra = tmp_srcs_df['interim_ew'].sum() / tmp_srcs_df['weight_ew'].sum()
+        wm_uncertainty_ew = 1./np.sqrt(tmp_srcs_df["weight_ew"].sum())
+
+        wm_dec = tmp_srcs_df['interim_ns'].sum() / tmp_srcs_df['weight_ns'].sum()
+        wm_uncertainty_ns = 1./np.sqrt(tmp_srcs_df["weight_ns"].sum())
+
+        weighted_df = pd.concat(
+            [wm_ra, wm_uncertainty_ew, wm_dec, wm_uncertainty_ns], axis=1, sort=False
+        ).reset_index().rename(columns={
+            0: "ra",
+            "weight_ew": "uncertainty_ew",
+            1: "dec",
+            "weight_ns": "uncertainty_ns"
+        })
 
         logger.info(
             "Finalising base sources catalogue ready for next iteration..."
         )
         # merge the weighted ra and dec and replace the values
         skyc1_srcs = skyc1_srcs.merge(
-            tmp_srcs_df,
+            weighted_df,
             on='source',
             how='left',
             suffixes=('', '_skyc2')
         )
-
         del tmp_srcs_df
+        del weighted_df
         skyc1_srcs.ra = skyc1_srcs.ra_skyc2
         skyc1_srcs.dec = skyc1_srcs.dec_skyc2
         skyc1_srcs.uncertainty_ew = skyc1_srcs.uncertainty_ew_skyc2
