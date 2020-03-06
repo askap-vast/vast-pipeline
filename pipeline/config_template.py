@@ -31,24 +31,29 @@ SOURCE_FINDER = 'selavy'
 MONITOR = False
 MAX_BACKWARDS_MONITOR_IMAGES = 0
 
-###
-# OPTIONS THAT CONTROL THE SOURCE ASSOCIATION
-###
-ASSOCIATION_METHOD = 'basic'   # 'basic' or 'advanced'
-ASSOCIATION_RADIUS = 5. # units is arcsec
-ASSOCIATION_BEAMWIDTH_LIMIT = 1.0 # advanced mode only
-ASSOCIATION_MAX_RADIUS = 1.0 # in arcmin, advanced only, only change if you know what you're doing!
-
-# Default survey.
-# Used by the website for analysis plots.
-DEFAULT_SURVEY =  None # 'NVSS'
-
 # The position uncertainty is in reality a combination of the fitting errors and the
 # astrometric uncertainty of the image/survey/instrument.
 # These two uncertainties are combined in quadrature.
 # These two parameters are the astrometric uncertainty in ra/dec and they may be different
 ASTROMETRIC_UNCERTAINTY_RA = 5. / 3600.  # Degrees
 ASTROMETRIC_UNCERTAINTY_DEC = ASTROMETRIC_UNCERTAINTY_RA  # Degrees
+
+###
+# OPTIONS THAT CONTROL THE SOURCE ASSOCIATION
+###
+# Enbale/Disble source association, set false to turn off association stage
+ASSOCIATION_METHOD = 'basic'   # 'basic' or 'advanced'
+
+# options that apply to basic
+ASSOCIATION_RADIUS = 5. # units is arcsec, basic only
+
+#options that apply to advanced
+ASSOCIATION_DE_RUITER_RADIUS = 5.68
+ASSOCIATION_BEAMWIDTH_LIMIT = 1.0
+
+# Default survey.
+# Used by the website for analysis plots.
+DEFAULT_SURVEY =  None # 'NVSS'
 
 # Minimum error to apply to all flux measurements. The actual value used will be the measured/
 # reported value or this value, whichever is greater.

@@ -8,6 +8,8 @@ from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
 
+from ..image.utils import calculate_error_radius
+
 from pipeline.survey.translators import tr_selavy
 
 
@@ -156,9 +158,10 @@ class FitsImage(Image):
 class SelavyImage(FitsImage):
     """Fits images that have a selavy catalogue"""
 
-    def __init__(self, path, selavy_path, hdu_index=0):
+    def __init__(self, path, selavy_path, hdu_index=0, config=None):
         # inherit from parent
         self.selavy_path = selavy_path
+        self.config = config
         super().__init__(path, hdu_index)
 
     def read_selavy(self, dj_image):
@@ -200,11 +203,33 @@ class SelavyImage(FitsImage):
             sel = df[col] < settings.FLUX_DEFAULT_MIN_ERROR
             if sel.any():
                 df.loc[sel, col] = settings.FLUX_DEFAULT_MIN_ERROR
-                
+
         # # fix error ra dec
         for col in ['ra_err', 'dec_err']:
             sel = df[col] < settings.POS_DEFAULT_MIN_ERROR
             if sel.any():
                 df.loc[sel, col] = settings.POS_DEFAULT_MIN_ERROR
+            df[col] = df[col] / 3600.
+
+        logger.debug("Calculating errors...")
+        df['ew_sys_err'] = self.config.ASTROMETRIC_UNCERTAINTY_RA / 3600.
+        df['ns_sys_err'] = self.config.ASTROMETRIC_UNCERTAINTY_DEC / 3600.
+
+        df['error_radius'] = calculate_error_radius(
+            df.ra, df.ra_err, df.dec, df.dec_err
+        )
+
+        if 0.0 in df.error_radius:
+            print("Yes")
+
+        df["uncertainty_ew"] = np.hypot(
+            df.ew_sys_err, df.error_radius
+        )
+
+        df["uncertainty_ns"] = np.hypot(
+            df.ns_sys_err, df.error_radius
+        )
+
+        logger.debug("Errors done.")
 
         return df

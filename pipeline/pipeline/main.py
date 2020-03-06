@@ -47,7 +47,11 @@ class Pipeline():
         meas_dj_obj = pd.DataFrame()
         for path in self.img_selavy_paths:
             # STEP #1: Load image and measurements
-            image = SelavyImage(path, self.img_selavy_paths[path])
+            image = SelavyImage(
+                path,
+                self.img_selavy_paths[path],
+                config=self.config
+            )
             logger.info('read image %s', image.name)
 
             # 1.1 get/create the frequency band
@@ -83,6 +87,7 @@ class Pipeline():
             )
 
             # do DB bulk create
+            logger.info("Uploading to DB...")
             measurements['meas_dj'] = measurements.apply(
                 get_measurement_models, axis=1
             )
@@ -119,15 +124,16 @@ class Pipeline():
         # order images by time
         images.sort(key=operator.attrgetter('datetime'))
         limit = Angle(self.config.ASSOCIATION_RADIUS * u.arcsec)
-        max_limit = Angle(self.config.ASSOCIATION_MAX_RADIUS * u.arcmin)
+        dr_limit = self.config.ASSOCIATION_DE_RUITER_RADIUS
+        bw_limit = self.config.ASSOCIATION_BEAMWIDTH_LIMIT
 
         association(
             p_run,
             images,
             meas_dj_obj,
             limit,
-            max_limit,
-            self.config.ASSOCIATION_BEAMWIDTH_LIMIT,
+            dr_limit,
+            bw_limit,
             self.config.ASSOCIATION_METHOD,
         )
 

@@ -219,10 +219,12 @@ class Source(models.Model):
     new = models.BooleanField(default=False, help_text='New Source')
 
     # average fields calculated from the source measurements
-    ave_ra = models.FloatField()
-    ave_dec = models.FloatField()
-    ave_flux_int = models.FloatField()
-    ave_flux_peak = models.FloatField()
+    wavg_ra = models.FloatField()
+    wavg_dec = models.FloatField()
+    wavg_uncertainty_ew = models.FloatField()
+    wavg_uncertainty_ns = models.FloatField()
+    avg_flux_int = models.FloatField()
+    avg_flux_peak = models.FloatField()
     max_flux_peak = models.FloatField()
 
     # metrics
@@ -401,6 +403,19 @@ class Measurement(models.Model):
         help_text='Position angle of Gaussian fit east of north to bmaj (Deg)'
     )# Position angle (degrees)
     err_pa = models.FloatField()# Error position angle (degrees)
+
+    # supplied by user via config
+    ew_sys_err = models.FloatField()# Systematic error in RA (degrees).
+    # supplied by user via config
+    ns_sys_err = models.FloatField()# Systematic error in Dec (degrees).
+
+    # estimate of maximum error radius (from ra_err and dec_err)
+    error_radius = models.FloatField()# Used in advanced association.
+
+    # quadratic sum of error_radius and ew_sys_err
+    uncertainty_ew = models.FloatField()# Uncertainty in RA (degrees).
+     # quadratic sum of error_radius and ns_sys_err
+    uncertainty_ns = models.FloatField()# Uncertainty in Dec (degrees).
 
     flux_int = models.FloatField()# Jy/beam
     flux_int_err = models.FloatField()# Jy/beam
