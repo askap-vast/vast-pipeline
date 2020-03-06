@@ -1,7 +1,14 @@
+import io
 import logging
 
+from astropy.io import fits
+from astropy.coordinates import SkyCoord, Angle
+from astropy.nddata import Cutout2D
+from astropy.wcs import WCS
 from django.db.models import Count, F
+from django.http import FileResponse
 from django.shortcuts import render
+from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
 from .models import Image, Measurement, Run, Source
@@ -384,3 +391,22 @@ def SourceDetail(request, id, action=None):
     }
     context = {'source': source, 'measurements': measurements}
     return render(request, 'source_detail.html', context)
+
+
+class ImageCutout(APIView):
+    def get(self, request, measurement_name):
+        measurement = Measurement.objects.get(name=measurement_name)
+        image_hdu: fits.PrimaryHDU = fits.open(measurement.image.path)[0]
+        coord = SkyCoord(ra=measurement.ra, dec=measurement.dec, unit="deg")
+        cutout = Cutout2D(image_hdu.data, coord, Angle("3arcmin"), wcs=WCS(image_hdu.header))
+
+        cutout_hdu = fits.PrimaryHDU(data=cutout.data, header=cutout.wcs.to_header())
+        cutout_file = io.BytesIO()
+        cutout_hdu.writeto(cutout_file)
+        cutout_file.seek(0)
+        response = FileResponse(
+            cutout_file,
+            as_attachment=True,
+            filename=f"{measurement.name}_cutout.fits"
+        )
+        return response

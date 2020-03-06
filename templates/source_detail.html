@@ -5,6 +5,7 @@
 {% block head %}
 
 <link rel='stylesheet' href='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css' />
+<link rel="stylesheet" href="{% static 'vendor/js9/js9-allinone.css' %}" />
 
 {% endblock head %}
 
@@ -81,6 +82,30 @@
     </div>
   </div>
 
+  <!-- Postage stamps -->
+  <div class="card shadow mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary">Postage Stamps</h6>
+    </div>
+    <div class="card-body">
+      <div class="JS9Menubar" id="SUPERMENU_" data-displays="*"></div>
+      <div class="row row-cols-1 row-cols-md-5">
+        {% for measurement in measurements.dataQuery %}
+        <div class="card">
+          <div class="card-header">
+            <p class="mb-0">{{ measurement.image_name }}</p>
+            <p class="mb-0">{{ measurement.name }}</p>
+          </div>
+          <div class="card-body">
+            <!--div class="JS9Menubar"></div-->
+            <div class="JS9" id="JS9_{{ forloop.counter }}" data-width="200px" data-height="200px"></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
   <!-- DataTales Source Measurements -->
   <div class="card shadow mb-4">
     <div class="card-header py-3">
@@ -115,6 +140,11 @@
 
 
 {% block custom_page_scripts %}
+<!-- JS9 FITS viewer - must appear before DataTables -->
+<script type="text/javascript" src="{% static 'vendor/js9/js9prefs.js' %}"></script>
+<script type="text/javascript" src="{% static 'vendor/js9/js9support.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'vendor/js9/js9.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'vendor/js9/js9plugins.js' %}"></script>
 
 <!-- Page level plugins -->
 <script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
@@ -135,4 +165,17 @@
 <script type='text/javascript' src='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js' charset='utf-8'></script>
 <script src="{% static 'js/aladin-script.js' %}"></script>
 
+{{ measurements.dataQuery|json_script:"data-js9" }}
+<script type="text/javascript">
+  $(document).on("JS9:ready", function() {
+    var measurementData = JSON.parse(document.getElementById("data-js9").textContent);
+    measurementData.forEach((measurement, i) => {
+      JS9.Load("/cutout/"+measurement.name, {scalemin: -0.001, scalemax: 0.005}, {display: "JS9_"+(i+1)});
+      // needs time for the images to load before changing the zoom works correctly
+      setTimeout(() => {
+        JS9.SetZoom("toFit", {display: "JS9_"+(i+1)});
+      }, 2000);
+    });
+  });
+</script>
 {% endblock custom_page_scripts %}

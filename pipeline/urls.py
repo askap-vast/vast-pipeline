@@ -1,5 +1,4 @@
 from django.urls import include, path, re_path
-from django.views.generic import TemplateView
 from rest_framework.routers import DefaultRouter
 
 from . import views
@@ -25,5 +24,6 @@ urlpatterns = [
         views.SourceDetail,
         name='source_detail'
     ),
+    path('cutout/<str:measurement_name>/', views.ImageCutout.as_view(), name='cutout'),
     path('api/', include(router.urls))
 ]
