@@ -35,21 +35,20 @@ MAX_BACKWARDS_MONITOR_IMAGES = 0
 # astrometric uncertainty of the image/survey/instrument.
 # These two uncertainties are combined in quadrature.
 # These two parameters are the astrometric uncertainty in ra/dec and they may be different
-ASTROMETRIC_UNCERTAINTY_RA = 5. / 3600.  # Degrees
-ASTROMETRIC_UNCERTAINTY_DEC = ASTROMETRIC_UNCERTAINTY_RA  # Degrees
+ASTROMETRIC_UNCERTAINTY_RA = 1.    # arcsec
+ASTROMETRIC_UNCERTAINTY_DEC = ASTROMETRIC_UNCERTAINTY_RA  # arcsec
 
 ###
 # OPTIONS THAT CONTROL THE SOURCE ASSOCIATION
 ###
-# Enbale/Disble source association, set false to turn off association stage
 ASSOCIATION_METHOD = 'basic'   # 'basic' or 'advanced'
 
 # options that apply to basic
-ASSOCIATION_RADIUS = 5. # units is arcsec, basic only
+ASSOCIATION_RADIUS = 5. # arcsec, basic only
 
 #options that apply to advanced
-ASSOCIATION_DE_RUITER_RADIUS = 5.68
-ASSOCIATION_BEAMWIDTH_LIMIT = 1.0
+ASSOCIATION_DE_RUITER_RADIUS = 5.68 # unitless, advanced only
+ASSOCIATION_BEAMWIDTH_LIMIT = 1.0   # multiplicative factor, advanced only
 
 # Default survey.
 # Used by the website for analysis plots.
