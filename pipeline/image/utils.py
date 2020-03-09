@@ -9,6 +9,11 @@ logger = logging.getLogger(__name__)
 
 
 def on_sky_sep(ra_1, ra_2, dec_1, dec_2):
+    """
+    Simple on sky distance between two RA and Dec coordinates.
+    Needed for fast calculation on dataframes as astropy is
+    slow. All units are radians.
+    """
     separation = np.arccos(
         (np.sin(dec_1) * np.sin(dec_2)) +
         (np.cos(dec_1) * np.cos(dec_2) * np.cos(ra_1 - ra_2))
@@ -17,12 +22,16 @@ def on_sky_sep(ra_1, ra_2, dec_1, dec_2):
     return separation
 
 def calculate_error_radius(ra, ra_err, dec, dec_err):
-
+    """
+    Using the fitted errors from selavy, this function
+    estimates the largest on sky angular size of the
+    uncertainty. The four different combinations of the
+    errors are analysed and the maximum is returned.
+    Logic is taken from the TraP, where this is also
+    used. Function has been vectorised for pandas.
+    """
     ra_1 = np.deg2rad(ra)
-    # ra_2 = np.deg2rad(ra + ra_err)
-
     dec_1 = np.deg2rad(dec)
-    # dec_2 = np.deg2rad(dec + dec_err)
 
     ra_offsets = [
         (ra + ra_err),
