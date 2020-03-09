@@ -1,7 +1,5 @@
 import logging
 
-import pipeline.config as base_cfg
-
 import numpy as np
 
 
