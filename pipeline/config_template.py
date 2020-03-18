@@ -35,13 +35,13 @@ MAX_BACKWARDS_MONITOR_IMAGES = 0
 # astrometric uncertainty of the image/survey/instrument.
 # These two uncertainties are combined in quadrature.
 # These two parameters are the astrometric uncertainty in ra/dec and they may be different
-ASTROMETRIC_UNCERTAINTY_RA = 1.    # arcsec
+ASTROMETRIC_UNCERTAINTY_RA = 1. # arcsec
 ASTROMETRIC_UNCERTAINTY_DEC = ASTROMETRIC_UNCERTAINTY_RA  # arcsec
 
 ###
 # OPTIONS THAT CONTROL THE SOURCE ASSOCIATION
 ###
-ASSOCIATION_METHOD = 'basic'   # 'basic' or 'advanced'
+ASSOCIATION_METHOD = 'basic' # 'basic' or 'advanced'
 
 # options that apply to basic
 ASSOCIATION_RADIUS = 5. # arcsec, basic only
@@ -52,7 +52,7 @@ ASSOCIATION_BEAMWIDTH_LIMIT = 1.0   # multiplicative factor, advanced only
 
 # Default survey.
 # Used by the website for analysis plots.
-DEFAULT_SURVEY =  None # 'NVSS'
+DEFAULT_SURVEY = None # 'NVSS'
 
 # Minimum error to apply to all flux measurements. The actual value used will be the measured/
 # reported value or this value, whichever is greater.
