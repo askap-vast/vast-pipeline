@@ -8,7 +8,7 @@ from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
 
-from ..image.utils import calculate_error_radius
+from .utils import calc_error_radius
 
 from pipeline.survey.translators import tr_selavy
 
@@ -91,7 +91,6 @@ class FitsImage(Image):
 
         # get the time as Julian Datetime using Pandas function
         self.jd = self.datetime.to_julian_date()
-
 
     def __get_img_coordinates(self, header, fits_naxis1, fits_naxis2):
         """
@@ -212,28 +211,29 @@ class SelavyImage(FitsImage):
             df[col] = df[col] / 3600.
 
         logger.debug("Calculating errors...")
+        # TODO: avoid extra column given that it is a single value
         df['ew_sys_err'] = self.config.ASTROMETRIC_UNCERTAINTY_RA / 3600.
         df['ns_sys_err'] = self.config.ASTROMETRIC_UNCERTAINTY_DEC / 3600.
 
-        df['error_radius'] = calculate_error_radius(
-            df.ra, df.ra_err, df.dec, df.dec_err
+        df['error_radius'] = calc_error_radius(
+            df['ra'].values,
+            df['ra_err'].values,
+            df['dec'].values,
+            df['dec_err'].values,
         )
 
-        if 0.0 in df.error_radius:
-            print("Yes")
-
-        df["uncertainty_ew"] = np.hypot(
-            df.ew_sys_err, df.error_radius
+        df['uncertainty_ew'] = np.hypot(
+            df['ew_sys_err'].values, df['error_radius'].values
         )
 
-        df["uncertainty_ns"] = np.hypot(
-            df.ns_sys_err, df.error_radius
+        df['uncertainty_ns'] = np.hypot(
+            df['ns_sys_err'].values, df['error_radius'].values
         )
 
         # weight calculations to use later
-        df["weight_ew"] = 1./(df.uncertainty_ew * df.uncertainty_ew)
-        df["weight_ns"] = 1./(df.uncertainty_ns * df.uncertainty_ns)
+        df['weight_ew'] = 1./df['uncertainty_ew'].values**2
+        df['weight_ns'] = 1./df['uncertainty_ns'].values**2
 
-        logger.debug("Errors done.")
+        logger.debug('Errors calculation done.')
 
         return df

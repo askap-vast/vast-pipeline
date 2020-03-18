@@ -13,13 +13,14 @@ def on_sky_sep(ra_1, ra_2, dec_1, dec_2):
     slow. All units are radians.
     """
     separation = np.arccos(
-        (np.sin(dec_1) * np.sin(dec_2)) +
-        (np.cos(dec_1) * np.cos(dec_2) * np.cos(ra_1 - ra_2))
+        np.sin(dec_1) * np.sin(dec_2) +
+        np.cos(dec_1) * np.cos(dec_2) * np.cos(ra_1 - ra_2)
     )
 
     return separation
 
-def calculate_error_radius(ra, ra_err, dec, dec_err):
+
+def calc_error_radius(ra, ra_err, dec, dec_err):
     """
     Using the fitted errors from selavy, this function
     estimates the largest on sky angular size of the
@@ -45,12 +46,14 @@ def calculate_error_radius(ra, ra_err, dec, dec_err):
         (dec - dec_err)
     ]
 
-    seps = [np.rad2deg(on_sky_sep(
-        ra_1,
-        np.deg2rad(i),
-        dec_1,
-        np.deg2rad(j)
-    )) for i,j in zip(ra_offsets, dec_offsets)]
+    seps = [
+        np.rad2deg(on_sky_sep(
+            ra_1,
+            np.deg2rad(i),
+            dec_1,
+            np.deg2rad(j)
+        )) for i,j in zip(ra_offsets, dec_offsets)
+    ]
 
     seps = np.column_stack(seps)
 
