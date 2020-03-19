@@ -21,53 +21,51 @@ def get_eta_metric(row, df, peak=False):
     """
     if row['Nsrc'] == 1:
         return 0.
+
     suffix = 'peak' if peak else 'int'
-    weights = df[f'flux_{suffix}_err']**-2
-    fluxes = df[f"flux_{suffix}"]
+    weights = 1./ df[f'flux_{suffix}_err'].values**2
+    fluxes = df[f"flux_{suffix}"].values
     eta = (row['Nsrc'] / (row['Nsrc']-1)) * (
-        (weights*fluxes**2).mean() - ((weights*fluxes).mean()**2 / weights.mean())
+        (weights * fluxes**2).mean() - ((weights * fluxes).mean()**2 / weights.mean())
     )
     return eta
 
 
-def calculate_de_ruiter(row):
+def calc_de_ruiter(df):
     """
     Calculates the unitless 'de Ruiter' radius of the
     association. Works on the 'temp_df' dataframe of the
     advanced association, where the two sources associated
     with each other have been merged into one row.
     """
-    ra_1 = row.ra_skyc1
-    ra_2 = row.ra_skyc2
+    ra_1 = df['ra_skyc1'].values
+    ra_2 = df['ra_skyc2'].values
 
     # avoid wrapping issues
-    if ra_1 > 270. or ra_2 > 270.:
-        ra_1 -= 180.
-        ra_2 -= 180.
-
-    elif ra_1 < 90. or ra_2 < 90.:
-        ra_1 += 180.
-        ra_2 += 180.
+    ra_1[ra_1 > 270.] -= 180.
+    ra_2[ra_2 > 270.] -= 180.
+    ra_1[ra_1 < 90.] += 180.
+    ra_2[ra_2 < 90.] += 180.
 
     ra_1 = np.deg2rad(ra_1)
     ra_2 = np.deg2rad(ra_2)
 
-    ra_1_err = np.deg2rad(row.uncertainty_ew_skyc1)
-    ra_2_err = np.deg2rad(row.uncertainty_ew_skyc2)
+    ra_1_err = np.deg2rad(df['uncertainty_ew_skyc1'].values)
+    ra_2_err = np.deg2rad(df['uncertainty_ew_skyc2'].values)
 
-    dec_1 = np.deg2rad(row.dec_skyc1)
-    dec_2 = np.deg2rad(row.dec_skyc2)
+    dec_1 = np.deg2rad(df['dec_skyc1'].values)
+    dec_2 = np.deg2rad(df['dec_skyc2'].values)
 
-    dec_1_err = np.deg2rad(row.uncertainty_ns_skyc1)
-    dec_2_err = np.deg2rad(row.uncertainty_ns_skyc2)
+    dec_1_err = np.deg2rad(df['uncertainty_ns_skyc1'].values)
+    dec_2_err = np.deg2rad(df['uncertainty_ns_skyc2'].values)
 
-    dr1 = (ra_1 - ra_2)*(ra_1 - ra_2)
-    dr1_1 = np.cos((dec_1 + dec_2)/2.)
-    dr1 *= (dr1_1 * dr1_1)
-    dr1 /= ((ra_1_err*ra_1_err) + (ra_2_err*ra_2_err))
+    dr1 = (ra_1 - ra_2) * (ra_1 - ra_2)
+    dr1_1 = np.cos((dec_1 + dec_2) / 2.)
+    dr1 *= dr1_1 * dr1_1
+    dr1 /= ra_1_err * ra_1_err + ra_2_err * ra_2_err
 
     dr2 = (dec_1 - dec_2) * (dec_1 - dec_2)
-    dr2 /= ((dec_1_err*dec_1_err) + (dec_2_err*dec_2_err))
+    dr2 /= dec_1_err * dec_1_err + dec_2_err * dec_2_err
 
     dr = np.sqrt(dr1 + dr2)
 
@@ -269,7 +267,7 @@ def flag_many_to_many_advanced(temp_srcs):
     return temp_srcs
 
 
-def basic_assoication_loop(
+def basic_association_loop(
         sources_df, skyc1_srcs,
         skyc1, skyc2_srcs, skyc2, limit
     ):
@@ -298,13 +296,11 @@ def basic_assoication_loop(
         skyc2_srcs
     )
 
-    logger.info(
-        "Updating sources catalogue with new sources..."
-    )
+    logger.info('Updating sources catalogue with new sources...')
     # update the src numbers for those sources in skyc2 with no match
     # using the max current src as the start and incrementing by one
-    start_elem = sources_df.source.max() + 1.
-    nan_sel = (skyc2_srcs.source == -1).values
+    start_elem = sources_df['source'].values.max() + 1.
+    nan_sel = (skyc2_srcs['source'] == -1).values
     skyc2_srcs.loc[nan_sel, 'source'] = (
         np.arange(start_elem, start_elem + skyc2_srcs.loc[nan_sel].shape[0])
     )
@@ -325,7 +321,7 @@ def basic_assoication_loop(
     return sources_df, skyc1_srcs
 
 
-def advanced_assoication_loop(
+def advanced_association_loop(
         sources_df, skyc1_srcs, skyc1,
         skyc2_srcs, skyc2, dr_limit, bw_max
     ):
@@ -361,7 +357,7 @@ def advanced_assoication_loop(
     )
 
     # Step 4: Calculate and perform De Ruiter radius cut
-    temp_srcs['dr'] = temp_srcs.apply(calculate_de_ruiter, axis=1)
+    temp_srcs['dr'] = calc_de_ruiter(temp_srcs)
     temp_srcs = temp_srcs[temp_srcs.dr <= dr_limit]
 
     # Now have the 'good' matches
@@ -438,14 +434,13 @@ def advanced_assoication_loop(
     return sources_df, skyc1_srcs
 
 
-def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit, method):
+def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
+    method):
     """
     The main association function that does the common tasks between basic
     and advanced modes.
     """
-    logger.info(
-        "Association mode selected: %s.", method
-    )
+    logger.info("Association mode selected: %s.", method)
 
     # read the needed sources fields
     cols = [
@@ -468,15 +463,15 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit, method):
     skyc1_srcs['img'] = images[0].name
     # these are the first 'sources'
     skyc1_srcs['source'] = skyc1_srcs.index + 1
-    skyc1_srcs['ra_source'] = skyc1_srcs.ra
-    skyc1_srcs['uncertainty_ew_source'] = skyc1_srcs.uncertainty_ew
-    skyc1_srcs['dec_source'] = skyc1_srcs.dec
-    skyc1_srcs['uncertainty_ns_source'] = skyc1_srcs.uncertainty_ns
+    skyc1_srcs['ra_source'] = skyc1_srcs['ra']
+    skyc1_srcs['uncertainty_ew_source'] = skyc1_srcs['uncertainty_ew']
+    skyc1_srcs['dec_source'] = skyc1_srcs['dec']
+    skyc1_srcs['uncertainty_ns_source'] = skyc1_srcs['uncertainty_ns']
     skyc1_srcs['d2d'] = 0.0
     # create base catalogue
     skyc1 = SkyCoord(
-        ra=skyc1_srcs.ra * u.degree,
-        dec=skyc1_srcs.dec * u.degree
+        ra=skyc1_srcs['ra'] * u.degree,
+        dec=skyc1_srcs['dec'] * u.degree
     )
     # initialise the sources dataframe using first image as base
     sources_df = skyc1_srcs.copy()
@@ -490,18 +485,18 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit, method):
         )
         skyc2_srcs['img'] = image.name
         skyc2_srcs['source'] = -1
-        skyc2_srcs['ra_source'] = skyc2_srcs.ra
-        skyc2_srcs['uncertainty_ew_source'] = skyc2_srcs.uncertainty_ew
-        skyc2_srcs['dec_source'] = skyc2_srcs.dec
-        skyc2_srcs['uncertainty_ns_source'] = skyc2_srcs.uncertainty_ns
+        skyc2_srcs['ra_source'] = skyc2_srcs['ra']
+        skyc2_srcs['uncertainty_ew_source'] = skyc2_srcs['uncertainty_ew']
+        skyc2_srcs['dec_source'] = skyc2_srcs['dec']
+        skyc2_srcs['uncertainty_ns_source'] = skyc2_srcs['uncertainty_ns']
         skyc2_srcs['d2d'] = 0.0
         skyc2 = SkyCoord(
-            ra=skyc2_srcs.ra * u.degree,
-            dec=skyc2_srcs.dec * u.degree
+            ra=skyc2_srcs['ra'] * u.degree,
+            dec=skyc2_srcs['dec'] * u.degree
         )
 
         if method == 'basic':
-            sources_df, skyc1_srcs = basic_assoication_loop(
+            sources_df, skyc1_srcs = basic_association_loop(
                 sources_df,
                 skyc1_srcs,
                 skyc1,
@@ -511,8 +506,10 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit, method):
             )
 
         elif method == 'advanced':
-            bw_max = Angle(bw_limit * (image.beam_bmaj * 3600. / 2.) * u.arcsec)
-            sources_df, skyc1_srcs = advanced_assoication_loop(
+            bw_max = Angle(
+                bw_limit * (image.beam_bmaj * 3600. / 2.) * u.arcsec
+            )
+            sources_df, skyc1_srcs = advanced_association_loop(
                 sources_df,
                 skyc1_srcs,
                 skyc1,
@@ -521,22 +518,30 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit, method):
                 dr_limit,
                 bw_max
             )
+        else:
+            raise Exception('association method not implemented!')
 
         logger.info(
             "Calculating weighted average RA and Dec for sources..."
         )
 
-        sources_df["interim_ew"] = sources_df.ra * sources_df.weight_ew
-        sources_df["interim_ns"] = sources_df.dec * sources_df.weight_ns
+        sources_df["interim_ew"] = (
+            sources_df['ra'].values * sources_df['weight_ew'].values
+        )
+        sources_df["interim_ns"] = (
+            sources_df['dec'].values * sources_df['weight_ns'].values
+        )
 
         tmp_srcs_df = (
             sources_df.loc[sources_df.source != -1, [
-                'ra', 'dec', 'uncertainty_ew', 'uncertainty_ns', 'source', 'interim_ew',
-                'interim_ns', 'weight_ew', 'weight_ns'
+                'ra', 'dec', 'uncertainty_ew', 'uncertainty_ns',
+                'source', 'interim_ew', 'interim_ns', 'weight_ew',
+                'weight_ns'
             ]]
             .groupby('source')
         )
 
+        # SOMETHING is wrong with these lines below!
         wm_ra = tmp_srcs_df['interim_ew'].sum() / tmp_srcs_df['weight_ew'].sum()
         wm_uncertainty_ew = 1./np.sqrt(tmp_srcs_df["weight_ew"].sum())
 
@@ -564,10 +569,10 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit, method):
         )
         del tmp_srcs_df
         del weighted_df
-        skyc1_srcs.ra = skyc1_srcs.ra_skyc2
-        skyc1_srcs.dec = skyc1_srcs.dec_skyc2
-        skyc1_srcs.uncertainty_ew = skyc1_srcs.uncertainty_ew_skyc2
-        skyc1_srcs.uncertainty_ns = skyc1_srcs.uncertainty_ns_skyc2
+        skyc1_srcs['ra'] = skyc1_srcs['ra_skyc2']
+        skyc1_srcs['dec'] = skyc1_srcs['dec_skyc2']
+        skyc1_srcs['uncertainty_ew'] = skyc1_srcs['uncertainty_ew_skyc2']
+        skyc1_srcs['uncertainty_ns'] = skyc1_srcs['uncertainty_ns_skyc2']
         skyc1_srcs = skyc1_srcs.drop(
             [
                 'ra_skyc2',
@@ -579,8 +584,8 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit, method):
 
         #generate new sky coord ready for next iteration
         skyc1 = SkyCoord(
-            ra=skyc1_srcs.ra * u.degree,
-            dec=skyc1_srcs.dec * u.degree
+            ra=skyc1_srcs['ra'] * u.degree,
+            dec=skyc1_srcs['dec'] * u.degree
         )
         logger.info('Association iteration: #%i complete.', (it + 1))
 
