@@ -7,7 +7,7 @@ from astropy.coordinates import SkyCoord
 from astropy.coordinates import Angle
 
 from ..models import Association, Source
-from ..utils.utils import deg2hms, deg2dms
+from ..utils.utils import deg2hms, deg2dms, StopWatch
 
 
 logger = logging.getLogger(__name__)
@@ -80,13 +80,13 @@ def groupby_funcs(row, first_img):
     """
     # calculated average ra, dec, fluxes and metrics
     d = {}
-    d['wavg_ra'] = row.interim_ew.sum() / row.weight_ew.sum()
+    d['wavg_ra'] = row['interim_ew'].sum() / row.weight_ew.sum()
     d['wavg_dec'] = row.interim_ns.sum() / row.weight_ns.sum()
-    d['wavg_uncertainty_ew'] = 1./np.sqrt(row.weight_ew.sum())
-    d['wavg_uncertainty_ns'] = 1./np.sqrt(row.weight_ns.sum())
+    d['wavg_uncertainty_ew'] = 1. / np.sqrt(row.weight_ew.sum())
+    d['wavg_uncertainty_ns'] = 1. / np.sqrt(row.weight_ns.sum())
     for col in ['avg_flux_int', 'avg_flux_peak']:
         d[col] = row[col.split('_', 1)[1]].mean()
-    d['max_flux_peak'] = row['flux_peak'].max()
+    d['max_flux_peak'] = row['flux_peak'].values.max()
 
     for col in ['flux_int', 'flux_peak']:
         d[f'{col}_sq'] = (row[col]**2).mean()
@@ -168,8 +168,6 @@ def flag_one_to_many_basic(sources_df, skyc1_srcs, skyc2_srcs):
     else:
         logger.debug("No double matches found.")
 
-    del temp_matched_skyc2
-
     return sources_df, skyc1_srcs, skyc2_srcs
 
 
@@ -187,7 +185,9 @@ def flag_one_to_many_advanced(temp_srcs, sources_df, skyc1_srcs):
     if multi_skyc1_srcs.shape[0] == 0:
         logger.debug("no one-to-many associations")
     else:
-        logger.debug("%i one-to-many associations", multi_skyc1_srcs.shape[0])
+        logger.debug(
+            "%i one-to-many associations", multi_skyc1_srcs.shape[0]
+        )
         # go through the doubles and
         # 1. Keep the closest de ruiter as the primary id
         # 2. Increment a new source id for others
@@ -470,8 +470,8 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
     skyc1_srcs['d2d'] = 0.0
     # create base catalogue
     skyc1 = SkyCoord(
-        ra=skyc1_srcs['ra'] * u.degree,
-        dec=skyc1_srcs['dec'] * u.degree
+        ra=skyc1_srcs['ra'].values * u.degree,
+        dec=skyc1_srcs['dec'].values * u.degree
     )
     # initialise the sources dataframe using first image as base
     sources_df = skyc1_srcs.copy()
@@ -491,8 +491,8 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
         skyc2_srcs['uncertainty_ns_source'] = skyc2_srcs['uncertainty_ns']
         skyc2_srcs['d2d'] = 0.0
         skyc2 = SkyCoord(
-            ra=skyc2_srcs['ra'] * u.degree,
-            dec=skyc2_srcs['dec'] * u.degree
+            ra=skyc2_srcs['ra'].values * u.degree,
+            dec=skyc2_srcs['dec'].values * u.degree
         )
 
         if method == 'basic':
@@ -525,15 +525,15 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
             "Calculating weighted average RA and Dec for sources..."
         )
 
-        sources_df["interim_ew"] = (
+        sources_df['interim_ew'] = (
             sources_df['ra'].values * sources_df['weight_ew'].values
         )
-        sources_df["interim_ns"] = (
+        sources_df['interim_ns'] = (
             sources_df['dec'].values * sources_df['weight_ns'].values
         )
 
         tmp_srcs_df = (
-            sources_df.loc[sources_df.source != -1, [
+            sources_df.loc[sources_df['source'] != -1, [
                 'ra', 'dec', 'uncertainty_ew', 'uncertainty_ns',
                 'source', 'interim_ew', 'interim_ns', 'weight_ew',
                 'weight_ns'
@@ -541,24 +541,36 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
             .groupby('source')
         )
 
-        # SOMETHING is wrong with these lines below!
+        stats = StopWatch()
+
         wm_ra = tmp_srcs_df['interim_ew'].sum() / tmp_srcs_df['weight_ew'].sum()
-        wm_uncertainty_ew = 1./np.sqrt(tmp_srcs_df["weight_ew"].sum())
+        wm_uncertainty_ew = 1. / np.sqrt(
+            tmp_srcs_df['weight_ew'].sum()
+        )
 
         wm_dec = tmp_srcs_df['interim_ns'].sum() / tmp_srcs_df['weight_ns'].sum()
-        wm_uncertainty_ns = 1./np.sqrt(tmp_srcs_df["weight_ns"].sum())
+        wm_uncertainty_ns = 1. / np.sqrt(tmp_srcs_df['weight_ns'].sum())
 
-        weighted_df = pd.concat(
-            [wm_ra, wm_uncertainty_ew, wm_dec, wm_uncertainty_ns], axis=1, sort=False
-        ).reset_index().rename(columns={
-            0: "ra",
-            "weight_ew": "uncertainty_ew",
-            1: "dec",
-            "weight_ns": "uncertainty_ns"
-        })
+        weighted_df = (
+            pd.concat(
+                [wm_ra, wm_uncertainty_ew, wm_dec, wm_uncertainty_ns],
+                axis=1,
+                sort=False
+            )
+            .reset_index()
+            .rename(
+                columns={
+                    0: "ra",
+                    "weight_ew": "uncertainty_ew",
+                    1: "dec",
+                    "weight_ns": "uncertainty_ns"
+            })
+        )
+
+        logger.debug('groubby concat time %f', stats.reset())
 
         logger.info(
-            "Finalising base sources catalogue ready for next iteration..."
+            'Finalising base sources catalogue ready for next iteration...'
         )
         # merge the weighted ra and dec and replace the values
         skyc1_srcs = skyc1_srcs.merge(
