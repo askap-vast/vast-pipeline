@@ -213,6 +213,7 @@ class Source(models.Model):
         through='CrossMatch',
         through_fields=('source', 'survey_source')
     )
+    related = models.ManyToManyField('self')
 
     name = models.CharField(max_length=100)
     comment = models.TextField(max_length=1000, default='', blank=True)
