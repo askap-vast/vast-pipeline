@@ -2,7 +2,7 @@ import os
 import logging
 
 from ..utils.utils import eq_to_cart
-from ..models import Band, Image, SkyRegion, Measurement
+from ..models import Band, Image, Run, SkyRegion, Measurement
 
 
 logger = logging.getLogger(__name__)
@@ -115,3 +115,14 @@ def get_create_img(p_run, band_id, image):
     img.run.add(p_run)
 
     return (img, False)
+
+
+def get_create_p_run(name, path):
+    p_run = Run.objects.filter(name__exact=name)
+    if p_run:
+        return p_run.get()
+
+    p_run = Run(name=name, path=path)
+    p_run.save()
+
+    return p_run
