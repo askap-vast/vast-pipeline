@@ -143,27 +143,44 @@ def flag_one_to_many_basic(sources_df, skyc1_srcs, skyc2_srcs):
         # now we have the src values which are doubled.
         # make the nearest match have the original src id
         # give the other matched source a new src id
+        # and make sure to copy the other previously
+        # matched sources.
         for i, msrc in enumerate(multi_srcs):
             # obtain the current start src elem
-            start_elem = sources_df.source.max() + 1.
+            start_src_id = sources_df.source.max() + 1.
+            # get the sky2_sources with this source id
             skyc2_srcs_cut = skyc2_srcs[skyc2_srcs.source == msrc]
+            # get the minimum d2d index
             min_d2d_idx = skyc2_srcs_cut.d2d.idxmin()
-            # set the other indexes to a new src id
-            # need to add copies of skyc1 source into the source_df
-            # get the index of the skyc1 source
-            skyc1_source_index = skyc1_srcs[skyc1_srcs.source == msrc].index.values[0]
-            num_to_add = skyc2_srcs_cut.index.shape[0] - 1
-            # copy it n times needed
-            skyc1_srcs_toadd = skyc1_srcs.loc[[skyc1_source_index for i in range(num_to_add)]]
-            # Appy new src ids to copies
-            skyc1_srcs_toadd.source = np.arange(start_elem, start_elem + num_to_add)
-            # Change skyc2 sources to new src ids
+            # Get the indexes of the other skyc2 sources
+            # which need to be changed
             idx_to_change = skyc2_srcs_cut.index.values[
                 skyc2_srcs_cut.index.values != min_d2d_idx
             ]
-            skyc2_srcs.loc[idx_to_change, 'source'] = skyc1_srcs_toadd.source.values
-            # append copies to source_df
-            sources_df = sources_df.append(skyc1_srcs_toadd, ignore_index=True)
+            # how many 'copies' do we need to make?
+            num_to_add = idx_to_change.shape[0]
+            # Get all the previous crossmatches which need to be copied
+            sources_to_copy = sources_df[
+                sources_df.source == msrc
+            ].reset_index(drop=True)
+            # number of unique sources in previous crossmatch
+            num_of_sources_to_copy = sources_to_copy.shape[0]
+            # Create multiples of this if needed
+            if num_to_add > 1:
+                sources_to_copy = sources_to_copy.append([sources_to_copy]*num_to_add-1)
+            # Set the new index range
+            new_src_ids = np.arange(start_src_id, start_src_id + num_to_add)
+            # Set the new index for all the sources in the copy
+            new_src_ids_to_append = [
+                source_id for j in [
+                    [t for k in range(num_of_sources_to_copy)] for t in new_src_ids
+                ] for source_id in j
+            ]
+            # Set the new index values in the skyc2
+            skyc2_srcs.loc[idx_to_change, 'source'] = new_src_ids
+            # Set the ids on the copies and append to source_df
+            sources_to_copy.source = new_src_ids_to_append
+            sources_df = sources_df.append(sources_to_copy, ignore_index=True)
         logger.info("Cleaned %i double matches.", i + 1)
     else:
         logger.debug("No double matches found.")
@@ -191,7 +208,8 @@ def flag_one_to_many_advanced(temp_srcs, sources_df, skyc1_srcs):
         # go through the doubles and
         # 1. Keep the closest de ruiter as the primary id
         # 2. Increment a new source id for others
-        # 3. Add a copy of the base source into sources.
+        # 3. Add a copy of the previously matched
+        # source into sources.
         for i, mskyc1 in enumerate(multi_skyc1_srcs):
             # define a start src id for new forks
             start_src_id = sources_df.source.max() + 1
@@ -203,18 +221,31 @@ def flag_one_to_many_advanced(temp_srcs, sources_df, skyc1_srcs):
             idx_to_change = o_to_m_temp.index.values[
                 o_to_m_temp.index.values != o_to_m_min_dr_idx
             ]
-            # Copy the original skyc1 object ready to append
-            sky1_idx_to_copy = o_to_m_temp.index_old_skyc1.iloc[0]
+            # Copy the past source rows ready to append
+            sources_to_copy = sources_df[
+                sources_df.source == mskyc1
+            ].reset_index(drop=True)
+            # number of unique sources in previous crossmatch
+            num_of_sources_to_copy = sources_to_copy.shape[0]
+            # How many copies do we need?
             num_to_add = idx_to_change.shape[0]
-            skyc1_srcs_toadd = skyc1_srcs.loc[[sky1_idx_to_copy for i in range(num_to_add)]]
+            if num_to_add > 1:
+                sources_to_copy = sources_to_copy.append([sources_to_copy]*num_to_add-1)
             # Define new source ids
             new_src_ids = np.arange(start_src_id, start_src_id + num_to_add)
-            # Apply to the temp
+            # Create a list of the new source id x the number of unique sources
+            new_src_ids_to_append = [
+                source_id for j in [
+                    [t for k in range(num_of_sources_to_copy)] for t in new_src_ids
+                ] for source_id in j
+            ]
+            # Apply the change to the temp sources
             temp_srcs.loc[idx_to_change, 'source_skyc1'] = new_src_ids
             # And apply to the new rows to add to sources (copies of the skyc1 source)
-            skyc1_srcs_toadd.source = new_src_ids
+            sources_to_copy.source = new_src_ids_to_append
             # append copies of skyc1 to source_df
-            sources_df = sources_df.append(skyc1_srcs_toadd, ignore_index=True)
+            # import ipdb; ipdb.set_trace() # BREAKPOINT
+            sources_df = sources_df.append(sources_to_copy, ignore_index=True)
 
     return temp_srcs, sources_df
 
