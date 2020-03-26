@@ -14,17 +14,17 @@ logger = logging.getLogger(__name__)
 
 
 def get_eta_metric(row, df, peak=False):
-    """
+    '''
     Calculates the eta variability metric of a source.
     Works on the grouped by dataframe using the fluxes
     of the assoicated measurements.
-    """
+    '''
     if row['Nsrc'] == 1:
         return 0.
 
     suffix = 'peak' if peak else 'int'
     weights = 1. / df[f'flux_{suffix}_err'].values**2
-    fluxes = df[f"flux_{suffix}"].values
+    fluxes = df[f'flux_{suffix}'].values
     eta = (row['Nsrc'] / (row['Nsrc']-1)) * (
         (weights * fluxes**2).mean() - (
             (weights * fluxes).mean()**2 / weights.mean()
@@ -34,12 +34,12 @@ def get_eta_metric(row, df, peak=False):
 
 
 def calc_de_ruiter(df):
-    """
+    '''
     Calculates the unitless 'de Ruiter' radius of the
     association. Works on the 'temp_df' dataframe of the
     advanced association, where the two sources associated
     with each other have been merged into one row.
-    """
+    '''
     ra_1 = df['ra_skyc1'].values
     ra_2 = df['ra_skyc2'].values
 
@@ -75,11 +75,11 @@ def calc_de_ruiter(df):
 
 
 def groupby_funcs(row, first_img):
-    """
+    '''
     Performs calculations on the unique sources to get the
     lightcurve properties. Works on the grouped by source
     dataframe.
-    """
+    '''
     # calculated average ra, dec, fluxes and metrics
     d = {}
     d['wavg_ra'] = row['interim_ew'].sum() / row.weight_ew.sum()
@@ -93,8 +93,8 @@ def groupby_funcs(row, first_img):
     for col in ['flux_int', 'flux_peak']:
         d[f'{col}_sq'] = (row[col]**2).mean()
     d['Nsrc'] = row['id'].count()
-    d['v_int'] = row["flux_int"].std() / row["flux_int"].mean()
-    d['v_peak'] = row["flux_peak"].std() / row["flux_peak"].mean()
+    d['v_int'] = row['flux_int'].std() / row['flux_int'].mean()
+    d['v_peak'] = row['flux_peak'].std() / row['flux_peak'].mean()
     d['eta_int'] = get_eta_metric(d, row)
     d['eta_peak'] = get_eta_metric(d, row, peak=True)
     # remove not used cols
@@ -107,9 +107,9 @@ def groupby_funcs(row, first_img):
 
 
 def get_source_models(row, pipeline_run=None):
-    """
+    '''
     Fetches the source model (for DB injecting).
-    """
+    '''
     name = f"src_{deg2hms(row['wavg_ra'])}{deg2dms(row['wavg_dec'])}"
     src = Source()
     src.run = pipeline_run
@@ -121,7 +121,7 @@ def get_source_models(row, pipeline_run=None):
 
 
 def one_to_many_basic(sources_df, skyc1_srcs, skyc2_srcs):
-    """
+    '''
     Finds and processes the one-to-many associations in the basic
     association. For each one-to-many association, the nearest
     associated source is assigned the original source id, where as
@@ -131,10 +131,11 @@ def one_to_many_basic(sources_df, skyc1_srcs, skyc2_srcs):
 
     This is needed to be separate from the advanced version
     as the data products between the two are different.
-    """
+    '''
     temp_matched_skyc2 = skyc2_srcs[skyc2_srcs.source != -1]
-    if temp_matched_skyc2.source.unique().shape[0] != temp_matched_skyc2.source.shape[0]:
-        logger.info("Double matches detected, cleaning...")
+    if (temp_matched_skyc2.source.unique().shape[0] !=
+        temp_matched_skyc2.source.shape[0]):
+        logger.info('Double matches detected, cleaning...')
         # get the value counts
         cnts = temp_matched_skyc2[
             temp_matched_skyc2.source != -1
@@ -149,7 +150,7 @@ def one_to_many_basic(sources_df, skyc1_srcs, skyc2_srcs):
         # matched sources.
         for i, msrc in enumerate(multi_srcs):
             # obtain the current start src elem
-            start_src_id = sources_df.source.max() + 1.
+            start_src_id = sources_df.source.max() + 1
             # get the sky2_sources with this source id
             skyc2_srcs_cut = skyc2_srcs[skyc2_srcs.source == msrc]
             # get the minimum d2d index
@@ -169,9 +170,15 @@ def one_to_many_basic(sources_df, skyc1_srcs, skyc2_srcs):
             num_of_sources_to_copy = sources_to_copy.shape[0]
             # Create multiples of this if needed
             if num_to_add > 1:
-                sources_to_copy = sources_to_copy.append([sources_to_copy]*num_to_add-1)
+                sources_to_copy = sources_to_copy.append(
+                    [sources_to_copy] * num_to_add -1
+                )
             # Set the new index range
-            new_src_ids = np.arange(start_src_id, start_src_id + num_to_add)
+            new_src_ids = np.arange(
+                start_src_id,
+                start_src_id + num_to_add,
+                dtype=int
+            )
             # Set the new index for all the sources in the copy
             new_src_ids_to_append = [
                 source_id for j in [
@@ -182,30 +189,33 @@ def one_to_many_basic(sources_df, skyc1_srcs, skyc2_srcs):
             skyc2_srcs.loc[idx_to_change, 'source'] = new_src_ids
             # Set the ids on the copies and append to source_df
             sources_to_copy.source = new_src_ids_to_append
-            sources_df = sources_df.append(sources_to_copy, ignore_index=True)
-        logger.info("Cleaned %i double matches.", i + 1)
+            sources_df = sources_df.append(
+                sources_to_copy,
+                ignore_index=True
+            )
+        logger.info('Cleaned %i double matches.', i + 1)
     else:
-        logger.debug("No double matches found.")
+        logger.debug('No double matches found.')
 
     return sources_df, skyc1_srcs, skyc2_srcs
 
 
 def one_to_many_advanced(temp_srcs, sources_df, skyc1_srcs):
-    """
+    '''
     Finds and processes the one-to-many associations in the basic
     association. The same logic is applied as in
     'one_to_many_basic.
 
     This is needed to be separate from the basic version
     as the data products between the two are different.
-    """
+    '''
     skyc1_cnts = temp_srcs.source_skyc1.value_counts()
     multi_skyc1_srcs = skyc1_cnts[skyc1_cnts > 1].index.values
     if multi_skyc1_srcs.shape[0] == 0:
-        logger.debug("no one-to-many associations")
+        logger.debug('no one-to-many associations')
     else:
         logger.debug(
-            "%i one-to-many associations", multi_skyc1_srcs.shape[0]
+            '%i one-to-many associations', multi_skyc1_srcs.shape[0]
         )
         # go through the doubles and
         # 1. Keep the closest de ruiter as the primary id
@@ -253,7 +263,7 @@ def one_to_many_advanced(temp_srcs, sources_df, skyc1_srcs):
 
 
 def many_to_many_advanced(temp_srcs):
-    """
+    '''
     Finds and processes the many-to-many associations in the advanced
     association. We do not want to build many-to-many associations as
     this will make the database get very large (see TraP documentation).
@@ -263,7 +273,7 @@ def many_to_many_advanced(temp_srcs):
     de Ruiter radius) is kept where as the other associations are dropped.
 
     This follows the same logic used by the TraP (see TraP documentation).
-    """
+    '''
     # First many-to-many
     # Select those where the extracted source is listed more than once
     skyc2_cnts = temp_srcs.index_old_skyc2.value_counts()
@@ -280,9 +290,9 @@ def many_to_many_advanced(temp_srcs):
         (temp_srcs.source_skyc1.isin(multi_skyc1_srcs))
     ].reset_index()
     if m_to_m.shape[0] == 0:
-        logger.debug("No many-to-many assocations")
+        logger.debug('No many-to-many assocations')
     else:
-        logger.debug("%i many-to-many assocations", m_to_m.shape[0])
+        logger.debug('%i many-to-many assocations', m_to_m.shape[0])
         # get the minimum de ruiter value for each extracted source
         m_to_m_temp = m_to_m.groupby('index_old_skyc2')['dr']
         m_to_m.loc[m_to_m.index.values,'min_dr'] = m_to_m_temp.transform('min')
@@ -304,11 +314,11 @@ def basic_association(
         sources_df, skyc1_srcs,
         skyc1, skyc2_srcs, skyc2, limit
     ):
-    """
+    '''
     The loop for basic source association that uses the astropy
     'match_to_catalog_sky' function (i.e. only the nearest match between
     the catalogs). A direct on sky separation is used to define the association.
-    """
+    '''
     # match the new sources to the base
     # idx gives the index of the closest match in the base for skyc2
     idx, d2d, d3d = skyc2.match_to_catalog_sky(skyc1)
@@ -321,8 +331,9 @@ def basic_association(
     skyc2_srcs.loc[sel, 'd2d'] = d2d[sel].arcsec
 
     # must check for double matches in the acceptable matches just made
-    # this would mean that multiple sources in skyc2 have been matched to the same base source
-    # we want to keep closest match and move the other match(es) back to having a -1 src id
+    # this would mean that multiple sources in skyc2 have been matched
+    #  to the same base source we want to keep closest match and move
+    # the other match(es) back to having a -1 src id
     sources_df, skyc1_srcs, skyc2_srcs = one_to_many_basic(
         sources_df,
         skyc1_srcs,
@@ -332,17 +343,20 @@ def basic_association(
     logger.info('Updating sources catalogue with new sources...')
     # update the src numbers for those sources in skyc2 with no match
     # using the max current src as the start and incrementing by one
-    start_elem = sources_df['source'].values.max() + 1.
+    start_elem = sources_df['source'].values.max() + 1
     nan_sel = (skyc2_srcs['source'] == -1).values
     skyc2_srcs.loc[nan_sel, 'source'] = (
-        np.arange(start_elem, start_elem + skyc2_srcs.loc[nan_sel].shape[0])
+        np.arange(
+            start_elem,
+            start_elem + skyc2_srcs.loc[nan_sel].shape[0],
+            dtype=int
+        )
     )
 
     # and skyc2 is now ready to be appended to new sources
     sources_df = sources_df.append(
         skyc2_srcs, ignore_index=True
     ).reset_index(drop=True)
-
 
     # update skyc1 and df for next association iteration
     # calculate average angles for skyc1
@@ -358,13 +372,13 @@ def advanced_association(
         sources_df, skyc1_srcs, skyc1,
         skyc2_srcs, skyc2, dr_limit, bw_max
     ):
-    """
+    '''
     The loop for advanced source association that uses the astropy
     'search_around_sky' function (i.e. all matching sources are
     found). The BMAJ of the image * the user supplied beamwidth
     limit is the base distance for association. This is followed
     by calculating the 'de Ruiter' radius.
-    """
+    '''
     # read the needed sources fields
     # Step 1: get matches within semimajor axis of image.
     idx_skyc1, idx_skyc2, d2d, d3d = skyc2.search_around_sky(skyc1, bw_max)
@@ -376,11 +390,11 @@ def advanced_association(
     # Step 3: merge the candidates so the de ruiter can be calculated
     temp_skyc1_srcs = skyc1_srcs.loc[idx_skyc1[sel]]
     temp_skyc1_srcs = temp_skyc1_srcs.reset_index().rename(
-        columns={"index":"index_old"}
+        columns={'index': 'index_old'}
     )
     temp_skyc2_srcs = skyc2_srcs.loc[idx_skyc2[sel]]
     temp_skyc2_srcs = temp_skyc2_srcs.reset_index().rename(
-        columns={"index":"index_old"}
+        columns={'index': 'index_old'}
     )
     temp_srcs = temp_skyc1_srcs.merge(
         temp_skyc2_srcs,
@@ -412,9 +426,9 @@ def advanced_association(
     skyc2_cnts = temp_srcs.index_old_skyc2.value_counts()
     multi_skyc2_srcs = skyc2_cnts[skyc2_cnts > 1].index.values
     if multi_skyc2_srcs.shape[0] == 0:
-        logger.debug("no many-to-one associations")
+        logger.debug('no many-to-one associations')
     else:
-        logger.debug("%i many-to-one associations", multi_skyc2_srcs.shape[0])
+        logger.debug('%i many-to-one associations', multi_skyc2_srcs.shape[0])
 
     # Now everything in place to append
 
@@ -426,12 +440,12 @@ def advanced_association(
         temp_srcs.index_old_skyc2.values
     ].reset_index(drop=True)
 
-    skyc2_srcs_toappend["source"] = temp_srcs.source_skyc1.values
+    skyc2_srcs_toappend['source'] = temp_srcs.source_skyc1.values
 
     # and get the skyc2 sources with no match
 
     logger.info(
-        "Updating sources catalogue with new sources..."
+        'Updating sources catalogue with new sources...'
     )
 
     new_sources = skyc2_srcs.loc[
@@ -442,8 +456,8 @@ def advanced_association(
 
     # update the src numbers for those sources in skyc2 with no match
     # using the max current src as the start and incrementing by one
-    start_elem = sources_df.source.max() + 1.
-    new_sources["source"] = np.arange(
+    start_elem = sources_df.source.max() + 1
+    new_sources['source'] = np.arange(
         start_elem, start_elem + new_sources.shape[0]
     )
 
@@ -469,21 +483,21 @@ def advanced_association(
 
 def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
     method):
-    """
+    '''
     The main association function that does the common tasks between basic
     and advanced modes.
-    """
-    logger.info("Association mode selected: %s.", method)
+    '''
+    logger.info('Association mode selected: %s.', method)
 
     # read the needed sources fields
     cols = [
         'id',
         'ra',
         'uncertainty_ew',
-        "weight_ew",
+        'weight_ew',
         'dec',
         'uncertainty_ns',
-        "weight_ns",
+        'weight_ns',
         'flux_int',
         'flux_int_err',
         'flux_peak',
@@ -500,7 +514,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
     skyc1_srcs['uncertainty_ew_source'] = skyc1_srcs['uncertainty_ew']
     skyc1_srcs['dec_source'] = skyc1_srcs['dec']
     skyc1_srcs['uncertainty_ns_source'] = skyc1_srcs['uncertainty_ns']
-    skyc1_srcs['d2d'] = 0.0
+    skyc1_srcs['d2d'] = 0.
     # create base catalogue
     skyc1 = SkyCoord(
         ra=skyc1_srcs['ra'].values * u.degree,
@@ -510,7 +524,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
     sources_df = skyc1_srcs.copy()
 
     for it, image in enumerate(images[1:]):
-        logger.info('Association iteration: #%i', (it + 1))
+        logger.info('Association iteration: #%i', it + 1)
         # load skyc2 source measurements and create SkyCoord
         skyc2_srcs = pd.read_parquet(
             image.measurements_path,
@@ -522,7 +536,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
         skyc2_srcs['uncertainty_ew_source'] = skyc2_srcs['uncertainty_ew']
         skyc2_srcs['dec_source'] = skyc2_srcs['dec']
         skyc2_srcs['uncertainty_ns_source'] = skyc2_srcs['uncertainty_ns']
-        skyc2_srcs['d2d'] = 0.0
+        skyc2_srcs['d2d'] = 0.
         skyc2 = SkyCoord(
             ra=skyc2_srcs['ra'].values * u.degree,
             dec=skyc2_srcs['dec'].values * u.degree
@@ -555,7 +569,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
             raise Exception('association method not implemented!')
 
         logger.info(
-            "Calculating weighted average RA and Dec for sources..."
+            'Calculating weighted average RA and Dec for sources...'
         )
 
         sources_df['interim_ew'] = (
@@ -593,10 +607,10 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
             .reset_index()
             .rename(
                 columns={
-                    0: "ra",
-                    "weight_ew": "uncertainty_ew",
-                    1: "dec",
-                    "weight_ns": "uncertainty_ns"
+                    0: 'ra',
+                    'weight_ew': 'uncertainty_ew',
+                    1: 'dec',
+                    'weight_ns': 'uncertainty_ns'
             })
         )
 
@@ -632,7 +646,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
             ra=skyc1_srcs['ra'] * u.degree,
             dec=skyc1_srcs['dec'] * u.degree
         )
-        logger.info('Association iteration: #%i complete.', (it + 1))
+        logger.info('Association iteration: #%i complete.', it + 1)
 
     # ra and dec columns are actually the average over each iteration
     # so remove ave ra and ave dec used for calculation and use
@@ -644,7 +658,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
 
     # calculate source fields
     logger.info(
-        "Calculating statistics for %i sources...",
+        'Calculating statistics for %i sources...',
         sources_df.source.unique().shape[0]
     )
     srcs_df = sources_df.groupby('source').apply(

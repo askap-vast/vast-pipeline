@@ -27,16 +27,16 @@ class Pipeline():
 
     def __init__(self, max_img=10, config=None):
         '''
-        We limit the size of the cube cache so we don't hit the max files
-        open limit or use too much RAM
+        We limit the size of the cube cache so we don't hit the max
+        files open limit or use too much RAM
         '''
         self.max_img = max_img
         self.config = config
         if self.config.MAX_BACKWARDS_MONITOR_IMAGES:
             self.max_img=self.config.MAX_BACKWARDS_MONITOR_IMAGES + 1
 
-        # A dictionary of path to Fits images, eg "/data/images/I1233234.FITS"
-        # and selavy catalogues
+        # A dictionary of path to Fits images, eg
+        # "/data/images/I1233234.FITS" and selavy catalogues
         # Used as a cache to avoid reloading cubes all the time.
         self.img_selavy_paths = {
             x:y for x,y in zip(config.IMAGE_FILES, config.SELAVY_FILES)
@@ -63,7 +63,8 @@ class Pipeline():
             images.append(img)
             if exists_f:
                 logger.info(
-                    'image %s already processed, grab measurements', img.name
+                    'image %s already processed, grab measurements',
+                    img.name
                 )
                 # grab the measurements and skip to process next image
                 measurements = (
@@ -102,8 +103,12 @@ class Pipeline():
                 logger.info('bulk uploaded #%i measurements', len(out_bulk))
 
             # make a columns with the measurement id
-            measurements['id'] = measurements.meas_dj.apply(getattr, args=('id',))
-            meas_dj_obj = meas_dj_obj.append(measurements.loc[:, ['id','meas_dj']])
+            measurements['id'] = measurements.meas_dj.apply(
+                getattr, args=('id',)
+            )
+            meas_dj_obj = meas_dj_obj.append(
+                measurements.loc[:, ['id','meas_dj']]
+            )
 
             # save measurements to parquet file in pipeline run folder
             if not os.path.exists(os.path.dirname(img.measurements_path)):
