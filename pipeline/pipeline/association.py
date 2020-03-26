@@ -23,10 +23,12 @@ def get_eta_metric(row, df, peak=False):
         return 0.
 
     suffix = 'peak' if peak else 'int'
-    weights = 1./ df[f'flux_{suffix}_err'].values**2
+    weights = 1. / df[f'flux_{suffix}_err'].values**2
     fluxes = df[f"flux_{suffix}"].values
     eta = (row['Nsrc'] / (row['Nsrc']-1)) * (
-        (weights * fluxes**2).mean() - ((weights * fluxes).mean()**2 / weights.mean())
+        (weights * fluxes**2).mean() - (
+            (weights * fluxes).mean()**2 / weights.mean()
+        )
     )
     return eta
 
@@ -118,7 +120,7 @@ def get_source_models(row, pipeline_run=None):
     return src
 
 
-def flag_one_to_many_basic(sources_df, skyc1_srcs, skyc2_srcs):
+def one_to_many_basic(sources_df, skyc1_srcs, skyc2_srcs):
     """
     Finds and processes the one-to-many associations in the basic
     association. For each one-to-many association, the nearest
@@ -188,11 +190,11 @@ def flag_one_to_many_basic(sources_df, skyc1_srcs, skyc2_srcs):
     return sources_df, skyc1_srcs, skyc2_srcs
 
 
-def flag_one_to_many_advanced(temp_srcs, sources_df, skyc1_srcs):
+def one_to_many_advanced(temp_srcs, sources_df, skyc1_srcs):
     """
     Finds and processes the one-to-many associations in the basic
     association. The same logic is applied as in
-    'flag_one_to_many_basic.
+    'one_to_many_basic.
 
     This is needed to be separate from the basic version
     as the data products between the two are different.
@@ -250,7 +252,7 @@ def flag_one_to_many_advanced(temp_srcs, sources_df, skyc1_srcs):
     return temp_srcs, sources_df
 
 
-def flag_many_to_many_advanced(temp_srcs):
+def many_to_many_advanced(temp_srcs):
     """
     Finds and processes the many-to-many associations in the advanced
     association. We do not want to build many-to-many associations as
@@ -298,7 +300,7 @@ def flag_many_to_many_advanced(temp_srcs):
     return temp_srcs
 
 
-def basic_association_loop(
+def basic_association(
         sources_df, skyc1_srcs,
         skyc1, skyc2_srcs, skyc2, limit
     ):
@@ -321,7 +323,7 @@ def basic_association_loop(
     # must check for double matches in the acceptable matches just made
     # this would mean that multiple sources in skyc2 have been matched to the same base source
     # we want to keep closest match and move the other match(es) back to having a -1 src id
-    sources_df, skyc1_srcs, skyc2_srcs = flag_one_to_many_basic(
+    sources_df, skyc1_srcs, skyc2_srcs = one_to_many_basic(
         sources_df,
         skyc1_srcs,
         skyc2_srcs
@@ -352,7 +354,7 @@ def basic_association_loop(
     return sources_df, skyc1_srcs
 
 
-def advanced_association_loop(
+def advanced_association(
         sources_df, skyc1_srcs, skyc1,
         skyc2_srcs, skyc2, dr_limit, bw_max
     ):
@@ -394,11 +396,11 @@ def advanced_association_loop(
     # Now have the 'good' matches
     # Step 5: Check for one-to-many, many-to-one and many-to-many associations
 
-    temp_srcs = flag_many_to_many_advanced(temp_srcs)
+    temp_srcs = many_to_many_advanced(temp_srcs)
 
     # Next one-to-many
     # Get the sources which are doubled
-    temp_srcs, sources_df = flag_one_to_many_advanced(
+    temp_srcs, sources_df = one_to_many_advanced(
         temp_srcs,
         sources_df,
         skyc1_srcs
@@ -527,7 +529,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
         )
 
         if method == 'basic':
-            sources_df, skyc1_srcs = basic_association_loop(
+            sources_df, skyc1_srcs = basic_association(
                 sources_df,
                 skyc1_srcs,
                 skyc1,
@@ -540,7 +542,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
             bw_max = Angle(
                 bw_limit * (image.beam_bmaj * 3600. / 2.) * u.arcsec
             )
-            sources_df, skyc1_srcs = advanced_association_loop(
+            sources_df, skyc1_srcs = advanced_association(
                 sources_df,
                 skyc1_srcs,
                 skyc1,
