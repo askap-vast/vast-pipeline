@@ -182,7 +182,7 @@ class SkyRegion(models.Model):
     z = models.FloatField()
 
     def __str__(self):
-        return f'{self.centre_ra}, {self.centre_dec}'
+        return f'{round(self.centre_ra, 3)}, {round(self.centre_dec, 3)}'
 
 
 class SourceQuerySet(models.QuerySet):
