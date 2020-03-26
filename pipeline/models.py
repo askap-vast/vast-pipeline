@@ -196,10 +196,10 @@ class SourceQuerySet(models.QuerySet):
         return (
             self.extra(
                 select={
-                    "distance": "q3c_dist(ave_ra, ave_dec, %s, %s) * 3600"
+                    "distance": "q3c_dist(wavg_ra, wavg_dec, %s, %s) * 3600"
                 },
                 select_params=[ra, dec],
-                where=["q3c_radial_query(ave_ra, ave_dec, %s, %s, %s)"],
+                where=["q3c_radial_query(wavg_ra, wavg_dec, %s, %s, %s)"],
                 params=[ra, dec, radius_deg],
             )
             .order_by("distance")
