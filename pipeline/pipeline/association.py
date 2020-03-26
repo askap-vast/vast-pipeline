@@ -8,6 +8,7 @@ from astropy.coordinates import Angle
 
 from ..models import Association, Source
 from ..utils.utils import deg2hms, deg2dms, StopWatch
+from .utils import prep_skysrcs_df
 
 
 logger = logging.getLogger(__name__)
@@ -26,7 +27,9 @@ def get_eta_metric(row, df, peak=False):
     weights = 1./ df[f'flux_{suffix}_err'].values**2
     fluxes = df[f"flux_{suffix}"].values
     eta = (row['Nsrc'] / (row['Nsrc']-1)) * (
-        (weights * fluxes**2).mean() - ((weights * fluxes).mean()**2 / weights.mean())
+        (weights * fluxes**2).mean() - (
+            (weights * fluxes).mean()**2 / weights.mean()
+        )
     )
     return eta
 
@@ -118,7 +121,7 @@ def get_source_models(row, pipeline_run=None):
     return src
 
 
-def flag_one_to_many_basic(sources_df, skyc1_srcs, skyc2_srcs):
+def one_to_many_basic(sources_df, skyc1_srcs, skyc2_srcs):
     """
     Finds and processes the one-to-many associations in the basic
     association. For each one-to-many association, the nearest
@@ -131,8 +134,9 @@ def flag_one_to_many_basic(sources_df, skyc1_srcs, skyc2_srcs):
     as the data products between the two are different.
     """
     temp_matched_skyc2 = skyc2_srcs[skyc2_srcs.source != -1]
-    if temp_matched_skyc2.source.unique().shape[0] != temp_matched_skyc2.source.shape[0]:
-        logger.info("Double matches detected, cleaning...")
+    if (temp_matched_skyc2.source.unique().shape[0] !=
+        temp_matched_skyc2.source.shape[0]):
+        logger.info('Double matches detected, cleaning...')
         # get the value counts
         cnts = temp_matched_skyc2[
             temp_matched_skyc2.source != -1
@@ -183,7 +187,7 @@ def flag_one_to_many_basic(sources_df, skyc1_srcs, skyc2_srcs):
             sources_df = sources_df.append(sources_to_copy, ignore_index=True)
         logger.info("Cleaned %i double matches.", i + 1)
     else:
-        logger.debug("No double matches found.")
+        logger.debug('No double matches found.')
 
     return sources_df, skyc1_srcs, skyc2_srcs
 
@@ -192,7 +196,7 @@ def flag_one_to_many_advanced(temp_srcs, sources_df, skyc1_srcs):
     """
     Finds and processes the one-to-many associations in the basic
     association. The same logic is applied as in
-    'flag_one_to_many_basic.
+    'one_to_many_basic.
 
     This is needed to be separate from the basic version
     as the data products between the two are different.
@@ -321,7 +325,7 @@ def basic_association_loop(
     # must check for double matches in the acceptable matches just made
     # this would mean that multiple sources in skyc2 have been matched to the same base source
     # we want to keep closest match and move the other match(es) back to having a -1 src id
-    sources_df, skyc1_srcs, skyc2_srcs = flag_one_to_many_basic(
+    sources_df, skyc1_srcs, skyc2_srcs = one_to_many_basic(
         sources_df,
         skyc1_srcs,
         skyc2_srcs
@@ -330,10 +334,13 @@ def basic_association_loop(
     logger.info('Updating sources catalogue with new sources...')
     # update the src numbers for those sources in skyc2 with no match
     # using the max current src as the start and incrementing by one
-    start_elem = sources_df['source'].values.max() + 1.
+    import ipdb; ipdb.set_trace()  # breakpoint 21505fb0 //
+    start_elem = sources_df['source'].values.max() + 1
     nan_sel = (skyc2_srcs['source'] == -1).values
-    skyc2_srcs.loc[nan_sel, 'source'] = (
-        np.arange(start_elem, start_elem + skyc2_srcs.loc[nan_sel].shape[0])
+    skyc2_srcs.loc[nan_sel, 'source'] = np.arange(
+        start_elem,
+        start_elem + skyc2_srcs.loc[nan_sel].shape[0],
+        dtype=int
     )
 
     # and skyc2 is now ready to be appended to new sources
@@ -473,32 +480,9 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
     """
     logger.info("Association mode selected: %s.", method)
 
-    # read the needed sources fields
-    cols = [
-        'id',
-        'ra',
-        'uncertainty_ew',
-        "weight_ew",
-        'dec',
-        'uncertainty_ns',
-        "weight_ns",
-        'flux_int',
-        'flux_int_err',
-        'flux_peak',
-        'flux_peak_err'
-    ]
-    skyc1_srcs = pd.read_parquet(
-        images[0].measurements_path,
-        columns=cols
-    )
-    skyc1_srcs['img'] = images[0].name
-    # these are the first 'sources'
-    skyc1_srcs['source'] = skyc1_srcs.index + 1
-    skyc1_srcs['ra_source'] = skyc1_srcs['ra']
-    skyc1_srcs['uncertainty_ew_source'] = skyc1_srcs['uncertainty_ew']
-    skyc1_srcs['dec_source'] = skyc1_srcs['dec']
-    skyc1_srcs['uncertainty_ns_source'] = skyc1_srcs['uncertainty_ns']
-    skyc1_srcs['d2d'] = 0.0
+
+    # create the sky source dataframe for the first image
+    skyc1_srcs = prep_skysrcs_df(images[0])
     # create base catalogue
     skyc1 = SkyCoord(
         ra=skyc1_srcs['ra'].values * u.degree,
@@ -508,19 +492,9 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
     sources_df = skyc1_srcs.copy()
 
     for it, image in enumerate(images[1:]):
-        logger.info('Association iteration: #%i', (it + 1))
+        logger.info('Association iteration: #%i', it + 1)
         # load skyc2 source measurements and create SkyCoord
-        skyc2_srcs = pd.read_parquet(
-            image.measurements_path,
-            columns=cols
-        )
-        skyc2_srcs['img'] = image.name
-        skyc2_srcs['source'] = -1
-        skyc2_srcs['ra_source'] = skyc2_srcs['ra']
-        skyc2_srcs['uncertainty_ew_source'] = skyc2_srcs['uncertainty_ew']
-        skyc2_srcs['dec_source'] = skyc2_srcs['dec']
-        skyc2_srcs['uncertainty_ns_source'] = skyc2_srcs['uncertainty_ns']
-        skyc2_srcs['d2d'] = 0.0
+        skyc2_srcs = prep_skysrcs_df(image)
         skyc2 = SkyCoord(
             ra=skyc2_srcs['ra'].values * u.degree,
             dec=skyc2_srcs['dec'].values * u.degree
@@ -630,7 +604,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
             ra=skyc1_srcs['ra'] * u.degree,
             dec=skyc1_srcs['dec'] * u.degree
         )
-        logger.info('Association iteration: #%i complete.', (it + 1))
+        logger.info('Association iteration: #%i complete.', it + 1)
 
     # ra and dec columns are actually the average over each iteration
     # so remove ave ra and ave dec used for calculation and use
