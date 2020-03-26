@@ -6,6 +6,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.coordinates import Angle
 
+from .utils import prep_skysrc_df
 from ..models import Association, Source
 from ..utils.utils import deg2hms, deg2dms, StopWatch
 
@@ -256,7 +257,6 @@ def one_to_many_advanced(temp_srcs, sources_df, skyc1_srcs):
             # And apply to the new rows to add to sources (copies of the skyc1 source)
             sources_to_copy.source = new_src_ids_to_append
             # append copies of skyc1 to source_df
-            # import ipdb; ipdb.set_trace() # BREAKPOINT
             sources_df = sources_df.append(sources_to_copy, ignore_index=True)
 
     return temp_srcs, sources_df
@@ -489,32 +489,8 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
     '''
     logger.info('Association mode selected: %s.', method)
 
-    # read the needed sources fields
-    cols = [
-        'id',
-        'ra',
-        'uncertainty_ew',
-        'weight_ew',
-        'dec',
-        'uncertainty_ns',
-        'weight_ns',
-        'flux_int',
-        'flux_int_err',
-        'flux_peak',
-        'flux_peak_err'
-    ]
-    skyc1_srcs = pd.read_parquet(
-        images[0].measurements_path,
-        columns=cols
-    )
-    skyc1_srcs['img'] = images[0].name
-    # these are the first 'sources'
-    skyc1_srcs['source'] = skyc1_srcs.index + 1
-    skyc1_srcs['ra_source'] = skyc1_srcs['ra']
-    skyc1_srcs['uncertainty_ew_source'] = skyc1_srcs['uncertainty_ew']
-    skyc1_srcs['dec_source'] = skyc1_srcs['dec']
-    skyc1_srcs['uncertainty_ns_source'] = skyc1_srcs['uncertainty_ns']
-    skyc1_srcs['d2d'] = 0.
+    # initialise sky source dataframe
+    skyc1_srcs = prep_skysrc_df(images[0])
     # create base catalogue
     skyc1 = SkyCoord(
         ra=skyc1_srcs['ra'].values * u.degree,
@@ -526,17 +502,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
     for it, image in enumerate(images[1:]):
         logger.info('Association iteration: #%i', it + 1)
         # load skyc2 source measurements and create SkyCoord
-        skyc2_srcs = pd.read_parquet(
-            image.measurements_path,
-            columns=cols
-        )
-        skyc2_srcs['img'] = image.name
-        skyc2_srcs['source'] = -1
-        skyc2_srcs['ra_source'] = skyc2_srcs['ra']
-        skyc2_srcs['uncertainty_ew_source'] = skyc2_srcs['uncertainty_ew']
-        skyc2_srcs['dec_source'] = skyc2_srcs['dec']
-        skyc2_srcs['uncertainty_ns_source'] = skyc2_srcs['uncertainty_ns']
-        skyc2_srcs['d2d'] = 0.
+        skyc2_srcs = prep_skysrc_df(image, ini_df=False)
         skyc2 = SkyCoord(
             ra=skyc2_srcs['ra'].values * u.degree,
             dec=skyc2_srcs['dec'].values * u.degree

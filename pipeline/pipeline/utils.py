@@ -1,5 +1,6 @@
 import os
 import logging
+import pandas as pd
 
 from ..utils.utils import eq_to_cart
 from ..models import Band, Image, Run, SkyRegion, Measurement
@@ -126,3 +127,39 @@ def get_create_p_run(name, path):
     p_run.save()
 
     return p_run
+
+
+def prep_skysrc_df(image, ini_df=True):
+    '''
+    initiliase the source dataframe to use in association logic by
+    reading the measurement parquet file and creating columns
+    inputs
+    image: django image model
+    ini_df: flag to initialise source id depending if inital df or not
+    '''
+    cols = [
+    'id',
+    'ra',
+    'uncertainty_ew',
+    'weight_ew',
+    'dec',
+    'uncertainty_ns',
+    'weight_ns',
+    'flux_int',
+    'flux_int_err',
+    'flux_peak',
+    'flux_peak_err'
+    ]
+
+    df = pd.read_parquet(image.measurements_path, columns=cols)
+    df['img'] = image.name
+    # these are the first 'sources'
+    df['source'] = df.index + 1 if ini_df else -1
+    df['ra_source'] = df['ra']
+    df['uncertainty_ew_source'] = df['uncertainty_ew']
+    df['dec_source'] = df['dec']
+    df['uncertainty_ns_source'] = df['uncertainty_ns']
+    df['d2d'] = 0.
+    df['related'] = None
+
+    return df
