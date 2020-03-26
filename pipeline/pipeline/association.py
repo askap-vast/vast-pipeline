@@ -133,16 +133,14 @@ def one_to_many_basic(sources_df, skyc1_srcs, skyc2_srcs):
     This is needed to be separate from the advanced version
     as the data products between the two are different.
     '''
-    temp_matched_skyc2 = skyc2_srcs[skyc2_srcs.source != -1]
-    if (temp_matched_skyc2.source.unique().shape[0] !=
-        temp_matched_skyc2.source.shape[0]):
+    duplicated_matches = skyc2_srcs.loc[
+        (skyc2_srcs['source'] != -1) &
+        skyc2_srcs.duplicated(subset='source', keep=False),
+        ['source', 'd2d']
+    ]
+    if not duplicated_matches.empty:
         logger.info('Double matches detected, cleaning...')
-        # get the value counts
-        cnts = temp_matched_skyc2[
-            temp_matched_skyc2.source != -1
-        ].source.value_counts()
-        # and the src ids that are doubled
-        multi_srcs = cnts[cnts > 1].index.values
+        multi_srcs = duplicated_matches['source'].unique()
 
         # now we have the src values which are doubled.
         # make the nearest match have the original src id
