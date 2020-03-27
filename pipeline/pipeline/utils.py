@@ -129,7 +129,7 @@ def get_create_p_run(name, path):
     return p_run
 
 
-def prep_skysrc_df(image, ini_df=True):
+def prep_skysrc_df(image, ini_df=False):
     '''
     initiliase the source dataframe to use in association logic by
     reading the measurement parquet file and creating columns

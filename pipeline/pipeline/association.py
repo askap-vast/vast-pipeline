@@ -121,7 +121,7 @@ def get_source_models(row, pipeline_run=None):
     return src
 
 
-def one_to_many_basic(sources_df, skyc1_srcs, skyc2_srcs):
+def one_to_many_basic(sources_df, skyc2_srcs):
     '''
     Finds and processes the one-to-many associations in the basic
     association. For each one-to-many association, the nearest
@@ -133,34 +133,71 @@ def one_to_many_basic(sources_df, skyc1_srcs, skyc2_srcs):
     This is needed to be separate from the advanced version
     as the data products between the two are different.
     '''
-    duplicated_matches = skyc2_srcs.loc[
+    # select duplicated in 'source' field in skyc2_srcs, excluding -1
+    duplicated_skyc2 = skyc2_srcs.loc[
         (skyc2_srcs['source'] != -1) &
         skyc2_srcs.duplicated(subset='source', keep=False),
         ['source', 'd2d']
     ]
-    if not duplicated_matches.empty:
+    if not duplicated_skyc2.empty:
         logger.info('Double matches detected, cleaning...')
-        multi_srcs = duplicated_matches['source'].unique()
+        multi_srcs = duplicated_skyc2['source'].unique()
 
         # now we have the src values which are doubled.
-        # make the nearest match have the original src id
+        # make the nearest match have the "original" src id
         # give the other matched source a new src id
         # and make sure to copy the other previously
         # matched sources.
         for i, msrc in enumerate(multi_srcs):
-            # obtain the current start src elem
-            start_src_id = sources_df.source.max() + 1
-            # get the sky2_sources with this source id
-            skyc2_srcs_cut = skyc2_srcs[skyc2_srcs.source == msrc]
+            # 1) assign new source id and
+            # get the sky2_sources with this source id and
             # get the minimum d2d index
-            min_d2d_idx = skyc2_srcs_cut.d2d.idxmin()
+            src_selection = duplicated_skyc2['source'] == msrc
+            min_d2d_idx = duplicated_skyc2.loc[
+                src_selection,
+                'd2d'
+            ].idxmin()
             # Get the indexes of the other skyc2 sources
             # which need to be changed
-            idx_to_change = skyc2_srcs_cut.index.values[
-                skyc2_srcs_cut.index.values != min_d2d_idx
+            idx_to_change = duplicated_skyc2.index.values[
+                (duplicated_skyc2.index.values != min_d2d_idx) &
+                src_selection
             ]
             # how many 'copies' do we need to make?
-            num_to_add = idx_to_change.shape[0]
+            nr_copies = idx_to_change.shape[0]
+            # obtain the current start src elem
+            start_src_id = sources_df['source'].values.max() + 1
+            # Set the new index range
+            new_src_ids = np.arange(
+                start_src_id,
+                start_src_id + nr_copies,
+                dtype=int
+            )
+            # Set the new index values in the skyc2
+            skyc2_srcs.loc[idx_to_change, 'source'] = new_src_ids
+
+            # populate the 'related' field in skyc2_srcs
+            # original source with duplicated
+            orig_src = skyc2_srcs.at[min_d2d_idx, 'related']
+            if isinstance(orig_src, list):
+                skyc2_srcs.at[min_d2d_idx, 'related'] = (
+                    orig_src + new_src_ids.tolist()
+                )
+            else:
+                skyc2_srcs.at[min_d2d_idx, 'related'] = new_src_ids.tolist()
+            # other sources with original
+            skyc2_srcs.loc[idx_to_change, 'related'] = skyc2_srcs.loc[
+                idx_to_change,
+                'related'
+            ].apply(
+                lambda x: x.append(msrc) if isinstance(x, list) else [msrc]
+            )
+
+            # 2) Check for generate copies of previous crossmatches in
+            # 'sources_df' and match them with new source id
+            # e.g. clone f1 and f2 in https://tkp.readthedocs.io/en/
+            # latest/devref/database/assoc.html#one-to-many-association
+            # and assign them to f3
             # Get all the previous crossmatches which need to be copied
             sources_to_copy = sources_df[
                 sources_df.source == msrc
@@ -168,24 +205,16 @@ def one_to_many_basic(sources_df, skyc1_srcs, skyc2_srcs):
             # number of unique sources in previous crossmatch
             num_of_sources_to_copy = sources_to_copy.shape[0]
             # Create multiples of this if needed
-            if num_to_add > 1:
+            if nr_copies > 1:
                 sources_to_copy = sources_to_copy.append(
-                    [sources_to_copy] * num_to_add -1
+                    [sources_to_copy] * nr_copies -1
                 )
-            # Set the new index range
-            new_src_ids = np.arange(
-                start_src_id,
-                start_src_id + num_to_add,
-                dtype=int
-            )
             # Set the new index for all the sources in the copy
             new_src_ids_to_append = [
                 source_id for j in [
                     [t for k in range(num_of_sources_to_copy)] for t in new_src_ids
                 ] for source_id in j
             ]
-            # Set the new index values in the skyc2
-            skyc2_srcs.loc[idx_to_change, 'source'] = new_src_ids
             # Set the ids on the copies and append to source_df
             sources_to_copy.source = new_src_ids_to_append
             sources_df = sources_df.append(
@@ -196,7 +225,7 @@ def one_to_many_basic(sources_df, skyc1_srcs, skyc2_srcs):
     else:
         logger.debug('No double matches found.')
 
-    return sources_df, skyc1_srcs, skyc2_srcs
+    return sources_df, skyc2_srcs
 
 
 def one_to_many_advanced(temp_srcs, sources_df, skyc1_srcs):
@@ -309,8 +338,7 @@ def many_to_many_advanced(temp_srcs):
 
 
 def basic_association(
-        sources_df, skyc1_srcs,
-        skyc1, skyc2_srcs, skyc2, limit
+        sources_df, skyc1_srcs, skyc1, skyc2_srcs, skyc2, limit
     ):
     '''
     The loop for basic source association that uses the astropy
@@ -332,11 +360,7 @@ def basic_association(
     # this would mean that multiple sources in skyc2 have been matched
     #  to the same base source we want to keep closest match and move
     # the other match(es) back to having a -1 src id
-    sources_df, skyc1_srcs, skyc2_srcs = one_to_many_basic(
-        sources_df,
-        skyc1_srcs,
-        skyc2_srcs
-    )
+    sources_df, skyc2_srcs = one_to_many_basic(sources_df, skyc2_srcs)
 
     logger.info('Updating sources catalogue with new sources...')
     # update the src numbers for those sources in skyc2 with no match
@@ -488,7 +512,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
     logger.info('Association mode selected: %s.', method)
 
     # initialise sky source dataframe
-    skyc1_srcs = prep_skysrc_df(images[0])
+    skyc1_srcs = prep_skysrc_df(images[0], ini_df=True)
     # create base catalogue
     skyc1 = SkyCoord(
         ra=skyc1_srcs['ra'].values * u.degree,
@@ -500,7 +524,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
     for it, image in enumerate(images[1:]):
         logger.info('Association iteration: #%i', it + 1)
         # load skyc2 source measurements and create SkyCoord
-        skyc2_srcs = prep_skysrc_df(image, ini_df=False)
+        skyc2_srcs = prep_skysrc_df(image)
         skyc2 = SkyCoord(
             ra=skyc2_srcs['ra'].values * u.degree,
             dec=skyc2_srcs['dec'].values * u.degree
