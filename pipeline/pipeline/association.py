@@ -198,29 +198,18 @@ def one_to_many_basic(sources_df, skyc2_srcs):
             # e.g. clone f1 and f2 in https://tkp.readthedocs.io/en/
             # latest/devref/database/assoc.html#one-to-many-association
             # and assign them to f3
-            # Get all the previous crossmatches which need to be copied
-            sources_to_copy = sources_df[
-                sources_df.source == msrc
-            ].reset_index(drop=True)
-            # number of unique sources in previous crossmatch
-            num_of_sources_to_copy = sources_to_copy.shape[0]
-            # Create multiples of this if needed
-            if nr_copies > 1:
-                sources_to_copy = sources_to_copy.append(
-                    [sources_to_copy] * nr_copies -1
+            for new_id in new_src_ids:
+                # Get all the previous crossmatches to be cloned
+                sources_to_copy = sources_df.loc[
+                    sources_df.source == msrc
+                ].copy()
+                # change source id with new one
+                sources_to_copy['source'] = new_id
+                # append copies to "sources_df"
+                sources_df = sources_df.append(
+                    sources_to_copy,
+                    ignore_index=True
                 )
-            # Set the new index for all the sources in the copy
-            new_src_ids_to_append = [
-                source_id for j in [
-                    [t for k in range(num_of_sources_to_copy)] for t in new_src_ids
-                ] for source_id in j
-            ]
-            # Set the ids on the copies and append to source_df
-            sources_to_copy.source = new_src_ids_to_append
-            sources_df = sources_df.append(
-                sources_to_copy,
-                ignore_index=True
-            )
         logger.info('Cleaned %i double matches.', i + 1)
     else:
         logger.debug('No double matches found.')
