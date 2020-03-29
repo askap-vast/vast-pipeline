@@ -5,6 +5,7 @@ import pandas as pd
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.coordinates import Angle
+from itertools import chain
 
 from .utils import prep_skysrc_df
 from ..models import Association, Source
@@ -83,10 +84,10 @@ def groupby_funcs(row, first_img):
     '''
     # calculated average ra, dec, fluxes and metrics
     d = {}
-    d['wavg_ra'] = row['interim_ew'].sum() / row.weight_ew.sum()
-    d['wavg_dec'] = row.interim_ns.sum() / row.weight_ns.sum()
-    d['wavg_uncertainty_ew'] = 1. / np.sqrt(row.weight_ew.sum())
-    d['wavg_uncertainty_ns'] = 1. / np.sqrt(row.weight_ns.sum())
+    d['wavg_ra'] = row['interim_ew'].sum() / row['weight_ew'].sum()
+    d['wavg_dec'] = row['interim_ns'].sum() / row['weight_ns'].sum()
+    d['wavg_uncertainty_ew'] = 1. / np.sqrt(row['weight_ew'].sum())
+    d['wavg_uncertainty_ns'] = 1. / np.sqrt(row['weight_ns'].sum())
     for col in ['avg_flux_int', 'avg_flux_peak']:
         d[col] = row[col.split('_', 1)[1]].mean()
     d['max_flux_peak'] = row['flux_peak'].values.max()
@@ -104,6 +105,13 @@ def groupby_funcs(row, first_img):
     d.pop('Nsrc')
     # set new source
     d['new'] = False if first_img in row['img'].values else True
+    # get unique related sources
+    list_uniq_related = list(set(
+        chain.from_iterable(
+            lst for lst in row['related'] if isinstance(lst, list)
+        )
+    ))
+    d['related_list'] = list_uniq_related if list_uniq_related else -1
     return pd.Series(d)
 
 
@@ -203,6 +211,9 @@ def one_to_many_basic(sources_df, skyc2_srcs):
                 sources_to_copy = sources_df.loc[
                     sources_df.source == msrc
                 ].copy()
+                if (sources_to_copy.shape[0] > 1) and (nr_copies > 1):
+                    import ipdb; ipdb.set_trace()  # breakpoint d6c2b080 //
+                    pass
                 # change source id with new one
                 sources_to_copy['source'] = new_id
                 # append copies to "sources_df"
@@ -568,9 +579,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
         stats = StopWatch()
 
         wm_ra = tmp_srcs_df['interim_ew'].sum() / tmp_srcs_df['weight_ew'].sum()
-        wm_uncertainty_ew = 1. / np.sqrt(
-            tmp_srcs_df['weight_ew'].sum()
-        )
+        wm_uncertainty_ew = 1. / np.sqrt(tmp_srcs_df['weight_ew'].sum())
 
         wm_dec = tmp_srcs_df['interim_ns'].sum() / tmp_srcs_df['weight_ns'].sum()
         wm_uncertainty_ns = 1. / np.sqrt(tmp_srcs_df['weight_ns'].sum())
@@ -625,6 +634,8 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
         )
         logger.info('Association iteration: #%i complete.', it + 1)
 
+    # End of iteration over images, move to stats calcs and Django
+    # association model generation
     # ra and dec columns are actually the average over each iteration
     # so remove ave ra and ave dec used for calculation and use
     # ra_source and dec_source columns
@@ -647,8 +658,8 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
     # generate the source models
     srcs_df['src_dj'] = srcs_df.apply(
         get_source_models,
-        axis=1,
-        pipeline_run=p_run
+        pipeline_run=p_run,
+        axis=1
     )
     # create sources in DB
     # TODO remove deleting existing sources
@@ -671,11 +682,24 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
         )
         logger.info('bulk created #%i sources', len(out_bulk))
 
+    # add source related object in DB
+    related_df = srcs_df.loc[
+        srcs_df['related_list'] != -1,['related_list', 'src_dj']
+    ]
+    for idx, row in related_df.iterrows():
+        for src_id in row['related_list']:
+            try:
+                row['src_dj'].related.add(related_df.at[src_id, 'src_dj'])
+            except Exception as e:
+                logger.debug('Error in related update:\n%s', e)
+                pass
+
     sources_df = (
-        sources_df.merge(srcs_df, on='source')
+        sources_df.drop('related', axis=1)
+        .merge(srcs_df.drop('related_list', axis=1), on='source')
         .merge(meas_dj_obj, on='id')
     )
-    del srcs_df
+    del srcs_df, related_df
 
     # Create Associan objects (linking measurements into single sources)
     # and insert in DB
