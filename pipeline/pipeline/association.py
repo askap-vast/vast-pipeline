@@ -321,12 +321,7 @@ def many_to_many_advanced(temp_srcs):
     # get the ids of those crossmatches that are larger than the minimum
     m_to_m_to_drop = m_to_m[m_to_m.dr != m_to_m.min_dr].index.values
     # and drop these from the temp_srcs
-    temp_srcs.drop(
-        m_to_m_to_drop, inplace=True
-    )
-    temp_srcs.reset_index(
-        drop=True, inplace=True
-    )
+    temp_srcs = temp_srcs.drop(m_to_m_to_drop)
 
     return temp_srcs
 
