@@ -301,38 +301,32 @@ def many_to_many_advanced(temp_srcs):
 
     This follows the same logic used by the TraP (see TraP documentation).
     '''
-    # First many-to-many
     # Select those where the extracted source is listed more than once
-    skyc2_cnts = temp_srcs.index_old_skyc2.value_counts()
-    # and the src ids that are doubled
-    multi_skyc2_srcs = skyc2_cnts[skyc2_cnts > 1].index.values
-    # and of these get those that have a source id that is listed more than
-    # once in the temps_srcs df
-    # first we need a list of double source_ids
-    skyc1_cnts = temp_srcs.source_skyc1.value_counts()
-    multi_skyc1_srcs = skyc1_cnts[skyc1_cnts > 1].index.values
-    # and make the selection
-    m_to_m = temp_srcs[
-        (temp_srcs.index_old_skyc2.isin(multi_skyc2_srcs)) &
-        (temp_srcs.source_skyc1.isin(multi_skyc1_srcs))
-    ].reset_index()
-    if m_to_m.shape[0] == 0:
+    # and of these get those that have a source id that is listed more
+    # than once in the temps_srcs df
+    m_to_m = temp_srcs[(
+        temp_srcs['index_old_skyc2'].duplicated(keep=False) &
+        temp_srcs['source_skyc1'].duplicated(keep=False)
+    )].copy()
+    if m_to_m.empty:
         logger.debug('No many-to-many assocations')
-    else:
-        logger.debug('%i many-to-many assocations', m_to_m.shape[0])
-        # get the minimum de ruiter value for each extracted source
-        m_to_m_temp = m_to_m.groupby('index_old_skyc2')['dr']
-        m_to_m.loc[m_to_m.index.values,'min_dr'] = m_to_m_temp.transform('min')
-        del m_to_m_temp
-        # get the ids of those crossmatches that are larger than the minimum
-        m_to_m_to_drop = m_to_m[m_to_m.dr != m_to_m.min_dr].index.values
-        # and drop these from the temp_srcs
-        temp_srcs.drop(
-            m_to_m_to_drop, inplace=True
-        )
-        temp_srcs.reset_index(
-            drop=True, inplace=True
-        )
+        return temp_srcs
+
+    logger.debug('%i many-to-many assocations', m_to_m.shape[0])
+    # get the minimum de ruiter value for each extracted source
+    m_to_m['min_dr'] = (
+        m_to_m.groupby('index_old_skyc2')['dr']
+        .transform('min')
+    )
+    # get the ids of those crossmatches that are larger than the minimum
+    m_to_m_to_drop = m_to_m[m_to_m.dr != m_to_m.min_dr].index.values
+    # and drop these from the temp_srcs
+    temp_srcs.drop(
+        m_to_m_to_drop, inplace=True
+    )
+    temp_srcs.reset_index(
+        drop=True, inplace=True
+    )
 
     return temp_srcs
 
@@ -403,20 +397,24 @@ def advanced_association(
     '''
     # read the needed sources fields
     # Step 1: get matches within semimajor axis of image.
-    idx_skyc1, idx_skyc2, d2d, d3d = skyc2.search_around_sky(skyc1, bw_max)
+    idx_skyc1, idx_skyc2, d2d, d3d = skyc2.search_around_sky(
+        skyc1, bw_max
+    )
     # Step 2: Apply the beamwidth limit
     sel = d2d <= bw_max
 
     skyc2_srcs.loc[idx_skyc2[sel], 'd2d'] = d2d[sel].arcsec
 
     # Step 3: merge the candidates so the de ruiter can be calculated
-    temp_skyc1_srcs = skyc1_srcs.loc[idx_skyc1[sel]]
-    temp_skyc1_srcs = temp_skyc1_srcs.reset_index().rename(
-        columns={'index': 'index_old'}
+    temp_skyc1_srcs = (
+        skyc1_srcs.loc[idx_skyc1[sel]]
+        .reset_index()
+        .rename(columns={'index': 'index_old'})
     )
-    temp_skyc2_srcs = skyc2_srcs.loc[idx_skyc2[sel]]
-    temp_skyc2_srcs = temp_skyc2_srcs.reset_index().rename(
-        columns={'index': 'index_old'}
+    temp_skyc2_srcs = (
+        skyc2_srcs.loc[idx_skyc2[sel]]
+        .reset_index()
+        .rename(columns={'index': 'index_old'})
     )
     temp_srcs = temp_skyc1_srcs.merge(
         temp_skyc2_srcs,
@@ -427,11 +425,11 @@ def advanced_association(
 
     # Step 4: Calculate and perform De Ruiter radius cut
     temp_srcs['dr'] = calc_de_ruiter(temp_srcs)
-    temp_srcs = temp_srcs[temp_srcs.dr <= dr_limit]
+    temp_srcs = temp_srcs[temp_srcs['dr'] <= dr_limit]
 
     # Now have the 'good' matches
-    # Step 5: Check for one-to-many, many-to-one and many-to-many associations
-
+    # Step 5: Check for one-to-many, many-to-one and many-to-many
+    # associations. First the many-to-many
     temp_srcs = many_to_many_advanced(temp_srcs)
 
     # Next one-to-many
@@ -442,9 +440,9 @@ def advanced_association(
         skyc1_srcs
     )
 
-    # Finally many-to-one associations, the opposite of above
-    # But we don't have to create new ids for these so it's much simpler
-    # In fact we don't need to do anything but lets get the number for debugging.
+    # Finally many-to-one associations, the opposite of above but we
+    # don't have to create new ids for these so it's much simpler in fact
+    # we don't need to do anything but lets get the number for debugging.
     skyc2_cnts = temp_srcs.index_old_skyc2.value_counts()
     multi_skyc2_srcs = skyc2_cnts[skyc2_cnts > 1].index.values
     if multi_skyc2_srcs.shape[0] == 0:
