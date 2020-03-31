@@ -163,3 +163,15 @@ def prep_skysrc_df(image, ini_df=False):
     df['related'] = None
 
     return df
+
+
+def get_or_append_list(obj_in, elem):
+    '''
+    return a list with elem in it, if obj_in is list append to it
+    '''
+    if isinstance(obj_in, list):
+        out = obj_in
+        out.append(elem)
+        return out
+
+    return [elem]

@@ -7,7 +7,7 @@ from astropy.coordinates import SkyCoord
 from astropy.coordinates import Angle
 from itertools import chain
 
-from .utils import prep_skysrc_df
+from .utils import get_or_append_list, prep_skysrc_df
 from ..models import Association, Source
 from ..utils.utils import deg2hms, deg2dms, StopWatch
 
@@ -277,7 +277,7 @@ def one_to_many_advanced(temp_srcs, sources_df):
         # how many new source ids we need to make?
         num_to_add = idx_to_change.shape[0]
         # define a start src id for new forks
-        start_src_id = sources_df.source.max() + 1
+        start_src_id = sources_df['source'].values.max() + 1
         # Define new source ids
         new_src_ids = np.arange(
             start_src_id,
@@ -387,8 +387,64 @@ def many_to_one_advanced(temp_srcs, sources_df):
         'Detected #%i many-to-one associations',
         duplicated_skyc2.shape[0]
     )
+    multi_srcs = duplicated_skyc2['index_old_skyc2'].unique()
+    for i, msrc in enumerate(multi_srcs):
+        # Make the selection
+        src_selection = duplicated_skyc2['index_old_skyc2'] == msrc
+        # Get the min dr idx
+        min_dr_idx = duplicated_skyc2.loc[src_selection, 'dr'].idxmin()
+        # Select the others
+        idx_to_change = duplicated_skyc2.index.values[
+            (duplicated_skyc2.index.values != min_dr_idx) &
+            src_selection
+        ]
+        # how many new source ids we need to make?
+        num_to_add = idx_to_change.shape[0]
+        # define a start src id for new forks
+        start_src_id = sources_df['source'].values.max() + 1
+        # Define new source ids
+        new_src_ids = np.arange(
+            start_src_id,
+            start_src_id + num_to_add,
+            dtype=int
+        )
+        # Apply the change to the temp sources
+        temp_srcs.loc[idx_to_change, 'source_skyc1'] = new_src_ids
+        # populate the 'related' field for skyc1
+        # original source with duplicated
+        orig_src = duplicated_skyc2.at[min_dr_idx, 'related_skyc1']
+        if isinstance(orig_src, list):
+            temp_srcs.at[min_dr_idx, 'related_skyc1'] = (
+                orig_src + new_src_ids.tolist()
+            )
+        else:
+            temp_srcs.at[min_dr_idx, 'related_skyc1'] = new_src_ids.tolist()
+        # other sources with original
+        temp_srcs.loc[idx_to_change, 'related_skyc1'] = temp_srcs.loc[
+            idx_to_change,
+            'related_skyc1'
+        ].apply(get_or_append_list, elem=msrc)
+        #     lambda x: x.append(msrc) if isinstance(x, list) else [msrc]
+        # )
 
-    return temp_srcs
+        # Check for generate copies of previous crossmatches and copy
+        # the past source rows ready to append
+        for new_id in new_src_ids:
+            sources_to_copy = sources_df[
+                sources_df['source'] == msrc
+            ].copy()
+            if (sources_to_copy.shape[0] > 1) and (num_to_add > 1):
+                import ipdb; ipdb.set_trace()  # breakpoint ea6697a9 //
+                pass
+            # change source id with new one
+            sources_to_copy['source'] = new_id
+            # append copies of skyc1 to source_df
+            sources_df = sources_df.append(
+                sources_to_copy,
+                ignore_index=True
+            )
+
+    return temp_srcs, sources_df
 
 
 def basic_association(
@@ -523,7 +579,7 @@ def advanced_association(
     ].reset_index(drop=True)
     # update the src numbers for those sources in skyc2 with no match
     # using the max current src as the start and incrementing by one
-    start_elem = sources_df['source'].max() + 1
+    start_elem = sources_df['source'].values.max() + 1
     new_sources['source'] = np.arange(
         start_elem,
         start_elem + new_sources.shape[0],
