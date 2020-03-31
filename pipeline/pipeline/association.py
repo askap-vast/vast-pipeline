@@ -492,37 +492,42 @@ def advanced_association(
     # First the skyc2 sources with a match.
     # This is created from the temp_srcs df.
     # This will take care of the extra skyc2 sources needed.
-    old_sources = temp_srcs['index_old_skyc2'].values
-    skyc2_srcs.loc[old_sources, 'source'] = temp_srcs['source_skyc1'].values
-    skyc2_srcs.loc[old_sources, 'related'] = temp_srcs['related_skyc1'].values
+    skyc2_srcs_toappend = skyc2_srcs.loc[
+        temp_srcs['index_old_skyc2'].values
+    ].reset_index(drop=True)
+    skyc2_srcs_toappend['source'] = temp_srcs['source_skyc1'].values
+    skyc2_srcs_toappend['related'] = temp_srcs['related_skyc1'].values
 
     # and get the skyc2 sources with no match
     logger.info(
         'Updating sources catalogue with new sources...'
     )
-    new_sources = skyc2_srcs.index.difference(
-        temp_srcs['index_old_skyc2'].values
-    )
-    import ipdb; ipdb.set_trace()  # breakpoint 67fb00ce //
+    new_sources = skyc2_srcs.loc[
+        skyc2_srcs.index.difference(
+            temp_srcs['index_old_skyc2'].values
+        )
+    ].reset_index(drop=True)
     # update the src numbers for those sources in skyc2 with no match
     # using the max current src as the start and incrementing by one
-    start_elem = sources_df.source.max() + 1
-    new_sources_idx = np.arange(
+    start_elem = sources_df['source'].max() + 1
+    new_sources['source'] = np.arange(
         start_elem,
         start_elem + new_sources.shape[0],
         dtype=int
     )
-    skyc2_srcs.loc[new_sources, 'source'] = new_sources_idx
+    skyc2_srcs_toappend = skyc2_srcs_toappend.append(
+        new_sources, ignore_index=True
+    )
 
     # and skyc2 is now ready to be appended to source_df
     sources_df = sources_df.append(
-        skyc2_srcs, ignore_index=True
+        skyc2_srcs_toappend, ignore_index=True
     ).reset_index(drop=True)
 
     # update skyc1 and df for next association iteration
     # calculate average angles for skyc1
     skyc1_srcs = (
-        skyc1_srcs.append(skyc2_srcs.loc[new_sources], ignore_index=True)
+        skyc1_srcs.append(new_sources, ignore_index=True)
         .reset_index(drop=True)
     )
 
