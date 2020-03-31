@@ -203,9 +203,7 @@ def one_to_many_basic(sources_df, skyc2_srcs):
         skyc2_srcs.loc[idx_to_change, 'related'] = skyc2_srcs.loc[
             idx_to_change,
             'related'
-        ].apply(
-            lambda x: x.append(msrc) if isinstance(x, list) else [msrc]
-        )
+        ].apply(get_or_append_list, elem=msrc)
 
         # 2) Check for generate copies of previous crossmatches in
         # 'sources_df' and match them with new source id
@@ -299,9 +297,7 @@ def one_to_many_advanced(temp_srcs, sources_df):
         temp_srcs.loc[idx_to_change, 'related_skyc1'] = temp_srcs.loc[
             idx_to_change,
             'related_skyc1'
-        ].apply(
-            lambda x: x.append(msrc) if isinstance(x, list) else [msrc]
-        )
+        ].apply(get_or_append_list, elem=msrc)
 
         # Check for generate copies of previous crossmatches and copy
         # the past source rows ready to append
@@ -424,8 +420,6 @@ def many_to_one_advanced(temp_srcs, sources_df):
             idx_to_change,
             'related_skyc1'
         ].apply(get_or_append_list, elem=msrc)
-        #     lambda x: x.append(msrc) if isinstance(x, list) else [msrc]
-        # )
 
         # Check for generate copies of previous crossmatches and copy
         # the past source rows ready to append
