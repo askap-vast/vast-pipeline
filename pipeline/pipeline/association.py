@@ -232,7 +232,7 @@ def one_to_many_basic(sources_df, skyc2_srcs):
     return sources_df, skyc2_srcs
 
 
-def one_to_many_advanced(temp_srcs, sources_df, skyc1_srcs):
+def one_to_many_advanced(temp_srcs, sources_df):
     '''
     Finds and processes the one-to-many associations in the basic
     association. The same logic is applied as in
@@ -363,6 +363,34 @@ def many_to_many_advanced(temp_srcs):
     return temp_srcs
 
 
+def many_to_one_advanced(temp_srcs, sources_df):
+    '''
+    Finds and processes the many-to-one associations in the advanced
+    association.
+    '''
+    # use only these columns for easy debugging of the dataframe
+    cols = [
+        'index_old_skyc1', 'id_skyc1', 'source_skyc1', 'd2d_skyc1',
+        'related_skyc1', 'index_old_skyc2', 'id_skyc2', 'source_skyc2',
+        'd2d_skyc2', 'related_skyc2', 'dr'
+    ]
+
+    duplicated_skyc2 = temp_srcs.loc[
+            temp_srcs['index_old_skyc2'].duplicated(keep=False),
+            cols
+    ]
+    if duplicated_skyc2.empty:
+        logger.debug('No many-to-one associations.')
+        return temp_srcs
+
+    logger.debug(
+        'Detected #%i many-to-one associations',
+        duplicated_skyc2.shape[0]
+    )
+
+    return temp_srcs
+
+
 def basic_association(
         sources_df, skyc1_srcs, skyc1, skyc2_srcs, skyc2, limit
     ):
@@ -467,28 +495,14 @@ def advanced_association(
 
     # Next one-to-many
     # Get the sources which are doubled
-    temp_srcs, sources_df = one_to_many_advanced(
-        temp_srcs,
-        sources_df,
-        skyc1_srcs
-    )
+    temp_srcs, sources_df = one_to_many_advanced(temp_srcs, sources_df)
 
     # Finally many-to-one associations, the opposite of above but we
     # don't have to create new ids for these so it's much simpler in fact
     # we don't need to do anything but lets get the number for debugging.
-    duplicated_skyc2 = temp_srcs.loc[
-        temp_srcs['index_old_skyc2'].duplicated(keep=False)
-    ]
-    if duplicated_skyc2.empty:
-        logger.debug('No many-to-one associations.')
-    else:
-        logger.debug(
-            'Detected #%i many-to-one associations',
-            duplicated_skyc2.shape[0]
-        )
+    temp_srcs, sources_df = many_to_one_advanced(temp_srcs, sources_df)
 
     # Now everything in place to append
-
     # First the skyc2 sources with a match.
     # This is created from the temp_srcs df.
     # This will take care of the extra skyc2 sources needed.
