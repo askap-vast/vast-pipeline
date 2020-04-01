@@ -30,7 +30,7 @@ def upload_images(selavy_paths, config, pipeline_run):
             selavy_paths[path],
             config=config
         )
-        logger.info('Reading image %s', image.name)
+        logger.info('Reading image %s ...', image.name)
 
         # 1.1 get/create the frequency band
         band_id = get_create_img_band(image)
@@ -136,7 +136,7 @@ def upload_sources(pipeline_run, srcs_df):
     for idx, row in related_df.iterrows():
         for src_id in row['related_list']:
             try:
-                row['src_dj'].related.add(related_df.at[src_id, 'src_dj'])
+                row['src_dj'].related.add(srcs_df.at[src_id, 'src_dj'])
             except Exception as e:
                 logger.debug('Error in related update:\n%s', e)
                 pass

@@ -722,7 +722,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
             ra=skyc1_srcs['ra'] * u.degree,
             dec=skyc1_srcs['dec'] * u.degree
         )
-        logger.info('Association iteration: #%i complete.', it + 1)
+        logger.info('Association iteration #%i complete.', it + 1)
 
     # End of iteration over images, move to stats calcs and Django
     # association model generation
