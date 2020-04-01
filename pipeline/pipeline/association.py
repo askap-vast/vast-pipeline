@@ -329,8 +329,9 @@ def many_to_many_advanced(temp_srcs):
     This follows the same logic used by the TraP (see TraP documentation).
     '''
     # Select those where the extracted source is listed more than once
-    # and of these get those that have a source id that is listed more
-    # than once in the temps_srcs df
+    # (e.g. index_old_skyc2 duplicated values) and of these get those that
+    # have a source id that is listed more than once (e.g. source_skyc1
+    # duplicated values) in the temps_srcs df
     m_to_m = temp_srcs[(
         temp_srcs['index_old_skyc2'].duplicated(keep=False) &
         temp_srcs['source_skyc1'].duplicated(keep=False)
