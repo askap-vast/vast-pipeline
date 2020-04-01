@@ -7,6 +7,7 @@ from astropy.coordinates import SkyCoord
 from astropy.coordinates import Angle
 from itertools import chain
 
+from .loading import upload_associations, upload_sources
 from .utils import get_or_append_list, prep_skysrc_df
 from ..models import Association, Source
 from ..utils.utils import deg2hms, deg2dms, StopWatch
@@ -105,6 +106,7 @@ def groupby_funcs(row, first_img):
     d.pop('Nsrc')
     # set new source
     d['new'] = False if first_img in row['img'].values else True
+
     # get unique related sources
     list_uniq_related = list(set(
         chain.from_iterable(
@@ -112,6 +114,7 @@ def groupby_funcs(row, first_img):
         )
     ))
     d['related_list'] = list_uniq_related if list_uniq_related else -1
+
     return pd.Series(d)
 
 
@@ -215,9 +218,6 @@ def one_to_many_basic(sources_df, skyc2_srcs):
             sources_to_copy = sources_df.loc[
                 sources_df['source'] == msrc
             ].copy()
-            if (sources_to_copy.shape[0] > 1) and (num_to_add > 1):
-                import ipdb; ipdb.set_trace()  # breakpoint d6c2b080 //
-                pass
             # change source id with new one
             sources_to_copy['source'] = new_id
             # append copies to "sources_df"
@@ -305,9 +305,6 @@ def one_to_many_advanced(temp_srcs, sources_df):
             sources_to_copy = sources_df[
                 sources_df['source'] == msrc
             ].copy()
-            if (sources_to_copy.shape[0] > 1) and (num_to_add > 1):
-                import ipdb; ipdb.set_trace()  # breakpoint ea6697a9 //
-                pass
             # change source id with new one
             sources_to_copy['source'] = new_id
             # append copies of skyc1 to source_df
@@ -427,9 +424,6 @@ def many_to_one_advanced(temp_srcs, sources_df):
             sources_to_copy = sources_df[
                 sources_df['source'] == msrc
             ].copy()
-            if (sources_to_copy.shape[0] > 1) and (num_to_add > 1):
-                import ipdb; ipdb.set_trace()  # breakpoint ea6697a9 //
-                pass
             # change source id with new one
             sources_to_copy['source'] = new_id
             # append copies of skyc1 to source_df
@@ -695,7 +689,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
             })
         )
 
-        logger.debug('groubby concat time %f', stats.reset())
+        logger.debug('Groupby concat time %f', stats.reset())
 
         logger.info(
             'Finalising base sources catalogue ready for next iteration...'
@@ -756,46 +750,15 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
         pipeline_run=p_run,
         axis=1
     )
-    # create sources in DB
-    # TODO remove deleting existing sources
-    if Source.objects.filter(run=p_run).exists():
-        logger.info('removing objects from previous pipeline run')
-        n_del, detail_del = Source.objects.filter(run=p_run).delete()
-        logger.info(
-            ('deleting all sources and related objects for this run. '
-             'Total objects deleted: %i'),
-            n_del,
-        )
-        logger.debug('(type, #deleted): %s', detail_del)
-
-    logger.info('uploading associations to db...')
-    batch_size = 10_000
-    for idx in range(0, srcs_df.src_dj.size, batch_size):
-        out_bulk = Source.objects.bulk_create(
-            srcs_df.src_dj.iloc[idx : idx + batch_size].tolist(),
-            batch_size
-        )
-        logger.info('bulk created #%i sources', len(out_bulk))
-
-    # add source related object in DB
-    logger.info('populate "related" field of sources...')
-    related_df = srcs_df.loc[
-        srcs_df['related_list'] != -1, ['related_list', 'src_dj']
-    ]
-    for idx, row in related_df.iterrows():
-        for src_id in row['related_list']:
-            try:
-                row['src_dj'].related.add(related_df.at[src_id, 'src_dj'])
-            except Exception as e:
-                logger.debug('Error in related update:\n%s', e)
-                pass
+    # upload sources and related to DB
+    upload_sources(p_run, srcs_df)
 
     sources_df = (
         sources_df.drop('related', axis=1)
         .merge(srcs_df.drop('related_list', axis=1), on='source')
         .merge(meas_dj_obj, on='id')
     )
-    del srcs_df, related_df
+    del srcs_df
 
     # Create Associan objects (linking measurements into single sources)
     # and insert in DB
@@ -805,10 +768,5 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
             source=row['src_dj']
         ), axis=1
     )
-    batch_size = 10_000
-    for idx in range(0, sources_df.assoc_dj.size, batch_size):
-        out_bulk = Association.objects.bulk_create(
-            sources_df.assoc_dj.iloc[idx : idx + batch_size].tolist(),
-            batch_size
-        )
-        logger.info('bulk created #%i associations', len(out_bulk))
+    # upload associations in DB
+    upload_associations(sources_df['assoc_dj'])

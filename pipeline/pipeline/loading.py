@@ -5,7 +5,7 @@ import pandas as pd
 from django.db import transaction
 
 from ..image.main import SelavyImage
-from ..models import Measurement
+from ..models import Association, Measurement, Source
 from .utils import (
     get_create_img, get_create_img_band, get_measurement_models
 )
@@ -30,7 +30,7 @@ def upload_images(selavy_paths, config, pipeline_run):
             selavy_paths[path],
             config=config
         )
-        logger.info('read image %s', image.name)
+        logger.info('Reading image %s', image.name)
 
         # 1.1 get/create the frequency band
         band_id = get_create_img_band(image)
@@ -41,7 +41,7 @@ def upload_images(selavy_paths, config, pipeline_run):
         images.append(img)
         if exists_f:
             logger.info(
-                'image %s already processed, grab measurements',
+                'Image %s already processed, grab measurements',
                 img.name
             )
             # grab the measurements and skip to process next image
@@ -66,7 +66,7 @@ def upload_images(selavy_paths, config, pipeline_run):
         )
 
         # do DB bulk create
-        logger.info("Uploading to DB...")
+        logger.info('Uploading to DB...')
         measurements['meas_dj'] = measurements.apply(
             get_measurement_models, axis=1
         )
@@ -78,7 +78,7 @@ def upload_images(selavy_paths, config, pipeline_run):
                 measurements.meas_dj.iloc[idx : idx + batch_size].values.tolist(),
                 batch_size
             )
-            logger.info('bulk uploaded #%i measurements', len(out_bulk))
+            logger.info('Bulk uploaded #%i measurements', len(out_bulk))
 
         # make a columns with the measurement id
         measurements['id'] = measurements.meas_dj.apply(
@@ -99,3 +99,55 @@ def upload_images(selavy_paths, config, pipeline_run):
         del measurements, image, band_id, img, out_bulk
 
     return images, meas_dj_obj
+
+
+@transaction.atomic
+def upload_sources(pipeline_run, srcs_df):
+    '''
+    delete previous sources for given pipeline run and bulk upload
+    new found sources as well as related sources
+    '''
+    # create sources in DB
+    # TODO remove deleting existing sources
+    if Source.objects.filter(run=pipeline_run).exists():
+        logger.info('Removing objects from previous pipeline run')
+        n_del, detail_del = Source.objects.filter(run=pipeline_run).delete()
+        logger.info(
+            ('Deleting all sources and related objects for this run. '
+             'Total objects deleted: %i'),
+            n_del,
+        )
+        logger.debug('(type, #deleted): %s', detail_del)
+
+    logger.info('Uploading associations to db...')
+    batch_size = 10_000
+    for idx in range(0, srcs_df['src_dj'].size, batch_size):
+        out_bulk = Source.objects.bulk_create(
+            srcs_df['src_dj'].iloc[idx : idx + batch_size].tolist(),
+            batch_size
+        )
+        logger.info('Bulk created #%i sources', len(out_bulk))
+
+    # add source related object in DB
+    logger.info('Populate "related" field of sources...')
+    related_df = srcs_df.loc[
+        srcs_df['related_list'] != -1, ['related_list', 'src_dj']
+    ]
+    for idx, row in related_df.iterrows():
+        for src_id in row['related_list']:
+            try:
+                row['src_dj'].related.add(related_df.at[src_id, 'src_dj'])
+            except Exception as e:
+                logger.debug('Error in related update:\n%s', e)
+                pass
+
+
+@transaction.atomic
+def upload_associations(associations_list):
+    batch_size = 10_000
+    for idx in range(0, associations_list.size, batch_size):
+        out_bulk = Association.objects.bulk_create(
+            associations_list.iloc[idx : idx + batch_size].tolist(),
+            batch_size
+        )
+        logger.info('Bulk created #%i associations', len(out_bulk))
