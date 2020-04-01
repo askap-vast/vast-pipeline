@@ -286,7 +286,7 @@ def one_to_many_advanced(temp_srcs, sources_df):
         temp_srcs.loc[idx_to_change, 'source_skyc1'] = new_src_ids
         # populate the 'related' field for skyc1
         # original source with duplicated
-        orig_src = duplicated_skyc1.at[min_dr_idx, 'related_skyc1']
+        orig_src = temp_srcs.at[min_dr_idx, 'related_skyc1']
         if isinstance(orig_src, list):
             temp_srcs.at[min_dr_idx, 'related_skyc1'] = (
                 orig_src + new_src_ids.tolist()
@@ -359,7 +359,7 @@ def many_to_many_advanced(temp_srcs):
     return temp_srcs
 
 
-def many_to_one_advanced(temp_srcs, sources_df):
+def many_to_one_advanced(temp_srcs):
     '''
     Finds and processes the many-to-one associations in the advanced
     association.
@@ -386,59 +386,23 @@ def many_to_one_advanced(temp_srcs, sources_df):
     multi_srcs = duplicated_skyc2['index_old_skyc2'].unique()
     for i, msrc in enumerate(multi_srcs):
         # Make the selection
-        src_selection = duplicated_skyc2['index_old_skyc2'] == msrc
-        # Get the min dr idx
-        min_dr_idx = duplicated_skyc2.loc[src_selection, 'dr'].idxmin()
-        # Select the others
-        idx_to_change = duplicated_skyc2.index.values[
-            (duplicated_skyc2.index.values != min_dr_idx) &
-            src_selection
-        ]
-        # how many new source ids we need to make?
-        num_to_add = idx_to_change.shape[0]
-        # define a start src id for new forks
-        start_src_id = sources_df['source'].values.max() + 1
-        # Define new source ids
-        new_src_ids = np.arange(
-            start_src_id,
-            start_src_id + num_to_add,
-            dtype=int
-        )
-        # Apply the change to the temp sources
-        temp_srcs.loc[idx_to_change, 'source_skyc1'] = new_src_ids
+        src_sel_idx = duplicated_skyc2.loc[
+            duplicated_skyc2['index_old_skyc2'] == msrc
+        ].index
         # populate the 'related' field for skyc1
-        # original source with duplicated
-        orig_src = duplicated_skyc2.at[min_dr_idx, 'related_skyc1']
-        if isinstance(orig_src, list):
-            temp_srcs.at[min_dr_idx, 'related_skyc1'] = (
-                orig_src + new_src_ids.tolist()
-            )
-        else:
-            temp_srcs.at[min_dr_idx, 'related_skyc1'] = new_src_ids.tolist()
-        # other sources with original
-        temp_srcs.loc[idx_to_change, 'related_skyc1'] = temp_srcs.loc[
-            idx_to_change,
-            'related_skyc1'
-        ].apply(get_or_append_list, elem=msrc)
+        for idx in src_sel_idx:
+            related = temp_srcs.loc[
+                src_sel_idx.drop(idx), 'source_skyc1'
+            ].tolist()
+            elem = temp_srcs.at[idx, 'related_skyc1']
+            if isinstance(elem, list):
+                temp_srcs.at[idx, 'related_skyc1'] = (
+                    elem + related
+                )
+            else:
+                temp_srcs.at[idx, 'related_skyc1'] = related
 
-        # Check for generate copies of previous crossmatches and copy
-        # the past source rows ready to append
-        for new_id in new_src_ids:
-            sources_to_copy = sources_df[
-                sources_df['source'] == msrc
-            ].copy()
-            if (sources_to_copy.shape[0] > 1) and (num_to_add > 1):
-                import ipdb; ipdb.set_trace()  # breakpoint ea6697a9 //
-                pass
-            # change source id with new one
-            sources_to_copy['source'] = new_id
-            # append copies of skyc1 to source_df
-            sources_df = sources_df.append(
-                sources_to_copy,
-                ignore_index=True
-            )
-
-    return temp_srcs, sources_df
+    return temp_srcs
 
 
 def basic_association(
@@ -550,7 +514,7 @@ def advanced_association(
     # Finally many-to-one associations, the opposite of above but we
     # don't have to create new ids for these so it's much simpler in fact
     # we don't need to do anything but lets get the number for debugging.
-    temp_srcs, sources_df = many_to_one_advanced(temp_srcs, sources_df)
+    temp_srcs = many_to_one_advanced(temp_srcs)
 
     # Now everything in place to append
     # First the skyc2 sources with a match.
