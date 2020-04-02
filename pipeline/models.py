@@ -182,7 +182,7 @@ class SkyRegion(models.Model):
     z = models.FloatField()
 
     def __str__(self):
-        return f'{self.centre_ra}, {self.centre_dec}'
+        return f'{round(self.centre_ra, 3)}, {round(self.centre_dec, 3)}'
 
 
 class SourceQuerySet(models.QuerySet):
@@ -196,10 +196,10 @@ class SourceQuerySet(models.QuerySet):
         return (
             self.extra(
                 select={
-                    "distance": "q3c_dist(ave_ra, ave_dec, %s, %s) * 3600"
+                    "distance": "q3c_dist(wavg_ra, wavg_dec, %s, %s) * 3600"
                 },
                 select_params=[ra, dec],
-                where=["q3c_radial_query(ave_ra, ave_dec, %s, %s, %s)"],
+                where=["q3c_radial_query(wavg_ra, wavg_dec, %s, %s, %s)"],
                 params=[ra, dec, radius_deg],
             )
             .order_by("distance")
@@ -213,17 +213,40 @@ class Source(models.Model):
         through='CrossMatch',
         through_fields=('source', 'survey_source')
     )
+    related = models.ManyToManyField('self')
 
     name = models.CharField(max_length=100)
     comment = models.TextField(max_length=1000, default='', blank=True)
     new = models.BooleanField(default=False, help_text='New Source')
 
     # average fields calculated from the source measurements
-    ave_ra = models.FloatField()
-    ave_dec = models.FloatField()
-    ave_flux_int = models.FloatField()
-    ave_flux_peak = models.FloatField()
-    max_flux_peak = models.FloatField()
+    wavg_ra = models.FloatField(
+        help_text='The weighted average right ascension (Deg).'
+    )
+    wavg_dec = models.FloatField(
+        help_text='The weighted average declination (Deg).'
+    )
+    wavg_uncertainty_ew = models.FloatField(
+        help_text=(
+            'The weighted average uncertainty in the east-.'
+            'west (RA) direction (Deg).'
+        )
+    )
+    wavg_uncertainty_ns = models.FloatField(
+        help_text=(
+            'The weighted average uncertainty in the north-.'
+            'south (Dec) direction (Deg).'
+        )
+    )
+    avg_flux_int = models.FloatField(
+        help_text='The average integrated flux value.'
+    )
+    avg_flux_peak = models.FloatField(
+        help_text='The average peak flux value.'
+    )
+    max_flux_peak = models.FloatField(
+        help_text='The maximum peak flux value.'
+    )
 
     # metrics
     v_int = models.FloatField(
@@ -402,6 +425,38 @@ class Measurement(models.Model):
     )# Position angle (degrees)
     err_pa = models.FloatField()# Error position angle (degrees)
 
+    # supplied by user via config
+    ew_sys_err = models.FloatField(
+        help_text='Systematic error in east-west (RA) direction (Deg).'
+    )# Systematic error in RA (degrees).
+    # supplied by user via config
+    ns_sys_err = models.FloatField(
+        help_text='Systematic error in north-south (dec) direction (Deg).'
+    )# Systematic error in Dec (degrees).
+
+    # estimate of maximum error radius (from ra_err and dec_err)
+    error_radius = models.FloatField(
+        help_text=(
+            'Estimate of maximum error radius using ra_err'
+            ' and dec_err (Deg).'
+        )
+    )# Used in advanced association.
+
+    # quadratic sum of error_radius and ew_sys_err
+    uncertainty_ew = models.FloatField(
+        help_text=(
+            'Total east-west (RA) uncertainty, quadratic sum of error_radius'
+            ' and ew_sys_err (Deg).'
+        )
+    )# Uncertainty in RA (degrees).
+     # quadratic sum of error_radius and ns_sys_err
+    uncertainty_ns = models.FloatField(
+        help_text=(
+            'Total north-south (Dec) uncertainty, quadratic sum of error_radius'
+            ' and ns_sys_err (Deg).'
+        )
+    )# Uncertainty in Dec (degrees).
+
     flux_int = models.FloatField()# Jy/beam
     flux_int_err = models.FloatField()# Jy/beam
     flux_peak = models.FloatField()# Jy/beam
@@ -494,7 +549,14 @@ class Association(models.Model):
     source = models.ForeignKey(Source, on_delete=models.CASCADE)
     meas = models.ForeignKey(Measurement, on_delete=models.CASCADE)
 
-    probability = models.FloatField(default=1.)  # probability of association
+    d2d = models.FloatField(
+        default=0.,
+        help_text='astronomical distance calculated by Astropy, arcsec.'
+    )
+    dr = models.FloatField(
+        default=0.,
+        help_text='De Roiter radius calculated in advanced association'
+    )
 
     def __str__(self):
         return f'assoc prob: {self.probability:.2%}'

@@ -65,6 +65,13 @@ def load_validate_cfg(cfg):
             f' Choices are {source_finder_names}'
         ))
 
+    association_methods = ['basic', 'advanced']
+    if getattr(mod, 'ASSOCIATION_METHOD') not in association_methods:
+        raise Exception((
+            "ASSOCIATION_METHOD is not valid!"
+            " Must be a value contained in: {}.".format(association_methods)
+        ))
+
     # validate every config from the config template
     for key in [k for k in dir(mod) if k.isupper()]:
         if key not in dir(base_cfg):
