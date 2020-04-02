@@ -231,8 +231,8 @@ class SelavyImage(FitsImage):
         )
 
         # weight calculations to use later
-        df['weight_ew'] = 1./df['uncertainty_ew'].values**2
-        df['weight_ns'] = 1./df['uncertainty_ns'].values**2
+        df['weight_ew'] = 1. / df['uncertainty_ew'].values**2
+        df['weight_ns'] = 1. / df['uncertainty_ns'].values**2
 
         logger.debug('Errors calculation done.')
 
