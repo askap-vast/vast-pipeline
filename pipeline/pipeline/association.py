@@ -766,7 +766,9 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
     sources_df['assoc_dj'] = sources_df.apply(
         lambda row: Association(
             meas=row['meas_dj'],
-            source=row['src_dj']
+            source=row['src_dj'],
+            d2d=row['d2d'],
+            dr=row['dr'],
         ), axis=1
     )
     batch_size = 10_000

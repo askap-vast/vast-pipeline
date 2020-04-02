@@ -510,7 +510,14 @@ class Association(models.Model):
     source = models.ForeignKey(Source, on_delete=models.CASCADE)
     meas = models.ForeignKey(Measurement, on_delete=models.CASCADE)
 
-    probability = models.FloatField(default=1.)  # probability of association
+    d2d = models.FloatField(
+        default=0.,
+        help_text='astronomical distance calculated by Astropy'
+    )
+    dr = models.FloatField(
+        default=0.,
+        help_text='De Roiter radius calculated in advanced association'
+    )
 
     def __str__(self):
         return f'assoc prob: {self.probability:.2%}'
