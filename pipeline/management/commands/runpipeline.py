@@ -4,7 +4,6 @@ import traceback
 
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
-from django.db import transaction
 
 from pipeline.pipeline.main import Pipeline
 from pipeline.pipeline.utils import get_create_p_run
@@ -30,7 +29,6 @@ class Command(BaseCommand):
             help='path to the pipeline run folder'
         )
 
-    @transaction.atomic
     def handle(self, *args, **options):
         # configure logging
         if options['verbosity'] > 1:

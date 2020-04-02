@@ -7,6 +7,7 @@ from astropy.coordinates import SkyCoord
 from astropy.coordinates import Angle
 from itertools import chain
 
+from .loading import upload_associations, upload_sources
 from .utils import get_or_append_list, prep_skysrc_df
 from ..models import Association, Source
 from ..utils.utils import deg2hms, deg2dms, StopWatch
@@ -105,6 +106,7 @@ def groupby_funcs(row, first_img):
     d.pop('Nsrc')
     # set new source
     d['new'] = False if first_img in row['img'].values else True
+
     # get unique related sources
     list_uniq_related = list(set(
         chain.from_iterable(
@@ -112,6 +114,7 @@ def groupby_funcs(row, first_img):
         )
     ))
     d['related_list'] = list_uniq_related if list_uniq_related else -1
+
     return pd.Series(d)
 
 
@@ -326,8 +329,9 @@ def many_to_many_advanced(temp_srcs):
     This follows the same logic used by the TraP (see TraP documentation).
     '''
     # Select those where the extracted source is listed more than once
-    # and of these get those that have a source id that is listed more
-    # than once in the temps_srcs df
+    # (e.g. index_old_skyc2 duplicated values) and of these get those that
+    # have a source id that is listed more than once (e.g. source_skyc1
+    # duplicated values) in the temps_srcs df
     m_to_m = temp_srcs[(
         temp_srcs['index_old_skyc2'].duplicated(keep=False) &
         temp_srcs['source_skyc1'].duplicated(keep=False)
@@ -659,7 +663,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
             })
         )
 
-        logger.debug('groubby concat time %f', stats.reset())
+        logger.debug('Groupby concat time %f', stats.reset())
 
         logger.info(
             'Finalising base sources catalogue ready for next iteration...'
@@ -691,7 +695,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
             ra=skyc1_srcs['ra'] * u.degree,
             dec=skyc1_srcs['dec'] * u.degree
         )
-        logger.info('Association iteration: #%i complete.', it + 1)
+        logger.info('Association iteration #%i complete.', it + 1)
 
     # End of iteration over images, move to stats calcs and Django
     # association model generation
@@ -720,46 +724,15 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
         pipeline_run=p_run,
         axis=1
     )
-    # create sources in DB
-    # TODO remove deleting existing sources
-    if Source.objects.filter(run=p_run).exists():
-        logger.info('removing objects from previous pipeline run')
-        n_del, detail_del = Source.objects.filter(run=p_run).delete()
-        logger.info(
-            ('deleting all sources and related objects for this run. '
-             'Total objects deleted: %i'),
-            n_del,
-        )
-        logger.debug('(type, #deleted): %s', detail_del)
-
-    logger.info('uploading associations to db...')
-    batch_size = 10_000
-    for idx in range(0, srcs_df.src_dj.size, batch_size):
-        out_bulk = Source.objects.bulk_create(
-            srcs_df.src_dj.iloc[idx : idx + batch_size].tolist(),
-            batch_size
-        )
-        logger.info('bulk created #%i sources', len(out_bulk))
-
-    # add source related object in DB
-    logger.info('populate "related" field of sources...')
-    related_df = srcs_df.loc[
-        srcs_df['related_list'] != -1, ['related_list', 'src_dj']
-    ]
-    for idx, row in related_df.iterrows():
-        for src_id in row['related_list']:
-            try:
-                row['src_dj'].related.add(srcs_df.at[src_id, 'src_dj'])
-            except Exception as e:
-                logger.debug('Error in related update:\n%s', e)
-                pass
+    # upload sources and related to DB
+    upload_sources(p_run, srcs_df)
 
     sources_df = (
         sources_df.drop('related', axis=1)
         .merge(srcs_df.drop('related_list', axis=1), on='source')
         .merge(meas_dj_obj, on='id')
     )
-    del srcs_df, related_df
+    del srcs_df
 
     # Create Associan objects (linking measurements into single sources)
     # and insert in DB
@@ -771,10 +744,5 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
             dr=row['dr'],
         ), axis=1
     )
-    batch_size = 10_000
-    for idx in range(0, sources_df.assoc_dj.size, batch_size):
-        out_bulk = Association.objects.bulk_create(
-            sources_df.assoc_dj.iloc[idx : idx + batch_size].tolist(),
-            batch_size
-        )
-        logger.info('bulk created #%i associations', len(out_bulk))
+    # upload associations in DB
+    upload_associations(sources_df['assoc_dj'])
