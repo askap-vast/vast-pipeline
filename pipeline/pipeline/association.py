@@ -748,7 +748,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
     for idx, row in related_df.iterrows():
         for src_id in row['related_list']:
             try:
-                row['src_dj'].related.add(related_df.at[src_id, 'src_dj'])
+                row['src_dj'].related.add(srcs_df.at[src_id, 'src_dj'])
             except Exception as e:
                 logger.debug('Error in related update:\n%s', e)
                 pass
