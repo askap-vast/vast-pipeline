@@ -144,7 +144,7 @@ def one_to_many_basic(sources_df, skyc2_srcs):
     # select duplicated in 'source' field in skyc2_srcs, excluding -1
     duplicated_skyc2 = skyc2_srcs.loc[
         (skyc2_srcs['source'] != -1) &
-        skyc2_srcs.duplicated(subset='source', keep=False),
+        skyc2_srcs['source'].duplicated(keep=False),
         ['source', 'd2d']
     ]
     if duplicated_skyc2.empty:
