@@ -161,6 +161,7 @@ def prep_skysrc_df(image, perc_error, ini_df=False):
     df['dec_source'] = df['dec']
     df['uncertainty_ns_source'] = df['uncertainty_ns']
     df['d2d'] = 0.
+    df['dr'] = 0.
     df['related'] = None
     logger.info('Correcting flux errors with config error setting...')
     for col in ['flux_int', 'flux_peak']:

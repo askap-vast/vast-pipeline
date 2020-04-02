@@ -519,6 +519,7 @@ def advanced_association(
     ].reset_index(drop=True)
     skyc2_srcs_toappend['source'] = temp_srcs['source_skyc1'].values
     skyc2_srcs_toappend['related'] = temp_srcs['related_skyc1'].values
+    skyc2_srcs_toappend['dr'] = temp_srcs['dr'].values
 
     # and get the skyc2 sources with no match
     logger.info(
