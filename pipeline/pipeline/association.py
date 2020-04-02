@@ -563,15 +563,20 @@ def advanced_association(
 
 
 def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
-    method):
+    config):
     '''
     The main association function that does the common tasks between basic
     and advanced modes.
     '''
+    method = config.ASSOCIATION_METHOD
     logger.info('Association mode selected: %s.', method)
 
     # initialise sky source dataframe
-    skyc1_srcs = prep_skysrc_df(images[0], ini_df=True)
+    skyc1_srcs = prep_skysrc_df(
+        images[0],
+        config.FLUX_PERC_ERROR,
+        ini_df=True
+    )
     # create base catalogue
     skyc1 = SkyCoord(
         ra=skyc1_srcs['ra'].values * u.degree,
@@ -583,7 +588,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
     for it, image in enumerate(images[1:]):
         logger.info('Association iteration: #%i', it + 1)
         # load skyc2 source measurements and create SkyCoord
-        skyc2_srcs = prep_skysrc_df(image)
+        skyc2_srcs = prep_skysrc_df(image, config.FLUX_PERC_ERROR)
         skyc2 = SkyCoord(
             ra=skyc2_srcs['ra'].values * u.degree,
             dec=skyc2_srcs['dec'].values * u.degree
