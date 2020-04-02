@@ -215,9 +215,6 @@ def one_to_many_basic(sources_df, skyc2_srcs):
             sources_to_copy = sources_df.loc[
                 sources_df['source'] == msrc
             ].copy()
-            if (sources_to_copy.shape[0] > 1) and (num_to_add > 1):
-                import ipdb; ipdb.set_trace()  # breakpoint d6c2b080 //
-                pass
             # change source id with new one
             sources_to_copy['source'] = new_id
             # append copies to "sources_df"
@@ -305,9 +302,6 @@ def one_to_many_advanced(temp_srcs, sources_df):
             sources_to_copy = sources_df[
                 sources_df['source'] == msrc
             ].copy()
-            if (sources_to_copy.shape[0] > 1) and (num_to_add > 1):
-                import ipdb; ipdb.set_trace()  # breakpoint ea6697a9 //
-                pass
             # change source id with new one
             sources_to_copy['source'] = new_id
             # append copies of skyc1 to source_df
