@@ -62,7 +62,7 @@ class Pipeline():
             limit,
             dr_limit,
             bw_limit,
-            self.config.ASSOCIATION_METHOD,
+            self.config,
         )
 
         # STEP #3: ...

@@ -1,5 +1,6 @@
 import os
 import logging
+import numpy as np
 import pandas as pd
 
 from ..utils.utils import eq_to_cart
@@ -129,7 +130,7 @@ def get_create_p_run(name, path):
     return p_run
 
 
-def prep_skysrc_df(image, ini_df=False):
+def prep_skysrc_df(image, perc_error, ini_df=False):
     '''
     initiliase the source dataframe to use in association logic by
     reading the measurement parquet file and creating columns
@@ -160,7 +161,13 @@ def prep_skysrc_df(image, ini_df=False):
     df['dec_source'] = df['dec']
     df['uncertainty_ns_source'] = df['uncertainty_ns']
     df['d2d'] = 0.
+    df['dr'] = 0.
     df['related'] = None
+    logger.info('Correcting flux errors with config error setting...')
+    for col in ['flux_int', 'flux_peak']:
+        df[f'{col}_err'] = np.hypot(
+            df[f'{col}_err'].values, perc_error * df[col].values
+        )
 
     return df
 

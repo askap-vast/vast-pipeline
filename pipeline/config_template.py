@@ -57,4 +57,4 @@ DEFAULT_SURVEY = None # 'NVSS'
 # Minimum error to apply to all flux measurements. The actual value used will be the measured/
 # reported value or this value, whichever is greater.
 # This is a fraction, 0 = No minimum error
-MIN_ERR_FLUX = 0 #percent 0.05 is 5%
+FLUX_PERC_ERROR = 0 #percent 0.05 is 5%

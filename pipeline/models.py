@@ -220,13 +220,33 @@ class Source(models.Model):
     new = models.BooleanField(default=False, help_text='New Source')
 
     # average fields calculated from the source measurements
-    wavg_ra = models.FloatField()
-    wavg_dec = models.FloatField()
-    wavg_uncertainty_ew = models.FloatField()
-    wavg_uncertainty_ns = models.FloatField()
-    avg_flux_int = models.FloatField()
-    avg_flux_peak = models.FloatField()
-    max_flux_peak = models.FloatField()
+    wavg_ra = models.FloatField(
+        help_text='The weighted average right ascension (Deg).'
+    )
+    wavg_dec = models.FloatField(
+        help_text='The weighted average declination (Deg).'
+    )
+    wavg_uncertainty_ew = models.FloatField(
+        help_text=(
+            'The weighted average uncertainty in the east-.'
+            'west (RA) direction (Deg).'
+        )
+    )
+    wavg_uncertainty_ns = models.FloatField(
+        help_text=(
+            'The weighted average uncertainty in the north-.'
+            'south (Dec) direction (Deg).'
+        )
+    )
+    avg_flux_int = models.FloatField(
+        help_text='The average integrated flux value.'
+    )
+    avg_flux_peak = models.FloatField(
+        help_text='The average peak flux value.'
+    )
+    max_flux_peak = models.FloatField(
+        help_text='The maximum peak flux value.'
+    )
 
     # metrics
     v_int = models.FloatField(
@@ -406,17 +426,36 @@ class Measurement(models.Model):
     err_pa = models.FloatField()# Error position angle (degrees)
 
     # supplied by user via config
-    ew_sys_err = models.FloatField()# Systematic error in RA (degrees).
+    ew_sys_err = models.FloatField(
+        help_text='Systematic error in east-west (RA) direction (Deg).'
+    )# Systematic error in RA (degrees).
     # supplied by user via config
-    ns_sys_err = models.FloatField()# Systematic error in Dec (degrees).
+    ns_sys_err = models.FloatField(
+        help_text='Systematic error in north-south (dec) direction (Deg).'
+    )# Systematic error in Dec (degrees).
 
     # estimate of maximum error radius (from ra_err and dec_err)
-    error_radius = models.FloatField()# Used in advanced association.
+    error_radius = models.FloatField(
+        help_text=(
+            'Estimate of maximum error radius using ra_err'
+            ' and dec_err (Deg).'
+        )
+    )# Used in advanced association.
 
     # quadratic sum of error_radius and ew_sys_err
-    uncertainty_ew = models.FloatField()# Uncertainty in RA (degrees).
+    uncertainty_ew = models.FloatField(
+        help_text=(
+            'Total east-west (RA) uncertainty, quadratic sum of error_radius'
+            ' and ew_sys_err (Deg).'
+        )
+    )# Uncertainty in RA (degrees).
      # quadratic sum of error_radius and ns_sys_err
-    uncertainty_ns = models.FloatField()# Uncertainty in Dec (degrees).
+    uncertainty_ns = models.FloatField(
+        help_text=(
+            'Total north-south (Dec) uncertainty, quadratic sum of error_radius'
+            ' and ns_sys_err (Deg).'
+        )
+    )# Uncertainty in Dec (degrees).
 
     flux_int = models.FloatField()# Jy/beam
     flux_int_err = models.FloatField()# Jy/beam
@@ -510,7 +549,14 @@ class Association(models.Model):
     source = models.ForeignKey(Source, on_delete=models.CASCADE)
     meas = models.ForeignKey(Measurement, on_delete=models.CASCADE)
 
-    probability = models.FloatField(default=1.)  # probability of association
+    d2d = models.FloatField(
+        default=0.,
+        help_text='astronomical distance calculated by Astropy, arcsec.'
+    )
+    dr = models.FloatField(
+        default=0.,
+        help_text='De Roiter radius calculated in advanced association'
+    )
 
     def __str__(self):
         return f'assoc prob: {self.probability:.2%}'

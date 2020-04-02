@@ -147,7 +147,7 @@ def one_to_many_basic(sources_df, skyc2_srcs):
     # select duplicated in 'source' field in skyc2_srcs, excluding -1
     duplicated_skyc2 = skyc2_srcs.loc[
         (skyc2_srcs['source'] != -1) &
-        skyc2_srcs.duplicated(subset='source', keep=False),
+        skyc2_srcs['source'].duplicated(keep=False),
         ['source', 'd2d']
     ]
     if duplicated_skyc2.empty:
@@ -286,7 +286,7 @@ def one_to_many_advanced(temp_srcs, sources_df):
         temp_srcs.loc[idx_to_change, 'source_skyc1'] = new_src_ids
         # populate the 'related' field for skyc1
         # original source with duplicated
-        orig_src = duplicated_skyc1.at[min_dr_idx, 'related_skyc1']
+        orig_src = temp_srcs.at[min_dr_idx, 'related_skyc1']
         if isinstance(orig_src, list):
             temp_srcs.at[min_dr_idx, 'related_skyc1'] = (
                 orig_src + new_src_ids.tolist()
@@ -357,7 +357,7 @@ def many_to_many_advanced(temp_srcs):
     return temp_srcs
 
 
-def many_to_one_advanced(temp_srcs, sources_df):
+def many_to_one_advanced(temp_srcs):
     '''
     Finds and processes the many-to-one associations in the advanced
     association.
@@ -384,56 +384,23 @@ def many_to_one_advanced(temp_srcs, sources_df):
     multi_srcs = duplicated_skyc2['index_old_skyc2'].unique()
     for i, msrc in enumerate(multi_srcs):
         # Make the selection
-        src_selection = duplicated_skyc2['index_old_skyc2'] == msrc
-        # Get the min dr idx
-        min_dr_idx = duplicated_skyc2.loc[src_selection, 'dr'].idxmin()
-        # Select the others
-        idx_to_change = duplicated_skyc2.index.values[
-            (duplicated_skyc2.index.values != min_dr_idx) &
-            src_selection
-        ]
-        # how many new source ids we need to make?
-        num_to_add = idx_to_change.shape[0]
-        # define a start src id for new forks
-        start_src_id = sources_df['source'].values.max() + 1
-        # Define new source ids
-        new_src_ids = np.arange(
-            start_src_id,
-            start_src_id + num_to_add,
-            dtype=int
-        )
-        # Apply the change to the temp sources
-        temp_srcs.loc[idx_to_change, 'source_skyc1'] = new_src_ids
+        src_sel_idx = duplicated_skyc2.loc[
+            duplicated_skyc2['index_old_skyc2'] == msrc
+        ].index
         # populate the 'related' field for skyc1
-        # original source with duplicated
-        orig_src = duplicated_skyc2.at[min_dr_idx, 'related_skyc1']
-        if isinstance(orig_src, list):
-            temp_srcs.at[min_dr_idx, 'related_skyc1'] = (
-                orig_src + new_src_ids.tolist()
-            )
-        else:
-            temp_srcs.at[min_dr_idx, 'related_skyc1'] = new_src_ids.tolist()
-        # other sources with original
-        temp_srcs.loc[idx_to_change, 'related_skyc1'] = temp_srcs.loc[
-            idx_to_change,
-            'related_skyc1'
-        ].apply(get_or_append_list, elem=msrc)
+        for idx in src_sel_idx:
+            related = temp_srcs.loc[
+                src_sel_idx.drop(idx), 'source_skyc1'
+            ].tolist()
+            elem = temp_srcs.at[idx, 'related_skyc1']
+            if isinstance(elem, list):
+                temp_srcs.at[idx, 'related_skyc1'] = (
+                    elem + related
+                )
+            else:
+                temp_srcs.at[idx, 'related_skyc1'] = related
 
-        # Check for generate copies of previous crossmatches and copy
-        # the past source rows ready to append
-        for new_id in new_src_ids:
-            sources_to_copy = sources_df[
-                sources_df['source'] == msrc
-            ].copy()
-            # change source id with new one
-            sources_to_copy['source'] = new_id
-            # append copies of skyc1 to source_df
-            sources_df = sources_df.append(
-                sources_to_copy,
-                ignore_index=True
-            )
-
-    return temp_srcs, sources_df
+    return temp_srcs
 
 
 def basic_association(
@@ -545,7 +512,7 @@ def advanced_association(
     # Finally many-to-one associations, the opposite of above but we
     # don't have to create new ids for these so it's much simpler in fact
     # we don't need to do anything but lets get the number for debugging.
-    temp_srcs, sources_df = many_to_one_advanced(temp_srcs, sources_df)
+    temp_srcs = many_to_one_advanced(temp_srcs)
 
     # Now everything in place to append
     # First the skyc2 sources with a match.
@@ -556,6 +523,7 @@ def advanced_association(
     ].reset_index(drop=True)
     skyc2_srcs_toappend['source'] = temp_srcs['source_skyc1'].values
     skyc2_srcs_toappend['related'] = temp_srcs['related_skyc1'].values
+    skyc2_srcs_toappend['dr'] = temp_srcs['dr'].values
 
     # and get the skyc2 sources with no match
     logger.info(
@@ -594,15 +562,20 @@ def advanced_association(
 
 
 def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
-    method):
+    config):
     '''
     The main association function that does the common tasks between basic
     and advanced modes.
     '''
+    method = config.ASSOCIATION_METHOD
     logger.info('Association mode selected: %s.', method)
 
     # initialise sky source dataframe
-    skyc1_srcs = prep_skysrc_df(images[0], ini_df=True)
+    skyc1_srcs = prep_skysrc_df(
+        images[0],
+        config.FLUX_PERC_ERROR,
+        ini_df=True
+    )
     # create base catalogue
     skyc1 = SkyCoord(
         ra=skyc1_srcs['ra'].values * u.degree,
@@ -614,7 +587,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
     for it, image in enumerate(images[1:]):
         logger.info('Association iteration: #%i', it + 1)
         # load skyc2 source measurements and create SkyCoord
-        skyc2_srcs = prep_skysrc_df(image)
+        skyc2_srcs = prep_skysrc_df(image, config.FLUX_PERC_ERROR)
         skyc2 = SkyCoord(
             ra=skyc2_srcs['ra'].values * u.degree,
             dec=skyc2_srcs['dec'].values * u.degree
@@ -766,7 +739,9 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
     sources_df['assoc_dj'] = sources_df.apply(
         lambda row: Association(
             meas=row['meas_dj'],
-            source=row['src_dj']
+            source=row['src_dj'],
+            d2d=row['d2d'],
+            dr=row['dr'],
         ), axis=1
     )
     # upload associations in DB
