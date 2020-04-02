@@ -512,7 +512,7 @@ class Association(models.Model):
 
     d2d = models.FloatField(
         default=0.,
-        help_text='astronomical distance calculated by Astropy'
+        help_text='astronomical distance calculated by Astropy, arcsec.'
     )
     dr = models.FloatField(
         default=0.,
