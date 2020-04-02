@@ -182,7 +182,7 @@ class SkyRegion(models.Model):
     z = models.FloatField()
 
     def __str__(self):
-        return f'{self.centre_ra}, {self.centre_dec}'
+        return f'{round(self.centre_ra, 3)}, {round(self.centre_dec, 3)}'
 
 
 class SourceQuerySet(models.QuerySet):
@@ -510,7 +510,14 @@ class Association(models.Model):
     source = models.ForeignKey(Source, on_delete=models.CASCADE)
     meas = models.ForeignKey(Measurement, on_delete=models.CASCADE)
 
-    probability = models.FloatField(default=1.)  # probability of association
+    d2d = models.FloatField(
+        default=0.,
+        help_text='astronomical distance calculated by Astropy, arcsec.'
+    )
+    dr = models.FloatField(
+        default=0.,
+        help_text='De Roiter radius calculated in advanced association'
+    )
 
     def __str__(self):
         return f'assoc prob: {self.probability:.2%}'
