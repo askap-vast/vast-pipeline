@@ -1,7 +1,7 @@
 import logging
 import numpy as np
 import pandas as pd
-
+import multiprocessing
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.coordinates import Angle
@@ -77,7 +77,7 @@ def calc_de_ruiter(df):
     return dr
 
 
-def groupby_funcs(row, first_img):
+def groupby_funcs(source, row, first_img):
     '''
     Performs calculations on the unique sources to get the
     lightcurve properties. Works on the grouped by source
@@ -115,7 +115,7 @@ def groupby_funcs(row, first_img):
     ))
     d['related_list'] = list_uniq_related if list_uniq_related else -1
 
-    return pd.Series(d)
+    return pd.Series(d, name=source)
 
 
 def get_source_models(row, pipeline_run=None):
@@ -567,6 +567,12 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
     The main association function that does the common tasks between basic
     and advanced modes.
     '''
+    def groupby_apply_parallel(df_grouped, func, first_img):
+        with multiprocessing.Pool(multiprocessing.cpu_count() - 1) as pool:
+            result = pool.starmap_async(func, [(name, group, first_img) for name, group in df_grouped])
+            result_list = result.get()
+        return pd.DataFrame(result_list)
+
     method = config.ASSOCIATION_METHOD
     logger.info('Association mode selected: %s.', method)
 
@@ -712,9 +718,8 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
         'Calculating statistics for %i sources...',
         sources_df.source.unique().shape[0]
     )
-    srcs_df = sources_df.groupby('source').apply(
-        groupby_funcs, first_img=images[0].name
-    )
+    srcs_df = groupby_apply_parallel(sources_df.groupby('source'), groupby_funcs, images[0].name)
+    srcs_df.index = srcs_df.index.rename("source")
     # fill NaNs as resulted from calculated metrics with 0
     srcs_df = srcs_df.fillna(0.)
 
