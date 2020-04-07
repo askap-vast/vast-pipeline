@@ -718,8 +718,14 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
         'Calculating statistics for %i sources...',
         sources_df.source.unique().shape[0]
     )
-    srcs_df = groupby_apply_parallel(sources_df.groupby('source'), groupby_funcs, images[0].name)
+    stats = StopWatch()
+    srcs_df = groupby_apply_parallel(
+        sources_df.groupby('source'),
+        groupby_funcs,
+        images[0].name
+    )
     srcs_df.index = srcs_df.index.rename("source")
+    logger.info('Groupby-apply time: %.2f', stats.reset())
     # fill NaNs as resulted from calculated metrics with 0
     srcs_df = srcs_df.fillna(0.)
 
