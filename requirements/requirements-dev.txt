@@ -4,3 +4,4 @@ pygraphviz
 ipdb
 ipython
 pip-tools
+tabulate
