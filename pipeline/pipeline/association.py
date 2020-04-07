@@ -719,7 +719,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
     srcs_df_dask = dd.from_pandas(sources_df, n_cpu)
     srcs_df = srcs_df_dask.groupby('source').apply(
         groupby_funcs, first_img=images[0].name
-    ).compute(num_workers=n_cpu)
+    ).compute(num_workers=n_cpu, scheduler='processes')
     logger.info('Groupby-apply time: %.2f', stats.reset())
     # fill NaNs as resulted from calculated metrics with 0
     srcs_df = srcs_df.fillna(0.)
