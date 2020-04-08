@@ -76,21 +76,22 @@ def load_validate_cfg(cfg):
             "ASSOCIATION_METHOD is not valid!"
             " Must be a value contained in: {}.".format(association_methods)
         ))
+
     # validate Forced extraction settings
     if getattr(mod, 'MONITOR') and not(
             getattr(mod, 'BACKGROUND_MAP_FILES') and getattr(mod, 'RMS_FILES')
         ):
-        raise Exception('Expecting list of background map and RMS files!')
+        raise Exception('Expecting list of background MAP and RMS files!')
     else:
         for lst in ['BACKGROUND_MAP_FILES', 'RMS_FILES']:
             for file in getattr(mod, lst):
                 if not os.path.exists(file):
                     raise Exception(f'file:\n{file}\ndo not exists!')
+
     # validate every config from the config template
     for key in [k for k in dir(mod) if k.isupper()]:
         if key not in dir(base_cfg):
             raise Exception(f'configuration not valid, missing key: {key}!')
-
 
     return mod
 

@@ -732,7 +732,6 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
         .merge(srcs_df.drop('related_list', axis=1), on='source')
         .merge(meas_dj_obj, on='id')
     )
-    del srcs_df
 
     # Create Associan objects (linking measurements into single sources)
     # and insert in DB
@@ -746,3 +745,5 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
     )
     # upload associations in DB
     upload_associations(sources_df['assoc_dj'])
+
+    return srcs_df, sources_df

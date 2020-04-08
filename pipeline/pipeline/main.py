@@ -56,7 +56,7 @@ class Pipeline():
         dr_limit = self.config.ASSOCIATION_DE_RUITER_RADIUS
         bw_limit = self.config.ASSOCIATION_BEAMWIDTH_LIMIT
 
-        src_df = association(
+        srcs_df, sources_df = association(
             p_run,
             images,
             meas_dj_obj,
@@ -68,6 +68,6 @@ class Pipeline():
 
         # STEP #3: Run forced extraction/photometry
         if self.config.MONITOR:
-            forced_extraction(src_df)
+            forced_extraction(srcs_df, sources_df)
 
         pass
