@@ -183,3 +183,11 @@ def get_or_append_list(obj_in, elem):
         return out
 
     return [elem]
+
+
+def cross_join(left, right):
+    return (
+        left.assign(key=1)
+        .merge(right.assign(key=1), on='key')
+        .drop('key', axis=1)
+    )
