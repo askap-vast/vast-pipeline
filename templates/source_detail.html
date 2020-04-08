@@ -52,8 +52,8 @@
         </div>
         <div class="card-body">
           <p><strong>Position: </strong>Guest</p>
-          <p><strong>RA: </strong> {{ source.ave_ra }}</p>
-          <p><strong>DEC: </strong> {{ source.ave_dec }}</p>
+          <p><strong>RA: </strong> {{ source.wavg_ra }}</p>
+          <p><strong>DEC: </strong> {{ source.wavg_dec }}</p>
           <p><strong>New Source: </strong> {{ source.new }}</p>
           <p><strong>Nr Datapoints: </strong> {{ source.measurements }}</p>
           <p><strong>Pipeline Run: </strong> <a href="{% url 'pipeline:run_detail' source.run_id %}">{{ source.run_name }}</a></p>

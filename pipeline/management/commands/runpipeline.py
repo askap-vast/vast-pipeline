@@ -4,11 +4,10 @@ import traceback
 
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
-from django.db import transaction
 
 from pipeline.pipeline.main import Pipeline
+from pipeline.pipeline.utils import get_create_p_run
 from pipeline.utils.utils import load_validate_cfg, StopWatch
-from pipeline.models import Run
 
 
 logger = logging.getLogger(__name__)
@@ -30,7 +29,6 @@ class Command(BaseCommand):
             help='path to the pipeline run folder'
         )
 
-    @transaction.atomic
     def handle(self, *args, **options):
         # configure logging
         if options['verbosity'] > 1:
@@ -60,7 +58,7 @@ class Command(BaseCommand):
             raise CommandError(f'Config error:\n{e}')
 
         # Create the pipeline run in DB
-        p_run = self.get_create_p_run(p_run_name, cfg.PIPE_RUN_PATH)
+        p_run = get_create_p_run(p_run_name, cfg.PIPE_RUN_PATH)
 
         logger.info("Source finder: %s", cfg.SOURCE_FINDER)
         logger.info("Using pipeline run '%s'", p_run_name)
@@ -78,15 +76,7 @@ class Command(BaseCommand):
             if options['verbosity'] > 1:
                 traceback.print_exc()
             raise CommandError(f'Processing error:\n{e}')
-        logger.info("total pipeline processing time %.2f sec", stopwatch.reset())
-
-    @staticmethod
-    def get_create_p_run(name, path):
-        p_run = Run.objects.filter(name__exact=name)
-        if p_run:
-            return p_run.get()
-
-        p_run = Run(name=name, path=path)
-        p_run.save()
-
-        return p_run
+        logger.info(
+            'total pipeline processing time %.2f sec',
+            stopwatch.reset()
+        )

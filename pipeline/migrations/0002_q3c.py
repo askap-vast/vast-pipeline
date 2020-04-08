@@ -29,7 +29,7 @@ class Migration(migrations.Migration):
             [],
         ),
         migrations.RunSQL(
-            ["CREATE INDEX ON pipeline_source (q3c_ang2ipix(ave_ra, ave_dec));"],
+            ["CREATE INDEX ON pipeline_source (q3c_ang2ipix(wavg_ra, wavg_dec));"],
             ["DROP INDEX pipeline_source_q3c_ang2ipix_idx;"],
         ),
         migrations.RunSQL(

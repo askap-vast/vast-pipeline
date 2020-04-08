@@ -133,10 +133,10 @@ def SourceIndex(request):
     fields = [
         'name',
         'comment',
-        'ave_ra',
-        'ave_dec',
-        'ave_flux_int',
-        'ave_flux_peak',
+        'wavg_ra',
+        'wavg_dec',
+        'avg_flux_int',
+        'avg_flux_peak',
         'max_flux_peak',
         'measurements',
         'v_int',
@@ -200,7 +200,7 @@ class SourceViewSet(ModelViewSet):
         if p_run:
             qry_dict['run__name'] = p_run
 
-        flux_qry_flds = ['ave_flux_int', 'ave_flux_peak', 'v_int', 'v_peak']
+        flux_qry_flds = ['avg_flux_int', 'avg_flux_peak', 'v_int', 'v_peak']
         for fld in flux_qry_flds:
             for limit in ['max', 'min']:
                 val = self.request.query_params.get(limit + '_' + fld)
@@ -212,17 +212,17 @@ class SourceViewSet(ModelViewSet):
         if measurements:
             qry_dict['measurements'] = measurements
 
-        if self.request.query_params.get('newsrc'):
+        if 'newsrc' in self.request.query_params:
             qry_dict['new'] = True
 
         if qry_dict:
             qs = qs.filter(**qry_dict)
 
         radius = self.request.query_params.get('radius')
-        ave_ra = self.request.query_params.get('ra')
-        ave_dec = self.request.query_params.get('dec')
-        if ave_ra and ave_dec and radius:
-            qs = qs.cone_search(ave_ra, ave_dec, radius)
+        wavg_ra = self.request.query_params.get('ra')
+        wavg_dec = self.request.query_params.get('dec')
+        if wavg_ra and wavg_dec and radius:
+            qs = qs.cone_search(wavg_ra, wavg_dec, radius)
 
         return qs
 
@@ -232,10 +232,10 @@ def SourceQuery(request):
     fields = [
         'name',
         'comment',
-        'ave_ra',
-        'ave_dec',
-        'ave_flux_int',
-        'ave_flux_peak',
+        'wavg_ra',
+        'wavg_dec',
+        'avg_flux_int',
+        'avg_flux_peak',
         'max_flux_peak',
         'measurements',
         'v_int',
@@ -321,10 +321,10 @@ def SourceDetail(request, id, action=None):
         source = source.filter(id=id).annotate(
             run_name=F('run__name')
         ).values().get()
-    source['aladin_ra'] = source['ave_ra']
-    source['aladin_dec'] = source['ave_dec']
-    source['ave_ra'] = deg2hms(source['ave_ra'], hms_format=True)
-    source['ave_dec'] = deg2dms(source['ave_dec'], dms_format=True)
+    source['aladin_ra'] = source['wavg_ra']
+    source['aladin_dec'] = source['wavg_dec']
+    source['wavg_ra'] = deg2hms(source['wavg_ra'], hms_format=True)
+    source['wavg_dec'] = deg2dms(source['wavg_dec'], dms_format=True)
     source['datatable'] = {'colsNames': [
         'Name',
         'Date',

@@ -8,6 +8,8 @@ from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
 
+from .utils import calc_error_radius
+
 from pipeline.survey.translators import tr_selavy
 
 
@@ -92,7 +94,6 @@ class FitsImage(Image):
         # get the time as Julian Datetime using Pandas function
         self.jd = self.datetime.to_julian_date()
 
-
     def __get_img_coordinates(self, header, fits_naxis1, fits_naxis2):
         """
         set the image attributes ra, dec, fov_bmin and fov_bmaj, radius
@@ -158,9 +159,10 @@ class FitsImage(Image):
 class SelavyImage(FitsImage):
     """Fits images that have a selavy catalogue"""
 
-    def __init__(self, path, selavy_path, hdu_index=0):
+    def __init__(self, path, selavy_path, hdu_index=0, config=None):
         # inherit from parent
         self.selavy_path = selavy_path
+        self.config = config
         super().__init__(path, hdu_index)
 
     def read_selavy(self, dj_image):
@@ -208,5 +210,32 @@ class SelavyImage(FitsImage):
             sel = df[col] < settings.POS_DEFAULT_MIN_ERROR
             if sel.any():
                 df.loc[sel, col] = settings.POS_DEFAULT_MIN_ERROR
+            df[col] = df[col] / 3600.
+
+        logger.debug("Calculating errors...")
+        # TODO: avoid extra column given that it is a single value
+        df['ew_sys_err'] = self.config.ASTROMETRIC_UNCERTAINTY_RA / 3600.
+        df['ns_sys_err'] = self.config.ASTROMETRIC_UNCERTAINTY_DEC / 3600.
+
+        df['error_radius'] = calc_error_radius(
+            df['ra'].values,
+            df['ra_err'].values,
+            df['dec'].values,
+            df['dec_err'].values,
+        )
+
+        df['uncertainty_ew'] = np.hypot(
+            df['ew_sys_err'].values, df['error_radius'].values
+        )
+
+        df['uncertainty_ns'] = np.hypot(
+            df['ns_sys_err'].values, df['error_radius'].values
+        )
+
+        # weight calculations to use later
+        df['weight_ew'] = 1. / df['uncertainty_ew'].values**2
+        df['weight_ns'] = 1. / df['uncertainty_ns'].values**2
+
+        logger.debug('Errors calculation done.')
 
         return df

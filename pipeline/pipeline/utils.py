@@ -1,8 +1,10 @@
 import os
 import logging
+import numpy as np
+import pandas as pd
 
 from ..utils.utils import eq_to_cart
-from ..models import Band, Image, SkyRegion, Measurement
+from ..models import Band, Image, Run, SkyRegion, Measurement
 
 
 logger = logging.getLogger(__name__)
@@ -115,3 +117,68 @@ def get_create_img(p_run, band_id, image):
     img.run.add(p_run)
 
     return (img, False)
+
+
+def get_create_p_run(name, path):
+    p_run = Run.objects.filter(name__exact=name)
+    if p_run:
+        return p_run.get()
+
+    p_run = Run(name=name, path=path)
+    p_run.save()
+
+    return p_run
+
+
+def prep_skysrc_df(image, perc_error, ini_df=False):
+    '''
+    initiliase the source dataframe to use in association logic by
+    reading the measurement parquet file and creating columns
+    inputs
+    image: django image model
+    ini_df: flag to initialise source id depending if inital df or not
+    '''
+    cols = [
+    'id',
+    'ra',
+    'uncertainty_ew',
+    'weight_ew',
+    'dec',
+    'uncertainty_ns',
+    'weight_ns',
+    'flux_int',
+    'flux_int_err',
+    'flux_peak',
+    'flux_peak_err'
+    ]
+
+    df = pd.read_parquet(image.measurements_path, columns=cols)
+    df['img'] = image.name
+    # these are the first 'sources'
+    df['source'] = df.index + 1 if ini_df else -1
+    df['ra_source'] = df['ra']
+    df['uncertainty_ew_source'] = df['uncertainty_ew']
+    df['dec_source'] = df['dec']
+    df['uncertainty_ns_source'] = df['uncertainty_ns']
+    df['d2d'] = 0.
+    df['dr'] = 0.
+    df['related'] = None
+    logger.info('Correcting flux errors with config error setting...')
+    for col in ['flux_int', 'flux_peak']:
+        df[f'{col}_err'] = np.hypot(
+            df[f'{col}_err'].values, perc_error * df[col].values
+        )
+
+    return df
+
+
+def get_or_append_list(obj_in, elem):
+    '''
+    return a list with elem in it, if obj_in is list append to it
+    '''
+    if isinstance(obj_in, list):
+        out = obj_in
+        out.append(elem)
+        return out
+
+    return [elem]
