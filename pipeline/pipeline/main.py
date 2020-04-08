@@ -52,7 +52,7 @@ class Pipeline():
             }
 
     def process_pipeline(self, p_run):
-        images, meas_dj_obj = upload_images(
+        img_skyreg_df, meas_dj_obj = upload_images(
             self.img_paths,
             self.config,
             p_run
@@ -64,15 +64,13 @@ class Pipeline():
             pass
 
         # 2.2 Associate with other measurements
-        # order images by time
-        images.sort(key=operator.attrgetter('datetime'))
         limit = Angle(self.config.ASSOCIATION_RADIUS * u.arcsec)
         dr_limit = self.config.ASSOCIATION_DE_RUITER_RADIUS
         bw_limit = self.config.ASSOCIATION_BEAMWIDTH_LIMIT
 
         srcs_df, sources_df = association(
             p_run,
-            images,
+            img_skyreg_df,
             meas_dj_obj,
             limit,
             dr_limit,
@@ -82,6 +80,6 @@ class Pipeline():
 
         # STEP #3: Run forced extraction/photometry
         if self.config.MONITOR:
-            forced_extraction(srcs_df, sources_df)
+            forced_extraction(srcs_df, sources_df, img_skyreg_df)
 
         pass
