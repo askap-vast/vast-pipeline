@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 @transaction.atomic
-def upload_images(selavy_paths, config, pipeline_run):
+def upload_images(paths, config, pipeline_run):
     '''
     carry the first part of the pipeline, by uploading all the images
     to the image table and populated band and skyregion objects
@@ -23,11 +23,11 @@ def upload_images(selavy_paths, config, pipeline_run):
     images = []
     meas_dj_obj = pd.DataFrame()
 
-    for path in selavy_paths:
+    for path in paths['selavy']:
         # STEP #1: Load image and measurements
         image = SelavyImage(
             path,
-            selavy_paths[path],
+            paths['selavy'][path],
             config=config
         )
         logger.info('Reading image %s ...', image.name)
@@ -37,6 +37,17 @@ def upload_images(selavy_paths, config, pipeline_run):
 
         # 1.2 create image and skyregion entry in DB
         img, exists_f = get_create_img(pipeline_run, band_id, image)
+        # add noise and background paths if necessary
+        if config.MONITOR and (
+            img.noise_path == '' or img.background_path == ''
+            ):
+            img.noise_path = paths['noise'][path]
+            img.background_path = paths['background'][path]
+            logger.info(
+                'Updating image model with noise and background paths...'
+            )
+            img.save(update_fields=['noise_path', 'background_path'])
+
         # add image to list
         images.append(img)
         if exists_f:

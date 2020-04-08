@@ -79,11 +79,11 @@ def load_validate_cfg(cfg):
 
     # validate Forced extraction settings
     if getattr(mod, 'MONITOR') and not(
-            getattr(mod, 'BACKGROUND_MAP_FILES') and getattr(mod, 'RMS_FILES')
+            getattr(mod, 'BACKGROUND_FILES') and getattr(mod, 'NOISE_FILES')
         ):
         raise Exception('Expecting list of background MAP and RMS files!')
     else:
-        for lst in ['BACKGROUND_MAP_FILES', 'RMS_FILES']:
+        for lst in ['BACKGROUND_FILES', 'NOISE_FILES']:
             for file in getattr(mod, lst):
                 if not os.path.exists(file):
                     raise Exception(f'file:\n{file}\ndo not exists!')

@@ -18,12 +18,12 @@ SELAVY_FILES = [
 ]
 
 # background map files
-BACKGROUND_MAP_FILES = [
+BACKGROUND_FILES = [
     # insert background map file path(s) here
 ]
 
-# RMS files
-RMS_FILES = [
+# Noise or RMS files
+NOISE_FILES = [
     # insert RMS file path(s) here
 ]
 
