@@ -99,7 +99,7 @@ class ImageViewSet(ModelViewSet):
 
 # Measurements table
 def MeasurementIndex(request):
-    cols = ['name', 'ra', 'dec', 'flux_int', 'flux_peak']
+    cols = ['name', 'ra', 'ra_err', 'dec', 'dec_err', 'flux_int', 'flux_peak']
     return render(
         request,
         'generic_table.html',
@@ -112,7 +112,7 @@ def MeasurementIndex(request):
             'datatable': {
                 'api': '/api/measurements/?format=datatables',
                 'colsFields': [{'data': x} for x in cols],
-                'colsNames': ['Name','RA','DEC', 'Flux', 'Peak Flux'],
+                'colsNames': ['Name','RA', 'RA Error', 'Dec', 'Dec Error', 'Int. Flux (mJy)', 'Peak Flux (mJy/beam)'],
                 'search': True,
             }
         }
@@ -140,8 +140,8 @@ def SourceIndex(request):
         'max_flux_peak',
         'measurements',
         'v_int',
-        'v_peak',
         'eta_int',
+        'v_peak',
         'eta_peak',
         'new'
     ]
@@ -161,8 +161,8 @@ def SourceIndex(request):
         'generic_table.html',
         {
             'text': {
-                'title': 'Light Sources',
-                'description': 'List of all light sources below',
+                'title': 'Sources',
+                'description': 'List of all sources below',
                 'breadcrumb': {'title': 'Sources', 'url': request.path},
             },
             'datatable': {
@@ -171,15 +171,15 @@ def SourceIndex(request):
                 'colsNames': [
                     'Name',
                     'Comment',
-                    'Average RA',
-                    'Average DEC',
-                    'Average Int Flux',
-                    'Average Peak Flux',
-                    'Max Peak Flux',
+                    'W. Avg. RA',
+                    'W. Avg. Dec',
+                    'Avg. Int. Flux (mJy)',
+                    'Avg. Peak Flux (mJy/beam)',
+                    'Max Peak Flux (mJy/beam)',
                     'Datapoints',
                     'V int flux',
-                    'V peak flux',
                     'Eta int flux',
+                    'V peak flux',
                     'Eta peak flux',
                     'New Source',
                 ],
@@ -331,12 +331,12 @@ def SourceDetail(request, id, action=None):
         'Image',
         'RA',
         'RA Error',
-        'DEC',
-        'DEC Error',
-        'Flux (mJy)',
-        'Error Flux (mJy)',
-        'Peak Flux (mJy)',
-        'Error Peak Flux (mJy)',
+        'Dec',
+        'Dec Error',
+        'Int. Flux (mJy)',
+        'Int. Flux Error (mJy)',
+        'Peak Flux (mJy/beam)',
+        'Peak Flux Error (mJy/beam)',
     ]}
 
     # source data
