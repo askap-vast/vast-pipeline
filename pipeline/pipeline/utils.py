@@ -19,10 +19,17 @@ def get_measurement_models(row):
 
 
 def get_create_skyreg(p_run, image):
+    '''
+    This create a Sky Region object in Django ORM given the related
+    image object.
+    '''
+    # In the calculations below, it is assumed the image has square
+    # pixels (this pipeline has been designed for ASKAP images, so it
+    # should always be square). It will likely give wrong results if not
     skyr = SkyRegion.objects.filter(
         centre_ra=image.ra,
         centre_dec=image.dec,
-        xtr_radius=image.radius_pixels
+        xtr_radius=image.fov_bmin
     )
     if skyr:
         skyr = skyr.get()
@@ -36,7 +43,7 @@ def get_create_skyreg(p_run, image):
     skyr = SkyRegion(
         centre_ra=image.ra,
         centre_dec=image.dec,
-        xtr_radius=image.radius_pixels,
+        xtr_radius=image.fov_bmin,
         x=x,
         y=y,
         z=z,
