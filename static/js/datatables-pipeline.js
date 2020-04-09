@@ -41,10 +41,10 @@ $(document).ready(function() {
       hover: true,
       serverSide: false,
       data: dataSet,
+      order: dataConf.order,
     };
   };
   var table = $('#dataTable').DataTable(dataTableConf);
-  table.order( [ 1, 'asc' ] ).draw();
 
   // Trigger the update search on the datatable
   $("#catalogSearch").on('click', function(e) {

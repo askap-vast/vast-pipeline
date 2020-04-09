@@ -381,6 +381,7 @@ def SourceDetail(request, id, action=None):
             'flux_peak_err',
         ],
         'search': True,
+        'order': [1, 'asc']
     }
     for i,val in enumerate(measurements['dataQuery']):
         for j in ['ra', 'dec', 'ra_err', 'dec_err']:
