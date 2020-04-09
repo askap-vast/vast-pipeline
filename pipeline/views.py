@@ -382,5 +382,10 @@ def SourceDetail(request, id, action=None):
         ],
         'search': True,
     }
+    for i,val in enumerate(measurements['dataQuery']):
+        for j in ['ra', 'dec', 'ra_err', 'dec_err']:
+            measurements['dataQuery'][i][j] = "{:.4f}".format(val[j])
+        for j in ['flux_int', 'flux_int_err', 'flux_peak', 'flux_peak_err']:
+            measurements['dataQuery'][i][j] = "{:.3f}".format(val[j])
     context = {'source': source, 'measurements': measurements}
     return render(request, 'source_detail.html', context)

@@ -38,7 +38,16 @@ class MeasurementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Measurement
-        fields = ['id', 'name', 'ra', 'ra_err', 'dec', 'dec_err', 'flux_int', 'flux_peak']
+        fields = [
+            'id',
+            'name',
+            'ra',
+            'ra_err',
+            'dec',
+            'dec_err',
+            'flux_int',
+            'flux_peak'
+        ]
         datatables_always_serialize = ('id',)
 
     def get_ra(self, measurement):
@@ -79,22 +88,22 @@ class SourceSerializer(serializers.ModelSerializer):
         return deg2dms(source.wavg_dec, dms_format=True)
 
     def get_v_int(self, source):
-        return round(source.v_int, 2)
+        return "{:.2f}".format(source.v_int)
 
     def get_eta_int(self, source):
-        return round(source.v_int, 2)
+        return "{:.2f}".format(source.eta_int)
 
     def get_v_peak(self, source):
-        return round(source.v_int, 2)
+        return "{:.2f}".format(source.v_peak)
 
     def get_eta_peak(self, source):
-        return round(source.v_int, 2)
+        return "{:.2f}".format(source.eta_peak)
 
     def get_avg_flux_int(self, source):
-        return round(source.avg_flux_int, 3)
+        return "{:.3f}".format(source.avg_flux_int)
 
     def get_avg_flux_peak(self, source):
-        return round(source.avg_flux_peak, 3)
+        return "{:.3f}".format(source.avg_flux_peak)
 
     def get_max_flux_peak(self, source):
-        return round(source.max_flux_peak, 3)
+        return "{:.3f}".format(source.max_flux_peak)
