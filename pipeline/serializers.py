@@ -31,10 +31,6 @@ class ImageSerializer(serializers.ModelSerializer):
 
 class MeasurementSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
-    ra = serializers.SerializerMethodField()
-    ra_err = serializers.SerializerMethodField()
-    dec = serializers.SerializerMethodField()
-    dec_err = serializers.SerializerMethodField()
 
     class Meta:
         model = Measurement
@@ -43,24 +39,14 @@ class MeasurementSerializer(serializers.ModelSerializer):
             'name',
             'ra',
             'ra_err',
+            'uncertainty_ew',
             'dec',
             'dec_err',
+            'uncertainty_ns',
             'flux_int',
             'flux_peak'
         ]
         datatables_always_serialize = ('id',)
-
-    def get_ra(self, measurement):
-        return "{:.4f}".format(measurement.ra)
-
-    def get_ra_err(self, measurement):
-        return "{:.5f}".format(measurement.ra_err)
-
-    def get_dec(self, measurement):
-        return "{:.4f}".format(measurement.dec)
-
-    def get_dec_err(self, measurement):
-        return "{:.5f}".format(measurement.dec_err)
 
 
 class SourceSerializer(serializers.ModelSerializer):
@@ -68,13 +54,6 @@ class SourceSerializer(serializers.ModelSerializer):
     measurements = serializers.IntegerField(read_only=True)
     wavg_ra = serializers.SerializerMethodField()
     wavg_dec = serializers.SerializerMethodField()
-    v_int = serializers.SerializerMethodField()
-    v_peak = serializers.SerializerMethodField()
-    eta_int = serializers.SerializerMethodField()
-    eta_peak = serializers.SerializerMethodField()
-    avg_flux_int = serializers.SerializerMethodField()
-    avg_flux_peak = serializers.SerializerMethodField()
-    max_flux_peak = serializers.SerializerMethodField()
 
     class Meta:
         model = Source
@@ -86,24 +65,3 @@ class SourceSerializer(serializers.ModelSerializer):
 
     def get_wavg_dec(self, source):
         return deg2dms(source.wavg_dec, dms_format=True)
-
-    def get_v_int(self, source):
-        return "{:.2f}".format(source.v_int)
-
-    def get_eta_int(self, source):
-        return "{:.2f}".format(source.eta_int)
-
-    def get_v_peak(self, source):
-        return "{:.2f}".format(source.v_peak)
-
-    def get_eta_peak(self, source):
-        return "{:.2f}".format(source.eta_peak)
-
-    def get_avg_flux_int(self, source):
-        return "{:.3f}".format(source.avg_flux_int)
-
-    def get_avg_flux_peak(self, source):
-        return "{:.3f}".format(source.avg_flux_peak)
-
-    def get_max_flux_peak(self, source):
-        return "{:.3f}".format(source.max_flux_peak)

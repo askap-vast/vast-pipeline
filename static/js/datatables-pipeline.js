@@ -6,11 +6,24 @@ $(document).ready(function() {
     let testFields = dataConf.colsFields;
     testFields.forEach( function(obj) {
       if (obj.hasOwnProperty('render')) {
-        let [prefix, col] = [obj.render.prefix, obj.render.col];
-        let hrefValue = function(data, type, row, meta) {
-          return '<a href="' + prefix + row.id + '"target=_blank">' + row[col] + '</a>';
-        };
-        obj.render = hrefValue;
+          if (obj.render.hasOwnProperty('url')) {
+              let [prefix, col] = [obj.render.url.prefix, obj.render.url.col];
+              let hrefValue = function(data, type, row, meta) {
+                  return '<a href="' + prefix + row.id + '"target=_blank">' + row[col] + '</a>';
+              };
+              obj.render = hrefValue;
+          } else if (obj.render.hasOwnProperty('float')) {
+              let [precision, scale, col] = [
+                  obj.render.float.precision,
+                  obj.render.float.scale,
+                  obj.render.float.col
+              ];
+              let floatFormat = function(data, type, row, meta) {
+                  return (row[col] * scale).toFixed(precision);
+              };
+              obj.render = floatFormat;
+              // obj.render = $.fn.dataTable.render.number( ',', '.', precision );
+          };
       }
     });
     var dataTableConf = {

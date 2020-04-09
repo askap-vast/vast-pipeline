@@ -99,7 +99,75 @@ class ImageViewSet(ModelViewSet):
 
 # Measurements table
 def MeasurementIndex(request):
-    cols = ['name', 'ra', 'ra_err', 'dec', 'dec_err', 'flux_int', 'flux_peak']
+    fields = [
+        'name',
+        'ra',
+        'ra_err',
+        'uncertainty_ew',
+        'dec',
+        'dec_err',
+        'uncertainty_ns',
+        'flux_int',
+        'flux_peak'
+    ]
+    colsfields = []
+    float_fields = {
+        'ra': {
+            'precision': 4,
+            'scale': 1,
+        },
+        'ra_err': {
+            'precision': 4,
+            'scale': 3600.,
+        },
+        'uncertainty_ew': {
+            'precision': 4,
+            'scale': 3600.,
+        },
+        'dec': {
+            'precision': 4,
+            'scale': 1,
+        },
+        'dec_err': {
+            'precision': 4,
+            'scale': 3600,
+        },
+        'uncertainty_ns': {
+            'precision': 4,
+            'scale': 3600.,
+        },
+        'flux_int': {
+            'precision': 2,
+            'scale': 1,
+        },
+        'flux_peak': {
+            'precision': 2,
+            'scale': 1,
+        },
+    }
+    for col in fields:
+        if col == 'name':
+            colsfields.append({
+                'data': col, 'render': {
+                    'url': {
+                        'prefix': '/measurements/',
+                        'col': 'name'
+                    }
+                }
+            })
+        elif col in float_fields:
+            colsfields.append({
+                'data': col,
+                'render': {
+                    'float': {
+                        'col': col,
+                        'precision': float_fields[col]['precision'],
+                        'scale': float_fields[col]['scale'],
+                    }
+                }
+            })
+        else:
+            colsfields.append({'data': col})
     return render(
         request,
         'generic_table.html',
@@ -111,8 +179,18 @@ def MeasurementIndex(request):
             },
             'datatable': {
                 'api': '/api/measurements/?format=datatables',
-                'colsFields': [{'data': x} for x in cols],
-                'colsNames': ['Name','RA', 'RA Error', 'Dec', 'Dec Error', 'Int. Flux (mJy)', 'Peak Flux (mJy/beam)'],
+                'colsFields': colsfields,
+                'colsNames': [
+                    'Name',
+                    'RA (deg)',
+                    'RA Error (arcsec)',
+                    'Uncertainty EW (arcsec)',
+                    'Dec (deg)',
+                    'Dec Error (arcsec)',
+                    'Uncertainty NS (arcsec)',
+                    'Int. Flux (mJy)',
+                    'Peak Flux (mJy/beam)'
+                ],
                 'search': True,
             }
         }
@@ -145,16 +223,61 @@ def SourceIndex(request):
         'eta_peak',
         'new'
     ]
+    float_fields = {
+        'v_int': {
+            'precision': 2,
+            'scale': 1,
+        },
+        'eta_int': {
+            'precision': 2,
+            'scale': 1,
+        },
+        'v_peak': {
+            'precision': 2,
+            'scale': 1,
+        },
+        'eta_peak': {
+            'precision': 2,
+            'scale': 1,
+        },
+        'avg_flux_int': {
+            'precision': 3,
+            'scale': 1,
+        },
+        'avg_flux_peak': {
+            'precision': 3,
+            'scale': 1,
+        },
+        'max_flux_peak': {
+            'precision': 3,
+            'scale': 1,
+        },
+    }
     colsfields = []
     for col in fields:
         if col == 'name':
             colsfields.append({
                 'data': col, 'render': {
-                    'prefix': '/sources/', 'col':'name'
+                    'url': {
+                        'prefix': '/sources/',
+                        'col': 'name'
+                    }
+                }
+            })
+        elif col in float_fields:
+            colsfields.append({
+                'data': col,
+                'render': {
+                    'float': {
+                        'col': col,
+                        'precision': float_fields[col]['precision'],
+                        'scale': float_fields[col]['scale'],
+                    }
                 }
             })
         else:
             colsfields.append({'data': col})
+
 
     return render(
         request,
@@ -178,9 +301,9 @@ def SourceIndex(request):
                     'Max Peak Flux (mJy/beam)',
                     'Datapoints',
                     'V int flux',
-                    'Eta int flux',
+                    '\u03B7 int flux',
                     'V peak flux',
-                    'Eta peak flux',
+                    '\u03B7 peak flux',
                     'New Source',
                 ],
                 'search': False,
@@ -239,17 +362,61 @@ def SourceQuery(request):
         'max_flux_peak',
         'measurements',
         'v_int',
-        'v_peak',
         'eta_int',
+        'v_peak',
         'eta_peak',
         'new'
     ]
+    float_fields = {
+        'v_int': {
+            'precision': 2,
+            'scale': 1,
+        },
+        'eta_int': {
+            'precision': 2,
+            'scale': 1,
+        },
+        'v_peak': {
+            'precision': 2,
+            'scale': 1,
+        },
+        'eta_peak': {
+            'precision': 2,
+            'scale': 1,
+        },
+        'avg_flux_int': {
+            'precision': 3,
+            'scale': 1,
+        },
+        'avg_flux_peak': {
+            'precision': 3,
+            'scale': 1,
+        },
+        'max_flux_peak': {
+            'precision': 3,
+            'scale': 1,
+        },
+    }
     colsfields = []
     for col in fields:
         if col == 'name':
             colsfields.append({
                 'data': col, 'render': {
-                    'prefix': '/sources/', 'col':'name'
+                    'url': {
+                        'prefix': '/sources/',
+                        'col':'name'
+                    }
+                }
+            })
+        elif col in float_fields:
+            colsfields.append({
+                'data': col,
+                'render': {
+                    'float': {
+                        'col': col,
+                        'precision': float_fields[col]['precision'],
+                        'scale': float_fields[col]['scale'],
+                    }
                 }
             })
         else:
@@ -274,16 +441,16 @@ def SourceQuery(request):
                 'colsNames': [
                     'Name',
                     'Comment',
-                    'Average RA',
-                    'Average DEC',
-                    'Average Int Flux',
-                    'Average Peak Flux',
-                    'Max Peak Flux',
+                    'W. Avg. RA',
+                    'W. Avg. Dec',
+                    'Avg. Int. Flux (mJy)',
+                    'Avg. Peak Flux (mJy/beam)',
+                    'Max Peak Flux (mJy/beam)',
                     'Datapoints',
                     'V int flux',
+                    '\u03B7 int flux',
                     'V peak flux',
-                    'Eta int flux',
-                    'Eta peak flux',
+                    '\u03B7 peak flux',
                     'New Source',
                 ],
                 'search': False,
@@ -383,10 +550,61 @@ def SourceDetail(request, id, action=None):
         'search': True,
         'order': [1, 'asc']
     }
+
     for i,val in enumerate(measurements['dataQuery']):
         for j in ['ra', 'dec', 'ra_err', 'dec_err']:
             measurements['dataQuery'][i][j] = "{:.4f}".format(val[j])
         for j in ['flux_int', 'flux_int_err', 'flux_peak', 'flux_peak_err']:
             measurements['dataQuery'][i][j] = "{:.3f}".format(val[j])
+
+    print(measurements)
     context = {'source': source, 'measurements': measurements}
     return render(request, 'source_detail.html', context)
+
+
+def MeasurementDetail(request, id, action=None):
+    # source data
+    measurement = Measurement.objects.all()
+    if action:
+        if action == 'next':
+            msr = measurement.filter(id__gt=id)
+            if msr.exists():
+                measurement = msr.annotate(
+                    datetime=F('image__datetime'),
+                    image_name=F('image__name'),
+                ).values().first()
+            else:
+                measurement = measurement.filter(id=id).annotate(
+                    datetime=F('image__datetime'),
+                    image_name=F('image__name'),
+                ).values().get()
+        elif action == 'prev':
+            msr = measurement.filter(id__lt=id)
+            if msr.exists():
+                measurement = msr.annotate(
+                    datetime=F('image__datetime'),
+                    image_name=F('image__name'),
+                ).values().last()
+            else:
+                measurement = measurement.filter(id=id).annotate(
+                    datetime=F('image__datetime'),
+                    image_name=F('image__name'),
+                ).values().get()
+    else:
+        measurement = measurement.filter(id=id).annotate(
+            datetime=F('image__datetime'),
+            image_name=F('image__name'),
+        ).values().get()
+
+    measurement['aladin_ra'] = measurement['ra']
+    measurement['aladin_dec'] = measurement['dec']
+    measurement['ra'] = deg2hms(measurement['ra'], hms_format=True)
+    measurement['dec'] = deg2dms(measurement['dec'], dms_format=True)
+
+    measurement['datetime'] = measurement['datetime'].isoformat()
+
+    # add source count
+    # add the data for the datatable api
+
+    context = {'measurement': measurement}
+    return render(request, 'measurement_detail.html', context)
