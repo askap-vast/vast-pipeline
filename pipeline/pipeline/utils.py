@@ -22,7 +22,7 @@ def get_create_skyreg(p_run, image):
     skyr = SkyRegion.objects.filter(
         centre_ra=image.ra,
         centre_dec=image.dec,
-        xtr_radius=image.radius_pixels
+        xtr_radius=image.fov_bmin
     )
     if skyr:
         skyr = skyr.get()
@@ -36,7 +36,7 @@ def get_create_skyreg(p_run, image):
     skyr = SkyRegion(
         centre_ra=image.ra,
         centre_dec=image.dec,
-        xtr_radius=image.radius_pixels,
+        xtr_radius=image.fov_bmin,
         x=x,
         y=y,
         z=z,
