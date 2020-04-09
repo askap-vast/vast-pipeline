@@ -80,6 +80,6 @@ class Pipeline():
 
         # STEP #3: Run forced extraction/photometry
         if self.config.MONITOR:
-            forced_extraction(srcs_df, sources_df, img_skyreg_df)
+            forced_extraction(srcs_df, sources_df)
 
         pass

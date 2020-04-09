@@ -1,8 +1,10 @@
 import logging
+import numpy as np
 import pandas as pd
 
-from .utils import cartesian_product
+from .utils import cross_join
 from pipeline.models import Image
+from pipeline.image.utils import on_sky_sep
 
 
 logger = logging.getLogger(__name__)
@@ -14,10 +16,10 @@ def forced_extraction(srcs_df, sources_df):
     related source(s)
     """
     # get all the skyregions and related images
-    cols = list(
+    cols = [
         'name', 'skyreg__centre_ra','skyreg__centre_dec',
         'skyreg__xtr_radius'
-    )
+    ]
     skyreg_df = pd.DataFrame(list(
         Image.objects.select_related('skyreg').values(*tuple(cols))
     ))
@@ -25,17 +27,33 @@ def forced_extraction(srcs_df, sources_df):
         skyreg_df.groupby(skyreg_df.columns.drop('name').values.tolist())
         .agg(lambda group: group.values.ravel().tolist())
         .reset_index()
+        .rename(columns={'name':'img_list'})
     )
+    skyreg_df.columns = [
+        x.replace('skyreg__', '') for x in skyreg_df.columns.values
+    ]
 
 
     # create dataframe with all skyregions and sources combinations
-    combos = cross_join(srcs_df.reset_index(), skyreg_df)
-    combos['sep'] = on_sky_sep(
-        combos['wavg_ra'].values,
-        combos['centre_ra'].values,
-        combos['wavg_dec'].values,
-        combos['centre_dec'].values,
+    cols = [
+        'wavg_uncertainty_ew', 'wavg_uncertainty_ns', 'avg_flux_int',
+        'avg_flux_peak', 'max_flux_peak', 'v_int', 'v_peak', 'eta_int',
+        'eta_peak', 'new', 'related_list'
+    ]
+    src_skyrg_df = cross_join(
+        (
+            srcs_df.drop(cols, axis=1)
+            .reset_index()
+        ),
+        skyreg_df
     )
-    import ipdb; ipdb.set_trace()  # breakpoint cfd8cd8a //
+    src_skyrg_df['sep'] = np.rad2deg(
+        on_sky_sep(
+            np.deg2rad(src_skyrg_df['wavg_ra'].values),
+            np.deg2rad(src_skyrg_df['centre_ra'].values),
+            np.deg2rad(src_skyrg_df['wavg_dec'].values),
+            np.deg2rad(src_skyrg_df['centre_dec'].values),
+        )
+    )
 
     pass
