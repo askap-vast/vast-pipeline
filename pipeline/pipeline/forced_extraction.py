@@ -1,5 +1,3 @@
-# import faulthandler; faulthandler.enable()
-
 import logging
 import numpy as np
 import pandas as pd
@@ -27,7 +25,7 @@ def forced_extraction(srcs_df, sources_df):
     ))
     skyreg_df = (
         skyreg_df.groupby(skyreg_df.columns.drop('name').values.tolist())
-        .agg(lambda group: [group.values.ravel()])
+        .agg(lambda group: group.values.ravel().tolist())
         .reset_index()
         .rename(columns={'name':'img_list'})
     )
@@ -66,10 +64,11 @@ def forced_extraction(srcs_df, sources_df):
             src_skyrg_df['sep'] < src_skyrg_df['xtr_radius'],
             ['source', 'img_list']
         ]
-        # .set_index('source')
-        # .groupby('source')
-        # .agg(lambda group: group.values.ravel().unique().tolist())
+        .set_index('source')
+        .groupby('source')
+        .agg(lambda group: list(
+            set(sum(group.values.ravel().tolist(), []))
+        ))
     )
-    import pdb; pdb.set_trace()  # breakpoint 25334aa5 //
 
     pass
