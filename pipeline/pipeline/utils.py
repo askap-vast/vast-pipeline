@@ -92,7 +92,7 @@ def get_create_img(p_run, band_id, image):
         ).exists():
             img.run.add(p_run)
 
-        return (img, skyreg, True)
+        return (img, True)
 
     # at this stage measurement parquet file not created but assume location
     img_folder_name = '_'.join([
@@ -123,7 +123,7 @@ def get_create_img(p_run, band_id, image):
     img.save()
     img.run.add(p_run)
 
-    return (img, skyreg, False)
+    return (img, False)
 
 
 def get_create_p_run(name, path):
@@ -137,7 +137,7 @@ def get_create_p_run(name, path):
     return p_run
 
 
-def prep_skysrc_df(image, skyregion, perc_error, ini_df=False):
+def prep_skysrc_df(image, perc_error, ini_df=False):
     '''
     initiliase the source dataframe to use in association logic by
     reading the measurement parquet file and creating columns
@@ -160,8 +160,7 @@ def prep_skysrc_df(image, skyregion, perc_error, ini_df=False):
     ]
 
     df = pd.read_parquet(image.measurements_path, columns=cols)
-    df['img'] = image
-    df['skyreg'] = skyregion
+    df['img'] = image.name
     # these are the first 'sources'
     df['source'] = df.index + 1 if ini_df else -1
     df['ra_source'] = df['ra']

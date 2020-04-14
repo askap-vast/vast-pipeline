@@ -20,9 +20,7 @@ def upload_images(paths, config, pipeline_run):
     carry the first part of the pipeline, by uploading all the images
     to the image table and populated band and skyregion objects
     '''
-    img_skyrg_df = pd.DataFrame(
-        columns=['image', 'datetime', 'skyregion']
-    )
+    images = []
     meas_dj_obj = pd.DataFrame()
 
     for path in paths['selavy']:
@@ -38,7 +36,7 @@ def upload_images(paths, config, pipeline_run):
         band_id = get_create_img_band(image)
 
         # 1.2 create image and skyregion entry in DB
-        img, skyreg, exists_f = get_create_img(pipeline_run, band_id, image)
+        img, exists_f = get_create_img(pipeline_run, band_id, image)
         # add noise and background paths if necessary
         if config.MONITOR and (
             img.noise_path == '' or img.background_path == ''
@@ -50,10 +48,8 @@ def upload_images(paths, config, pipeline_run):
             )
             img.save(update_fields=['noise_path', 'background_path'])
 
-        # add image to dataframe
-        img_skyrg_df = img_skyrg_df.append([{
-            'image': img, 'datetime': img.datetime, 'skyregion': skyreg
-        }])
+        # add image to list
+        images.append(img)
         if exists_f:
             logger.info(
                 'Image %s already processed, grab measurements',
@@ -113,7 +109,7 @@ def upload_images(paths, config, pipeline_run):
         )
         del measurements, image, band_id, img, out_bulk
 
-    return img_skyrg_df.sort_values('datetime'), meas_dj_obj
+    return images, meas_dj_obj
 
 
 @transaction.atomic
