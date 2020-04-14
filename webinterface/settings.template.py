@@ -67,6 +67,9 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'libraries': {
+                'unit_tags': 'pipeline.utils.unit_tags'
+            }
         },
     },
 ]

@@ -2,6 +2,8 @@
 
 {% load static %}
 
+{% load unit_tags %}
+
 {% block head %}
 
 <link rel='stylesheet' href='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css' />
@@ -66,6 +68,18 @@
           <p><strong>Position: </strong>Guest</p>
           <p><strong>RA: </strong> {{ measurement.ra }}</p>
           <p><strong>DEC: </strong> {{ measurement.dec }}</p>
+          <p><strong>Uncertainty EW: </strong> {{ measurement.uncertainty_ew|deg_to_arcsec|floatformat:3 }}''</p>
+          <p><strong>Uncertainty NS: </strong> {{ measurement.uncertainty_ns|deg_to_arcsec|floatformat:3 }}''</p>
+          <p><strong>BMAJ: </strong> {{ measurement.bmaj }}''</p>
+          <p><strong>BMIN: </strong> {{ measurement.bmin }}''</p>
+          <p><strong>BPA: </strong> {{ measurement.pa }}</p>
+          <p><strong>Has siblings: </strong> {{ measurement.has_siblings }}</p>
+          {% if measurement.has_siblings  == True %}
+          <p><strong>Island ID: </strong> {{ measurement.island_id }}</p>
+          {% else %}
+          <p><strong>Island ID: </strong> N/A</p>
+          {% endif %}
+          <p><strong>flag_c4: </strong> {{ measurement.flag_c4 }}</p>
           <p><strong>Comment: </strong> {{ measurement.comment }}</p>
         </div>
       </div>

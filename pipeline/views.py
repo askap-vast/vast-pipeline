@@ -22,7 +22,9 @@ def RunIndex(request):
         if col == 'name':
             colsfields.append({
                 'data': col, 'render': {
-                    'prefix': '/piperuns/', 'col':'name'
+                    'url': {
+                        'prefix': '/piperuns/', 'col':'name'
+                    }
                 }
             })
         else:
@@ -564,10 +566,11 @@ def SourceDetail(request, id, action=None):
 
 def MeasurementDetail(request, id, action=None):
     # source data
-    measurement = Measurement.objects.all()
+    measurement = Measurement.objects.all().order_by('id')
     if action:
         if action == 'next':
             msr = measurement.filter(id__gt=id)
+            print(msr)
             if msr.exists():
                 measurement = msr.annotate(
                     datetime=F('image__datetime'),
