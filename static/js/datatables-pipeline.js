@@ -142,7 +142,7 @@ $(document).ready(function() {
                 }
             },
             {
-                "targets": 12,
+                "targets": 13,
                 "searchable": false,
                 "visible": false
             },

@@ -44,7 +44,8 @@ class MeasurementSerializer(serializers.ModelSerializer):
             'dec_err',
             'uncertainty_ns',
             'flux_int',
-            'flux_peak'
+            'flux_peak',
+            'has_siblings',
         ]
         datatables_always_serialize = ('id',)
 

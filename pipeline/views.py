@@ -297,7 +297,8 @@ def MeasurementIndex(request):
         'dec_err',
         'uncertainty_ns',
         'flux_int',
-        'flux_peak'
+        'flux_peak',
+        'has_siblings'
     ]
 
     colsfields = generate_colsfields(fields, '/measurements/')
@@ -323,7 +324,8 @@ def MeasurementIndex(request):
                     'Dec Error (arcsec)',
                     'Uncertainty NS (arcsec)',
                     'Int. Flux (mJy)',
-                    'Peak Flux (mJy/beam)'
+                    'Peak Flux (mJy/beam)',
+                    'Has siblings'
                 ],
                 'search': True,
             }
@@ -581,6 +583,7 @@ def SourceDetail(request, id, action=None):
         'Int. Flux Error (mJy)',
         'Peak Flux (mJy/beam)',
         'Peak Flux Error (mJy/beam)',
+        'Has siblings',
         'Image ID'
     ]}
 
@@ -596,6 +599,7 @@ def SourceDetail(request, id, action=None):
         'flux_int_err',
         'flux_peak',
         'flux_peak_err',
+        'has_siblings',
         'datetime',
         'image_name',
         'image_id'
@@ -628,6 +632,7 @@ def SourceDetail(request, id, action=None):
             'flux_int_err',
             'flux_peak',
             'flux_peak_err',
+            'has_siblings',
             'image_id'
         ],
         'search': True,

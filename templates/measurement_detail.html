@@ -65,7 +65,7 @@
           <h6 class="m-0 font-weight-bold text-primary">Details</h6>
         </div>
         <div class="card-body">
-          <p><strong>Position: </strong>Guest</p>
+          <p><strong>Image: </strong> <a href="/images/{{ measurement.image_id }}" target="_blank">{{ measurement.image_name }}</a></p>
           <p><strong>RA: </strong> {{ measurement.ra }}</p>
           <p><strong>DEC: </strong> {{ measurement.dec }}</p>
           <p><strong>Uncertainty EW: </strong> {{ measurement.uncertainty_ew|deg_to_arcsec|floatformat:3 }}''</p>
