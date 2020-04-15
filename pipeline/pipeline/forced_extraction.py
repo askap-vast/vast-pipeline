@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 
 def get_image_list_diff(row):
     out = []
-    for image in row['img_list']:
-        if image not in row['img']:
+    for image in row['skyrg_img_list']:
+        if image not in row['img_list']:
             out.append(image)
 
     # set empty list to -1
@@ -40,7 +40,7 @@ def forced_extraction(srcs_df, sources_df):
         skyreg_df.groupby(skyreg_df.columns.drop('name').values.tolist())
         .agg(lambda group: group.values.ravel().tolist())
         .reset_index()
-        .rename(columns={'name':'img_list'})
+        .rename(columns={'name':'skyrg_img_list'})
     )
     skyreg_df.columns = [
         x.replace('skyreg__', '') for x in skyreg_df.columns.values
@@ -75,7 +75,7 @@ def forced_extraction(srcs_df, sources_df):
     src_skyrg_df = (
         src_skyrg_df.loc[
             src_skyrg_df['sep'] < src_skyrg_df['xtr_radius'],
-            ['source', 'img_list']
+            ['source', 'skyrg_img_list']
         ]
         .set_index('source')
         .groupby('source')
@@ -90,7 +90,7 @@ def forced_extraction(srcs_df, sources_df):
     )
     del src_skyrg_df
 
-    srcs_df['img_diff'] = srcs_df[['img', 'img_list']].apply(
+    srcs_df['img_diff'] = srcs_df[['img_list', 'skyrg_img_list']].apply(
         get_image_list_diff, axis=1
     )
 

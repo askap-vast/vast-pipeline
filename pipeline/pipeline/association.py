@@ -87,7 +87,7 @@ def groupby_funcs(row, first_img):
     '''
     # calculated average ra, dec, fluxes and metrics
     d = {}
-    d['img'] = list(set(row['img'].values.tolist()))
+    d['img_list'] = list(set(row['img'].values.tolist()))
     d['wavg_ra'] = row['interim_ew'].sum() / row['weight_ew'].sum()
     d['wavg_dec'] = row['interim_ns'].sum() / row['weight_ns'].sum()
     d['wavg_uncertainty_ew'] = 1. / np.sqrt(row['weight_ew'].sum())
