@@ -90,9 +90,9 @@
           </div>
 
     	</div>
-      <h2 class="h4 mb-4 text-gray-800">Current Skyregions</h2>
+      <h2 class="h4 mb-4 text-gray-800">Current Sky Regions</h2>
     <div class="row">
-   	<div class="col-lg-12">
+   	<div class="col-lg-9">
        <div class="card shadow mb-4">
          <div id="celestial-map"></div>
        </div>
@@ -101,14 +101,12 @@
     </div>
     <!-- /.container-fluid -->
 
-
-
 {% endblock content %}
 
 {% block custom_page_scripts %}
 
 <!-- Chart scripts -->
-<!-- {{ measurements|json_script:"chart-data" }} -->
+{{ d3_celestial_skyregions|json_script:"skyregion-data" }}
 <script type="text/javascript" src="{% static 'vendor/d3-celestial/d3.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'vendor/d3-celestial/d3.geo.projection.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'vendor/d3-celestial/celestial.min.js' %}"></script>

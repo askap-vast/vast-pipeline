@@ -168,5 +168,63 @@ var config = {
   }
 };
 
+// Asterisms canvas style properties for lines and text
+var lineStyle = {
+      stroke:"#f00",
+      fill: "rgba(255, 204, 204, 0.4)",
+      width: 3
+    },
+    textStyle = {
+      fill:"#f00",
+      font: "bold 15px Helvetica, Arial, sans-serif",
+      align: "center",
+      baseline: "middle"
+    };
+
+let jsonLine = JSON.parse(document.getElementById('skyregion-data').textContent);
+
+Celestial.add({
+  type:"line",
+
+  callback: function(error, json) {
+
+    if (error) return console.warn(error);
+    // Load the geoJSON file and transform to correct coordinate system, if necessary
+    var asterism = Celestial.getData(jsonLine, config.transform);
+
+    // Add to celestial objects container in d3
+    Celestial.container.selectAll(".asterisms")
+      .data(asterism.features)
+      .enter().append("path")
+      .attr("class", "ast");
+    // Trigger redraw to display changes
+    Celestial.redraw();
+  },
+
+  redraw: function() {
+
+    // Select the added objects by class name as given previously
+    Celestial.container.selectAll(".ast").each(function(d) {
+      // Set line styles
+      Celestial.setStyle(lineStyle);
+      // Project objects on map
+      Celestial.map(d);
+      // draw on canvas
+      Celestial.context.fill();
+      Celestial.context.stroke();
+
+      // If point is visible (this doesn't work automatically for points)
+      if (Celestial.clip(d.properties.loc)) {
+        // get point coordinates
+        pt = Celestial.mapProjection(d.properties.loc);
+        // Set text styles
+        Celestial.setTextStyle(textStyle);
+        // and draw text on canvas
+        Celestial.context.fillText(d.properties.n, pt[0], pt[1]);
+      }
+    });
+  }
+});
+
 // Display map with the configuration above or any subset thereof
 Celestial.display(config);

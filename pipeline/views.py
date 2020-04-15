@@ -4,7 +4,7 @@ from django.db.models import Count, F
 from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet
 
-from .models import Image, Measurement, Run, Source
+from .models import Image, Measurement, Run, Source, SkyRegion
 from .serializers import (
     ImageSerializer, MeasurementSerializer, RunSerializer,
     SourceSerializer
@@ -110,6 +110,47 @@ def generate_colsfields(fields, url_prefix):
     return colsfields
 
 
+def get_skyregions_collection():
+    """
+    Produce Sky region geometry shapes for d3-celestial.
+    """
+    skyregions = SkyRegion.objects.all()
+
+    features = []
+
+    for skr in skyregions:
+        ra = skr.centre_ra - 180.
+        dec = skr.centre_dec
+        radius = skr.xtr_radius
+        id = skr.id
+        features.append(
+            {
+                "type":"Feature",
+                "id":"SkyRegion{}".format(id),
+                "properties": {
+                    "n":"{:02d}".format(id),
+                    "loc": [ra, dec]
+                },
+                "geometry":{
+                    "type":"MultiLineString",
+                    "coordinates":[[
+                        [ra+radius, dec+radius],
+                        [ra+radius, dec-radius],
+                        [ra-radius, dec-radius],
+                        [ra-radius, dec+radius],
+                        [ra+radius, dec+radius]
+                    ]]
+                }
+            }
+        )
+
+    skyregions_collection = {
+        "type":"FeatureCollection",
+        "features": features
+    }
+
+    return skyregions_collection
+
 def Home(request):
     totals = {}
     totals['nr_pruns'] = Run.objects.count()
@@ -120,15 +161,19 @@ def Home(request):
     aladin['aladin_ra'] = 0.0
     aladin['aladin_dec'] = -25.0
     aladin['aladin_zoom'] = 180
-    context = {'totals':totals, 'aladin':aladin}
+    context = {
+        'totals': totals,
+        'aladin': aladin,
+        'd3_celestial_skyregions': get_skyregions_collection()
+    }
     return render(request, 'index.html', context)
 
 
 # Runs table
 def RunIndex(request):
     fields = [
-        'time',
         'name',
+        'time',
         'path',
         'comment',
         'n_images',
@@ -150,7 +195,7 @@ def RunIndex(request):
                 'api': '/api/piperuns/?format=datatables',
                 'colsFields': colsfields,
                 'colsNames': [
-                    'Run Datetime','Name','Path','Comment','Nr Images',
+                    'Name','Run Datetime','Path','Comment','Nr Images',
                     'Nr Sources'
                 ],
                 'search': True,
