@@ -112,6 +112,7 @@ def generate_colsfields(fields, url_prefix):
 
 def Home(request):
     totals = {}
+    totals['nr_pruns'] = Run.objects.count()
     totals['nr_imgs'] = Image.objects.count()
     totals['nr_srcs'] = Source.objects.count()
     totals['nr_meas'] = Measurement.objects.count()
