@@ -10,6 +10,19 @@ from pipeline.image.utils import on_sky_sep
 logger = logging.getLogger(__name__)
 
 
+def get_image_list_diff(row):
+    out = []
+    for image in row['img_list']:
+        if image not in row['img']:
+            out.append(image)
+
+    # set empty list to -1
+    if not out:
+        out = -1
+
+    return out
+
+
 def forced_extraction(srcs_df, sources_df):
     """
     check and extract expected measurements, and associated them with the
@@ -70,5 +83,17 @@ def forced_extraction(srcs_df, sources_df):
             set(sum(group.values.ravel().tolist(), []))
         ))
     )
+
+    # merge into main df and compare the images
+    srcs_df = srcs_df.merge(
+        src_skyrg_df, left_index=True, right_index=True
+    )
+    del src_skyrg_df
+
+    srcs_df['img_diff'] = srcs_df[['img', 'img_list']].apply(
+        get_image_list_diff, axis=1
+    )
+
+    srcs_df =  srcs_df.loc[srcs_df['img_diff'] != -1]
 
     pass
