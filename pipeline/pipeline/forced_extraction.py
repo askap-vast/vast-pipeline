@@ -94,6 +94,17 @@ def forced_extraction(srcs_df, sources_df):
         get_image_list_diff, axis=1
     )
 
-    srcs_df =  srcs_df.loc[srcs_df['img_diff'] != -1]
+    # prepare df to groupby image and apply force extraction function
+    extr_df = srcs_df.loc[
+        srcs_df['img_diff'] != -1,
+        ['wavg_ra', 'wavg_dec', 'img_diff']
+    ].copy()
+    extr_df = (
+        extr_df.explode('img_diff')
+        .rename(columns={'img_diff':'images'})
+        .reset_index()
+        .groupby('images')
+    )
+    import ipdb; ipdb.set_trace()  # breakpoint f3fd8927 //
 
     pass
