@@ -17,6 +17,11 @@ urlpatterns = [
     path('piperuns', views.RunIndex, name='run_index'),
     path('piperuns/<int:id>/', views.RunDetail, name='run_detail'),
     path('images', views.ImageIndex, name='image_index'),
+    re_path(
+        r'^images/(?P<id>\d+)(?:/(?P<action>[\w]+))?/$',
+        views.ImageDetail,
+        name='image_detail'
+    ),
     path('measurements', views.MeasurementIndex, name='measurement_index'),
     re_path(
         r'^measurements/(?P<id>\d+)(?:/(?P<action>[\w]+))?/$',

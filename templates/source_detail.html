@@ -143,7 +143,7 @@
 <script src="{% static 'js/light-curve-chart.js' %}"></script>
 
 <!-- Aladin -->
-{{ measurements|json_script:"data-aladin" }}
+{{ source|json_script:"data-aladin" }}
 <script type='text/javascript' src='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js' charset='utf-8'></script>
 <script src="{% static 'js/aladin-script.js' %}"></script>
 

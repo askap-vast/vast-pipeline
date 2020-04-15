@@ -1,5 +1,13 @@
 {% extends "base.html" %}
 
+{% load static %}
+
+{% block head %}
+
+<link rel='stylesheet' href="{% static 'vendor/d3-celestial/celestial.css' %}" />
+
+{% endblock head %}
+
 {% block content %}
     <!-- Begin Page Content -->
     <div class="container-fluid">
@@ -7,7 +15,85 @@
       <!-- Page Heading -->
       <h1 class="h3 mb-4 text-gray-800">Welcome to VAST Pipeline</h1>
 
+      <div class="row">
+    		<!-- Nr Images -->
+          <div class="col-xl-4 col-md-6 mb-4">
+          {# <div class="col-xl-3 mb-4"> #}
+            <div class="card border-left-primary shadow h-100 py-2">
+              <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                  <div class="col mr-2">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Nr Images</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totals.nr_imgs }}</div>
+                  </div>
+                  <div class="col-auto">
+                    <i class="fas fa-images fa-2x text-gray-300"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+    			<!-- Nr Catalogs -->
+          <div class="col-xl-4 col-md-6 mb-4">
+          {# <div class="col-xl-3 mb-4"> #}
+            <div class="card border-left-warning shadow h-100 py-2">
+              <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                  <div class="col mr-2">
+                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Total Nr Sources</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totals.nr_srcs }}</div>
+                  </div>
+                  <div class="col-auto">
+                    <i class="fas fa-share-alt fa-2x text-gray-300"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+    			<!-- Extracted Sources -->
+          <div class="col-xl-4 col-md-6 mb-4">
+          {# <div class="col-xl-3 mb-4"> #}
+            <div class="card border-left-info shadow h-100 py-2">
+              <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                  <div class="col mr-2">
+                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Extracted Source Measurements</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totals.nr_meas }}</div>
+                  </div>
+                  <div class="col-auto">
+                    <i class="fas fa-bolt fa-2x text-gray-300"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+    	</div>
+      <h2 class="h4 mb-4 text-gray-800">Current Skyregions</h2>
+    <div class="row">
+   	<div class="col-lg-12">
+       <div class="card shadow mb-4">
+         <div id="celestial-map"></div>
+       </div>
+   	</div>
+    </div>
     </div>
     <!-- /.container-fluid -->
 
+
+
 {% endblock content %}
+
+{% block custom_page_scripts %}
+
+<!-- Chart scripts -->
+<!-- {{ measurements|json_script:"chart-data" }} -->
+<script type="text/javascript" src="{% static 'vendor/d3-celestial/d3.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'vendor/d3-celestial/d3.geo.projection.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'vendor/d3-celestial/celestial.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/d3-celestial-script.js' %}"></script>
+<link rel="stylesheet" href="../celestial.css">
+
+{% endblock custom_page_scripts %}

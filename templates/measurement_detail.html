@@ -72,7 +72,7 @@
           <p><strong>Uncertainty NS: </strong> {{ measurement.uncertainty_ns|deg_to_arcsec|floatformat:3 }}''</p>
           <p><strong>BMAJ: </strong> {{ measurement.bmaj }}''</p>
           <p><strong>BMIN: </strong> {{ measurement.bmin }}''</p>
-          <p><strong>BPA: </strong> {{ measurement.pa }}</p>
+          <p><strong>BPA: </strong> {{ measurement.pa }}&deg;</p>
           <p><strong>Has siblings: </strong> {{ measurement.has_siblings }}</p>
           {% if measurement.has_siblings  == True %}
           <p><strong>Island ID: </strong> {{ measurement.island_id }}</p>
@@ -104,18 +104,8 @@
 <script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
 <script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
 
-<!-- Datatable scripts -->
-{{ measurements|json_script:"datatable-conf" }}
-<script src="{% static 'js/datatables-pipeline.js' %}"></script>
-
-<!-- Chart scripts -->
-{{ measurements|json_script:"chart-data" }}
-<script src="{% static 'vendor/chart.js/Chart.bundle.min.js' %}"></script>
-<script src="{% static 'vendor/chart.js/Plugin.Errorbars.min.js' %}"></script>
-<script src="{% static 'js/light-curve-chart.js' %}"></script>
-
 <!-- Aladin -->
-{{ measurements|json_script:"data-aladin" }}
+{{ measurement|json_script:"data-aladin" }}
 <script type='text/javascript' src='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js' charset='utf-8'></script>
 <script src="{% static 'js/aladin-script.js' %}"></script>
 
