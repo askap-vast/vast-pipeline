@@ -2,9 +2,13 @@ import logging
 import numpy as np
 import pandas as pd
 
-from .utils import cross_join
+from astropy import units as u
+from astropy.coordinates import SkyCoord
+
 from pipeline.models import Image
 from pipeline.image.utils import on_sky_sep
+from .forced_phot import ForcedPhot
+from .utils import cross_join
 
 
 logger = logging.getLogger(__name__)
@@ -23,6 +27,29 @@ def get_image_list_diff(row):
     return out
 
 
+def extract_from_image(df, images_df):
+    P_islands = SkyCoord(
+        df['wavg_ra'].values * u.deg,
+        df['wavg_dec'].values * u.deg
+    )
+
+    image, noise, background = images_df.loc[
+        df['image'].iloc[0],
+        ['path', 'noise_path', 'background_path']
+    ]
+    import ipdb; ipdb.set_trace()  # breakpoint 27ccbf15 //
+    FP = ForcedPhot(image, background, noise)
+    flux, flux_err, chisq, DOF = FP.measure(
+        P_islands,
+        cluster_threshold=3
+    )
+    import ipdb; ipdb.set_trace()  # breakpoint 99f075aa //
+    df['flux'] = flux
+    df['flux_err'] = flux_err
+    df['chisq'] = chisq
+    df['DOF'] = DOF
+
+
 def forced_extraction(srcs_df, sources_df):
     """
     check and extract expected measurements, and associated them with the
@@ -30,12 +57,23 @@ def forced_extraction(srcs_df, sources_df):
     """
     # get all the skyregions and related images
     cols = [
-        'name', 'skyreg__centre_ra','skyreg__centre_dec',
+        'name', 'measurements_path', 'path', 'noise_path',
+        'background_path', 'skyreg__centre_ra', 'skyreg__centre_dec',
         'skyreg__xtr_radius'
     ]
     skyreg_df = pd.DataFrame(list(
         Image.objects.select_related('skyreg').values(*tuple(cols))
     ))
+    # grab images df to use later
+    images = (
+        skyreg_df.copy()
+        .drop([x for x in skyreg_df.columns if 'skyreg' in x], axis=1)
+        # not necessary now but here for future when many images might
+        # belong to same sky region
+        .drop_duplicates()
+        # assume each image name is unique
+        .set_index('name')
+    )
     skyreg_df = (
         skyreg_df.groupby(skyreg_df.columns.drop('name').values.tolist())
         .agg(lambda group: group.values.ravel().tolist())
@@ -77,7 +115,6 @@ def forced_extraction(srcs_df, sources_df):
             src_skyrg_df['sep'] < src_skyrg_df['xtr_radius'],
             ['source', 'skyrg_img_list']
         ]
-        .set_index('source')
         .groupby('source')
         .agg(lambda group: list(
             set(sum(group.values.ravel().tolist(), []))
@@ -101,10 +138,12 @@ def forced_extraction(srcs_df, sources_df):
     ].copy()
     extr_df = (
         extr_df.explode('img_diff')
-        .rename(columns={'img_diff':'images'})
+        .rename(columns={'img_diff':'image'})
         .reset_index()
-        .groupby('images')
+        .groupby('image')
     )
+    extr_df = extr_df.apply(extract_from_image, images_df=images)
+
     import ipdb; ipdb.set_trace()  # breakpoint f3fd8927 //
 
     pass
