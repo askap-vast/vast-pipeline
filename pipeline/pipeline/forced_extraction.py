@@ -37,7 +37,10 @@ def extract_from_image(df, images_df):
         df['image'].iloc[0],
         ['path', 'noise_path', 'background_path']
     ]
-    import ipdb; ipdb.set_trace()  # breakpoint 27ccbf15 //
+    print(' '.join(20 * ['*']))
+    print(image)
+    print(noise)
+    print(background)
     FP = ForcedPhot(image, background, noise)
     flux, flux_err, chisq, DOF = FP.measure(
         P_islands,
