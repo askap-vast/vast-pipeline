@@ -49,6 +49,9 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.modeling import fitting, models
 from astropy.wcs import WCS
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class G2D:
@@ -215,10 +218,13 @@ class ForcedPhot:
         self.BMIN=self.fi[0].header['BMIN'] * u.deg
         self.BPA=self.fi[0].header['BPA'] * u.deg
 
+        self.NAXIS1 = self.fi[0].header['NAXIS1']
+        self.NAXIS2 = self.fi[0].header['NAXIS2']
+
         self.data = self.fi[0].data - self.fb[0].data
         self.bgdata = self.fb[0].data
         self.noisedata = self.fn[0].data
-        if len(self.fi[0].data) == 2:
+        if len(self.fi[0].data.shape) == 2:
             self.twod = True
         else:
             self.twod = False
@@ -324,6 +330,7 @@ class ForcedPhot:
         X0, Y0 = map(
             np.atleast_1d, astropy.wcs.utils.skycoord_to_pixel(positions, self.w)
         )
+        X0, Y0 = self._filter_out_of_range(X0, Y0)
         self.cluster(X0, Y0, threshold=cluster_threshold)
 
         if stamps:
@@ -481,6 +488,22 @@ class ForcedPhot:
                 b[i],
                 pa[i],
             )
+
+
+    def _filter_out_of_range(self, X0, Y0):
+        X0_mask = (X0 < 0) | (X0 > self.NAXIS1)
+        Y0_mask = (Y0 < 0) | (Y0 > self.NAXIS2)
+
+        final_mask = np.logical_or(
+            X0_mask, Y0_mask
+        )
+
+        logger.debug(
+            "Removing %i sources that are outside of the image range", np.sum(final_mask)
+        )
+
+        return X0[~final_mask], Y0[~final_mask]
+
 
     def _measure(self, X0, Y0, xmin, xmax, ymin, ymax, a, b, pa, stamps=False):
         """
