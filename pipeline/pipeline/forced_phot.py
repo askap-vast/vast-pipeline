@@ -284,7 +284,9 @@ class ForcedPhot:
                     [self.clusters[j].add(k) for k in indices]
                 else:
                     self.clusters[i] = set(indices)
-        self.in_cluster = sorted(list((chain.from_iterable([*self.clusters.values()]))))
+        self.in_cluster = sorted(
+            list(chain.from_iterable([*self.clusters.values()]))
+        )
 
     def measure(
         self,
@@ -328,16 +330,20 @@ class ForcedPhot:
         """
 
         X0, Y0 = map(
-            np.atleast_1d, astropy.wcs.utils.skycoord_to_pixel(positions, self.w)
+            np.atleast_1d,
+            astropy.wcs.utils.skycoord_to_pixel(positions, self.w)
         )
         X0, Y0 = self._filter_out_of_range(X0, Y0)
         self.cluster(X0, Y0, threshold=cluster_threshold)
 
         if stamps:
             if len(X0) > 1 and not (
-                len(self.in_cluster) == len(X0) and len(self.clusters.keys()) == 1
+                len(self.in_cluster) == len(X0) and
+                len(self.clusters.keys()) == 1
             ):
-                raise ArgumentError("Cannot output postage stamps for >1 object")
+                raise ArgumentError(
+                    "Cannot output postage stamps for >1 object"
+                )
 
         if major_axes is None:
             a = np.ones(len(X0)) * (self.BMAJ).to(u.arcsec)
@@ -396,16 +402,8 @@ class ForcedPhot:
             if i in self.in_cluster:
                 continue
             out = self._measure(
-                X0[i],
-                Y0[i],
-                xmin[i],
-                xmax[i],
-                ymin[i],
-                ymax[i],
-                a[i],
-                b[i],
-                pa[i],
-                stamps=stamps,
+                X0[i], Y0[i], xmin[i], xmax[i], ymin[i], ymax[i], a[i],
+                b[i], pa[i], stamps=stamps,
             )
 
             if not stamps:
@@ -417,12 +415,19 @@ class ForcedPhot:
             if self.verbose:
                 print("Fitting a cluster of sources %s" % i)
             xmin = max(int(round((X0[i] - npix[i]).min())), 0)
-            xmax = min(int(round((X0[i] + npix[i]).max())), self.data.shape[-1]) + 1
+            xmax = min(
+                int(round((X0[i] + npix[i]).max())),
+                self.data.shape[-1]
+            ) + 1
             ymin = max(int(round((Y0[i] - npix[i]).min())), 0)
-            ymax = min(int(round((Y0[i] + npix[i]).max())), self.data.shape[-2]) + 1
+            ymax = min(
+                int(round((Y0[i] + npix[i]).max())),
+                self.data.shape[-2]
+            ) + 1
 
             out = self._measure_cluster(
-                X0[i], Y0[i], xmin, xmax, ymin, ymax, a[i], b[i], pa[i], stamps=stamps
+                X0[i], Y0[i], xmin, xmax, ymin, ymax, a[i], b[i],
+                pa[i], stamps=stamps
             )
             f, f_err, csq, dof = out[:4]
             for k in range(len(i)):
@@ -433,7 +438,10 @@ class ForcedPhot:
 
         if positions.isscalar:
             if stamps:
-                return flux[0], flux_err[0], chisq[0], DOF[0], out[-2], out[-1]
+                return (
+                    flux[0], flux_err[0], chisq[0], DOF[0], out[-2],
+                    out[-1]
+                )
             else:
                 return flux[0], flux_err[0], chisq[0], DOF[0]
         else:
@@ -457,7 +465,8 @@ class ForcedPhot:
         """
 
         X0, Y0 = map(
-            np.atleast_1d, astropy.wcs.utils.skycoord_to_pixel(positions, self.w)
+            np.atleast_1d,
+            astropy.wcs.utils.skycoord_to_pixel(positions, self.w)
         )
         flux = np.atleast_1d(flux)
 
@@ -477,16 +486,8 @@ class ForcedPhot:
 
         for i in range(len(X0)):
             self._inject(
-                flux[i],
-                X0[i],
-                Y0[i],
-                xmin[i],
-                xmax[i],
-                ymin[i],
-                ymax[i],
-                a[i],
-                b[i],
-                pa[i],
+                flux[i], X0[i], Y0[i], xmin[i], xmax[i], ymin[i],
+                ymax[i], a[i], b[i], pa[i],
             )
 
 
@@ -499,7 +500,8 @@ class ForcedPhot:
         )
 
         logger.debug(
-            "Removing %i sources that are outside of the image range", np.sum(final_mask)
+            "Removing %i sources that are outside of the image range",
+            np.sum(final_mask)
         )
 
         return X0[~final_mask], Y0[~final_mask]
@@ -547,7 +549,10 @@ class ForcedPhot:
         x = np.arange(xmin, xmax)
         y = np.arange(ymin, ymax)
         xx, yy = np.meshgrid(x, y)
-        g = G2D(X0, Y0, (a / self.pixelscale).value, (b / self.pixelscale).value, pa)
+        g = G2D(
+            X0, Y0, (a / self.pixelscale).value,
+            (b / self.pixelscale).value, pa
+        )
 
         kernel = g(xx, yy)
 
@@ -555,10 +560,16 @@ class ForcedPhot:
         # the uncertainty on the amplitude is just the noise at the position of the source
         # so do a weighted average over the beam
         n = self.noisedata[sl]
-        flux = ((self.data[sl]) * kernel / n ** 2).sum() / (kernel ** 2 / n ** 2).sum()
-        flux_err = ((n) * kernel / n ** 2).sum() / (kernel ** 2 / n ** 2).sum()
+        flux = (
+            (self.data[sl] * kernel / n**2).sum() /
+            (kernel**2 / n**2).sum()
+        )
+        flux_err = (
+            (n * kernel / n**2).sum() /
+            (kernel**2 / n**2).sum()
+        )
 
-        chisq = (((self.data[sl] - kernel * flux) / n) ** 2).sum()
+        chisq = (((self.data[sl] - kernel * flux) / n)**2).sum()
 
         if not stamps:
             return flux, flux_err, chisq, np.prod(xx.shape) - 1
@@ -719,7 +730,9 @@ class ForcedPhot:
             flux[k] = out.__getattr__("amplitude_%d" % k).value
             # a weighted average would be better for the noise here, but
             # to simplify just use the noise map at the central source position
-            flux_err[k] = self.noisedata[np.int16(round(Y0[k])), np.int16(round(Y0[k]))]
+            flux_err[k] = self.noisedata[
+                np.int16(round(Y0[k])), np.int16(round(Y0[k]))
+            ]
 
         if stamps:
             return flux, flux_err, chisq, DOF, d, model
@@ -748,7 +761,9 @@ class ForcedPhot:
         """
         p = astropy.wcs.utils.pixel_to_skycoord(X0, Y0, self.w)
         if self.twod:
-            im = astropy.nddata.Cutout2D(self.fi[0].data, p, nbeam * a, wcs=self.w)
+            im = astropy.nddata.Cutout2D(
+                self.fi[0].data, p, nbeam * a, wcs=self.w
+            )
             bg = self.fb[0].data[
                 im.ymin_original : im.ymax_original + 1,
                 im.xmin_original : im.xmax_original + 1,
@@ -778,11 +793,19 @@ class ForcedPhot:
         y = np.arange(im.data.shape[0])
         xx, yy = np.meshgrid(x, y)
         x0, y0 = astropy.wcs.utils.skycoord_to_pixel(p, im.wcs)
-        g = G2D(x0, y0, (a / self.pixelscale).value, (b / self.pixelscale).value, pa)
+        g = G2D(
+            x0, y0, (a / self.pixelscale).value,
+            (b / self.pixelscale).value, pa
+        )
         kernel = g(xx, yy)
-        flux = ((im.data - bg) * kernel / ns ** 2).sum() / (kernel ** 2 / ns ** 2).sum()
-        flux_err = ((ns) * kernel / ns ** 2).sum() / (kernel ** 2 / ns ** 2).sum()
-        chisq = (((im.data - flux * kernel) / ns.data) ** 2).sum()
+        flux = (
+            ((im.data - bg) * kernel / ns**2).sum() /
+            (kernel**2 / ns**2).sum()
+        )
+        flux_err = (
+            (ns * kernel / ns**2).sum() / (kernel**2 / ns**2).sum()
+        )
+        chisq = (((im.data - flux * kernel) / ns.data)**2).sum()
         DOF = np.prod(xx.shape) - 1
         if not stamps:
             return flux, flux_err, chisq, DOF
