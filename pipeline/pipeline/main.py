@@ -82,6 +82,9 @@ class Pipeline():
 
         # STEP #3: Run forced extraction/photometry
         if self.config.MONITOR:
-            forced_extraction(srcs_df, sources_df)
+            forced_extraction(
+                srcs_df, sources_df,
+                self.config.ASTROMETRIC_UNCERTAINTY_RA / 3600.
+            )
 
         pass
