@@ -42,11 +42,11 @@ def extract_from_image(df, images_df):
         P_islands,
         cluster_threshold=3
     )
-    import ipdb; ipdb.set_trace()  # breakpoint 99f075aa //
     df['flux'] = flux
     df['flux_err'] = flux_err
     df['chisq'] = chisq
     df['DOF'] = DOF
+    return df
 
 
 def forced_extraction(srcs_df, sources_df):
@@ -64,7 +64,7 @@ def forced_extraction(srcs_df, sources_df):
         Image.objects.select_related('skyreg').values(*tuple(cols))
     ))
     # grab images df to use later
-    images = (
+    images_df = (
         skyreg_df.copy()
         .drop([x for x in skyreg_df.columns if 'skyreg' in x], axis=1)
         # not necessary now but here for future when many images might
@@ -141,7 +141,7 @@ def forced_extraction(srcs_df, sources_df):
         .reset_index()
         .groupby('image')
     )
-    extr_df = extr_df.apply(extract_from_image, images_df=images)
+    extr_df = extr_df.apply(extract_from_image, images_df=images_df)
 
     import ipdb; ipdb.set_trace()  # breakpoint f3fd8927 //
 
