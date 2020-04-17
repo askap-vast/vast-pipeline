@@ -490,7 +490,7 @@ class Measurement(models.Model):
         max_length=64,
         help_text='The ID of the component from which the source comes from'
     )# The ID of the component from which the source comes from
-    island_id    = models.CharField(
+    island_id = models.CharField(
         max_length=64,
         help_text='The ID of the island from which the source comes from'
     )# The ID of the island from which the source comes from
