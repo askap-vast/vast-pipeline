@@ -445,6 +445,10 @@ class ForcedPhot:
             else:
                 return flux[0], flux_err[0], chisq[0], DOF[0]
         else:
+            flux, flux_err, chisq, DOF = self.reshape_output(
+                [flux, flux_err, chisq, DOF],
+                self.idx_mask
+            )
             if stamps:
                 return flux, flux_err, chisq, DOF, out[-2], out[-1]
             else:
@@ -503,6 +507,8 @@ class ForcedPhot:
             "Removing %i sources that are outside of the image range",
             np.sum(final_mask)
         )
+        # save the mask to reconstruct arrays
+        self.idx_mask = final_mask
 
         return X0[~final_mask], Y0[~final_mask]
 
@@ -811,3 +817,12 @@ class ForcedPhot:
             return flux, flux_err, chisq, DOF
         else:
             return flux, flux_err, chisq, DOF, im.data, flux * kernel
+
+    @staticmethod
+    def reshape_output(inputs_list, mask):
+        out = []
+        for el in inputs_list:
+            myarr = np.zeros(mask.shape)
+            myarr[np.where(mask == False)] = el
+            out.append(myarr)
+        return tuple(out)
