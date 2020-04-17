@@ -4,6 +4,7 @@ import pandas as pd
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from django.conf import settings
 
 from pipeline.models import Image
 from pipeline.image.utils import on_sky_sep
@@ -27,14 +28,15 @@ def get_image_list_diff(row):
     return out
 
 
-def extract_from_image(df, images_df):
+def extract_from_image(df, images_df, err):
     P_islands = SkyCoord(
         df['wavg_ra'].values * u.deg,
         df['wavg_dec'].values * u.deg
     )
 
+    img_name = df['image'].iloc[0]
     image, noise, background = images_df.loc[
-        df['image'].iloc[0],
+        img_name,
         ['path', 'noise_path', 'background_path']
     ]
     FP = ForcedPhot(image, background, noise)
@@ -42,23 +44,42 @@ def extract_from_image(df, images_df):
         P_islands,
         cluster_threshold=3
     )
-    df['flux'] = flux
-    df['flux_err'] = flux_err
-    df['chisq'] = chisq
-    df['DOF'] = DOF
+    df['flux_int'] = flux
+    df['flux_int_err'] = flux_err
+    df['chi_squared_fit'] = chisq
+    df['name'] = 'TBC'
+    df['ra_err'] = settings.POS_DEFAULT_MIN_ERROR
+    df['dec_err'] = settings.POS_DEFAULT_MIN_ERROR
+    df['bmaj'] = images_df.at[img_name, 'beam_bmaj']
+    df['err_bmaj'] = err
+    df['bmin'] = images_df.at[img_name, 'beam_bmin']
+    df['err_bmin'] = err
+    df['pa'] = images_df.at[img_name, 'beam_bpa']
+    df['err_pa'] = err
+    df['ew_sys_err'] = err
+    df['ns_sys_err'] = err
+    df['error_radius'] = 0.
+    df['uncertainty_ew'] = err
+    df['uncertainty_ns'] = err
+    df['flux_peak'] = df['flux_int']
+    df['flux_peak_err'] = df['flux_int_err']
+    df['spectral_index'] = 0.
+    df['component_id'] = 'TBC'
+    df['island_id'] = 'TBC'
+
     return df
 
 
-def forced_extraction(srcs_df, sources_df):
+def forced_extraction(srcs_df, sources_df, sys_err):
     """
     check and extract expected measurements, and associated them with the
     related source(s)
     """
     # get all the skyregions and related images
     cols = [
-        'name', 'measurements_path', 'path', 'noise_path',
-        'background_path', 'skyreg__centre_ra', 'skyreg__centre_dec',
-        'skyreg__xtr_radius'
+        'name', 'measurements_path', 'path', 'noise_path', 'beam_bmaj',
+        'beam_bmin', 'beam_bpa', 'background_path', 'skyreg__centre_ra',
+        'skyreg__centre_dec', 'skyreg__xtr_radius'
     ]
     skyreg_df = pd.DataFrame(list(
         Image.objects.select_related('skyreg').values(*tuple(cols))
@@ -141,7 +162,12 @@ def forced_extraction(srcs_df, sources_df):
         .reset_index()
         .groupby('image')
     )
-    extr_df = extr_df.apply(extract_from_image, images_df=images_df)
+    extr_df = (
+        extr_df.apply(
+            extract_from_image, images_df=images_df, err=sys_err
+        )
+        .rename(columns={'wavg_ra':'ra', 'wavg_dec':'dec'})
+    )
 
     import ipdb; ipdb.set_trace()  # breakpoint f3fd8927 //
 
