@@ -68,11 +68,14 @@ class G2D:
         y0 (float): the mean y coordinate (pixels)
         fwhm_x (float): the FWHM in the x coordinate (pixels)
         fwhm_y (float): the FWHM in the y coordinate (pixels)
-        pa (float): the position angle of the Gaussian (E of N) as a Quantity or in
-            radians.
+        pa (float): the position angle of the Gaussian (E of N) as a
+        Quantity or in radians.
     """
 
-    def __init__(self, x0: float, y0: float, fwhm_x: float, fwhm_y: float, pa: float):
+    def __init__(
+        self, x0: float, y0: float, fwhm_x: float, fwhm_y: float,
+        pa: float
+    ):
         self.x0 = x0
         self.y0 = y0
         self.fwhm_x = fwhm_x
@@ -107,9 +110,9 @@ class G2D:
             np.ndarray: the kernel evaluated at the given coordinates
         """
         return np.exp(
-            -self.a * (x - self.x0) ** 2
+            -self.a * (x - self.x0)**2
             - self.b * (x - self.x0) * (y - self.y0)
-            - self.c * (y - self.y0) ** 2
+            - self.c * (y - self.y0)**2
         )
 
 
@@ -147,7 +150,7 @@ class ForcedPhot:
             try:
                 self.fi = fits.open(image)
             except FileNotFoundError:
-                print("Unable to open image %s" % image)
+                logger.error("Unable to open image %s", image)
                 raise
         elif isinstance(image, fits.HDUList):
             self.fi = image
@@ -157,17 +160,21 @@ class ForcedPhot:
             try:
                 self.fb = fits.open(background)
             except FileNotFoundError:
-                print("Unable to open background image %s" % background)
+                logger.error(
+                    "Unable to open background image %s", background
+                )
                 raise
         elif isinstance(background, fits.HDUList):
             self.fb = background
         else:
-            raise ArgumentError("Do not understand input background image")
+            raise ArgumentError(
+                'Do not understand input background image'
+            )
         if isinstance(noise, str):
             try:
                 self.fn = fits.open(noise)
             except FileNotFoundError:
-                print("Unable to open noise image %s" % noise)
+                logger.error("Unable to open noise image %s", noise)
                 raise
         elif isinstance(noise, fits.HDUList):
             self.fn = noise
@@ -179,8 +186,9 @@ class ForcedPhot:
             and ("BMIN" in self.fi[0].header.keys())
             and ("BPA" in self.fi[0].header.keys())
         ):
-
-            raise KeyError("Image header does not have BMAJ, BMIN, BPA keywords")
+            raise KeyError(
+                'Image header does not have BMAJ, BMIN, BPA keywords'
+            )
 
         self.BMAJ = self.fi[0].header["BMAJ"] * u.deg
         self.BMIN = self.fi[0].header["BMIN"] * u.deg
@@ -195,9 +203,14 @@ class ForcedPhot:
         self.twod = True  # TODO remove
 
         self.w = WCS(self.fi[0].header).celestial
-        self.pixelscale = (proj_plane_pixel_scales(self.w)[1] * u.deg).to(u.arcsec)
+        self.pixelscale = (
+            proj_plane_pixel_scales(self.w)[1] * u.deg
+        ).to(u.arcsec)
 
-    def cluster(self, X0: np.ndarray, Y0: np.ndarray, threshold: Optional[float] = 1.5):
+    def cluster(
+        self, X0: np.ndarray, Y0: np.ndarray,
+        threshold: Optional[float] = 1.5
+    ):
         """Identifies clusters among the given X, Y points that are within `threshold` * BMAJ
             of each other using a KDTree algorithm. Results are stored in `self.clusters`
             and `self.in_cluster`:
@@ -217,7 +230,9 @@ class ForcedPhot:
             self.in_cluster = []
             return
 
-        threshold_pixels = threshold * (self.BMAJ / self.pixelscale).decompose().value
+        threshold_pixels = (
+            threshold * (self.BMAJ / self.pixelscale).decompose().value
+        )
         t = scipy.spatial.KDTree(np.c_[X0, Y0])
 
         # this is somewhat convoluted
@@ -228,7 +243,8 @@ class ForcedPhot:
         self.clusters = {}
         for i in range(len(X0)):
             dists, indices = t.query(
-                np.c_[X0[i], Y0[i]], k=10, distance_upper_bound=threshold_pixels
+                np.c_[X0[i], Y0[i]], k=10,
+                distance_upper_bound=threshold_pixels
             )
             indices = indices[~np.isinf(dists)]
             if len(indices) > 1:
@@ -240,7 +256,9 @@ class ForcedPhot:
                         self.clusters[j].add(k)
                 else:
                     self.clusters[i] = set(indices)
-        self.in_cluster = sorted(list((chain.from_iterable([*self.clusters.values()]))))
+        self.in_cluster = sorted(
+            list(chain.from_iterable([*self.clusters.values()]))
+        )
 
     def measure(
         self,
@@ -285,16 +303,20 @@ class ForcedPhot:
             freedom. If `stamps` is True, the data and model are also returned.
         """
         X0, Y0 = map(
-            np.atleast_1d, astropy.wcs.utils.skycoord_to_pixel(positions, self.w)
+            np.atleast_1d,
+            astropy.wcs.utils.skycoord_to_pixel(positions, self.w)
         )
         X0, Y0 = self._filter_out_of_range(X0, Y0, nbeam)
         self.cluster(X0, Y0, threshold=cluster_threshold)
 
         if stamps:
             if len(X0) > 1 and not (
-                len(self.in_cluster) == len(X0) and len(self.clusters.keys()) == 1
+                len(self.in_cluster) == len(X0) and
+                len(self.clusters.keys()) == 1
             ):
-                raise ArgumentError("Cannot output postage stamps for >1 object")
+                raise ArgumentError(
+                    'Cannot output postage stamps for >1 object'
+                )
 
         if major_axes is None:
             a = np.ones(len(X0)) * (self.BMAJ).to(u.arcsec)
@@ -322,7 +344,7 @@ class ForcedPhot:
             pa = np.ones(len(X0)) * (self.BPA)
         else:
             if not isinstance(position_angles, astropy.units.Quantity):
-                raise ArgumentError("Position angles must be a quantity")
+                raise ArgumentError('Position angles must be a quantity')
 
             if position_angles.isscalar:
                 pa = position_angles * np.ones(len(X0))
@@ -334,7 +356,7 @@ class ForcedPhot:
         # goes from [xmin,xmax) and [ymin,ymax)
         # so add 1 to the maxes to be inclusive
         # and then check against boundaries
-        npix = ((nbeam / 2.0) * a / self.pixelscale).value
+        npix = (nbeam / 2. * a / self.pixelscale).value
         xmin = np.int16(np.round(X0 - npix))
         xmax = np.int16(np.round(X0 + npix)) + 1
         ymin = np.int16(np.round(Y0 - npix))
@@ -373,12 +395,19 @@ class ForcedPhot:
             if self.verbose:
                 print("Fitting a cluster of sources %s" % ii)
             xmin = max(int(round((X0[ii] - npix[ii]).min())), 0)
-            xmax = min(int(round((X0[ii] + npix[ii]).max())), self.data.shape[-1]) + 1
+            xmax = min(
+                int(round((X0[ii] + npix[ii]).max())),
+                self.data.shape[-1]
+            ) + 1
             ymin = max(int(round((Y0[ii] - npix[ii]).min())), 0)
-            ymax = min(int(round((Y0[ii] + npix[ii]).max())), self.data.shape[-2]) + 1
+            ymax = min(
+                int(round((Y0[ii] + npix[ii]).max())),
+                self.data.shape[-2]
+            ) + 1
 
             out = self._measure_cluster(
-                X0[ii], Y0[ii], xmin, xmax, ymin, ymax, a[ii], b[ii], pa[ii], stamps=stamps
+                X0[ii], Y0[ii], xmin, xmax, ymin, ymax, a[ii], b[ii],
+                pa[ii], stamps=stamps
             )
             f, f_err, csq, _dof = out[:4]
             for k in range(len(ii)):
@@ -389,7 +418,10 @@ class ForcedPhot:
 
         if positions.isscalar:
             if stamps:
-                return flux[0], flux_err[0], chisq[0], dof[0], out[-3], out[-2], out[-1]
+                return (
+                    flux[0], flux_err[0], chisq[0], dof[0], out[-3],
+                    out[-2], out[-1]
+                )
             else:
                 return flux[0], flux_err[0], chisq[0], dof[0]
         else:
@@ -398,7 +430,10 @@ class ForcedPhot:
                 self.idx_mask
             )
             if stamps:
-                return flux, flux_err, chisq, dof, out[-3], out[-2], out[-1]
+                return (
+                    flux, flux_err, chisq, dof, out[-3], out[-2],
+                    out[-1]
+                )
             else:
                 return flux, flux_err, chisq, dof
 
@@ -418,7 +453,8 @@ class ForcedPhot:
                 Defaults to 3.
         """
         X0, Y0 = map(
-            np.atleast_1d, astropy.wcs.utils.skycoord_to_pixel(positions, self.w)
+            np.atleast_1d,
+            astropy.wcs.utils.skycoord_to_pixel(positions, self.w)
         )
         flux = np.atleast_1d(flux)
 
@@ -426,7 +462,7 @@ class ForcedPhot:
         b = self.BMIN.to(u.arcsec) * np.ones(len(X0))
         pa = self.BPA * np.ones(len(X0))
 
-        npix = ((nbeam / 2.0) * a / self.pixelscale).value
+        npix = (nbeam / 2. * a / self.pixelscale).value
         xmin = np.int16(np.round(X0 - npix))
         xmax = np.int16(np.round(X0 + npix)) + 1
         ymin = np.int16(np.round(Y0 - npix))
@@ -494,18 +530,24 @@ class ForcedPhot:
         x = np.arange(xmin, xmax)
         y = np.arange(ymin, ymax)
         xx, yy = np.meshgrid(x, y)
-        g = G2D(X0, Y0, (a / self.pixelscale).value, (b / self.pixelscale).value, pa)
+        g = G2D(
+            X0, Y0, (a / self.pixelscale).value,
+            (b / self.pixelscale).value, pa
+        )
 
         kernel = g(xx, yy)
 
         # uncertainties: see discussion in Section 3 of Condon (1997)
-        # the uncertainty on the amplitude is just the noise at the position of the source
-        # so do a weighted average over the beam
+        # the uncertainty on the amplitude is just the noise at the
+        # position of the source so do a weighted average over the beam
         n = self.noisedata[sl]
-        flux = ((self.data[sl]) * kernel / n ** 2).sum() / (kernel ** 2 / n ** 2).sum()
-        flux_err = ((n) * kernel / n ** 2).sum() / (kernel ** 2 / n ** 2).sum()
+        flux = (
+            (self.data[sl] * kernel / n**2).sum() /
+            (kernel**2 / n**2).sum()
+        )
+        flux_err = (n * kernel / n**2).sum() / (kernel**2 / n**2).sum()
 
-        chisq = (((self.data[sl] - kernel * flux) / n) ** 2).sum()
+        chisq = (((self.data[sl] - kernel * flux) / n)**2).sum()
 
         if not stamps:
             return flux, flux_err, chisq, np.prod(xx.shape) - 1
@@ -533,7 +575,7 @@ class ForcedPhot:
             the major axis. Defaults to 3.
         """
         npix = round(
-            ((nbeam / 2.0) * self.BMAJ.to('arcsec') /
+            (nbeam / 2. * self.BMAJ.to('arcsec') /
             self.pixelscale).value
         )
 
@@ -585,7 +627,10 @@ class ForcedPhot:
         x = np.arange(xmin, xmax)
         y = np.arange(ymin, ymax)
         xx, yy = np.meshgrid(x, y)
-        g = G2D(X0, Y0, (a / self.pixelscale).value, (b / self.pixelscale).value, pa)
+        g = G2D(
+            X0, Y0, (a / self.pixelscale).value,
+            (b / self.pixelscale).value, pa
+        )
 
         kernel = g(xx, yy).value
         self.data[sl] += kernel * flux
@@ -696,13 +741,18 @@ class ForcedPhot:
         model = out(xx, yy)
         flux = np.zeros(len(X0))
         flux_err = np.zeros(len(X0))
-        chisq = np.zeros(len(X0)) + (((d - model) / n) ** 2).sum()
-        dof = np.zeros(len(X0), dtype=np.int16) + np.prod(xx.shape) - len(X0)
+        chisq = np.zeros(len(X0)) + (((d - model) / n)**2).sum()
+        dof = (
+            np.zeros(len(X0), dtype=np.int16) +
+            np.prod(xx.shape) - len(X0)
+        )
         for k in range(len(X0)):
             flux[k] = out.__getattr__("amplitude_%d" % k).value
             # a weighted average would be better for the noise here, but
             # to simplify just use the noise map at the central source position
-            flux_err[k] = self.noisedata[np.int16(round(Y0[k])), np.int16(round(Y0[k]))]
+            flux_err[k] = self.noisedata[
+                np.int16(round(Y0[k])), np.int16(round(Y0[k]))
+            ]
 
         if stamps:
             return flux, flux_err, chisq, dof, d, model
@@ -735,7 +785,9 @@ class ForcedPhot:
         """
         p = astropy.wcs.utils.pixel_to_skycoord(X0, Y0, self.w)
         if self.twod:
-            im = astropy.nddata.Cutout2D(self.fi[0].data, p, nbeam * a, wcs=self.w)
+            im = astropy.nddata.Cutout2D(
+                self.fi[0].data, p, nbeam * a, wcs=self.w
+            )
             bg = self.fb[0].data[
                 im.ymin_original : im.ymax_original + 1,
                 im.xmin_original : im.xmax_original + 1,
@@ -765,11 +817,19 @@ class ForcedPhot:
         y = np.arange(im.data.shape[0])
         xx, yy = np.meshgrid(x, y)
         x0, y0 = astropy.wcs.utils.skycoord_to_pixel(p, im.wcs)
-        g = G2D(x0, y0, (a / self.pixelscale).value, (b / self.pixelscale).value, pa)
+        g = G2D(
+            x0, y0, (a / self.pixelscale).value,
+            (b / self.pixelscale).value, pa
+        )
         kernel = g(xx, yy)
-        flux = ((im.data - bg) * kernel / ns ** 2).sum() / (kernel ** 2 / ns ** 2).sum()
-        flux_err = ((ns) * kernel / ns ** 2).sum() / (kernel ** 2 / ns ** 2).sum()
-        chisq = (((im.data - flux * kernel) / ns.data) ** 2).sum()
+        flux = (
+            ((im.data - bg) * kernel / ns**2).sum() /
+            (kernel**2 / ns**2).sum()
+        )
+        flux_err = (
+            (ns * kernel / ns**2).sum() / (kernel**2 / ns**2).sum()
+        )
+        chisq = (((im.data - flux * kernel) / ns.data)**2).sum()
         dof = np.prod(xx.shape) - 1
         if not stamps:
             return flux, flux_err, chisq, dof
