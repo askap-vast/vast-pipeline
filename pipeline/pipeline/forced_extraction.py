@@ -44,10 +44,13 @@ def extract_from_image(df, images_df, err):
         P_islands,
         cluster_threshold=3
     )
+
+    # make the measurements TEMPORARY name from the image
+    df['name'] = img_name.split('.')[0]
+    # assign all the other columns
     df['flux_int'] = flux
     df['flux_int_err'] = flux_err
     df['chi_squared_fit'] = chisq
-    df['name'] = 'TBC'
     df['ra_err'] = settings.POS_DEFAULT_MIN_ERROR
     df['dec_err'] = settings.POS_DEFAULT_MIN_ERROR
     df['bmaj'] = images_df.at[img_name, 'beam_bmaj']
@@ -64,8 +67,8 @@ def extract_from_image(df, images_df, err):
     df['flux_peak'] = df['flux_int']
     df['flux_peak_err'] = df['flux_int_err']
     df['spectral_index'] = 0.
-    df['component_id'] = 'TBC'
-    df['island_id'] = 'TBC'
+    df['component_id'] = None
+    df['island_id'] = None
 
     return df
 
@@ -161,13 +164,12 @@ def forced_extraction(srcs_df, sources_df, sys_err):
         .rename(columns={'img_diff':'image'})
         .reset_index()
         .groupby('image')
-    )
-    extr_df = (
-        extr_df.apply(
-            extract_from_image, images_df=images_df, err=sys_err
-        )
+        .apply(extract_from_image, images_df=images_df, err=sys_err)
         .rename(columns={'wavg_ra':'ra', 'wavg_dec':'dec'})
+        .dropna(subset=['flux_int'])
     )
+
+    extr_df = extr_df.loc[extr_df['flux_int'] > 0, :]
 
     import ipdb; ipdb.set_trace()  # breakpoint f3fd8927 //
 
