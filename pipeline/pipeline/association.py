@@ -639,7 +639,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
             sources_df['dec'].values * sources_df['weight_ns'].values
         )
 
-        sources_df.drop(['ra_wrap'], axis=1)
+        sources_df = sources_df.drop(['ra_wrap'], axis=1)
 
         tmp_srcs_df = (
             sources_df.loc[sources_df['source'] != -1, [
