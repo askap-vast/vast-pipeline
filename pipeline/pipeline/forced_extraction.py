@@ -39,17 +39,19 @@ def extract_from_image(df, images_df, err):
         img_name,
         ['path', 'noise_path', 'background_path']
     ]
+
     FP = ForcedPhot(image, background, noise)
     flux, flux_err, chisq, DOF = FP.measure(
         P_islands,
-        cluster_threshold=3
+        cluster_threshold=3,
     )
 
     # make the measurements TEMPORARY name from the image
     df['name'] = img_name.split('.')[0]
     # assign all the other columns
-    df['flux_int'] = flux
-    df['flux_int_err'] = flux_err
+    # convert fluxes to mJy
+    df['flux_int'] = flux * 1.e3
+    df['flux_int_err'] = flux_err * 1.e3
     df['chi_squared_fit'] = chisq
     df['ra_err'] = settings.POS_DEFAULT_MIN_ERROR
     df['dec_err'] = settings.POS_DEFAULT_MIN_ERROR
