@@ -559,4 +559,7 @@ class Association(models.Model):
     )
 
     def __str__(self):
-        return f'distance: {self.d2d:.2%}' if self.dr == 0 else f'distance: {self.dr:.2%}'
+        return (
+            f'distance: {self.d2d:.2f}' if self.dr == 0 else
+            f'distance: {self.dr:.2f}'
+        )
