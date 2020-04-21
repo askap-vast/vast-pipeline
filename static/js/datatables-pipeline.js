@@ -56,7 +56,6 @@ $(document).ready(function() {
       })
       dataSet.push(row)
     });
-    console.log(dataSet);
     var dataTableConf = {
       bFilter: dataConf.search,
       hover: true,

@@ -125,15 +125,15 @@ def get_skyregions_collection():
         id = skr.id
         features.append(
             {
-                "type":"Feature",
-                "id":"SkyRegion{}".format(id),
+                "type": "Feature",
+                "id": f"SkyRegion{id}",
                 "properties": {
-                    "n":"{:02d}".format(id),
+                    "n": f"{id:02d}",
                     "loc": [ra, dec]
                 },
-                "geometry":{
-                    "type":"MultiLineString",
-                    "coordinates":[[
+                "geometry": {
+                    "type": "MultiLineString",
+                    "coordinates": [[
                         [ra+radius, dec+radius],
                         [ra+radius, dec-radius],
                         [ra-radius, dec-radius],
@@ -145,8 +145,8 @@ def get_skyregions_collection():
         )
 
     skyregions_collection = {
-        "type":"FeatureCollection",
-        "features": features
+        "type": "FeatureCollection",
+        "features" : features
     }
 
     return skyregions_collection
@@ -157,13 +157,8 @@ def Home(request):
     totals['nr_imgs'] = Image.objects.count()
     totals['nr_srcs'] = Source.objects.count()
     totals['nr_meas'] = Measurement.objects.count()
-    aladin = {}
-    aladin['aladin_ra'] = 0.0
-    aladin['aladin_dec'] = -25.0
-    aladin['aladin_zoom'] = 180
     context = {
         'totals': totals,
-        'aladin': aladin,
         'd3_celestial_skyregions': get_skyregions_collection()
     }
     return render(request, 'index.html', context)
