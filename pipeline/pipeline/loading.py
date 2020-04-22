@@ -92,7 +92,7 @@ def upload_images(paths, config, pipeline_run):
             logger.info('Bulk uploaded #%i measurements', len(out_bulk))
 
         # make a columns with the measurement id
-        measurements['id'] = measurements.meas_dj.apply(
+        measurements['id'] = measurements['meas_dj'].apply(
             getattr, args=('id',)
         )
         meas_dj_obj = meas_dj_obj.append(
