@@ -60,40 +60,53 @@
 
       <!-- Nav Item - Sources -->
       <li class="nav-item">
-        <a class="nav-link" href="#" data-toggle="collapse" data-target="#collapseSource" aria-expanded="true" aria-controls="collapseSource">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseSource" aria-expanded="true" aria-controls="collapseSource">
           <i class="fas fa-fw fa-share-alt"></i>
           <span>Sources</span>
         </a>
         <div id="collapseSource" class="collapse" aria-labelledby="headingCatalog" data-parent="#accordionSidebar">
           <div class="bg-white py-2 collapse-inner rounded">
-            <a class="collapse-item" href="{% url 'pipeline:source_index' %}">Overview</a>
+            <a class="collapse-item" href="{% url 'pipeline:source_index' %}">View all sources</a>
             <a class="collapse-item" href="{% url 'pipeline:source_query' %}">Query</a>
-          </div>
-        </div>
-      </li>
-
-      <!-- Nav Item - Images -->
-      <li class="nav-item">
-        <a class="nav-link" href="#" data-toggle="collapse" data-target="#collapseImage" aria-expanded="true" aria-controls="collapseImage">
-          <i class="fas fa-fw fa-images"></i>
-          <span>Images</span>
-        </a>
-        <div id="collapseImage" class="collapse" aria-labelledby="headingImage" data-parent="#accordionSidebar">
-          <div class="bg-white py-2 collapse-inner rounded">
-            <a class="collapse-item" href="{% url 'pipeline:image_index' %}">Overview</a>
           </div>
         </div>
       </li>
 
       <!-- Nav Item - Measurements -->
       <li class="nav-item">
-        <a class="nav-link" href="#" data-toggle="collapse" data-target="#collapseSourceMeas" aria-expanded="true" aria-controls="collapseSourceMeas">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseSourceMeas" aria-expanded="true" aria-controls="collapseSourceMeas">
           <i class="fas fa-fw fa-bolt"></i>
-          <span>Image Data</span>
+          <span>Measurements</span>
         </a>
         <div id="collapseSourceMeas" class="collapse" aria-labelledby="headingSource" data-parent="#accordionSidebar">
           <div class="bg-white py-2 collapse-inner rounded">
-            <a class="collapse-item" href="{% url 'pipeline:measurement_index' %}">Overview</a>
+            <a class="collapse-item" href="{% url 'pipeline:measurement_index' %}">View all measurements</a>
+          </div>
+        </div>
+      </li>
+
+      <!-- Nav Item - Images -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseImage" aria-expanded="true" aria-controls="collapseImage">
+          <i class="fas fa-fw fa-images"></i>
+          <span>Images</span>
+        </a>
+        <div id="collapseImage" class="collapse" aria-labelledby="headingImage" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <a class="collapse-item" href="{% url 'pipeline:image_index' %}">View all images</a>
+          </div>
+        </div>
+      </li>
+      
+      <!-- Nav Item - Analysis -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseAnalysis" aria-expanded="true" aria-controls="collapseAnalysis">
+          <i class="fas fa-fw fa-fingerprint"></i>
+          <span>Analysis</span>
+        </a>
+        <div id="collapseAnalysis" class="collapse" aria-labelledby="headingAnalysis" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <a class="collapse-item" href="">Overview</a>
           </div>
         </div>
       </li>
