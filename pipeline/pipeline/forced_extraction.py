@@ -5,11 +5,15 @@ import pandas as pd
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from django.conf import settings
+from django.db import transaction
 
 from pipeline.models import Image
 from pipeline.image.utils import on_sky_sep
+from pipeline.pipeline.utils import get_measurement_models
 from .forced_phot import ForcedPhot
+from .loading import upload_associations
 from .utils import cross_join
+from ..models import Association, Measurement
 
 
 logger = logging.getLogger(__name__)
@@ -93,6 +97,8 @@ def extract_from_image(df, images_df, err):
     df['flux_peak'] = df['flux_int']
     df['flux_peak_err'] = df['flux_int_err']
     df['spectral_index'] = 0.
+    # add image id
+    df['image_id'] = images_df.at[img_name, 'id']
 
     return df
 
@@ -104,9 +110,9 @@ def forced_extraction(srcs_df, sources_df, sys_err):
     """
     # get all the skyregions and related images
     cols = [
-        'name', 'measurements_path', 'path', 'noise_path', 'beam_bmaj',
-        'beam_bmin', 'beam_bpa', 'background_path', 'skyreg__centre_ra',
-        'skyreg__centre_dec', 'skyreg__xtr_radius'
+        'id', 'name', 'measurements_path', 'path', 'noise_path',
+        'beam_bmaj', 'beam_bmin', 'beam_bpa', 'background_path',
+        'skyreg__centre_ra', 'skyreg__centre_dec', 'skyreg__xtr_radius'
     ]
     skyreg_df = pd.DataFrame(list(
         Image.objects.select_related('skyreg').values(*tuple(cols))
@@ -185,8 +191,8 @@ def forced_extraction(srcs_df, sources_df, sys_err):
     ].copy()
     extr_df = (
         extr_df.explode('img_diff')
-        .rename(columns={'img_diff':'image'})
         .reset_index()
+        .rename(columns={'img_diff':'image', 'source':'source_tmp_id'})
         .groupby('image')
         .apply(extract_from_image, images_df=images_df, err=sys_err)
         .rename(columns={'wavg_ra':'ra', 'wavg_dec':'dec'})
@@ -194,5 +200,36 @@ def forced_extraction(srcs_df, sources_df, sys_err):
     )
 
     extr_df = extr_df.loc[extr_df['flux_int'] > 0, :]
+
+    # Create measurement Django objects
+    extr_df['meas_dj'] = extr_df.apply(
+        get_measurement_models, axis=1
+    )
+    # Update new sources in the db and update the parquet files
+    batch_size = 10_000
+    for idx in range(0, extr_df['meas_dj'].size, batch_size):
+        out_bulk = Measurement.objects.bulk_create(
+            extr_df['meas_dj'].iloc[
+                idx : idx + batch_size
+            ].values.tolist(),
+            batch_size
+        )
+        logger.info('Bulk uploaded #%i measurements', len(out_bulk))
+
+    # create the associations objects
+    extr_df = (
+        extr_df.rename(columns={'source_tmp_id':'source'})
+        .merge(
+            srcs_df['src_dj'].reset_index(),
+            on='source'
+        )
+    )
+    extr_df['assoc_dj'] = extr_df.apply(lambda row: Association(
+            meas=row['meas_dj'], source=row['src_dj']
+        ),
+        axis=1
+    )
+    # upload associations in DB
+    upload_associations(extr_df['assoc_dj'])
 
     pass
