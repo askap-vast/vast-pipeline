@@ -46,8 +46,32 @@ def extract_from_image(df, images_df, err):
         cluster_threshold=3,
     )
 
-    # make the measurements TEMPORARY name from the image
-    df['name'] = img_name.split('.')[0]
+    # make up the measurements name from the image
+    # get max component id from parquet file
+    max_id = (
+        pd.read_parquet(
+            images_df.at[img_name, 'measurements_path'],
+            columns=['island_id']
+        )['island_id']
+    )
+    prefix = max_id.iloc[0].rsplit('_', maxsplit=1)[0] + '_'
+    max_id = (
+        max_id.str.rsplit('_', n=1)
+        .str.get(-1)
+        .astype(int)
+        .values.max() + 1
+    )
+
+    # generate the name columns
+    df['island_id'] = np.char.add(
+        prefix,
+        np.arange(max_id, max_id + df.shape[0]).astype(str)
+    )
+    df['component_id'] = df['island_id'].str.replace(
+        'island', 'component'
+    ) + 'a'
+    prefix = img_name.split('.')[0] + '_'
+    df['name'] = prefix + df['component_id']
     # assign all the other columns
     # convert fluxes to mJy
     df['flux_int'] = flux * 1.e3
@@ -69,8 +93,6 @@ def extract_from_image(df, images_df, err):
     df['flux_peak'] = df['flux_int']
     df['flux_peak_err'] = df['flux_int_err']
     df['spectral_index'] = 0.
-    df['component_id'] = None
-    df['island_id'] = None
 
     return df
 
@@ -172,7 +194,5 @@ def forced_extraction(srcs_df, sources_df, sys_err):
     )
 
     extr_df = extr_df.loc[extr_df['flux_int'] > 0, :]
-
-    import ipdb; ipdb.set_trace()  # breakpoint f3fd8927 //
 
     pass
