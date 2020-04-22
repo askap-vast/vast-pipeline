@@ -206,15 +206,16 @@ def forced_extraction(srcs_df, sources_df, sys_err):
         get_measurement_models, axis=1
     )
     # Update new sources in the db and update the parquet files
-    batch_size = 10_000
-    for idx in range(0, extr_df['meas_dj'].size, batch_size):
-        out_bulk = Measurement.objects.bulk_create(
-            extr_df['meas_dj'].iloc[
-                idx : idx + batch_size
-            ].values.tolist(),
-            batch_size
-        )
-        logger.info('Bulk uploaded #%i measurements', len(out_bulk))
+    with transaction.atomic():
+        batch_size = 10_000
+        for idx in range(0, extr_df['meas_dj'].size, batch_size):
+            out_bulk = Measurement.objects.bulk_create(
+                extr_df['meas_dj'].iloc[
+                    idx : idx + batch_size
+                ].values.tolist(),
+                batch_size
+            )
+            logger.info('Bulk uploaded #%i measurements', len(out_bulk))
 
     # create the associations objects
     extr_df = (
