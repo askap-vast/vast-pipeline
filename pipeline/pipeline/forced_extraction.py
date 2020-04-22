@@ -200,6 +200,8 @@ def forced_extraction(srcs_df, sources_df, sys_err):
     )
 
     extr_df = extr_df.loc[extr_df['flux_int'] > 0, :]
+    # set the forced field
+    extr_df['forced'] = True
 
     # Create measurement Django objects
     extr_df['meas_dj'] = extr_df.apply(
@@ -217,6 +219,25 @@ def forced_extraction(srcs_df, sources_df, sys_err):
             )
             logger.info('Bulk uploaded #%i measurements', len(out_bulk))
 
+    # make the measurement id column
+    extr_df['id'] = extr_df['meas_dj'].apply(getattr, args=('id',))
+
+    # Update the parquet files appending the new measurements
+    for grp_name, grp_df in extr_df.groupby('image'):
+        logger.info('Updating the image %s parquet ...', grp_name)
+        fname = images_df.at[grp_name, 'measurements_path']
+        df = (
+            pd.read_parquet(fname)
+            .append(grp_df.drop(
+                ['source_tmp_id', 'meas_dj', 'image'],
+                axis=1
+            ))
+        )
+        df.to_parquet(
+            fname,
+            index=False
+        )
+
     # create the associations objects
     extr_df = (
         extr_df.rename(columns={'source_tmp_id':'source'})
@@ -232,5 +253,8 @@ def forced_extraction(srcs_df, sources_df, sys_err):
     )
     # upload associations in DB
     upload_associations(extr_df['assoc_dj'])
+
+    # Update source variability metrics and fluxes
+
 
     pass
