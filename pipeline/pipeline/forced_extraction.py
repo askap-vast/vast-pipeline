@@ -32,7 +32,7 @@ def get_image_list_diff(row):
     return out
 
 
-def extract_from_image(df, images_df, err):
+def extract_from_image(df, images_df):
     P_islands = SkyCoord(
         df['wavg_ra'].values * u.deg,
         df['wavg_dec'].values * u.deg
@@ -81,22 +81,9 @@ def extract_from_image(df, images_df, err):
     df['flux_int'] = flux * 1.e3
     df['flux_int_err'] = flux_err * 1.e3
     df['chi_squared_fit'] = chisq
-    df['ra_err'] = settings.POS_DEFAULT_MIN_ERROR
-    df['dec_err'] = settings.POS_DEFAULT_MIN_ERROR
     df['bmaj'] = images_df.at[img_name, 'beam_bmaj']
-    df['err_bmaj'] = err
     df['bmin'] = images_df.at[img_name, 'beam_bmin']
-    df['err_bmin'] = err
     df['pa'] = images_df.at[img_name, 'beam_bpa']
-    df['err_pa'] = err
-    df['ew_sys_err'] = err
-    df['ns_sys_err'] = err
-    df['error_radius'] = 0.
-    df['uncertainty_ew'] = err
-    df['uncertainty_ns'] = err
-    df['flux_peak'] = df['flux_int']
-    df['flux_peak_err'] = df['flux_int_err']
-    df['spectral_index'] = 0.
     # add image id
     df['image_id'] = images_df.at[img_name, 'id']
 
@@ -194,13 +181,30 @@ def forced_extraction(srcs_df, sources_df, sys_err):
         .reset_index()
         .rename(columns={'img_diff':'image', 'source':'source_tmp_id'})
         .groupby('image')
-        .apply(extract_from_image, images_df=images_df, err=sys_err)
+        .apply(extract_from_image, images_df=images_df)
         .rename(columns={'wavg_ra':'ra', 'wavg_dec':'dec'})
         .dropna(subset=['flux_int'])
     )
 
     extr_df = extr_df.loc[extr_df['flux_int'] > 0, :]
-    # set the forced field
+    # set the columns with fix values
+    extr_df['ra_err'] = settings.POS_DEFAULT_MIN_ERROR
+    extr_df['dec_err'] = settings.POS_DEFAULT_MIN_ERROR
+    extr_df['err_bmaj'] = sys_err
+    extr_df['err_bmin'] = sys_err
+    extr_df['err_pa'] = sys_err
+    extr_df['ew_sys_err'] = sys_err
+    extr_df['ns_sys_err'] = sys_err
+    extr_df['error_radius'] = 0.
+
+    extr_df['uncertainty_ew'] = sys_err
+    extr_df['weight_ew'] = 1. / extr_df['uncertainty_ew'].values**2
+    extr_df['uncertainty_ns'] = sys_err
+    extr_df['weight_ns'] = 1. / extr_df['uncertainty_ns'].values**2
+
+    extr_df['flux_peak'] = extr_df['flux_int']
+    extr_df['flux_peak_err'] = extr_df['flux_int_err']
+    extr_df['spectral_index'] = 0.
     extr_df['forced'] = True
 
     # Create measurement Django objects
