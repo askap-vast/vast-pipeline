@@ -200,21 +200,43 @@ def forced_extraction(srcs_df, sources_df, sys_err):
     )
 
     extr_df = extr_df.loc[extr_df['flux_int'] > 0, :]
+    # set the forced field
+    extr_df['forced'] = True
 
     # Create measurement Django objects
     extr_df['meas_dj'] = extr_df.apply(
         get_measurement_models, axis=1
     )
     # Update new sources in the db and update the parquet files
-    batch_size = 10_000
-    for idx in range(0, extr_df['meas_dj'].size, batch_size):
-        out_bulk = Measurement.objects.bulk_create(
-            extr_df['meas_dj'].iloc[
-                idx : idx + batch_size
-            ].values.tolist(),
-            batch_size
+    with transaction.atomic():
+        batch_size = 10_000
+        for idx in range(0, extr_df['meas_dj'].size, batch_size):
+            out_bulk = Measurement.objects.bulk_create(
+                extr_df['meas_dj'].iloc[
+                    idx : idx + batch_size
+                ].values.tolist(),
+                batch_size
+            )
+            logger.info('Bulk uploaded #%i measurements', len(out_bulk))
+
+    # make the measurement id column
+    extr_df['id'] = extr_df['meas_dj'].apply(getattr, args=('id',))
+
+    # Update the parquet files appending the new measurements
+    for grp_name, grp_df in extr_df.groupby('image'):
+        logger.info('Updating the image %s parquet ...', grp_name)
+        fname = images_df.at[grp_name, 'measurements_path']
+        df = (
+            pd.read_parquet(fname)
+            .append(grp_df.drop(
+                ['source_tmp_id', 'meas_dj', 'image'],
+                axis=1
+            ))
         )
-        logger.info('Bulk uploaded #%i measurements', len(out_bulk))
+        df.to_parquet(
+            fname,
+            index=False
+        )
 
     # create the associations objects
     extr_df = (
@@ -231,5 +253,8 @@ def forced_extraction(srcs_df, sources_df, sys_err):
     )
     # upload associations in DB
     upload_associations(extr_df['assoc_dj'])
+
+    # Update source variability metrics and fluxes
+
 
     pass
