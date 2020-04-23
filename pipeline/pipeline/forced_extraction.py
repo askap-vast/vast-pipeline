@@ -10,10 +10,11 @@ from django.db import transaction
 from pipeline.models import Image
 from pipeline.image.utils import on_sky_sep
 from pipeline.pipeline.utils import get_measurement_models
+
 from .forced_phot import ForcedPhot
 from .loading import upload_associations
 from .utils import cross_join
-from ..models import Association, Measurement
+from ..models import Association, Measurement, Source
 
 
 logger = logging.getLogger(__name__)
@@ -88,6 +89,37 @@ def extract_from_image(df, images_df):
     df['image_id'] = images_df.at[img_name, 'id']
 
     return df
+
+
+def get_eta_metric(df, peak=False):
+    '''
+    Calculates the eta variability metric of a source.
+    Works on the grouped by dataframe using the fluxes
+    of the assoicated measurements.
+    '''
+    suffix = 'peak' if peak else 'int'
+    Nsrc = df['source'].count()
+    if (Nsrc == 1) or (df[f'flux_{suffix}_err'] == 0.).any():
+        return 0.
+
+    weights = 1. / df[f'flux_{suffix}_err'].values**2
+    fluxes = df[f'flux_{suffix}'].values
+    eta = (Nsrc / (Nsrc - 1)) * (
+        (weights * fluxes**2).mean() - (
+            (weights * fluxes).mean()**2 / weights.mean()
+        )
+    )
+    return eta
+
+
+def update_source_models(row):
+    '''
+    Fetches the source model (for DB injecting).
+    '''
+    src = row['src_dj']
+    for fld in row.index:
+        setattr(src, fld, row[fld])
+    return src
 
 
 def forced_extraction(srcs_df, sources_df, sys_err):
@@ -226,6 +258,7 @@ def forced_extraction(srcs_df, sources_df, sys_err):
     # make the measurement id column
     extr_df['id'] = extr_df['meas_dj'].apply(getattr, args=('id',))
 
+    # TODO: parallelise with Dask
     # Update the parquet files appending the new measurements
     for grp_name, grp_df in extr_df.groupby('image'):
         logger.info('Updating the image %s parquet ...', grp_name)
@@ -259,6 +292,50 @@ def forced_extraction(srcs_df, sources_df, sys_err):
     upload_associations(extr_df['assoc_dj'])
 
     # Update source variability metrics and fluxes
+    # select only sources to be updated and used columns
+    cols = [
+        'source', 'src_dj', 'flux_int', 'flux_int_err', 'flux_peak',
+        'flux_peak_err'
+    ]
+    sources_df = (
+        sources_df.loc[
+            sources_df['source'].isin(extr_df['source']),
+            cols
+        ]
+        .append(extr_df[cols], ignore_index=True)
+    )
 
+    grouped = sources_df.groupby('source')
+    new_srcs_df = grouped.agg(
+        avg_flux_int=pd.NamedAgg(column='flux_int', aggfunc='mean'),
+        avg_flux_peak=pd.NamedAgg(column='flux_peak', aggfunc='mean'),
+        max_flux_peak=pd.NamedAgg(column='flux_peak', aggfunc='max'),
+    )
+    new_srcs_df['v_int'] = (
+        grouped['flux_int'].std() / grouped['flux_int'].mean()
+    )
+    new_srcs_df['v_peak'] = (
+        grouped['flux_peak'].std() / grouped['flux_peak'].mean()
+    )
+    new_srcs_df['eta_int'] = grouped.apply(get_eta_metric)
+    new_srcs_df['eta_peak'] = grouped.apply(get_eta_metric, peak=True)
+    # add and update Django objects with new values
+    new_srcs_df['src_dj'] = srcs_df.loc[new_srcs_df.index, 'src_dj']
+    new_srcs_df['src_dj'] = new_srcs_df.apply(
+        update_source_models,
+        axis=1
+    )
+    # bulk update the source new variability metrics and fluxes
+    with transaction.atomic():
+        batch_size = 10_000
+        for idx in range(0, new_srcs_df['src_dj'].size, batch_size):
+            out_bulk = Source.objects.bulk_update(
+                new_srcs_df['src_dj'].iloc[
+                    idx : idx + batch_size
+                ].values.tolist(),
+                new_srcs_df.columns.drop('src_dj').values.tolist(),
+                batch_size
+            )
+            logger.info('Bulk updated #%i sources', len(out_bulk))
 
     pass
