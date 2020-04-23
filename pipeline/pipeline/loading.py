@@ -84,9 +84,11 @@ def upload_images(paths, config, pipeline_run):
         # do a upload without evaluate the objects, that should be faster
         # see https://docs.djangoproject.com/en/2.2/ref/models/querysets/
         batch_size = 10_000
-        for idx in range(0, measurements.meas_dj.size, batch_size):
+        for idx in range(0, measurements['meas_dj'].size, batch_size):
             out_bulk = Measurement.objects.bulk_create(
-                measurements.meas_dj.iloc[idx : idx + batch_size].values.tolist(),
+                measurements['meas_dj'].iloc[
+                    idx : idx + batch_size
+                ].values.tolist(),
                 batch_size
             )
             logger.info('Bulk uploaded #%i measurements', len(out_bulk))
