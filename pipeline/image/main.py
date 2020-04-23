@@ -236,6 +236,9 @@ class SelavyImage(FitsImage):
         df['weight_ew'] = 1. / df['uncertainty_ew'].values**2
         df['weight_ns'] = 1. / df['uncertainty_ns'].values**2
 
+        # Initialise the forced column as False
+        df['forced'] = False
+
         logger.debug('Errors calculation done.')
 
         return df
