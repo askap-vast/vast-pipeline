@@ -190,6 +190,19 @@ class SelavyImage(FitsImage):
         if df['component_id'].duplicated().any():
             raise Exception('Found duplicated names in sources')
 
+        # drop unrealistic sources
+        cols_to_check = [
+            'bmaj',
+            'bmin',
+            'flux_peak',
+            'flux_int',
+        ]
+
+        bad_sources = df[(df[cols_to_check] == 0).any(axis=1)]
+        if bad_sources.shape[0] > 0:
+            logger.debug("Dropping %i bad sources.", bad_sources.shape[0])
+            df = df.drop(bad_sources.index.values)
+
         # add fields from image and fix name column
         df['image_id'] = dj_image.id
         df['time'] = dj_image.datetime
@@ -211,7 +224,48 @@ class SelavyImage(FitsImage):
                 df.loc[sel, col] = settings.POS_DEFAULT_MIN_ERROR
             df[col] = df[col] / 3600.
 
-        logger.debug("Calculating errors...")
+        df['snr'] = df['flux_peak'] / df['rms_image']
+
+        if self.config.USE_CONDON_ERRORS:
+            logger.debug("Calculating Condon '97 errors...")
+            theta_B = dj_image.beam_bmaj
+            theta_b = dj_image.beam_bmin
+
+            df[[
+                'condon_flux_peak',
+                'condon_flux_peak_err',
+                'condon_flux_int_err',
+                'condon_major_err',
+                'condon_minor_err',
+                'condon_theta_err',
+                'condon_ra_err',
+                'condon_dec_err',
+            ]] = df[[
+                'flux_peak',
+                'flux_int',
+                'bmaj',
+                'bmin',
+                'pa',
+                'snr',
+                'rms_image',
+            ]].apply(
+                calc_condon_flux_errors,
+                args=(theta_B,theta_b),
+                axis=1,
+                result_type='expand'
+            )
+
+            df['flux_peak'] = df['condon_flux_peak']
+            df['flux_peak_err'] = df['condon_flux_peak_err']
+            df['flux_int_err'] = df['condon_flux_int_err']
+            df['err_bmaj'] = df['condon_major_err']
+            df['err_bmin'] = df['condon_minor_err']
+            df['err_pa'] = df['condon_theta_err']
+            df['ra_err'] = df['condon_ra_err']
+            df['dec_err'] = df['condon_dec_err']
+            logger.debug("Condon errors done.")
+
+        logger.debug("Calculating positional errors...")
         # TODO: avoid extra column given that it is a single value
         df['ew_sys_err'] = self.config.ASTROMETRIC_UNCERTAINTY_RA / 3600.
         df['ns_sys_err'] = self.config.ASTROMETRIC_UNCERTAINTY_DEC / 3600.
@@ -235,25 +289,6 @@ class SelavyImage(FitsImage):
         df['weight_ew'] = 1. / df['uncertainty_ew'].values**2
         df['weight_ns'] = 1. / df['uncertainty_ns'].values**2
 
-        df['snr'] = df['flux_peak'] / df['rms_image']
-
-        if self.config.USE_CONDON_ERRORS:
-            theta_n = np.hypot(dj_image.beam_bmaj, dj_image.beam_bmin)
-
-            df[['condon_flux_peak_err', 'condon_flux_int_err']] = df.apply(
-                calc_condon_flux_errors,
-                args=(theta_n,),
-                axis=1,
-                result_type='expand'
-            )
-
-        df['condon_flux_peak_err'] = df['condon_flux_peak_err'] * 1.e3
-        df['condon_flux_int_err'] = df['condon_flux_int_err'] * 1.e3
-
-        df.to_csv("selavy_fluxes_condon.csv", index=False)
-
-        import ipdb; ipdb.set_trace() # BREAKPOINT
-
-        logger.debug('Errors calculation done.')
+        logger.debug('Positional errors done.')
 
         return df

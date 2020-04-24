@@ -60,73 +60,107 @@ def calc_error_radius(ra, ra_err, dec, dec_err):
     return np.amax(seps, 1)
 
 
-def calc_condon_flux_errors(row, theta_n):
+def calc_condon_flux_errors(row, theta_B, theta_b, alpha_maj1=2.5, alpha_min1=0.5,
+                 alpha_maj2=0.5, alpha_min2=2.5, alpha_maj3=1.5, alpha_min3=1.5,
+                 clean_bias=0.0, clean_bias_error=0.0, frac_flux_cal_error=0.0,):
     """
-    Calculate the parameter errors for a fitted source
-    using the description of Condon'97
-    All parameters are assigned errors, assuming that all params were fit.
-    If some params were held fixed then these errors are overestimated.
-    Parameters
-    ----------
-    source : :class:`AegeanTools.models.SimpleSource`
-        The source which was fit.
-    theta_n : float or None
-        A measure of the beam sampling. (See Condon'97).
-    psf : :class:`AegeanTools.wcs_helpers.Beam`
-        The psf at the location of the source.
-    Returns
-    -------
-    None
+    Returns the errors on parameters from Gaussian fits according to
+    the Condon (PASP 109, 166 (1997)) formulae.
+    These formulae are not perfect, but we'll use them for the
+    time being.  (See Refregier and Brown (astro-ph/9803279v1) for
+    a more rigorous approach.) It also returns the corrected peak.
+    The peak is corrected for the overestimate due to the local
+    noise gradient.
     """
-
-    # indices for the calculation or rho
-    alphas = {'amp': (3. / 2, 3. / 2),
-              'major': (5. / 2, 1. / 2),
-              'xo': (5. / 2, 1. / 2),
-              'minor': (1. / 2, 5. / 2),
-              'yo': (1. / 2, 5. / 2),
-              'pa': (1. / 2, 5. / 2)}
 
     major = row.bmaj / 3600.  # degrees
     minor = row.bmin / 3600.  # degrees
-    phi = np.radians(row.pa)  # radians
-    # if psf is not None:
-    #     beam = psf.get_beam(source.ra, source.dec)
-    #     if beam is not None:
-    #         theta_n = np.hypot(beam.a, beam.b)
-    #         print(beam, theta_n)
-
-    if theta_n is None:
-        return 0., 0.
-
-    smoothing = major * minor / (theta_n ** 2)
-    factor1 = (1 + (major / theta_n))
-    factor2 = (1 + (minor / theta_n))
+    theta = np.deg2rad(row.pa)
+    flux_peak = row.flux_peak
+    flux_int = row.flux_int
     snr = row.snr
-    # calculation of rho2 depends on the parameter being used so we lambda this into a function
-    rho2 = lambda x: smoothing / 4 * factor1 ** alphas[x][0] * factor2 ** alphas[x][1] * snr ** 2
+    noise = row.rms_image
 
-    err_peak_flux = (row.flux_peak / 1.e3) * np.sqrt(2 / rho2('amp'))
-    err_a = major * np.sqrt(2 / rho2('major')) * 3600.  # arcsec
-    err_b = minor * np.sqrt(2 / rho2('minor')) * 3600.  # arcsec
+    variables = [
+        theta_B,
+        theta_b,
+        major,
+        minor,
+        flux_peak,
+        flux_int,
+        snr,
+        noise
+    ]
 
-    err_xo2 = 2. / rho2('xo') * major ** 2 / (8 * np.log(2))  # Condon'97 eq 21
-    err_yo2 = 2. / rho2('yo') * minor ** 2 / (8 * np.log(2))
-    err_ra = np.sqrt(err_xo2 * np.sin(phi)**2 + err_yo2 * np.cos(phi)**2)
-    err_dec = np.sqrt(err_xo2 * np.cos(phi)**2 + err_yo2 * np.sin(phi)**2)
+    if 0.0 in variables:
+        logger.debug(variables)
+        return 0., 0., 0., 0., 0., 0., 0., 0.
 
-    if (major == 0) or (minor == 0):
-        source.err_pa = -1.
-    # if major/minor are very similar then we should not be able to figure out what pa is.
-    elif abs(2 * (major-minor) / (major+minor)) < 0.01:
-        err_pa = -1.
-    else:
-        err_pa = np.degrees(np.sqrt(4 / rho2('pa')) * (major * minor / (major ** 2 - minor ** 2)))
+    try:
 
-    # integrated flux error
-    err2 = ((err_peak_flux) / (row.flux_peak / 1.e3)) ** 2
-    err2 += (theta_n ** 2 / (major * minor)) * ((err_a / (major * 3600.) ) ** 2 + (err_b / (minor * 3600.) ) ** 2)
-    err_int_flux = (row.flux_int / 1.e3) * np.sqrt(err2)
+        rho_sq1 = ((major * minor / (4. * theta_B * theta_b)) *
+                   (1. + (theta_B / major)**2)**alpha_maj1 *
+                   (1. + (theta_b / minor)**2)**alpha_min1 *
+                   snr**2)
+        rho_sq2 = ((major * minor / (4. * theta_B * theta_b)) *
+                   (1. + (theta_B / major)**2)**alpha_maj2 *
+                   (1. + (theta_b / minor)**2)**alpha_min2 *
+                   snr**2)
+        rho_sq3 = ((major * minor / (4.* theta_B * theta_b)) *
+                   (1. + (theta_B / major)**2)**alpha_maj3 *
+                   (1. + (theta_b / minor)**2)**alpha_min3 *
+                   snr**2)
 
-    return err_peak_flux , err_int_flux
+        rho1 = np.sqrt(rho_sq1)
+        rho2 = np.sqrt(rho_sq2)
+        rho3 = np.sqrt(rho_sq3)
 
+        denom1 = np.sqrt(4. * np.log(2.)) * rho1
+        denom2 = np.sqrt(4. * np.log(2.)) * rho2
+
+        # Here you get the errors parallel to the fitted semi-major and
+        # semi-minor axes as taken from the NVSS paper (Condon et al. 1998,
+        # AJ, 115, 1693), formula 25.
+        # Those variances are twice the theoreticals, so the errors in
+        # position are sqrt(2) as large as one would get from formula 21
+        # of the Condon (1997) paper.
+        error_par_major = major / denom1
+        error_par_minor = minor / denom2
+
+        # When these errors are converted to RA and Dec,
+        # calibration uncertainties will have to be added,
+        # like in formulae 27 of the NVSS paper.
+        errorx = np.sqrt((error_par_major * np.sin(theta))**2 +
+                            (error_par_minor * np.cos(theta))**2)
+        errory = np.sqrt((error_par_major * np.cos(theta))**2 +
+                            (error_par_minor * np.sin(theta))**2)
+
+        # Note that we report errors in HWHM axes instead of FWHM axes
+        # so the errors are half the errors of formula 29 of the NVSS paper.
+        errormajor = np.sqrt(2) * major / rho1
+        errorminor = np.sqrt(2) * minor / rho2
+
+        if major > minor:
+            errortheta = 2.0 * (major * minor / (major**2 - minor**2)) / rho2
+        else:
+            errortheta = np.pi
+        if errortheta > np.pi:
+            errortheta = np.pi
+
+        flux_peak += -noise**2 / flux_peak + clean_bias
+
+        errorpeaksq = ((frac_flux_cal_error * flux_peak)**2 +
+                       clean_bias_error**2 +
+                       2. * flux_peak**2 / rho_sq3)
+
+        errorpeak = np.sqrt(errorpeaksq)
+
+        help1 = (errormajor / major)**2
+        help2 = (errorminor / minor)**2
+        help3 = theta_B * theta_b / (major * minor)
+        errorflux = np.abs(flux_int) * np.sqrt(errorpeaksq / flux_peak**2 + help3 * (help1 + help2))
+
+        return flux_peak, errorpeak, errorflux, errormajor, errorminor, errortheta, errorx, errory
+
+    except exception as e:
+        return 0., 0., 0., 0., 0., 0., 0., 0.

@@ -238,7 +238,7 @@ def ImageIndex(request):
             'datatable': {
                 'api': '/api/images/?format=datatables',
                 'colsFields': colsfields,
-                'colsNames': ['Name','Time','RA','DEC'],
+                'colsNames': ['Name','Time (UTC)','RA (deg)','Dec (deg)'],
                 'search': True,
             }
         }
@@ -568,12 +568,12 @@ def SourceDetail(request, id, action=None):
     source['datatable'] = {'colsNames': [
         'ID',
         'Name',
-        'Date',
+        'Date (UTC)',
         'Image',
-        'RA',
-        'RA Error',
-        'Dec',
-        'Dec Error',
+        'RA (deg)',
+        'RA Error (arcsec)',
+        'Dec (deg)',
+        'Dec Error (arcsec)',
         'Int. Flux (mJy)',
         'Int. Flux Error (mJy)',
         'Peak Flux (mJy/beam)',
