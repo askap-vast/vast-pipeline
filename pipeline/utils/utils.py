@@ -2,6 +2,11 @@ import os
 import logging
 import math as m
 from importlib.util import spec_from_file_location, module_from_spec
+from astroquery.ned import Ned
+from astroquery.simbad import Simbad
+import numpy as np
+from astropy import units as u
+from astropy.coordinates import SkyCoord
 
 from datetime import datetime
 from django.conf import settings
@@ -167,3 +172,43 @@ def eq_to_cart(ra, dec):
         m.cos(m.radians(dec)) * m.sin(m.radians(ra)),# Cartesian y
         m.sin(m.radians(dec))# Cartesian z
     )
+
+
+def ned_search(object_name):
+    """
+    Find the coordinates of an object from the NED service.
+    Returns RA and Dec. Will return None values if search
+    returns no results.
+    """
+    try:
+        result_table = Ned.query_object(object_name)
+
+        ra = result_table[0]['RA']
+        dec = result_table[0]['DEC']
+
+        return ra, dec
+
+    except Exception as e:
+        return None, None
+
+
+def simbad_search(object_name):
+    """
+    Find the coordinates of an object from the NED service.
+    Returns RA and Dec. Will return None values if search
+    returns no results.
+    """
+    result_table = Simbad.query_object(object_name)
+
+    if result_table is None:
+        return None, None
+
+    ra = result_table[0]['RA']
+    dec = result_table[0]['DEC']
+
+    c = SkyCoord(ra + dec, unit=(u.hourangle, u.deg))
+
+    ra = c.ra.deg
+    dec = c.dec.deg
+
+    return ra, dec

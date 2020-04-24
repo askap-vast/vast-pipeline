@@ -9,7 +9,7 @@ from .serializers import (
     ImageSerializer, MeasurementSerializer, RunSerializer,
     SourceSerializer
 )
-from .utils.utils import deg2dms, deg2hms
+from .utils.utils import deg2dms, deg2hms, simbad_search, ned_search
 
 
 logger = logging.getLogger(__name__)
@@ -238,7 +238,7 @@ def ImageIndex(request):
             'datatable': {
                 'api': '/api/images/?format=datatables',
                 'colsFields': colsfields,
-                'colsNames': ['Name','Time','RA','DEC'],
+                'colsNames': ['Name','Time (UTC)','RA (deg)','Dec (deg)'],
                 'search': True,
             }
         }
@@ -465,10 +465,26 @@ class SourceViewSet(ModelViewSet):
         if qry_dict:
             qs = qs.filter(**qry_dict)
 
+        radius_conversions = {
+            "arcsec": 3600.,
+            "arcmin": 60.,
+            "deg": 1.
+        }
         radius = self.request.query_params.get('radius')
-        wavg_ra = self.request.query_params.get('ra')
-        wavg_dec = self.request.query_params.get('dec')
+        radiusUnit = self.request.query_params.get('radiusunit')
+        objectname = self.request.query_params.get('objectname')
+        objectservice = self.request.query_params.get('objectservice')
+        if objectname is not None:
+            if objectservice == 'simbad':
+                wavg_ra, wavg_dec = simbad_search(objectname)
+            elif objectservice == 'ned':
+                wavg_ra, wavg_dec = ned_search(objectname)
+        else:
+            wavg_ra = self.request.query_params.get('ra')
+            wavg_dec = self.request.query_params.get('dec')
+
         if wavg_ra and wavg_dec and radius:
+            radius = float(radius) / radius_conversions[radiusUnit]
             qs = qs.cone_search(wavg_ra, wavg_dec, radius)
 
         return qs
@@ -568,12 +584,12 @@ def SourceDetail(request, id, action=None):
     source['datatable'] = {'colsNames': [
         'ID',
         'Name',
-        'Date',
+        'Date (UTC)',
         'Image',
-        'RA',
-        'RA Error',
-        'Dec',
-        'Dec Error',
+        'RA (deg)',
+        'RA Error (arcsec)',
+        'Dec (deg)',
+        'Dec Error (arcsec)',
         'Int. Flux (mJy)',
         'Int. Flux Error (mJy)',
         'Peak Flux (mJy/beam)',

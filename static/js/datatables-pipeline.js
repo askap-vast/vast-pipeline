@@ -155,11 +155,21 @@ $(document).ready(function() {
     let PipeRun = document.getElementById("runSelect");
     let qry_url = dataConf.api;
     if (PipeRun.value != '') {
-      qry_url = qry_url + "&run=" + PipeRun.value;
+      qry_url = qry_url + "&run=" + encodeURIComponent(PipeRun.value);
     };
+    let objectname = document.getElementById("objectSearch");
+    let objectservice = document.getElementById("objectService");
     let radius = document.getElementById("radiusSelect");
     let ra = document.getElementById("raSelect");
     let dec = document.getElementById("decSelect");
+    let unit = document.getElementById("radiusUnit");
+    // Object search overrules RA and Dec search
+    if (objectname.value) {
+      qry_url = qry_url + "&objectname=" + encodeURIComponent(objectname.value);
+    }
+    if (objectservice.value) {
+      qry_url = qry_url + "&objectservice=" + objectservice.value;
+    }
     if (radius.value) {
       qry_url = qry_url + "&radius=" + radius.value;
     };
@@ -169,6 +179,9 @@ $(document).ready(function() {
     if (dec.value) {
       qry_url = qry_url + "&dec=" + dec.value;
     };
+    if (unit.value) {
+        qry_url = qry_url + "&radiusunit=" + unit.value
+    }
     let flux_type = document.getElementById("aveFluxSelect");
     let flux_min = document.getElementById("fluxMinSelect");
     let flux_max = document.getElementById("fluxMaxSelect");

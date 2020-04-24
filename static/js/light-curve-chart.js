@@ -74,6 +74,7 @@ let conf = {
         ticks: {
           maxTicksLimit: 5,
           padding: 10,
+          // beginAtZero: true   // minimum value will be 0.
         },
         gridLines: {
           color: "rgb(234, 236, 244)",

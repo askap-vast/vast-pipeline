@@ -41,18 +41,34 @@
       <div class="row">
         <div class="col-lg-2">
           <h1 class="h6 mb-2 font-weight-bold text-gray-800">Pipeline Run</h1>
-          <select id="runSelect" class="form-control">
+          <select id="runSelect" class="form-control" style="margin-bottom:1rem">
             <option value="" selected>All</option>
-            {% for ds in  runs%}
+            {% for ds in runs %}
             <option value={{ ds.name }}>{{ ds.name }}</option>
             {% endfor %}
           </select>
         </div>
         <div class="col-lg-2">
           <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Cone Search</h1>
+          <input id="objectSearch" type="text" class="form-control bg-light border-0 small" placeholder="Object Name" aria-label="ObjectSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+              <select id="objectService" class="form-control" style="margin-bottom:1rem">
+                <option value="simbad" selected>SIMBAD</option>
+                <option value="ned">NED</option>
+              </select>
           <input id="raSelect" type="number" class="form-control bg-light border-0 small" placeholder="RA (deg)" step="1e-10" aria-label="RaSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
           <input id="decSelect" type="number" class="form-control bg-light border-0 small" placeholder="DEC (deg)" step="1e-10" aria-label="DecSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
-          <input id="radiusSelect" type="number" class="form-control bg-light border-0 small" placeholder="Radius (deg)" min="1e-10" step="1e-10" aria-label="RadiusSearch" aria-describedby="basic-addon2">
+          <div class="row">
+            <div class="col-7">
+              <input id="radiusSelect" type="number" class="form-control bg-light border-0 small" placeholder="Radius" min="1e-10" step="1" aria-label="RadiusSearch" aria-describedby="basic-addon2">
+            </div>
+            <div class="col-5">
+              <select id="radiusUnit" class="form-control">
+                <option value="arcsec" selected>arcsec</option>
+                <option value="arcmin">arcmin</option>
+                <option value="deg">deg</option>
+              </select>
+            </div>
+          </div>
         </div>
         <div class="col-lg-2">
           <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Average Flux Range</h1>
