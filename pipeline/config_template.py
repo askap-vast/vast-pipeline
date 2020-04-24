@@ -58,3 +58,5 @@ DEFAULT_SURVEY = None # 'NVSS'
 # reported value or this value, whichever is greater.
 # This is a fraction, 0 = No minimum error
 FLUX_PERC_ERROR = 0 #percent 0.05 is 5%
+
+USE_CONDON_ERRORS = False

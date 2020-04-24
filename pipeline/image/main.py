@@ -9,6 +9,7 @@ from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
 
 from .utils import calc_error_radius
+from .utils import calc_condon_flux_errors
 
 from pipeline.survey.translators import tr_selavy
 
@@ -233,6 +234,25 @@ class SelavyImage(FitsImage):
         # weight calculations to use later
         df['weight_ew'] = 1. / df['uncertainty_ew'].values**2
         df['weight_ns'] = 1. / df['uncertainty_ns'].values**2
+
+        df['snr'] = df['flux_peak'] / df['rms_image']
+
+        if self.config.USE_CONDON_ERRORS:
+            theta_n = np.hypot(dj_image.beam_bmaj, dj_image.beam_bmin)
+
+            df[['condon_flux_peak_err', 'condon_flux_int_err']] = df.apply(
+                calc_condon_flux_errors,
+                args=(theta_n,),
+                axis=1,
+                result_type='expand'
+            )
+
+        df['condon_flux_peak_err'] = df['condon_flux_peak_err'] * 1.e3
+        df['condon_flux_int_err'] = df['condon_flux_int_err'] * 1.e3
+
+        df.to_csv("selavy_fluxes_condon.csv", index=False)
+
+        import ipdb; ipdb.set_trace() # BREAKPOINT
 
         logger.debug('Errors calculation done.')
 
