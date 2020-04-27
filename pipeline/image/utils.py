@@ -64,6 +64,9 @@ def calc_condon_flux_errors(row, theta_B, theta_b, alpha_maj1=2.5, alpha_min1=0.
                  alpha_maj2=0.5, alpha_min2=2.5, alpha_maj3=1.5, alpha_min3=1.5,
                  clean_bias=0.0, clean_bias_error=0.0, frac_flux_cal_error=0.0,):
     """
+    The following code for this function taken from the TraP with a few
+    modifications.
+
     Returns the errors on parameters from Gaussian fits according to
     the Condon (PASP 109, 166 (1997)) formulae.
     These formulae are not perfect, but we'll use them for the
@@ -79,7 +82,7 @@ def calc_condon_flux_errors(row, theta_B, theta_b, alpha_maj1=2.5, alpha_min1=0.
     flux_peak = row.flux_peak
     flux_int = row.flux_int
     snr = row.snr
-    noise = row.rms_image
+    noise = row.local_rms
 
     variables = [
         theta_B,
@@ -92,6 +95,8 @@ def calc_condon_flux_errors(row, theta_B, theta_b, alpha_maj1=2.5, alpha_min1=0.
         noise
     ]
 
+    # return 0 if the source is unrealistic. Should be rare
+    # given that these sources are also filtered out before hand.
     if 0.0 in variables:
         logger.debug(variables)
         return 0., 0., 0., 0., 0., 0., 0., 0.
@@ -115,28 +120,21 @@ def calc_condon_flux_errors(row, theta_B, theta_b, alpha_maj1=2.5, alpha_min1=0.
         rho2 = np.sqrt(rho_sq2)
         rho3 = np.sqrt(rho_sq3)
 
+        # here we change the TraP code slightly and base it
+        # purely on Condon 97 and not the NVSS paper.
         denom1 = np.sqrt(4. * np.log(2.)) * rho1
         denom2 = np.sqrt(4. * np.log(2.)) * rho2
 
-        # Here you get the errors parallel to the fitted semi-major and
-        # semi-minor axes as taken from the NVSS paper (Condon et al. 1998,
-        # AJ, 115, 1693), formula 25.
-        # Those variances are twice the theoreticals, so the errors in
-        # position are sqrt(2) as large as one would get from formula 21
-        # of the Condon (1997) paper.
+        # these are the 'xo' and 'y0' errors from Condon
         error_par_major = major / denom1
         error_par_minor = minor / denom2
 
-        # When these errors are converted to RA and Dec,
-        # calibration uncertainties will have to be added,
-        # like in formulae 27 of the NVSS paper.
-        errorx = np.sqrt((error_par_major * np.sin(theta))**2 +
+        # ra and dec errors
+        errorra = np.sqrt((error_par_major * np.sin(theta))**2 +
                             (error_par_minor * np.cos(theta))**2)
-        errory = np.sqrt((error_par_major * np.cos(theta))**2 +
+        errordec = np.sqrt((error_par_major * np.cos(theta))**2 +
                             (error_par_minor * np.sin(theta))**2)
 
-        # Note that we report errors in HWHM axes instead of FWHM axes
-        # so the errors are half the errors of formula 29 of the NVSS paper.
         errormajor = np.sqrt(2) * major / rho1
         errorminor = np.sqrt(2) * minor / rho2
 
@@ -160,7 +158,7 @@ def calc_condon_flux_errors(row, theta_B, theta_b, alpha_maj1=2.5, alpha_min1=0.
         help3 = theta_B * theta_b / (major * minor)
         errorflux = np.abs(flux_int) * np.sqrt(errorpeaksq / flux_peak**2 + help3 * (help1 + help2))
 
-        return flux_peak, errorpeak, errorflux, errormajor, errorminor, errortheta, errorx, errory
+        return flux_peak, errorpeak, errorflux, errormajor, errorminor, errortheta, errorra, errordec
 
     except exception as e:
         return 0., 0., 0., 0., 0., 0., 0., 0.

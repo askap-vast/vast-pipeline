@@ -212,58 +212,68 @@ class SelavyImage(FitsImage):
         df['name'] = img_prefix + df['component_id']
 
         # # fix error fluxes
-        for col in ['flux_int_err', 'flux_peak_err']:
+        for col in ['selavy_flux_int_err', 'selavy_flux_peak_err']:
             sel = df[col] < settings.FLUX_DEFAULT_MIN_ERROR
             if sel.any():
                 df.loc[sel, col] = settings.FLUX_DEFAULT_MIN_ERROR
 
         # # fix error ra dec
-        for col in ['ra_err', 'dec_err']:
+        for col in ['selavy_ra_err', 'selavy_dec_err']:
             sel = df[col] < settings.POS_DEFAULT_MIN_ERROR
             if sel.any():
                 df.loc[sel, col] = settings.POS_DEFAULT_MIN_ERROR
             df[col] = df[col] / 3600.
 
-        df['snr'] = df['flux_peak'] / df['rms_image']
+        df['snr'] = df['flux_peak'] / df['local_rms']
+
+        logger.debug("Calculating Condon '97 errors...")
+        theta_B = dj_image.beam_bmaj
+        theta_b = dj_image.beam_bmin
+
+        df[[
+            'condon_flux_peak',
+            'condon_flux_peak_err',
+            'condon_flux_int_err',
+            'condon_err_bmaj',
+            'condon_err_bmin',
+            'condon_err_pa',
+            'condon_ra_err',
+            'condon_dec_err',
+        ]] = df[[
+            'flux_peak',
+            'flux_int',
+            'bmaj',
+            'bmin',
+            'pa',
+            'snr',
+            'local_rms',
+        ]].apply(
+            calc_condon_flux_errors,
+            args=(theta_B,theta_b),
+            axis=1,
+            result_type='expand'
+        )
+
+        logger.debug("Condon errors done.")
 
         if self.config.USE_CONDON_ERRORS:
-            logger.debug("Calculating Condon '97 errors...")
-            theta_B = dj_image.beam_bmaj
-            theta_b = dj_image.beam_bmin
-
-            df[[
-                'condon_flux_peak',
-                'condon_flux_peak_err',
-                'condon_flux_int_err',
-                'condon_major_err',
-                'condon_minor_err',
-                'condon_theta_err',
-                'condon_ra_err',
-                'condon_dec_err',
-            ]] = df[[
-                'flux_peak',
-                'flux_int',
-                'bmaj',
-                'bmin',
-                'pa',
-                'snr',
-                'rms_image',
-            ]].apply(
-                calc_condon_flux_errors,
-                args=(theta_B,theta_b),
-                axis=1,
-                result_type='expand'
-            )
-
-            df['flux_peak'] = df['condon_flux_peak']
             df['flux_peak_err'] = df['condon_flux_peak_err']
             df['flux_int_err'] = df['condon_flux_int_err']
-            df['err_bmaj'] = df['condon_major_err']
-            df['err_bmin'] = df['condon_minor_err']
-            df['err_pa'] = df['condon_theta_err']
+            df['err_bmaj'] = df['condon_err_bmaj']
+            df['err_bmin'] = df['condon_err_bmin']
+            df['err_pa'] = df['condon_err_pa']
             df['ra_err'] = df['condon_ra_err']
             df['dec_err'] = df['condon_dec_err']
-            logger.debug("Condon errors done.")
+            df['condon_errors'] = True
+        else:
+            df['flux_peak_err'] = df['selavy_flux_peak_err']
+            df['flux_int_err'] = df['selavy_flux_int_err']
+            df['err_bmaj'] = df['selavy_err_bmaj']
+            df['err_bmin'] = df['selavy_err_bmin']
+            df['err_pa'] = df['selavy_err_pa']
+            df['ra_err'] = df['selavy_ra_err']
+            df['dec_err'] = df['selavy_dec_err']
+            df['condon_errors'] = False
 
         logger.debug("Calculating positional errors...")
         # TODO: avoid extra column given that it is a single value

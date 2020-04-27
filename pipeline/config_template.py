@@ -59,4 +59,5 @@ DEFAULT_SURVEY = None # 'NVSS'
 # This is a fraction, 0 = No minimum error
 FLUX_PERC_ERROR = 0 #percent 0.05 is 5%
 
-USE_CONDON_ERRORS = False
+# default to True
+USE_CONDON_ERRORS = True

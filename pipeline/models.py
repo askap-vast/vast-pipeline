@@ -239,13 +239,13 @@ class Source(models.Model):
         )
     )
     avg_flux_int = models.FloatField(
-        help_text='The average integrated flux value.'
+        help_text='The average integrated flux value'
     )
     avg_flux_peak = models.FloatField(
-        help_text='The average peak flux value.'
+        help_text='The average peak flux value'
     )
     max_flux_peak = models.FloatField(
-        help_text='The maximum peak flux value.'
+        help_text='The maximum peak flux value'
     )
 
     # metrics
@@ -457,10 +457,10 @@ class Measurement(models.Model):
         )
     )# Uncertainty in Dec (degrees).
 
-    flux_int = models.FloatField()# Jy/beam
-    flux_int_err = models.FloatField()# Jy/beam
-    flux_peak = models.FloatField()# Jy/beam
-    flux_peak_err = models.FloatField()# Jy/beam
+    flux_int = models.FloatField()# mJy/beam
+    flux_int_err = models.FloatField()# mJy/beam
+    flux_peak = models.FloatField()# mJy/beam
+    flux_peak_err = models.FloatField()# mJy/beam
     chi_squared_fit = models.FloatField(
         db_column='chi2_fit',
         help_text='Chi-squared of the Guassian fit to the source'
@@ -477,6 +477,7 @@ class Measurement(models.Model):
             ' term came'
         )
         )# Did the spectral index come from the taylor term
+    local_rms = models.FloatField()# mJy/beam
     flag_c4 = models.BooleanField(
         default=False,
         help_text='Fit flag from selavy'
@@ -507,6 +508,58 @@ class Measurement(models.Model):
         default=False,
         help_text='Is this a quality source for analysis purposes'
     )# Is this a "quality" source for analysis purposes?
+
+    condon_errors = models.BooleanField(
+        default=False,
+        help_text=(
+        'Is the measurment using the calculated Condon errors'
+        ' as the main errors?'
+        )
+    )
+
+    selavy_flux_peak_err = models.FloatField(
+        help_text='The original peak flux error value given by Selavy',
+    )# mJy/beam
+    selavy_flux_int_err = models.FloatField(
+        help_text='The original int flux error value given by Selavy',
+    )# mJy/beam
+    selavy_err_bmaj = models.FloatField(
+        help_text='The original bmaj error value given by Selavy',
+    )# deg
+    selavy_err_bmin = models.FloatField(
+        help_text='The original bmin error value given by Selavy',
+    )# deg
+    selavy_err_pa = models.FloatField(
+        help_text='The original pa error value given by Selavy',
+    )# deg
+    selavy_ra_err = models.FloatField(
+        help_text='The original RA error value given by Selavy',
+    )# deg
+    selavy_dec_err = models.FloatField(
+        help_text='The original Dec error value given by Selavy',
+    )# deg
+
+    condon_flux_peak_err = models.FloatField(
+        help_text='The Condon peak flux error value calculated by the pipeline'
+    )# mJy/beam
+    condon_flux_int_err = models.FloatField(
+        help_text='The Condon int flux error value calculated by the pipeline'
+    )# mJy/beam
+    condon_err_bmaj = models.FloatField(
+        help_text='The Condon bmaj error value calculated by the pipeline'
+    )# deg
+    condon_err_bmin = models.FloatField(
+        help_text='The Condon bmin error value calculated by the pipeline'
+    )# deg
+    condon_err_pa = models.FloatField(
+        help_text='The Condon pa error value calculated by the pipeline'
+    )# deg
+    condon_ra_err = models.FloatField(
+        help_text='The Condon RA error value calculated by the pipeline'
+    )# deg
+    condon_dec_err = models.FloatField(
+        help_text='The Condon Dec error value calculated by the pipeline'
+    )# deg
 
     objects = SourceQuerySet.as_manager()
 
