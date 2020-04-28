@@ -222,8 +222,21 @@ def forced_extraction(
     extr_df['meas_dj'] = extr_df.apply(
         get_measurement_models, axis=1
     )
-    # Update new measurements in the db
+    # Delete previous forced measurements and update new forced
+    # measurements in the db
     with transaction.atomic():
+        obj_to_delete = Measurement.objects.filter(
+            image__run=p_run, forced=True
+        )
+        if obj_to_delete.exists():
+            n_del, detail_del = obj_to_delete.delete()
+            logger.info(
+                ('Deleting all previous forced measurement objects for '
+                 'this run. Total objects deleted: %i'),
+                n_del,
+            )
+            logger.debug('(type, #deleted): %s', detail_del)
+
         batch_size = 10_000
         for idx in range(0, extr_df['meas_dj'].size, batch_size):
             out_bulk = Measurement.objects.bulk_create(
