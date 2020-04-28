@@ -94,37 +94,6 @@ def extract_from_image(df, images_df):
     return df
 
 
-def get_eta_metric(df, peak=False):
-    '''
-    Calculates the eta variability metric of a source.
-    Works on the grouped by dataframe using the fluxes
-    of the assoicated measurements.
-    '''
-    suffix = 'peak' if peak else 'int'
-    Nsrc = df['source'].count()
-    if (Nsrc == 1) or (df[f'flux_{suffix}_err'] == 0.).any():
-        return 0.
-
-    weights = 1. / df[f'flux_{suffix}_err'].values**2
-    fluxes = df[f'flux_{suffix}'].values
-    eta = (Nsrc / (Nsrc - 1)) * (
-        (weights * fluxes**2).mean() - (
-            (weights * fluxes).mean()**2 / weights.mean()
-        )
-    )
-    return eta
-
-
-def update_source_models(row):
-    '''
-    Fetches the source model (for DB injecting).
-    '''
-    src = row['src_dj']
-    for fld in row.index:
-        setattr(src, fld, row[fld])
-    return src
-
-
 def forced_extraction(
         srcs_df, sources_df, sys_err, first_img, p_run, meas_dj_obj
     ):
@@ -206,6 +175,7 @@ def forced_extraction(
         srcs_df['img_diff'] != -1,
         ['wavg_ra', 'wavg_dec', 'img_diff']
     ].copy()
+    timer.reset()
     extr_df = (
         extr_df.explode('img_diff')
         .reset_index()
@@ -214,6 +184,9 @@ def forced_extraction(
         .apply(extract_from_image, images_df=images_df)
         .rename(columns={'wavg_ra':'ra', 'wavg_dec':'dec'})
         .dropna(subset=['flux_int'])
+    )
+    logger.info(
+        'Force extraction step time: %.2f seconds', timer.reset()
     )
 
     extr_df = extr_df.loc[extr_df['flux_int'] > 0, :]
@@ -249,7 +222,7 @@ def forced_extraction(
     extr_df['meas_dj'] = extr_df.apply(
         get_measurement_models, axis=1
     )
-    # Update new measurements in the db and update the parquet files
+    # Update new measurements in the db
     with transaction.atomic():
         batch_size = 10_000
         for idx in range(0, extr_df['meas_dj'].size, batch_size):
@@ -261,25 +234,8 @@ def forced_extraction(
             )
             logger.info('Bulk uploaded #%i measurements', len(out_bulk))
 
-    # make the measurement id column
+    # make the measurement id column and rename to source
     extr_df['id'] = extr_df['meas_dj'].apply(getattr, args=('id',))
-
-    # TODO: parallelise with Dask
-    # Update the parquet files appending the new measurements
-    for grp_name, grp_df in extr_df.groupby('image'):
-        logger.info('Updating the image %s parquet ...', grp_name)
-        fname = images_df.at[grp_name, 'measurements_path']
-        df = (
-            pd.read_parquet(fname)
-            .append(grp_df.drop(
-                ['source_tmp_id', 'meas_dj', 'image'],
-                axis=1
-            ))
-        )
-        df.to_parquet(
-            fname,
-            index=False
-        )
     extr_df = extr_df.rename(columns={'source_tmp_id':'source'})
 
     # append new measurements to prev meas df
@@ -335,4 +291,7 @@ def forced_extraction(
     # upload associations in DB
     upload_associations(sources_df['assoc_dj'])
 
+    logger.info(
+        'Total forced extraction time: %.2f seconds', timer.reset_init()
+    )
     pass
