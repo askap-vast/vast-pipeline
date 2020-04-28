@@ -1,41 +1,18 @@
 import logging
-import multiprocessing
 import numpy as np
 import pandas as pd
-import dask.dataframe as dd
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.coordinates import Angle
-from itertools import chain
 
 from .loading import upload_associations, upload_sources
-from .utils import get_or_append_list, prep_skysrc_df
+from .utils import get_or_append_list, parallel_groupby, prep_skysrc_df
 from ..models import Association, Source
 from ..utils.utils import deg2hms, deg2dms, StopWatch
 
 
 logger = logging.getLogger(__name__)
-
-
-def get_eta_metric(row, df, peak=False):
-    '''
-    Calculates the eta variability metric of a source.
-    Works on the grouped by dataframe using the fluxes
-    of the assoicated measurements.
-    '''
-    if row['Nsrc'] == 1:
-        return 0.
-
-    suffix = 'peak' if peak else 'int'
-    weights = 1. / df[f'flux_{suffix}_err'].values**2
-    fluxes = df[f'flux_{suffix}'].values
-    eta = (row['Nsrc'] / (row['Nsrc']-1)) * (
-        (weights * fluxes**2).mean() - (
-            (weights * fluxes).mean()**2 / weights.mean()
-        )
-    )
-    return eta
 
 
 def calc_de_ruiter(df):
@@ -77,48 +54,6 @@ def calc_de_ruiter(df):
     dr = np.sqrt(dr1 + dr2)
 
     return dr
-
-
-def groupby_funcs(row, first_img):
-    '''
-    Performs calculations on the unique sources to get the
-    lightcurve properties. Works on the grouped by source
-    dataframe.
-    '''
-    # calculated average ra, dec, fluxes and metrics
-    d = {}
-    d['img_list'] = list(set(row['img'].values.tolist()))
-    d['wavg_ra'] = row['interim_ew'].sum() / row['weight_ew'].sum()
-    d['wavg_dec'] = row['interim_ns'].sum() / row['weight_ns'].sum()
-    d['wavg_uncertainty_ew'] = 1. / np.sqrt(row['weight_ew'].sum())
-    d['wavg_uncertainty_ns'] = 1. / np.sqrt(row['weight_ns'].sum())
-    for col in ['avg_flux_int', 'avg_flux_peak']:
-        d[col] = row[col.split('_', 1)[1]].mean()
-    d['max_flux_peak'] = row['flux_peak'].values.max()
-
-    for col in ['flux_int', 'flux_peak']:
-        d[f'{col}_sq'] = (row[col]**2).mean()
-    d['Nsrc'] = row['id'].count()
-    d['v_int'] = row['flux_int'].std() / row['flux_int'].mean()
-    d['v_peak'] = row['flux_peak'].std() / row['flux_peak'].mean()
-    d['eta_int'] = get_eta_metric(d, row)
-    d['eta_peak'] = get_eta_metric(d, row, peak=True)
-    # remove not used cols
-    for col in ['flux_int_sq', 'flux_peak_sq']:
-        d.pop(col)
-    d.pop('Nsrc')
-    # set new source
-    d['new'] = False if first_img in row['img'].values else True
-
-    # get unique related sources
-    list_uniq_related = list(set(
-        chain.from_iterable(
-            lst for lst in row['related'] if isinstance(lst, list)
-        )
-    ))
-    d['related_list'] = list_uniq_related if list_uniq_related else -1
-
-    return pd.Series(d)
 
 
 def get_source_models(row, pipeline_run=None):
@@ -716,13 +651,8 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
         sources_df.source.unique().shape[0]
     )
     stats = StopWatch()
-    n_cpu = multiprocessing.cpu_count() - 1
-    srcs_df_dask = dd.from_pandas(sources_df, n_cpu)
-    srcs_df = (
-        srcs_df_dask.groupby('source')
-        .apply(groupby_funcs, first_img=images[0].name)
-        .compute(num_workers=n_cpu, scheduler='processes')
-    )
+    srcs_df = parallel_groupby(sources_df, images[0].name)
+
     logger.info('Groupby-apply time: %.2f', stats.reset())
     # fill NaNs as resulted from calculated metrics with 0
     srcs_df = srcs_df.fillna(0.)
