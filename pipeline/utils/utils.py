@@ -34,8 +34,7 @@ class StopWatch():
         """
         now = datetime.now()
         diff = (now - self._init).total_seconds()
-        self._last = now
-        self._init = now
+        self._last = self._init = now
         return diff
 
 
