@@ -7,9 +7,12 @@ from astropy.coordinates import SkyCoord
 from astropy.coordinates import Angle
 
 from .loading import upload_associations, upload_sources
-from .utils import get_or_append_list, parallel_groupby, prep_skysrc_df
-from ..models import Association, Source
-from ..utils.utils import deg2hms, deg2dms, StopWatch
+from .utils import (
+    get_or_append_list, get_source_models, parallel_groupby,
+    parallel_groupby_coord, prep_skysrc_df
+)
+from ..models import Association
+from ..utils.utils import StopWatch
 
 
 logger = logging.getLogger(__name__)
@@ -54,20 +57,6 @@ def calc_de_ruiter(df):
     dr = np.sqrt(dr1 + dr2)
 
     return dr
-
-
-def get_source_models(row, pipeline_run=None):
-    '''
-    Fetches the source model (for DB injecting).
-    '''
-    name = f"src_{deg2hms(row['wavg_ra'])}{deg2dms(row['wavg_dec'])}"
-    src = Source()
-    src.run = pipeline_run
-    src.name = name
-    for fld in src._meta.get_fields():
-        if getattr(fld, 'attname', None) and fld.attname in row.index:
-            setattr(src, fld.attname, row[fld.attname])
-    return src
 
 
 def one_to_many_basic(sources_df, skyc2_srcs):
@@ -647,45 +636,51 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
         .rename(columns={'ra_source':'ra', 'dec_source':'dec'})
     )
 
-    # calculate source fields
-    logger.info(
-        'Calculating statistics for %i sources...',
-        sources_df.source.unique().shape[0]
-    )
-    timer.reset()
-    srcs_df = parallel_groupby(sources_df, images[0].name)
+    if not config.MONITOR:
+        # calculate source fields
+        logger.info(
+            'Calculating statistics for %i sources...',
+            sources_df.source.unique().shape[0]
+        )
+        timer.reset()
+        srcs_df = parallel_groupby(sources_df, images[0].name)
 
-    logger.info('Groupby-apply time: %.2f seconds', timer.reset())
-    # fill NaNs as resulted from calculated metrics with 0
-    srcs_df = srcs_df.fillna(0.)
+        logger.info('Groupby-apply time: %.2f seconds', timer.reset())
+        # fill NaNs as resulted from calculated metrics with 0
+        srcs_df = srcs_df.fillna(0.)
 
-    # generate the source models
-    srcs_df['src_dj'] = srcs_df.apply(
-        get_source_models,
-        pipeline_run=p_run,
-        axis=1
-    )
-    # upload sources and related to DB
-    upload_sources(p_run, srcs_df)
+        # generate the source models
+        srcs_df['src_dj'] = srcs_df.apply(
+            get_source_models,
+            pipeline_run=p_run,
+            axis=1
+        )
+        # upload sources and related to DB
+        upload_sources(p_run, srcs_df)
 
-    sources_df = (
-        sources_df.drop('related', axis=1)
-        .merge(srcs_df.drop('related_list', axis=1), on='source')
-        .merge(meas_dj_obj, on='id')
-    )
+        sources_df = (
+            sources_df.drop('related', axis=1)
+            .merge(srcs_df.drop('related_list', axis=1), on='source')
+            .merge(meas_dj_obj, on='id')
+        )
 
-    # Create Associan objects (linking measurements into single sources)
-    # and insert in DB
-    sources_df['assoc_dj'] = sources_df.apply(
-        lambda row: Association(
-            meas=row['meas_dj'],
-            source=row['src_dj'],
-            d2d=row['d2d'],
-            dr=row['dr'],
-        ), axis=1
-    )
-    # upload associations in DB
-    upload_associations(sources_df['assoc_dj'])
+        # Create Associan objects (linking measurements into single sources)
+        # and insert in DB
+        sources_df['assoc_dj'] = sources_df.apply(
+            lambda row: Association(
+                meas=row['meas_dj'],
+                source=row['src_dj'],
+                d2d=row['d2d'],
+                dr=row['dr'],
+            ), axis=1
+        )
+        # upload associations in DB
+        upload_associations(sources_df['assoc_dj'])
+    else:
+        # compute only some necessary metrics in the groupby
+        timer.reset()
+        srcs_df = parallel_groupby_coord(sources_df)
+        logger.info('Groupby-apply time: %.2f seconds', timer.reset())
 
     logger.info(
         'Total association time: %.2f seconds', timer.reset_init()

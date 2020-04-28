@@ -9,12 +9,15 @@ from django.db import transaction
 
 from pipeline.models import Image
 from pipeline.image.utils import on_sky_sep
-from pipeline.pipeline.utils import get_measurement_models
 
 from .forced_phot import ForcedPhot
-from .loading import upload_associations
-from .utils import cross_join
+from .loading import upload_associations, upload_sources
+from .utils import (
+    cross_join, get_measurement_models, get_source_models,
+    parallel_groupby
+)
 from ..models import Association, Measurement, Source
+from ..utils.utils import StopWatch
 
 
 logger = logging.getLogger(__name__)
@@ -122,11 +125,15 @@ def update_source_models(row):
     return src
 
 
-def forced_extraction(srcs_df, sources_df, sys_err):
+def forced_extraction(
+        srcs_df, sources_df, sys_err, first_img, p_run, meas_dj_obj
+    ):
     """
     check and extract expected measurements, and associated them with the
     related source(s)
     """
+    timer = StopWatch()
+
     # get all the skyregions and related images
     cols = [
         'id', 'name', 'measurements_path', 'path', 'noise_path',
@@ -151,25 +158,16 @@ def forced_extraction(srcs_df, sources_df, sys_err):
         .agg(lambda group: group.values.ravel().tolist())
         .reset_index()
         .rename(columns={'name':'skyrg_img_list'})
+        .rename(
+            columns={
+                x:x.replace('skyreg__', '') for x in
+                skyreg_df.columns.values
+            }
+        )
     )
-    skyreg_df.columns = [
-        x.replace('skyreg__', '') for x in skyreg_df.columns.values
-    ]
-
 
     # create dataframe with all skyregions and sources combinations
-    cols = [
-        'wavg_uncertainty_ew', 'wavg_uncertainty_ns', 'avg_flux_int',
-        'avg_flux_peak', 'max_flux_peak', 'v_int', 'v_peak', 'eta_int',
-        'eta_peak', 'new', 'related_list', 'src_dj'
-    ]
-    src_skyrg_df = cross_join(
-        (
-            srcs_df.drop(cols, axis=1)
-            .reset_index()
-        ),
-        skyreg_df
-    )
+    src_skyrg_df = cross_join(srcs_df.reset_index(), skyreg_df)
     src_skyrg_df['sep'] = np.rad2deg(
         on_sky_sep(
             np.deg2rad(src_skyrg_df['wavg_ra'].values),
@@ -233,17 +231,25 @@ def forced_extraction(srcs_df, sources_df, sys_err):
     extr_df['weight_ew'] = 1. / extr_df['uncertainty_ew'].values**2
     extr_df['uncertainty_ns'] = sys_err
     extr_df['weight_ns'] = 1. / extr_df['uncertainty_ns'].values**2
+    extr_df['interim_ew'] = (
+        extr_df['ra'].values * extr_df['weight_ew'].values
+    )
+    extr_df['interim_ns'] = (
+        extr_df['dec'].values * extr_df['weight_ns'].values
+    )
 
     extr_df['flux_peak'] = extr_df['flux_int']
     extr_df['flux_peak_err'] = extr_df['flux_int_err']
     extr_df['spectral_index'] = 0.
+    extr_df['dr'] = 0.
+    extr_df['d2d'] = 0.
     extr_df['forced'] = True
 
     # Create measurement Django objects
     extr_df['meas_dj'] = extr_df.apply(
         get_measurement_models, axis=1
     )
-    # Update new sources in the db and update the parquet files
+    # Update new measurements in the db and update the parquet files
     with transaction.atomic():
         batch_size = 10_000
         for idx in range(0, extr_df['meas_dj'].size, batch_size):
@@ -274,68 +280,59 @@ def forced_extraction(srcs_df, sources_df, sys_err):
             fname,
             index=False
         )
+    extr_df = extr_df.rename(columns={'source_tmp_id':'source'})
 
-    # create the associations objects
-    extr_df = (
-        extr_df.rename(columns={'source_tmp_id':'source'})
-        .merge(
-            srcs_df['src_dj'].reset_index(),
-            on='source'
-        )
+    # append new measurements to prev meas df
+    meas_dj_obj = meas_dj_obj.append(
+        extr_df[['meas_dj', 'id']],
+        ignore_index=True
     )
-    extr_df['assoc_dj'] = extr_df.apply(lambda row: Association(
-            meas=row['meas_dj'], source=row['src_dj']
-        ),
+
+    # append new meas into main df and proceed with source groupby etc
+    sources_df = sources_df.append(
+        extr_df.loc[:, extr_df.columns.isin(sources_df.columns)],
+        ignore_index=True
+    )
+
+    # TODO: duplicated code from association.py -> refactor
+    # calculate source fields
+    logger.info(
+        'Calculating statistics for %i sources...',
+        sources_df.source.unique().shape[0]
+    )
+    timer.reset()
+    srcs_df = parallel_groupby(sources_df, first_img)
+
+    logger.info('Groupby-apply time: %.2f seconds', timer.reset())
+    # fill NaNs as resulted from calculated metrics with 0
+    srcs_df = srcs_df.fillna(0.)
+
+    # generate the source models
+    srcs_df['src_dj'] = srcs_df.apply(
+        get_source_models,
+        pipeline_run=p_run,
         axis=1
+    )
+    # upload sources and related to DB
+    upload_sources(p_run, srcs_df)
+
+    sources_df = (
+        sources_df.drop('related', axis=1)
+        .merge(srcs_df.drop('related_list', axis=1), on='source')
+        .merge(meas_dj_obj, on='id')
+    )
+
+    # Create Associan objects (linking measurements into single sources)
+    # and insert in DB
+    sources_df['assoc_dj'] = sources_df.apply(
+        lambda row: Association(
+            meas=row['meas_dj'],
+            source=row['src_dj'],
+            d2d=row['d2d'],
+            dr=row['dr'],
+        ), axis=1
     )
     # upload associations in DB
-    upload_associations(extr_df['assoc_dj'])
-
-    # Update source variability metrics and fluxes
-    # select only sources to be updated and used columns
-    cols = [
-        'source', 'src_dj', 'flux_int', 'flux_int_err', 'flux_peak',
-        'flux_peak_err'
-    ]
-    sources_df = (
-        sources_df.loc[
-            sources_df['source'].isin(extr_df['source']),
-            cols
-        ]
-        .append(extr_df[cols], ignore_index=True)
-    )
-
-    grouped = sources_df.groupby('source')
-    new_srcs_df = grouped.agg(
-        avg_flux_int=pd.NamedAgg(column='flux_int', aggfunc='mean'),
-        avg_flux_peak=pd.NamedAgg(column='flux_peak', aggfunc='mean'),
-        max_flux_peak=pd.NamedAgg(column='flux_peak', aggfunc='max'),
-    )
-    new_srcs_df['v_int'] = (
-        grouped['flux_int'].std() / grouped['flux_int'].mean()
-    )
-    new_srcs_df['v_peak'] = (
-        grouped['flux_peak'].std() / grouped['flux_peak'].mean()
-    )
-    new_srcs_df['eta_int'] = grouped.apply(get_eta_metric)
-    new_srcs_df['eta_peak'] = grouped.apply(get_eta_metric, peak=True)
-    # add and update Django objects with new values
-    new_srcs_df['src_dj'] = srcs_df.loc[new_srcs_df.index, 'src_dj']
-    new_srcs_df['src_dj'] = new_srcs_df.apply(
-        update_source_models,
-        axis=1
-    )
-    # bulk update the source new variability metrics and fluxes
-    with transaction.atomic():
-        batch_size = 10_000
-        for idx in range(0, new_srcs_df['src_dj'].size, batch_size):
-            out_bulk = Source.objects.bulk_update(
-                new_srcs_df['src_dj'].iloc[
-                    idx : idx + batch_size
-                ].values.tolist(),
-                new_srcs_df.columns.drop('src_dj').values.tolist(),
-                batch_size
-            )
-            logger.info('Bulk updated #%i sources', len(out_bulk))
+    upload_associations(sources_df['assoc_dj'])
 
     pass

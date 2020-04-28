@@ -7,8 +7,8 @@ import dask.dataframe as dd
 from psutil import cpu_count
 from itertools import chain
 
-from ..utils.utils import eq_to_cart
-from ..models import Band, Image, Run, SkyRegion, Measurement
+from ..utils.utils import deg2hms, deg2dms, eq_to_cart
+from ..models import Band, Image, Measurement, Run, Source, SkyRegion
 
 
 logger = logging.getLogger(__name__)
@@ -168,9 +168,9 @@ def prep_skysrc_df(image, perc_error, ini_df=False):
     # these are the first 'sources'
     df['source'] = df.index + 1 if ini_df else -1
     df['ra_source'] = df['ra']
-    df['uncertainty_ew_source'] = df['uncertainty_ew']
+    # df['uncertainty_ew_source'] = df['uncertainty_ew']
     df['dec_source'] = df['dec']
-    df['uncertainty_ns_source'] = df['uncertainty_ns']
+    # df['uncertainty_ns_source'] = df['uncertainty_ns']
     df['d2d'] = 0.
     df['dr'] = 0.
     df['related'] = None
@@ -274,3 +274,36 @@ def parallel_groupby(df, image):
         .compute(num_workers=n_cpu, scheduler='processes')
     )
     return out
+
+
+def calc_ave_coord(grp):
+    d = {}
+    d['img_list'] = list(set(grp['img'].values.tolist()))
+    d['wavg_ra'] = grp['interim_ew'].sum() / grp['weight_ew'].sum()
+    d['wavg_dec'] = grp['interim_ns'].sum() / grp['weight_ns'].sum()
+    return pd.Series(d)
+
+
+def parallel_groupby_coord(df):
+    n_cpu = cpu_count() - 1
+    out = dd.from_pandas(df, n_cpu)
+    out = (
+        out.groupby('source')
+        .apply(calc_ave_coord)
+        .compute(num_workers=n_cpu, scheduler='processes')
+    )
+    return out
+
+
+def get_source_models(row, pipeline_run=None):
+    '''
+    Fetches the source model (for DB injecting).
+    '''
+    name = f"src_{deg2hms(row['wavg_ra'])}{deg2dms(row['wavg_dec'])}"
+    src = Source()
+    src.run = pipeline_run
+    src.name = name
+    for fld in src._meta.get_fields():
+        if getattr(fld, 'attname', None) and fld.attname in row.index:
+            setattr(src, fld.attname, row[fld.attname])
+    return src
