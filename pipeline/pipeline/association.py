@@ -505,6 +505,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
     The main association function that does the common tasks between basic
     and advanced modes.
     '''
+    timer = StopWatch()
     method = config.ASSOCIATION_METHOD
     logger.info('Association mode selected: %s.', method)
 
@@ -635,6 +636,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
         )
         logger.info('Association iteration #%i complete.', it + 1)
 
+    logger.info('Association steps time: %.2f seconds', timer.reset())
     # End of iteration over images, move to stats calcs and Django
     # association model generation
     # ra and dec columns are actually the average over each iteration
@@ -650,10 +652,10 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
         'Calculating statistics for %i sources...',
         sources_df.source.unique().shape[0]
     )
-    stats = StopWatch()
+    timer.reset()
     srcs_df = parallel_groupby(sources_df, images[0].name)
 
-    logger.info('Groupby-apply time: %.2f', stats.reset())
+    logger.info('Groupby-apply time: %.2f seconds', timer.reset())
     # fill NaNs as resulted from calculated metrics with 0
     srcs_df = srcs_df.fillna(0.)
 
@@ -685,4 +687,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
     # upload associations in DB
     upload_associations(sources_df['assoc_dj'])
 
+    logger.info(
+        'Total association time: %.2f seconds', timer.reset_init()
+    )
     return srcs_df, sources_df
