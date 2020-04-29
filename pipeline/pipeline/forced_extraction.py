@@ -177,7 +177,8 @@ def forced_extraction(
     extr_df = srcs_df.loc[
         srcs_df['img_diff'] != -1,
         ['wavg_ra', 'wavg_dec', 'img_diff']
-    ].copy()
+    ]
+
     timer.reset()
     extr_df = (
         extr_df.explode('img_diff')
@@ -192,7 +193,7 @@ def forced_extraction(
         'Force extraction step time: %.2f seconds', timer.reset()
     )
 
-    extr_df = extr_df.loc[extr_df['flux_int'] > 0, :]
+    extr_df = extr_df.loc[extr_df['flux_int'].fillna(0) != 0, :]
     # set the columns with fix values
     extr_df['ra_err'] = settings.POS_DEFAULT_MIN_ERROR
     extr_df['dec_err'] = settings.POS_DEFAULT_MIN_ERROR
