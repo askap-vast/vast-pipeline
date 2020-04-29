@@ -254,6 +254,26 @@ def forced_extraction(
     extr_df['id'] = extr_df['meas_dj'].apply(getattr, args=('id',))
     extr_df = extr_df.rename(columns={'source_tmp_id':'source'})
 
+    # write forced measurements to specific parquet
+    logger.info(
+        'Saving forced measurements to specific parquet file...'
+    )
+    for grp_name, grp_df in extr_df.groupby('image'):
+        fname = (
+            images_df.at[grp_name, 'measurements_path']
+            .replace('.parquet', f'_forced_{p_run.name}.parquet')
+        )
+        (
+            grp_df.drop(
+                ['source', 'meas_dj', 'image'],
+                axis=1
+            )
+            .to_parquet(
+                fname,
+                index=False
+            )
+        )
+
     # append new measurements to prev meas df
     meas_dj_obj = meas_dj_obj.append(
         extr_df[['meas_dj', 'id']],
