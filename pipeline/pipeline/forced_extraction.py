@@ -266,4 +266,7 @@ def forced_extraction(
         ignore_index=True
     )
 
+    logger.info(
+        'Total forced extraction time: %.2f seconds', timer.reset_init()
+    )
     return sources_df, meas_dj_obj

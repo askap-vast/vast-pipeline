@@ -52,5 +52,5 @@ def final_operations(sources_df, first_img, p_run, meas_dj_obj):
     upload_associations(sources_df['assoc_dj'])
 
     logger.info(
-        'Total forced extraction time: %.2f seconds', timer.reset_init()
+        'Total final operations time: %.2f seconds', timer.reset_init()
     )

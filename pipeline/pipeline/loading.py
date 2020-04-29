@@ -9,6 +9,7 @@ from ..models import Association, Measurement, Source
 from .utils import (
     get_create_img, get_create_img_band, get_measurement_models
 )
+from ..utils.utils import StopWatch
 
 
 logger = logging.getLogger(__name__)
@@ -20,6 +21,7 @@ def upload_images(paths, config, pipeline_run):
     carry the first part of the pipeline, by uploading all the images
     to the image table and populated band and skyregion objects
     '''
+    timer = StopWatch()
     images = []
     meas_dj_obj = pd.DataFrame()
 
@@ -111,6 +113,10 @@ def upload_images(paths, config, pipeline_run):
         )
         del measurements, image, band_id, img, out_bulk
 
+    logger.info(
+        'Total images upload/loading time: %.2f seconds',
+        timer.reset_init()
+    )
     return images, meas_dj_obj
 
 
