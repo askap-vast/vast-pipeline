@@ -450,8 +450,8 @@ class SourceViewSet(ModelViewSet):
         qs = Source.objects.annotate(
             measurements=Count('measurement')
         ).annotate(
-            forced_measurements=Count('measurement', filter=Q(
-                measurement__forced=True)
+            forced_measurements=Count(
+                'measurement', filter=Q(measurement__forced=True)
             )
         )
 
