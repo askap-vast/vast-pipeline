@@ -50,9 +50,10 @@ class FitsImage(Image):
             with fits.open(self.path) as hdulist:
                 hdu = hdulist[hdu_index]
         except Exception:
-            raise Exception(
-                f'issues with this guy {os.path.basename(self.path)}'
-            )
+            raise IOError((
+                'Could not read this FITS file: '
+                f'{os.path.basename(self.path)}'
+            ))
         return hdu.header.copy()
 
     def __set_img_attr_for_telescope(self, header):
