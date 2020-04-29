@@ -23,13 +23,13 @@ let conf = {
     datasets: [{
       label: "Flux",
       fill: false,
-      lineTension: 0.3,
+      showLine: false,
       backgroundColor: "rgba(78, 115, 223, 0.05)",
       borderColor: "rgba(78, 115, 223, 1)",
-      pointRadius: 3,
+      pointRadius: 5,
       pointBackgroundColor: "rgba(78, 115, 223, 1)",
       pointBorderColor: "rgba(78, 115, 223, 1)",
-      pointHoverRadius: 3,
+      pointHoverRadius: 5,
       pointHoverBackgroundColor: "rgba(78, 115, 223, 1)",
       pointHoverBorderColor: "rgba(78, 115, 223, 1)",
       pointHitRadius: 10,
@@ -69,7 +69,7 @@ let conf = {
       yAxes: [{
         scaleLabel: {
           display: true,
-          labelString: 'Flux (mJy)',
+          labelString: 'Int. Flux (mJy)',
         },
         ticks: {
           maxTicksLimit: 5,

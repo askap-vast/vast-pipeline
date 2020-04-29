@@ -551,12 +551,21 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
             'Calculating weighted average RA and Dec for sources...'
         )
 
+        # account for RA wrapping
+        ra_wrap_mask = sources_df.ra <= 0.1
+        sources_df['ra_wrap'] = sources_df.ra.values
+        sources_df.at[
+            ra_wrap_mask, 'ra_wrap'
+        ] = sources_df[ra_wrap_mask].ra.values + 360.
+
         sources_df['interim_ew'] = (
-            sources_df['ra'].values * sources_df['weight_ew'].values
+            sources_df['ra_wrap'].values * sources_df['weight_ew'].values
         )
         sources_df['interim_ns'] = (
             sources_df['dec'].values * sources_df['weight_ns'].values
         )
+
+        sources_df = sources_df.drop(['ra_wrap'], axis=1)
 
         tmp_srcs_df = (
             sources_df.loc[sources_df['source'] != -1, [
@@ -590,6 +599,12 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
                     'weight_ns': 'uncertainty_ns'
             })
         )
+
+        # correct the RA wrapping
+        ra_wrap_mask = weighted_df.ra >= 360.
+        weighted_df.at[
+            ra_wrap_mask, 'ra'
+        ] = weighted_df[ra_wrap_mask].ra.values - 360.
 
         logger.debug('Groupby concat time %f', stats.reset())
 

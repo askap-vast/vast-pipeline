@@ -34,7 +34,19 @@ class MeasurementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Measurement
-        fields = ['id', 'name', 'ra', 'dec', 'flux_int', 'flux_peak']
+        fields = [
+            'id',
+            'name',
+            'ra',
+            'ra_err',
+            'uncertainty_ew',
+            'dec',
+            'dec_err',
+            'uncertainty_ns',
+            'flux_int',
+            'flux_peak',
+            'has_siblings',
+        ]
         datatables_always_serialize = ('id',)
 
 

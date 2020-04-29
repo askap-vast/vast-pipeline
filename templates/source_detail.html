@@ -26,8 +26,20 @@
 
   <!-- Page Heading -->
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
-	  <h1 class="h3 mb-2 text-gray-800">Light Source: {{ source.name }}</h1>
+	  <h1 class="h3 mb-2 text-gray-800">Source: {{ source.name }}</h1>
     <div class="">
+        <a href="http://simbad.u-strasbg.fr/simbad/sim-coo?CooEpoch=2000&Coord={{ source.aladin_ra }}d{{ source.aladin_dec }}d&Radius.unit=arcmin&CooEqui=2000&CooFrame=FK5&Radius=10'" class="d-none d-sm-inline-block btn btn-sm btn-info btn-icon-split shadow-sm" target="_blank">
+          <span class="icon text-white-600">
+            <i class="fas fa-info-circle fa-sm"></i>
+          </span>
+          <span class="text">SIMBAD</span>
+        </a>
+        <a href="https://ned.ipac.caltech.edu/conesearch?search_type=Near%20Position%20Search&coordinates={{ source.aladin_ra }}d%20{{ source.aladin_dec }}d&radius=2.0&in_csys=Equatorial&in_equinox=J2000.0&out_csys=Equatorial&out_equinox=J2000.0&hconst=67.8&omegam=0.308&omegav=0.692&wmap=4&corr_z=1" class="d-none d-sm-inline-block btn btn-sm btn-info btn-icon-split shadow-sm" target="_blank">
+          <span class="icon text-white-600">
+            <i class="fas fa-info-circle fa-sm"></i>
+          </span>
+          <span class="text">NED</span>
+        </a>
       <a href="{% url 'pipeline:source_detail' source.id %}prev" class="d-none d-sm-inline-block btn btn-sm btn-light btn-icon-split shadow-sm">
         <span class="icon text-gray-600">
           <i class="fas fa-arrow-left fa-sm"></i>
@@ -51,7 +63,6 @@
           <h6 class="m-0 font-weight-bold text-primary">Details</h6>
         </div>
         <div class="card-body">
-          <p><strong>Position: </strong>Guest</p>
           <p><strong>RA: </strong> {{ source.wavg_ra }}</p>
           <p><strong>DEC: </strong> {{ source.wavg_dec }}</p>
           <p><strong>New Source: </strong> {{ source.new }}</p>
@@ -131,7 +142,7 @@
 <script src="{% static 'js/light-curve-chart.js' %}"></script>
 
 <!-- Aladin -->
-{{ measurements|json_script:"data-aladin" }}
+{{ source|json_script:"data-aladin" }}
 <script type='text/javascript' src='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js' charset='utf-8'></script>
 <script src="{% static 'js/aladin-script.js' %}"></script>
 
