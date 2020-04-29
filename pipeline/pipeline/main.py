@@ -8,6 +8,7 @@ from astropy.coordinates import Angle
 from ..models import SurveySource
 from .association import association
 from .forced_extraction import forced_extraction
+from .finalise import final_operations
 from .loading import upload_images
 
 
@@ -70,7 +71,7 @@ class Pipeline():
         dr_limit = self.config.ASSOCIATION_DE_RUITER_RADIUS
         bw_limit = self.config.ASSOCIATION_BEAMWIDTH_LIMIT
 
-        srcs_df, sources_df = association(
+        sources_df = association(
             p_run,
             images,
             meas_dj_obj,
@@ -80,15 +81,22 @@ class Pipeline():
             self.config,
         )
 
-        # STEP #3: Run forced extraction/photometry
+        # STEP #3: Run forced extraction/photometry if asked
         if self.config.MONITOR:
-            forced_extraction(
-                srcs_df,
+            sources_df, meas_dj_obj = forced_extraction(
                 sources_df,
                 self.config.ASTROMETRIC_UNCERTAINTY_RA / 3600.,
-                images[0].name,
                 p_run,
                 meas_dj_obj
             )
+
+        # STEP #4: finalise the df getting unique sources, calculating
+        # metrics and upload data to database
+        final_operations(
+            sources_df,
+            images[0].name,
+            p_run,
+            meas_dj_obj
+        )
 
         pass

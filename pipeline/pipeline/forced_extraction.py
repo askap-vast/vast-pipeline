@@ -7,16 +7,13 @@ from astropy.coordinates import SkyCoord
 from django.conf import settings
 from django.db import transaction
 
-from pipeline.models import Image
+from pipeline.models import Image, Measurement
 from pipeline.image.utils import on_sky_sep
 
 from .forced_phot import ForcedPhot
-from .loading import upload_associations, upload_sources
 from .utils import (
-    cross_join, get_measurement_models, get_source_models,
-    parallel_groupby
+    cross_join, get_measurement_models, parallel_groupby_coord
 )
-from ..models import Association, Measurement, Source
 from ..utils.utils import StopWatch
 
 
@@ -95,7 +92,7 @@ def extract_from_image(df, images_df):
 
 
 def forced_extraction(
-        srcs_df, sources_df, sys_err, first_img, p_run, meas_dj_obj
+        sources_df, sys_err, p_run, meas_dj_obj
     ):
     """
     check and extract expected measurements, and associated them with the
@@ -134,6 +131,12 @@ def forced_extraction(
             }
         )
     )
+
+    # calculate some metrics on sources
+    # compute only some necessary metrics in the groupby
+    timer.reset()
+    srcs_df = parallel_groupby_coord(sources_df)
+    logger.info('Groupby-apply time: %.2f seconds', timer.reset())
 
     # create dataframe with all skyregions and sources combinations
     src_skyrg_df = cross_join(srcs_df.reset_index(), skyreg_df)
@@ -263,48 +266,4 @@ def forced_extraction(
         ignore_index=True
     )
 
-    # TODO: duplicated code from association.py -> refactor
-    # calculate source fields
-    logger.info(
-        'Calculating statistics for %i sources...',
-        sources_df.source.unique().shape[0]
-    )
-    timer.reset()
-    srcs_df = parallel_groupby(sources_df, first_img)
-
-    logger.info('Groupby-apply time: %.2f seconds', timer.reset())
-    # fill NaNs as resulted from calculated metrics with 0
-    srcs_df = srcs_df.fillna(0.)
-
-    # generate the source models
-    srcs_df['src_dj'] = srcs_df.apply(
-        get_source_models,
-        pipeline_run=p_run,
-        axis=1
-    )
-    # upload sources and related to DB
-    upload_sources(p_run, srcs_df)
-
-    sources_df = (
-        sources_df.drop('related', axis=1)
-        .merge(srcs_df.drop('related_list', axis=1), on='source')
-        .merge(meas_dj_obj, on='id')
-    )
-
-    # Create Associan objects (linking measurements into single sources)
-    # and insert in DB
-    sources_df['assoc_dj'] = sources_df.apply(
-        lambda row: Association(
-            meas=row['meas_dj'],
-            source=row['src_dj'],
-            d2d=row['d2d'],
-            dr=row['dr'],
-        ), axis=1
-    )
-    # upload associations in DB
-    upload_associations(sources_df['assoc_dj'])
-
-    logger.info(
-        'Total forced extraction time: %.2f seconds', timer.reset_init()
-    )
-    pass
+    return sources_df, meas_dj_obj

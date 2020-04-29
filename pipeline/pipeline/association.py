@@ -9,7 +9,7 @@ from astropy.coordinates import Angle
 from .loading import upload_associations, upload_sources
 from .utils import (
     get_or_append_list, get_source_models, parallel_groupby,
-    parallel_groupby_coord, prep_skysrc_df
+    prep_skysrc_df
 )
 from ..models import Association
 from ..utils.utils import StopWatch
@@ -625,64 +625,15 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
         )
         logger.info('Association iteration #%i complete.', it + 1)
 
-    logger.info('Association steps time: %.2f seconds', timer.reset())
-    # End of iteration over images, move to stats calcs and Django
-    # association model generation
-    # ra and dec columns are actually the average over each iteration
-    # so remove ave ra and ave dec used for calculation and use
-    # ra_source and dec_source columns
+    # End of iteration over images, ra and dec columns are actually the
+    # average over each iteration so remove ave ra and ave dec used for
+    # calculation and use ra_source and dec_source columns
     sources_df = (
         sources_df.drop(['ra', 'dec'], axis=1)
         .rename(columns={'ra_source':'ra', 'dec_source':'dec'})
     )
 
-    if not config.MONITOR:
-        # calculate source fields
-        logger.info(
-            'Calculating statistics for %i sources...',
-            sources_df.source.unique().shape[0]
-        )
-        timer.reset()
-        srcs_df = parallel_groupby(sources_df, images[0].name)
-
-        logger.info('Groupby-apply time: %.2f seconds', timer.reset())
-        # fill NaNs as resulted from calculated metrics with 0
-        srcs_df = srcs_df.fillna(0.)
-
-        # generate the source models
-        srcs_df['src_dj'] = srcs_df.apply(
-            get_source_models,
-            pipeline_run=p_run,
-            axis=1
-        )
-        # upload sources and related to DB
-        upload_sources(p_run, srcs_df)
-
-        sources_df = (
-            sources_df.drop('related', axis=1)
-            .merge(srcs_df.drop('related_list', axis=1), on='source')
-            .merge(meas_dj_obj, on='id')
-        )
-
-        # Create Associan objects (linking measurements into single sources)
-        # and insert in DB
-        sources_df['assoc_dj'] = sources_df.apply(
-            lambda row: Association(
-                meas=row['meas_dj'],
-                source=row['src_dj'],
-                d2d=row['d2d'],
-                dr=row['dr'],
-            ), axis=1
-        )
-        # upload associations in DB
-        upload_associations(sources_df['assoc_dj'])
-    else:
-        # compute only some necessary metrics in the groupby
-        timer.reset()
-        srcs_df = parallel_groupby_coord(sources_df)
-        logger.info('Groupby-apply time: %.2f seconds', timer.reset())
-
     logger.info(
         'Total association time: %.2f seconds', timer.reset_init()
     )
-    return srcs_df, sources_df
+    return sources_df
