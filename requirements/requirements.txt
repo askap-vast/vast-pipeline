@@ -1,5 +1,6 @@
 aplpy==2.0.3
 astropy==4.0
+dask[dataframe]==2.14.0
 dill==0.3.1.1
 django==3.0.3
 djangorestframework-datatables==0.5.1

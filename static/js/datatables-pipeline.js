@@ -1,3 +1,27 @@
+// Formatting function for API
+function obj_formatter(obj) {
+    if (obj.render.hasOwnProperty('url')) {
+        let [prefix, col] = [obj.render.url.prefix, obj.render.url.col];
+        let hrefValue = function(data, type, row, meta) {
+            return '<a href="' + prefix + row.id + ' "target="_blank">' + row[col] + '</a>';
+        };
+        obj.render = hrefValue;
+        return obj;
+    } else if (obj.render.hasOwnProperty('float')) {
+        let [precision, scale, col] = [
+            obj.render.float.precision,
+            obj.render.float.scale,
+            obj.render.float.col
+        ];
+        let floatFormat = function(data, type, row, meta) {
+            return (row[col] * scale).toFixed(precision);
+        };
+        obj.render = floatFormat;
+        return obj;
+    };
+};
+
+
 // Call the dataTables jQuery plugin
 $(document).ready(function() {
   let dataConf = JSON.parse(document.getElementById('datatable-conf').textContent);
@@ -6,11 +30,7 @@ $(document).ready(function() {
     let testFields = dataConf.colsFields;
     testFields.forEach( function(obj) {
       if (obj.hasOwnProperty('render')) {
-        let [prefix, col] = [obj.render.prefix, obj.render.col];
-        let hrefValue = function(data, type, row, meta) {
-          return '<a href="' + prefix + row.id + '"target=_blank">' + row[col] + '</a>';
-        };
-        obj.render = hrefValue;
+          obj = obj_formatter(obj)
       }
     });
     var dataTableConf = {
@@ -41,6 +61,91 @@ $(document).ready(function() {
       hover: true,
       serverSide: false,
       data: dataSet,
+      order: dataConf.order,
+    };
+    if (dataConf.table == 'source_detail') {
+        dataTableConf.columnDefs = [
+            {
+                "targets": 0,
+                "searchable": true,
+                "visible": false
+            },
+            {
+                "targets": 1,
+                "data": "name",
+                "render": function ( data, type, row, meta ) {
+                    return '<a href="/measurements/'+ row[0] + '"target="_blank">' + row[1] + '</a>';
+                }
+            },
+            {
+                "targets": 3,
+                "data": "image",
+                "render": function ( data, type, row, meta ) {
+                    return '<a href="/images/'+ row[12] + '"target="_blank">' + row[3] + '</a>';
+                }
+            },
+            {
+                "targets": 4,
+                "data": "ra",
+                "render": function ( data, type, row, meta ) {
+                    return row[4].toFixed(4);
+                }
+            },
+            {
+                "targets": 5,
+                "data": "ra_err",
+                "render": function ( data, type, row, meta ) {
+                    return (row[5] * 3600.).toFixed(4);
+                }
+            },
+            {
+                "targets": 6,
+                "data": "dec",
+                "render": function ( data, type, row, meta ) {
+                    return row[6].toFixed(4);
+                }
+            },
+            {
+                "targets": 7,
+                "data": "dec_err",
+                "render": function ( data, type, row, meta ) {
+                    return (row[7] * 3600.).toFixed(4);
+                }
+            },
+            {
+                "targets": 8,
+                "data": "flux_int",
+                "render": function ( data, type, row, meta ) {
+                    return (row[8]).toFixed(3);
+                }
+            },
+            {
+                "targets": 9,
+                "data": "flux_int_err",
+                "render": function ( data, type, row, meta ) {
+                    return (row[9]).toFixed(3);
+                }
+            },
+            {
+                "targets": 10,
+                "data": "flux_peak",
+                "render": function ( data, type, row, meta ) {
+                    return (row[10]).toFixed(3);
+                }
+            },
+            {
+                "targets": 11,
+                "data": "flux_peak_err",
+                "render": function ( data, type, row, meta ) {
+                    return (row[11]).toFixed(3);
+                }
+            },
+            {
+                "targets": 13,
+                "searchable": false,
+                "visible": false
+            },
+        ]
     };
   };
   var table = $('#dataTable').DataTable(dataTableConf);
