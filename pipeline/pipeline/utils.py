@@ -160,7 +160,8 @@ def prep_skysrc_df(image, perc_error, ini_df=False):
     'flux_int',
     'flux_int_err',
     'flux_peak',
-    'flux_peak_err'
+    'flux_peak_err',
+    'forced'
     ]
 
     df = pd.read_parquet(image.measurements_path, columns=cols)
@@ -223,7 +224,7 @@ def get_eta_metric(row, df, peak=False):
     return eta
 
 
-def groupby_funcs(row, first_img):
+def groupby_funcs(df, first_img):
     '''
     Performs calculations on the unique sources to get the
     lightcurve properties. Works on the grouped by source
@@ -231,33 +232,45 @@ def groupby_funcs(row, first_img):
     '''
     # calculated average ra, dec, fluxes and metrics
     d = {}
-    d['img_list'] = list(set(row['img'].values.tolist()))
-    d['wavg_ra'] = row['interim_ew'].sum() / row['weight_ew'].sum()
-    d['wavg_dec'] = row['interim_ns'].sum() / row['weight_ns'].sum()
-    d['wavg_uncertainty_ew'] = 1. / np.sqrt(row['weight_ew'].sum())
-    d['wavg_uncertainty_ns'] = 1. / np.sqrt(row['weight_ns'].sum())
+    d['img_list'] = list(set(df['img'].values.tolist()))
+    if df['forced'].any():
+        non_forced_sel = df['forced'] != True
+        d['wavg_ra'] = (
+            df.loc[non_forced_sel, 'interim_ew'].sum() /
+            df.loc[non_forced_sel, 'weight_ew'].sum()
+        )
+        d['wavg_dec'] = (
+            df.loc[non_forced_sel, 'interim_ns'].sum() /
+            df.loc[non_forced_sel, 'weight_ns'].sum()
+        )
+    else:
+        d['wavg_ra'] = df['interim_ew'].sum() / df['weight_ew'].sum()
+        d['wavg_dec'] = df['interim_ns'].sum() / df['weight_ns'].sum()
+
+    d['wavg_uncertainty_ew'] = 1. / np.sqrt(df['weight_ew'].sum())
+    d['wavg_uncertainty_ns'] = 1. / np.sqrt(df['weight_ns'].sum())
     for col in ['avg_flux_int', 'avg_flux_peak']:
-        d[col] = row[col.split('_', 1)[1]].mean()
-    d['max_flux_peak'] = row['flux_peak'].values.max()
+        d[col] = df[col.split('_', 1)[1]].mean()
+    d['max_flux_peak'] = df['flux_peak'].values.max()
 
     for col in ['flux_int', 'flux_peak']:
-        d[f'{col}_sq'] = (row[col]**2).mean()
-    d['Nsrc'] = row['id'].count()
-    d['v_int'] = row['flux_int'].std() / row['flux_int'].mean()
-    d['v_peak'] = row['flux_peak'].std() / row['flux_peak'].mean()
-    d['eta_int'] = get_eta_metric(d, row)
-    d['eta_peak'] = get_eta_metric(d, row, peak=True)
+        d[f'{col}_sq'] = (df[col]**2).mean()
+    d['Nsrc'] = df['id'].count()
+    d['v_int'] = df['flux_int'].std() / df['flux_int'].mean()
+    d['v_peak'] = df['flux_peak'].std() / df['flux_peak'].mean()
+    d['eta_int'] = get_eta_metric(d, df)
+    d['eta_peak'] = get_eta_metric(d, df, peak=True)
     # remove not used cols
     for col in ['flux_int_sq', 'flux_peak_sq']:
         d.pop(col)
     d.pop('Nsrc')
     # set new source
-    d['new'] = False if first_img in row['img'].values else True
+    d['new'] = False if first_img in df['img'].values else True
 
     # get unique related sources
     list_uniq_related = list(set(
         chain.from_iterable(
-            lst for lst in row['related'] if isinstance(lst, list)
+            lst for lst in df['related'] if isinstance(lst, list)
         )
     ))
     d['related_list'] = list_uniq_related if list_uniq_related else -1

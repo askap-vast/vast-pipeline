@@ -193,8 +193,8 @@ def forced_extraction(
         'Force extraction step time: %.2f seconds', timer.reset()
     )
 
+    # select sensible flux values and set the columns with fix values
     extr_df = extr_df.loc[extr_df['flux_int'].fillna(0) != 0, :]
-    # set the columns with fix values
     extr_df['ra_err'] = settings.POS_DEFAULT_MIN_ERROR
     extr_df['dec_err'] = settings.POS_DEFAULT_MIN_ERROR
     extr_df['err_bmaj'] = sys_err
