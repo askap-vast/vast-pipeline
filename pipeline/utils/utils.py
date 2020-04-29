@@ -60,7 +60,7 @@ def load_validate_cfg(cfg):
         for lst in ['IMAGE_FILES', 'SELAVY_FILES']:
             for file in getattr(mod, lst):
                 if not os.path.exists(file):
-                    raise Exception(f'file:\n{file}\ndo not exists!')
+                    raise Exception(f'file:\n{file}\ndoes not exists!')
 
     source_finder_names = settings.SOURCE_FINDERS
     if getattr(mod, 'SOURCE_FINDER') not in source_finder_names:
@@ -85,7 +85,7 @@ def load_validate_cfg(cfg):
         for lst in ['BACKGROUND_FILES', 'NOISE_FILES']:
             for file in getattr(mod, lst):
                 if not os.path.exists(file):
-                    raise Exception(f'file:\n{file}\ndo not exists!')
+                    raise Exception(f'file:\n{file}\ndoes not exists!')
 
     # validate every config from the config template
     for key in [k for k in dir(mod) if k.isupper()]:
