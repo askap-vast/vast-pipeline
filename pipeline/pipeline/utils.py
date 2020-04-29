@@ -169,9 +169,7 @@ def prep_skysrc_df(image, perc_error, ini_df=False):
     # these are the first 'sources'
     df['source'] = df.index + 1 if ini_df else -1
     df['ra_source'] = df['ra']
-    # df['uncertainty_ew_source'] = df['uncertainty_ew']
     df['dec_source'] = df['dec']
-    # df['uncertainty_ns_source'] = df['uncertainty_ns']
     df['d2d'] = 0.
     df['dr'] = 0.
     df['related'] = None
