@@ -1,41 +1,21 @@
 import logging
-import multiprocessing
 import numpy as np
 import pandas as pd
-import dask.dataframe as dd
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.coordinates import Angle
-from itertools import chain
 
 from .loading import upload_associations, upload_sources
-from .utils import get_or_append_list, prep_skysrc_df
-from ..models import Association, Source
-from ..utils.utils import deg2hms, deg2dms, StopWatch
+from .utils import (
+    get_or_append_list, get_source_models, parallel_groupby,
+    prep_skysrc_df
+)
+from ..models import Association
+from ..utils.utils import StopWatch
 
 
 logger = logging.getLogger(__name__)
-
-
-def get_eta_metric(row, df, peak=False):
-    '''
-    Calculates the eta variability metric of a source.
-    Works on the grouped by dataframe using the fluxes
-    of the assoicated measurements.
-    '''
-    if row['Nsrc'] == 1:
-        return 0.
-
-    suffix = 'peak' if peak else 'int'
-    weights = 1. / df[f'flux_{suffix}_err'].values**2
-    fluxes = df[f'flux_{suffix}'].values
-    eta = (row['Nsrc'] / (row['Nsrc']-1)) * (
-        (weights * fluxes**2).mean() - (
-            (weights * fluxes).mean()**2 / weights.mean()
-        )
-    )
-    return eta
 
 
 def calc_de_ruiter(df):
@@ -77,61 +57,6 @@ def calc_de_ruiter(df):
     dr = np.sqrt(dr1 + dr2)
 
     return dr
-
-
-def groupby_funcs(row, first_img):
-    '''
-    Performs calculations on the unique sources to get the
-    lightcurve properties. Works on the grouped by source
-    dataframe.
-    '''
-    # calculated average ra, dec, fluxes and metrics
-    d = {}
-    d['wavg_ra'] = row['interim_ew'].sum() / row['weight_ew'].sum()
-    d['wavg_dec'] = row['interim_ns'].sum() / row['weight_ns'].sum()
-    d['wavg_uncertainty_ew'] = 1. / np.sqrt(row['weight_ew'].sum())
-    d['wavg_uncertainty_ns'] = 1. / np.sqrt(row['weight_ns'].sum())
-    for col in ['avg_flux_int', 'avg_flux_peak']:
-        d[col] = row[col.split('_', 1)[1]].mean()
-    d['max_flux_peak'] = row['flux_peak'].values.max()
-
-    for col in ['flux_int', 'flux_peak']:
-        d[f'{col}_sq'] = (row[col]**2).mean()
-    d['Nsrc'] = row['id'].count()
-    d['v_int'] = row['flux_int'].std() / row['flux_int'].mean()
-    d['v_peak'] = row['flux_peak'].std() / row['flux_peak'].mean()
-    d['eta_int'] = get_eta_metric(d, row)
-    d['eta_peak'] = get_eta_metric(d, row, peak=True)
-    # remove not used cols
-    for col in ['flux_int_sq', 'flux_peak_sq']:
-        d.pop(col)
-    d.pop('Nsrc')
-    # set new source
-    d['new'] = False if first_img in row['img'].values else True
-
-    # get unique related sources
-    list_uniq_related = list(set(
-        chain.from_iterable(
-            lst for lst in row['related'] if isinstance(lst, list)
-        )
-    ))
-    d['related_list'] = list_uniq_related if list_uniq_related else -1
-
-    return pd.Series(d)
-
-
-def get_source_models(row, pipeline_run=None):
-    '''
-    Fetches the source model (for DB injecting).
-    '''
-    name = f"src_{deg2hms(row['wavg_ra'])}{deg2dms(row['wavg_dec'])}"
-    src = Source()
-    src.run = pipeline_run
-    src.name = name
-    for fld in src._meta.get_fields():
-        if getattr(fld, 'attname', None) and fld.attname in row.index:
-            setattr(src, fld.attname, row[fld.attname])
-    return src
 
 
 def one_to_many_basic(sources_df, skyc2_srcs):
@@ -569,6 +494,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
     The main association function that does the common tasks between basic
     and advanced modes.
     '''
+    timer = StopWatch()
     method = config.ASSOCIATION_METHOD
     logger.info('Association mode selected: %s.', method)
 
@@ -714,62 +640,15 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
         )
         logger.info('Association iteration #%i complete.', it + 1)
 
-    # End of iteration over images, move to stats calcs and Django
-    # association model generation
-    # ra and dec columns are actually the average over each iteration
-    # so remove ave ra and ave dec used for calculation and use
-    # ra_source and dec_source columns
+    # End of iteration over images, ra and dec columns are actually the
+    # average over each iteration so remove ave ra and ave dec used for
+    # calculation and use ra_source and dec_source columns
     sources_df = (
         sources_df.drop(['ra', 'dec'], axis=1)
         .rename(columns={'ra_source':'ra', 'dec_source':'dec'})
     )
 
-    # calculate source fields
     logger.info(
-        'Calculating statistics for %i sources...',
-        sources_df.source.unique().shape[0]
+        'Total association time: %.2f seconds', timer.reset_init()
     )
-    stats = StopWatch()
-    n_cpu = multiprocessing.cpu_count() - 1
-    srcs_df_dask = dd.from_pandas(sources_df, n_cpu)
-    srcs_df = srcs_df_dask.groupby('source').apply(
-        groupby_funcs, first_img=images[0].name
-    ).compute(num_workers=n_cpu, scheduler='processes')
-    logger.info('Groupby-apply time: %.2f', stats.reset())
-    # fill NaNs as resulted from calculated metrics with 0
-    srcs_df = srcs_df.fillna(0.)
-
-    # correct the RA wrapping
-    ra_wrap_mask = srcs_df.wavg_ra >= 360.
-    srcs_df.at[
-        ra_wrap_mask, 'wavg_ra'
-    ] = srcs_df[ra_wrap_mask].wavg_ra.values - 360.
-
-    # generate the source models
-    srcs_df['src_dj'] = srcs_df.apply(
-        get_source_models,
-        pipeline_run=p_run,
-        axis=1
-    )
-    # upload sources and related to DB
-    upload_sources(p_run, srcs_df)
-
-    sources_df = (
-        sources_df.drop('related', axis=1)
-        .merge(srcs_df.drop('related_list', axis=1), on='source')
-        .merge(meas_dj_obj, on='id')
-    )
-    del srcs_df
-
-    # Create Associan objects (linking measurements into single sources)
-    # and insert in DB
-    sources_df['assoc_dj'] = sources_df.apply(
-        lambda row: Association(
-            meas=row['meas_dj'],
-            source=row['src_dj'],
-            d2d=row['d2d'],
-            dr=row['dr'],
-        ), axis=1
-    )
-    # upload associations in DB
-    upload_associations(sources_df['assoc_dj'])
+    return sources_df

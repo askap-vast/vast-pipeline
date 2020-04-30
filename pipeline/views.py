@@ -5,8 +5,8 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
 from astropy.nddata import Cutout2D
 from astropy.wcs import WCS
-from django.db.models import Count, F
 from django.http import FileResponse
+from django.db.models import Count, F, Q
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
@@ -220,6 +220,8 @@ def RunDetail(request, id):
     p_run['nr_imgs'] = Image.objects.filter(run__id=p_run['id']).count()
     p_run['nr_srcs'] = Source.objects.filter(run__id=p_run['id']).count()
     p_run['nr_meas'] = Measurement.objects.filter(image__run__id=p_run['id']).count()
+    p_run['nr_frcd'] = Measurement.objects.filter(
+        image__run=p_run, forced=True).count()
     p_run['new_srcs'] = Source.objects.filter(
         run__id=p_run['id'],
         new=True,
@@ -300,7 +302,8 @@ def MeasurementIndex(request):
         'uncertainty_ns',
         'flux_int',
         'flux_peak',
-        'has_siblings'
+        'has_siblings',
+        'forced'
     ]
 
     colsfields = generate_colsfields(fields, '/measurements/')
@@ -327,7 +330,8 @@ def MeasurementIndex(request):
                     'Uncertainty NS (arcsec)',
                     'Int. Flux (mJy)',
                     'Peak Flux (mJy/beam)',
-                    'Has siblings'
+                    'Has siblings',
+                    'Forced Extraction'
                 ],
                 'search': True,
             }
@@ -401,6 +405,7 @@ def SourceIndex(request):
         'avg_flux_peak',
         'max_flux_peak',
         'measurements',
+        'forced_measurements',
         'v_int',
         'eta_int',
         'v_peak',
@@ -430,7 +435,8 @@ def SourceIndex(request):
                     'Avg. Int. Flux (mJy)',
                     'Avg. Peak Flux (mJy/beam)',
                     'Max Peak Flux (mJy/beam)',
-                    'Datapoints',
+                    'Total Datapoints',
+                    'Forced Datapoints',
                     'V int flux',
                     '\u03B7 int flux',
                     'V peak flux',
@@ -447,7 +453,12 @@ class SourceViewSet(ModelViewSet):
     serializer_class = SourceSerializer
 
     def get_queryset(self):
-        qs = Source.objects.annotate(measurements=Count("measurement"))
+        qs = Source.objects.annotate(
+            measurements=Count('measurement'),
+            forced_measurements=Count(
+                'measurement', filter=Q(measurement__forced=True)
+            )
+        )
 
         qry_dict = {}
         p_run = self.request.query_params.get('run')
@@ -492,6 +503,7 @@ def SourceQuery(request):
         'avg_flux_peak',
         'max_flux_peak',
         'measurements',
+        'forced_measurements',
         'v_int',
         'eta_int',
         'v_peak',
@@ -525,7 +537,8 @@ def SourceQuery(request):
                     'Avg. Int. Flux (mJy)',
                     'Avg. Peak Flux (mJy/beam)',
                     'Max Peak Flux (mJy/beam)',
-                    'Datapoints',
+                    'Total Datapoints',
+                    'Forced Datapoints',
                     'V int flux',
                     '\u03B7 int flux',
                     'V peak flux',
@@ -586,6 +599,7 @@ def SourceDetail(request, id, action=None):
         'Peak Flux (mJy/beam)',
         'Peak Flux Error (mJy/beam)',
         'Has siblings',
+        'Forced Extraction',
         'Image ID'
     ]}
 
@@ -602,6 +616,7 @@ def SourceDetail(request, id, action=None):
         'flux_peak',
         'flux_peak_err',
         'has_siblings',
+        'forced',
         'datetime',
         'image_name',
         'image_id'
@@ -635,6 +650,7 @@ def SourceDetail(request, id, action=None):
             'flux_peak',
             'flux_peak_err',
             'has_siblings',
+            'forced',
             'image_id'
         ],
         'search': True,

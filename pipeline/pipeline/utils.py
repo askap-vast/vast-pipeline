@@ -2,9 +2,13 @@ import os
 import logging
 import numpy as np
 import pandas as pd
+import dask.dataframe as dd
 
-from ..utils.utils import eq_to_cart
-from ..models import Band, Image, Run, SkyRegion, Measurement
+from psutil import cpu_count
+from itertools import chain
+
+from ..utils.utils import deg2hms, deg2dms, eq_to_cart
+from ..models import Band, Image, Measurement, Run, Source, SkyRegion
 
 
 logger = logging.getLogger(__name__)
@@ -156,7 +160,8 @@ def prep_skysrc_df(image, perc_error, ini_df=False):
     'flux_int',
     'flux_int_err',
     'flux_peak',
-    'flux_peak_err'
+    'flux_peak_err',
+    'forced'
     ]
 
     df = pd.read_parquet(image.measurements_path, columns=cols)
@@ -164,9 +169,7 @@ def prep_skysrc_df(image, perc_error, ini_df=False):
     # these are the first 'sources'
     df['source'] = df.index + 1 if ini_df else -1
     df['ra_source'] = df['ra']
-    df['uncertainty_ew_source'] = df['uncertainty_ew']
     df['dec_source'] = df['dec']
-    df['uncertainty_ns_source'] = df['uncertainty_ns']
     df['d2d'] = 0.
     df['dr'] = 0.
     df['related'] = None
@@ -189,3 +192,129 @@ def get_or_append_list(obj_in, elem):
         return out
 
     return [elem]
+
+
+def cross_join(left, right):
+    return (
+        left.assign(key=1)
+        .merge(right.assign(key=1), on='key')
+        .drop('key', axis=1)
+    )
+
+
+def get_eta_metric(row, df, peak=False):
+    '''
+    Calculates the eta variability metric of a source.
+    Works on the grouped by dataframe using the fluxes
+    of the assoicated measurements.
+    '''
+    if row['Nsrc'] == 1:
+        return 0.
+
+    suffix = 'peak' if peak else 'int'
+    weights = 1. / df[f'flux_{suffix}_err'].values**2
+    fluxes = df[f'flux_{suffix}'].values
+    eta = (row['Nsrc'] / (row['Nsrc']-1)) * (
+        (weights * fluxes**2).mean() - (
+            (weights * fluxes).mean()**2 / weights.mean()
+        )
+    )
+    return eta
+
+
+def groupby_funcs(df, first_img):
+    '''
+    Performs calculations on the unique sources to get the
+    lightcurve properties. Works on the grouped by source
+    dataframe.
+    '''
+    # calculated average ra, dec, fluxes and metrics
+    d = {}
+    d['img_list'] = list(set(df['img'].values.tolist()))
+    if df['forced'].any():
+        non_forced_sel = df['forced'] != True
+        d['wavg_ra'] = (
+            df.loc[non_forced_sel, 'interim_ew'].sum() /
+            df.loc[non_forced_sel, 'weight_ew'].sum()
+        )
+        d['wavg_dec'] = (
+            df.loc[non_forced_sel, 'interim_ns'].sum() /
+            df.loc[non_forced_sel, 'weight_ns'].sum()
+        )
+    else:
+        d['wavg_ra'] = df['interim_ew'].sum() / df['weight_ew'].sum()
+        d['wavg_dec'] = df['interim_ns'].sum() / df['weight_ns'].sum()
+
+    d['wavg_uncertainty_ew'] = 1. / np.sqrt(df['weight_ew'].sum())
+    d['wavg_uncertainty_ns'] = 1. / np.sqrt(df['weight_ns'].sum())
+    for col in ['avg_flux_int', 'avg_flux_peak']:
+        d[col] = df[col.split('_', 1)[1]].mean()
+    d['max_flux_peak'] = df['flux_peak'].values.max()
+
+    for col in ['flux_int', 'flux_peak']:
+        d[f'{col}_sq'] = (df[col]**2).mean()
+    d['Nsrc'] = df['id'].count()
+    d['v_int'] = df['flux_int'].std() / df['flux_int'].mean()
+    d['v_peak'] = df['flux_peak'].std() / df['flux_peak'].mean()
+    d['eta_int'] = get_eta_metric(d, df)
+    d['eta_peak'] = get_eta_metric(d, df, peak=True)
+    # remove not used cols
+    for col in ['flux_int_sq', 'flux_peak_sq']:
+        d.pop(col)
+    d.pop('Nsrc')
+    # set new source
+    d['new'] = False if first_img in df['img'].values else True
+
+    # get unique related sources
+    list_uniq_related = list(set(
+        chain.from_iterable(
+            lst for lst in df['related'] if isinstance(lst, list)
+        )
+    ))
+    d['related_list'] = list_uniq_related if list_uniq_related else -1
+
+    return pd.Series(d)
+
+
+def parallel_groupby(df, image):
+    n_cpu = cpu_count() - 1
+    out = dd.from_pandas(df, n_cpu)
+    out = (
+        out.groupby('source')
+        .apply(groupby_funcs, first_img=image)
+        .compute(num_workers=n_cpu, scheduler='processes')
+    )
+    return out
+
+
+def calc_ave_coord(grp):
+    d = {}
+    d['img_list'] = list(set(grp['img'].values.tolist()))
+    d['wavg_ra'] = grp['interim_ew'].sum() / grp['weight_ew'].sum()
+    d['wavg_dec'] = grp['interim_ns'].sum() / grp['weight_ns'].sum()
+    return pd.Series(d)
+
+
+def parallel_groupby_coord(df):
+    n_cpu = cpu_count() - 1
+    out = dd.from_pandas(df, n_cpu)
+    out = (
+        out.groupby('source')
+        .apply(calc_ave_coord)
+        .compute(num_workers=n_cpu, scheduler='processes')
+    )
+    return out
+
+
+def get_source_models(row, pipeline_run=None):
+    '''
+    Fetches the source model (for DB injecting).
+    '''
+    name = f"src_{deg2hms(row['wavg_ra'])}{deg2dms(row['wavg_dec'])}"
+    src = Source()
+    src.run = pipeline_run
+    src.name = name
+    for fld in src._meta.get_fields():
+        if getattr(fld, 'attname', None) and fld.attname in row.index:
+            setattr(src, fld.attname, row[fld.attname])
+    return src

@@ -281,31 +281,31 @@ class Image(models.Model):
     polarisation = models.CharField(
         max_length=2,
         help_text='Polarisation of the image e.g. I,XX,YY,Q,U,V'
-        )# eg XX,YY,I,Q,U,V
+    )# eg XX,YY,I,Q,U,V
     name = models.CharField(
         max_length=200,
-            help_text='Name of the image'
-            )
+        help_text='Name of the image'
+    )
     path = models.FilePathField(
         max_length=500,
         help_text='Path to the file containing the image'
-        )# the path to the file containing this image
-    noise_path = models.CharField(
+    )# the path to the file containing this image
+    noise_path = models.FilePathField(
         max_length=300,
-            blank=True,
+        blank=True,
         default='',
         help_text='Path to the file containing the RMS image'
-        )# includes filename
-    background_path = models.CharField(
+    )# includes filename
+    background_path = models.FilePathField(
         max_length=300,
-            blank=True,
+        blank=True,
         default='',
         help_text='Path to the file containing the background image'
-        )# includes filename
+    )# includes filename
     valid = models.BooleanField(
         default=True,
         help_text='Is the image valid'
-        )# Is the image valid?
+    )# Is the image valid?
 
     datetime = models.DateTimeField(
         help_text='Date of observation'
@@ -356,7 +356,9 @@ class Image(models.Model):
     )# Beam position angle (degrees)
     rms = models.FloatField(
         default=0,
-        help_text='Background RMS based on sigma clipping of image data (mJy)'
+        help_text=(
+            'Background RMS based on sigma clipping of image data (mJy)'
+        )
     )# Background RMS (mJy)
 
     flux_percentile = models.FloatField(default=0)# Pixel flux at 95th percentile
@@ -445,8 +447,8 @@ class Measurement(models.Model):
     # quadratic sum of error_radius and ew_sys_err
     uncertainty_ew = models.FloatField(
         help_text=(
-            'Total east-west (RA) uncertainty, quadratic sum of error_radius'
-            ' and ew_sys_err (Deg).'
+            'Total east-west (RA) uncertainty, quadratic sum of'
+            ' error_radius and ew_sys_err (Deg).'
         )
     )# Uncertainty in RA (degrees).
      # quadratic sum of error_radius and ns_sys_err
@@ -468,7 +470,7 @@ class Measurement(models.Model):
     spectral_index = models.FloatField(
         db_column='spectr_idx',
         help_text='In-band Selavy spectral index'
-        )# In band spectral index from Selavy
+    )# In band spectral index from Selavy
     spectral_index_from_TT = models.BooleanField(
         default=False,
         db_column='spectr_idx_tt',
@@ -476,7 +478,7 @@ class Measurement(models.Model):
             'True/False if the spectral index came from the taylor'
             ' term came'
         )
-        )# Did the spectral index come from the taylor term
+    )# Did the spectral index come from the taylor term
     flag_c4 = models.BooleanField(
         default=False,
         help_text='Fit flag from selavy'
@@ -490,7 +492,7 @@ class Measurement(models.Model):
         max_length=64,
         help_text='The ID of the component from which the source comes from'
     )# The ID of the component from which the source comes from
-    island_id    = models.CharField(
+    island_id = models.CharField(
         max_length=64,
         help_text='The ID of the island from which the source comes from'
     )# The ID of the island from which the source comes from
@@ -507,6 +509,10 @@ class Measurement(models.Model):
         default=False,
         help_text='Is this a quality source for analysis purposes'
     )# Is this a "quality" source for analysis purposes?
+    forced = models.BooleanField(
+        default=False,
+        help_text='True: the measurement is forced extracted'
+    )
 
     objects = SourceQuerySet.as_manager()
 
@@ -559,4 +565,7 @@ class Association(models.Model):
     )
 
     def __str__(self):
-        return f'assoc prob: {self.probability:.2%}'
+        return (
+            f'distance: {self.d2d:.2f}' if self.dr == 0 else
+            f'distance: {self.dr:.2f}'
+        )

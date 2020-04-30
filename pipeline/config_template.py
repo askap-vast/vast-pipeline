@@ -8,13 +8,25 @@ import os
 PIPE_RUN_PATH = os.path.dirname(os.path.realpath(__file__))
 
 # Images settings
+# NOTE: all the paths !!!MUST!!! match with each other, e.g.
+# IMAGE_FILES[0] image matches SELAVY_FILES[0] file
 IMAGE_FILES = [
-    # insert images path here or regex, or both
+    # insert images file path(s) here
 ]
 
-# Selavy catalogue files: if passed, skip source find stage
+# Selavy catalogue files
 SELAVY_FILES = [
-    # insert Selavy file paths here or regex, or both
+    # insert Selavy file path(s) here
+]
+
+# background map files
+BACKGROUND_FILES = [
+    # insert background map file path(s) here
+]
+
+# Noise or RMS files
+NOISE_FILES = [
+    # insert RMS file path(s) here
 ]
 
 ###
@@ -29,7 +41,6 @@ SOURCE_FINDER = 'selavy'
 # Source monitoring can be done both forward and backward in 'time'.
 # Monitoring backward means re-opening files that were previously processed and can be slow.
 MONITOR = False
-MAX_BACKWARDS_MONITOR_IMAGES = 0
 
 # The position uncertainty is in reality a combination of the fitting errors and the
 # astrometric uncertainty of the image/survey/instrument.
