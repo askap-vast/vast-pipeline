@@ -7,6 +7,8 @@ from astropy.coordinates import Angle
 
 from ..models import SurveySource
 from .association import association
+from .forced_extraction import forced_extraction
+from .finalise import final_operations
 from .loading import upload_images
 
 
@@ -19,26 +21,37 @@ class Pipeline():
     just one is used)
     '''
 
-    def __init__(self, max_img=10, config=None):
+    def __init__(self, config=None):
         '''
         We limit the size of the cube cache so we don't hit the max
         files open limit or use too much RAM
         '''
-        self.max_img = max_img
         self.config = config
-        if self.config.MAX_BACKWARDS_MONITOR_IMAGES:
-            self.max_img=self.config.MAX_BACKWARDS_MONITOR_IMAGES + 1
 
         # A dictionary of path to Fits images, eg
         # "/data/images/I1233234.FITS" and selavy catalogues
         # Used as a cache to avoid reloading cubes all the time.
-        self.img_selavy_paths = {
+        self.img_paths = {}
+        self.img_paths['selavy'] = {
             x:y for x,y in zip(config.IMAGE_FILES, config.SELAVY_FILES)
         }
+        if config.MONITOR:
+            self.img_paths['noise'] = {
+                x:y for x,y in zip(
+                    config.IMAGE_FILES,
+                    config.NOISE_FILES
+                )
+            }
+            self.img_paths['background'] = {
+                x:y for x,y in zip(
+                    config.IMAGE_FILES,
+                    config.BACKGROUND_FILES
+                )
+            }
 
     def process_pipeline(self, p_run):
         images, meas_dj_obj = upload_images(
-            self.img_selavy_paths,
+            self.img_paths,
             self.config,
             p_run
         )
@@ -55,7 +68,7 @@ class Pipeline():
         dr_limit = self.config.ASSOCIATION_DE_RUITER_RADIUS
         bw_limit = self.config.ASSOCIATION_BEAMWIDTH_LIMIT
 
-        association(
+        sources_df = association(
             p_run,
             images,
             meas_dj_obj,
@@ -65,5 +78,23 @@ class Pipeline():
             self.config,
         )
 
-        # STEP #3: ...
+        # STEP #3: Run forced extraction/photometry if asked
+        if self.config.MONITOR:
+            sources_df, meas_dj_obj = forced_extraction(
+                sources_df,
+                self.config.ASTROMETRIC_UNCERTAINTY_RA / 3600.,
+                self.config.ASTROMETRIC_UNCERTAINTY_DEC / 3600.,
+                p_run,
+                meas_dj_obj
+            )
+
+        # STEP #4: finalise the df getting unique sources, calculating
+        # metrics and upload data to database
+        final_operations(
+            sources_df,
+            images[0].name,
+            p_run,
+            meas_dj_obj
+        )
+
         pass

@@ -49,8 +49,11 @@ class FitsImage(Image):
         try:
             with fits.open(self.path) as hdulist:
                 hdu = hdulist[hdu_index]
-        except Exception as e:
-            raise e
+        except Exception:
+            raise IOError((
+                'Could not read this FITS file: '
+                f'{os.path.basename(self.path)}'
+            ))
         return hdu.header.copy()
 
     def __set_img_attr_for_telescope(self, header):
@@ -233,6 +236,9 @@ class SelavyImage(FitsImage):
         # weight calculations to use later
         df['weight_ew'] = 1. / df['uncertainty_ew'].values**2
         df['weight_ns'] = 1. / df['uncertainty_ns'].values**2
+
+        # Initialise the forced column as False
+        df['forced'] = False
 
         logger.debug('Errors calculation done.')
 
