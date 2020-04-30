@@ -92,7 +92,7 @@ def extract_from_image(df, images_df):
 
 
 def forced_extraction(
-        sources_df, sys_err, p_run, meas_dj_obj
+        sources_df, cfg_err_ra, cfg_err_dec, p_run, meas_dj_obj
     ):
     """
     check and extract expected measurements, and associated them with the
@@ -197,16 +197,22 @@ def forced_extraction(
     extr_df = extr_df.loc[extr_df['flux_int'].fillna(0) != 0, :]
     extr_df['ra_err'] = settings.POS_DEFAULT_MIN_ERROR
     extr_df['dec_err'] = settings.POS_DEFAULT_MIN_ERROR
-    extr_df['err_bmaj'] = sys_err
-    extr_df['err_bmin'] = sys_err
-    extr_df['err_pa'] = sys_err
-    extr_df['ew_sys_err'] = sys_err
-    extr_df['ns_sys_err'] = sys_err
+    extr_df['err_bmaj'] = 0.
+    extr_df['err_bmin'] = 0.
+    extr_df['err_pa'] = 0.
+    extr_df['ew_sys_err'] = cfg_err_ra
+    extr_df['ns_sys_err'] = cfg_err_dec
     extr_df['error_radius'] = 0.
 
-    extr_df['uncertainty_ew'] = sys_err
+    extr_df['uncertainty_ew'] = np.hypot(
+        cfg_err_ra,
+        settings.POS_DEFAULT_MIN_ERROR
+    )
     extr_df['weight_ew'] = 1. / extr_df['uncertainty_ew'].values**2
-    extr_df['uncertainty_ns'] = sys_err
+    extr_df['uncertainty_ns'] = np.hypot(
+        cfg_err_dec,
+        settings.POS_DEFAULT_MIN_ERROR
+    )
     extr_df['weight_ns'] = 1. / extr_df['uncertainty_ns'].values**2
     extr_df['interim_ew'] = (
         extr_df['ra'].values * extr_df['weight_ew'].values

@@ -83,6 +83,7 @@ class Pipeline():
             sources_df, meas_dj_obj = forced_extraction(
                 sources_df,
                 self.config.ASTROMETRIC_UNCERTAINTY_RA / 3600.,
+                self.config.ASTROMETRIC_UNCERTAINTY_DEC / 3600.,
                 p_run,
                 meas_dj_obj
             )
