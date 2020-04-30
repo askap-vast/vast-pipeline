@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
+{% load humanize %}
 {% load static %}
+
 
 {% block head %}
 
@@ -37,7 +39,7 @@
                 <div class="row no-gutters align-items-center">
                   <div class="col mr-2">
                     <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Nr Pipeline Runs</div>
-                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totals.nr_pruns }}</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totals.nr_pruns|intcomma }}</div>
                   </div>
                   <div class="col-auto">
                     <i class="fas fa-bookmark fa-2x text-gray-300"></i>
@@ -55,7 +57,7 @@
                 <div class="row no-gutters align-items-center">
                   <div class="col mr-2">
                     <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Nr Images</div>
-                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totals.nr_imgs }}</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totals.nr_imgs|intcomma }}</div>
                   </div>
                   <div class="col-auto">
                     <i class="fas fa-images fa-2x text-gray-300"></i>
@@ -73,7 +75,7 @@
                 <div class="row no-gutters align-items-center">
                   <div class="col mr-2">
                     <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Total Nr Sources</div>
-                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totals.nr_srcs }}</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totals.nr_srcs|intcomma }}</div>
                   </div>
                   <div class="col-auto">
                     <i class="fas fa-share-alt fa-2x text-gray-300"></i>
@@ -91,7 +93,7 @@
                 <div class="row no-gutters align-items-center">
                   <div class="col mr-2">
                     <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Extracted Source Measurements</div>
-                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totals.nr_meas }}</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totals.nr_meas|intcomma }}</div>
                   </div>
                   <div class="col-auto">
                     <i class="fas fa-bolt fa-2x text-gray-300"></i>

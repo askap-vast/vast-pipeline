@@ -46,6 +46,7 @@ class MeasurementSerializer(serializers.ModelSerializer):
             'flux_int',
             'flux_peak',
             'has_siblings',
+            'forced',
         ]
         datatables_always_serialize = ('id',)
 
@@ -53,6 +54,7 @@ class MeasurementSerializer(serializers.ModelSerializer):
 class SourceSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
     measurements = serializers.IntegerField(read_only=True)
+    forced_measurements = serializers.IntegerField(read_only=True)
     wavg_ra = serializers.SerializerMethodField()
     wavg_dec = serializers.SerializerMethodField()
 

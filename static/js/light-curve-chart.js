@@ -6,22 +6,34 @@ Chart.defaults.global.defaultFontColor = '#858796';
 var ctx = document.getElementById("lightCurveChart").getContext('2d');
 let dataConf = JSON.parse(document.getElementById('chart-data').textContent);
 let data = [];
+let data_f = [];
 let labels = [];
 let errors = {};
+let errors_f = {};
 dataConf.dataQuery.forEach( function(obj) {
   let dtObj = new Date(obj.datetime);
   let dtObjString = dtObj.toISOString();
-  data.push({x: dtObj, y: obj.flux_int});
+  let err = obj.flux_int_err.toFixed(3);
+  let flux = obj.flux_int.toFixed(3);
   labels.push(dtObjString);
-  let err = obj.flux_int_err / 2.;
-  errors[dtObjString] = {plus: err, minus: err};
+  if (obj.forced == true) {
+      data.push({x: dtObj, y: null});
+      data_f.push({x: dtObj, y: flux});
+      errors[dtObjString] = {plus: null, minus: null};
+      errors_f[dtObjString] = {plus: err, minus: -err};
+  } else {
+      data.push({x: dtObj, y: flux});
+      data_f.push({x: dtObj, y: null});
+      errors[dtObjString] = {plus: err, minus: -err};
+      errors_f[dtObjString] = {plus: null, minus: null};
+  }
 });
 let conf = {
   type: 'line',
   data: {
     labels: labels,
     datasets: [{
-      label: "Flux",
+      label: "Measured Flux",
       fill: false,
       showLine: false,
       backgroundColor: "rgba(78, 115, 223, 0.05)",
@@ -36,6 +48,24 @@ let conf = {
       pointBorderWidth: 2,
       data: data,
       errorBars: errors,
+    },{
+      label: "Forced Flux",
+      fill: false,
+      showLine: false,
+      backgroundColor: "rgba(78, 115, 223, 0.05)",
+      borderColor: "rgba(78, 115, 223, 1)",
+      pointRadius: 5,
+      pointBackgroundColor: "rgba(78, 115, 223, 1)",
+      pointBorderColor: "rgba(78, 115, 223, 1)",
+      pointHoverRadius: 5,
+      pointHoverBackgroundColor: "rgba(78, 115, 223, 1)",
+      pointHoverBorderColor: "rgba(78, 115, 223, 1)",
+      pointHitRadius: 10,
+      pointBorderWidth: 2,
+      pointStyle: 'triangle',
+      data: data_f,
+      errorBars: errors_f,
+      rotation: 60,
     }],
   },
   options: {
@@ -45,7 +75,7 @@ let conf = {
       padding: {
         left: 10,
         right: 25,
-        top: 25,
+        top: 5,
         bottom: 0
       }
     },
@@ -85,7 +115,13 @@ let conf = {
       }],
     },
     legend: {
-      display: false
+      // need to sort out axis scaling to turn on
+      display: true,
+      align: 'end',
+      labels: {
+        usePointStyle: true,
+      },
+
     },
     tooltips: {
       backgroundColor: "rgb(255,255,255)",
