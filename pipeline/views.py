@@ -128,7 +128,8 @@ def get_skyregions_collection():
     for skr in skyregions:
         ra = skr.centre_ra - 180.
         dec = skr.centre_dec
-        radius = skr.xtr_radius
+        width_ra = skr.width_ra / 2.
+        width_dec = skr.width_dec / 2.
         id = skr.id
         features.append(
             {
@@ -141,11 +142,11 @@ def get_skyregions_collection():
                 "geometry": {
                     "type": "MultiLineString",
                     "coordinates": [[
-                        [ra+radius, dec+radius],
-                        [ra+radius, dec-radius],
-                        [ra-radius, dec-radius],
-                        [ra-radius, dec+radius],
-                        [ra+radius, dec+radius]
+                        [ra+width_ra, dec+width_dec],
+                        [ra+width_ra, dec-width_dec],
+                        [ra-width_ra, dec-width_dec],
+                        [ra-width_ra, dec+width_dec],
+                        [ra+width_ra, dec+width_dec]
                     ]]
                 }
             }
@@ -280,7 +281,9 @@ def ImageDetail(request, id, action=None):
 
     image['aladin_ra'] = image['ra']
     image['aladin_dec'] = image['dec']
-    image['aladin_zoom'] = 20.0
+    image['aladin_zoom'] = 15.0
+    image['aladin_box_ra'] = image['physical_bmaj']
+    image['aladin_box_dec'] = image['physical_bmin']
     image['ra'] = deg2hms(image['ra'], hms_format=True)
     image['dec'] = deg2dms(image['dec'], dms_format=True)
 

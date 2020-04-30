@@ -176,6 +176,8 @@ class SkyRegion(models.Model):
 
     centre_ra = models.FloatField()
     centre_dec = models.FloatField()
+    width_ra = models.FloatField()
+    width_dec = models.FloatField()
     xtr_radius = models.FloatField()
     x = models.FloatField()
     y = models.FloatField()
@@ -341,6 +343,12 @@ class Image(models.Model):
     )# Major (Dec) radius of image (degrees)
     fov_bmin = models.FloatField(
         help_text='Field of view minor axis '
+    )# Minor (RA) radius of image (degrees)
+    physical_bmaj = models.FloatField(
+        help_text='The actual size of the image major axis (Deg)'
+    )# Major (Dec) radius of image (degrees)
+    physical_bmin = models.FloatField(
+        help_text='The actual size of the image minor axis (Deg)'
     )# Minor (RA) radius of image (degrees)
     radius_pixels = models.FloatField(
         help_text='Radius of the useable region of the image (pixels)'

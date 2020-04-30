@@ -7,3 +7,13 @@ var nvss = aladin.createImageSurvey('NVSS', 'NVSS', 'https://alasky.u-strasbg.fr
 let survey = (aladinConf.aladin_dec < -40) ? sumss : nvss;
 aladin.setImageSurvey(survey);
 aladin.getBaseImageLayer().getColorMap().reverse();
+if (aladinConf.hasOwnProperty('aladin_box_ra')) {
+    var overlay = A.graphicOverlay({color: '#ee2345', lineWidth: 2});
+    aladin.addOverlay(overlay);
+    overlay.addFootprints([A.polygon([
+        [aladinConf.aladin_ra + (aladinConf.aladin_box_ra / 2) , aladinConf.aladin_dec - (aladinConf.aladin_box_dec / 2)],
+        [aladinConf.aladin_ra + (aladinConf.aladin_box_ra / 2) , aladinConf.aladin_dec + (aladinConf.aladin_box_dec / 2)],
+        [aladinConf.aladin_ra - (aladinConf.aladin_box_ra / 2) , aladinConf.aladin_dec + (aladinConf.aladin_box_dec / 2)],
+        [aladinConf.aladin_ra - (aladinConf.aladin_box_ra / 2) , aladinConf.aladin_dec - (aladinConf.aladin_box_dec / 2)],
+    ])]);
+}
