@@ -6,6 +6,7 @@
 
 <link rel='stylesheet' href='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css' />
 <link rel="stylesheet" href="{% static 'vendor/js9/js9-allinone.css' %}" />
+<link rel="stylesheet" href="{% static 'css/collapse-box.css' %}">
 
 {% endblock head %}
 
@@ -94,28 +95,46 @@
   </div>
 
   <!-- Postage stamps -->
-  <div class="card shadow mb-4">
-    <div class="card-header py-3">
-      <h6 class="m-0 font-weight-bold text-primary">Postage Stamps</h6>
-    </div>
-    <div class="card-body">
-      <div class="JS9Menubar" id="SUPERMENU_" data-displays="*"></div>
-      <div class="row row-cols-1 row-cols-md-5">
-        {% for measurement in measurements.dataQuery %}
-        <div class="card">
-          <div class="card-header">
-            <p class="mb-0">{{ measurement.image_name }}</p>
-            <p class="mb-0">{{ measurement.name }}</p>
+    <div class="card shadow mb-4">
+      <h6 class="card-header m-0 font-weight-bold text-primary">
+        <a data-toggle="collapse" href="#collapse-example" aria-expanded="true" aria-controls="collapse-example" id="heading-example" class="d-block">
+          <i class="fa fa-chevron-down pull-right"></i>
+          Postage Stamps
+        </a>
+      </h6>
+      <div id="collapse-example" class="collapse show" aria-labelledby="heading-example">
+        <div class="card-body">
+          <div class="row">
+            Left stamp: Zoom in on source (2 arcmin); Right stamp: Local field view (20 arcmin). Source always at centre.
           </div>
-          <div class="card-body">
-            <!--div class="JS9Menubar"></div-->
-            <div class="JS9" id="JS9_{{ forloop.counter }}" data-width="200px" data-height="200px"></div>
+          <div class="row">
+            <div class="JS9Menubar" id="SUPERMENU_" data-displays="*"></div>
+          </div>
+          <div class="row row-cols-4 row-cols-md-4">
+            {% for measurement in measurements.dataQuery %}
+              <div class="card">
+                <div class="card-header">
+                  <p class="mb-0"><a href="{% url 'pipeline:image_detail' measurement.image_id %}" target="_blank">{{ measurement.image_name }}</a></p>
+                  <p class="mb-0"><a href="{% url 'pipeline:measurement_detail' measurement.id %}" target="_blank">{{ measurement.name }}</a></p>
+                </div>
+              <div class="card-body">
+                <table>
+                  <tr>
+                    <td colspan="1">
+                      <div class="JS9" id="JS9_{{ forloop.counter }}a" data-width="230px" data-height="230px"></div>
+                    </td>
+                    <td colspan="1">
+                      <div class="JS9" id="JS9_{{ forloop.counter }}b" data-width="230px" data-height="230px"></div>
+                    </td>
+                  </tr>
+                </table>
+                </div>
+              </div>
+            {% endfor %}
           </div>
         </div>
-        {% endfor %}
       </div>
     </div>
-  </div>
 
   <!-- DataTales Source Measurements -->
   <div class="card shadow mb-4">
@@ -181,11 +200,13 @@
   $(document).on("JS9:ready", function() {
     var measurementData = JSON.parse(document.getElementById("data-js9").textContent);
     measurementData.forEach((measurement, i) => {
-      JS9.Load("/cutout/"+measurement.name, {scalemin: -0.001, scalemax: 0.005}, {display: "JS9_"+(i+1)});
+      JS9.Load("/cutout/"+measurement.name, {scalemin: -0.001, scalemax: 0.004, color: 'gray', invert: true}, {display: "JS9_"+(i+1)+"a"});
+      JS9.Load("/cutout/"+measurement.name+"/large", {scalemin: -0.001, scalemax: 0.004, color:'gray', invert: true,}, {display: "JS9_"+(i+1)+"b"});
       // needs time for the images to load before changing the zoom works correctly
       setTimeout(() => {
-        JS9.SetZoom("toFit", {display: "JS9_"+(i+1)});
-      }, 2000);
+        JS9.SetZoom("toFit", {display: "JS9_"+(i+1)+"a"});
+        JS9.SetZoom("toFit", {display: "JS9_"+(i+1)+"b"});
+      }, 3000);
     });
   });
 </script>

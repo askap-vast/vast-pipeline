@@ -7,6 +7,7 @@
 {% block head %}
 
 <link rel='stylesheet' href='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css' />
+<link rel="stylesheet" href="{% static 'vendor/js9/js9-allinone.css' %}" />
 
 {% endblock head %}
 
@@ -84,7 +85,22 @@
     <!-- Aladin viz tile -->
     <div class="col-lg-6">
       <div class="card shadow mb-4">
-        <div id="aladinViz" style="height:23.3rem;"></div>
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">Postage Stamp</h6>
+        </div>
+        <div class="card-body">
+          <div class="JS9Menubar" data-width="750px"></div>
+          <div class="JS9" data-width="750px"></div>
+        </div>
+      </div>
+      
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">Aladin</h6>
+        </div>
+        <div class="card-body">
+          <div id="aladinViz" style="height:23.3rem;"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -96,6 +112,11 @@
 
 
 {% block custom_page_scripts %}
+<!-- JS9 FITS viewer - must appear before DataTables -->
+<script type="text/javascript" src="{% static 'vendor/js9/js9prefs.js' %}"></script>
+<script type="text/javascript" src="{% static 'vendor/js9/js9support.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'vendor/js9/js9.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'vendor/js9/js9plugins.js' %}"></script>
 
 <!-- Page level plugins -->
 <script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
@@ -105,5 +126,16 @@
 {{ measurement|json_script:"data-aladin" }}
 <script type='text/javascript' src='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js' charset='utf-8'></script>
 <script src="{% static 'js/aladin-script.js' %}"></script>
+
+{{ measurement|json_script:"data-js9" }}
+<script type="text/javascript">
+  $(document).on("JS9:ready", function() {
+    var measurement = JSON.parse(document.getElementById("data-js9").textContent);
+      JS9.Load("/cutout/"+measurement.name+"/large", {scalemin: -0.001, scalemax: 0.004, color:'gray', invert: true,});
+      setTimeout(() => {
+        JS9.SetZoom(4);
+      }, 500);
+  });
+</script>
 
 {% endblock custom_page_scripts %}

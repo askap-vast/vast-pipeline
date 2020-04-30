@@ -35,5 +35,6 @@ urlpatterns = [
         name='source_detail'
     ),
     path('cutout/<str:measurement_name>/', views.ImageCutout.as_view(), name='cutout'),
+    path('cutout/<str:measurement_name>/<str:size>', views.ImageCutout.as_view(), name='cutout'),
     path('api/', include(router.urls))
 ]

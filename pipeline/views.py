@@ -665,11 +665,27 @@ def SourceDetail(request, id, action=None):
 
 
 class ImageCutout(APIView):
-    def get(self, request, measurement_name):
+    def get(self, request, measurement_name, size="normal"):
+        print(size)
         measurement = Measurement.objects.get(name=measurement_name)
         image_hdu: fits.PrimaryHDU = fits.open(measurement.image.path)[0]
         coord = SkyCoord(ra=measurement.ra, dec=measurement.dec, unit="deg")
-        cutout = Cutout2D(image_hdu.data, coord, Angle("3arcmin"), wcs=WCS(image_hdu.header))
+        sizes = {
+            "xlarge": "40arcmin",
+            "large": "20arcmin",
+            "normal": "2arcmin",
+        }
+
+        filenames = {
+            "xlarge": f"{measurement.name}_cutout_xlarge.fits",
+            "large": f"{measurement.name}_cutout_large.fits",
+            "normal": f"{measurement.name}_cutout.fits",
+        }
+
+        cutout = Cutout2D(
+            image_hdu.data, coord, Angle(sizes[size]), wcs=WCS(image_hdu.header),
+            mode='partial'
+        )
 
         cutout_hdu = fits.PrimaryHDU(data=cutout.data, header=cutout.wcs.to_header())
         cutout_file = io.BytesIO()
@@ -678,6 +694,6 @@ class ImageCutout(APIView):
         response = FileResponse(
             cutout_file,
             as_attachment=True,
-            filename=f"{measurement.name}_cutout.fits"
+            filename=filenames[size]
         )
         return response
