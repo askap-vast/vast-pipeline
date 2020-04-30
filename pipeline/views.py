@@ -214,8 +214,7 @@ def RunDetail(request, id):
     p_run['nr_srcs'] = Source.objects.filter(run__id=p_run['id']).count()
     p_run['nr_meas'] = Measurement.objects.filter(image__run__id=p_run['id']).count()
     p_run['nr_frcd'] = Measurement.objects.filter(
-        image__run__id=p_run['id']
-    ).filter(forced = True).count()
+        image__run=p_run, forced=True).count()
     p_run['new_srcs'] = Source.objects.filter(
         run__id=p_run['id'],
         new=True,
