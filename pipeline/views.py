@@ -666,7 +666,6 @@ def SourceDetail(request, id, action=None):
 
 class ImageCutout(APIView):
     def get(self, request, measurement_name, size="normal"):
-        print(size)
         measurement = Measurement.objects.get(name=measurement_name)
         image_hdu: fits.PrimaryHDU = fits.open(measurement.image.path)[0]
         coord = SkyCoord(ra=measurement.ra, dec=measurement.dec, unit="deg")
