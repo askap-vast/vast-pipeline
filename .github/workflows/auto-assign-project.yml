@@ -1,6 +1,10 @@
-name: Auto Assign Issues & PRs to Project
+name: Assign NEW Issues & PRs to General Project, bug and prod labelled to Prod Project
 
-on: [pull_request, issues]
+on:
+  issues:
+    types: [opened, labeled]
+  pull_request:
+    types: [opened, labeled]
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -9,8 +13,18 @@ jobs:
     runs-on: ubuntu-latest
     name: Assign to One Project
     steps:
-    - name: Run assignment to one project
-      uses: srggrs/assign-one-project-github-action@1.1.0
+    - name: Assign NEW Issues and NEW PRs to Pipeline General Dashboard
+      uses: srggrs/assign-one-project-github-action@1.2.0
       if: github.event.action == 'opened'
       with:
         project: 'https://github.com/askap-vast/vast-pipeline/projects/1'
+
+    - name: Assign Issues and PRs with "bug" or "prod" labels to Nimbus Production Dashboard
+      uses: srggrs/assign-one-project-github-action@1.2.0
+      if: |
+        contains(github.event.issue.labels.*.name, 'bug') ||
+        contains(github.event.pull_request.labels.*.name, 'bug') ||
+        contains(github.event.issue.labels.*.name, 'prod') ||
+        contains(github.event.pull_request.labels.*.name, 'prod')
+      with:
+        project: 'https://github.com/askap-vast/vast-pipeline/projects/2'
