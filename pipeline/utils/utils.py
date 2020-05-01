@@ -34,8 +34,7 @@ class StopWatch():
         """
         now = datetime.now()
         diff = (now - self._init).total_seconds()
-        self._last = now
-        self._init = now
+        self._last = self._init = now
         return diff
 
 
@@ -53,10 +52,15 @@ def load_validate_cfg(cfg):
     spec.loader.exec_module(mod)
 
     # do sanity checks
-    if not (getattr(mod, 'IMAGE_FILES') or getattr(mod, 'SELAVY_FILES')):
+    if not (getattr(mod, 'IMAGE_FILES') and getattr(mod, 'SELAVY_FILES')):
         raise Exception(
             'no image file paths passed or Selavy file paths!'
         )
+    else:
+        for lst in ['IMAGE_FILES', 'SELAVY_FILES']:
+            for file in getattr(mod, lst):
+                if not os.path.exists(file):
+                    raise Exception(f'file:\n{file}\ndoes not exists!')
 
     source_finder_names = settings.SOURCE_FINDERS
     if getattr(mod, 'SOURCE_FINDER') not in source_finder_names:
@@ -71,6 +75,17 @@ def load_validate_cfg(cfg):
             "ASSOCIATION_METHOD is not valid!"
             " Must be a value contained in: {}.".format(association_methods)
         ))
+
+    # validate Forced extraction settings
+    if getattr(mod, 'MONITOR') and not(
+            getattr(mod, 'BACKGROUND_FILES') and getattr(mod, 'NOISE_FILES')
+        ):
+        raise Exception('Expecting list of background MAP and RMS files!')
+    else:
+        for lst in ['BACKGROUND_FILES', 'NOISE_FILES']:
+            for file in getattr(mod, lst):
+                if not os.path.exists(file):
+                    raise Exception(f'file:\n{file}\ndoes not exists!')
 
     # validate every config from the config template
     for key in [k for k in dir(mod) if k.isupper()]:

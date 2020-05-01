@@ -50,8 +50,11 @@ class FitsImage(Image):
         try:
             with fits.open(self.path) as hdulist:
                 hdu = hdulist[hdu_index]
-        except Exception as e:
-            raise e
+        except Exception:
+            raise IOError((
+                'Could not read this FITS file: '
+                f'{os.path.basename(self.path)}'
+            ))
         return hdu.header.copy()
 
     def __set_img_attr_for_telescope(self, header):
@@ -111,6 +114,8 @@ class FitsImage(Image):
         cdelt1, cdelt2 = proj_plane_pixel_scales(WCS(header).celestial)
         self.fov_bmin = usable_radius_pix * abs(cdelt1)
         self.fov_bmaj = usable_radius_pix * abs(cdelt2)
+        self.physical_bmin = header[fits_naxis1] * abs(cdelt1)
+        self.physical_bmaj = header[fits_naxis2] * abs(cdelt2)
 
         # set the pixels radius
         # TODO: check calcs
@@ -281,5 +286,8 @@ class SelavyImage(FitsImage):
         df['weight_ns'] = 1. / df['uncertainty_ns'].values**2
 
         logger.debug('Positional errors done.')
+
+        # Initialise the forced column as False
+        df['forced'] = False
 
         return df

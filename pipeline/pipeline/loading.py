@@ -9,25 +9,27 @@ from ..models import Association, Measurement, Source
 from .utils import (
     get_create_img, get_create_img_band, get_measurement_models
 )
+from ..utils.utils import StopWatch
 
 
 logger = logging.getLogger(__name__)
 
 
 @transaction.atomic
-def upload_images(selavy_paths, config, pipeline_run):
+def upload_images(paths, config, pipeline_run):
     '''
     carry the first part of the pipeline, by uploading all the images
     to the image table and populated band and skyregion objects
     '''
+    timer = StopWatch()
     images = []
     meas_dj_obj = pd.DataFrame()
 
-    for path in selavy_paths:
+    for path in paths['selavy']:
         # STEP #1: Load image and measurements
         image = SelavyImage(
             path,
-            selavy_paths[path],
+            paths['selavy'][path],
             config=config
         )
         logger.info('Reading image %s ...', image.name)
@@ -37,6 +39,17 @@ def upload_images(selavy_paths, config, pipeline_run):
 
         # 1.2 create image and skyregion entry in DB
         img, exists_f = get_create_img(pipeline_run, band_id, image)
+        # add noise and background paths if necessary
+        if config.MONITOR and (
+            img.noise_path == '' or img.background_path == ''
+            ):
+            img.noise_path = paths['noise'][path]
+            img.background_path = paths['background'][path]
+            logger.info(
+                'Updating image model with noise and background paths...'
+            )
+            img.save(update_fields=['noise_path', 'background_path'])
+
         # add image to list
         images.append(img)
         if exists_f:
@@ -73,15 +86,17 @@ def upload_images(selavy_paths, config, pipeline_run):
         # do a upload without evaluate the objects, that should be faster
         # see https://docs.djangoproject.com/en/2.2/ref/models/querysets/
         batch_size = 10_000
-        for idx in range(0, measurements.meas_dj.size, batch_size):
+        for idx in range(0, measurements['meas_dj'].size, batch_size):
             out_bulk = Measurement.objects.bulk_create(
-                measurements.meas_dj.iloc[idx : idx + batch_size].values.tolist(),
+                measurements['meas_dj'].iloc[
+                    idx : idx + batch_size
+                ].values.tolist(),
                 batch_size
             )
             logger.info('Bulk uploaded #%i measurements', len(out_bulk))
 
         # make a columns with the measurement id
-        measurements['id'] = measurements.meas_dj.apply(
+        measurements['id'] = measurements['meas_dj'].apply(
             getattr, args=('id',)
         )
         meas_dj_obj = meas_dj_obj.append(
@@ -98,6 +113,10 @@ def upload_images(selavy_paths, config, pipeline_run):
         )
         del measurements, image, band_id, img, out_bulk
 
+    logger.info(
+        'Total images upload/loading time: %.2f seconds',
+        timer.reset_init()
+    )
     return images, meas_dj_obj
 
 
