@@ -195,8 +195,9 @@ def forced_extraction(
 
     # select sensible flux values and set the columns with fix values
     extr_df = extr_df.loc[extr_df['flux_int'].fillna(0) != 0, :]
-    extr_df['ra_err'] = settings.POS_DEFAULT_MIN_ERROR
-    extr_df['dec_err'] = settings.POS_DEFAULT_MIN_ERROR
+    default_pos_err = settings.POS_DEFAULT_MIN_ERROR / 3600.
+    extr_df['ra_err'] = default_pos_err
+    extr_df['dec_err'] = default_pos_err
     extr_df['err_bmaj'] = 0.
     extr_df['err_bmin'] = 0.
     extr_df['err_pa'] = 0.
@@ -206,12 +207,12 @@ def forced_extraction(
 
     extr_df['uncertainty_ew'] = np.hypot(
         cfg_err_ra,
-        settings.POS_DEFAULT_MIN_ERROR / 3600.
+        default_pos_err
     )
     extr_df['weight_ew'] = 1. / extr_df['uncertainty_ew'].values**2
     extr_df['uncertainty_ns'] = np.hypot(
         cfg_err_dec,
-        settings.POS_DEFAULT_MIN_ERROR / 3600.
+        default_pos_err
     )
     extr_df['weight_ns'] = 1. / extr_df['uncertainty_ns'].values**2
     extr_df['interim_ew'] = (
