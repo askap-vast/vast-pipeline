@@ -3,6 +3,7 @@ import logging
 from django.db.models import Count, F, Q
 from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet
+from django.contrib.postgres.aggregates.general import ArrayAgg
 
 from .models import Image, Measurement, Run, Source, SkyRegion
 from .serializers import (
@@ -241,7 +242,7 @@ def ImageIndex(request):
             'datatable': {
                 'api': '/api/images/?format=datatables',
                 'colsFields': colsfields,
-                'colsNames': ['Name','Time','RA','DEC'],
+                'colsNames': ['Name','Time (UTC)','RA (deg)','Dec (deg)'],
                 'search': True,
             }
         }
@@ -402,6 +403,7 @@ def SourceIndex(request):
         'max_flux_peak',
         'measurements',
         'forced_measurements',
+        'relations',
         'v_int',
         'eta_int',
         'v_peak',
@@ -433,6 +435,7 @@ def SourceIndex(request):
                     'Max Peak Flux (mJy/beam)',
                     'Total Datapoints',
                     'Forced Datapoints',
+                    'Relations',
                     'V int flux',
                     '\u03B7 int flux',
                     'V peak flux',
@@ -450,10 +453,13 @@ class SourceViewSet(ModelViewSet):
 
     def get_queryset(self):
         qs = Source.objects.annotate(
-            measurements=Count('measurement'),
+            measurements=Count('measurement', distinct=True),
             forced_measurements=Count(
-                'measurement', filter=Q(measurement__forced=True)
-            )
+                'measurement',
+                filter=Q(measurement__forced=True),
+                distinct=True
+            ),
+            relations=Count('related', distinct=True),
         )
 
         qry_dict = {}
@@ -500,6 +506,7 @@ def SourceQuery(request):
         'max_flux_peak',
         'measurements',
         'forced_measurements',
+        'relations',
         'v_int',
         'eta_int',
         'v_peak',
@@ -535,6 +542,7 @@ def SourceQuery(request):
                     'Max Peak Flux (mJy/beam)',
                     'Total Datapoints',
                     'Forced Datapoints',
+                    'Relations',
                     'V int flux',
                     '\u03B7 int flux',
                     'V peak flux',
@@ -556,40 +564,56 @@ def SourceDetail(request, id, action=None):
             src = source.filter(id__gt=id)
             if src.exists():
                 source = src.annotate(
-                    run_name=F('run__name')
+                    run_name=F('run__name'),
+                    relations_ids=ArrayAgg('related__id'),
+                    relations_names=ArrayAgg('related__name')
                 ).values().first()
             else:
                 source = source.filter(id=id).annotate(
-                    run_name=F('run__name')
+                    run_name=F('run__name'),
+                    relations_ids=ArrayAgg('related__id'),
+                    relations_names=ArrayAgg('related__name')
                 ).values().get()
         elif action == 'prev':
             src = source.filter(id__lt=id)
             if src.exists():
                 source = src.annotate(
-                    run_name=F('run__name')
+                    run_name=F('run__name'),
+                    relations_ids=ArrayAgg('related__id'),
+                    relations_names=ArrayAgg('related__name')
                 ).values().last()
             else:
                 source = source.filter(id=id).annotate(
-                    run_name=F('run__name')
+                    run_name=F('run__name'),
+                    relations_ids=ArrayAgg('related__id'),
+                    relations_names=ArrayAgg('related__name')
                 ).values().get()
     else:
         source = source.filter(id=id).annotate(
-            run_name=F('run__name')
+            run_name=F('run__name'),
+            relations_ids=ArrayAgg('related__id'),
+            relations_names=ArrayAgg('related__name')
         ).values().get()
     source['aladin_ra'] = source['wavg_ra']
     source['aladin_dec'] = source['wavg_dec']
     source['aladin_zoom'] = 0.36
+    if not source['relations_ids'] == [None]:
+        # this enables easy presenting in the template
+        source['relations_info'] = list(zip(
+            source['relations_ids'],
+            source['relations_names']
+        ))
     source['wavg_ra'] = deg2hms(source['wavg_ra'], hms_format=True)
     source['wavg_dec'] = deg2dms(source['wavg_dec'], dms_format=True)
     source['datatable'] = {'colsNames': [
         'ID',
         'Name',
-        'Date',
+        'Date (UTC)',
         'Image',
-        'RA',
-        'RA Error',
-        'Dec',
-        'Dec Error',
+        'RA (deg)',
+        'RA Error (arcsec)',
+        'Dec (deg)',
+        'Dec Error (arcsec)',
         'Int. Flux (mJy)',
         'Int. Flux Error (mJy)',
         'Peak Flux (mJy/beam)',
