@@ -121,10 +121,7 @@
                 <table>
                   <tr>
                     <td colspan="1">
-                      <div class="JS9" id="JS9_{{ forloop.counter }}a" data-width="230px" data-height="230px"></div>
-                    </td>
-                    <td colspan="1">
-                      <div class="JS9" id="JS9_{{ forloop.counter }}b" data-width="230px" data-height="230px"></div>
+                      <div class="JS9" id="JS9_{{ forloop.counter }}" data-width="230px" data-height="230px"></div>
                     </td>
                   </tr>
                 </table>
@@ -197,17 +194,25 @@
 
 {{ measurements.dataQuery|json_script:"data-js9" }}
 <script type="text/javascript">
-  $(document).on("JS9:ready", function() {
-    var measurementData = JSON.parse(document.getElementById("data-js9").textContent);
-    measurementData.forEach((measurement, i) => {
-      JS9.Load("/cutout/"+measurement.name, {scalemin: -0.001, scalemax: 0.004, color: 'gray', invert: true}, {display: "JS9_"+(i+1)+"a"});
-      JS9.Load("/cutout/"+measurement.name+"/large", {scalemin: -0.001, scalemax: 0.004, color:'gray', invert: true,}, {display: "JS9_"+(i+1)+"b"});
-      // needs time for the images to load before changing the zoom works correctly
-      setTimeout(() => {
-        JS9.SetZoom("toFit", {display: "JS9_"+(i+1)+"a"});
-        JS9.SetZoom("toFit", {display: "JS9_"+(i+1)+"b"});
-      }, 3000);
+  function loadFitsImage(imageName, displayId) {
+    return new Promise(resolve => {
+      JS9.Load(
+        "/cutout/"+imageName+"/large",
+        {id: imageName, scalemin: -0.001, scalemax: 0.004, color:'gray', invert: true, onload: () => { return resolve(); }},
+        {display: displayId}
+      );
     });
+  }
+  // when JS9 is ready, load the cutout images into the correct display panels
+  $(document).on("JS9:ready", async function() {
+    var measurementData = JSON.parse(document.getElementById("data-js9").textContent);
+    // load all images and wait until they're all done
+    await Promise.all(measurementData.map((measurement, i) => {
+      var displayId = "JS9_"+(i+1);
+      return loadFitsImage(measurement.name, displayId);
+    }));
+    JS9.SyncImages();  // sync panning between images
+    JS9.SetZoom("toFit");
   });
 </script>
 {% endblock custom_page_scripts %}
