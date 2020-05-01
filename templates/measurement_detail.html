@@ -66,6 +66,7 @@
         </div>
         <div class="card-body">
           <p><strong>Image: </strong> <a href="/images/{{ measurement.image_id }}" target="_blank">{{ measurement.image_name }}</a></p>
+          <p><strong>Forced Extraction: </strong> {{ measurement.forced }}</p>
           <p><strong>RA: </strong> {{ measurement.ra }}</p>
           <p><strong>DEC: </strong> {{ measurement.dec }}</p>
           <p><strong>Uncertainty EW: </strong> {{ measurement.uncertainty_ew|deg_to_arcsec|floatformat:3 }}''</p>
@@ -74,11 +75,7 @@
           <p><strong>BMIN: </strong> {{ measurement.bmin }}''</p>
           <p><strong>BPA: </strong> {{ measurement.pa }}&deg;</p>
           <p><strong>Has siblings: </strong> {{ measurement.has_siblings }}</p>
-          {% if measurement.has_siblings  == True %}
           <p><strong>Island ID: </strong> {{ measurement.island_id }}</p>
-          {% else %}
-          <p><strong>Island ID: </strong> N/A</p>
-          {% endif %}
           <p><strong>flag_c4: </strong> {{ measurement.flag_c4 }}</p>
           <p><strong>Comment: </strong> {{ measurement.comment }}</p>
         </div>
