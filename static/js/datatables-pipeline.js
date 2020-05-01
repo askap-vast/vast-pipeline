@@ -218,7 +218,7 @@ $(document).ready(function() {
     });
     let inputs = [
       'fluxMinSelect', 'fluxMaxSelect', 'varMinSelect', 'varMaxSelect',
-      'raSelect', 'decSelect', 'radiusSelect', 'datapointSelect'
+      'raSelect', 'decSelect', 'radiusSelect', 'datapointSelect', 'objectSearch'
       ];
     for (input of inputs) {
       document.getElementById(input).value = '';

@@ -213,17 +213,21 @@ def simbad_search(object_name):
     Returns RA and Dec. Will return None values if search
     returns no results.
     """
-    result_table = Simbad.query_object(object_name)
+    try:
+        result_table = Simbad.query_object(object_name)
+        print(result_table)
+        if result_table is None:
+            return None, None
 
-    if result_table is None:
+        ra = result_table[0]['RA']
+        dec = result_table[0]['DEC']
+
+        c = SkyCoord(ra + dec, unit=(u.hourangle, u.deg))
+
+        ra = c.ra.deg
+        dec = c.dec.deg
+
+        return ra, dec
+
+    except Exception as e:
         return None, None
-
-    ra = result_table[0]['RA']
-    dec = result_table[0]['DEC']
-
-    c = SkyCoord(ra + dec, unit=(u.hourangle, u.deg))
-
-    ra = c.ra.deg
-    dec = c.dec.deg
-
-    return ra, dec
