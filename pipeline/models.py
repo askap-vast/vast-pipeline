@@ -509,58 +509,6 @@ class Measurement(models.Model):
         help_text='Is this a quality source for analysis purposes'
     )# Is this a "quality" source for analysis purposes?
 
-    condon_errors = models.BooleanField(
-        default=False,
-        help_text=(
-        'Is the measurment using the calculated Condon errors'
-        ' as the main errors?'
-        )
-    )
-
-    selavy_flux_peak_err = models.FloatField(
-        help_text='The original peak flux error value given by Selavy',
-    )# mJy/beam
-    selavy_flux_int_err = models.FloatField(
-        help_text='The original int flux error value given by Selavy',
-    )# mJy/beam
-    selavy_err_bmaj = models.FloatField(
-        help_text='The original bmaj error value given by Selavy',
-    )# deg
-    selavy_err_bmin = models.FloatField(
-        help_text='The original bmin error value given by Selavy',
-    )# deg
-    selavy_err_pa = models.FloatField(
-        help_text='The original pa error value given by Selavy',
-    )# deg
-    selavy_ra_err = models.FloatField(
-        help_text='The original RA error value given by Selavy',
-    )# deg
-    selavy_dec_err = models.FloatField(
-        help_text='The original Dec error value given by Selavy',
-    )# deg
-
-    condon_flux_peak_err = models.FloatField(
-        help_text='The Condon peak flux error value calculated by the pipeline'
-    )# mJy/beam
-    condon_flux_int_err = models.FloatField(
-        help_text='The Condon int flux error value calculated by the pipeline'
-    )# mJy/beam
-    condon_err_bmaj = models.FloatField(
-        help_text='The Condon bmaj error value calculated by the pipeline'
-    )# deg
-    condon_err_bmin = models.FloatField(
-        help_text='The Condon bmin error value calculated by the pipeline'
-    )# deg
-    condon_err_pa = models.FloatField(
-        help_text='The Condon pa error value calculated by the pipeline'
-    )# deg
-    condon_ra_err = models.FloatField(
-        help_text='The Condon RA error value calculated by the pipeline'
-    )# deg
-    condon_dec_err = models.FloatField(
-        help_text='The Condon Dec error value calculated by the pipeline'
-    )# deg
-
     objects = SourceQuerySet.as_manager()
 
     class Meta:

@@ -193,22 +193,7 @@ class Migration(migrations.Migration):
                 ('persistent', models.BooleanField(default=False, help_text='Keep this source between pipeline runs')),
                 ('quality', models.NullBooleanField(default=False, help_text='Is this a quality source for analysis purposes')),
                 ('image', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='pipeline.Image')),
-                ('source', models.ManyToManyField(through='pipeline.Association', to='pipeline.Source')),
-                ('condon_errors', models.BooleanField(default=False, help_text='Is the measurment using the calculated Condon errors as the main errors?')),
-                ('selavy_flux_peak_err', models.FloatField(help_text='The original peak flux error value given by Selavy')),
-                ('selavy_flux_int_err', models.FloatField(help_text='The original int flux error value given by Selavy')),
-                ('selavy_err_bmaj', models.FloatField(help_text='The original bmaj error value given by Selavy')),
-                ('selavy_err_bmin', models.FloatField(help_text='The original bmin error value given by Selavy')),
-                ('selavy_err_pa', models.FloatField(help_text='The original pa error value given by Selavy')),
-                ('selavy_ra_err', models.FloatField(help_text='The original RA error value given by Selavy')),
-                ('selavy_dec_err', models.FloatField(help_text='The original Dec error value given by Selavy')),
-                ('condon_flux_peak_err', models.FloatField(help_text='The Condon peak flux error value calculated by the pipeline')),
-                ('condon_flux_int_err', models.FloatField(help_text='The Condon int flux error value calculated by the pipeline')),
-                ('condon_err_bmaj', models.FloatField(help_text='The Condon bmaj error value calculated by the pipeline')),
-                ('condon_err_bmin', models.FloatField(help_text='The Condon bmin error value calculated by the pipeline')),
-                ('condon_err_pa', models.FloatField(help_text='The Condon pa error value calculated by the pipeline')),
-                ('condon_ra_err', models.FloatField(help_text='The Condon RA error value calculated by the pipeline')),
-                ('condon_dec_err', models.FloatField(help_text='The Condon Dec error value calculated by the pipeline'))
+                ('source', models.ManyToManyField(through='pipeline.Association', to='pipeline.Source'))
             ],
             options={
                 'ordering': ['ra'],

@@ -99,7 +99,7 @@ def calc_condon_flux_errors(row, theta_B, theta_b, alpha_maj1=2.5, alpha_min1=0.
     # given that these sources are also filtered out before hand.
     if 0.0 in variables:
         logger.debug(variables)
-        return 0., 0., 0., 0., 0., 0., 0., 0.
+        return 0., 0., 0., 0., 0., 0., 0.
 
     try:
 
@@ -145,7 +145,10 @@ def calc_condon_flux_errors(row, theta_B, theta_b, alpha_maj1=2.5, alpha_min1=0.
         if errortheta > np.pi:
             errortheta = np.pi
 
-        flux_peak += -noise**2 / flux_peak + clean_bias
+        # correction to flux peak not currently used
+        # but might be in the future.
+        # Do not remove!
+        # flux_peak += -noise**2 / flux_peak + clean_bias
 
         errorpeaksq = ((frac_flux_cal_error * flux_peak)**2 +
                        clean_bias_error**2 +
@@ -158,7 +161,8 @@ def calc_condon_flux_errors(row, theta_B, theta_b, alpha_maj1=2.5, alpha_min1=0.
         help3 = theta_B * theta_b / (major * minor)
         errorflux = np.abs(flux_int) * np.sqrt(errorpeaksq / flux_peak**2 + help3 * (help1 + help2))
 
-        return flux_peak, errorpeak, errorflux, errormajor, errorminor, errortheta, errorra, errordec
+        # need to return flux_peak if used.
+        return errorpeak, errorflux, errormajor, errorminor, errortheta, errorra, errordec
 
     except exception as e:
-        return 0., 0., 0., 0., 0., 0., 0., 0.
+        return 0., 0., 0., 0., 0., 0., 0.
