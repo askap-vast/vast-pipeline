@@ -165,4 +165,5 @@ def calc_condon_flux_errors(row, theta_B, theta_b, alpha_maj1=2.5, alpha_min1=0.
         return errorpeak, errorflux, errormajor, errorminor, errortheta, errorra, errordec
 
     except exception as e:
+        logger.debug("Error in the calculation of Condon errors for a source", exc_info=True)
         return 0., 0., 0., 0., 0., 0., 0.
