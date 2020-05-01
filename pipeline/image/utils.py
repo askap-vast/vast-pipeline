@@ -79,10 +79,10 @@ def calc_condon_flux_errors(row, theta_B, theta_b, alpha_maj1=2.5, alpha_min1=0.
     major = row.bmaj / 3600.  # degrees
     minor = row.bmin / 3600.  # degrees
     theta = np.deg2rad(row.pa)
-    flux_peak = row.flux_peak
-    flux_int = row.flux_int
-    snr = row.snr
-    noise = row.local_rms
+    flux_peak = row['flux_peak']
+    flux_int = row['flux_int']
+    snr = row['snr']
+    noise = row['local_rms']
 
     variables = [
         theta_B,

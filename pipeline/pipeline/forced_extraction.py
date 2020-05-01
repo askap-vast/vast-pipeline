@@ -206,12 +206,12 @@ def forced_extraction(
 
     extr_df['uncertainty_ew'] = np.hypot(
         cfg_err_ra,
-        settings.POS_DEFAULT_MIN_ERROR
+        settings.POS_DEFAULT_MIN_ERROR / 3600.
     )
     extr_df['weight_ew'] = 1. / extr_df['uncertainty_ew'].values**2
     extr_df['uncertainty_ns'] = np.hypot(
         cfg_err_dec,
-        settings.POS_DEFAULT_MIN_ERROR
+        settings.POS_DEFAULT_MIN_ERROR / 3600.
     )
     extr_df['weight_ns'] = 1. / extr_df['uncertainty_ns'].values**2
     extr_df['interim_ew'] = (
@@ -223,6 +223,7 @@ def forced_extraction(
 
     extr_df['flux_peak'] = extr_df['flux_int']
     extr_df['flux_peak_err'] = extr_df['flux_int_err']
+    extr_df['local_rms'] = extr_df['flux_int_err']
     extr_df['spectral_index'] = 0.
     extr_df['dr'] = 0.
     extr_df['d2d'] = 0.

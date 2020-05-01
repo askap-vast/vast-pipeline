@@ -229,6 +229,11 @@ class SelavyImage(FitsImage):
                 df.loc[sel, col] = settings.POS_DEFAULT_MIN_ERROR
             df[col] = df[col] / 3600.
 
+        # replace 0 local_rms values using user config value
+        df.loc[
+            df['local_rms'] == 0., 'local_rms'
+        ] = self.config.SELAVY_LOCAL_RMS_ZERO_FILL_VALUE
+
         df['snr'] = df['flux_peak'] / df['local_rms']
 
         if self.config.USE_CONDON_ERRORS:
