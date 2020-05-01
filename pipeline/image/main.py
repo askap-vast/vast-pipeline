@@ -206,7 +206,7 @@ class SelavyImage(FitsImage):
         bad_sources = df[(df[cols_to_check] == 0).any(axis=1)]
         if bad_sources.shape[0] > 0:
             logger.debug("Dropping %i bad sources.", bad_sources.shape[0])
-            df = df.drop(bad_sources.index.values)
+            df = df.drop(bad_sources.index)
 
         # add fields from image and fix name column
         df['image_id'] = dj_image.id
