@@ -1,5 +1,6 @@
 import io
 import logging
+from typing import Optional
 
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
@@ -714,16 +715,27 @@ class ImageCutout(APIView):
 
 
 class MeasurementQuery(APIView):
-    def get(self, request, ra_deg: float, dec_deg: float, image_id: int, radius_deg: float):
-        columns = ["name", "ra", "dec", "bmaj", "bmin", "pa"]
-        measurements = Measurement.objects.filter(
-            image=image_id
-        ).cone_search(ra_deg, dec_deg, radius_deg).values(*columns)
+    def get(
+        self,
+        request,
+        ra_deg: float,
+        dec_deg: float,
+        image_id: int,
+        radius_deg: float,
+        source_id: Optional[int] = None,
+    ):
+        columns = ["name", "ra", "dec", "bmaj", "bmin", "pa", "source"]
+        measurements = (
+            Measurement.objects.filter(image=image_id)
+            .cone_search(ra_deg, dec_deg, radius_deg)
+            .values(*columns)
+        )
         measurement_region_file = io.StringIO()
         for meas in measurements:
+            color = "#FF0000" if meas["source"] == source_id else "#0000FF"
             region = (
                 f"ellipse({meas['ra']}d, {meas['dec']}d, {meas['bmaj']}\", {meas['bmin']}\", "
-                f"{meas['pa']+90}d)\n"
+                f"{meas['pa']+90}d) {{\"color\": \"{color}\"}}\n"
             )
             measurement_region_file.write(region)
         measurement_region_file.seek(0)

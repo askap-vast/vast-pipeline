@@ -44,5 +44,10 @@ urlpatterns = [
         views.MeasurementQuery.as_view(),
         name="measurements_region"
     ),
+    path(
+        'measurements/<int:image_id>/<ra:ra_deg>,<dec:dec_deg>,<angle:radius_deg>/<int:source_id>/region',
+        views.MeasurementQuery.as_view(),
+        name="measurements_region_with_source"
+    ),
     path('api/', include(router.urls))
 ]
