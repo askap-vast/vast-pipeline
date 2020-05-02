@@ -213,6 +213,12 @@
     }));
     JS9.SyncImages();  // sync panning between images
     JS9.SetZoom("toFit");
+    // overlay nearby components as regions
+    measurementData.forEach((measurement, i) => {
+      var displayId = "JS9_"+(i+1);
+      var region_url = "/measurements/"+measurement.image_id+"/"+measurement.ra+","+measurement.dec+",20arcmin/region";
+      JS9.LoadRegions(region_url, {color: "#FF0000", changeable: false}, {display: displayId});
+    });
   });
 </script>
 {% endblock custom_page_scripts %}

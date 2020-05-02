@@ -5,6 +5,7 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
 from astropy.nddata import Cutout2D
 from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_scales
 from django.http import FileResponse
 from django.db.models import Count, F, Q
 from django.shortcuts import render
@@ -686,7 +687,21 @@ class ImageCutout(APIView):
             mode='partial'
         )
 
-        cutout_hdu = fits.PrimaryHDU(data=cutout.data, header=cutout.wcs.to_header())
+        # add beam properties to the cutout header and fix cdelts as JS9 does not deal
+        # with PCi_j properly
+        cdelt1, cdelt2 = proj_plane_pixel_scales(cutout.wcs)
+        cutout_header = cutout.wcs.to_header()
+        cutout_header.remove("PC1_1", ignore_missing=True)
+        cutout_header.remove("PC2_2", ignore_missing=True)
+        cutout_header.update(
+            CDELT1=-cdelt1,
+            CDELT2=cdelt2,
+            BMAJ=image_hdu.header["BMAJ"],
+            BMIN=image_hdu.header["BMIN"],
+            BPA=image_hdu.header["BPA"]
+        )
+
+        cutout_hdu = fits.PrimaryHDU(data=cutout.data, header=cutout_header)
         cutout_file = io.BytesIO()
         cutout_hdu.writeto(cutout_file)
         cutout_file.seek(0)
@@ -694,5 +709,28 @@ class ImageCutout(APIView):
             cutout_file,
             as_attachment=True,
             filename=filenames[size]
+        )
+        return response
+
+
+class MeasurementQuery(APIView):
+    def get(self, request, ra_deg: float, dec_deg: float, image_id: int, radius_deg: float):
+        columns = ["name", "ra", "dec", "bmaj", "bmin", "pa"]
+        measurements = Measurement.objects.filter(
+            image=image_id
+        ).cone_search(ra_deg, dec_deg, radius_deg).values(*columns)
+        measurement_region_file = io.StringIO()
+        for meas in measurements:
+            region = (
+                f"ellipse({meas['ra']}d, {meas['dec']}d, {meas['bmaj']}\", {meas['bmin']}\", "
+                f"{meas['pa']+90}d)\n"
+            )
+            measurement_region_file.write(region)
+        measurement_region_file.seek(0)
+        f = io.BytesIO(bytes(measurement_region_file.read(), encoding="utf8"))
+        response = FileResponse(
+            f,
+            as_attachment=False,
+            filename=f"image-{image_id}_{ra_deg:.5f}_{dec_deg:+.5f}_radius-{radius_deg:.3f}.reg",
         )
         return response

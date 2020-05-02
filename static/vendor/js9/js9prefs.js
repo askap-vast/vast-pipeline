@@ -11,7 +11,8 @@ var JS9Prefs = {
 		"dataPath": "$HOME/Desktop:$HOME/data",
 		"analysisPlugins": "./analysis-plugins",
 		"analysisWrappers": "./analysis-wrappers",
-		"installDir": "/static/vendor/js9"
+		"installDir": "/static/vendor/js9",
+		"syncOps": ["colormap","contrastbias","flip","pan","rot90","scale","wcs","zoom"]
 	},
 	"imageOpts": {
 		"colormap": "grey",
