@@ -105,7 +105,8 @@
       <div id="collapse-example" class="collapse show" aria-labelledby="heading-example">
         <div class="card-body">
           <div class="row">
-            Left stamp: Zoom in on source (2 arcmin); Right stamp: Local field view (20 arcmin). Source always at centre.
+            <button class="btn btn-info" onclick="focusOnSource(2.0);">Zoom to Source</button>
+            <button class="btn btn-info" onclick="focusOnSource('toFit');">Zoom to Field</button>
           </div>
           <div class="row">
             <div class="JS9Menubar" id="SUPERMENU_" data-displays="*"></div>
@@ -118,13 +119,7 @@
                   <p class="mb-0"><a href="{% url 'pipeline:measurement_detail' measurement.id %}" target="_blank">{{ measurement.name }}</a></p>
                 </div>
               <div class="card-body">
-                <table>
-                  <tr>
-                    <td colspan="1">
                       <div class="JS9" id="JS9_{{ forloop.counter }}" data-width="230px" data-height="230px"></div>
-                    </td>
-                  </tr>
-                </table>
                 </div>
               </div>
             {% endfor %}
@@ -202,6 +197,12 @@
         {display: displayId}
       );
     });
+  }
+  function focusOnSource(zoom) {
+    let ra = {{ source.aladin_ra }};
+    let dec = {{ source.aladin_dec }};
+    JS9.SetPan({ra: ra, dec: dec});
+    JS9.SetZoom(zoom);
   }
   // when JS9 is ready, load the cutout images into the correct display panels
   $(document).on("JS9:ready", async function() {
