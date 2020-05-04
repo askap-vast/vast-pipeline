@@ -69,3 +69,10 @@ DEFAULT_SURVEY = None # 'NVSS'
 # reported value or this value, whichever is greater.
 # This is a fraction, 0 = No minimum error
 FLUX_PERC_ERROR = 0 #percent 0.05 is 5%
+
+# Replace the selavy errors witht
+USE_CONDON_ERRORS = True
+
+# Sometimes the local rms for a source is reported as 0 by selavy.
+# Choose a value to use for the local rms in these cases
+SELAVY_LOCAL_RMS_ZERO_FILL_VALUE = 0.2  # mJy
