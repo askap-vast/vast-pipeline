@@ -403,6 +403,7 @@ def SourceIndex(request):
         'avg_flux_peak',
         'max_flux_peak',
         'measurements',
+        'selavy_measurements',
         'forced_measurements',
         'relations',
         'v_int',
@@ -436,6 +437,7 @@ def SourceIndex(request):
                     'Avg. Peak Flux (mJy/beam)',
                     'Max Peak Flux (mJy/beam)',
                     'Total Datapoints',
+                    'Selavy Datapoints',
                     'Forced Datapoints',
                     'Relations',
                     'V int flux',
@@ -457,6 +459,11 @@ class SourceViewSet(ModelViewSet):
     def get_queryset(self):
         qs = Source.objects.annotate(
             measurements=Count('measurement', distinct=True),
+            selavy_measurements=Count(
+                'measurement',
+                filter=Q(measurement__forced=False),
+                distinct=True
+            ),
             forced_measurements=Count(
                 'measurement',
                 filter=Q(measurement__forced=True),
@@ -487,6 +494,7 @@ class SourceViewSet(ModelViewSet):
             'eta_int',
             'eta_peak',
             'measurements',
+            'selavy_measurements',
             'forced_measurements',
             'relations',
             'contains_siblings'
@@ -552,6 +560,7 @@ def SourceQuery(request):
         'avg_flux_peak',
         'max_flux_peak',
         'measurements',
+        'selavy_measurements',
         'forced_measurements',
         'relations',
         'v_int',
@@ -589,6 +598,7 @@ def SourceQuery(request):
                     'Avg. Peak Flux (mJy/beam)',
                     'Max Peak Flux (mJy/beam)',
                     'Total Datapoints',
+                    'Selavy Datapoints',
                     'Forced Datapoints',
                     'Relations',
                     'V int flux',

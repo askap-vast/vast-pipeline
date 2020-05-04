@@ -221,6 +221,14 @@ $(document).ready(function() {
     if (datapts_max.value) {
       qry_url = qry_url + "&max_measurements=" + datapts_max.value;
     };
+    let selavy_min = document.getElementById("SelavyMinSelect");
+    let selavy_max = document.getElementById("SelavyMaxSelect");
+    if (selavy_min.value) {
+      qry_url = qry_url + "&min_selavy_measurements=" + selavy_min.value;
+    };
+    if (selavy_max.value) {
+      qry_url = qry_url + "&max_selavy_measurements=" + selavy_max.value;
+    };
     let forced_min = document.getElementById("ForcedMinSelect");
     let forced_max = document.getElementById("ForcedMaxSelect");
     if (forced_min.value) {
@@ -256,7 +264,7 @@ $(document).ready(function() {
       'objectSearch', 'fluxMinSelect', 'fluxMaxSelect', 'varVMinSelect', 'varVMaxSelect',
       'varEtaMinSelect', 'varEtaMaxSelect', 'ForcedMinSelect', 'ForcedMaxSelect',
       'raSelect', 'decSelect', 'radiusSelect', 'datapointMinSelect', 'datapointMaxSelect',
-      'RelationsMinSelect', 'RelationsMaxSelect',
+      'RelationsMinSelect', 'RelationsMaxSelect', 'SelavyMinSelect', 'SelavyMaxSelect',
       ];
     for (input of inputs) {
       document.getElementById(input).value = '';
