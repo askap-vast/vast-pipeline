@@ -355,11 +355,15 @@ def MeasurementDetail(request, id, action=None):
                 measurement = msr.annotate(
                     datetime=F('image__datetime'),
                     image_name=F('image__name'),
+                    source_ids=ArrayAgg('source__id'),
+                    source_names=ArrayAgg('source__name'),
                 ).values().first()
             else:
                 measurement = measurement.filter(id=id).annotate(
                     datetime=F('image__datetime'),
                     image_name=F('image__name'),
+                    source_ids=ArrayAgg('source__id'),
+                    source_names=ArrayAgg('source__name'),
                 ).values().get()
         elif action == 'prev':
             msr = measurement.filter(id__lt=id)
@@ -367,16 +371,22 @@ def MeasurementDetail(request, id, action=None):
                 measurement = msr.annotate(
                     datetime=F('image__datetime'),
                     image_name=F('image__name'),
+                    source_ids=ArrayAgg('source__id'),
+                    source_names=ArrayAgg('source__name'),
                 ).values().last()
             else:
                 measurement = measurement.filter(id=id).annotate(
                     datetime=F('image__datetime'),
                     image_name=F('image__name'),
+                    source_ids=ArrayAgg('source__id'),
+                    source_names=ArrayAgg('source__name'),
                 ).values().get()
     else:
         measurement = measurement.filter(id=id).annotate(
             datetime=F('image__datetime'),
             image_name=F('image__name'),
+            source_ids=ArrayAgg('source__id'),
+            source_names=ArrayAgg('source__name'),
         ).values().get()
 
     measurement['aladin_ra'] = measurement['ra']
@@ -386,6 +396,13 @@ def MeasurementDetail(request, id, action=None):
     measurement['dec'] = deg2dms(measurement['dec'], dms_format=True)
 
     measurement['datetime'] = measurement['datetime'].isoformat()
+
+    if not measurement['source_ids'] == [None]:
+        # this enables easy presenting in the template
+        measurement['sources_info'] = list(zip(
+            measurement['source_ids'],
+            measurement['source_names']
+        ))
 
     context = {'measurement': measurement}
     return render(request, 'measurement_detail.html', context)
