@@ -735,7 +735,8 @@ class MeasurementQuery(APIView):
             color = "#FF0000" if meas["source"] == source_id else "#0000FF"
             region = (
                 f"ellipse({meas['ra']}d, {meas['dec']}d, {meas['bmaj']}\", {meas['bmin']}\", "
-                f"{meas['pa']+90}d) {{\"color\": \"{color}\"}}\n"
+                f"{meas['pa']+90+180}d) "
+                f'{{"color": "{color}", "text": "{meas["source"]}"}}\n'
             )
             measurement_region_file.write(region)
         measurement_region_file.seek(0)
