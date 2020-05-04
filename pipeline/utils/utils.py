@@ -189,6 +189,18 @@ def eq_to_cart(ra, dec):
     )
 
 
+def gal2equ(l,b):
+    """
+    Convert galactic coordinates to equatorial.
+    """
+    c = SkyCoord(l=np.float(l)*u.deg, b=np.float(b)*u.deg, frame='galactic')
+    icrs = c.icrs
+    ra = icrs.ra.deg
+    dec = icrs.dec.deg
+
+    return ra,dec
+
+
 def ned_search(object_name):
     """
     Find the coordinates of an object from the NED service.

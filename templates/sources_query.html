@@ -47,6 +47,11 @@
             <option value={{ ds.name }}>{{ ds.name }}</option>
             {% endfor %}
           </select>
+        <h1 class="h6 mb-2 font-weight-bold text-gray-800">Cone Search Coordinate System</h1>
+        <select id="coordUnit" class="form-control" style="margin-bottom:1rem">
+          <option value="equatorial" selected>Equatorial</option>
+          <option value="galactic">Galactic</option>
+        </select>
         </div>
         <div class="col-lg-2">
           <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Cone Search</h1>
@@ -55,8 +60,8 @@
             <option value="simbad" selected>SIMBAD</option>
             <option value="ned">NED</option>
           </select>
-          <input id="raSelect" type="number" class="form-control bg-light border-0 small" placeholder="RA (deg)" step="1e-10" aria-label="RaSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
-          <input id="decSelect" type="number" class="form-control bg-light border-0 small" placeholder="DEC (deg)" step="1e-10" aria-label="DecSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <input id="raSelect" type="number" class="form-control bg-light border-0 small" placeholder="RA or l (deg) " step="1e-10" aria-label="RaSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <input id="decSelect" type="number" class="form-control bg-light border-0 small" placeholder="DEC or b (deg)" step="1e-10" aria-label="DecSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
           <div class="row">
             <div class="col-7">
               <input id="radiusSelect" type="number" class="form-control bg-light border-0 small" placeholder="Radius" min="1e-10" step="1" aria-label="RadiusSearch" aria-describedby="basic-addon2">
@@ -70,8 +75,8 @@
             </div>
           </div>
         </div>
-        <div class="col-lg-2">
-          <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Average Flux Range</h1>
+        <div class="col-lg-1">
+          <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Avg. Flux</h1>
           <input id="fluxMinSelect" type="number" class="form-control bg-light border-0 small" placeholder="Min" step="0.01" aria-label="FluxMinSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
           <input id="fluxMaxSelect" type="number" class="form-control bg-light border-0 small" placeholder="Max" step="0.01" aria-label="FluxMaxSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
           <select id="aveFluxSelect" class="form-control">
@@ -79,18 +84,38 @@
             <option value="avg_flux_peak">Peak Flux</option>
           </select>
         </div>
-        <div class="col-lg-2">
-          <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Variability Metric</h1>
-          <input id="varMinSelect" type="number" class="form-control bg-light border-0 small" placeholder="Min" step="0.01" aria-label="VarMinSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
-          <input id="varMaxSelect" type="number" class="form-control bg-light border-0 small" placeholder="Max" step="0.01" aria-label="VarMaxSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
-          <select id="varMetricSelect" class="form-control">
+        <div class="col-lg-1">
+          <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">V Metric</h1>
+          <input id="varVMinSelect" type="number" class="form-control bg-light border-0 small" placeholder="Min" step="0.01" aria-label="VarVMinSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <input id="varVMaxSelect" type="number" class="form-control bg-light border-0 small" placeholder="Max" step="0.01" aria-label="VarVMaxSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <select id="varVMetricSelect" class="form-control">
             <option value="v_int" selected>Int Flux</option>
             <option value="v_peak">Peak Flux</option>
           </select>
         </div>
-        <div class="col-lg-2">
+        <div class="col-lg-1">
+          <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">&eta; Metric</h1>
+          <input id="varEtaMinSelect" type="number" class="form-control bg-light border-0 small" placeholder="Min" step="0.01" aria-label="VarEtaMinSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <input id="varEtaMaxSelect" type="number" class="form-control bg-light border-0 small" placeholder="Max" step="0.01" aria-label="VarEtaMaxSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <select id="varEtaMetricSelect" class="form-control">
+            <option value="eta_int" selected>Int Flux</option>
+            <option value="eta_peak">Peak Flux</option>
+          </select>
+        </div>
+        <div class="col-lg-1">
           <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Datapoints</h1>
-          <input id="datapointSelect" type="number" class="form-control bg-light border-0 small" placeholder="Nr points" min="1" step="1" aria-label="DatapointsSearch" aria-describedby="basic-addon2">
+          <input id="datapointMinSelect" type="number" class="form-control bg-light border-0 small" placeholder="Min" min="1" step="1" aria-label="DatapointsSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <input id="datapointMaxSelect" type="number" class="form-control bg-light border-0 small" placeholder="Max" min="1" step="1" aria-label="DatapointsSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+        </div>
+        <div class="col-lg-1">
+          <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Forced</h1>
+          <input id="ForcedMinSelect" type="number" class="form-control bg-light border-0 small" placeholder="Min" min="0" step="1" aria-label="ForcedMinSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <input id="ForcedMaxSelect" type="number" class="form-control bg-light border-0 small" placeholder="Max" min="0" step="1" aria-label="ForcedMaxSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+        </div>
+        <div class="col-lg-1">
+          <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Relations</h1>
+          <input id="RelationsMinSelect" type="number" class="form-control bg-light border-0 small" placeholder="Min" min="0" step="1" aria-label="RelationsMinSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <input id="RelationsMaxSelect" type="number" class="form-control bg-light border-0 small" placeholder="Max" min="0" step="1" aria-label="RelationsMaxSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
         </div>
         <div class="col-lg-2">
           <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Source Type</h1>

@@ -157,6 +157,7 @@ $(document).ready(function() {
     if (PipeRun.value != '') {
       qry_url = qry_url + "&run=" + encodeURIComponent(PipeRun.value);
     };
+    let coordunits = document.getElementById("coordUnit");
     let objectname = document.getElementById("objectSearch");
     let objectservice = document.getElementById("objectService");
     let radius = document.getElementById("radiusSelect");
@@ -170,6 +171,9 @@ $(document).ready(function() {
     if (objectservice.value) {
       qry_url = qry_url + "&objectservice=" + objectservice.value;
     }
+    if (coordunits.value) {
+      qry_url = qry_url + "&coordsys=" + coordunits.value;
+    };
     if (radius.value) {
       qry_url = qry_url + "&radius=" + radius.value;
     };
@@ -191,18 +195,47 @@ $(document).ready(function() {
     if (flux_max.value) {
       qry_url = qry_url + "&max_" + flux_type.value + "=" + flux_max.value;
     };
-    let var_type = document.getElementById("varMetricSelect");
-    let var_min = document.getElementById("varMinSelect");
-    let var_max = document.getElementById("varMaxSelect");
-    if (var_min.value) {
-      qry_url = qry_url + "&min_" + var_type.value + "=" + var_min.value;
+    let var_v_type = document.getElementById("varVMetricSelect");
+    let var_v_min = document.getElementById("varVMinSelect");
+    let var_v_max = document.getElementById("varVMaxSelect");
+    if (var_v_min.value) {
+      qry_url = qry_url + "&min_" + var_v_type.value + "=" + var_v_min.value;
     };
-    if (var_max.value) {
-      qry_url = qry_url + "&max_" + var_type.value + "=" + var_max.value;
+    if (var_v_max.value) {
+      qry_url = qry_url + "&max_" + var_v_type.value + "=" + var_v_max.value;
     };
-    let datapts = document.getElementById("datapointSelect");
-    if (datapts.value) {
-      qry_url = qry_url + "&meas=" + datapts.value;
+    let var_eta_type = document.getElementById("varEtaMetricSelect");
+    let var_eta_min = document.getElementById("varEtaMinSelect");
+    let var_eta_max = document.getElementById("varEtaMaxSelect");
+    if (var_eta_min.value) {
+      qry_url = qry_url + "&min_" + var_eta_type.value + "=" + var_eta_min.value;
+    };
+    if (var_eta_max.value) {
+      qry_url = qry_url + "&max_" + var_eta_type.value + "=" + var_eta_max.value;
+    };
+    let datapts_min = document.getElementById("datapointMinSelect");
+    let datapts_max = document.getElementById("datapointMaxSelect");
+    if (datapts_min.value) {
+      qry_url = qry_url + "&min_measurements=" + datapts_min.value;
+    };
+    if (datapts_max.value) {
+      qry_url = qry_url + "&max_measurements=" + datapts_max.value;
+    };
+    let forced_min = document.getElementById("ForcedMinSelect");
+    let forced_max = document.getElementById("ForcedMaxSelect");
+    if (forced_min.value) {
+      qry_url = qry_url + "&min_forced_measurements=" + forced_min.value;
+    };
+    if (forced_max.value) {
+      qry_url = qry_url + "&max_forced_measurements=" + forced_max.value;
+    };
+    let relations_min = document.getElementById("RelationsMinSelect");
+    let relations_max = document.getElementById("RelationsMaxSelect");
+    if (relations_min.value) {
+      qry_url = qry_url + "&min_relations=" + relations_min.value;
+    };
+    if (relations_max.value) {
+      qry_url = qry_url + "&max_relations=" + relations_max.value;
     };
     if (document.getElementById("newSourceSelect").checked) {
       qry_url = qry_url + "&newsrc";
@@ -217,8 +250,10 @@ $(document).ready(function() {
       return this.defaultSelected
     });
     let inputs = [
-      'fluxMinSelect', 'fluxMaxSelect', 'varMinSelect', 'varMaxSelect',
-      'raSelect', 'decSelect', 'radiusSelect', 'datapointSelect', 'objectSearch'
+      'objectSearch', 'fluxMinSelect', 'fluxMaxSelect', 'varVMinSelect', 'varVMaxSelect',
+      'varEtaMinSelect', 'varEtaMaxSelect', 'ForcedMinSelect', 'ForcedMaxSelect',
+      'raSelect', 'decSelect', 'radiusSelect', 'datapointMinSelect', 'datapointMaxSelect',
+      'RelationsMinSelect', 'RelationsMaxSelect',
       ];
     for (input of inputs) {
       document.getElementById(input).value = '';

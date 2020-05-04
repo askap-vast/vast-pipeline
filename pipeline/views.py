@@ -10,7 +10,8 @@ from .serializers import (
     ImageSerializer, MeasurementSerializer, RunSerializer,
     SourceSerializer
 )
-from .utils.utils import deg2dms, deg2hms, simbad_search, ned_search
+from .utils.utils import deg2dms, deg2hms, gal2equ
+from .utils.utils import simbad_search, ned_search
 
 
 logger = logging.getLogger(__name__)
@@ -467,7 +468,17 @@ class SourceViewSet(ModelViewSet):
         if p_run:
             qry_dict['run__name'] = p_run
 
-        flux_qry_flds = ['avg_flux_int', 'avg_flux_peak', 'v_int', 'v_peak']
+        flux_qry_flds = [
+            'avg_flux_int',
+            'avg_flux_peak',
+            'v_int',
+            'v_peak',
+            'eta_int',
+            'eta_peak',
+            'measurements',
+            'forced_measurements',
+            'relations',
+        ]
         for fld in flux_qry_flds:
             for limit in ['max', 'min']:
                 val = self.request.query_params.get(limit + '_' + fld)
@@ -494,6 +505,7 @@ class SourceViewSet(ModelViewSet):
         radiusUnit = self.request.query_params.get('radiusunit')
         objectname = self.request.query_params.get('objectname')
         objectservice = self.request.query_params.get('objectservice')
+        coordsys = self.request.query_params.get('coordsys')
         if objectname is not None:
             if objectservice == 'simbad':
                 wavg_ra, wavg_dec = simbad_search(objectname)
@@ -502,6 +514,10 @@ class SourceViewSet(ModelViewSet):
         else:
             wavg_ra = self.request.query_params.get('ra')
             wavg_dec = self.request.query_params.get('dec')
+            # galactic coordinates won't be entered if the user
+            # has entered an object query
+            if coordsys == 'galactic':
+                wavg_ra, wavg_dec = gal2equ(wavg_ra, wavg_dec)
 
         if wavg_ra and wavg_dec and radius:
             radius = float(radius) / radius_conversions[radiusUnit]
