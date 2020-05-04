@@ -67,6 +67,19 @@
         <div class="card-body">
           <p><strong>Image: </strong> <a href="/images/{{ measurement.image_id }}" target="_blank">{{ measurement.image_name }}</a></p>
           <p><strong>Forced Extraction: </strong> {{ measurement.forced }}</p>
+          <p><strong>Sources:</strong>
+          {% if measurement.sources_info %}
+            {% for a,b in measurement.sources_info %}
+              <!-- if the comma is only in the if statement then there is an ugly space -->
+              {% if not forloop.last %}
+                <a href="{% url 'pipeline:source_detail' a %}" target="_blank">{{ b }}</a>,
+              {% else %}
+                <a href="{% url 'pipeline:source_detail' a %}" target="_blank">{{ b }}</a>
+              {% endif %}
+            {% endfor %}
+          {% else %}
+            None.
+          {% endif %}</p>
           <p><strong>RA: </strong> {{ measurement.ra }}</p>
           <p><strong>DEC: </strong> {{ measurement.dec }}</p>
           <p><strong>Uncertainty EW: </strong> {{ measurement.uncertainty_ew|deg_to_arcsec|floatformat:3 }}''</p>
