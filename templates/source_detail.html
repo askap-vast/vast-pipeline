@@ -68,6 +68,19 @@
           <p><strong>New Source: </strong> {{ source.new }}</p>
           <p><strong>Nr Datapoints: </strong> {{ source.measurements }}</p>
           <p><strong>Pipeline Run: </strong> <a href="{% url 'pipeline:run_detail' source.run_id %}">{{ source.run_name }}</a></p>
+          <p><strong>Related: </strong>
+          {% if source.relations_info %}
+            {% for a,b in source.relations_info %}
+              <!-- if the comma is only in the if statement then there is an ugly space -->
+              {% if not forloop.last %}
+                <a href="{% url 'pipeline:source_detail' a %}" target="_blank">{{ b }}</a>,
+              {% else %}
+                <a href="{% url 'pipeline:source_detail' a %}" target="_blank">{{ b }}</a>
+              {% endif %}
+            {% endfor %}
+          {% else %}
+            None.
+          {% endif %}</p>
           <p><strong>Comment: </strong> {{ source.comment }}</p>
         </div>
       </div>
