@@ -130,6 +130,7 @@ tr_selavy = {
     "spectral_index": {'name': "spectral_index", 'dtype': np.dtype(float)},
     "spectral_index_from_TT": {'name': "spectral_index_from_TT", 'dtype': np.dtype(bool)},
     "has_siblings": {'name': "has_siblings", 'dtype': np.dtype(bool)},
+    "rms_image": {'name': "local_rms", 'dtype': np.dtype(float)},
 }
 
 translators = {

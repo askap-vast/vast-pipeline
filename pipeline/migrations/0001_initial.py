@@ -188,6 +188,7 @@ class Migration(migrations.Migration):
                 ('chi_squared_fit', models.FloatField(db_column='chi2_fit', help_text='Chi-squared of the Guassian fit to the source')),
                 ('spectral_index', models.FloatField(db_column='spectr_idx', help_text='In-band Selavy spectral index')),
                 ('spectral_index_from_TT', models.BooleanField(db_column='spectr_idx_tt', default=False, help_text='True/False if the spectral index came from the taylor term came')),
+                ('local_rms', models.FloatField(help_text='Local rms from Selavy.')),
                 ('flag_c4', models.BooleanField(default=False, help_text='Fit flag from selavy')),
                 ('has_siblings', models.BooleanField(default=False, help_text='Does the fit come from an island')),
                 ('component_id', models.CharField(help_text='The ID of the component from which the source comes from', max_length=64)),
@@ -197,7 +198,7 @@ class Migration(migrations.Migration):
                 ('quality', models.NullBooleanField(default=False, help_text='Is this a quality source for analysis purposes')),
                 ('forced', models.BooleanField(default=False, help_text='True: the measurement is forced extracted')),
                 ('image', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='pipeline.Image')),
-                ('source', models.ManyToManyField(through='pipeline.Association', to='pipeline.Source')),
+                ('source', models.ManyToManyField(through='pipeline.Association', to='pipeline.Source'))
             ],
             options={
                 'ordering': ['ra'],

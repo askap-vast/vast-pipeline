@@ -9,6 +9,7 @@ from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
 
 from .utils import calc_error_radius
+from .utils import calc_condon_flux_errors
 
 from pipeline.survey.translators import tr_selavy
 
@@ -194,6 +195,19 @@ class SelavyImage(FitsImage):
         if df['component_id'].duplicated().any():
             raise Exception('Found duplicated names in sources')
 
+        # drop unrealistic sources
+        cols_to_check = [
+            'bmaj',
+            'bmin',
+            'flux_peak',
+            'flux_int',
+        ]
+
+        bad_sources = df[(df[cols_to_check] == 0).any(axis=1)]
+        if bad_sources.shape[0] > 0:
+            logger.debug("Dropping %i bad sources.", bad_sources.shape[0])
+            df = df.drop(bad_sources.index)
+
         # add fields from image and fix name column
         df['image_id'] = dj_image.id
         df['time'] = dj_image.datetime
@@ -203,19 +217,56 @@ class SelavyImage(FitsImage):
         df['name'] = img_prefix + df['component_id']
 
         # # fix error fluxes
-        for col in ['flux_int_err', 'flux_peak_err']:
+        for col in ['selavy_flux_int_err', 'selavy_flux_peak_err']:
             sel = df[col] < settings.FLUX_DEFAULT_MIN_ERROR
             if sel.any():
                 df.loc[sel, col] = settings.FLUX_DEFAULT_MIN_ERROR
 
         # # fix error ra dec
-        for col in ['ra_err', 'dec_err']:
+        for col in ['selavy_ra_err', 'selavy_dec_err']:
             sel = df[col] < settings.POS_DEFAULT_MIN_ERROR
             if sel.any():
                 df.loc[sel, col] = settings.POS_DEFAULT_MIN_ERROR
             df[col] = df[col] / 3600.
 
-        logger.debug("Calculating errors...")
+        # replace 0 local_rms values using user config value
+        df.loc[
+            df['local_rms'] == 0., 'local_rms'
+        ] = self.config.SELAVY_LOCAL_RMS_ZERO_FILL_VALUE
+
+        df['snr'] = df['flux_peak'].values / df['local_rms'].values
+
+        if self.config.USE_CONDON_ERRORS:
+            logger.debug("Calculating Condon '97 errors...")
+            theta_B = dj_image.beam_bmaj
+            theta_b = dj_image.beam_bmin
+
+            df[[
+                'flux_peak_err',
+                'flux_int_err',
+                'err_bmaj',
+                'err_bmin',
+                'err_pa',
+                'ra_err',
+                'dec_err',
+            ]] = df[[
+                'flux_peak',
+                'flux_int',
+                'bmaj',
+                'bmin',
+                'pa',
+                'snr',
+                'local_rms',
+            ]].apply(
+                calc_condon_flux_errors,
+                args=(theta_B,theta_b),
+                axis=1,
+                result_type='expand'
+            )
+
+            logger.debug("Condon errors done.")
+
+        logger.debug("Calculating positional errors...")
         # TODO: avoid extra column given that it is a single value
         df['ew_sys_err'] = self.config.ASTROMETRIC_UNCERTAINTY_RA / 3600.
         df['ns_sys_err'] = self.config.ASTROMETRIC_UNCERTAINTY_DEC / 3600.
@@ -239,9 +290,9 @@ class SelavyImage(FitsImage):
         df['weight_ew'] = 1. / df['uncertainty_ew'].values**2
         df['weight_ns'] = 1. / df['uncertainty_ns'].values**2
 
+        logger.debug('Positional errors done.')
+
         # Initialise the forced column as False
         df['forced'] = False
-
-        logger.debug('Errors calculation done.')
 
         return df
