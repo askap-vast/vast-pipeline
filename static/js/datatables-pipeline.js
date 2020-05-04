@@ -240,6 +240,9 @@ $(document).ready(function() {
     if (document.getElementById("newSourceSelect").checked) {
       qry_url = qry_url + "&newsrc";
     }
+    if (document.getElementById("containsSiblingsSelect").checked) {
+      qry_url = qry_url + "&no_siblings";
+    }
     table.ajax.url(qry_url);
     table.ajax.reload();
   });
@@ -259,6 +262,7 @@ $(document).ready(function() {
       document.getElementById(input).value = '';
     };
     document.getElementById("newSourceSelect").checked = false;
+    document.getElementById("containsSiblingsSelect").checked = false;
     table.ajax.url(dataConf.api);
     table.ajax.reload();
   });

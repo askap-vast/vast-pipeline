@@ -1,6 +1,6 @@
 import logging
 
-from django.db.models import Count, F, Q
+from django.db.models import Count, F, Q, Case, When, Value, BooleanField
 from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet
 from django.contrib.postgres.aggregates.general import ArrayAgg
@@ -409,6 +409,7 @@ def SourceIndex(request):
         'eta_int',
         'v_peak',
         'eta_peak',
+        'contains_siblings',
         'new'
     ]
 
@@ -441,6 +442,7 @@ def SourceIndex(request):
                     '\u03B7 int flux',
                     'V peak flux',
                     '\u03B7 peak flux',
+                    'Contains siblings',
                     'New Source',
                 ],
                 'search': False,
@@ -461,7 +463,16 @@ class SourceViewSet(ModelViewSet):
                 distinct=True
             ),
             relations=Count('related', distinct=True),
-        )
+            siblings_count=Count(
+                'measurement',
+                filter=Q(measurement__has_siblings=True),
+                distinct=True
+            )
+        ).annotate(contains_siblings=Case(
+            When(siblings_count__gt=0, then=Value(True)),
+            default=Value(False),
+            output_field=BooleanField()
+        ))
 
         qry_dict = {}
         p_run = self.request.query_params.get('run')
@@ -478,6 +489,7 @@ class SourceViewSet(ModelViewSet):
             'measurements',
             'forced_measurements',
             'relations',
+            'contains_siblings'
         ]
         for fld in flux_qry_flds:
             for limit in ['max', 'min']:
@@ -492,6 +504,9 @@ class SourceViewSet(ModelViewSet):
 
         if 'newsrc' in self.request.query_params:
             qry_dict['new'] = True
+
+        if 'no_siblings' in self.request.query_params:
+            qry_dict['contains_siblings'] = False
 
         if qry_dict:
             qs = qs.filter(**qry_dict)
@@ -543,6 +558,7 @@ def SourceQuery(request):
         'eta_int',
         'v_peak',
         'eta_peak',
+        'contains_siblings',
         'new'
     ]
 
@@ -579,6 +595,7 @@ def SourceQuery(request):
                     '\u03B7 int flux',
                     'V peak flux',
                     '\u03B7 peak flux',
+                    'Contains siblings',
                     'New Source',
                 ],
                 'search': False,
