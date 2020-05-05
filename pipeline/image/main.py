@@ -106,7 +106,7 @@ class FitsImage(Image):
         self.ra, self.dec = wcs.wcs_pix2world(pix_centre, 1)[0]
 
         # The field-of-view (in pixels) is assumed to be a circle in the centre
-         # of the image. This may be an ellipse on the sky, eg MOST images.
+        # of the image. This may be an ellipse on the sky, eg MOST images.
         # We leave a pixel margin at the edge that we don't use.
         # TODO: move unused pixel as argument
         unusedpix = 0.
@@ -127,7 +127,7 @@ class FitsImage(Image):
         If the image is not a square/circle then the shortest radius will be returned.
         """
         if self.entire_image:
-            #a large circle that *should* include the whole image (and then some)
+            # a large circle that *should* include the whole image (and then some)
             diameter = np.hypot(header[fits_naxis1], header[fits_naxis2])
         else:
             # We simply place the largest circle we can in the centre.
@@ -259,7 +259,7 @@ class SelavyImage(FitsImage):
                 'local_rms',
             ]].apply(
                 calc_condon_flux_errors,
-                args=(theta_B,theta_b),
+                args=(theta_B, theta_b),
                 axis=1,
                 result_type='expand'
             )
