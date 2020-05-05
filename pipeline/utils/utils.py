@@ -193,7 +193,7 @@ def gal2equ(l,b):
     """
     Convert galactic coordinates to equatorial.
     """
-    c = SkyCoord(l=np.float(l)*u.deg, b=np.float(b)*u.deg, frame='galactic')
+    c = SkyCoord(l=np.float(l) * u.deg, b=np.float(b) * u.deg, frame='galactic')
     icrs = c.icrs
     ra = icrs.ra.deg
     dec = icrs.dec.deg
