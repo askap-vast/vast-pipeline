@@ -216,6 +216,9 @@ def ned_search(object_name):
         return ra, dec
 
     except Exception as e:
+        logger.debug(
+            "Error in performing the NED object search!", exc_info=True
+        )
         return None, None
 
 
@@ -241,4 +244,7 @@ def simbad_search(object_name):
         return ra, dec
 
     except Exception as e:
+        logger.debug(
+            "Error in performing the SIMBAD object search!", exc_info=True
+        )
         return None, None
