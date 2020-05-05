@@ -10,8 +10,9 @@ from .serializers import (
     ImageSerializer, MeasurementSerializer, RunSerializer,
     SourceSerializer
 )
-from .utils.utils import deg2dms, deg2hms, gal2equ
-from .utils.utils import simbad_search, ned_search
+from .utils.utils import (
+    deg2dms, deg2hms, gal2equ, ned_search, simbad_search
+)
 
 
 logger = logging.getLogger(__name__)
