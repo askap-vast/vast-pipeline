@@ -492,12 +492,13 @@ class SourceViewSet(ModelViewSet):
                 'measurement',
                 filter=Q(measurement__has_siblings=True),
                 distinct=True
+            ),
+            contains_siblings=Case(
+                When(siblings_count__gt=0, then=Value(True)),
+                default=Value(False),
+                output_field=BooleanField()
             )
-        ).annotate(contains_siblings=Case(
-            When(siblings_count__gt=0, then=Value(True)),
-            default=Value(False),
-            output_field=BooleanField()
-        ))
+        )
 
         qry_dict = {}
         p_run = self.request.query_params.get('run')
