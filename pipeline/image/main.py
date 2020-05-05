@@ -217,13 +217,13 @@ class SelavyImage(FitsImage):
         df['name'] = img_prefix + df['component_id']
 
         # # fix error fluxes
-        for col in ['selavy_flux_int_err', 'selavy_flux_peak_err']:
+        for col in ['flux_int_err', 'flux_peak_err']:
             sel = df[col] < settings.FLUX_DEFAULT_MIN_ERROR
             if sel.any():
                 df.loc[sel, col] = settings.FLUX_DEFAULT_MIN_ERROR
 
         # # fix error ra dec
-        for col in ['selavy_ra_err', 'selavy_dec_err']:
+        for col in ['ra_err', 'dec_err']:
             sel = df[col] < settings.POS_DEFAULT_MIN_ERROR
             if sel.any():
                 df.loc[sel, col] = settings.POS_DEFAULT_MIN_ERROR
