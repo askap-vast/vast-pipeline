@@ -155,11 +155,25 @@ $(document).ready(function() {
     let PipeRun = document.getElementById("runSelect");
     let qry_url = dataConf.api;
     if (PipeRun.value != '') {
-      qry_url = qry_url + "&run=" + PipeRun.value;
+      qry_url = qry_url + "&run=" + encodeURIComponent(PipeRun.value);
     };
+    let coordunits = document.getElementById("coordUnit");
+    let objectname = document.getElementById("objectSearch");
+    let objectservice = document.getElementById("objectService");
     let radius = document.getElementById("radiusSelect");
     let ra = document.getElementById("raSelect");
     let dec = document.getElementById("decSelect");
+    let unit = document.getElementById("radiusUnit");
+    // Object search overrules RA and Dec search
+    if (objectname.value) {
+      qry_url = qry_url + "&objectname=" + encodeURIComponent(objectname.value);
+    }
+    if (objectservice.value) {
+      qry_url = qry_url + "&objectservice=" + objectservice.value;
+    }
+    if (coordunits.value) {
+      qry_url = qry_url + "&coordsys=" + coordunits.value;
+    };
     if (radius.value) {
       qry_url = qry_url + "&radius=" + radius.value;
     };
@@ -169,6 +183,9 @@ $(document).ready(function() {
     if (dec.value) {
       qry_url = qry_url + "&dec=" + dec.value;
     };
+    if (unit.value) {
+        qry_url = qry_url + "&radiusunit=" + unit.value
+    }
     let flux_type = document.getElementById("aveFluxSelect");
     let flux_min = document.getElementById("fluxMinSelect");
     let flux_max = document.getElementById("fluxMaxSelect");
@@ -178,21 +195,61 @@ $(document).ready(function() {
     if (flux_max.value) {
       qry_url = qry_url + "&max_" + flux_type.value + "=" + flux_max.value;
     };
-    let var_type = document.getElementById("varMetricSelect");
-    let var_min = document.getElementById("varMinSelect");
-    let var_max = document.getElementById("varMaxSelect");
-    if (var_min.value) {
-      qry_url = qry_url + "&min_" + var_type.value + "=" + var_min.value;
+    let var_v_type = document.getElementById("varVMetricSelect");
+    let var_v_min = document.getElementById("varVMinSelect");
+    let var_v_max = document.getElementById("varVMaxSelect");
+    if (var_v_min.value) {
+      qry_url = qry_url + "&min_" + var_v_type.value + "=" + var_v_min.value;
     };
-    if (var_max.value) {
-      qry_url = qry_url + "&max_" + var_type.value + "=" + var_max.value;
+    if (var_v_max.value) {
+      qry_url = qry_url + "&max_" + var_v_type.value + "=" + var_v_max.value;
     };
-    let datapts = document.getElementById("datapointSelect");
-    if (datapts.value) {
-      qry_url = qry_url + "&meas=" + datapts.value;
+    let var_eta_type = document.getElementById("varEtaMetricSelect");
+    let var_eta_min = document.getElementById("varEtaMinSelect");
+    let var_eta_max = document.getElementById("varEtaMaxSelect");
+    if (var_eta_min.value) {
+      qry_url = qry_url + "&min_" + var_eta_type.value + "=" + var_eta_min.value;
+    };
+    if (var_eta_max.value) {
+      qry_url = qry_url + "&max_" + var_eta_type.value + "=" + var_eta_max.value;
+    };
+    let datapts_min = document.getElementById("datapointMinSelect");
+    let datapts_max = document.getElementById("datapointMaxSelect");
+    if (datapts_min.value) {
+      qry_url = qry_url + "&min_measurements=" + datapts_min.value;
+    };
+    if (datapts_max.value) {
+      qry_url = qry_url + "&max_measurements=" + datapts_max.value;
+    };
+    let selavy_min = document.getElementById("SelavyMinSelect");
+    let selavy_max = document.getElementById("SelavyMaxSelect");
+    if (selavy_min.value) {
+      qry_url = qry_url + "&min_selavy_measurements=" + selavy_min.value;
+    };
+    if (selavy_max.value) {
+      qry_url = qry_url + "&max_selavy_measurements=" + selavy_max.value;
+    };
+    let forced_min = document.getElementById("ForcedMinSelect");
+    let forced_max = document.getElementById("ForcedMaxSelect");
+    if (forced_min.value) {
+      qry_url = qry_url + "&min_forced_measurements=" + forced_min.value;
+    };
+    if (forced_max.value) {
+      qry_url = qry_url + "&max_forced_measurements=" + forced_max.value;
+    };
+    let relations_min = document.getElementById("RelationsMinSelect");
+    let relations_max = document.getElementById("RelationsMaxSelect");
+    if (relations_min.value) {
+      qry_url = qry_url + "&min_relations=" + relations_min.value;
+    };
+    if (relations_max.value) {
+      qry_url = qry_url + "&max_relations=" + relations_max.value;
     };
     if (document.getElementById("newSourceSelect").checked) {
       qry_url = qry_url + "&newsrc";
+    }
+    if (document.getElementById("containsSiblingsSelect").checked) {
+      qry_url = qry_url + "&no_siblings";
     }
     table.ajax.url(qry_url);
     table.ajax.reload();
@@ -204,13 +261,16 @@ $(document).ready(function() {
       return this.defaultSelected
     });
     let inputs = [
-      'fluxMinSelect', 'fluxMaxSelect', 'varMinSelect', 'varMaxSelect',
-      'raSelect', 'decSelect', 'radiusSelect', 'datapointSelect'
+      'objectSearch', 'fluxMinSelect', 'fluxMaxSelect', 'varVMinSelect', 'varVMaxSelect',
+      'varEtaMinSelect', 'varEtaMaxSelect', 'ForcedMinSelect', 'ForcedMaxSelect',
+      'raSelect', 'decSelect', 'radiusSelect', 'datapointMinSelect', 'datapointMaxSelect',
+      'RelationsMinSelect', 'RelationsMaxSelect', 'SelavyMinSelect', 'SelavyMaxSelect',
       ];
     for (input of inputs) {
       document.getElementById(input).value = '';
     };
     document.getElementById("newSourceSelect").checked = false;
+    document.getElementById("containsSiblingsSelect").checked = false;
     table.ajax.url(dataConf.api);
     table.ajax.reload();
   });
