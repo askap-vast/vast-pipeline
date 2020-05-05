@@ -1,5 +1,7 @@
 import io
+import json
 import logging
+from typing import Dict, Any
 
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
@@ -844,7 +846,7 @@ class MeasurementQuery(APIView):
         Returns:
             FileResponse: Django FileReponse containing a DS9/JS9 region file.
         """
-        columns = ["id", "name", "ra", "dec", "bmaj", "bmin", "pa", "source"]
+        columns = ["id", "name", "ra", "dec", "bmaj", "bmin", "pa", "forced", "source"]
         selection_model = request.GET.get("selection_model", "measurement")
         selection_id = request.GET.get("selection_id", None)
 
@@ -867,11 +869,17 @@ class MeasurementQuery(APIView):
         for meas in measurements:
             if selection_id is not None:
                 color = "#FF0000" if meas[selection_attr] == selection_id else "#0000FF"
-            region = (
+            shape = (
                 f"ellipse({meas['ra']}d, {meas['dec']}d, {meas['bmaj']}\", {meas['bmin']}\", "
-                f"{meas['pa']+90+180}d) "
-                f'{{"color": "{color}", "text": "{selection_attr}: {meas[selection_attr]}"}}\n'
+                f"{meas['pa']+90+180}d)"
             )
+            properties: Dict[str, Any] = {
+                "color": color,
+                "text": f"{selection_attr}: {meas[selection_attr]}",
+            }
+            if meas["forced"]:
+                properties.update(strokeDashArray=[3, 2])
+            region = f"{shape} {json.dumps(properties)}\n"
             measurement_region_file.write(region)
         measurement_region_file.seek(0)
         f = io.BytesIO(bytes(measurement_region_file.read(), encoding="utf8"))
