@@ -124,15 +124,15 @@
           <div class="row">
             <div class="JS9Menubar" id="SUPERMENU_" data-displays="*"></div>
           </div>
-          <div class="row row-cols-4 row-cols-md-4">
+          <div class="row">
             {% for measurement in measurements.dataQuery %}
               <div class="card">
                 <div class="card-header">
                   <p class="mb-0"><a href="{% url 'pipeline:image_detail' measurement.image_id %}" target="_blank">{{ measurement.image_name }}</a></p>
                   <p class="mb-0"><a href="{% url 'pipeline:measurement_detail' measurement.id %}" target="_blank">{{ measurement.name }}</a></p>
                 </div>
-              <div class="card-body">
-                      <div class="JS9" id="JS9_{{ forloop.counter }}" data-width="230px" data-height="230px"></div>
+                <div class="card-body">
+                  <div class="JS9" id="JS9_{{ forloop.counter }}" data-width="350px" data-height="350px"></div>
                 </div>
               </div>
             {% endfor %}
