@@ -118,7 +118,7 @@
       <div id="collapse-example" class="collapse show" aria-labelledby="heading-example">
         <div class="card-body">
           <div class="row">
-            <button class="btn btn-info" onclick="focusOnSource(2.0);">Zoom to Source</button>
+            <button class="btn btn-info" onclick="focusOnSource(4.0);">Zoom to Source</button>
             <button class="btn btn-info" onclick="focusOnSource('toFit');">Zoom to Field</button>
           </div>
           <div class="row">
@@ -226,7 +226,7 @@
       return loadFitsImage(measurement.name, displayId);
     }));
     JS9.SyncImages();  // sync panning between images
-    JS9.SetZoom("toFit");
+    focusOnSource(4.0);
     // overlay nearby components as regions
     measurementData.forEach((measurement, i) => {
       var displayId = "JS9_"+(i+1);
