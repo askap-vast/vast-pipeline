@@ -1,6 +1,6 @@
 import logging
 
-from django.db.models import Count, F, Q
+from django.db.models import Count, F, Q, Case, When, Value, BooleanField
 from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet
 from django.contrib.postgres.aggregates.general import ArrayAgg
@@ -10,7 +10,9 @@ from .serializers import (
     ImageSerializer, MeasurementSerializer, RunSerializer,
     SourceSerializer
 )
-from .utils.utils import deg2dms, deg2hms
+from .utils.utils import (
+    deg2dms, deg2hms, gal2equ, ned_search, simbad_search
+)
 
 
 logger = logging.getLogger(__name__)
@@ -419,12 +421,14 @@ def SourceIndex(request):
         'avg_flux_peak',
         'max_flux_peak',
         'measurements',
+        'selavy_measurements',
         'forced_measurements',
         'relations',
         'v_int',
         'eta_int',
         'v_peak',
         'eta_peak',
+        'contains_siblings',
         'new'
     ]
 
@@ -451,12 +455,14 @@ def SourceIndex(request):
                     'Avg. Peak Flux (mJy/beam)',
                     'Max Peak Flux (mJy/beam)',
                     'Total Datapoints',
+                    'Selavy Datapoints',
                     'Forced Datapoints',
                     'Relations',
                     'V int flux',
                     '\u03B7 int flux',
                     'V peak flux',
                     '\u03B7 peak flux',
+                    'Contains siblings',
                     'New Source',
                 ],
                 'search': False,
@@ -471,12 +477,27 @@ class SourceViewSet(ModelViewSet):
     def get_queryset(self):
         qs = Source.objects.annotate(
             measurements=Count('measurement', distinct=True),
+            selavy_measurements=Count(
+                'measurement',
+                filter=Q(measurement__forced=False),
+                distinct=True
+            ),
             forced_measurements=Count(
                 'measurement',
                 filter=Q(measurement__forced=True),
                 distinct=True
             ),
             relations=Count('related', distinct=True),
+            siblings_count=Count(
+                'measurement',
+                filter=Q(measurement__has_siblings=True),
+                distinct=True
+            ),
+            contains_siblings=Case(
+                When(siblings_count__gt=0, then=Value(True)),
+                default=Value(False),
+                output_field=BooleanField()
+            )
         )
 
         qry_dict = {}
@@ -484,7 +505,19 @@ class SourceViewSet(ModelViewSet):
         if p_run:
             qry_dict['run__name'] = p_run
 
-        flux_qry_flds = ['avg_flux_int', 'avg_flux_peak', 'v_int', 'v_peak']
+        flux_qry_flds = [
+            'avg_flux_int',
+            'avg_flux_peak',
+            'v_int',
+            'v_peak',
+            'eta_int',
+            'eta_peak',
+            'measurements',
+            'selavy_measurements',
+            'forced_measurements',
+            'relations',
+            'contains_siblings'
+        ]
         for fld in flux_qry_flds:
             for limit in ['max', 'min']:
                 val = self.request.query_params.get(limit + '_' + fld)
@@ -499,13 +532,37 @@ class SourceViewSet(ModelViewSet):
         if 'newsrc' in self.request.query_params:
             qry_dict['new'] = True
 
+        if 'no_siblings' in self.request.query_params:
+            qry_dict['contains_siblings'] = False
+
         if qry_dict:
             qs = qs.filter(**qry_dict)
 
+        radius_conversions = {
+            "arcsec": 3600.,
+            "arcmin": 60.,
+            "deg": 1.
+        }
         radius = self.request.query_params.get('radius')
-        wavg_ra = self.request.query_params.get('ra')
-        wavg_dec = self.request.query_params.get('dec')
+        radiusUnit = self.request.query_params.get('radiusunit')
+        objectname = self.request.query_params.get('objectname')
+        objectservice = self.request.query_params.get('objectservice')
+        coordsys = self.request.query_params.get('coordsys')
+        if objectname is not None:
+            if objectservice == 'simbad':
+                wavg_ra, wavg_dec = simbad_search(objectname)
+            elif objectservice == 'ned':
+                wavg_ra, wavg_dec = ned_search(objectname)
+        else:
+            wavg_ra = self.request.query_params.get('ra')
+            wavg_dec = self.request.query_params.get('dec')
+            # galactic coordinates won't be entered if the user
+            # has entered an object query
+            if coordsys == 'galactic':
+                wavg_ra, wavg_dec = gal2equ(wavg_ra, wavg_dec)
+
         if wavg_ra and wavg_dec and radius:
+            radius = float(radius) / radius_conversions[radiusUnit]
             qs = qs.cone_search(wavg_ra, wavg_dec, radius)
 
         return qs
@@ -522,12 +579,14 @@ def SourceQuery(request):
         'avg_flux_peak',
         'max_flux_peak',
         'measurements',
+        'selavy_measurements',
         'forced_measurements',
         'relations',
         'v_int',
         'eta_int',
         'v_peak',
         'eta_peak',
+        'contains_siblings',
         'new'
     ]
 
@@ -558,12 +617,14 @@ def SourceQuery(request):
                     'Avg. Peak Flux (mJy/beam)',
                     'Max Peak Flux (mJy/beam)',
                     'Total Datapoints',
+                    'Selavy Datapoints',
                     'Forced Datapoints',
                     'Relations',
                     'V int flux',
                     '\u03B7 int flux',
                     'V peak flux',
                     '\u03B7 peak flux',
+                    'Contains siblings',
                     'New Source',
                 ],
                 'search': False,

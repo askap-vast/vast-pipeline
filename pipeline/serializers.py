@@ -54,8 +54,11 @@ class MeasurementSerializer(serializers.ModelSerializer):
 class SourceSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
     measurements = serializers.IntegerField(read_only=True)
+    selavy_measurements = serializers.IntegerField(read_only=True)
     forced_measurements = serializers.IntegerField(read_only=True)
     relations = serializers.IntegerField(read_only=True)
+    siblings_count = serializers.IntegerField(read_only=True)
+    contains_siblings = serializers.BooleanField(read_only=True)
     wavg_ra = serializers.SerializerMethodField()
     wavg_dec = serializers.SerializerMethodField()
 
