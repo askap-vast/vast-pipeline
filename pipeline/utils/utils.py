@@ -198,7 +198,7 @@ def gal2equ(l,b):
     ra = icrs.ra.deg
     dec = icrs.dec.deg
 
-    return ra,dec
+    return ra, dec
 
 
 def ned_search(object_name):
