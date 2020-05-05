@@ -144,10 +144,20 @@
 <script type="text/javascript">
   $(document).on("JS9:ready", function() {
     var measurement = JSON.parse(document.getElementById("data-js9").textContent);
-      JS9.Load("/cutout/"+measurement.name+"/large", {scalemin: -0.001, scalemax: 0.004, color:'gray', invert: true,});
-      setTimeout(() => {
-        JS9.SetZoom(4);
-      }, 500);
+    JS9.Load(
+      "/cutout/"+measurement.name+"/large",
+      {
+        scalemin: -0.001,
+        scalemax: 0.004,
+        color:'gray',
+        invert: true,
+        onload: image => {
+          JS9.SetZoom(4);
+          var region_url = "/measurements/"+measurement.image_id+"/"+measurement.aladin_ra+","+measurement.aladin_dec+",20arcmin/region?selection_model=measurement&selection_id={{ measurement.id }}";
+          JS9.LoadRegions(region_url, {changeable: false, strokeWidth: 1});
+        }
+      }
+    );
   });
 </script>
 

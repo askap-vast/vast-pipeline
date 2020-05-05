@@ -1,13 +1,12 @@
 import io
 import logging
-from typing import Optional
 
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
 from astropy.nddata import Cutout2D
 from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
-from django.http import FileResponse
+from django.http import FileResponse, Http404
 from django.db.models import Count, F, Q, Case, When, Value, BooleanField
 from django.shortcuts import render
 from rest_framework.views import APIView
@@ -824,9 +823,41 @@ class MeasurementQuery(APIView):
         dec_deg: float,
         image_id: int,
         radius_deg: float,
-        source_id: Optional[int] = None,
-    ):
-        columns = ["name", "ra", "dec", "bmaj", "bmin", "pa", "source"]
+    ) -> FileResponse:
+        """Return a DS9/JS9 region file for all Measurement objects for a given cone search
+        on an Image. Optionally highlight sources based on a Measurement or Source ID.
+
+        Args:
+            request: Django HTTPRequest. Supports two URL GET parameters:
+                selection_model: either "measurement" or "source" (defaults to "measurement"); and
+                selection_id: the id for the given `selection_model`.
+                Measurement objects that match the given selection criterion will be
+                highlighted. e.g. ?selection_model=measurement&selection_id=100 will highlight
+                the Measurement object with id=100. ?selection_model=source&selection_id=5
+                will highlight all Measurement objects associated with the Source object with
+                id=5.
+            ra_deg: Cone search RA in decimal degrees.
+            dec_deg: Cone search Dec in decimal degrees.
+            image_id: Primary key (id) of the Image object to search.
+            radius_deg: Cone search radius in decimal degrees.
+
+        Returns:
+            FileResponse: Django FileReponse containing a DS9/JS9 region file.
+        """
+        columns = ["id", "name", "ra", "dec", "bmaj", "bmin", "pa", "source"]
+        selection_model = request.GET.get("selection_model", "measurement")
+        selection_id = request.GET.get("selection_id", None)
+
+        # validate selection query params
+        if selection_id is not None:
+            if selection_model not in ("measurement", "source"):
+                raise Http404("GET param selection_model must be either 'measurement' or 'source'.")
+            selection_attr = "id" if selection_model == "measurement" else selection_model
+            try:
+                selection_id = int(selection_id)
+            except ValueError:
+                raise Http404("GET param selection_id must be an integer.")
+
         measurements = (
             Measurement.objects.filter(image=image_id)
             .cone_search(ra_deg, dec_deg, radius_deg)
@@ -834,11 +865,12 @@ class MeasurementQuery(APIView):
         )
         measurement_region_file = io.StringIO()
         for meas in measurements:
-            color = "#FF0000" if meas["source"] == source_id else "#0000FF"
+            if selection_id is not None:
+                color = "#FF0000" if meas[selection_attr] == selection_id else "#0000FF"
             region = (
                 f"ellipse({meas['ra']}d, {meas['dec']}d, {meas['bmaj']}\", {meas['bmin']}\", "
                 f"{meas['pa']+90+180}d) "
-                f'{{"color": "{color}", "text": "{meas["source"]}"}}\n'
+                f'{{"color": "{color}", "text": "{selection_attr}: {meas[selection_attr]}"}}\n'
             )
             measurement_region_file.write(region)
         measurement_region_file.seek(0)
