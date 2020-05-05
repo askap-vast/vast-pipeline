@@ -165,6 +165,7 @@ def get_skyregions_collection():
 
     return skyregions_collection
 
+
 def Home(request):
     totals = {}
     totals['nr_pruns'] = Run.objects.count()
@@ -204,7 +205,7 @@ def RunIndex(request):
                 'api': '/api/piperuns/?format=datatables',
                 'colsFields': colsfields,
                 'colsNames': [
-                    'Name','Run Datetime','Path','Comment','Nr Images',
+                    'Name', 'Run Datetime', 'Path', 'Comment', 'Nr Images',
                     'Nr Sources'
                 ],
                 'search': True,
@@ -254,7 +255,7 @@ def ImageIndex(request):
             'datatable': {
                 'api': '/api/images/?format=datatables',
                 'colsFields': colsfields,
-                'colsNames': ['Name','Time (UTC)','RA (deg)','Dec (deg)'],
+                'colsNames': ['Name', 'Time (UTC)', 'RA (deg)', 'Dec (deg)'],
                 'search': True,
             }
         }
@@ -603,7 +604,7 @@ def SourceQuery(request):
     colsfields = generate_colsfields(fields, '/sources/')
 
     # get all pipeline run names
-    p_runs =  list(Run.objects.values('name').all())
+    p_runs = list(Run.objects.values('name').all())
 
     return render(
         request,
