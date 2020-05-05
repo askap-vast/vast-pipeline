@@ -241,13 +241,13 @@ class Source(models.Model):
         )
     )
     avg_flux_int = models.FloatField(
-        help_text='The average integrated flux value.'
+        help_text='The average integrated flux value'
     )
     avg_flux_peak = models.FloatField(
-        help_text='The average peak flux value.'
+        help_text='The average peak flux value'
     )
     max_flux_peak = models.FloatField(
-        help_text='The maximum peak flux value.'
+        help_text='The maximum peak flux value'
     )
 
     # metrics
@@ -467,10 +467,10 @@ class Measurement(models.Model):
         )
     )# Uncertainty in Dec (degrees).
 
-    flux_int = models.FloatField()# Jy/beam
-    flux_int_err = models.FloatField()# Jy/beam
-    flux_peak = models.FloatField()# Jy/beam
-    flux_peak_err = models.FloatField()# Jy/beam
+    flux_int = models.FloatField()# mJy/beam
+    flux_int_err = models.FloatField()# mJy/beam
+    flux_peak = models.FloatField()# mJy/beam
+    flux_peak_err = models.FloatField()# mJy/beam
     chi_squared_fit = models.FloatField(
         db_column='chi2_fit',
         help_text='Chi-squared of the Guassian fit to the source'
@@ -487,6 +487,9 @@ class Measurement(models.Model):
             ' term came'
         )
     )# Did the spectral index come from the taylor term
+
+    local_rms = models.FloatField()# mJy/beam
+
     flag_c4 = models.BooleanField(
         default=False,
         help_text='Fit flag from selavy'

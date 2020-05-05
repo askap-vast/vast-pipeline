@@ -12,6 +12,7 @@ from django.db.models import Count, F, Q
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
+from django.contrib.postgres.aggregates.general import ArrayAgg
 
 from .models import Image, Measurement, Run, Source, SkyRegion
 from .serializers import (
@@ -224,7 +225,7 @@ def RunDetail(request, id):
     p_run['nr_srcs'] = Source.objects.filter(run__id=p_run['id']).count()
     p_run['nr_meas'] = Measurement.objects.filter(image__run__id=p_run['id']).count()
     p_run['nr_frcd'] = Measurement.objects.filter(
-        image__run=p_run, forced=True).count()
+        image__run=p_run['id'], forced=True).count()
     p_run['new_srcs'] = Source.objects.filter(
         run__id=p_run['id'],
         new=True,
@@ -250,7 +251,7 @@ def ImageIndex(request):
             'datatable': {
                 'api': '/api/images/?format=datatables',
                 'colsFields': colsfields,
-                'colsNames': ['Name','Time','RA','DEC'],
+                'colsNames': ['Name','Time (UTC)','RA (deg)','Dec (deg)'],
                 'search': True,
             }
         }
@@ -363,11 +364,15 @@ def MeasurementDetail(request, id, action=None):
                 measurement = msr.annotate(
                     datetime=F('image__datetime'),
                     image_name=F('image__name'),
+                    source_ids=ArrayAgg('source__id'),
+                    source_names=ArrayAgg('source__name'),
                 ).values().first()
             else:
                 measurement = measurement.filter(id=id).annotate(
                     datetime=F('image__datetime'),
                     image_name=F('image__name'),
+                    source_ids=ArrayAgg('source__id'),
+                    source_names=ArrayAgg('source__name'),
                 ).values().get()
         elif action == 'prev':
             msr = measurement.filter(id__lt=id)
@@ -375,16 +380,22 @@ def MeasurementDetail(request, id, action=None):
                 measurement = msr.annotate(
                     datetime=F('image__datetime'),
                     image_name=F('image__name'),
+                    source_ids=ArrayAgg('source__id'),
+                    source_names=ArrayAgg('source__name'),
                 ).values().last()
             else:
                 measurement = measurement.filter(id=id).annotate(
                     datetime=F('image__datetime'),
                     image_name=F('image__name'),
+                    source_ids=ArrayAgg('source__id'),
+                    source_names=ArrayAgg('source__name'),
                 ).values().get()
     else:
         measurement = measurement.filter(id=id).annotate(
             datetime=F('image__datetime'),
             image_name=F('image__name'),
+            source_ids=ArrayAgg('source__id'),
+            source_names=ArrayAgg('source__name'),
         ).values().get()
 
     measurement['aladin_ra'] = measurement['ra']
@@ -394,6 +405,13 @@ def MeasurementDetail(request, id, action=None):
     measurement['dec'] = deg2dms(measurement['dec'], dms_format=True)
 
     measurement['datetime'] = measurement['datetime'].isoformat()
+
+    if not measurement['source_ids'] == [None]:
+        # this enables easy presenting in the template
+        measurement['sources_info'] = list(zip(
+            measurement['source_ids'],
+            measurement['source_names']
+        ))
 
     context = {'measurement': measurement}
     return render(request, 'measurement_detail.html', context)
@@ -411,6 +429,7 @@ def SourceIndex(request):
         'max_flux_peak',
         'measurements',
         'forced_measurements',
+        'relations',
         'v_int',
         'eta_int',
         'v_peak',
@@ -442,6 +461,7 @@ def SourceIndex(request):
                     'Max Peak Flux (mJy/beam)',
                     'Total Datapoints',
                     'Forced Datapoints',
+                    'Relations',
                     'V int flux',
                     '\u03B7 int flux',
                     'V peak flux',
@@ -459,10 +479,13 @@ class SourceViewSet(ModelViewSet):
 
     def get_queryset(self):
         qs = Source.objects.annotate(
-            measurements=Count('measurement'),
+            measurements=Count('measurement', distinct=True),
             forced_measurements=Count(
-                'measurement', filter=Q(measurement__forced=True)
-            )
+                'measurement',
+                filter=Q(measurement__forced=True),
+                distinct=True
+            ),
+            relations=Count('related', distinct=True),
         )
 
         qry_dict = {}
@@ -509,6 +532,7 @@ def SourceQuery(request):
         'max_flux_peak',
         'measurements',
         'forced_measurements',
+        'relations',
         'v_int',
         'eta_int',
         'v_peak',
@@ -544,6 +568,7 @@ def SourceQuery(request):
                     'Max Peak Flux (mJy/beam)',
                     'Total Datapoints',
                     'Forced Datapoints',
+                    'Relations',
                     'V int flux',
                     '\u03B7 int flux',
                     'V peak flux',
@@ -565,40 +590,56 @@ def SourceDetail(request, id, action=None):
             src = source.filter(id__gt=id)
             if src.exists():
                 source = src.annotate(
-                    run_name=F('run__name')
+                    run_name=F('run__name'),
+                    relations_ids=ArrayAgg('related__id'),
+                    relations_names=ArrayAgg('related__name')
                 ).values().first()
             else:
                 source = source.filter(id=id).annotate(
-                    run_name=F('run__name')
+                    run_name=F('run__name'),
+                    relations_ids=ArrayAgg('related__id'),
+                    relations_names=ArrayAgg('related__name')
                 ).values().get()
         elif action == 'prev':
             src = source.filter(id__lt=id)
             if src.exists():
                 source = src.annotate(
-                    run_name=F('run__name')
+                    run_name=F('run__name'),
+                    relations_ids=ArrayAgg('related__id'),
+                    relations_names=ArrayAgg('related__name')
                 ).values().last()
             else:
                 source = source.filter(id=id).annotate(
-                    run_name=F('run__name')
+                    run_name=F('run__name'),
+                    relations_ids=ArrayAgg('related__id'),
+                    relations_names=ArrayAgg('related__name')
                 ).values().get()
     else:
         source = source.filter(id=id).annotate(
-            run_name=F('run__name')
+            run_name=F('run__name'),
+            relations_ids=ArrayAgg('related__id'),
+            relations_names=ArrayAgg('related__name')
         ).values().get()
     source['aladin_ra'] = source['wavg_ra']
     source['aladin_dec'] = source['wavg_dec']
     source['aladin_zoom'] = 0.36
+    if not source['relations_ids'] == [None]:
+        # this enables easy presenting in the template
+        source['relations_info'] = list(zip(
+            source['relations_ids'],
+            source['relations_names']
+        ))
     source['wavg_ra'] = deg2hms(source['wavg_ra'], hms_format=True)
     source['wavg_dec'] = deg2dms(source['wavg_dec'], dms_format=True)
     source['datatable'] = {'colsNames': [
         'ID',
         'Name',
-        'Date',
+        'Date (UTC)',
         'Image',
-        'RA',
-        'RA Error',
-        'Dec',
-        'Dec Error',
+        'RA (deg)',
+        'RA Error (arcsec)',
+        'Dec (deg)',
+        'Dec Error (arcsec)',
         'Int. Flux (mJy)',
         'Int. Flux Error (mJy)',
         'Peak Flux (mJy/beam)',
