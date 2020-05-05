@@ -154,7 +154,12 @@
         onload: image => {
           JS9.SetZoom(4);
           var region_url = "/measurements/"+measurement.image_id+"/"+measurement.aladin_ra+","+measurement.aladin_dec+",20arcmin/region?selection_model=measurement&selection_id={{ measurement.id }}";
-          JS9.LoadRegions(region_url, {changeable: false, strokeWidth: 1});
+          var opts = Object.assign({}, JS9.Regions.opts);
+          opts.tooltip = "$xreg.data.text"
+          JS9.NewShapeLayer("components", opts);
+          $.get(region_url, regions => {
+            JS9.AddShapes("components", regions, {changeable: false, strokeWidth: 1});
+          })
         }
       }
     );

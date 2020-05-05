@@ -231,7 +231,12 @@
     measurementData.forEach((measurement, i) => {
       var displayId = "JS9_"+(i+1);
       var region_url = "/measurements/"+measurement.image_id+"/"+measurement.ra+","+measurement.dec+",20arcmin/region?selection_model=source&selection_id={{ source.id }}";
-      JS9.LoadRegions(region_url, {color: "#FF0000", changeable: false, strokeWidth: 1}, {display: displayId});
+      var opts = Object.assign({}, JS9.Regions.opts);
+      opts.tooltip = "$xreg.data.text"
+      JS9.NewShapeLayer("components", opts, {display: displayId});
+      $.get(region_url, regions => {
+        JS9.AddShapes("components", regions, {changeable: false, strokeWidth: 1}, {display: displayId});
+      })
     });
   });
 </script>

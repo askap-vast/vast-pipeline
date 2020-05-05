@@ -876,7 +876,9 @@ class MeasurementQuery(APIView):
             )
             properties: Dict[str, Any] = {
                 "color": color,
-                "text": f"{selection_attr}: {meas[selection_attr]}",
+                "data": {
+                    "text": f"{selection_attr}: {meas[selection_attr]}"
+                }
             }
             if meas["forced"]:
                 properties.update(strokeDashArray=[3, 2])
