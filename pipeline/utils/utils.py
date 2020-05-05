@@ -227,7 +227,6 @@ def simbad_search(object_name):
     """
     try:
         result_table = Simbad.query_object(object_name)
-        print(result_table)
         if result_table is None:
             return None, None
 
