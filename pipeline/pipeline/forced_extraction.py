@@ -82,8 +82,9 @@ def extract_from_image(df, images_df):
     df['flux_int'] = flux * 1.e3
     df['flux_int_err'] = flux_err * 1.e3
     df['chi_squared_fit'] = chisq
-    df['bmaj'] = images_df.at[img_name, 'beam_bmaj']
-    df['bmin'] = images_df.at[img_name, 'beam_bmin']
+    # store source bmaj and bmin in arcsec
+    df['bmaj'] = images_df.at[img_name, 'beam_bmaj'] * 3600.
+    df['bmin'] = images_df.at[img_name, 'beam_bmin'] * 3600.
     df['pa'] = images_df.at[img_name, 'beam_bpa']
     # add image id
     df['image_id'] = images_df.at[img_name, 'id']
