@@ -11,6 +11,7 @@ from astropy.wcs.utils import proj_plane_pixel_scales
 from django.http import FileResponse, Http404
 from django.db.models import Count, F, Q, Case, When, Value, BooleanField
 from django.shortcuts import render
+from django.urls import reverse
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from django.contrib.postgres.aggregates.general import ArrayAgg
@@ -847,7 +848,7 @@ class MeasurementQuery(APIView):
         Returns:
             FileResponse: Django FileReponse containing a DS9/JS9 region file.
         """
-        columns = ["id", "name", "ra", "dec", "bmaj", "bmin", "pa", "forced", "source"]
+        columns = ["id", "name", "ra", "dec", "bmaj", "bmin", "pa", "forced", "source", "source__name"]
         selection_model = request.GET.get("selection_model", "measurement")
         selection_id = request.GET.get("selection_id", None)
 
@@ -855,7 +856,12 @@ class MeasurementQuery(APIView):
         if selection_id is not None:
             if selection_model not in ("measurement", "source"):
                 raise Http404("GET param selection_model must be either 'measurement' or 'source'.")
-            selection_attr = "id" if selection_model == "measurement" else selection_model
+            if selection_model == "measurement":
+                selection_attr = "id"
+                selection_name = "name"
+            else:
+                selection_attr = selection_model
+                selection_name = "source__name"
             try:
                 selection_id = int(selection_id)
             except ValueError:
@@ -864,7 +870,7 @@ class MeasurementQuery(APIView):
         measurements = (
             Measurement.objects.filter(image=image_id)
             .cone_search(ra_deg, dec_deg, radius_deg)
-            .values(*columns)
+            .values(*columns, __name=F(selection_name))
         )
         measurement_region_file = io.StringIO()
         for meas in measurements:
@@ -877,7 +883,8 @@ class MeasurementQuery(APIView):
             properties: Dict[str, Any] = {
                 "color": color,
                 "data": {
-                    "text": f"{selection_attr}: {meas[selection_attr]}"
+                    "text": f"{selection_model} ID: {meas[selection_attr]}",
+                    "link": reverse(f"pipeline:{selection_model}_detail", args=[selection_id]),
                 }
             }
             if meas["forced"]:
