@@ -208,6 +208,17 @@ class SelavyImage(FitsImage):
             logger.debug("Dropping %i bad sources.", bad_sources.shape[0])
             df = df.drop(bad_sources.index)
 
+        # dropping tiny sources
+        nr_sources_old = df.shape[0]
+        df = df.loc[
+            (df['bmaj'] > dj_image.beam_bmaj * 500) &
+            (df['bmin'] > dj_image.beam_bmin * 500)
+        ]
+        if df.shape[0] != nr_sources_old:
+            logger.info(
+                'Dropped %i tiny sources.', nr_sources_old - df.shape[0]
+            )
+
         # add fields from image and fix name column
         df['image_id'] = dj_image.id
         df['time'] = dj_image.datetime
