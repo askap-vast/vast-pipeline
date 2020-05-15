@@ -1,3 +1,4 @@
+import os
 import logging
 import numpy as np
 import pandas as pd
@@ -269,9 +270,9 @@ def forced_extraction(
         'Saving forced measurements to specific parquet file...'
     )
     for grp_name, grp_df in extr_df.groupby('image'):
-        fname = (
-            images_df.at[grp_name, 'measurements_path']
-            .replace('.parquet', f'_forced_{p_run.name}.parquet')
+        fname = os.path.join(
+            p_run.path,
+            f'forced_measurements_{grp_name}.parquet'
         )
         (
             grp_df.drop(
