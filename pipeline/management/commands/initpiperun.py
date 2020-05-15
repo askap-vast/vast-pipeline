@@ -45,7 +45,7 @@ class Command(BaseCommand):
             raise CommandError('Pipeline run name already used. Change name')
 
         # create the pipeline run folder
-        ds_path = os.path.join(cfg.PROJECT_WORKING_DIR, name)
+        ds_path = os.path.join(cfg.PIPELINE_WORKING_DIR, name)
 
         if os.path.exists(ds_path):
             raise CommandError('pipeline run path already present!')
