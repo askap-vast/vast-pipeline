@@ -1,7 +1,18 @@
+import io
+import json
 import logging
+from typing import Dict, Any
 
+from astropy.io import fits
+from astropy.coordinates import SkyCoord, Angle
+from astropy.nddata import Cutout2D
+from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_scales
+from django.http import FileResponse, Http404
 from django.db.models import Count, F, Q, Case, When, Value, BooleanField
 from django.shortcuts import render
+from django.urls import reverse
+from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from django.contrib.postgres.aggregates.general import ArrayAgg
 
@@ -155,6 +166,7 @@ def get_skyregions_collection():
 
     return skyregions_collection
 
+
 def Home(request):
     totals = {}
     totals['nr_pruns'] = Run.objects.count()
@@ -194,7 +206,7 @@ def RunIndex(request):
                 'api': '/api/piperuns/?format=datatables',
                 'colsFields': colsfields,
                 'colsNames': [
-                    'Name','Run Datetime','Path','Comment','Nr Images',
+                    'Name', 'Run Datetime', 'Path', 'Comment', 'Nr Images',
                     'Nr Sources'
                 ],
                 'search': True,
@@ -244,7 +256,7 @@ def ImageIndex(request):
             'datatable': {
                 'api': '/api/images/?format=datatables',
                 'colsFields': colsfields,
-                'colsNames': ['Name','Time (UTC)','RA (deg)','Dec (deg)'],
+                'colsNames': ['Name', 'Time (UTC)', 'RA (deg)', 'Dec (deg)'],
                 'search': True,
             }
         }
@@ -593,7 +605,7 @@ def SourceQuery(request):
     colsfields = generate_colsfields(fields, '/sources/')
 
     # get all pipeline run names
-    p_runs =  list(Run.objects.values('name').all())
+    p_runs = list(Run.objects.values('name').all())
 
     return render(
         request,
@@ -757,3 +769,133 @@ def SourceDetail(request, id, action=None):
 
     context = {'source': source, 'measurements': measurements}
     return render(request, 'source_detail.html', context)
+
+
+class ImageCutout(APIView):
+    def get(self, request, measurement_name, size="normal"):
+        measurement = Measurement.objects.get(name=measurement_name)
+        image_hdu: fits.PrimaryHDU = fits.open(measurement.image.path)[0]
+        coord = SkyCoord(ra=measurement.ra, dec=measurement.dec, unit="deg")
+        sizes = {
+            "xlarge": "40arcmin",
+            "large": "20arcmin",
+            "normal": "2arcmin",
+        }
+
+        filenames = {
+            "xlarge": f"{measurement.name}_cutout_xlarge.fits",
+            "large": f"{measurement.name}_cutout_large.fits",
+            "normal": f"{measurement.name}_cutout.fits",
+        }
+
+        cutout = Cutout2D(
+            image_hdu.data, coord, Angle(sizes[size]), wcs=WCS(image_hdu.header),
+            mode='partial'
+        )
+
+        # add beam properties to the cutout header and fix cdelts as JS9 does not deal
+        # with PCi_j properly
+        cdelt1, cdelt2 = proj_plane_pixel_scales(cutout.wcs)
+        cutout_header = cutout.wcs.to_header()
+        cutout_header.remove("PC1_1", ignore_missing=True)
+        cutout_header.remove("PC2_2", ignore_missing=True)
+        cutout_header.update(
+            CDELT1=-cdelt1,
+            CDELT2=cdelt2,
+            BMAJ=image_hdu.header["BMAJ"],
+            BMIN=image_hdu.header["BMIN"],
+            BPA=image_hdu.header["BPA"]
+        )
+
+        cutout_hdu = fits.PrimaryHDU(data=cutout.data, header=cutout_header)
+        cutout_file = io.BytesIO()
+        cutout_hdu.writeto(cutout_file)
+        cutout_file.seek(0)
+        response = FileResponse(
+            cutout_file,
+            as_attachment=True,
+            filename=filenames[size]
+        )
+        return response
+
+
+class MeasurementQuery(APIView):
+    def get(
+        self,
+        request,
+        ra_deg: float,
+        dec_deg: float,
+        image_id: int,
+        radius_deg: float,
+    ) -> FileResponse:
+        """Return a DS9/JS9 region file for all Measurement objects for a given cone search
+        on an Image. Optionally highlight sources based on a Measurement or Source ID.
+
+        Args:
+            request: Django HTTPRequest. Supports two URL GET parameters:
+                selection_model: either "measurement" or "source" (defaults to "measurement"); and
+                selection_id: the id for the given `selection_model`.
+                Measurement objects that match the given selection criterion will be
+                highlighted. e.g. ?selection_model=measurement&selection_id=100 will highlight
+                the Measurement object with id=100. ?selection_model=source&selection_id=5
+                will highlight all Measurement objects associated with the Source object with
+                id=5.
+            ra_deg: Cone search RA in decimal degrees.
+            dec_deg: Cone search Dec in decimal degrees.
+            image_id: Primary key (id) of the Image object to search.
+            radius_deg: Cone search radius in decimal degrees.
+
+        Returns:
+            FileResponse: Django FileReponse containing a DS9/JS9 region file.
+        """
+        columns = ["id", "name", "ra", "dec", "bmaj", "bmin", "pa", "forced", "source", "source__name"]
+        selection_model = request.GET.get("selection_model", "measurement")
+        selection_id = request.GET.get("selection_id", None)
+
+        # validate selection query params
+        if selection_id is not None:
+            if selection_model not in ("measurement", "source"):
+                raise Http404("GET param selection_model must be either 'measurement' or 'source'.")
+            if selection_model == "measurement":
+                selection_attr = "id"
+                selection_name = "name"
+            else:
+                selection_attr = selection_model
+                selection_name = "source__name"
+            try:
+                selection_id = int(selection_id)
+            except ValueError:
+                raise Http404("GET param selection_id must be an integer.")
+
+        measurements = (
+            Measurement.objects.filter(image=image_id)
+            .cone_search(ra_deg, dec_deg, radius_deg)
+            .values(*columns, __name=F(selection_name))
+        )
+        measurement_region_file = io.StringIO()
+        for meas in measurements:
+            if selection_id is not None:
+                color = "#FF0000" if meas[selection_attr] == selection_id else "#0000FF"
+            shape = (
+                f"ellipse({meas['ra']}d, {meas['dec']}d, {meas['bmaj']}\", {meas['bmin']}\", "
+                f"{meas['pa']+90+180}d)"
+            )
+            properties: Dict[str, Any] = {
+                "color": color,
+                "data": {
+                    "text": f"{selection_model} ID: {meas[selection_attr]}",
+                    "link": reverse(f"pipeline:{selection_model}_detail", args=[selection_id]),
+                }
+            }
+            if meas["forced"]:
+                properties.update(strokeDashArray=[3, 2])
+            region = f"{shape} {json.dumps(properties)}\n"
+            measurement_region_file.write(region)
+        measurement_region_file.seek(0)
+        f = io.BytesIO(bytes(measurement_region_file.read(), encoding="utf8"))
+        response = FileResponse(
+            f,
+            as_attachment=False,
+            filename=f"image-{image_id}_{ra_deg:.5f}_{dec_deg:+.5f}_radius-{radius_deg:.3f}.reg",
+        )
+        return response

@@ -5,6 +5,8 @@
 {% block head %}
 
 <link rel='stylesheet' href='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css' />
+<link rel="stylesheet" href="{% static 'vendor/js9/js9-allinone.css' %}" />
+<link rel="stylesheet" href="{% static 'css/collapse-box.css' %}">
 
 {% endblock head %}
 
@@ -105,6 +107,40 @@
     </div>
   </div>
 
+  <!-- Postage stamps -->
+    <div class="card shadow mb-4">
+      <h6 class="card-header m-0 font-weight-bold text-primary">
+        <a data-toggle="collapse" href="#collapse-example" aria-expanded="true" aria-controls="collapse-example" id="heading-example" class="d-block">
+          <i class="fa fa-chevron-down pull-right"></i>
+          Postage Stamps
+        </a>
+      </h6>
+      <div id="collapse-example" class="collapse show" aria-labelledby="heading-example">
+        <div class="card-body">
+          <div class="row">
+            <button class="btn btn-info mr-1" onclick="focusOnSource(4.0);">Zoom to Source</button>
+            <button class="btn btn-info mr-1" onclick="focusOnSource('toFit');">Zoom to Field</button>
+          </div>
+          <div class="row">
+            <div class="JS9Menubar" id="SUPERMENU_" data-displays="*"></div>
+          </div>
+          <div class="row">
+            {% for measurement in measurements.dataQuery %}
+              <div class="card">
+                <div class="card-header">
+                  <p class="mb-0"><a href="{% url 'pipeline:image_detail' measurement.image_id %}" target="_blank">{{ measurement.image_name }}</a></p>
+                  <p class="mb-0"><a href="{% url 'pipeline:measurement_detail' measurement.id %}" target="_blank">{{ measurement.name }}</a></p>
+                </div>
+                <div class="card-body">
+                  <div class="JS9" id="JS9_{{ forloop.counter }}" data-width="350px" data-height="350px"></div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
   <!-- DataTales Source Measurements -->
   <div class="card shadow mb-4">
     <div class="card-header py-3">
@@ -139,6 +175,11 @@
 
 
 {% block custom_page_scripts %}
+<!-- JS9 FITS viewer - must appear before DataTables -->
+<script type="text/javascript" src="{% static 'vendor/js9/js9prefs.js' %}"></script>
+<script type="text/javascript" src="{% static 'vendor/js9/js9support.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'vendor/js9/js9.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'vendor/js9/js9plugins.js' %}"></script>
 
 <!-- Page level plugins -->
 <script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
@@ -159,4 +200,44 @@
 <script type='text/javascript' src='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js' charset='utf-8'></script>
 <script src="{% static 'js/aladin-script.js' %}"></script>
 
+{{ measurements.dataQuery|json_script:"data-js9" }}
+<script type="text/javascript">
+  function loadFitsImage(imageName, displayId) {
+    return new Promise(resolve => {
+      JS9.Load(
+        "/cutout/"+imageName+"/large",
+        {id: imageName, scalemin: -0.001, scalemax: 0.004, color:'gray', invert: true, onload: () => { return resolve(); }},
+        {display: displayId}
+      );
+    });
+  }
+  function focusOnSource(zoom) {
+    let ra = {{ source.aladin_ra }};
+    let dec = {{ source.aladin_dec }};
+    JS9.SetPan({ra: ra, dec: dec});
+    JS9.SetZoom(zoom);
+  }
+  // when JS9 is ready, load the cutout images into the correct display panels
+  $(document).on("JS9:ready", async function() {
+    var measurementData = JSON.parse(document.getElementById("data-js9").textContent);
+    // load all images and wait until they're all done
+    await Promise.all(measurementData.map((measurement, i) => {
+      var displayId = "JS9_"+(i+1);
+      return loadFitsImage(measurement.name, displayId);
+    }));
+    JS9.SyncImages();  // sync panning between images
+    focusOnSource(4.0);
+    // overlay nearby components as regions
+    measurementData.forEach((measurement, i) => {
+      var displayId = "JS9_"+(i+1);
+      var region_url = "/measurements/"+measurement.image_id+"/"+measurement.ra+","+measurement.dec+",20arcmin/region?selection_model=source&selection_id={{ source.id }}";
+      var opts = Object.assign({}, JS9.Regions.opts);
+      opts.tooltip = "$xreg.data.text";
+      JS9.NewShapeLayer("components", opts, {display: displayId});
+      $.get(region_url, regions => {
+        JS9.AddShapes("components", regions, {changeable: false, strokeWidth: 1}, {display: displayId});
+      })
+    });
+  });
+</script>
 {% endblock custom_page_scripts %}
