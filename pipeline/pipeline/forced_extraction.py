@@ -272,7 +272,8 @@ def forced_extraction(
     for grp_name, grp_df in extr_df.groupby('image'):
         fname = os.path.join(
             p_run.path,
-            f'forced_measurements_{grp_name}.parquet'
+            'forced_measurements_' + grp_name.replace('.','_') +
+            '.parquet'
         )
         (
             grp_df.drop(

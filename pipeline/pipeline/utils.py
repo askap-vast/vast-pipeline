@@ -104,8 +104,8 @@ def get_create_img(p_run, band_id, image):
     # at this stage, measurement parquet file is not created but
     # assume location
     img_folder_name = '_'.join([
-        image.name.split('.i.', 1)[-1].split('.', 1)[0],
-        image.datetime.isoformat()
+        image.name.replace('.', '_'),
+        image.datetime.strftime('%Y-%m-%dT%H_%M_%S%z')
     ])
     measurements_path = os.path.join(
         settings.PIPELINE_WORKING_DIR,
