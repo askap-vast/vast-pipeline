@@ -176,6 +176,8 @@ class SkyRegion(models.Model):
 
     centre_ra = models.FloatField()
     centre_dec = models.FloatField()
+    width_ra = models.FloatField()
+    width_dec = models.FloatField()
     xtr_radius = models.FloatField()
     x = models.FloatField()
     y = models.FloatField()
@@ -239,13 +241,13 @@ class Source(models.Model):
         )
     )
     avg_flux_int = models.FloatField(
-        help_text='The average integrated flux value.'
+        help_text='The average integrated flux value'
     )
     avg_flux_peak = models.FloatField(
-        help_text='The average peak flux value.'
+        help_text='The average peak flux value'
     )
     max_flux_peak = models.FloatField(
-        help_text='The maximum peak flux value.'
+        help_text='The maximum peak flux value'
     )
 
     # metrics
@@ -341,6 +343,12 @@ class Image(models.Model):
     )# Major (Dec) radius of image (degrees)
     fov_bmin = models.FloatField(
         help_text='Field of view minor axis '
+    )# Minor (RA) radius of image (degrees)
+    physical_bmaj = models.FloatField(
+        help_text='The actual size of the image major axis (Deg)'
+    )# Major (Dec) radius of image (degrees)
+    physical_bmin = models.FloatField(
+        help_text='The actual size of the image minor axis (Deg)'
     )# Minor (RA) radius of image (degrees)
     radius_pixels = models.FloatField(
         help_text='Radius of the useable region of the image (pixels)'
@@ -459,10 +467,10 @@ class Measurement(models.Model):
         )
     )# Uncertainty in Dec (degrees).
 
-    flux_int = models.FloatField()# Jy/beam
-    flux_int_err = models.FloatField()# Jy/beam
-    flux_peak = models.FloatField()# Jy/beam
-    flux_peak_err = models.FloatField()# Jy/beam
+    flux_int = models.FloatField()# mJy/beam
+    flux_int_err = models.FloatField()# mJy/beam
+    flux_peak = models.FloatField()# mJy/beam
+    flux_peak_err = models.FloatField()# mJy/beam
     chi_squared_fit = models.FloatField(
         db_column='chi2_fit',
         help_text='Chi-squared of the Guassian fit to the source'
@@ -479,6 +487,9 @@ class Measurement(models.Model):
             ' term came'
         )
     )# Did the spectral index come from the taylor term
+
+    local_rms = models.FloatField()# mJy/beam
+
     flag_c4 = models.BooleanField(
         default=False,
         help_text='Fit flag from selavy'

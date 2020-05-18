@@ -9,6 +9,7 @@ from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
 
 from .utils import calc_error_radius
+from .utils import calc_condon_flux_errors
 
 from pipeline.survey.translators import tr_selavy
 
@@ -105,7 +106,7 @@ class FitsImage(Image):
         self.ra, self.dec = wcs.wcs_pix2world(pix_centre, 1)[0]
 
         # The field-of-view (in pixels) is assumed to be a circle in the centre
-         # of the image. This may be an ellipse on the sky, eg MOST images.
+        # of the image. This may be an ellipse on the sky, eg MOST images.
         # We leave a pixel margin at the edge that we don't use.
         # TODO: move unused pixel as argument
         unusedpix = 0.
@@ -113,6 +114,8 @@ class FitsImage(Image):
         cdelt1, cdelt2 = proj_plane_pixel_scales(WCS(header).celestial)
         self.fov_bmin = usable_radius_pix * abs(cdelt1)
         self.fov_bmaj = usable_radius_pix * abs(cdelt2)
+        self.physical_bmin = header[fits_naxis1] * abs(cdelt1)
+        self.physical_bmaj = header[fits_naxis2] * abs(cdelt2)
 
         # set the pixels radius
         # TODO: check calcs
@@ -124,7 +127,7 @@ class FitsImage(Image):
         If the image is not a square/circle then the shortest radius will be returned.
         """
         if self.entire_image:
-            #a large circle that *should* include the whole image (and then some)
+            # a large circle that *should* include the whole image (and then some)
             diameter = np.hypot(header[fits_naxis1], header[fits_naxis2])
         else:
             # We simply place the largest circle we can in the centre.
@@ -192,6 +195,30 @@ class SelavyImage(FitsImage):
         if df['component_id'].duplicated().any():
             raise Exception('Found duplicated names in sources')
 
+        # drop unrealistic sources
+        cols_to_check = [
+            'bmaj',
+            'bmin',
+            'flux_peak',
+            'flux_int',
+        ]
+
+        bad_sources = df[(df[cols_to_check] == 0).any(axis=1)]
+        if bad_sources.shape[0] > 0:
+            logger.debug("Dropping %i bad sources.", bad_sources.shape[0])
+            df = df.drop(bad_sources.index)
+
+        # dropping tiny sources
+        nr_sources_old = df.shape[0]
+        df = df.loc[
+            (df['bmaj'] > dj_image.beam_bmaj * 500) &
+            (df['bmin'] > dj_image.beam_bmin * 500)
+        ]
+        if df.shape[0] != nr_sources_old:
+            logger.info(
+                'Dropped %i tiny sources.', nr_sources_old - df.shape[0]
+            )
+
         # add fields from image and fix name column
         df['image_id'] = dj_image.id
         df['time'] = dj_image.datetime
@@ -213,7 +240,44 @@ class SelavyImage(FitsImage):
                 df.loc[sel, col] = settings.POS_DEFAULT_MIN_ERROR
             df[col] = df[col] / 3600.
 
-        logger.debug("Calculating errors...")
+        # replace 0 local_rms values using user config value
+        df.loc[
+            df['local_rms'] == 0., 'local_rms'
+        ] = self.config.SELAVY_LOCAL_RMS_ZERO_FILL_VALUE
+
+        df['snr'] = df['flux_peak'].values / df['local_rms'].values
+
+        if self.config.USE_CONDON_ERRORS:
+            logger.debug("Calculating Condon '97 errors...")
+            theta_B = dj_image.beam_bmaj
+            theta_b = dj_image.beam_bmin
+
+            df[[
+                'flux_peak_err',
+                'flux_int_err',
+                'err_bmaj',
+                'err_bmin',
+                'err_pa',
+                'ra_err',
+                'dec_err',
+            ]] = df[[
+                'flux_peak',
+                'flux_int',
+                'bmaj',
+                'bmin',
+                'pa',
+                'snr',
+                'local_rms',
+            ]].apply(
+                calc_condon_flux_errors,
+                args=(theta_B, theta_b),
+                axis=1,
+                result_type='expand'
+            )
+
+            logger.debug("Condon errors done.")
+
+        logger.debug("Calculating positional errors...")
         # TODO: avoid extra column given that it is a single value
         df['ew_sys_err'] = self.config.ASTROMETRIC_UNCERTAINTY_RA / 3600.
         df['ns_sys_err'] = self.config.ASTROMETRIC_UNCERTAINTY_DEC / 3600.
@@ -237,9 +301,9 @@ class SelavyImage(FitsImage):
         df['weight_ew'] = 1. / df['uncertainty_ew'].values**2
         df['weight_ns'] = 1. / df['uncertainty_ns'].values**2
 
+        logger.debug('Positional errors done.')
+
         # Initialise the forced column as False
         df['forced'] = False
-
-        logger.debug('Errors calculation done.')
 
         return df

@@ -47,6 +47,8 @@ def get_create_skyreg(p_run, image):
     skyr = SkyRegion(
         centre_ra=image.ra,
         centre_dec=image.dec,
+        width_ra=image.physical_bmin,
+        width_dec=image.physical_bmaj,
         xtr_radius=image.fov_bmin,
         x=x,
         y=y,

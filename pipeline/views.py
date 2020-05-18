@@ -1,15 +1,29 @@
+import io
+import json
 import logging
+from typing import Dict, Any
 
-from django.db.models import Count, F, Q
+from astropy.io import fits
+from astropy.coordinates import SkyCoord, Angle
+from astropy.nddata import Cutout2D
+from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_scales
+from django.http import FileResponse, Http404
+from django.db.models import Count, F, Q, Case, When, Value, BooleanField
 from django.shortcuts import render
+from django.urls import reverse
+from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
+from django.contrib.postgres.aggregates.general import ArrayAgg
 
 from .models import Image, Measurement, Run, Source, SkyRegion
 from .serializers import (
     ImageSerializer, MeasurementSerializer, RunSerializer,
     SourceSerializer
 )
-from .utils.utils import deg2dms, deg2hms
+from .utils.utils import (
+    deg2dms, deg2hms, gal2equ, ned_search, simbad_search
+)
 
 
 logger = logging.getLogger(__name__)
@@ -121,7 +135,8 @@ def get_skyregions_collection():
     for skr in skyregions:
         ra = skr.centre_ra - 180.
         dec = skr.centre_dec
-        radius = skr.xtr_radius
+        width_ra = skr.width_ra / 2.
+        width_dec = skr.width_dec / 2.
         id = skr.id
         features.append(
             {
@@ -134,11 +149,11 @@ def get_skyregions_collection():
                 "geometry": {
                     "type": "MultiLineString",
                     "coordinates": [[
-                        [ra+radius, dec+radius],
-                        [ra+radius, dec-radius],
-                        [ra-radius, dec-radius],
-                        [ra-radius, dec+radius],
-                        [ra+radius, dec+radius]
+                        [ra+width_ra, dec+width_dec],
+                        [ra+width_ra, dec-width_dec],
+                        [ra-width_ra, dec-width_dec],
+                        [ra-width_ra, dec+width_dec],
+                        [ra+width_ra, dec+width_dec]
                     ]]
                 }
             }
@@ -150,6 +165,7 @@ def get_skyregions_collection():
     }
 
     return skyregions_collection
+
 
 def Home(request):
     totals = {}
@@ -190,7 +206,7 @@ def RunIndex(request):
                 'api': '/api/piperuns/?format=datatables',
                 'colsFields': colsfields,
                 'colsNames': [
-                    'Name','Run Datetime','Path','Comment','Nr Images',
+                    'Name', 'Run Datetime', 'Path', 'Comment', 'Nr Images',
                     'Nr Sources'
                 ],
                 'search': True,
@@ -214,7 +230,7 @@ def RunDetail(request, id):
     p_run['nr_srcs'] = Source.objects.filter(run__id=p_run['id']).count()
     p_run['nr_meas'] = Measurement.objects.filter(image__run__id=p_run['id']).count()
     p_run['nr_frcd'] = Measurement.objects.filter(
-        image__run=p_run, forced=True).count()
+        image__run=p_run['id'], forced=True).count()
     p_run['new_srcs'] = Source.objects.filter(
         run__id=p_run['id'],
         new=True,
@@ -240,7 +256,7 @@ def ImageIndex(request):
             'datatable': {
                 'api': '/api/images/?format=datatables',
                 'colsFields': colsfields,
-                'colsNames': ['Name','Time','RA','DEC'],
+                'colsNames': ['Name', 'Time (UTC)', 'RA (deg)', 'Dec (deg)'],
                 'search': True,
             }
         }
@@ -273,7 +289,9 @@ def ImageDetail(request, id, action=None):
 
     image['aladin_ra'] = image['ra']
     image['aladin_dec'] = image['dec']
-    image['aladin_zoom'] = 20.0
+    image['aladin_zoom'] = 15.0
+    image['aladin_box_ra'] = image['physical_bmaj']
+    image['aladin_box_dec'] = image['physical_bmin']
     image['ra'] = deg2hms(image['ra'], hms_format=True)
     image['dec'] = deg2dms(image['dec'], dms_format=True)
 
@@ -351,11 +369,15 @@ def MeasurementDetail(request, id, action=None):
                 measurement = msr.annotate(
                     datetime=F('image__datetime'),
                     image_name=F('image__name'),
+                    source_ids=ArrayAgg('source__id'),
+                    source_names=ArrayAgg('source__name'),
                 ).values().first()
             else:
                 measurement = measurement.filter(id=id).annotate(
                     datetime=F('image__datetime'),
                     image_name=F('image__name'),
+                    source_ids=ArrayAgg('source__id'),
+                    source_names=ArrayAgg('source__name'),
                 ).values().get()
         elif action == 'prev':
             msr = measurement.filter(id__lt=id)
@@ -363,16 +385,22 @@ def MeasurementDetail(request, id, action=None):
                 measurement = msr.annotate(
                     datetime=F('image__datetime'),
                     image_name=F('image__name'),
+                    source_ids=ArrayAgg('source__id'),
+                    source_names=ArrayAgg('source__name'),
                 ).values().last()
             else:
                 measurement = measurement.filter(id=id).annotate(
                     datetime=F('image__datetime'),
                     image_name=F('image__name'),
+                    source_ids=ArrayAgg('source__id'),
+                    source_names=ArrayAgg('source__name'),
                 ).values().get()
     else:
         measurement = measurement.filter(id=id).annotate(
             datetime=F('image__datetime'),
             image_name=F('image__name'),
+            source_ids=ArrayAgg('source__id'),
+            source_names=ArrayAgg('source__name'),
         ).values().get()
 
     measurement['aladin_ra'] = measurement['ra']
@@ -382,6 +410,13 @@ def MeasurementDetail(request, id, action=None):
     measurement['dec'] = deg2dms(measurement['dec'], dms_format=True)
 
     measurement['datetime'] = measurement['datetime'].isoformat()
+
+    if not measurement['source_ids'] == [None]:
+        # this enables easy presenting in the template
+        measurement['sources_info'] = list(zip(
+            measurement['source_ids'],
+            measurement['source_names']
+        ))
 
     context = {'measurement': measurement}
     return render(request, 'measurement_detail.html', context)
@@ -398,11 +433,14 @@ def SourceIndex(request):
         'avg_flux_peak',
         'max_flux_peak',
         'measurements',
+        'selavy_measurements',
         'forced_measurements',
+        'relations',
         'v_int',
         'eta_int',
         'v_peak',
         'eta_peak',
+        'contains_siblings',
         'new'
     ]
 
@@ -429,11 +467,14 @@ def SourceIndex(request):
                     'Avg. Peak Flux (mJy/beam)',
                     'Max Peak Flux (mJy/beam)',
                     'Total Datapoints',
+                    'Selavy Datapoints',
                     'Forced Datapoints',
+                    'Relations',
                     'V int flux',
                     '\u03B7 int flux',
                     'V peak flux',
                     '\u03B7 peak flux',
+                    'Contains siblings',
                     'New Source',
                 ],
                 'search': False,
@@ -447,9 +488,27 @@ class SourceViewSet(ModelViewSet):
 
     def get_queryset(self):
         qs = Source.objects.annotate(
-            measurements=Count('measurement'),
+            measurements=Count('measurement', distinct=True),
+            selavy_measurements=Count(
+                'measurement',
+                filter=Q(measurement__forced=False),
+                distinct=True
+            ),
             forced_measurements=Count(
-                'measurement', filter=Q(measurement__forced=True)
+                'measurement',
+                filter=Q(measurement__forced=True),
+                distinct=True
+            ),
+            relations=Count('related', distinct=True),
+            siblings_count=Count(
+                'measurement',
+                filter=Q(measurement__has_siblings=True),
+                distinct=True
+            ),
+            contains_siblings=Case(
+                When(siblings_count__gt=0, then=Value(True)),
+                default=Value(False),
+                output_field=BooleanField()
             )
         )
 
@@ -458,7 +517,19 @@ class SourceViewSet(ModelViewSet):
         if p_run:
             qry_dict['run__name'] = p_run
 
-        flux_qry_flds = ['avg_flux_int', 'avg_flux_peak', 'v_int', 'v_peak']
+        flux_qry_flds = [
+            'avg_flux_int',
+            'avg_flux_peak',
+            'v_int',
+            'v_peak',
+            'eta_int',
+            'eta_peak',
+            'measurements',
+            'selavy_measurements',
+            'forced_measurements',
+            'relations',
+            'contains_siblings'
+        ]
         for fld in flux_qry_flds:
             for limit in ['max', 'min']:
                 val = self.request.query_params.get(limit + '_' + fld)
@@ -473,13 +544,37 @@ class SourceViewSet(ModelViewSet):
         if 'newsrc' in self.request.query_params:
             qry_dict['new'] = True
 
+        if 'no_siblings' in self.request.query_params:
+            qry_dict['contains_siblings'] = False
+
         if qry_dict:
             qs = qs.filter(**qry_dict)
 
+        radius_conversions = {
+            "arcsec": 3600.,
+            "arcmin": 60.,
+            "deg": 1.
+        }
         radius = self.request.query_params.get('radius')
-        wavg_ra = self.request.query_params.get('ra')
-        wavg_dec = self.request.query_params.get('dec')
+        radiusUnit = self.request.query_params.get('radiusunit')
+        objectname = self.request.query_params.get('objectname')
+        objectservice = self.request.query_params.get('objectservice')
+        coordsys = self.request.query_params.get('coordsys')
+        if objectname is not None:
+            if objectservice == 'simbad':
+                wavg_ra, wavg_dec = simbad_search(objectname)
+            elif objectservice == 'ned':
+                wavg_ra, wavg_dec = ned_search(objectname)
+        else:
+            wavg_ra = self.request.query_params.get('ra')
+            wavg_dec = self.request.query_params.get('dec')
+            # galactic coordinates won't be entered if the user
+            # has entered an object query
+            if coordsys == 'galactic':
+                wavg_ra, wavg_dec = gal2equ(wavg_ra, wavg_dec)
+
         if wavg_ra and wavg_dec and radius:
+            radius = float(radius) / radius_conversions[radiusUnit]
             qs = qs.cone_search(wavg_ra, wavg_dec, radius)
 
         return qs
@@ -496,18 +591,21 @@ def SourceQuery(request):
         'avg_flux_peak',
         'max_flux_peak',
         'measurements',
+        'selavy_measurements',
         'forced_measurements',
+        'relations',
         'v_int',
         'eta_int',
         'v_peak',
         'eta_peak',
+        'contains_siblings',
         'new'
     ]
 
     colsfields = generate_colsfields(fields, '/sources/')
 
     # get all pipeline run names
-    p_runs =  list(Run.objects.values('name').all())
+    p_runs = list(Run.objects.values('name').all())
 
     return render(
         request,
@@ -531,11 +629,14 @@ def SourceQuery(request):
                     'Avg. Peak Flux (mJy/beam)',
                     'Max Peak Flux (mJy/beam)',
                     'Total Datapoints',
+                    'Selavy Datapoints',
                     'Forced Datapoints',
+                    'Relations',
                     'V int flux',
                     '\u03B7 int flux',
                     'V peak flux',
                     '\u03B7 peak flux',
+                    'Contains siblings',
                     'New Source',
                 ],
                 'search': False,
@@ -553,40 +654,56 @@ def SourceDetail(request, id, action=None):
             src = source.filter(id__gt=id)
             if src.exists():
                 source = src.annotate(
-                    run_name=F('run__name')
+                    run_name=F('run__name'),
+                    relations_ids=ArrayAgg('related__id'),
+                    relations_names=ArrayAgg('related__name')
                 ).values().first()
             else:
                 source = source.filter(id=id).annotate(
-                    run_name=F('run__name')
+                    run_name=F('run__name'),
+                    relations_ids=ArrayAgg('related__id'),
+                    relations_names=ArrayAgg('related__name')
                 ).values().get()
         elif action == 'prev':
             src = source.filter(id__lt=id)
             if src.exists():
                 source = src.annotate(
-                    run_name=F('run__name')
+                    run_name=F('run__name'),
+                    relations_ids=ArrayAgg('related__id'),
+                    relations_names=ArrayAgg('related__name')
                 ).values().last()
             else:
                 source = source.filter(id=id).annotate(
-                    run_name=F('run__name')
+                    run_name=F('run__name'),
+                    relations_ids=ArrayAgg('related__id'),
+                    relations_names=ArrayAgg('related__name')
                 ).values().get()
     else:
         source = source.filter(id=id).annotate(
-            run_name=F('run__name')
+            run_name=F('run__name'),
+            relations_ids=ArrayAgg('related__id'),
+            relations_names=ArrayAgg('related__name')
         ).values().get()
     source['aladin_ra'] = source['wavg_ra']
     source['aladin_dec'] = source['wavg_dec']
     source['aladin_zoom'] = 0.36
+    if not source['relations_ids'] == [None]:
+        # this enables easy presenting in the template
+        source['relations_info'] = list(zip(
+            source['relations_ids'],
+            source['relations_names']
+        ))
     source['wavg_ra'] = deg2hms(source['wavg_ra'], hms_format=True)
     source['wavg_dec'] = deg2dms(source['wavg_dec'], dms_format=True)
     source['datatable'] = {'colsNames': [
         'ID',
         'Name',
-        'Date',
+        'Date (UTC)',
         'Image',
-        'RA',
-        'RA Error',
-        'Dec',
-        'Dec Error',
+        'RA (deg)',
+        'RA Error (arcsec)',
+        'Dec (deg)',
+        'Dec Error (arcsec)',
         'Int. Flux (mJy)',
         'Int. Flux Error (mJy)',
         'Peak Flux (mJy/beam)',
@@ -652,3 +769,133 @@ def SourceDetail(request, id, action=None):
 
     context = {'source': source, 'measurements': measurements}
     return render(request, 'source_detail.html', context)
+
+
+class ImageCutout(APIView):
+    def get(self, request, measurement_name, size="normal"):
+        measurement = Measurement.objects.get(name=measurement_name)
+        image_hdu: fits.PrimaryHDU = fits.open(measurement.image.path)[0]
+        coord = SkyCoord(ra=measurement.ra, dec=measurement.dec, unit="deg")
+        sizes = {
+            "xlarge": "40arcmin",
+            "large": "20arcmin",
+            "normal": "2arcmin",
+        }
+
+        filenames = {
+            "xlarge": f"{measurement.name}_cutout_xlarge.fits",
+            "large": f"{measurement.name}_cutout_large.fits",
+            "normal": f"{measurement.name}_cutout.fits",
+        }
+
+        cutout = Cutout2D(
+            image_hdu.data, coord, Angle(sizes[size]), wcs=WCS(image_hdu.header),
+            mode='partial'
+        )
+
+        # add beam properties to the cutout header and fix cdelts as JS9 does not deal
+        # with PCi_j properly
+        cdelt1, cdelt2 = proj_plane_pixel_scales(cutout.wcs)
+        cutout_header = cutout.wcs.to_header()
+        cutout_header.remove("PC1_1", ignore_missing=True)
+        cutout_header.remove("PC2_2", ignore_missing=True)
+        cutout_header.update(
+            CDELT1=-cdelt1,
+            CDELT2=cdelt2,
+            BMAJ=image_hdu.header["BMAJ"],
+            BMIN=image_hdu.header["BMIN"],
+            BPA=image_hdu.header["BPA"]
+        )
+
+        cutout_hdu = fits.PrimaryHDU(data=cutout.data, header=cutout_header)
+        cutout_file = io.BytesIO()
+        cutout_hdu.writeto(cutout_file)
+        cutout_file.seek(0)
+        response = FileResponse(
+            cutout_file,
+            as_attachment=True,
+            filename=filenames[size]
+        )
+        return response
+
+
+class MeasurementQuery(APIView):
+    def get(
+        self,
+        request,
+        ra_deg: float,
+        dec_deg: float,
+        image_id: int,
+        radius_deg: float,
+    ) -> FileResponse:
+        """Return a DS9/JS9 region file for all Measurement objects for a given cone search
+        on an Image. Optionally highlight sources based on a Measurement or Source ID.
+
+        Args:
+            request: Django HTTPRequest. Supports two URL GET parameters:
+                selection_model: either "measurement" or "source" (defaults to "measurement"); and
+                selection_id: the id for the given `selection_model`.
+                Measurement objects that match the given selection criterion will be
+                highlighted. e.g. ?selection_model=measurement&selection_id=100 will highlight
+                the Measurement object with id=100. ?selection_model=source&selection_id=5
+                will highlight all Measurement objects associated with the Source object with
+                id=5.
+            ra_deg: Cone search RA in decimal degrees.
+            dec_deg: Cone search Dec in decimal degrees.
+            image_id: Primary key (id) of the Image object to search.
+            radius_deg: Cone search radius in decimal degrees.
+
+        Returns:
+            FileResponse: Django FileReponse containing a DS9/JS9 region file.
+        """
+        columns = ["id", "name", "ra", "dec", "bmaj", "bmin", "pa", "forced", "source", "source__name"]
+        selection_model = request.GET.get("selection_model", "measurement")
+        selection_id = request.GET.get("selection_id", None)
+
+        # validate selection query params
+        if selection_id is not None:
+            if selection_model not in ("measurement", "source"):
+                raise Http404("GET param selection_model must be either 'measurement' or 'source'.")
+            if selection_model == "measurement":
+                selection_attr = "id"
+                selection_name = "name"
+            else:
+                selection_attr = selection_model
+                selection_name = "source__name"
+            try:
+                selection_id = int(selection_id)
+            except ValueError:
+                raise Http404("GET param selection_id must be an integer.")
+
+        measurements = (
+            Measurement.objects.filter(image=image_id)
+            .cone_search(ra_deg, dec_deg, radius_deg)
+            .values(*columns, __name=F(selection_name))
+        )
+        measurement_region_file = io.StringIO()
+        for meas in measurements:
+            if selection_id is not None:
+                color = "#FF0000" if meas[selection_attr] == selection_id else "#0000FF"
+            shape = (
+                f"ellipse({meas['ra']}d, {meas['dec']}d, {meas['bmaj']}\", {meas['bmin']}\", "
+                f"{meas['pa']+90+180}d)"
+            )
+            properties: Dict[str, Any] = {
+                "color": color,
+                "data": {
+                    "text": f"{selection_model} ID: {meas[selection_attr]}",
+                    "link": reverse(f"pipeline:{selection_model}_detail", args=[selection_id]),
+                }
+            }
+            if meas["forced"]:
+                properties.update(strokeDashArray=[3, 2])
+            region = f"{shape} {json.dumps(properties)}\n"
+            measurement_region_file.write(region)
+        measurement_region_file.seek(0)
+        f = io.BytesIO(bytes(measurement_region_file.read(), encoding="utf8"))
+        response = FileResponse(
+            f,
+            as_attachment=False,
+            filename=f"image-{image_id}_{ra_deg:.5f}_{dec_deg:+.5f}_radius-{radius_deg:.3f}.reg",
+        )
+        return response

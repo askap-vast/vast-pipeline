@@ -1,0 +1,24 @@
+var JS9Prefs = {
+	"globalOpts": {
+		"helperType": "none",
+		"helperPort": 2718,
+		"helperCGI": "./cgi-bin/js9/js9Helper.cgi",
+		"fits2png": false,
+		"debug": 0,
+		"loadProxy": true,
+		"workDir": "./tmp",
+		"workDirQuota": 100,
+		"dataPath": "$HOME/Desktop:$HOME/data",
+		"analysisPlugins": "./analysis-plugins",
+		"analysisWrappers": "./analysis-wrappers",
+		"installDir": "/static/vendor/js9",
+		"syncOps": ["colormap","contrastbias","flip","pan","rot90","scale","wcs","zoom"]
+	},
+	"imageOpts": {
+		"colormap": "grey",
+		"scale": "linear"
+	},
+	"textColorOpts": {
+		"info": "#000064"
+	}
+}
