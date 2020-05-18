@@ -104,8 +104,9 @@ def upload_images(paths, config, pipeline_run):
         )
 
         # save measurements to parquet file in pipeline run folder
-        if not os.path.exists(os.path.dirname(img.measurements_path)):
-            os.mkdir(os.path.dirname(img.measurements_path))
+        base_folder = os.path.dirname(img.measurements_path)
+        if not os.path.exists(base_folder):
+            os.makedirs(base_folder)
 
         measurements.drop('meas_dj', axis=1).to_parquet(
             img.measurements_path,

@@ -193,8 +193,8 @@ LOGGING = {
 }
 
 # PIPELINE settings
-# project default folder
-PROJECT_WORKING_DIR = os.path.join(BASE_DIR, 'pipeline-projects')
+# pipeline runs default folder
+PIPELINE_WORKING_DIR = os.path.join(BASE_DIR, 'pipeline-runs')
 
 # reference surveys default folder
 SURVEYS_WORKING_DIR = os.path.join(BASE_DIR, 'reference-surveys')

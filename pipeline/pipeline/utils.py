@@ -3,6 +3,7 @@ import logging
 import numpy as np
 import pandas as pd
 import dask.dataframe as dd
+from django.conf import settings
 
 from psutil import cpu_count
 from itertools import chain
@@ -100,13 +101,15 @@ def get_create_img(p_run, band_id, image):
 
         return (img, True)
 
-    # at this stage measurement parquet file not created but assume location
+    # at this stage, measurement parquet file is not created but
+    # assume location
     img_folder_name = '_'.join([
-        image.name.split('.i.', 1)[-1].split('.', 1)[0],
-        image.datetime.isoformat()
+        image.name.replace('.', '_'),
+        image.datetime.strftime('%Y-%m-%dT%H_%M_%S%z')
     ])
     measurements_path = os.path.join(
-        p_run.path,
+        settings.PIPELINE_WORKING_DIR,
+        'images',
         img_folder_name,
         'measurements.parquet'
         )

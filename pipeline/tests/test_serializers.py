@@ -20,7 +20,7 @@ class SerializerTest(TestCase):
         run_name = 'my_test_pipe_run'
         obj = mod.Run(
             name=run_name,
-            path=os.path.join(s.PROJECT_WORKING_DIR, run_name),
+            path=os.path.join(s.PIPELINE_WORKING_DIR, run_name),
             comment=f'this is the comment of my {run_name}'
         )
         return obj
@@ -76,13 +76,13 @@ class SerializerTest(TestCase):
             band=band,
             skyreg=skyreg,
             measurements_path=os.path.join(
-                s.PROJECT_WORKING_DIR,
+                s.PIPELINE_WORKING_DIR,
                 f'SB9602_{time.isoformat()}',
                 'measurements.parquet'
                 ),
             polarisation='I',
             name=image_name,
-            path=os.path.join(s.PROJECT_WORKING_DIR, 'images' , image_name),
+            path=os.path.join(s.PIPELINE_WORKING_DIR, 'images' , image_name),
             datetime=time,
             jd=time.to_julian_date(),
             duration=38290.3,
