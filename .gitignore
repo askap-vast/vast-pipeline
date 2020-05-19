@@ -95,3 +95,4 @@ celerybeat-schedule
 *project*/
 *run*/
 *survey*/
+**/*.env
