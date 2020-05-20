@@ -193,10 +193,14 @@ LOGGING = {
 
 # PIPELINE settings
 # project default folder
-PIPELINE_WORKING_DIR = env('PIPELINE_WORKING_DIR', cast=str, default=os.path.join(BASE_DIR, 'testing-pipe-runs'))
+PIPELINE_WORKING_DIR = env('PIPELINE_WORKING_DIR', cast=str, default=os.path.join(BASE_DIR, 'pipeline-runs'))
+if '/' not in PIPELINE_WORKING_DIR:
+    PIPELINE_WORKING_DIR = os.path.join(BASE_DIR, PIPELINE_WORKING_DIR)
 
 # reference surveys default folder
 SURVEYS_WORKING_DIR = env('SURVEYS_WORKING_DIR', cast=str, default=os.path.join(BASE_DIR, 'reference-surveys'))
+if '/' not in SURVEYS_WORKING_DIR:
+    SURVEYS_WORKING_DIR = os.path.join(BASE_DIR, SURVEYS_WORKING_DIR)
 
 # allowed source finders
 SOURCE_FINDERS = ['selavy']
