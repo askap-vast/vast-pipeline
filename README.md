@@ -10,7 +10,7 @@ If you intend to contribute to the code base please read and follow the guidelin
 - [Pipeline Configuration](#pipeline-configuration)
 - [Pipeline Usage](#pipeline-usage)
 	- [Initialise a Pipeline Run](#initialise-a-pipeline-run)
-	- [Run a Pipeline Instance](#run-the-pipeline)
+	- [Run a Pipeline Instance](#run-a-pipeline-instance)
 	- [Resetting a Pipeline Run](#resetting-a-pipeline-run)
 	- [Import survey data](#import-survey-data)
 - [Data Exploration via Django Web Server](#data-exploration-via-django-web-server)
