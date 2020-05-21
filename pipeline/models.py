@@ -362,10 +362,22 @@ class Image(models.Model):
     )# Beam minor axis (degrees)
     beam_bpa = models.FloatField(
     )# Beam position angle (degrees)
-    rms = models.FloatField(
-        default=0,
+    rms_avg = models.FloatField(
         help_text=(
-            'Background RMS based on sigma clipping of image data (mJy)'
+            'Background average RMS based on sigma clipping of image '
+            'data (mJy)'
+        )
+    )# Background RMS (mJy)
+    rms_min = models.FloatField(
+        help_text=(
+            'Background minimum RMS based on sigma clipping of image '
+            'data (mJy)'
+        )
+    )# Background RMS (mJy)
+    rms_max = models.FloatField(
+        help_text=(
+            'Background maximum RMS based on sigma clipping of image '
+            'data (mJy)'
         )
     )# Background RMS (mJy)
 
