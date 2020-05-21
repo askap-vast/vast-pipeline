@@ -2,6 +2,7 @@ import os
 import logging
 import numpy as np
 import pandas as pd
+from astropy.io import fits
 import dask.dataframe as dd
 from django.conf import settings
 
@@ -128,6 +129,10 @@ def get_create_img(p_run, band_id, image):
     # get create the sky region and associate with image
     skyreg = get_create_skyreg(p_run, img)
     img.skyreg = skyreg
+
+    img.rms_median, img.rms_min, img.rms_max = get_rms_noise_image_values(
+        img.noise_path
+    )
 
     img.save()
     img.run.add(p_run)
@@ -323,3 +328,25 @@ def get_source_models(row, pipeline_run=None):
         if getattr(fld, 'attname', None) and fld.attname in row.index:
             setattr(src, fld.attname, row[fld.attname])
     return src
+
+
+def get_rms_noise_image_values(rms_path):
+    '''
+    open the RMS noise FITS file and compute the median, max and min
+    rms values to be added to the image model and then used in the
+    calculations
+    '''
+    med_val = min_val = max_val = 0.
+    try:
+        with fits.open(rms_path) as f:
+            data = f[0].data
+            data = data[np.logical_not(np.isnan(data))]
+            data = data[data != 0]
+            med_val = np.median(data) * 1e+3
+            min_val = np.min(data) * 1e+3
+            max_val = np.max(data) * 1e+3
+            del data
+    except Exception:
+        raise IOError(f'Could not read this RMS FITS file: {rms_path}')
+
+    return med_val, min_val, max_val
