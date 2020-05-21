@@ -377,7 +377,7 @@ class Image(models.Model):
     )# Beam minor axis (degrees)
     beam_bpa = models.FloatField(
     )# Beam position angle (degrees)
-    rms_avg = models.FloatField(
+    rms_median = models.FloatField(
         help_text='Background average RMS from the provided RMS map.'
     )# Background RMS (mJy)
     rms_min = models.FloatField(
