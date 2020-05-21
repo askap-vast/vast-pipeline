@@ -30,15 +30,22 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        p_run_path = options['run_folder_path'][0]
+        run_folder = os.path.realpath(p_run_path)
         # configure logging
+        root_logger = logging.getLogger('')
+        f_handler = logging.FileHandler(
+            os.path.join(run_folder, 'log.txt'),
+            mode='w'
+        )
+        f_handler.setFormatter(root_logger.handlers[0].formatter)
+        root_logger.addHandler(f_handler)
+
         if options['verbosity'] > 1:
             # set root logger to use the DEBUG level
-            root_logger = logging.getLogger('')
             root_logger.setLevel(logging.DEBUG)
             # set the traceback on
             options['traceback'] = True
-
-        p_run_path = options['run_folder_path'][0]
 
         p_run_name = p_run_path
         # remove ending / if present
@@ -47,7 +54,7 @@ class Command(BaseCommand):
         # grab only the name from the path
         p_run_name = p_run_name.split(os.path.sep)[-1]
 
-        cfg_path = os.path.join(os.path.realpath(p_run_path), 'config.py')
+        cfg_path = os.path.join(run_folder, 'config.py')
 
         # load and validate run configs
         try:
