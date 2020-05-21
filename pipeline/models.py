@@ -10,10 +10,12 @@ class Survey(models.Model):
     name = models.CharField(
         max_length=32,
         unique=True,
-        help_text='Name of the Survey e.g. NVSS'
+        help_text='Name of the Survey e.g. NVSS.'
     )
     comment = models.TextField(max_length=1000, default='', blank=True)
-    frequency = models.IntegerField(help_text='Frequency of the survey')
+    frequency = models.IntegerField(
+        help_text='Frequency of the survey.'
+    )
 
     class Meta:
         ordering = ['name']
@@ -51,47 +53,60 @@ class SurveySource(models.Model):
 
     name = models.CharField(
         max_length=100,
-        help_text='Name of the survey source'
+        help_text='Name of the survey source.'
     )
 
-    ra = models.FloatField(help_text='RA of the survey source (Deg)')# degrees
-    ra_err = models.FloatField('RA error of the survey source (Deg)')# degrees
-    dec = models.FloatField('DEC of the survey source (Deg)')# degrees
-    dec_err = models.FloatField('DEC error of the survey source (Deg)')# degrees
+    ra = models.FloatField(
+        help_text='RA of the survey source (Deg).'
+    )# degrees
+    ra_err = models.FloatField(
+        help_text='RA error of the survey source (Deg).'
+        )# degrees
+    dec = models.FloatField(
+        help_text='DEC of the survey source (Deg).'
+    )# degrees
+    dec_err = models.FloatField(
+        help_text='DEC error of the survey source (Deg).'
+    )# degrees
 
     bmaj = models.FloatField(
         help_text=(
-            'The major axis of the Gaussian fit to the survey source (arcsecs)'
+            'The major axis of the Gaussian fit to the survey source '
+            '(arcsecs).'
         )
     )# major axis (arcsecs)
     bmin = models.FloatField(
         help_text=(
-            'The minor axis of the Gaussian fit to the survey source (arcsecs)'
+            'The minor axis of the Gaussian fit to the survey source '
+            '(arcsecs).'
         )
     )# minor axis (arcsecs)
     pa = models.FloatField(
-        help_text='Position angle of Gaussian fit east of north to bmaj (Deg)'
+        help_text=(
+            'Position angle of Gaussian fit east of north to bmaj '
+            '(Deg).'
+        )
     )# position angle (degrees east of north)
 
     flux_peak = models.FloatField(
-        help_text='Peak flux of the Guassian fit (Jy)'
+        help_text='Peak flux of the Guassian fit (Jy).'
     )# Jy/beam
     flux_peak_err = models.FloatField(
-        help_text='Peak flux error of the Gaussian fit (Jy)'
+        help_text='Peak flux error of the Gaussian fit (Jy).'
     )# Jy/beam
     flux_int = models.FloatField(
-        help_text='Integrated flux of the Guassian fit (Jy)'
+        help_text='Integrated flux of the Guassian fit (Jy).'
     )# total flux Jy
     flux_int_err = models.FloatField(
-        help_text='Integrated flux of the Guassian fit (Jy)'
+        help_text='Integrated flux of the Guassian fit (Jy).'
     )# Jy
 
     alpha = models.FloatField(default=0,
-        help_text='Spectral index of the survey source'
+        help_text='Spectral index of the survey source.'
     )# Spectral index of source
     image_name = models.CharField(max_length=100,
         blank=True,
-        help_text='Name of survey image where measurement was made'
+        help_text='Name of survey image where measurement was made.'
     )# image file
 
     objects = SurveySourceQuerySet.as_manager()
@@ -118,7 +133,7 @@ class Run(models.Model):
     )
     time = models.DateTimeField(
         auto_now=True,
-        help_text='Datetime of run'
+        help_text='Datetime of run.'
     )# run date/time of the pipeline run
     path = models.FilePathField(max_length=200)# the path to the pipeline run
     comment = models.TextField(
@@ -219,7 +234,7 @@ class Source(models.Model):
 
     name = models.CharField(max_length=100)
     comment = models.TextField(max_length=1000, default='', blank=True)
-    new = models.BooleanField(default=False, help_text='New Source')
+    new = models.BooleanField(default=False, help_text='New Source.')
 
     # average fields calculated from the source measurements
     wavg_ra = models.FloatField(
@@ -230,38 +245,38 @@ class Source(models.Model):
     )
     wavg_uncertainty_ew = models.FloatField(
         help_text=(
-            'The weighted average uncertainty in the east-.'
+            'The weighted average uncertainty in the east-'
             'west (RA) direction (Deg).'
         )
     )
     wavg_uncertainty_ns = models.FloatField(
         help_text=(
-            'The weighted average uncertainty in the north-.'
+            'The weighted average uncertainty in the north-'
             'south (Dec) direction (Deg).'
         )
     )
     avg_flux_int = models.FloatField(
-        help_text='The average integrated flux value'
+        help_text='The average integrated flux value.'
     )
     avg_flux_peak = models.FloatField(
-        help_text='The average peak flux value'
+        help_text='The average peak flux value.'
     )
     max_flux_peak = models.FloatField(
-        help_text='The maximum peak flux value'
+        help_text='The maximum peak flux value.'
     )
 
     # metrics
     v_int = models.FloatField(
-        help_text='V metric for int flux'
+        help_text='V metric for int flux.'
     )
     v_peak = models.FloatField(
-        help_text='V metric for peak flux'
+        help_text='V metric for peak flux.'
     )
     eta_int = models.FloatField(
-        help_text='Eta metric for int flux'
+        help_text='Eta metric for int flux.'
     )
     eta_peak = models.FloatField(
-        help_text='Eta metric for peak flux'
+        help_text='Eta metric for peak flux.'
     )
 
     objects = SourceQuerySet.as_manager()
@@ -282,103 +297,94 @@ class Image(models.Model):
     )# the path to the measurements parquet that belongs to this image
     polarisation = models.CharField(
         max_length=2,
-        help_text='Polarisation of the image e.g. I,XX,YY,Q,U,V'
+        help_text='Polarisation of the image e.g. I,XX,YY,Q,U,V.'
     )# eg XX,YY,I,Q,U,V
     name = models.CharField(
         max_length=200,
-        help_text='Name of the image'
+        help_text='Name of the image.'
     )
     path = models.FilePathField(
         max_length=500,
-        help_text='Path to the file containing the image'
+        help_text='Path to the file containing the image.'
     )# the path to the file containing this image
     noise_path = models.FilePathField(
         max_length=300,
         blank=True,
         default='',
-        help_text='Path to the file containing the RMS image'
+        help_text='Path to the file containing the RMS image.'
     )# includes filename
     background_path = models.FilePathField(
         max_length=300,
         blank=True,
         default='',
-        help_text='Path to the file containing the background image'
+        help_text='Path to the file containing the background image.'
     )# includes filename
     valid = models.BooleanField(
         default=True,
-        help_text='Is the image valid'
+        help_text='Is the image valid.'
     )# Is the image valid?
 
     datetime = models.DateTimeField(
-        help_text='Date of observation'
+        help_text='Date of observation.'
     )# date/time of observation, aka epoch
     jd = models.FloatField(
-        help_text='Julian date of the observation (days)'
+        help_text='Julian date of the observation (days).'
     )# date/time of observation in Julian Date format
     duration =  models.FloatField(
         default=0.,
-        help_text='Duration of the observation'
+        help_text='Duration of the observation.'
     )# Duration of the observation
 
     flux_gain = models.FloatField(
         default=1,
         help_text=(
-            'Gain of the image, multiplicative factor to change the'
-            ' relative flux scale'
+            'Gain of the image, multiplicative factor to change the '
+            'relative flux scale.'
         )
     )# flux gain factor
     flux_gain_err = models.FloatField(
         default=0,
-        help_text='Error on the image gain'
+        help_text='Error on the image gain.'
     )# std in flux gain factor
 
     ra = models.FloatField(
-        help_text='RA of the image centre (Deg)'
+        help_text='RA of the image centre (Deg).'
     )# RA of image centre (degrees)
     dec = models.FloatField(
-        help_text='DEC of the image centre (Deg)'
+        help_text='DEC of the image centre (Deg).'
     )# Dec of image centre (degrees)
     fov_bmaj = models.FloatField(
-        help_text='Field of view major axis (Deg)'
+        help_text='Field of view major axis (Deg).'
     )# Major (Dec) radius of image (degrees)
     fov_bmin = models.FloatField(
-        help_text='Field of view minor axis '
+        help_text='Field of view minor axis (Deg).'
     )# Minor (RA) radius of image (degrees)
     physical_bmaj = models.FloatField(
-        help_text='The actual size of the image major axis (Deg)'
+        help_text='The actual size of the image major axis (Deg).'
     )# Major (Dec) radius of image (degrees)
     physical_bmin = models.FloatField(
-        help_text='The actual size of the image minor axis (Deg)'
+        help_text='The actual size of the image minor axis (Deg).'
     )# Minor (RA) radius of image (degrees)
     radius_pixels = models.FloatField(
-        help_text='Radius of the useable region of the image (pixels)'
+        help_text='Radius of the useable region of the image (pixels).'
     )# Radius of the useable region of the image (pixels)
 
     beam_bmaj = models.FloatField(
-        help_text='Major axis of image restoring beam (Deg)'
+        help_text='Major axis of image restoring beam (Deg).'
     )# Beam major axis (degrees)
     beam_bmin = models.FloatField(
-        help_text='Minor axis of image restoring beam (Deg)'
+        help_text='Minor axis of image restoring beam (Deg).'
     )# Beam minor axis (degrees)
     beam_bpa = models.FloatField(
     )# Beam position angle (degrees)
     rms_avg = models.FloatField(
-        help_text=(
-            'Background average RMS based on sigma clipping of image '
-            'data (mJy)'
-        )
+        help_text='Background average RMS from the provided RMS map.'
     )# Background RMS (mJy)
     rms_min = models.FloatField(
-        help_text=(
-            'Background minimum RMS based on sigma clipping of image '
-            'data (mJy)'
-        )
+        help_text='Background minimum RMS from the provided RMS map.'
     )# Background RMS (mJy)
     rms_max = models.FloatField(
-        help_text=(
-            'Background maximum RMS based on sigma clipping of image '
-            'data (mJy)'
-        )
+        help_text='Background maximum RMS from the provided RMS map.'
     )# Background RMS (mJy)
 
     flux_percentile = models.FloatField(default=0)# Pixel flux at 95th percentile
@@ -429,21 +435,32 @@ class Measurement(models.Model):
 
     name = models.CharField(max_length=64, unique=True)
 
-    ra = models.FloatField(help_text='RA of the source (Deg)')# degrees
-    ra_err = models.FloatField(help_text='RA error of the source (Deg)')
-    dec = models.FloatField(help_text='DEC of the source (Deg)')# degrees
-    dec_err = models.FloatField(help_text='DEC error of the source (Deg)')
+    ra = models.FloatField(help_text='RA of the source (Deg).')# degrees
+    ra_err = models.FloatField(
+        help_text='RA error of the source (Deg).'
+    )
+    dec = models.FloatField(help_text='DEC of the source (Deg).')# degrees
+    dec_err = models.FloatField(
+        help_text='DEC error of the source (Deg).'
+    )
 
     bmaj = models.FloatField(
-        help_text='The major axis of the Gaussian fit to the source (Deg)'
+        help_text=(
+            'The major axis of the Gaussian fit to the source (Deg).'
+        )
     )# Major axis (degrees)
     err_bmaj = models.FloatField()# Error major axis (degrees)
     bmin = models.FloatField(
-        help_text='The minor axis of the Gaussian fit to the source (Deg)'
+        help_text=(
+            'The minor axis of the Gaussian fit to the source (Deg).'
+        )
     )# Minor axis (degrees)
     err_bmin = models.FloatField()# Error minor axis (degrees)
     pa = models.FloatField(
-        help_text='Position angle of Gaussian fit east of north to bmaj (Deg)'
+        help_text=(
+            'Position angle of Gaussian fit east of north to bmaj '
+            '(Deg).'
+        )
     )# Position angle (degrees)
     err_pa = models.FloatField()# Error position angle (degrees)
 
@@ -474,8 +491,8 @@ class Measurement(models.Model):
      # quadratic sum of error_radius and ns_sys_err
     uncertainty_ns = models.FloatField(
         help_text=(
-            'Total north-south (Dec) uncertainty, quadratic sum of error_radius'
-            ' and ns_sys_err (Deg).'
+            'Total north-south (Dec) uncertainty, quadratic sum of '
+            'error_radius and ns_sys_err (Deg).'
         )
     )# Uncertainty in Dec (degrees).
 
@@ -485,56 +502,62 @@ class Measurement(models.Model):
     flux_peak_err = models.FloatField()# mJy/beam
     chi_squared_fit = models.FloatField(
         db_column='chi2_fit',
-        help_text='Chi-squared of the Guassian fit to the source'
+        help_text='Chi-squared of the Guassian fit to the source.'
     )# chi-squared of Gaussian fit
     spectral_index = models.FloatField(
         db_column='spectr_idx',
-        help_text='In-band Selavy spectral index'
+        help_text='In-band Selavy spectral index.'
     )# In band spectral index from Selavy
     spectral_index_from_TT = models.BooleanField(
         default=False,
         db_column='spectr_idx_tt',
         help_text=(
-            'True/False if the spectral index came from the taylor'
-            ' term came'
+            'True/False if the spectral index came from the taylor '
+            'term came.'
         )
     )# Did the spectral index come from the taylor term
 
-    local_rms = models.FloatField()# mJy/beam
+    local_rms = models.FloatField(
+        help_text='Local rms in mJy from Selavy.'
+    )# mJy/beam
 
     flag_c4 = models.BooleanField(
         default=False,
-        help_text='Fit flag from selavy'
+        help_text='Fit flag from Selavy.'
     )# Fit flag from selavy file
 
     has_siblings = models.BooleanField(
         default=False,
-        help_text='Does the fit come from an island'
+        help_text='Does the fit come from an island.'
     )# Does the fit come from an island?
     component_id = models.CharField(
         max_length=64,
-        help_text='The ID of the component from which the source comes from'
+        help_text=(
+            'The ID of the component from which the source comes from.'
+        )
     )# The ID of the component from which the source comes from
     island_id = models.CharField(
         max_length=64,
-        help_text='The ID of the island from which the source comes from'
+        help_text=(
+            'The ID of the island from which the source comes from.'
+        )
     )# The ID of the island from which the source comes from
 
     monitor = models.BooleanField(
         default=False,
-        help_text='Are we monitoring this location'
+        help_text='Are we monitoring this location.'
     )# Are we monitoring this location?
     persistent = models.BooleanField(
         default=False,
-        help_text='Keep this source between pipeline runs'
+        help_text='Keep this source between pipeline runs.'
     )
     quality = models.NullBooleanField(
         default=False,
-        help_text='Is this a quality source for analysis purposes'
+        help_text='Is this a quality source for analysis purposes.'
     )# Is this a "quality" source for analysis purposes?
     forced = models.BooleanField(
         default=False,
-        help_text='True: the measurement is forced extracted'
+        help_text='True: the measurement is forced extracted.'
     )
 
     objects = SourceQuerySet.as_manager()
@@ -573,7 +596,8 @@ class CrossMatch(models.Model):
 
 class Association(models.Model):
     """
-    model association between sources and measurements based on some parameters
+    model association between sources and measurements based on
+    some parameters
     """
     source = models.ForeignKey(Source, on_delete=models.CASCADE)
     meas = models.ForeignKey(Measurement, on_delete=models.CASCADE)
@@ -584,7 +608,7 @@ class Association(models.Model):
     )
     dr = models.FloatField(
         default=0.,
-        help_text='De Roiter radius calculated in advanced association'
+        help_text='De Roiter radius calculated in advanced association.'
     )
 
     def __str__(self):
