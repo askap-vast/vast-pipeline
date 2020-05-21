@@ -183,11 +183,6 @@ LOGGING = {
             'propagate': True,
             'level': 'INFO',
         },
-        'Aegean': {
-            'handlers': ['console'],
-            'propagate': True,
-            'level': 'INFO',
-        },
     }
 }
 
