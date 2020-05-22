@@ -58,6 +58,9 @@
           <p><strong>Beam BMAJ: </strong> {{ image.beam_bmaj|deg_to_arcsec|floatformat:3 }}''</p>
           <p><strong>Beam BMIN: </strong> {{ image.beam_bmin|deg_to_arcsec|floatformat:3 }}''</p>
           <p><strong>Beam BPA: </strong> {{ image.beam_bpa|floatformat:2 }}&deg;</p>
+          <p><strong>Median RMS: </strong> {{ image.rms_median|floatformat:2 }} mJy</p>
+          <p><strong>Min RMS: </strong> {{ image.rms_min|floatformat:2 }} mJy</p>
+          <p><strong>Max RMS: </strong> {{ image.rms_max|floatformat:2 }} mJy</p>
           <p><strong>Comment: </strong> {{ image.comment }}</p>
         </div>
       </div>

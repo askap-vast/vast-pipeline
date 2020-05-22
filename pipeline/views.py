@@ -91,6 +91,18 @@ FLOAT_FIELDS = {
         'precision': 3,
         'scale': 1,
     },
+    'rms_median': {
+        'precision': 2,
+        'scale': 1,
+    },
+    'rms_min': {
+        'precision': 2,
+        'scale': 1,
+    },
+    'rms_max': {
+        'precision': 2,
+        'scale': 1,
+    },
 }
 
 
@@ -240,7 +252,15 @@ def RunDetail(request, id):
 
 # Images table
 def ImageIndex(request):
-    fields = ['name', 'datetime', 'ra', 'dec']
+    fields = [
+        'name',
+        'datetime',
+        'ra',
+        'dec',
+        'rms_median',
+        'rms_min',
+        'rms_max'
+    ]
 
     colsfields = generate_colsfields(fields, '/images/')
 
@@ -256,8 +276,17 @@ def ImageIndex(request):
             'datatable': {
                 'api': '/api/images/?format=datatables',
                 'colsFields': colsfields,
-                'colsNames': ['Name', 'Time (UTC)', 'RA (deg)', 'Dec (deg)'],
+                'colsNames': [
+                    'Name',
+                    'Time (UTC)',
+                    'RA (deg)',
+                    'Dec (deg)',
+                    'Median RMS (mJy)',
+                    'Min RMS (mJy)',
+                    'Max RMS (mJy)',
+                ],
                 'search': True,
+                'order': [1, 'asc']
             }
         }
     )
