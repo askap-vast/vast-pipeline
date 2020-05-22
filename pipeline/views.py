@@ -92,15 +92,15 @@ FLOAT_FIELDS = {
         'scale': 1,
     },
     'rms_median': {
-        'precision': 2,
+        'precision': 3,
         'scale': 1,
     },
     'rms_min': {
-        'precision': 2,
+        'precision': 3,
         'scale': 1,
     },
     'rms_max': {
-        'precision': 2,
+        'precision': 3,
         'scale': 1,
     },
 }
