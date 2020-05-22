@@ -10,32 +10,23 @@ If you intend to contribute to the code base please read and follow the guidelin
 - [Pipeline Configuration](#pipeline-configuration)
 - [Pipeline Usage](#pipeline-usage)
 	- [Initialise a Pipeline Run](#initialise-a-pipeline-run)
-	- [Run a Pipeline Instance](#run-the-pipeline)
+	- [Run a Pipeline Instance](#run-a-pipeline-instance)
 	- [Resetting a Pipeline Run](#resetting-a-pipeline-run)
 	- [Import survey data](#import-survey-data)
 - [Data Exploration via Django Web Server](#data-exploration-via-django-web-server)
 
 ## Pipeline Configuration
 The following instructions, will get you started in setting up the database and pipeline configuration
-1. Copy the settings template
+1. Copy the setting configuration file template, and fill it with your settings (see [defaults](./webinterface/.env.template))
 
 ```bash
-cp webinterface/settings.template.py webinterface/settings.py
+cp webinterface/.env.template webinterface/.env
 ```
 
-2. Choose a database name and user with password (e.g. database name: `vastdb`; user: `vast`, psw: `vastpsw`), and add the connection details in `settings.py`
+2. Choose a database name and user with password (e.g. database name: `vastdb`; user: `vast`, psw: `vastpsw`), and add the connection details in `.env` (for URL syntax see [this link](https://django-environ.readthedocs.io/en/latest/#tips))
 
-```Python
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'vastdb',
-        'USER': 'vast',
-        'PASSWORD': 'vastpsw',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
-}
+```cmake
+DATABASE_URL=psql://FILLMYUSER:FILLMYPASSWORD@FILLMYHOST:FILLMYPORT/FILLMYDBNAME
 ```
 
 NOTE: the connection details (host and port) are the same that you setup in [`INSTALL.md`](./INSTALL.md). The database/user names must not contain any spaces or dashes, so use the underscore if you want, e.g. `this_is_my_db_name`.
@@ -73,33 +64,33 @@ creating db 'vastdb'
 (pipeline_env)$:./manage.py migrate
 ```
 
-5. Create the directories listed at the bottom of `settings.py`
+5. Create the directories listed at the bottom of `settings.py` and update the details on your setting configuration file `.env` (single name, e.g. `pipeline-runs` means path relative to `BASE_DIR`, so the main folder where you cloned the repo).
 
 ```Python
 # reference surveys default folder
-PROJECT_WORKING_DIR = os.path.join(BASE_DIR, 'pipeline-projects')
+PIPELINE_WORKING_DIR = env('PIPELINE_WORKING_DIR', cast=str, default=os.path.join(BASE_DIR, 'pipeline-runs'))
 
 # reference surveys default folder
-SURVEYS_WORKING_DIR = os.path.join(BASE_DIR, 'reference-surveys')
+SURVEYS_WORKING_DIR = env('SURVEYS_WORKING_DIR', cast=str, default=os.path.join(BASE_DIR, 'reference-surveys'))
 ```
 
-Create the folders with (Note: make sure you change BASE_DIR to vast-pipeline or whatever folder you clone the repo in):
+The defaults values of the folders are pre-filled in your [`.env`](./webinterface/.env.template) file, and even if that variables are not present in such file, the settings assumed the default values, which are relative to the main repo folder. So create the folders with (Note: make sure you change BASE_DIR to vast-pipeline or whatever folder you clone the repo in):
 
 ```bash
-cd BASE_DIR && mkdir pipeline-projects && mkdir reference-surveys
+cd BASE_DIR && mkdir pipeline-runs && mkdir reference-surveys
 ```
 
-After creating the folders your directory tree should look like this:
+After creating the folders with the defaults values your directory tree should look like this:
 
 ```bash
 vast-pipeline/
 ├── init-tools
 ├── pipeline
+├── pipeline-runs
 ├── reference-surveys
 ├── requirements
 ├── static
 ├── templates
-├── pipeline-projects
 ├── webinterface
 ├── DEVELOPING.md
 ├── INSTALL.md
@@ -193,7 +184,34 @@ The pipeline is run using `runpipeline` django command.
 
 Output:
 ```bash
-TBC
+usage: manage.py runpipeline [-h] [--version] [-v {0,1,2,3}]
+                             [--settings SETTINGS] [--pythonpath PYTHONPATH]
+                             [--traceback] [--no-color] [--force-color]
+                             [--skip-checks]
+                             run_folder_path
+
+Process the pipeline for a list of images or a Selavy catalog
+
+positional arguments:
+  run_folder_path       path to the pipeline run folder
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --version             show program's version number and exit
+  -v {0,1,2,3}, --verbosity {0,1,2,3}
+                        Verbosity level; 0=minimal output, 1=normal output,
+                        2=verbose output, 3=very verbose output
+  --settings SETTINGS   The Python path to a settings module, e.g.
+                        "myproject.settings.main". If this isn't provided, the
+                        DJANGO_SETTINGS_MODULE environment variable will be
+                        used.
+  --pythonpath PYTHONPATH
+                        A directory to add to the Python path, e.g.
+                        "/home/djangoprojects/myproject".
+  --traceback           Raise on CommandError exceptions
+  --no-color            Don't colorize the command output.
+  --force-color         Force colorization of the command output.
+  --skip-checks         Skip system checks.
 ```
 
 General usage:

@@ -11,6 +11,13 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
+import environ
+from typing import List
+
+# Load the Django congig from the .env file
+env = environ.Env()
+environ.Env.read_env()
+
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -20,13 +27,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'FillMeUPWithSomeComplicatedString'
+SECRET_KEY = env('SECRET_KEY', cast=str, default='FillMeUPWithSomeComplicatedString')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env('DEBUG', cast=bool, default=True)
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS: List[str] = env('ALLOWED_HOSTS', cast=list, default=[])
 
 # Application definition
 
@@ -38,11 +44,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
-    'pipeline.apps.PipelineConfig',
     'rest_framework',
     'rest_framework_datatables',
-    'django_extensions',
-]
+    # pipeline app and others
+    'pipeline.apps.PipelineConfig',
+] + env('EXTRA_APPS', cast=list, default=[])
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -52,7 +58,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-]
+] + env('EXTRA_MIDDLEWARE', cast=list, default=[])
 
 ROOT_URLCONF = 'webinterface.urls'
 
@@ -82,14 +88,7 @@ WSGI_APPLICATION = 'webinterface.wsgi.application'
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'FILLME',
-        'USER': 'FILLME',
-        'PASSWORD': 'FILLME',
-        'HOST': 'FILLME',
-        'PORT': 'FILLME',
-    }
+    'default': env.db()
 }
 
 
@@ -142,11 +141,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = env('STATIC_URL', cast=str, default='/static/')
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'static'),
 )
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = env('STATIC_ROOT', cast=str, default=os.path.join(BASE_DIR, 'staticfiles'))
 
 # Logging
 LOGGING = {
@@ -193,11 +192,15 @@ LOGGING = {
 }
 
 # PIPELINE settings
-# pipeline runs default folder
-PIPELINE_WORKING_DIR = os.path.join(BASE_DIR, 'pipeline-runs')
+# project default folder
+PIPELINE_WORKING_DIR = env('PIPELINE_WORKING_DIR', cast=str, default=os.path.join(BASE_DIR, 'pipeline-runs'))
+if '/' not in PIPELINE_WORKING_DIR:
+    PIPELINE_WORKING_DIR = os.path.join(BASE_DIR, PIPELINE_WORKING_DIR)
 
 # reference surveys default folder
-SURVEYS_WORKING_DIR = os.path.join(BASE_DIR, 'reference-surveys')
+SURVEYS_WORKING_DIR = env('SURVEYS_WORKING_DIR', cast=str, default=os.path.join(BASE_DIR, 'reference-surveys'))
+if '/' not in SURVEYS_WORKING_DIR:
+    SURVEYS_WORKING_DIR = os.path.join(BASE_DIR, SURVEYS_WORKING_DIR)
 
 # allowed source finders
 SOURCE_FINDERS = ['selavy']
@@ -206,7 +209,7 @@ SOURCE_FINDERS = ['selavy']
 DEFAULT_SOURCE_FINDER = 'selavy'
 
 # minimum default accepted error on flux
-FLUX_DEFAULT_MIN_ERROR = 0.001
+FLUX_DEFAULT_MIN_ERROR = env('FLUX_DEFAULT_MIN_ERROR', cast=float, default=0.001)
 
 # minimum default accepted error on ra and dec
-POS_DEFAULT_MIN_ERROR = 0.01
+POS_DEFAULT_MIN_ERROR = env('POS_DEFAULT_MIN_ERROR', cast=float, default=0.01)

@@ -108,7 +108,7 @@ Or even better
 
 ## Reset the database
 
-Make sure you installed the [`requirements-dev.txt`](./requirements/requirements-dev.txt). And `django_extensions` is in `INSTALLED_APPS` in your settings file (i.e. `settings.py`).
+Make sure you installed the [`requirements-dev.txt`](./requirements/requirements-dev.txt). And `django_extensions` is in `EXTRA_APPS` in your setting configuration file `.env` (e.g. `EXTRA_APPS=django_extensions,another_app,...`).
 
 ```bash
 (pipeline_env)$: ./manage.py reset_db && ./manage.py migrate
