@@ -336,6 +336,7 @@ def get_rms_noise_image_values(rms_path):
     rms values to be added to the image model and then used in the
     calculations
     '''
+    logger.debug('Extracting Image RMS values from Noise file...')
     med_val = min_val = max_val = 0.
     try:
         with fits.open(rms_path) as f:
