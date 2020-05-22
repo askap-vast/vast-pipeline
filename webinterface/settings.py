@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import os
 import environ
-from typing import List
 
 # Load the Django congig from the .env file
 env = environ.Env()
@@ -32,7 +31,7 @@ SECRET_KEY = env('SECRET_KEY', cast=str, default='FillMeUPWithSomeComplicatedStr
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG', cast=bool, default=True)
 
-ALLOWED_HOSTS: List[str] = env('ALLOWED_HOSTS', cast=list, default=[])
+ALLOWED_HOSTS = env('ALLOWED_HOSTS', cast=list, default=[])
 
 # Application definition
 
