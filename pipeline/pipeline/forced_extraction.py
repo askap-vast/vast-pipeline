@@ -130,6 +130,41 @@ def parallel_extraction(df, df_images):
     return out
 
 
+def write_group_to_parquet(df, run_path):
+    '''
+    write a dataframe correpondent to a single group/image
+    to a parquet file
+    '''
+    img_name = df['image'].iloc[0]
+    fname = os.path.join(
+        run_path,
+        'forced_measurements_' + img_name.replace('.','_') +
+        '.parquet'
+    )
+    (
+        df.drop(['source', 'meas_dj', 'image'], axis=1)
+        .to_parquet(fname, index=False)
+    )
+
+    return {'out': True}
+
+def parallel_write_parquet(df, run_path):
+    '''
+    parallelize writing parquet files for forced measurments
+    '''
+    n_cpu = cpu_count() - 1
+    (
+        dd.from_pandas(df, n_cpu)
+        .groupby('image')
+        .apply(
+            write_group_to_parquet,
+            run_path=run_path,
+            meta=('out', '?')
+        )
+    )
+    pass
+
+
 def forced_extraction(
         sources_df, cfg_err_ra, cfg_err_dec, p_run, meas_dj_obj
     ):
@@ -298,22 +333,7 @@ def forced_extraction(
     logger.info(
         'Saving forced measurements to specific parquet file...'
     )
-    for grp_name, grp_df in extr_df.groupby('image'):
-        fname = os.path.join(
-            p_run.path,
-            'forced_measurements_' + grp_name.replace('.','_') +
-            '.parquet'
-        )
-        (
-            grp_df.drop(
-                ['source', 'meas_dj', 'image'],
-                axis=1
-            )
-            .to_parquet(
-                fname,
-                index=False
-            )
-        )
+    parallel_write_parquet(extr_df, p_run.path)
 
     # append new measurements to prev meas df
     meas_dj_obj = meas_dj_obj.append(
