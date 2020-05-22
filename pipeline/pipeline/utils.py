@@ -321,11 +321,16 @@ def calc_ave_coord(grp):
 
 
 def parallel_groupby_coord(df):
+    col_dtype = {
+        'img_list': 'O',
+        'wavg_ra': 'f',
+        'wavg_dec': 'f',
+    }
     n_cpu = cpu_count() - 1
     out = dd.from_pandas(df, n_cpu)
     out = (
         out.groupby('source')
-        .apply(calc_ave_coord)
+        .apply(calc_ave_coord, meta=col_dtype)
         .compute(num_workers=n_cpu, scheduler='processes')
     )
     return out
