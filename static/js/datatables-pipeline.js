@@ -39,6 +39,7 @@ $(document).ready(function() {
       serverSide: true,
       ajax: dataConf.api,
       columns: dataConf.colsFields,
+      order: dataConf.order,
     };
   } else {
     // expect that there is a 'data' attribute with the data
