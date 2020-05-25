@@ -163,9 +163,11 @@ class FitsImage(Image):
 class SelavyImage(FitsImage):
     """Fits images that have a selavy catalogue"""
 
-    def __init__(self, path, selavy_path, hdu_index=0, config=None):
+    def __init__(self, path, paths, hdu_index=0, config=None):
         # inherit from parent
-        self.selavy_path = selavy_path
+        self.selavy_path = paths['selavy'][path]
+        self.noise_path = paths['noise'][path]
+        self.background_path = paths['background'][path]
         self.config = config
         super().__init__(path, hdu_index)
 
