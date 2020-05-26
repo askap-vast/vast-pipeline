@@ -115,17 +115,19 @@ def parallel_extraction(df, df_images):
         'pa': 'f',
         'image_id': 'i',
     }
-    n_cpu = cpu_count() - 1
-    out = dd.from_pandas(df, n_cpu)
     out = (
-        out.explode('img_diff')
+        df.explode('img_diff')
         .reset_index()
         .rename(columns={'img_diff':'image', 'source':'source_tmp_id'})
+    )
+    n_cpu = cpu_count() - 1
+    out = (
+        dd.from_pandas(out, n_cpu)
         .groupby('image')
         .apply(extract_from_image, images_df=df_images, meta=col_dtype)
+        .dropna(subset=['flux_int'])
         .compute(num_workers=n_cpu, scheduler='processes')
         .rename(columns={'wavg_ra':'ra', 'wavg_dec':'dec'})
-        .dropna(subset=['flux_int'])
     )
     return out
 
