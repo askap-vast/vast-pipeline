@@ -35,19 +35,18 @@ class Pipeline():
         self.img_paths['selavy'] = {
             x:y for x,y in zip(config.IMAGE_FILES, config.SELAVY_FILES)
         }
-        if config.MONITOR:
-            self.img_paths['noise'] = {
-                x:y for x,y in zip(
-                    config.IMAGE_FILES,
-                    config.NOISE_FILES
-                )
-            }
-            self.img_paths['background'] = {
-                x:y for x,y in zip(
-                    config.IMAGE_FILES,
-                    config.BACKGROUND_FILES
-                )
-            }
+        self.img_paths['noise'] = {
+            x:y for x,y in zip(
+                config.IMAGE_FILES,
+                config.NOISE_FILES
+            )
+        }
+        self.img_paths['background'] = {
+            x:y for x,y in zip(
+                config.IMAGE_FILES,
+                config.BACKGROUND_FILES
+            )
+        }
 
     def process_pipeline(self, p_run):
         images, meas_dj_obj = upload_images(

@@ -1,4 +1,6 @@
+import os
 import logging
+import pandas as pd
 
 from pipeline.models import Association
 from pipeline.utils.utils import StopWatch
@@ -32,9 +34,18 @@ def final_operations(sources_df, first_img, p_run, meas_dj_obj):
     # upload sources and related to DB
     upload_sources(p_run, srcs_df)
 
+    # write sources to parquet file
+    srcs_df = srcs_df.drop(['related_list', 'img_list'], axis=1)
+    srcs_df['id'] = srcs_df['src_dj'].apply(getattr, args=('id',))
+    (
+        srcs_df.drop('src_dj', axis=1)
+        .to_parquet(os.path.join(p_run.path, 'sources.parquet'))
+    )
+
+    # update measurments with sources to get associations
     sources_df = (
         sources_df.drop('related', axis=1)
-        .merge(srcs_df.drop('related_list', axis=1), on='source')
+        .merge(srcs_df.rename(columns={'id': 'source_id'}), on='source')
         .merge(meas_dj_obj, on='id')
     )
 
@@ -50,6 +61,11 @@ def final_operations(sources_df, first_img, p_run, meas_dj_obj):
     )
     # upload associations in DB
     upload_associations(sources_df['assoc_dj'])
+
+    # write associations to parquet file
+    sources_df.rename(columns={'id': 'meas_id'})[
+        ['source_id', 'meas_id', 'd2d', 'dr']
+    ].to_parquet(os.path.join(p_run.path, 'associations.parquet'))
 
     logger.info(
         'Total final operations time: %.2f seconds', timer.reset_init()

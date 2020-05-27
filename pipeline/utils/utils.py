@@ -57,15 +57,15 @@ def load_validate_cfg(cfg):
     spec.loader.exec_module(mod)
 
     # do sanity checks
-    if not (getattr(mod, 'IMAGE_FILES') and getattr(mod, 'SELAVY_FILES')):
-        raise Exception(
-            'no image file paths passed or Selavy file paths!'
-        )
-    else:
+    if getattr(mod, 'IMAGE_FILES') and getattr(mod, 'SELAVY_FILES'):
         for lst in ['IMAGE_FILES', 'SELAVY_FILES']:
             for file in getattr(mod, lst):
                 if not os.path.exists(file):
                     raise Exception(f'file:\n{file}\ndoes not exists!')
+    else:
+        raise Exception(
+            'no image file paths passed or Selavy file paths!'
+        )
 
     source_finder_names = settings.SOURCE_FINDERS
     if getattr(mod, 'SOURCE_FINDER') not in source_finder_names:

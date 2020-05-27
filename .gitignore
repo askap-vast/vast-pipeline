@@ -93,4 +93,6 @@ celerybeat-schedule
 **/*.parquet
 **/*.png
 *project*/
+*run*/
 *survey*/
+**/*.env

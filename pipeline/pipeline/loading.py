@@ -29,7 +29,7 @@ def upload_images(paths, config, pipeline_run):
         # STEP #1: Load image and measurements
         image = SelavyImage(
             path,
-            paths['selavy'][path],
+            paths,
             config=config
         )
         logger.info('Reading image %s ...', image.name)
@@ -39,16 +39,6 @@ def upload_images(paths, config, pipeline_run):
 
         # 1.2 create image and skyregion entry in DB
         img, exists_f = get_create_img(pipeline_run, band_id, image)
-        # add noise and background paths if necessary
-        if config.MONITOR and (
-            img.noise_path == '' or img.background_path == ''
-            ):
-            img.noise_path = paths['noise'][path]
-            img.background_path = paths['background'][path]
-            logger.info(
-                'Updating image model with noise and background paths...'
-            )
-            img.save(update_fields=['noise_path', 'background_path'])
 
         # add image to list
         images.append(img)
@@ -104,8 +94,9 @@ def upload_images(paths, config, pipeline_run):
         )
 
         # save measurements to parquet file in pipeline run folder
-        if not os.path.exists(os.path.dirname(img.measurements_path)):
-            os.mkdir(os.path.dirname(img.measurements_path))
+        base_folder = os.path.dirname(img.measurements_path)
+        if not os.path.exists(base_folder):
+            os.makedirs(base_folder)
 
         measurements.drop('meas_dj', axis=1).to_parquet(
             img.measurements_path,
