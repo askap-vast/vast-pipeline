@@ -4,7 +4,13 @@ This document explains how to install all the packages that the pipeline needs t
 
 Note for installs on a Mac, the use of `homebrew` is recommended (https://brew.sh).
 
-## PostgreSQL Installation
+## Table of Contents
+
+- [PostgreSQL Installation](#postgresql)
+- [Pipeline Python Environment Installation](#pipeline-python-environment)
+- [Pipeline Front End Assets Installation](#pipeline-front-end-assets)
+
+## PostgreSQL
 
 I don't recommend installing the database as part of a system package (e.g. `apt-get install postgres`), but instead use docker, which let you mess up things and keep your database installation separated from the system packages. In this way you can easily destroy and re-create the database without messing up your OS installed packages.
 
@@ -65,7 +71,7 @@ As you can see does not matter if the CLI client is for higher PostgreSQL versio
 
 Basic Start/Stop commands are `docker start NAME_OF_MyCONTAINER` and `docker stop NAME_OF_MyCONTAINER`. Remember to start your container after rebooting your machine, if you don't have docker daemon configured to autoload!
 
-## Pipeline Python Environment Installation
+## Pipeline Python Environment
 I strongly recommend to setup a virtual environment, in which you can then install all these `Python` modules into.
 This will avoid conflicts either with the system version of python, or with other code that you have that require different versions of these modules.
 
@@ -120,5 +126,12 @@ while read requirement; do conda install --yes $requirement; done < requirements
 while read requirement; do conda install --yes $requirement; done < requirements/requirements.txt
 ```
 
-Done! Now open the [`README.md`](./README.md) file to see how to initialize and run the pipeline. Otherwise if you intend developing the repo open the [`DEVELOPING.md`](./DEVELOPING.md) file for instructions on how to contribute to the repo.
+## Pipeline Front End Assets
+We recommend install an node version manager like [nvm](https://github.com/nvm-sh/nvm). Check the links for the latest version, but the time of writing, the following command will install `nvm` and `node `:
 
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
+command -v nvm && nvm install --lts || echo "nvm not found"
+```
+
+Done! Now open the [`README.md`](./README.md) file to see how to initialize and run the pipeline. Otherwise if you intend developing the repo open the [`DEVELOPING.md`](./DEVELOPING.md) file for instructions on how to contribute to the repo.
