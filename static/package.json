@@ -1,0 +1,44 @@
+{
+  "name": "vast-pipeline",
+  "version": "0.0.0dev",
+  "description": "Vast Pipeline code base for processing and analysing telescope images from the Square Kilometre Pathfinder",
+  "main": "gulp.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/askap-vast/vast-pipeline.git"
+  },
+  "keywords": [
+    "astronomy",
+    "transients"
+  ],
+  "author": "VAST Development Team",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/askap-vast/vast-pipeline/issues"
+  },
+  "engines": {
+    "node": ">= 11.6.0"
+  },
+  "homepage": "https://github.com/askap-vast/vast-pipeline#readme",
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "5.12.0",
+    "bootstrap": "4.4.1",
+    "chart.js": "2.9.3",
+    "datatables.net-bs4": "1.10.20",
+    "jquery": "3.4.1",
+    "jquery.easing": "^1.4.1"
+  },
+  "devDependencies": {
+    "browser-sync": "2.26.7",
+    "del": "5.1.0",
+    "gulp": "4.0.2",
+    "gulp-clean-css": "4.2.0",
+    "gulp-plumber": "^1.2.1",
+    "gulp-rename": "2.0.0",
+    "gulp-uglify": "3.0.2",
+    "merge-stream": "2.0.0"
+  }
+}
