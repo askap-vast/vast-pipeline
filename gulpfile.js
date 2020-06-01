@@ -60,7 +60,10 @@ function modules() {
     .pipe(gulp.dest(paths.vendor + '/bootstrap/js'));
 
   // ChartJS
-  var chartJS = gulp.src('./node_modules/chart.js/dist/*.js')
+  var chartJS = gulp.src([
+      './node_modules/chart.js/dist/*.js',
+      './node_modules/chartjs-plugin-error-bars/build/*.js'
+    ])
     .pipe(gulp.dest(paths.vendor + '/chart.js'));
 
   // dataTables
