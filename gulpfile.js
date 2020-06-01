@@ -73,18 +73,22 @@ function modules() {
       './node_modules/datatables.net-bs4/css/*.css'
     ])
     .pipe(gulp.dest(paths.vendor + '/datatables'));
+
   // Font Awesome
   var fontAwesome = gulp.src('./node_modules/@fortawesome/**/*')
     .pipe(gulp.dest(paths.vendor + ''));
+
   // jQuery Easing
   var jqueryEasing = gulp.src('./node_modules/jquery.easing/*.js')
     .pipe(gulp.dest(paths.vendor + '/jquery-easing'));
+
   // jQuery
   var jquery = gulp.src([
       './node_modules/jquery/dist/*',
       '!./node_modules/jquery/dist/core.js'
     ])
     .pipe(gulp.dest(paths.vendor + '/jquery'));
+
   // d3 celestial
   var d3Celestial = gulp.src([
       './node_modules/d3-celestial/celestial*.js',
@@ -95,6 +99,21 @@ function modules() {
     .pipe(gulp.dest(paths.vendor + '/d3-celestial/data'));
   var d3CelestialImage = gulp.src('./node_modules/d3-celestial/images/*')
     .pipe(gulp.dest(paths.cssDir + '/images'));
+
+  // js9
+  var js9 = gulp.src([
+      './node_modules/js9/**/*',
+      // './node_modules/js9/**/*.js',
+      // './node_modules/js9/**/*.css',
+      // './node_modules/js9/js9-allinone.css',
+      // './node_modules/js9/js9prefs.js',
+      // './node_modules/js9/js9support.min.js',
+      // './node_modules/js9/js9.min.js',
+      // './node_modules/js9/js9plugins.js',
+      // './node_modules/js9/astroemw.wasm',
+    ])
+    .pipe(gulp.dest(paths.vendor + '/js9'));
+
   return merge(bootstrapJS, chartJS, dataTables, fontAwesome, jquery, jqueryEasing, d3Celestial, d3CelestialData, d3CelestialImage);
 }
 
