@@ -58,12 +58,11 @@ function modules() {
   // Bootstrap JS
   var bootstrapJS = gulp.src('./node_modules/bootstrap/dist/js/*')
     .pipe(gulp.dest(paths.vendor + '/bootstrap/js'));
-  // Bootstrap SCSS
-  // var bootstrapSCSS = gulp.src('./node_modules/bootstrap/scss/**/*')
-  //   .pipe(gulp.dest(paths.vendor + '/bootstrap/scss'));
+
   // ChartJS
   var chartJS = gulp.src('./node_modules/chart.js/dist/*.js')
     .pipe(gulp.dest(paths.vendor + '/chart.js'));
+
   // dataTables
   var dataTables = gulp.src([
       './node_modules/datatables.net/js/*.js',
@@ -83,8 +82,17 @@ function modules() {
       '!./node_modules/jquery/dist/core.js'
     ])
     .pipe(gulp.dest(paths.vendor + '/jquery'));
-  // return merge(bootstrapJS, bootstrapSCSS, chartJS, dataTables, fontAwesome, jquery, jqueryEasing);
-  return merge(bootstrapJS, chartJS, dataTables, fontAwesome, jquery, jqueryEasing);
+  // d3 celestial
+  var d3Celestial = gulp.src([
+      './node_modules/d3-celestial/celestial*.js',
+      './node_modules/d3-celestial/lib/d3*.js'
+    ])
+    .pipe(gulp.dest(paths.vendor + '/d3-celestial'));
+  var d3CelestialData = gulp.src('./node_modules/d3-celestial/data/*.json')
+    .pipe(gulp.dest(paths.vendor + '/d3-celestial/data'));
+  var d3CelestialImage = gulp.src('./node_modules/d3-celestial/images/*')
+    .pipe(gulp.dest(paths.cssDir + '/images'));
+  return merge(bootstrapJS, chartJS, dataTables, fontAwesome, jquery, jqueryEasing, d3Celestial, d3CelestialData, d3CelestialImage);
 }
 
 // CSS task
