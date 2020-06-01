@@ -2,6 +2,8 @@ import os
 import logging
 import numpy as np
 import pandas as pd
+import dask.dataframe as dd
+from psutil import cpu_count
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -93,6 +95,78 @@ def extract_from_image(df, images_df):
     return df
 
 
+def parallel_extraction(df, df_images):
+    '''
+    parallelize forced extraction with Dask
+    '''
+    col_dtype = {
+        'source_tmp_id': 'i',
+        'wavg_ra': 'f',
+        'wavg_dec': 'f',
+        'image': 'U',
+        'island_id': 'U',
+        'component_id': 'U',
+        'name': 'U',
+        'flux_int': 'f',
+        'flux_int_err': 'f',
+        'chi_squared_fit': 'f',
+        'bmaj': 'f',
+        'bmin': 'f',
+        'pa': 'f',
+        'image_id': 'i',
+    }
+    out = (
+        df.explode('img_diff')
+        .reset_index()
+        .rename(columns={'img_diff':'image', 'source':'source_tmp_id'})
+    )
+    n_cpu = cpu_count() - 1
+    out = (
+        dd.from_pandas(out, n_cpu)
+        .groupby('image')
+        .apply(extract_from_image, images_df=df_images, meta=col_dtype)
+        .dropna(subset=['flux_int'])
+        .compute(num_workers=n_cpu, scheduler='processes')
+        .rename(columns={'wavg_ra':'ra', 'wavg_dec':'dec'})
+    )
+    return out
+
+
+def write_group_to_parquet(df, run_path):
+    '''
+    write a dataframe correpondent to a single group/image
+    to a parquet file
+    '''
+    img_name = df['image'].iloc[0]
+    fname = os.path.join(
+        run_path,
+        'forced_measurements_' + img_name.replace('.','_') +
+        '.parquet'
+    )
+    (
+        df.drop(['source', 'meas_dj', 'image'], axis=1)
+        .to_parquet(fname, index=False)
+    )
+
+    return {'out': True}
+
+def parallel_write_parquet(df, run_path):
+    '''
+    parallelize writing parquet files for forced measurments
+    '''
+    n_cpu = cpu_count() - 1
+    (
+        dd.from_pandas(df, n_cpu)
+        .groupby('image')
+        .apply(
+            write_group_to_parquet,
+            run_path=run_path,
+            meta=('out', '?')
+        )
+    )
+    pass
+
+
 def forced_extraction(
         sources_df, cfg_err_ra, cfg_err_dec, p_run, meas_dj_obj
     ):
@@ -182,15 +256,7 @@ def forced_extraction(
     ]
 
     timer.reset()
-    extr_df = (
-        extr_df.explode('img_diff')
-        .reset_index()
-        .rename(columns={'img_diff':'image', 'source':'source_tmp_id'})
-        .groupby('image')
-        .apply(extract_from_image, images_df=images_df)
-        .rename(columns={'wavg_ra':'ra', 'wavg_dec':'dec'})
-        .dropna(subset=['flux_int'])
-    )
+    extr_df = parallel_extraction(extr_df, images_df)
     logger.info(
         'Force extraction step time: %.2f seconds', timer.reset()
     )
@@ -269,22 +335,7 @@ def forced_extraction(
     logger.info(
         'Saving forced measurements to specific parquet file...'
     )
-    for grp_name, grp_df in extr_df.groupby('image'):
-        fname = os.path.join(
-            p_run.path,
-            'forced_measurements_' + grp_name.replace('.','_') +
-            '.parquet'
-        )
-        (
-            grp_df.drop(
-                ['source', 'meas_dj', 'image'],
-                axis=1
-            )
-            .to_parquet(
-                fname,
-                index=False
-            )
-        )
+    parallel_write_parquet(extr_df, p_run.path)
 
     # append new measurements to prev meas df
     meas_dj_obj = meas_dj_obj.append(
