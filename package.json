@@ -8,7 +8,8 @@
     "build": "node_modules/.bin/gulp build",
     "debug": "node_modules/.bin/gulp debug",
     "start": "node_modules/.bin/gulp default",
-    "vendor": "node_modules/.bin/gulp vendor"
+    "vendor": "node_modules/.bin/gulp vendor",
+    "watch": "node_modules/.bin/gulp watch"
   },
   "repository": {
     "type": "git",

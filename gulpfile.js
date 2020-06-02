@@ -56,12 +56,12 @@ function debug() {
 
 // BrowserSync
 function browserSync(done) {
-  browsersync.init({
-    server: {
-      baseDir: "./"
-    },
-    port: 3000
-  });
+  browsersync.init(
+    {
+      port: 8001,
+      proxy: "localhost:8000"
+    }
+  );
   done();
 }
 
@@ -158,10 +158,10 @@ function cssTask() {
       paths.css,
       '!./static/css/*.min.css',
     ])
-    .pipe(sourcemaps.init())
+    // .pipe(sourcemaps.init())
     .pipe(rename({suffix: ".min"}))
     .pipe(cleanCSS())
-    .pipe(sourcemaps.write())
+    // .pipe(sourcemaps.write())
     .pipe(gulp.dest(paths.cssDir))
     .pipe(browsersync.stream());
 }
@@ -186,7 +186,7 @@ function jsTask() {
 
 // Watch files
 function watchFiles() {
-  gulp.watch(paths.css, cssTask);
+  gulp.watch([paths.css, '!./static/css/*.min.css'], gulp.series(cssTask, browserSyncReload));
   // gulp.watch(["./js/**/*", "!./js/**/*.min.js"], js);
   gulp.watch(paths.html, browserSyncReload);
 }
