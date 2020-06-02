@@ -23,4 +23,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', Home, name='index'),
     path('', include('pipeline.urls')),
+    path('', include('social_django.urls', namespace='social_login')),
 ]

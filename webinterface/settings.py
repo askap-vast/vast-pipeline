@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'rest_framework',
     'rest_framework_datatables',
+    'social_django',
     # pipeline app and others
     'pipeline.apps.PipelineConfig',
 ] + env('EXTRA_APPS', cast=list, default=[])
@@ -72,6 +73,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'social_django.context_processors.backends',
+                'social_django.context_processors.login_redirect',
             ],
             'libraries': {
                 'unit_tags': 'pipeline.utils.unit_tags'
@@ -91,6 +94,7 @@ DATABASES = {
 }
 
 
+# Authentication
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
 
@@ -108,6 +112,22 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+SOCIAL_AUTH_POSTGRES_JSONFIELD = True
+
+AUTHENTICATION_BACKENDS = [
+    'social_core.backends.github.GithubOrganizationOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+SOCIAL_AUTH_URL_NAMESPACE = 'social_login'
+
+SOCIAL_AUTH_GITHUB_ORG_KEY = env('SOCIAL_AUTH_GITHUB_ORG_KEY', cast=str, default='')
+SOCIAL_AUTH_GITHUB_ORG_SECRET = env('SOCIAL_AUTH_GITHUB_ORG_SECRET', cast=str, default='')
+SOCIAL_AUTH_GITHUB_ORG_NAME = 'askap-vast'
+SOCIAL_AUTH_GITHUB_ORG_SCOPE = ['read:org']
+SOCIAL_AUTH_RAISE_EXCEPTIONS = False
+SOCIAL_AUTH_LOGIN_ERROR_URL = 'index'
 
 # REST framework settings
 REST_FRAMEWORK = {
