@@ -123,30 +123,30 @@ function modules() {
   var d3CelestialImage = gulp.src('./node_modules/d3-celestial/images/*')
     .pipe(gulp.dest(paths.cssDir + '/images'));
 
-  // js9
-  var js9 = gulp.src([
-      './node_modules/js9/**/*',
-      '!./node_modules/js9/analysis-plugins',
-      '!./node_modules/js9/analysis-wrappers',
-      '!./node_modules/js9/astroem',
-      '!./node_modules/js9/casa',
-      '!./node_modules/js9/closure-compiler',
-      '!./node_modules/js9/closure-help',
-      '!./node_modules/js9/js9Tests',
-      '!./node_modules/js9/js9debugextras',
-      '!./node_modules/js9/node_modules',
-      '!./node_modules/js9/threeways',
-      '!./node_modules/js9/util',
-      // './node_modules/js9/**/*.js',
-      // './node_modules/js9/**/*.css',
-      // './node_modules/js9/js9-allinone.css',
-      // './node_modules/js9/js9prefs.js',
-      // './node_modules/js9/js9support.min.js',
-      // './node_modules/js9/js9.min.js',
-      // './node_modules/js9/js9plugins.js',
-      // './node_modules/js9/astroemw.wasm',
-    ])
-    .pipe(gulp.dest(paths.vendor + '/js9'));
+  // // js9
+  // var js9 = gulp.src([
+  //     './node_modules/js9/**/*',
+  //     '!./node_modules/js9/analysis-plugins',
+  //     '!./node_modules/js9/analysis-wrappers',
+  //     '!./node_modules/js9/astroem',
+  //     '!./node_modules/js9/casa',
+  //     '!./node_modules/js9/closure-compiler',
+  //     '!./node_modules/js9/closure-help',
+  //     '!./node_modules/js9/js9Tests',
+  //     '!./node_modules/js9/js9debugextras',
+  //     '!./node_modules/js9/node_modules',
+  //     '!./node_modules/js9/threeways',
+  //     '!./node_modules/js9/util',
+  //     './node_modules/js9/**/*.js',
+  //     './node_modules/js9/**/*.css',
+  //     './node_modules/js9/js9-allinone.css',
+  //     './node_modules/js9/js9prefs.js',
+  //     './node_modules/js9/js9support.min.js',
+  //     './node_modules/js9/js9.min.js',
+  //     './node_modules/js9/js9plugins.js',
+  //     './node_modules/js9/astroemw.wasm',
+  //   ])
+  //   .pipe(gulp.dest(paths.vendor + '/js9'));
 
   return merge(bootstrapJS, chartJS, dataTables, fontAwesome, jquery, jqueryEasing, d3Celestial, d3CelestialData, d3CelestialImage);
 }
