@@ -21,7 +21,7 @@ const pathsConfig = function () {
 
   return {
     root: root,
-    templates: root + '/templates/**/*.html',
+    html: root + '/templates/**/*.html',
     cssDir: cssFolder,
     css: cssFolder + '/**/*.css',
     jsDir: jsFolder,
@@ -47,6 +47,23 @@ function debug() {
 //     console.log(stderr);
 //   });
 // };
+
+// BrowserSync
+function browserSync(done) {
+  browsersync.init({
+    server: {
+      baseDir: "./"
+    },
+    port: 3000
+  });
+  done();
+}
+
+// BrowserSync reload
+function browserSyncReload(done) {
+  browsersync.reload();
+  done();
+}
 
 // Clean vendor
 function clean() {
@@ -129,7 +146,7 @@ function modules() {
 }
 
 // CSS task
-function css() {
+function cssTask() {
   return gulp
     .src([
       paths.css,
@@ -144,7 +161,7 @@ function css() {
 }
 
 // JS task
-function js() {
+function jsTask() {
   return gulp
     .src([
       paths.js,
@@ -161,20 +178,26 @@ function js() {
     .pipe(browsersync.stream());
 }
 
+// Watch files
+function watchFiles() {
+  gulp.watch(paths.css, cssTask);
+  // gulp.watch(["./js/**/*", "!./js/**/*.min.js"], js);
+  gulp.watch(paths.html, browserSyncReload);
+}
 
 // Define complex tasks
 // const vendor = gulp.series(clean, modules);
 const vendor = modules;
 // const build = gulp.series(vendor, gulp.parallel(css, js));
-const build = gulp.series(vendor, js);
-// const watch = gulp.series(build, gulp.parallel(watchFiles, browserSync));
+const build = gulp.series(vendor, cssTask);
+const watch = gulp.series(build, gulp.parallel(watchFiles, browserSync));
 
 // Export tasks
-exports.css = css;
-exports.js = js;
+exports.css = cssTask;
+exports.js = jsTask;
 // exports.clean = clean;
 exports.vendor = vendor;
 exports.build = build;
-// exports.watch = watch;
+exports.watch = watch;
 exports.default = build;
 exports.debug = debug;

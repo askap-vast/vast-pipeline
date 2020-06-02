@@ -4,9 +4,11 @@
   "description": "Vast Pipeline code base for processing and analysing telescope images from the Square Kilometre Pathfinder",
   "main": "gulp.js",
   "scripts": {
+    "css": "node_modules/.bin/gulp css",
+    "build": "node_modules/.bin/gulp build",
     "debug": "node_modules/.bin/gulp debug",
-    "vendor": "node_modules/.bin/gulp vendor",
-    "css": "node_modules/.bin/gulp css"
+    "start": "node_modules/.bin/gulp default",
+    "vendor": "node_modules/.bin/gulp vendor"
   },
   "repository": {
     "type": "git",
