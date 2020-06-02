@@ -193,16 +193,15 @@ function watchFiles() {
 
 // Define complex tasks
 // const vendor = gulp.series(clean, modules);
-const vendor = modules;
 // const build = gulp.series(vendor, gulp.parallel(css, js));
-const build = gulp.series(vendor, cssTask);
+const build = gulp.series(modules, cssTask);
 const watch = gulp.series(build, gulp.parallel(watchFiles, browserSync));
 
 // Export tasks
 exports.css = cssTask;
 exports.js = jsTask;
 // exports.clean = clean;
-exports.vendor = vendor;
+exports.vendor = modules;
 exports.build = build;
 exports.watch = watch;
 exports.default = build;
