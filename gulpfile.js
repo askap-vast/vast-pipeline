@@ -1,5 +1,11 @@
 'use strict';
 
+// resources to look
+// https://cookiecutter-django-gulp.readthedocs.io/en/latest/gulp-tasks.html#gulp-tasks
+// https://lincolnloop.com/blog/integrating-front-end-tools-your-django-project/
+// https://blog.mozilla.org/webdev/2016/05/27/django-pipeline-and-gulp/
+// https://gist.github.com/soin08/4793992d8cc537f62df3
+
 // Load plugins
 const gulp = require("gulp"),
       browsersync = require("browser-sync").create(),
