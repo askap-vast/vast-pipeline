@@ -7,15 +7,15 @@
 // https://gist.github.com/soin08/4793992d8cc537f62df3
 
 // Load plugins
-const gulp = require("gulp"),
-      browsersync = require("browser-sync").create(),
-      cleanCSS = require("gulp-clean-css"),
+const gulp = require('gulp'),
+      browsersync = require('browser-sync').create(),
+      cleanCSS = require('gulp-clean-css'),
       sourcemaps = require('gulp-sourcemaps'),
-      del = require("del"),
-      merge = require("merge-stream"),
-      rename = require("gulp-rename"),
-      uglify = require("gulp-uglify"),
-      babel = require("gulp-babel"),
+      del = require('del'),
+      merge = require('merge-stream'),
+      rename = require('gulp-rename'),
+      uglify = require('gulp-uglify'),
+      babel = require('gulp-babel'),
       pkg = require('./package.json');
 
 
@@ -31,8 +31,10 @@ const pathsConfig = function () {
     html: root + '/templates/**/*.html',
     cssDir: cssFolder,
     css: cssFolder + '/**/*.css',
+    cssMin: cssFolder + '/**/*.min.css',
     jsDir: jsFolder,
     js: jsFolder + '/**/*.js',
+    jsMin: jsFolder + '/**/*.min.js',
     dist: dist,
     vendor: dist + '/vendor',
   }
@@ -157,10 +159,12 @@ function cssTask() {
   return gulp
     .src([
       paths.css,
-      '!./static/css/*.min.css',
+      '!' + paths.cssMin,
     ])
     // .pipe(sourcemaps.init())
-    .pipe(rename({suffix: ".min"}))
+    .pipe(rename({
+      suffix: '.min'
+    }))
     .pipe(cleanCSS())
     // .pipe(sourcemaps.write())
     .pipe(gulp.dest(paths.cssDir))
@@ -172,7 +176,7 @@ function jsTask() {
   return gulp
     .src([
       paths.js,
-      '!' + paths.dist +'/js/*.min.js',
+      '!' + paths.jsMin,
     ])
     .pipe(babel({
       presets: ['@babel/env']
@@ -190,15 +194,15 @@ function jsTask() {
 
 // Watch files
 function watchFiles() {
-  gulp.watch([paths.css, '!./static/css/*.min.css'], gulp.series(cssTask, browserSyncReload));
-  // gulp.watch(["./js/**/*", "!./js/**/*.min.js"], js);
+  gulp.watch([paths.css, '!' + paths.cssMin], cssTask);
+  gulp.watch([paths.js, '!' + paths.jsMin], jsTask);
   gulp.watch(paths.html, browserSyncReload);
 }
 
 // Define complex tasks
 // const vendor = gulp.series(clean, modules);
 // const build = gulp.series(vendor, gulp.parallel(css, js));
-const build = gulp.series(modules, cssTask);
+const build = gulp.series(modules, gulp.parallel(cssTask, jsTask));
 const watch = gulp.series(build, gulp.parallel(watchFiles, browserSync));
 
 // Export tasks
