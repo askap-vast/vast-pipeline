@@ -91,6 +91,7 @@ sudo apt-get install python3-dev libpq-dev libgraphviz-dev
 ```bash
 git clone <PASTE REPO LINK> && cd <REPO>
 ```
+__NOTE__: DO NOT change the the folder name, e.g. `git clone https://github.com/askap-vast/vast-pipeline.git my-pipeline-local-dev`
 
 3. Setup a `Python >= 3.6` virtual environment. E.g. with `virtualenv`:
 ```bash
@@ -101,7 +102,7 @@ Otherwise use `Anaconda/conda`:
 conda create -n pipeline_env python=3.6
 ```
 
-NOTE: you can name the environment whatever you want instead of `pipeline_env`
+__NOTE__: you can name the environment whatever you want instead of `pipeline_env`
 
 4. Activate the environment.
 ```bash
@@ -133,5 +134,8 @@ We recommend install an node version manager like [nvm](https://github.com/nvm-s
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
 command -v nvm && nvm install --lts || echo "nvm not found"
 ```
+That would install `node v12.17.0` at the time of writing. For details of compilation of frontend assets (CSS and javascript files), and developement set up read the [front end `README.md`](./static/README.md).
+
+---
 
 Done! Now open the [`README.md`](./README.md) file to see how to initialize and run the pipeline. Otherwise if you intend developing the repo open the [`DEVELOPING.md`](./DEVELOPING.md) file for instructions on how to contribute to the repo.
