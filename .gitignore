@@ -36,6 +36,8 @@ MANIFEST
 
 # Front End things
 **/node_modules
+static/vendor
+static/css/images
 
 # Installer logs
 pip-log.txt
