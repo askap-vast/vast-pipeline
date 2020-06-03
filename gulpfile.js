@@ -15,6 +15,7 @@ const gulp = require("gulp"),
       merge = require("merge-stream"),
       rename = require("gulp-rename"),
       uglify = require("gulp-uglify"),
+      babel = require("gulp-babel"),
       pkg = require('./package.json');
 
 
@@ -171,8 +172,11 @@ function jsTask() {
   return gulp
     .src([
       paths.js,
-      '!./js/*.min.js',
+      '!' + paths.dist +'/js/*.min.js',
     ])
+    .pipe(babel({
+      presets: ['@babel/env']
+    }))
     .pipe(uglify())
     // .pipe(header(banner, {
     //   pkg: pkg
