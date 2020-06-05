@@ -16,12 +16,16 @@ const gulp = require('gulp'),
       rename = require('gulp-rename'),
       uglify = require('gulp-uglify'),
       babel = require('gulp-babel'),
+      // exec = require('child_process').exec,
+      // spawn = require('child_process').spawn,
+      run = require('gulp-run-command').default,
+      fs = require('fs'),
       pkg = require('./package.json');
 
 
 // Relative paths function
 const pathsConfig = function () {
-  let root = ".";
+  let root = __dirname;
   let dist = root + '/static';
   let cssFolder = dist + '/css';
   let jsFolder = dist + '/js';
@@ -37,6 +41,7 @@ const pathsConfig = function () {
     jsMin: jsFolder + '/**/*.min.js',
     dist: dist,
     vendor: dist + '/vendor',
+    js9Target: dist + '/vendor/js9',
   }
 };
 
@@ -44,18 +49,63 @@ const paths = pathsConfig();
 
 
 // Debug task
-function debug() {
-    console.log(paths)
-  return gulp.src('.')
+function debug(cb) {
+  console.log(paths)
+  return cb();
 }
 
 // // Run django server
 // function runServer() {
-//   return gulp.exec('python manage.py runserver', function (err, stdout, stderr) {
+//   return exec('python manage.py runserver', function (err, stdout, stderr) {
 //     console.log(stdout);
 //     console.log(stderr);
 //   });
 // };
+
+// JS9 tasks
+function js9Dir() {
+  var mkDir = run('mkdir -p ' + paths.js9Target)
+  return mkDir();
+}
+
+function js9MakeConfig() {
+  var config = run(
+    './configure --with-webdir=' + paths.js9Target + ' --with-helper=nodejs',
+    {cwd: './node_modules/js9'}
+  )
+  return config();
+}
+
+function js9Make() {
+  var make = run('make', {cwd: './node_modules/js9'})
+  return make();
+}
+
+function js9MakeInst() {
+  var makeInst = run('make install', {cwd: './node_modules/js9'})
+  return makeInst();
+}
+
+function js9Config(bc) {
+  // read JSON config and append extra paramenters
+  let js9Config = require(paths.js9Target + '/js9Prefs.json')
+  js9Config.globalOpts.installDir = paths.js9Target.replace(paths.root, '')
+  js9Config.globalOpts.syncOps = [
+    "colormap",
+    "contrastbias",
+    "flip",
+    "pan",
+    "rot90",
+    "scale",
+    "wcs",
+    "zoom"
+  ]
+  js9Config.textColorOpts = {"info": "#000064"}
+
+  let outConfig = 'var JS9Prefs = ' + JSON.stringify(js9Config)
+  // Write JS file with JSON config
+  return fs.writeFile(paths.js9Target + '/js9prefs.js', outConfig, bc);
+}
 
 // BrowserSync
 function browserSync(done) {
@@ -126,31 +176,6 @@ function modules() {
   var d3CelestialImage = gulp.src('./node_modules/d3-celestial/images/*')
     .pipe(gulp.dest(paths.cssDir + '/images'));
 
-  // // js9
-  // var js9 = gulp.src([
-  //     './node_modules/js9/**/*',
-  //     '!./node_modules/js9/analysis-plugins',
-  //     '!./node_modules/js9/analysis-wrappers',
-  //     '!./node_modules/js9/astroem',
-  //     '!./node_modules/js9/casa',
-  //     '!./node_modules/js9/closure-compiler',
-  //     '!./node_modules/js9/closure-help',
-  //     '!./node_modules/js9/js9Tests',
-  //     '!./node_modules/js9/js9debugextras',
-  //     '!./node_modules/js9/node_modules',
-  //     '!./node_modules/js9/threeways',
-  //     '!./node_modules/js9/util',
-  //     './node_modules/js9/**/*.js',
-  //     './node_modules/js9/**/*.css',
-  //     './node_modules/js9/js9-allinone.css',
-  //     './node_modules/js9/js9prefs.js',
-  //     './node_modules/js9/js9support.min.js',
-  //     './node_modules/js9/js9.min.js',
-  //     './node_modules/js9/js9plugins.js',
-  //     './node_modules/js9/astroemw.wasm',
-  //   ])
-  //   .pipe(gulp.dest(paths.vendor + '/js9'));
-
   return merge(bootstrapJS, chartJS, dataTables, fontAwesome, jquery, jqueryEasing, d3Celestial, d3CelestialData, d3CelestialImage);
 }
 
@@ -202,14 +227,19 @@ function watchFiles() {
 // Define complex tasks
 // const vendor = gulp.series(clean, modules);
 // const build = gulp.series(vendor, gulp.parallel(css, js));
-const build = gulp.series(modules, gulp.parallel(cssTask, jsTask));
-const watch = gulp.series(build, gulp.parallel(watchFiles, browserSync));
+const js9 = gulp.series(js9Dir, js9MakeConfig, js9Make, js9MakeInst, js9Config)
+const assets = gulp.parallel(cssTask, jsTask)
+const vendor = gulp.parallel(modules, js9)
+const build = gulp.series(vendor, assets);
+const watch = gulp.series(assets, gulp.parallel(watchFiles, browserSync));
 
 // Export tasks
+exports.clean = clean;
+exports.js9 = js9;
 exports.css = cssTask;
 exports.js = jsTask;
 // exports.clean = clean;
-exports.vendor = modules;
+exports.vendor = vendor;
 exports.build = build;
 exports.watch = watch;
 exports.default = build;
