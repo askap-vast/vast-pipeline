@@ -1,6 +1,6 @@
 # FrontEnd Assets Management
 
-This guide
+This guide explain the installation and compilation of the front end assets (HTML, CSS, JS and relative modules). We make use of a `node` installation with `npm` and `gulp` tasks.
 
 ## Installation of node packages
 After installing a `node` version and `npm`, install the node modules using from the base folder (`vast-pipeline`):
@@ -35,33 +35,61 @@ gulp --tasks
 
 Output:
 ```bash
-[12:51:26] Tasks for ~/PATH/TO/REPO/vast-pipeline/gulpfile.js
-[12:51:26] ├── css
-[12:51:26] ├── js
-[12:51:26] ├── vendor
-[12:51:26] ├─┬ build
-[12:51:26] │ └─┬ <series>
-[12:51:26] │   ├── modules
-[12:51:26] │   └─┬ <parallel>
-[12:51:26] │     ├── cssTask
-[12:51:26] │     └── jsTask
-[12:51:26] ├─┬ watch
-[12:51:26] │ └─┬ <series>
-[12:51:26] │   ├─┬ <series>
-[12:51:26] │   │ ├── modules
-[12:51:26] │   │ └─┬ <parallel>
-[12:51:26] │   │   ├── cssTask
-[12:51:26] │   │   └── jsTask
-[12:51:26] │   └─┬ <parallel>
-[12:51:26] │     ├── watchFiles
-[12:51:26] │     └── browserSync
-[12:51:26] ├─┬ default
-[12:51:26] │ └─┬ <series>
-[12:51:26] │   ├── modules
-[12:51:26] │   └─┬ <parallel>
-[12:51:26] │     ├── cssTask
-[12:51:26] │     └── jsTask
-[12:51:26] └── debug
+[11:55:30] Tasks for ~/PATH/TO/REPO/vast-pipeline/gulpfile.js
+[11:55:30] ├── clean
+[11:55:30] ├─┬ js9
+[11:55:30] │ └─┬ <series>
+[11:55:30] │   ├── js9Dir
+[11:55:30] │   ├── js9MakeConfig
+[11:55:30] │   ├── js9Make
+[11:55:30] │   ├── js9MakeInst
+[11:55:30] │   └── js9Config
+[11:55:30] ├── css
+[11:55:30] ├── js
+[11:55:30] ├─┬ vendor
+[11:55:30] │ └─┬ <parallel>
+[11:55:30] │   ├── modules
+[11:55:30] │   └─┬ <series>
+[11:55:30] │     ├── js9Dir
+[11:55:30] │     ├── js9MakeConfig
+[11:55:30] │     ├── js9Make
+[11:55:30] │     ├── js9MakeInst
+[11:55:30] │     └── js9Config
+[11:55:30] ├─┬ build
+[11:55:30] │ └─┬ <series>
+[11:55:30] │   ├─┬ <parallel>
+[11:55:30] │   │ ├── modules
+[11:55:30] │   │ └─┬ <series>
+[11:55:30] │   │   ├── js9Dir
+[11:55:30] │   │   ├── js9MakeConfig
+[11:55:30] │   │   ├── js9Make
+[11:55:30] │   │   ├── js9MakeInst
+[11:55:30] │   │   └── js9Config
+[11:55:30] │   └─┬ <parallel>
+[11:55:30] │     ├── cssTask
+[11:55:30] │     └── jsTask
+[11:55:30] ├─┬ watch
+[11:55:30] │ └─┬ <series>
+[11:55:30] │   ├─┬ <parallel>
+[11:55:30] │   │ ├── cssTask
+[11:55:30] │   │ └── jsTask
+[11:55:30] │   └─┬ <parallel>
+[11:55:30] │     ├── watchFiles
+[11:55:30] │     └── browserSync
+[11:55:30] ├─┬ default
+[11:55:30] │ └─┬ <series>
+[11:55:30] │   ├─┬ <parallel>
+[11:55:30] │   │ ├── modules
+[11:55:30] │   │ └─┬ <series>
+[11:55:30] │   │   ├── js9Dir
+[11:55:30] │   │   ├── js9MakeConfig
+[11:55:30] │   │   ├── js9Make
+[11:55:30] │   │   ├── js9MakeInst
+[11:55:30] │   │   └── js9Config
+[11:55:30] │   └─┬ <parallel>
+[11:55:30] │     ├── cssTask
+[11:55:30] │     └── jsTask
+[11:55:30] └── debug
 ```
 
 Alternatively you can run gulp from the installed version in the `node_modules` folder with:
@@ -83,6 +111,8 @@ Or, using global `gulp-cli`:
 ```bash
 gulp vendor
 ```
+
+As seen in the tasks diagram above, the `vendor` task run the module task in parallel with the js9 tasks. JS9 has many task as these run with manual command that involve `make/make install` and then writing configuration to `js9prefs.js` file. You can run manually the installation of JS9 with `gulp js9`.
 
 ### 2. Building CSS and Javascript files
 
@@ -133,4 +163,13 @@ This task is for debugging the paths used in the others task, but also serve as 
 npm run debug
 # or
 gulp debug
+```
+
+### Clean Task
+This task delete the vendor folder (`/static/vendor`) along with all the files.
+
+```bash
+npm run clean
+# or
+gulp clean
 ```

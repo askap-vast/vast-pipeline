@@ -8,7 +8,7 @@ Note for installs on a Mac, the use of `homebrew` is recommended (https://brew.s
 
 - [PostgreSQL Installation](#postgresql)
 - [Pipeline Python Environment Installation](#pipeline-python-environment)
-- [Pipeline Front End Assets Installation](#pipeline-front-end-assets)
+- [Pipeline Front End Assets Installation](#pipeline-front-end-assets-quickstart)
 
 ## PostgreSQL
 
@@ -127,14 +127,28 @@ while read requirement; do conda install --yes $requirement; done < requirements
 while read requirement; do conda install --yes $requirement; done < requirements/requirements.txt
 ```
 
-## Pipeline Front End Assets
+## Pipeline Front End Assets Quickstart
+In order to install and compile the frontend assets (modules like js9 and bootstrap, as well as minification of JS and CSS files) you need a recent version of `node` with `npm` installed.
+
+### Installation of `Node` and `npm`
 We recommend install an node version manager like [nvm](https://github.com/nvm-sh/nvm). Check the links for the latest version, but the time of writing, the following command will install `nvm` and `node `:
 
 ```bash
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
 command -v nvm && nvm install --lts || echo "nvm not found"
 ```
-That would install `node v12.17.0` at the time of writing. For details of compilation of frontend assets (CSS and javascript files), and developement set up read the [front end `README.md`](./static/README.md).
+That would install `node v12.17.0` at the time of writing.
+
+### Setting up the front end assets
+In order to set up the front end assets, run:
+
+```
+$ pwd
+/PATH/TO/REPO/vast-pipeline
+$ npm ci && npm start
+```
+
+__NOTE__: make sure you are in the root of the repo, as shown above. That command "clean install" all the dependencies, copies files into the `static/vendor` folder and minified CSS and JS files. For more details of compilation of frontend assets (e.g. single tasks), and developement set up read the [front end `README.md`](./static/README.md).
 
 ---
 
