@@ -4,7 +4,13 @@ This document explains how to install all the packages that the pipeline needs t
 
 Note for installs on a Mac, the use of `homebrew` is recommended (https://brew.sh).
 
-## PostgreSQL Installation
+## Table of Contents
+
+- [PostgreSQL Installation](#postgresql)
+- [Pipeline Python Environment Installation](#pipeline-python-environment)
+- [Pipeline Front End Assets Installation](#pipeline-front-end-assets-quickstart)
+
+## PostgreSQL
 
 I don't recommend installing the database as part of a system package (e.g. `apt-get install postgres`), but instead use docker, which let you mess up things and keep your database installation separated from the system packages. In this way you can easily destroy and re-create the database without messing up your OS installed packages.
 
@@ -65,7 +71,7 @@ As you can see does not matter if the CLI client is for higher PostgreSQL versio
 
 Basic Start/Stop commands are `docker start NAME_OF_MyCONTAINER` and `docker stop NAME_OF_MyCONTAINER`. Remember to start your container after rebooting your machine, if you don't have docker daemon configured to autoload!
 
-## Pipeline Python Environment Installation
+## Pipeline Python Environment
 I strongly recommend to setup a virtual environment, in which you can then install all these `Python` modules into.
 This will avoid conflicts either with the system version of python, or with other code that you have that require different versions of these modules.
 
@@ -85,6 +91,7 @@ sudo apt-get install python3-dev libpq-dev libgraphviz-dev
 ```bash
 git clone <PASTE REPO LINK> && cd <REPO>
 ```
+__NOTE__: DO NOT change the the folder name, e.g. `git clone https://github.com/askap-vast/vast-pipeline.git my-pipeline-local-dev`
 
 3. Setup a `Python >= 3.6` virtual environment. E.g. with `virtualenv`:
 ```bash
@@ -95,7 +102,7 @@ Otherwise use `Anaconda/conda`:
 conda create -n pipeline_env python=3.6
 ```
 
-NOTE: you can name the environment whatever you want instead of `pipeline_env`
+__NOTE__: you can name the environment whatever you want instead of `pipeline_env`
 
 4. Activate the environment.
 ```bash
@@ -120,5 +127,29 @@ while read requirement; do conda install --yes $requirement; done < requirements
 while read requirement; do conda install --yes $requirement; done < requirements/requirements.txt
 ```
 
-Done! Now open the [`README.md`](./README.md) file to see how to initialize and run the pipeline. Otherwise if you intend developing the repo open the [`DEVELOPING.md`](./DEVELOPING.md) file for instructions on how to contribute to the repo.
+## Pipeline Front End Assets Quickstart
+In order to install and compile the frontend assets (modules like js9 and bootstrap, as well as minification of JS and CSS files) you need a recent version of `node` with `npm` installed.
 
+### Installation of `Node` and `npm`
+We recommend install an node version manager like [nvm](https://github.com/nvm-sh/nvm). Check the links for the latest version, but the time of writing, the following command will install `nvm` and `node `:
+
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
+command -v nvm && nvm install --lts || echo "nvm not found"
+```
+That would install `node v12.17.0` at the time of writing.
+
+### Setting up the front end assets
+In order to set up the front end assets, run:
+
+```
+$ pwd
+/PATH/TO/REPO/vast-pipeline
+$ npm ci && npm start
+```
+
+__NOTE__: make sure you are in the root of the repo, as shown above. That command "clean install" all the dependencies, copies files into the `static/vendor` folder and minified CSS and JS files. For more details of compilation of frontend assets (e.g. single tasks), and developement set up read the [front end `README.md`](./static/README.md).
+
+---
+
+Done! Now open the [`README.md`](./README.md) file to see how to initialize and run the pipeline. Otherwise if you intend developing the repo open the [`DEVELOPING.md`](./DEVELOPING.md) file for instructions on how to contribute to the repo.

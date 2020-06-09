@@ -34,6 +34,11 @@ MANIFEST
 *.manifest
 *.spec
 
+# Front End things
+**/node_modules
+static/vendor
+static/css/images
+
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt

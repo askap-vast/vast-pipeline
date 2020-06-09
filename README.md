@@ -74,7 +74,7 @@ PIPELINE_WORKING_DIR = env('PIPELINE_WORKING_DIR', cast=str, default=os.path.joi
 SURVEYS_WORKING_DIR = env('SURVEYS_WORKING_DIR', cast=str, default=os.path.join(BASE_DIR, 'reference-surveys'))
 ```
 
-The defaults values of the folders are pre-filled in your [`.env`](./webinterface/.env.template) file, and even if that variables are not present in such file, the settings assumed the default values, which are relative to the main repo folder. So create the folders with (Note: make sure you change BASE_DIR to vast-pipeline or whatever folder you clone the repo in):
+The defaults values of the folders are pre-filled in your [`.env`](./webinterface/.env.template) file, and even if that variables are not present in such file, the settings assumed the default values, which are relative to the main repo folder. So create the folders with (Note: make sure you change BASE_DIR to `vast-pipeline`):
 
 ```bash
 cd BASE_DIR && mkdir pipeline-runs && mkdir reference-surveys

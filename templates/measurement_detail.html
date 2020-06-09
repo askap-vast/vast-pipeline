@@ -106,7 +106,7 @@
           <div class="JS9" data-width="750px"></div>
         </div>
       </div>
-      
+
       <div class="card shadow mb-4">
         <div class="card-header py-3">
           <h6 class="m-0 font-weight-bold text-primary">Aladin</h6>
@@ -138,7 +138,7 @@
 <!-- Aladin -->
 {{ measurement|json_script:"data-aladin" }}
 <script type='text/javascript' src='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js' charset='utf-8'></script>
-<script src="{% static 'js/aladin-script.js' %}"></script>
+<script src="{% static 'js/aladin-script.min.js' %}"></script>
 
 {{ measurement|json_script:"data-js9" }}
 <script type="text/javascript">

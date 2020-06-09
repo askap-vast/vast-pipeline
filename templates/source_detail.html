@@ -6,7 +6,7 @@
 
 <link rel='stylesheet' href='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css' />
 <link rel="stylesheet" href="{% static 'vendor/js9/js9-allinone.css' %}" />
-<link rel="stylesheet" href="{% static 'css/collapse-box.css' %}">
+<link rel="stylesheet" href="{% static 'css/collapse-box.min.css' %}">
 
 {% endblock head %}
 
@@ -187,18 +187,18 @@
 
 <!-- Datatable scripts -->
 {{ measurements|json_script:"datatable-conf" }}
-<script src="{% static 'js/datatables-pipeline.js' %}"></script>
+<script src="{% static 'js/datatables-pipeline.min.js' %}"></script>
 
 <!-- Chart scripts -->
 {{ measurements|json_script:"chart-data" }}
 <script src="{% static 'vendor/chart.js/Chart.bundle.min.js' %}"></script>
 <script src="{% static 'vendor/chart.js/Plugin.Errorbars.min.js' %}"></script>
-<script src="{% static 'js/light-curve-chart.js' %}"></script>
+<script src="{% static 'js/light-curve-chart.min.js' %}"></script>
 
 <!-- Aladin -->
 {{ source|json_script:"data-aladin" }}
 <script type='text/javascript' src='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js' charset='utf-8'></script>
-<script src="{% static 'js/aladin-script.js' %}"></script>
+<script src="{% static 'js/aladin-script.min.js' %}"></script>
 
 {{ measurements.dataQuery|json_script:"data-js9" }}
 <script type="text/javascript">
