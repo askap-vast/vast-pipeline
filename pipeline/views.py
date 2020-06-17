@@ -8,6 +8,7 @@ from astropy.coordinates import SkyCoord, Angle
 from astropy.nddata import Cutout2D
 from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
+
 from django.http import FileResponse, Http404
 from django.db.models import Count, F, Q, Case, When, Value, BooleanField
 from django.shortcuts import render
@@ -15,6 +16,8 @@ from django.urls import reverse
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from django.contrib.postgres.aggregates.general import ArrayAgg
+from django.contrib.auth.decorators import login_required
+
 
 from .models import Image, Measurement, Run, Source, SkyRegion
 from .serializers import (
@@ -179,6 +182,11 @@ def get_skyregions_collection():
     return skyregions_collection
 
 
+def Login(request):
+  return render(request, 'login.html')
+
+
+@login_required
 def Home(request):
     totals = {}
     totals['nr_pruns'] = Run.objects.count()
