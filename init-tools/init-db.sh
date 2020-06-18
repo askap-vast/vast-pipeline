@@ -22,7 +22,7 @@ then
     echo "\$4  ->  ADMINPSW the administrator password"
     echo "\$5  ->  USER the user to create"
     echo "\$6  ->  USERPSW the user password"
-    echo "\$6  ->  DBNAME the database name to create inside the database"
+    echo "\$7  ->  DBNAME the database name to create inside the database"
 	[ $PS1 ] && return || exit
 fi
 
