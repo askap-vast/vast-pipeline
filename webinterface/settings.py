@@ -21,7 +21,7 @@ DEBUG = env('DEBUG', cast=bool, default=True)
 
 ALLOWED_HOSTS = env('ALLOWED_HOSTS', cast=list, default=[])
 INTERNAL_IPS = [
-    "127.0.0.1",
+    '127.0.0.1',
 ]
 
 SITE_ID = 1
@@ -100,7 +100,7 @@ WSGI_APPLICATION = 'webinterface.wsgi.application'
 # ]
 
 AUTHENTICATION_BACKENDS = [
-    'social_core.backends.github.GithubOrganizationOAuth2',
+    'social_core.backends.github.GithubTeamOAuth2',
     'django.contrib.auth.backends.ModelBackend',
 ]
 
@@ -125,10 +125,10 @@ SOCIAL_AUTH_PIPELINE = (
     'social_core.pipeline.user.user_details',
 )
 
-SOCIAL_AUTH_GITHUB_ORG_KEY = env('SOCIAL_AUTH_GITHUB_ORG_KEY', cast=str, default='')
-SOCIAL_AUTH_GITHUB_ORG_SECRET = env('SOCIAL_AUTH_GITHUB_ORG_SECRET', cast=str, default='')
-SOCIAL_AUTH_GITHUB_ORG_NAME = 'askap-vast'
-SOCIAL_AUTH_GITHUB_ORG_SCOPE = ['read:org']
+SOCIAL_AUTH_GITHUB_TEAM_KEY = env('SOCIAL_AUTH_GITHUB_KEY', cast=str, default='')
+SOCIAL_AUTH_GITHUB_TEAM_SECRET = env('SOCIAL_AUTH_GITHUB_SECRET', cast=str, default='')
+SOCIAL_AUTH_GITHUB_TEAM_ID = env('SOCIAL_AUTH_GITHUB_TEAM_ID', cast=str, default='')
+SOCIAL_AUTH_GITHUB_TEAM_SCOPE = ['read:org', 'user:email']
 
 
 # Database
