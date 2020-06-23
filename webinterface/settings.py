@@ -119,8 +119,8 @@ SOCIAL_AUTH_PIPELINE = (
     'social_core.pipeline.social_auth.auth_allowed',
     'social_core.pipeline.social_auth.social_user',
     'social_core.pipeline.user.get_username',
-    'pipeline.utils.auth.check_admin_user',
     'social_core.pipeline.user.create_user',
+    'pipeline.utils.auth.create_admin_user',
     'social_core.pipeline.social_auth.associate_user',
     'social_core.pipeline.social_auth.load_extra_data',
     'social_core.pipeline.user.user_details',
@@ -129,6 +129,7 @@ SOCIAL_AUTH_PIPELINE = (
 SOCIAL_AUTH_GITHUB_TEAM_KEY = env('SOCIAL_AUTH_GITHUB_KEY', cast=str, default='')
 SOCIAL_AUTH_GITHUB_TEAM_SECRET = env('SOCIAL_AUTH_GITHUB_SECRET', cast=str, default='')
 SOCIAL_AUTH_GITHUB_TEAM_ID = env('SOCIAL_AUTH_GITHUB_TEAM_ID', cast=str, default='')
+SOCIAL_AUTH_GITHUB_TEAM_ADMIN = env('SOCIAL_AUTH_GITHUB_TEAM_ADMIN', cast=str, default='')
 SOCIAL_AUTH_GITHUB_TEAM_SCOPE = ['read:org', 'user:email']
 
 
