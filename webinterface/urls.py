@@ -7,7 +7,7 @@ from pipeline.views import Home, Login
 
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('pipe-admin/', admin.site.urls),
     path('', Home, name='index'),
     path('login/', Login, name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
