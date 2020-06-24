@@ -3,6 +3,8 @@ from django.conf import settings
 
 
 def create_admin_user(uid, response, details, user, social, *args, **kwargs):
+    # assume github-team backend, add <if backend.name == 'github-team'>
+    # if other backend are implemented
     admin_team = settings.SOCIAL_AUTH_GITHUB_TEAM_ADMIN
     usr = response.get('login', '')
     if (usr != '' and admin_team != '' and user and not user.is_staff and
@@ -27,4 +29,16 @@ def create_admin_user(uid, response, details, user, social, *args, **kwargs):
 
 def debug(strategy, backend, uid, response, details, user, social, *args, **kwargs):
     print(response)
+    pass
+
+
+def load_github_avatar(response, social, *args, **kwargs):
+    # assume github-team backend, add <if backend.name == 'github-team'>
+    # if other backend are implemented
+    # if social and social.get('extra_data', None)
+    # print(vars(social))
+    if 'avatar_url' not in social.extra_data:
+        social.extra_data['avatar_url'] = response['avatar_url']
+        social.save()
+        return {'social': social}
     pass

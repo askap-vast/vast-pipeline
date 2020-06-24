@@ -112,7 +112,7 @@ LOGOUT_REDIRECT_URL = 'login'
 SOCIAL_AUTH_STRATEGY = 'social_django.strategy.DjangoStrategy'
 SOCIAL_AUTH_STORAGE = 'social_django.models.DjangoStorage'
 SOCIAL_AUTH_POSTGRES_JSONFIELD = True
-SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = ['username', 'first_name', 'email']
+SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = ['email']
 SOCIAL_AUTH_PIPELINE = (
     'social_core.pipeline.social_auth.social_details',
     'social_core.pipeline.social_auth.social_uid',
@@ -123,6 +123,7 @@ SOCIAL_AUTH_PIPELINE = (
     'pipeline.utils.auth.create_admin_user',
     'social_core.pipeline.social_auth.associate_user',
     'social_core.pipeline.social_auth.load_extra_data',
+    'pipeline.utils.auth.load_github_avatar',
     'social_core.pipeline.user.user_details',
 )
 
