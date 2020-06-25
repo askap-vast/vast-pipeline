@@ -26,20 +26,19 @@
 </head>
 
 <body class="bg-gradient-primary">
-  <!-- <div id="particles-js"> -->
-<!--     <div class="container" style="width: 50%;">
+    <div class="container" style="width: 50%;position: absolute;margin-left: 25%">
 
-      Outer Row
+      <!-- Outer Row -->
       <div class="row justify-content-center" style="margin-top: 15rem;">
 
         <div class="col-xl-10 col-lg-12">
 
           <div class="card o-hidden border-0 shadow-lg my-5">
-          <div class="card o-hidden border-0 shadow-lg">
+          <!-- <div class="card o-hidden border-0 shadow-lg"> -->
             <div class="card-body p-0">
-              Nested Row within Card Body
-              <div class="row">
-                <div class="col-lg-6">
+              <!-- Nested Row within Card Body -->
+              <!-- <div class="row"> -->
+                <!-- <div class="col-lg-6"> -->
                   <div class="p-5">
                     <div class="text-center">
                       <h1 class="h4 text-gray-900 mb-4">Welcome to VAST Pipeline!</h1>
@@ -57,8 +56,8 @@
                       <a class="small" href="#">fill me in(e.g. Create an Account!)</a>
                     </div>
                   </div>
-                </div>
-              </div>
+                <!-- </div> -->
+              <!-- </div> -->
             </div>
           </div>
 
@@ -66,34 +65,9 @@
 
       </div>
 
-    </div> -->
-
-  <!-- trying my stuffs -->
-  <!-- <div id="particles-js" class="container-fluid">
-    <div class="card p-5">
-      <div class="row">
-        <div class="col-md-8 mx-auto social-container my-2 order-md-1">
-          <button class="btn btn-danger  mb-2">
-             <a href="#">Login with Instagram</a>
-         </button>
-        </div>
-      </div>
     </div>
-  </div> -->
 
-
-
-  <!-- </div> -->
-
-  <!-- Bootstrap core JavaScript-->
-  <!-- <script type="text/javascript" src="{% static 'vendor/jquery/jquery.min.js' %}"></script> -->
-  <!-- <script type="text/javascript" src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script> -->
-
-  <!-- Core plugin JavaScript-->
-  <!-- <script type="text/javascript" src="{% static 'vendor/jquery-easing/jquery.easing.min.js' %}"></script> -->
-
-  <!-- Custom scripts for all pages-->
-  <!-- <script type="text/javascript" src="{% static 'js/sb-admin-2.min.js' %}"></script> -->
+  <div id="particles-js"></div>
 
   <!-- Particle js -->
   {{ particlejs_conf_f|json_script:"particlejs-conf-f" }}
