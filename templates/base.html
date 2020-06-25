@@ -139,6 +139,41 @@
 
             <li class="breadcrumb-item active">Overview</li>
           </ol>
+          <!-- Topbar Navbar -->
+          <ul class="navbar-nav ml-auto">
+
+            <!-- Nav Item - User Information -->
+            <li class="nav-item dropdown no-arrow">
+              <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ user.username }}</span>
+                {% for ass in backends.associated %}
+                  {% if ass.provider == 'github-team' %}
+                    {% if 'avatar_url' in ass.extra_data %}
+                    <img class="img-profile rounded-circle" src="{{ ass.extra_data.avatar_url }}" alt="">
+                    {% else %}
+                    <img class="img-profile rounded-circle" src="https://img.icons8.com/ios/50/000000/user-male-circle.png" alt="">
+                    {% endif %}
+                  {% endif %}
+
+                {% endfor %}
+              </a>
+              <!-- Dropdown - User Information -->
+              <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                <a class="dropdown-item" href="#">
+                  <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
+                  Profile
+                </a>
+                <div class="dropdown-divider"></div>
+                <!-- <a class="dropdown-item" href="{% url 'logout' %}" data-toggle="modal" data-target="#logoutModal"> -->
+                <a class="dropdown-item" href="logout" data-toggle="modal" data-target="#logoutModal">
+                  <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                  Logout
+                </a>
+              </div>
+            </li>
+
+          </ul>
+
         </nav>
 
         {% block content %}
