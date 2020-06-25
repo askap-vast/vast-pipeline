@@ -1,4 +1,5 @@
 import io
+import os
 import json
 import logging
 from typing import Dict, Any
@@ -13,6 +14,7 @@ from django.http import FileResponse, Http404
 from django.db.models import Count, F, Q, Case, When, Value, BooleanField
 from django.shortcuts import render
 from django.urls import reverse
+from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from django.contrib.postgres.aggregates.general import ArrayAgg
@@ -183,7 +185,12 @@ def get_skyregions_collection():
 
 
 def Login(request):
-  return render(request, 'login.html')
+    context = {
+        'particlejs_conf_f': os.path.join(
+            settings.STATIC_URL, 'js', 'particlesjs-config.json'
+        )
+    }
+    return render(request, 'login.html', context)
 
 
 @login_required
