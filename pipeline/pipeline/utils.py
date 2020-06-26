@@ -9,8 +9,9 @@ from django.conf import settings
 from psutil import cpu_count
 from itertools import chain
 
-from ..utils.utils import deg2hms, deg2dms, eq_to_cart
+from ..utils.utils import deg2hms, deg2dms, eq_to_cart, StopWatch
 from ..models import Band, Image, Measurement, Run, Source, SkyRegion
+from pipeline.image.utils import on_sky_sep
 
 
 logger = logging.getLogger(__name__)
@@ -176,6 +177,7 @@ def prep_skysrc_df(image, perc_error, ini_df=False):
 
     df = pd.read_parquet(image.measurements_path, columns=cols)
     df['img'] = image.name
+    df['datetime'] = image.datetime
     # these are the first 'sources'
     df['source'] = df.index + 1 if ini_df else -1
     df['ra_source'] = df['ra']
@@ -232,7 +234,7 @@ def get_eta_metric(row, df, peak=False):
     return eta
 
 
-def groupby_funcs(df, first_img):
+def groupby_funcs(df):
     '''
     Performs calculations on the unique sources to get the
     lightcurve properties. Works on the grouped by source
@@ -273,7 +275,6 @@ def groupby_funcs(df, first_img):
         d.pop(col)
     d.pop('Nsrc')
     # set new source
-    d['new'] = False if first_img in df['img'].values else True
 
     # get unique related sources
     list_uniq_related = list(set(
@@ -286,7 +287,7 @@ def groupby_funcs(df, first_img):
     return pd.Series(d)
 
 
-def parallel_groupby(df, image):
+def parallel_groupby(df):
     col_dtype = {
         'img_list': 'O',
         'wavg_ra': 'f',
@@ -300,7 +301,6 @@ def parallel_groupby(df, image):
         'v_peak': 'f',
         'eta_int': 'f',
         'eta_peak': 'f',
-        'new': '?',
         'related_list': 'O',
     }
     n_cpu = cpu_count() - 1
@@ -309,7 +309,6 @@ def parallel_groupby(df, image):
         out.groupby('source')
         .apply(
             groupby_funcs,
-            first_img=image,
             meta=col_dtype
         )
         .compute(num_workers=n_cpu, scheduler='processes')
@@ -376,3 +375,102 @@ def get_rms_noise_image_values(rms_path):
         raise IOError(f'Could not read this RMS FITS file: {rms_path}')
 
     return med_val, min_val, max_val
+
+
+def get_image_list_diff(row):
+    out = []
+    for image in row['skyreg_img_list']:
+        if image not in row['img_list']:
+            out.append(image)
+
+    # set empty list to -1
+    if not out:
+        out = -1
+
+    return out
+
+
+def get_src_skyregion_merged_df(sources_df, p_run):
+    """
+    check and extract expected measurements, and associated them with the
+    related source(s)
+    """
+
+    timer = StopWatch()
+
+    # get all the skyregions and related images
+    cols = [
+        'id', 'name', 'measurements_path', 'path', 'noise_path',
+        'beam_bmaj', 'beam_bmin', 'beam_bpa', 'background_path',
+        'datetime', 'skyreg__id'
+    ]
+
+    skyreg_cols = [
+        'id', 'centre_ra', 'centre_dec', 'xtr_radius'
+    ]
+
+    images_df = pd.DataFrame(list(
+        Image.objects.filter(
+            run=p_run
+        ).select_related('skyreg').order_by('datetime').values(*tuple(cols))
+    )).explode('skyreg__id')
+
+    skyreg_df = pd.DataFrame(list(
+        SkyRegion.objects.all().filter(run=p_run).values(*tuple(skyreg_cols))
+    ))
+
+    skyreg_df = skyreg_df.join(
+        pd.DataFrame(
+            images_df.groupby('skyreg__id').apply(
+                lambda x: x['name'].values.tolist()
+            )
+        ).rename(columns={0:'skyreg_img_list'}),
+        on='id'
+    )
+
+    sources_df = sources_df.sort_values(by='datetime')
+    # calculate some metrics on sources
+    # compute only some necessary metrics in the groupby
+    timer.reset()
+    srcs_df = parallel_groupby_coord(sources_df)
+    logger.info('Groupby-apply time: %.2f seconds', timer.reset())
+
+    # create dataframe with all skyregions and sources combinations
+    src_skyrg_df = cross_join(srcs_df.reset_index(), skyreg_df)
+    src_skyrg_df['sep'] = np.rad2deg(
+        on_sky_sep(
+            np.deg2rad(src_skyrg_df['wavg_ra'].values),
+            np.deg2rad(src_skyrg_df['centre_ra'].values),
+            np.deg2rad(src_skyrg_df['wavg_dec'].values),
+            np.deg2rad(src_skyrg_df['centre_dec'].values),
+        )
+    )
+
+    # select rows where separation is less than sky region radius
+    # drop not more useful columns and groupby source id
+    # compute list of images
+    src_skyrg_df = (
+        src_skyrg_df.loc[
+            src_skyrg_df['sep'] < src_skyrg_df['xtr_radius'],
+            ['source', 'skyreg_img_list']
+        ]
+        .groupby('source')
+        .agg('sum') # sum because we need to preserve order
+    )
+
+    # merge into main df and compare the images
+    srcs_df = srcs_df.merge(
+        src_skyrg_df, left_index=True, right_index=True
+    )
+
+    del src_skyrg_df
+
+    srcs_df['img_diff'] = srcs_df[['img_list', 'skyreg_img_list']].apply(
+        get_image_list_diff, axis=1
+    )
+
+    srcs_df = srcs_df.loc[
+        srcs_df['img_diff'] != -1
+    ].copy()
+
+    return srcs_df
