@@ -45,6 +45,21 @@
       <!-- Divider -->
       <hr class="sidebar-divider my-0">
 
+      {% if user.is_staff %}
+      <!-- Nav Item - Admin Menu -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseAdmin" aria-expanded="true" aria-controls="collapseAdmin">
+          <i class="fas fa-fw fa-cog"></i>
+          <span>Admin</span>
+        </a>
+        <div id="collapseAdmin" class="collapse" aria-labelledby="headingDataset" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <a class="collapse-item" href="{% url 'admin:index' %}">Django</a>
+          </div>
+        </div>
+      </li>
+      {% endif %}
+
       <!-- Nav Item - Pipeline Runs -->
       <li class="nav-item">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapsePipeRun" aria-expanded="true" aria-controls="collapsePipeRun">
@@ -145,7 +160,13 @@
             <!-- Nav Item - User Information -->
             <li class="nav-item dropdown no-arrow">
               <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ user.username }}</span>
+                <span class="mr-2 d-none d-lg-inline text-gray-600 small">
+                  {% if user.first_name %}
+                  {{ user.first_name }}
+                  {% else %}
+                  {{ user.username }}
+                  {% endif %}
+                </span>
                 {% for ass in backends.associated %}
                   {% if ass.provider == 'github-team' %}
                     {% if 'avatar_url' in ass.extra_data %}
