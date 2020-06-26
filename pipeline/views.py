@@ -63,6 +63,14 @@ FLOAT_FIELDS = {
         'precision': 3,
         'scale': 1,
     },
+    'flux_int_err': {
+        'precision': 3,
+        'scale': 1,
+    },
+    'flux_peak_err': {
+        'precision': 3,
+        'scale': 1,
+    },
     'v_int': {
         'precision': 2,
         'scale': 1,
@@ -341,7 +349,9 @@ def MeasurementIndex(request):
         'dec_err',
         'uncertainty_ns',
         'flux_int',
+        'flux_int_err',
         'flux_peak',
+        'flux_peak_err',
         'has_siblings',
         'forced'
     ]
@@ -369,7 +379,9 @@ def MeasurementIndex(request):
                     'Dec Error (arcsec)',
                     'Uncertainty NS (arcsec)',
                     'Int. Flux (mJy)',
+                    'Int. Flux Error (mJy)',
                     'Peak Flux (mJy/beam)',
+                    'Peak Flux Error (mJy/beam)',
                     'Has siblings',
                     'Forced Extraction'
                 ],

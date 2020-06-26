@@ -41,13 +41,43 @@ def get_image_rms_measurements(image, group):
         group.wavg_ra, group.wavg_dec, unit=(u.deg, u.deg)
     )
 
-    pix_coords = np.rint(skycoord_to_pixel(
-        coords, wcs)
-    ).astype(int)
+    array_coords = wcs.world_to_array_index(coords)
+    array_coords = np.array([
+        np.array(array_coords[0]),
+        np.array(array_coords[1]),
+    ])
 
-    group["img_diff_true_rms"] = data[
-        pix_coords[0], pix_coords[1]
-    ].astype(np.float64) * 1.e3
+    # check for pixel wrapping
+    x_valid = np.logical_or(
+        array_coords[0] > data.shape[0],
+        array_coords[0] < 0
+    )
+
+    y_valid = np.logical_or(
+        array_coords[1] > data.shape[1],
+        array_coords[1] < 0
+    )
+
+    valid = ~np.logical_or(
+        x_valid, y_valid
+    )
+
+
+    valid_indexes = group[valid].index.values
+    not_valid_indexes = group[~valid].index.values
+
+    rms_values = data[
+        array_coords[0][valid],
+        array_coords[1][valid]
+    ]
+
+    group.loc[
+        valid_indexes, 'img_diff_true_rms'
+    ] = rms_values.astype(np.float64) * 1.e3
+
+    group.loc[
+        not_valid_indexes, 'img_diff_true_rms'
+    ] = np.nan
 
     return group
 
@@ -152,7 +182,9 @@ def new_sources(sources_df, missing_sources_df, p_run):
 
     # Current inaccurate sky regions may mean that the source
     # was in a previous 'NaN' area of the image. This needs to be
-    # checked (it's fast to just let numpy return a NaN).
+    # checked. Currently the check is done by filtering out of range
+    # pixels. This could be done using MOCpy however this is reasonably
+    # fast and the io of a MOC fits may take more time.
 
     # So these sources will be flagged as new sources, but we can also
     # make a guess of how signficant they are. For this the next step is
@@ -165,7 +197,11 @@ def new_sources(sources_df, missing_sources_df, p_run):
     )
 
     # this removes those that are out of range
-    new_sources_df = new_sources_df.dropna()
+    values = {'img_diff_true_rms': 0.0}
+    new_sources_df = new_sources_df.fillna(values)
+    new_sources_df = new_sources_df[
+        new_sources_df['img_diff_true_rms'] != 0
+    ].reset_index(drop=True)
 
     new_sources_df['true_sigma'] = (
         new_sources_df['flux_peak']
