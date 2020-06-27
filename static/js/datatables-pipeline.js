@@ -267,6 +267,7 @@ $(document).ready(function() {
       'raSelect', 'decSelect', 'radiusSelect', 'datapointMinSelect', 'datapointMaxSelect',
       'RelationsMinSelect', 'RelationsMaxSelect', 'SelavyMinSelect', 'SelavyMaxSelect',
       ];
+    var input;
     for (input of inputs) {
       document.getElementById(input).value = '';
     };
