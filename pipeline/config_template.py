@@ -57,9 +57,18 @@ ASSOCIATION_METHOD = 'basic' # 'basic' or 'advanced'
 # options that apply to basic
 ASSOCIATION_RADIUS = 5. # arcsec, basic only
 
-#options that apply to advanced
+# options that apply to advanced
 ASSOCIATION_DE_RUITER_RADIUS = 5.68 # unitless, advanced only
 ASSOCIATION_BEAMWIDTH_LIMIT = 1.0   # multiplicative factor, advanced only
+
+###
+# OPTIONS THAT CONTROL THE NEW SOURCE ANALYSIS
+###
+
+# controls whether a source is labelled as a new source. The source in question
+# must meet the requirement of:
+# MIN_NEW_SOURCE_SIGMA > (source_peak_flux / lowest_previous_image_min_rms)
+MIN_NEW_SOURCE_SIGMA = 5.0
 
 # Default survey.
 # Used by the website for analysis plots.

@@ -82,7 +82,7 @@ def get_image_rms_measurements(image, group):
     return group
 
 
-def new_sources(sources_df, missing_sources_df, p_run):
+def new_sources(sources_df, missing_sources_df, min_new_source_sigma, p_run):
     """
     Process the new sources detected to see if they are
     valid.
@@ -160,7 +160,7 @@ def new_sources(sources_df, missing_sources_df, p_run):
 
     new_sources_df = new_sources_df[
         new_sources_df.img_diff_time < new_sources_df.detection_time
-    ].copy()
+    ].reset_index(drop=True)
 
     # merge the detection fluxes in
     new_sources_df = pd.merge(
@@ -174,7 +174,7 @@ def new_sources(sources_df, missing_sources_df, p_run):
     )
 
     new_sources_df = new_sources_df[
-        new_sources_df['diff_sigma'] >= 5.0
+        new_sources_df['diff_sigma'] >= min_new_source_sigma
     ].copy()
 
     # Now have list of sources that should have been seen before given
