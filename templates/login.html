@@ -52,6 +52,18 @@
                     <div class="text-center">
                       <a class="small" href="https://github.com/askap-vast/vast-pipeline">Got Lost?</a>
                     </div>
+                    {% if messages %}
+                      <hr>
+                      {% for message in messages %}
+                        {% if 'github-team' in message.extra_tags %}
+                        <div class="card mb-4 py-3 border-top-danger border-bottom-danger border-right-danger border-left-danger">
+                          <div class="card-body">
+                          {{ message }}
+                          </div>
+                        </div>
+                        {% endif %}
+                      {% endfor %}
+                    {% endif %}
                   </div>
                 <!-- </div> -->
               <!-- </div> -->
