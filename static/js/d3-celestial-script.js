@@ -213,6 +213,7 @@ Celestial.add({
       Celestial.context.fill();
       Celestial.context.stroke();
 
+      var pt;
       // If point is visible (this doesn't work automatically for points)
       if (Celestial.clip(d.properties.loc)) {
         // get point coordinates
