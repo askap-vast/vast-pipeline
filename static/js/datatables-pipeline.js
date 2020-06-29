@@ -222,6 +222,14 @@ $(document).ready(function() {
     if (datapts_max.value) {
       qry_url = qry_url + "&max_measurements=" + datapts_max.value;
     };
+    let compactness_min = document.getElementById("compactnessMinSelect");
+    let compactness_max = document.getElementById("compactnessMaxSelect");
+    if (compactness_min.value) {
+      qry_url = qry_url + "&min_avg_compactness=" + compactness_min.value;
+    };
+    if (compactness_max.value) {
+      qry_url = qry_url + "&max_avg_compactness=" + compactness_max.value;
+    };
     let selavy_min = document.getElementById("SelavyMinSelect");
     let selavy_max = document.getElementById("SelavyMaxSelect");
     if (selavy_min.value) {
@@ -245,6 +253,18 @@ $(document).ready(function() {
     };
     if (relations_max.value) {
       qry_url = qry_url + "&max_relations=" + relations_max.value;
+    };
+    let neighbour_min = document.getElementById("NeighbourMinSelect");
+    let neighbour_max = document.getElementById("NeighbourMaxSelect");
+    if (neighbour_min.value) {
+      qry_url = qry_url + "&min_n_neighbour_dist=" + neighbour_min.value;
+    };
+    if (neighbour_max.value) {
+      qry_url = qry_url + "&max_n_neighbour_dist=" + neighbour_max.value;
+    };
+    let neighbourRadiusUnit = document.getElementById("neighbourRadiusUnit");
+    if (neighbourRadiusUnit.value) {
+      qry_url = qry_url + "&NeighbourUnit=" + neighbourRadiusUnit.value;
     };
     if (document.getElementById("newSourceSelect").checked) {
       qry_url = qry_url + "&newsrc";
@@ -274,7 +294,8 @@ $(document).ready(function() {
       'varEtaMinSelect', 'varEtaMaxSelect', 'ForcedMinSelect', 'ForcedMaxSelect',
       'raSelect', 'decSelect', 'radiusSelect', 'datapointMinSelect', 'datapointMaxSelect',
       'RelationsMinSelect', 'RelationsMaxSelect', 'SelavyMinSelect', 'SelavyMaxSelect',
-      'NewSigmaMinSelect', 'NewSigmaMaxSelect',
+      'NewSigmaMinSelect', 'NewSigmaMaxSelect', 'NeighbourMinSelect', 'NeighbourMaxSelect',
+      'compactnessMinSelect', 'compactnessMaxSelect',
       ];
     var input;
     for (input of inputs) {

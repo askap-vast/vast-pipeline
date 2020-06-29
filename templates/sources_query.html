@@ -106,6 +106,9 @@
           <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Datapoints</h1>
           <input id="datapointMinSelect" type="number" class="form-control bg-light border-0 small" placeholder="Min" min="1" step="1" aria-label="DatapointsSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
           <input id="datapointMaxSelect" type="number" class="form-control bg-light border-0 small" placeholder="Max" min="1" step="1" aria-label="DatapointsSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Avg. Compactness</h1>
+          <input id="compactnessMinSelect" type="number" class="form-control bg-light border-0 small" placeholder="Min" min="0" step="1" aria-label="compactnessMinSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <input id="compactnessMaxSelect" type="number" class="form-control bg-light border-0 small" placeholder="Max" min="0" step="1" aria-label="compactnessMaxSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
         </div>
         <div class="col-lg-1">
           <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Selavy</h1>
@@ -119,6 +122,14 @@
           <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Relations</h1>
           <input id="RelationsMinSelect" type="number" class="form-control bg-light border-0 small" placeholder="Min" min="0" step="1" aria-label="RelationsMinSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
           <input id="RelationsMaxSelect" type="number" class="form-control bg-light border-0 small" placeholder="Max" min="0" step="1" aria-label="RelationsMaxSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Nearest Neighbour Dist.</h1>
+          <input id="NeighbourMinSelect" type="number" class="form-control bg-light border-0 small" placeholder="Min" min="0" step="1" aria-label="NeighbourMinSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <input id="NeighbourMaxSelect" type="number" class="form-control bg-light border-0 small" placeholder="Max" min="0" step="1" aria-label="NeighbourMaxSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <select id="neighbourRadiusUnit" class="form-control">
+            <option value="arcsec">arcsec</option>
+            <option value="arcmin" selected>arcmin</option>
+            <option value="deg">deg</option>
+          </select>
         </div>
         <div class="col-lg-1">
           <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Source Type</h1>

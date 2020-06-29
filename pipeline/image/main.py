@@ -249,6 +249,8 @@ class SelavyImage(FitsImage):
 
         df['snr'] = df['flux_peak'].values / df['local_rms'].values
 
+        df['compactness'] = df['flux_int'].values / df['flux_peak'].values
+
         if self.config.USE_CONDON_ERRORS:
             logger.debug("Calculating Condon '97 errors...")
             theta_B = dj_image.beam_bmaj

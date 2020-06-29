@@ -264,6 +264,9 @@ class Source(models.Model):
     max_flux_peak = models.FloatField(
         help_text='The maximum peak flux value.'
     )
+    avg_compactness = models.FloatField(
+        help_text='The average compactness.'
+    )
 
     # metrics
     v_int = models.FloatField(
@@ -278,12 +281,13 @@ class Source(models.Model):
     eta_peak = models.FloatField(
         help_text='Eta metric for peak flux.'
     )
-
     new_high_sigma = models.FloatField(
         help_text=(
             'The largest sigma value for the new source'
             ' if it was placed in previous image.'
         )
+    n_neighbour_dist = models.FloatField(
+        help_text='Distance to the nearest neighbour (deg)'
     )
 
     objects = SourceQuerySet.as_manager()
@@ -532,6 +536,10 @@ class Measurement(models.Model):
         default=False,
         help_text='Fit flag from Selavy.'
     )# Fit flag from selavy file
+
+    compactness = models.FloatField(
+        help_text='Int flux over peak flux.'
+    )
 
     has_siblings = models.BooleanField(
         default=False,
