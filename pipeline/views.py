@@ -111,6 +111,10 @@ FLOAT_FIELDS = {
         'precision': 3,
         'scale': 1,
     },
+    'new_high_sigma': {
+        'precision': 3,
+        'scale': 1
+    }
 }
 
 
@@ -482,7 +486,8 @@ def SourceIndex(request):
         'v_peak',
         'eta_peak',
         'contains_siblings',
-        'new'
+        'new',
+        'new_high_sigma'
     ]
 
     colsfields = generate_colsfields(fields, '/sources/')
@@ -517,6 +522,7 @@ def SourceIndex(request):
                     '\u03B7 peak flux',
                     'Contains siblings',
                     'New Source',
+                    'New High Sigma'
                 ],
                 'search': False,
             }
@@ -640,7 +646,8 @@ def SourceQuery(request):
         'v_peak',
         'eta_peak',
         'contains_siblings',
-        'new'
+        'new',
+        'new_high_sigma'
     ]
 
     colsfields = generate_colsfields(fields, '/sources/')
@@ -679,6 +686,7 @@ def SourceQuery(request):
                     '\u03B7 peak flux',
                     'Contains siblings',
                     'New Source',
+                    'New High Sigma'
                 ],
                 'search': False,
             }

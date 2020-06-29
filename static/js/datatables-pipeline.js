@@ -252,6 +252,14 @@ $(document).ready(function() {
     if (document.getElementById("containsSiblingsSelect").checked) {
       qry_url = qry_url + "&no_siblings";
     }
+    let newsigma_min = document.getElementById("NewSigmaMinSelect");
+    let newsigma_max = document.getElementById("NewSigmaMaxSelect");
+    if (newsigma_min.value) {
+      qry_url = qry_url + "&min_new_high_sigma=" + newsigma_min.value;
+    };
+    if (newsigma_max.value) {
+      qry_url = qry_url + "&max_new_high_sigma=" + newsigma_max.value;
+    };
     table.ajax.url(qry_url);
     table.ajax.reload();
   });
@@ -266,6 +274,7 @@ $(document).ready(function() {
       'varEtaMinSelect', 'varEtaMaxSelect', 'ForcedMinSelect', 'ForcedMaxSelect',
       'raSelect', 'decSelect', 'radiusSelect', 'datapointMinSelect', 'datapointMaxSelect',
       'RelationsMinSelect', 'RelationsMaxSelect', 'SelavyMinSelect', 'SelavyMaxSelect',
+      'NewSigmaMinSelect', 'NewSigmaMaxSelect',
       ];
     var input;
     for (input of inputs) {

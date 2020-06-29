@@ -267,6 +267,8 @@ def forced_extraction(
         ignore_index=True
     )
 
+    extr_df = extr_df.rename(columns={'image':'img'})
+
     # append new meas into main df and proceed with source groupby etc
     sources_df = sources_df.append(
         extr_df.loc[:, extr_df.columns.isin(sources_df.columns)],

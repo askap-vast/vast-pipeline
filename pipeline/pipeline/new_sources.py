@@ -141,7 +141,8 @@ def new_sources(sources_df, missing_sources_df, min_new_source_sigma, p_run):
     new_sources_df = new_sources_df.merge(
         images_df[['datetime']],
         left_on='detection',
-        right_on='name'
+        right_on='name',
+        how='left'
     ).rename(columns={'datetime':'detection_time'})
 
     new_sources_df = new_sources_df.merge(
@@ -150,7 +151,8 @@ def new_sources(sources_df, missing_sources_df, min_new_source_sigma, p_run):
             'noise_path'
         ]],
         left_on='img_diff',
-        right_on='name'
+        right_on='name',
+        how='left'
     ).rename(columns={
         'datetime':'img_diff_time',
         'rms_min': 'img_diff_rms_min',
@@ -165,7 +167,8 @@ def new_sources(sources_df, missing_sources_df, min_new_source_sigma, p_run):
     # merge the detection fluxes in
     new_sources_df = pd.merge(
         new_sources_df, sources_df[['source', 'img', 'flux_peak']],
-        left_on=['source', 'detection'], right_on=['source', 'img']
+        left_on=['source', 'detection'], right_on=['source', 'img'],
+        how='left'
     ).drop(columns=['img'])
 
     new_sources_df['diff_sigma'] = (
@@ -210,10 +213,12 @@ def new_sources(sources_df, missing_sources_df, min_new_source_sigma, p_run):
 
     # We only care about the highest true sigma
     new_sources_df = new_sources_df.sort_values(
-        by=['source', 'img_diff_true_rms']
+        by=['source', 'true_sigma']
     )
 
-    new_sources_df = new_sources_df.drop_duplicates('source')
+    new_sources_df = new_sources_df.drop_duplicates('source').rename(
+        columns={'true_sigma':'new_high_sigma'}
+    )
 
     logger.info(
         'Total new source analysis time: %.2f seconds', timer.reset_init()

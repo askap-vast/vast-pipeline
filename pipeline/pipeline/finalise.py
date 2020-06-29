@@ -37,6 +37,14 @@ def final_operations(
 
     srcs_df['new'] = new
 
+    srcs_df = pd.merge(
+        srcs_df,
+        new_sources_df[['source', 'new_high_sigma']],
+        left_on='source', right_on='source', how='left'
+    )
+
+    srcs_df = srcs_df.fillna(value={'new_high_sigma': 0.0})
+
     # generate the source models
     srcs_df['src_dj'] = srcs_df.apply(
         get_source_models,
