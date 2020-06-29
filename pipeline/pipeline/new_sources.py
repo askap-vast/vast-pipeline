@@ -171,7 +171,7 @@ def new_sources(sources_df, missing_sources_df, min_new_source_sigma, p_run):
         columns=['in_primary']
     )
 
-    # Step 2 check if the previous sources would have actually been seen
+    # Check if the previous sources would have actually been seen
     # i.e. are the previous images sensitive enough
 
     # save the index before exploding
