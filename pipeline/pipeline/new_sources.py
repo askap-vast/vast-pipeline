@@ -33,8 +33,6 @@ def get_image_rms_measurements(group):
     """
     image = group.iloc[0]['img_diff_rms_path']
 
-    print(image)
-
     with fits.open(image) as hdul:
         header = hdul[0].header
         wcs = WCS(header, naxis=2)
@@ -71,7 +69,6 @@ def get_image_rms_measurements(group):
         x_valid, y_valid
     )
 
-
     valid_indexes = group[valid].index.values
     not_valid_indexes = group[~valid].index.values
 
@@ -80,13 +77,10 @@ def get_image_rms_measurements(group):
         array_coords[1][valid]
     ]
 
+    # not matched ones will be NaN.
     group.loc[
         valid_indexes, 'img_diff_true_rms'
     ] = rms_values.astype(np.float64) * 1.e3
-
-    group.loc[
-        not_valid_indexes, 'img_diff_true_rms'
-    ] = np.nan
 
     return group
 
