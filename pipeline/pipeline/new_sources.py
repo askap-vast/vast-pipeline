@@ -5,6 +5,8 @@ from pipeline.models import Image
 
 import pandas as pd
 import numpy as np
+import dask.dataframe as dd
+from psutil import cpu_count
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
@@ -24,7 +26,14 @@ def check_primary_image(row):
         return False
 
 
-def get_image_rms_measurements(image, group):
+def get_image_rms_measurements(group):
+    """
+    Take the coordinates provided from the group
+    and measure the array value in the provided image.
+    """
+    image = group.iloc[0]['img_diff_rms_path']
+
+    print(image)
 
     with fits.open(image) as hdul:
         header = hdul[0].header
@@ -82,6 +91,45 @@ def get_image_rms_measurements(image, group):
     return group
 
 
+def parallel_get_rms_measurements(df):
+    """
+    Wrapper function to use 'get_image_rms_measurements'
+    in parallel with Dask.
+    """
+
+    out = df[[
+            'source', 'wavg_ra', 'wavg_dec',
+            'img_diff_rms_path'
+    ]]
+
+    col_dtype = {
+        'source': 'i',
+        'wavg_ra': 'f',
+        'wavg_dec': 'f',
+        'img_diff_rms_path': 'U',
+        'img_diff_true_rms': 'f',
+    }
+
+    n_cpu = cpu_count() - 1
+
+    out = (
+        dd.from_pandas(out, n_cpu)
+        .groupby('img_diff_rms_path')
+        .apply(
+            get_image_rms_measurements,
+            meta=col_dtype
+        ).compute(num_workers=n_cpu, scheduler='processes')
+    )
+
+    df = df.merge(
+        out[['source', 'img_diff_true_rms']],
+        left_on='source', right_on='source',
+        how='left'
+    )
+
+    return df
+
+
 def new_sources(sources_df, missing_sources_df, min_new_source_sigma, p_run):
     """
     Process the new sources detected to see if they are
@@ -89,6 +137,8 @@ def new_sources(sources_df, missing_sources_df, min_new_source_sigma, p_run):
     """
 
     timer = StopWatch()
+
+    logger.info("Starting new source analysis.")
 
     cols = [
         'id', 'name', 'noise_path', 'datetime',
@@ -138,6 +188,7 @@ def new_sources(sources_df, missing_sources_df, min_new_source_sigma, p_run):
     # Explode now to avoid two loops below
     new_sources_df = new_sources_df.explode('img_diff')
 
+    # Merge the respective image information to the df
     new_sources_df = new_sources_df.merge(
         images_df[['datetime']],
         left_on='detection',
@@ -160,6 +211,8 @@ def new_sources(sources_df, missing_sources_df, min_new_source_sigma, p_run):
         'noise_path': 'img_diff_rms_path'
     })
 
+    # Select only those images that come before the detection image
+    # in time.
     new_sources_df = new_sources_df[
         new_sources_df.img_diff_time < new_sources_df.detection_time
     ].reset_index(drop=True)
@@ -171,11 +224,14 @@ def new_sources(sources_df, missing_sources_df, min_new_source_sigma, p_run):
         how='left'
     ).drop(columns=['img'])
 
+    # calculate the sigma of the source if it was placed in the
+    # minimum rms region of the previous images
     new_sources_df['diff_sigma'] = (
         new_sources_df['flux_peak']
         / new_sources_df['img_diff_rms_min']
     )
 
+    # keep those that are above the user specified threshold
     new_sources_df = new_sources_df[
         new_sources_df['diff_sigma'] >= min_new_source_sigma
     ].copy()
@@ -186,17 +242,18 @@ def new_sources(sources_df, missing_sources_df, min_new_source_sigma, p_run):
     # Current inaccurate sky regions may mean that the source
     # was in a previous 'NaN' area of the image. This needs to be
     # checked. Currently the check is done by filtering out of range
-    # pixels. This could be done using MOCpy however this is reasonably
+    # pixels once the values have been obtained (below).
+    # This could be done using MOCpy however this is reasonably
     # fast and the io of a MOC fits may take more time.
 
     # So these sources will be flagged as new sources, but we can also
     # make a guess of how signficant they are. For this the next step is
     # to measure the true rms at the source location.
 
-    new_sources_df = new_sources_df.groupby(
-        'img_diff_rms_path'
-    ).apply(
-        lambda x: get_image_rms_measurements(x.name, x)
+    # measure the actual rms in the previous images at
+    # the source location.
+    new_sources_df = parallel_get_rms_measurements(
+        new_sources_df
     )
 
     # this removes those that are out of range
@@ -206,6 +263,7 @@ def new_sources(sources_df, missing_sources_df, min_new_source_sigma, p_run):
         new_sources_df['img_diff_true_rms'] != 0
     ].reset_index(drop=True)
 
+    # calculate the true sigma
     new_sources_df['true_sigma'] = (
         new_sources_df['flux_peak']
         / new_sources_df['img_diff_true_rms']
@@ -216,6 +274,7 @@ def new_sources(sources_df, missing_sources_df, min_new_source_sigma, p_run):
         by=['source', 'true_sigma']
     )
 
+    # keep only the highest for each source, rename for the daatabase
     new_sources_df = new_sources_df.drop_duplicates('source').rename(
         columns={'true_sigma':'new_high_sigma'}
     )
