@@ -575,7 +575,8 @@ class SourceViewSet(ModelViewSet):
             'selavy_measurements',
             'forced_measurements',
             'relations',
-            'contains_siblings'
+            'contains_siblings',
+            'new_high_sigma'
         ]
         for fld in flux_qry_flds:
             for limit in ['max', 'min']:
