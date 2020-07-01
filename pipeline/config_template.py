@@ -41,6 +41,9 @@ SOURCE_FINDER = 'selavy'
 # Source monitoring can be done both forward and backward in 'time'.
 # Monitoring backward means re-opening files that were previously processed and can be slow.
 MONITOR = False
+# MONITOR_MIN_SIGMA defines the minimum SNR ratio a source has to be if it was placed in the
+# area of minimum rms in the image from which it is to be extracted from. If lower than this
+# value it is skipped
 MONITOR_MIN_SIGMA = 3.0
 
 # The position uncertainty is in reality a combination of the fitting errors and the
