@@ -82,7 +82,7 @@ def extract_from_image(df, images_df):
     return df
 
 
-def parallel_extraction(df, df_images):
+def parallel_extraction(df, df_images, df_sources, min_sigma):
     '''
     parallelize forced extraction with Dask
     '''
@@ -91,6 +91,10 @@ def parallel_extraction(df, df_images):
         'wavg_ra': 'f',
         'wavg_dec': 'f',
         'image': 'U',
+        'detection': 'U',
+        'image_rms_min': 'f',
+        'flux_peak': 'f',
+        'max_snr': 'f',
         'island_id': 'U',
         'component_id': 'U',
         'name': 'U',
@@ -107,6 +111,33 @@ def parallel_extraction(df, df_images):
         .reset_index()
         .rename(columns={'img_diff':'image', 'source':'source_tmp_id'})
     )
+
+    out = out.merge(
+        df_images[[
+            'rms_min'
+        ]],
+        left_on='image',
+        right_on='name',
+        how='left'
+    ).rename(columns={
+        'rms_min': 'image_rms_min',
+    })
+
+    out = pd.merge(
+        out, df_sources[['source', 'img', 'flux_peak']],
+        left_on=['source_tmp_id', 'detection'], right_on=['source', 'img'],
+        how='left'
+    ).drop(columns=['img', 'source'])
+
+    # drop the source for which we would have no hope of detecting
+    predrop_shape = out.shape[0]
+    out['max_snr'] = out['flux_peak'] / out['image_rms_min']
+    out = out[out['max_snr'] > min_sigma].reset_index(drop=True)
+    postdrop_shape = out.shape[0]
+    logger.debug("Min forced sigma dropped %i sources", (
+        predrop_shape - postdrop_shape
+    ))
+
     n_cpu = cpu_count() - 1
     out = (
         dd.from_pandas(out, n_cpu)
@@ -137,6 +168,7 @@ def write_group_to_parquet(df, run_path):
 
     return {'out': True}
 
+
 def parallel_write_parquet(df, run_path):
     '''
     parallelize writing parquet files for forced measurments
@@ -155,7 +187,8 @@ def parallel_write_parquet(df, run_path):
 
 
 def forced_extraction(
-        sources_df, cfg_err_ra, cfg_err_dec, p_run, meas_dj_obj, extr_df
+        sources_df, cfg_err_ra, cfg_err_dec, p_run,
+        meas_dj_obj, extr_df, min_sigma
     ):
     """
     check and extract expected measurements, and associated them with the
@@ -167,7 +200,8 @@ def forced_extraction(
     cols = [
         'id', 'name', 'measurements_path', 'path', 'noise_path',
         'beam_bmaj', 'beam_bmin', 'beam_bpa', 'background_path',
-        'skyreg__centre_ra', 'skyreg__centre_dec', 'skyreg__xtr_radius'
+        'rms_min', 'skyreg__centre_ra', 'skyreg__centre_dec',
+        'skyreg__xtr_radius'
     ]
 
     images_df = pd.DataFrame(list(
@@ -177,10 +211,10 @@ def forced_extraction(
     )).set_index('name')
 
     # prepare df to groupby image and apply force extraction function
-    extr_df = extr_df[['wavg_ra', 'wavg_dec', 'img_diff']]
+    extr_df = extr_df[['wavg_ra', 'wavg_dec', 'img_diff', 'detection']]
 
     timer.reset()
-    extr_df = parallel_extraction(extr_df, images_df)
+    extr_df = parallel_extraction(extr_df, images_df, sources_df, min_sigma)
     logger.info(
         'Force extraction step time: %.2f seconds', timer.reset()
     )

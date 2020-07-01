@@ -102,7 +102,8 @@ class Pipeline():
                 self.config.ASTROMETRIC_UNCERTAINTY_DEC / 3600.,
                 p_run,
                 meas_dj_obj,
-                missing_sources_df
+                missing_sources_df,
+                self.config.MONITOR_MIN_SIGMA
             )
 
         # STEP #6: finalise the df getting unique sources, calculating

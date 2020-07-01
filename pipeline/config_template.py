@@ -41,6 +41,7 @@ SOURCE_FINDER = 'selavy'
 # Source monitoring can be done both forward and backward in 'time'.
 # Monitoring backward means re-opening files that were previously processed and can be slow.
 MONITOR = False
+MONITOR_MIN_SIGMA = 3.0
 
 # The position uncertainty is in reality a combination of the fitting errors and the
 # astrometric uncertainty of the image/survey/instrument.
