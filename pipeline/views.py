@@ -1,4 +1,5 @@
 import io
+import os
 import json
 import logging
 from typing import Dict, Any
@@ -8,13 +9,22 @@ from astropy.coordinates import SkyCoord, Angle
 from astropy.nddata import Cutout2D
 from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
+
 from django.http import FileResponse, Http404
 from django.db.models import Count, F, Q, Case, When, Value, BooleanField
 from django.shortcuts import render
 from django.urls import reverse
+from django.conf import settings
+
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.authentication import (
+    SessionAuthentication, BasicAuthentication
+)
+from rest_framework.permissions import IsAuthenticated
 from django.contrib.postgres.aggregates.general import ArrayAgg
+from django.contrib.auth.decorators import login_required
+
 
 from .models import Image, Measurement, Run, Source, SkyRegion
 from .serializers import (
@@ -179,6 +189,16 @@ def get_skyregions_collection():
     return skyregions_collection
 
 
+def Login(request):
+    context = {
+        'particlejs_conf_f': os.path.join(
+            settings.STATIC_URL, 'js', 'particlesjs-config.json'
+        )
+    }
+    return render(request, 'login.html', context)
+
+
+@login_required
 def Home(request):
     totals = {}
     totals['nr_pruns'] = Run.objects.count()
@@ -193,6 +213,7 @@ def Home(request):
 
 
 # Runs table
+@login_required
 def RunIndex(request):
     fields = [
         'name',
@@ -228,6 +249,8 @@ def RunIndex(request):
 
 
 class RunViewSet(ModelViewSet):
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = Run.objects.annotate(
         n_images=Count("image", distinct=True),
         n_sources=Count("source", distinct=True),
@@ -236,6 +259,7 @@ class RunViewSet(ModelViewSet):
 
 
 # Run detail
+@login_required
 def RunDetail(request, id):
     p_run = Run.objects.filter(id=id).values().get()
     p_run['nr_imgs'] = Image.objects.filter(run__id=p_run['id']).count()
@@ -251,6 +275,7 @@ def RunDetail(request, id):
 
 
 # Images table
+@login_required
 def ImageIndex(request):
     fields = [
         'name',
@@ -293,10 +318,13 @@ def ImageIndex(request):
 
 
 class ImageViewSet(ModelViewSet):
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = Image.objects.all()
     serializer_class = ImageSerializer
 
 
+@login_required
 def ImageDetail(request, id, action=None):
     # source data
     image = Image.objects.all().order_by('id')
@@ -331,6 +359,7 @@ def ImageDetail(request, id, action=None):
 
 
 # Measurements table
+@login_required
 def MeasurementIndex(request):
     fields = [
         'name',
@@ -380,6 +409,8 @@ def MeasurementIndex(request):
 
 
 class MeasurementViewSet(ModelViewSet):
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
     queryset = Measurement.objects.all()
     serializer_class = MeasurementSerializer
 
@@ -388,6 +419,7 @@ class MeasurementViewSet(ModelViewSet):
         return self.queryset.filter(source__id=run_id) if run_id else self.queryset
 
 
+@login_required
 def MeasurementDetail(request, id, action=None):
     # source data
     measurement = Measurement.objects.all().order_by('id')
@@ -452,6 +484,7 @@ def MeasurementDetail(request, id, action=None):
 
 
 # Sources table
+@login_required
 def SourceIndex(request):
     fields = [
         'name',
@@ -513,6 +546,8 @@ def SourceIndex(request):
 
 
 class SourceViewSet(ModelViewSet):
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
     serializer_class = SourceSerializer
 
     def get_queryset(self):
@@ -610,6 +645,7 @@ class SourceViewSet(ModelViewSet):
 
 
 # Sources Query
+@login_required
 def SourceQuery(request):
     fields = [
         'name',
@@ -675,6 +711,7 @@ def SourceQuery(request):
 
 
 # Source detail
+@login_required
 def SourceDetail(request, id, action=None):
     # source data
     source = Source.objects.all()
@@ -801,6 +838,9 @@ def SourceDetail(request, id, action=None):
 
 
 class ImageCutout(APIView):
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, measurement_name, size="normal"):
         measurement = Measurement.objects.get(name=measurement_name)
         image_hdu: fits.PrimaryHDU = fits.open(measurement.image.path)[0]
@@ -849,6 +889,9 @@ class ImageCutout(APIView):
 
 
 class MeasurementQuery(APIView):
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
+
     def get(
         self,
         request,

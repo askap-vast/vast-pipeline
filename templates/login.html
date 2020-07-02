@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+{% load static %}
+
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="VAST Pipeline WebApp for processing the images from the ASKAP Telescope and detecting transient sources">
+  <meta name="author" content="VAST Developement Team">
+
+  <title>VAST Pipeline</title>
+
+  <!-- VAST icon -->
+  <link rel="shortcut icon" type="image/png" href="{% static 'img/favicon.png' %}"/>
+
+  <!-- Custom fonts for this template-->
+  <link href="{% static 'vendor/fontawesome-free/css/all.min.css' %}" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+
+  <!-- Custom styles for this template-->
+  <link href="{% static 'css/sb-admin-2.min.css' %}" rel="stylesheet">
+</head>
+
+<body class="bg-gradient-primary">
+    <div class="container" style="width: 50%;position: absolute;margin-left: 25%">
+
+      <!-- Outer Row -->
+      <div class="row justify-content-center" style="margin-top: 15rem;">
+
+        <div class="col-xl-10 col-lg-12">
+
+          <div class="card o-hidden border-0 shadow-lg my-5">
+          <!-- <div class="card o-hidden border-0 shadow-lg"> -->
+            <div class="card-body p-0">
+              <!-- Nested Row within Card Body -->
+              <!-- <div class="row"> -->
+                <!-- <div class="col-lg-6"> -->
+                  <div class="p-5">
+                    <div class="text-center">
+                      <h1 class="h4 text-gray-900 mb-4">Welcome to the VAST Pipeline!</h1>
+                    </div>
+                    <form class="user">
+                      <a href="{% url 'social:begin' 'github-team' %}" class="btn btn-primary btn-user btn-block">
+                        <i class="fab fa-github fa-lg"></i> Login with GitHub
+                      </a>
+                    </form>
+                    <hr>
+                    <div class="text-center">
+                      <a class="small" href="https://github.com/askap-vast/vast-pipeline">Got Lost?</a>
+                    </div>
+                    {% if messages %}
+                      <hr>
+                      {% for message in messages %}
+                        {% if 'github-team' in message.extra_tags %}
+                        <div class="card border-danger">
+                          <div class="card-body text-danger">
+                          {{ message }}
+                          </div>
+                        </div>
+                        {% endif %}
+                      {% endfor %}
+                    {% endif %}
+                  </div>
+                <!-- </div> -->
+              <!-- </div> -->
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  <div id="particles-js"></div>
+
+  <!-- Particle js -->
+  {{ particlejs_conf_f|json_script:"particlejs-conf-f" }}
+  <script type="text/javascript" src="{% static 'vendor/particles.js/particles.js' %}"></script>
+  <script type="text/javascript" src="{% static 'js/login.min.js' %}"></script>
+
+</body>
+
+</html>

@@ -38,6 +38,8 @@ MANIFEST
 **/node_modules
 static/vendor
 static/css/images
+static/js/particles.js
+**/*.min*
 
 # Installer logs
 pip-log.txt
