@@ -27,15 +27,7 @@ def final_operations(
     srcs_df = srcs_df.fillna(0.)
 
     # add new sources
-    new = []
-
-    for i in srcs_df.index.values:
-        if i in new_sources_df.source.values:
-            new.append(True)
-        else:
-            new.append(False)
-
-    srcs_df['new'] = new
+    srcs_df['new'] = srcs_df.index.isin(new_sources_df.source)
 
     srcs_df = pd.merge(
         srcs_df,
