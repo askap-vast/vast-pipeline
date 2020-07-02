@@ -54,10 +54,10 @@ ASTROMETRIC_UNCERTAINTY_DEC = ASTROMETRIC_UNCERTAINTY_RA  # arcsec
 ###
 ASSOCIATION_METHOD = 'basic' # 'basic' or 'advanced'
 
-# options that apply to basic
+# options that apply to basic association
 ASSOCIATION_RADIUS = 5. # arcsec, basic only
 
-# options that apply to advanced
+# options that apply to advanced association
 ASSOCIATION_DE_RUITER_RADIUS = 5.68 # unitless, advanced only
 ASSOCIATION_BEAMWIDTH_LIMIT = 1.0   # multiplicative factor, advanced only
 
