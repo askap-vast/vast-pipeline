@@ -35,7 +35,7 @@ def final_operations(
         left_on='source', right_on='source', how='left'
     )
 
-    srcs_df = srcs_df.fillna(value={'new_high_sigma': 0.0})
+    srcs_df['new_high_sigma'] = srcs_df['new_high_sigma'].fillna(0.)
 
     # generate the source models
     srcs_df['src_dj'] = srcs_df.apply(
