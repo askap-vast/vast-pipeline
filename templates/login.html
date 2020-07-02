@@ -22,7 +22,6 @@
 
   <!-- Custom styles for this template-->
   <link href="{% static 'css/sb-admin-2.min.css' %}" rel="stylesheet">
-  <!-- <link href="{% static 'css/login.min.css' %}" rel="stylesheet"> -->
 </head>
 
 <body class="bg-gradient-primary">
@@ -56,8 +55,8 @@
                       <hr>
                       {% for message in messages %}
                         {% if 'github-team' in message.extra_tags %}
-                        <div class="card mb-4 py-3 border-top-danger border-bottom-danger border-right-danger border-left-danger">
-                          <div class="card-body">
+                        <div class="card border-danger">
+                          <div class="card-body text-danger">
                           {{ message }}
                           </div>
                         </div>
