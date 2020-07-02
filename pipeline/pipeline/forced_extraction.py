@@ -262,7 +262,20 @@ def forced_extraction(
     )
 
     # select sensible flux values and set the columns with fix values
-    extr_df = extr_df.loc[extr_df['flux_int'].fillna(0) != 0, :]
+    values = {
+        'flux_int': 0,
+        'flux_int_err': 0
+    }
+
+    extr_df = extr_df.fillna(value=values)
+
+    extr_df = extr_df[
+        (extr_df['flux_int'] != 0)
+        & (extr_df['flux_int_err'] != 0)
+        & (extr_df['chi_squared_fit'] != np.inf)
+        & (extr_df['chi_squared_fit'] != np.nan)
+    ]
+
     default_pos_err = settings.POS_DEFAULT_MIN_ERROR / 3600.
     extr_df['ra_err'] = default_pos_err
     extr_df['dec_err'] = default_pos_err
