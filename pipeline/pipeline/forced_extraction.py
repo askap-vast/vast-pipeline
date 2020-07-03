@@ -220,12 +220,15 @@ def forced_extraction(
         'Force extraction step time: %.2f seconds', timer.reset()
     )
 
+    # make measurement names unique for db constraint
+    now = pd.Timestamp('now').strftime('%Y%m%dT%H%M')
+    extr_df['name'] = extr_df['name'] + f'_f{now}'
+
     # select sensible flux values and set the columns with fix values
     values = {
         'flux_int': 0,
         'flux_int_err': 0
     }
-
     extr_df = extr_df.fillna(value=values)
 
     extr_df = extr_df[
