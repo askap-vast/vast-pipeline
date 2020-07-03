@@ -20,10 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 def check_primary_image(row):
-    if row.primary in row.img_list:
-        return True
-    else:
-        return False
+    return row['primary'] in row['img_list']
 
 
 def get_image_rms_measurements(group):
