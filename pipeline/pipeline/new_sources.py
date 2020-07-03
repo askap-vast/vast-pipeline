@@ -165,9 +165,7 @@ def new_sources(sources_df, missing_sources_df, min_sigma, p_run):
 
     new_sources_df = missing_sources_df[
         missing_sources_df['in_primary'] == False
-    ]
-
-    new_sources_df = new_sources_df.drop(
+    ].drop(
         columns=['in_primary']
     )
 
