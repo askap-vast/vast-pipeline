@@ -90,7 +90,7 @@ class Pipeline():
         new_sources_df = new_sources(
             sources_df,
             missing_sources_df,
-            self.config.MIN_NEW_SOURCE_SIGMA,
+            self.config.NEW_SOURCE_MIN_SIGMA,
             p_run
         )
 
