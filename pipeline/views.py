@@ -124,7 +124,7 @@ FLOAT_FIELDS = {
     'new_high_sigma': {
         'precision': 3,
         'scale': 1
-    }
+    },
     'compactness': {
         'precision': 3,
         'scale': 1,
@@ -635,7 +635,7 @@ class SourceViewSet(ModelViewSet):
             'forced_measurements',
             'relations',
             'contains_siblings',
-            'new_high_sigma'
+            'new_high_sigma',
             'avg_compactness',
             'n_neighbour_dist'
         ]

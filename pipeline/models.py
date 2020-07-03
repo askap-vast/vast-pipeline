@@ -286,6 +286,7 @@ class Source(models.Model):
             'The largest sigma value for the new source'
             ' if it was placed in previous image.'
         )
+    )
     n_neighbour_dist = models.FloatField(
         help_text='Distance to the nearest neighbour (deg)'
     )
