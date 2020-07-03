@@ -127,7 +127,7 @@ def parallel_extraction(df, df_images, df_sources, min_sigma):
         out, df_sources[['source', 'image', 'flux_peak']],
         left_on=['source_tmp_id', 'detection'], right_on=['source', 'image'],
         how='left'
-    ).drop(columns=['image', 'source'])
+    ).drop(columns=['image_y', 'source']).rename(columns={'image_x': 'image'})
 
     # drop the source for which we would have no hope of detecting
     predrop_shape = out.shape[0]
