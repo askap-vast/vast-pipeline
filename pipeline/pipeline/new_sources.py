@@ -249,8 +249,7 @@ def new_sources(sources_df, missing_sources_df, min_sigma, p_run):
     )
 
     # this removes those that are out of range
-    values = {'img_diff_true_rms': 0.0}
-    new_sources_df = new_sources_df.fillna(values)
+    new_sources_df['img_diff_true_rms'] = new_sources_df['img_diff_true_rms'].fillna(0.)
     new_sources_df = new_sources_df[
         new_sources_df['img_diff_true_rms'] != 0
     ].reset_index(drop=True)
