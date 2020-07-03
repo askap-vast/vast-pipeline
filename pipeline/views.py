@@ -124,7 +124,19 @@ FLOAT_FIELDS = {
     'new_high_sigma': {
         'precision': 3,
         'scale': 1
-    }
+    },
+    'compactness': {
+        'precision': 3,
+        'scale': 1,
+    },
+    'avg_compactness': {
+        'precision': 3,
+        'scale': 1,
+    },
+    'n_neighbour_dist': {
+        'precision': 2,
+        'scale': 60.,
+    },
 }
 
 
@@ -385,6 +397,7 @@ def MeasurementIndex(request):
         'flux_int_err',
         'flux_peak',
         'flux_peak_err',
+        'compactness',
         'has_siblings',
         'forced'
     ]
@@ -415,6 +428,7 @@ def MeasurementIndex(request):
                     'Int. Flux Error (mJy)',
                     'Peak Flux (mJy/beam)',
                     'Peak Flux Error (mJy/beam)',
+                    'Compactness'
                     'Has siblings',
                     'Forced Extraction'
                 ],
@@ -510,9 +524,11 @@ def SourceIndex(request):
         'avg_flux_int',
         'avg_flux_peak',
         'max_flux_peak',
+        'avg_compactness',
         'measurements',
         'selavy_measurements',
         'forced_measurements',
+        'n_neighbour_dist',
         'relations',
         'v_int',
         'eta_int',
@@ -545,9 +561,11 @@ def SourceIndex(request):
                     'Avg. Int. Flux (mJy)',
                     'Avg. Peak Flux (mJy/beam)',
                     'Max Peak Flux (mJy/beam)',
+                    'Avg. Compactness',
                     'Total Datapoints',
                     'Selavy Datapoints',
                     'Forced Datapoints',
+                    'Nearest Neighbour Dist. (arcmin)',
                     'Relations',
                     'V int flux',
                     '\u03B7 int flux',
@@ -594,6 +612,12 @@ class SourceViewSet(ModelViewSet):
             )
         )
 
+        radius_conversions = {
+            "arcsec": 3600.,
+            "arcmin": 60.,
+            "deg": 1.
+        }
+
         qry_dict = {}
         p_run = self.request.query_params.get('run')
         if p_run:
@@ -611,13 +635,20 @@ class SourceViewSet(ModelViewSet):
             'forced_measurements',
             'relations',
             'contains_siblings',
-            'new_high_sigma'
+            'new_high_sigma',
+            'avg_compactness',
+            'n_neighbour_dist'
         ]
+
+        neighbour_unit = self.request.query_params.get('NeighbourUnit')
+
         for fld in flux_qry_flds:
             for limit in ['max', 'min']:
                 val = self.request.query_params.get(limit + '_' + fld)
                 if val:
                     ky = fld + '__lte' if limit == 'max' else fld + '__gte'
+                    if fld == 'n_neighbour_dist':
+                        val = float(val) / radius_conversions[neighbour_unit]
                     qry_dict[ky] = val
 
         measurements = self.request.query_params.get('meas')
@@ -633,11 +664,6 @@ class SourceViewSet(ModelViewSet):
         if qry_dict:
             qs = qs.filter(**qry_dict)
 
-        radius_conversions = {
-            "arcsec": 3600.,
-            "arcmin": 60.,
-            "deg": 1.
-        }
         radius = self.request.query_params.get('radius')
         radiusUnit = self.request.query_params.get('radiusunit')
         objectname = self.request.query_params.get('objectname')
@@ -674,9 +700,11 @@ def SourceQuery(request):
         'avg_flux_int',
         'avg_flux_peak',
         'max_flux_peak',
+        'avg_compactness',
         'measurements',
         'selavy_measurements',
         'forced_measurements',
+        'n_neighbour_dist',
         'relations',
         'v_int',
         'eta_int',
@@ -713,9 +741,11 @@ def SourceQuery(request):
                     'Avg. Int. Flux (mJy)',
                     'Avg. Peak Flux (mJy/beam)',
                     'Max Peak Flux (mJy/beam)',
+                    'Avg. Compactness',
                     'Total Datapoints',
                     'Selavy Datapoints',
                     'Forced Datapoints',
+                    'Nearest Neighbour Dist. (arcmin)',
                     'Relations',
                     'V int flux',
                     '\u03B7 int flux',

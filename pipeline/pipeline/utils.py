@@ -172,7 +172,8 @@ def prep_skysrc_df(image, perc_error, ini_df=False):
     'flux_int_err',
     'flux_peak',
     'flux_peak_err',
-    'forced'
+    'forced',
+    'compactness'
     ]
 
     df = pd.read_parquet(image.measurements_path, columns=cols)
@@ -253,9 +254,13 @@ def groupby_funcs(df):
             df.loc[non_forced_sel, 'interim_ns'].sum() /
             df.loc[non_forced_sel, 'weight_ns'].sum()
         )
+        d['avg_compactness'] = df.loc[
+            non_forced_sel, 'compactness'
+        ].mean()
     else:
         d['wavg_ra'] = df['interim_ew'].sum() / df['weight_ew'].sum()
         d['wavg_dec'] = df['interim_ns'].sum() / df['weight_ns'].sum()
+        d['avg_compactness'] = df['compactness'].mean()
 
     d['wavg_uncertainty_ew'] = 1. / np.sqrt(df['weight_ew'].sum())
     d['wavg_uncertainty_ns'] = 1. / np.sqrt(df['weight_ns'].sum())
@@ -292,6 +297,7 @@ def parallel_groupby(df):
         'img_list': 'O',
         'wavg_ra': 'f',
         'wavg_dec': 'f',
+        'avg_compactness': 'f',
         'wavg_uncertainty_ew': 'f',
         'wavg_uncertainty_ns': 'f',
         'avg_flux_int': 'f',

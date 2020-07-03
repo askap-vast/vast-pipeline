@@ -2,6 +2,9 @@ import os
 import logging
 import pandas as pd
 
+from astropy import units as u
+from astropy.coordinates import SkyCoord
+
 from pipeline.models import Association
 from pipeline.utils.utils import StopWatch
 
@@ -20,6 +23,7 @@ def final_operations(
         'Calculating statistics for %i sources...',
         sources_df.source.unique().shape[0]
     )
+
     timer.reset()
     srcs_df = parallel_groupby(sources_df)
     logger.info('Groupby-apply time: %.2f seconds', timer.reset())
@@ -36,6 +40,20 @@ def final_operations(
     )
 
     srcs_df['new_high_sigma'] = srcs_df['new_high_sigma'].fillna(0.)
+
+    # calculate nearest neighbour
+    srcs_skycoord = SkyCoord(
+        srcs_df['wavg_ra'],
+        srcs_df['wavg_dec'],
+        unit=(u.deg, u.deg)
+    )
+
+    idx, d2d, _ = srcs_skycoord.match_to_catalog_sky(
+        srcs_skycoord,
+        nthneighbor=2
+    )
+
+    srcs_df['n_neighbour_dist'] = d2d.deg
 
     # generate the source models
     srcs_df['src_dj'] = srcs_df.apply(

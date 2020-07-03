@@ -234,6 +234,7 @@ def forced_extraction(
     extr_df['dr'] = 0.
     extr_df['d2d'] = 0.
     extr_df['forced'] = True
+    extr_df['compactness'] = 1.
 
     # Create measurement Django objects
     extr_df['meas_dj'] = extr_df.apply(
