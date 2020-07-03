@@ -13,7 +13,7 @@ from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.wcs.utils import skycoord_to_pixel
 
-from ..utils.utils import StopWatch
+from pipeline.utils.utils import StopWatch
 
 
 logger = logging.getLogger(__name__)
