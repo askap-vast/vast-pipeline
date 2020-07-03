@@ -378,10 +378,7 @@ def get_rms_noise_image_values(rms_path):
 
 
 def get_image_list_diff(row):
-    out = []
-    for image in row['skyreg_img_list']:
-        if image not in row['img_list']:
-            out.append(image)
+    out = list(filter(lambda arg: arg not in row['img_list'], row['skyreg_img_list']))
 
     # set empty list to -1
     if not out:
