@@ -81,12 +81,18 @@ def load_validate_cfg(cfg):
             " Must be a value contained in: {}.".format(association_methods)
         ))
 
+    # validate min_new_source_sigma value
+    if 'NEW_SOURCE_MIN_SIGMA' not in dir(mod):
+        raise Exception('NEW_SOURCE_MIN_SIGMA must be defined!')
+
     # validate Forced extraction settings
     if getattr(mod, 'MONITOR') and not(
             getattr(mod, 'BACKGROUND_FILES') and getattr(mod, 'NOISE_FILES')
         ):
         raise Exception('Expecting list of background MAP and RMS files!')
     else:
+        if 'MONITOR_MIN_SIGMA' not in dir(mod):
+            raise Exception('MONITOR_MIN_SIGMA must be defined!')
         for lst in ['BACKGROUND_FILES', 'NOISE_FILES']:
             for file in getattr(mod, lst):
                 if not os.path.exists(file):

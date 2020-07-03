@@ -90,7 +90,7 @@ class Pipeline():
         new_sources_df = new_sources(
             sources_df,
             missing_sources_df,
-            self.config.MIN_NEW_SOURCE_SIGMA,
+            self.config.NEW_SOURCE_MIN_SIGMA,
             p_run
         )
 
@@ -102,7 +102,8 @@ class Pipeline():
                 self.config.ASTROMETRIC_UNCERTAINTY_DEC / 3600.,
                 p_run,
                 meas_dj_obj,
-                missing_sources_df
+                missing_sources_df,
+                self.config.MONITOR_MIN_SIGMA
             )
 
         # STEP #6: finalise the df getting unique sources, calculating
