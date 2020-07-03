@@ -9,7 +9,7 @@ from django.conf import settings
 from psutil import cpu_count
 from itertools import chain
 
-from ..utils.utils import deg2hms, deg2dms, eq_to_cart, StopWatch
+from pipeline.utils.utils import deg2hms, deg2dms, eq_to_cart, StopWatch
 from ..models import Band, Image, Measurement, Run, Source, SkyRegion
 from pipeline.image.utils import on_sky_sep
 
