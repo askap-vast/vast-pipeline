@@ -213,11 +213,10 @@ Celestial.add({
       Celestial.context.fill();
       Celestial.context.stroke();
 
-      var pt;
       // If point is visible (this doesn't work automatically for points)
       if (Celestial.clip(d.properties.loc)) {
         // get point coordinates
-        pt = Celestial.mapProjection(d.properties.loc);
+        let pt = Celestial.mapProjection(d.properties.loc);
         // Set text styles
         Celestial.setTextStyle(textStyle);
         // and draw text on canvas

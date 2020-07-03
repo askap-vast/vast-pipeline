@@ -148,13 +148,13 @@ def new_sources(sources_df, missing_sources_df, min_sigma, p_run):
     # Get rid of sources that are not 'new', i.e. sources which the
     # first sky region image is not in the image list
 
-    missing_sources_df['primary'] = [
-        i[0] for i in missing_sources_df.skyreg_img_list
-    ]
+    missing_sources_df['primary'] = missing_sources_df[
+        'skyreg_img_list'
+    ].apply(lambda x: x[0])
 
-    missing_sources_df['detection'] = [
-        i[0] for i in missing_sources_df.img_list
-    ]
+    missing_sources_df['detection'] = missing_sources_df[
+        'img_list'
+    ].apply(lambda x: x[0])
 
     missing_sources_df['in_primary'] = missing_sources_df[
         ['primary', 'img_list']
@@ -173,9 +173,7 @@ def new_sources(sources_df, missing_sources_df, min_sigma, p_run):
     # i.e. are the previous images sensitive enough
 
     # save the index before exploding
-    new_sources_df['source'] = new_sources_df.index
-
-    new_sources_df = new_sources_df.reset_index(drop=True)
+    new_sources_df = new_sources_df.reset_index()
 
     # Explode now to avoid two loops below
     new_sources_df = new_sources_df.explode('img_diff')
@@ -211,10 +209,10 @@ def new_sources(sources_df, missing_sources_df, min_sigma, p_run):
 
     # merge the detection fluxes in
     new_sources_df = pd.merge(
-        new_sources_df, sources_df[['source', 'img', 'flux_peak']],
-        left_on=['source', 'detection'], right_on=['source', 'img'],
+        new_sources_df, sources_df[['source', 'image', 'flux_peak']],
+        left_on=['source', 'detection'], right_on=['source', 'image'],
         how='left'
-    ).drop(columns=['img'])
+    ).drop(columns=['image'])
 
     # calculate the sigma of the source if it was placed in the
     # minimum rms region of the previous images
@@ -224,9 +222,9 @@ def new_sources(sources_df, missing_sources_df, min_sigma, p_run):
     )
 
     # keep those that are above the user specified threshold
-    new_sources_df = new_sources_df[
-        new_sources_df['diff_sigma'] >= min_new_source_sigma
-    ].copy()
+    new_sources_df = new_sources_df.loc[
+        new_sources_df['diff_sigma'] >= min_sigma
+    ]
 
     # Now have list of sources that should have been seen before given
     # previous images minimum rms values.

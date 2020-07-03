@@ -176,7 +176,7 @@ def prep_skysrc_df(image, perc_error, ini_df=False):
     ]
 
     df = pd.read_parquet(image.measurements_path, columns=cols)
-    df['img'] = image.name
+    df['image'] = image.name
     df['datetime'] = image.datetime
     # these are the first 'sources'
     df['source'] = df.index + 1 if ini_df else -1
@@ -242,7 +242,7 @@ def groupby_funcs(df):
     '''
     # calculated average ra, dec, fluxes and metrics
     d = {}
-    d['img_list'] = list(set(df['img'].values.tolist()))
+    d['img_list'] = list(set(df['image'].values.tolist()))
     if df['forced'].any():
         non_forced_sel = df['forced'] != True
         d['wavg_ra'] = (
@@ -318,7 +318,7 @@ def parallel_groupby(df):
 
 def calc_ave_coord(grp):
     d = {}
-    d['img_list'] = list(set(grp['img'].values.tolist()))
+    d['img_list'] = list(set(grp['image'].values.tolist()))
     d['wavg_ra'] = grp['interim_ew'].sum() / grp['weight_ew'].sum()
     d['wavg_dec'] = grp['interim_ns'].sum() / grp['weight_ns'].sum()
     return pd.Series(d)
@@ -471,6 +471,6 @@ def get_src_skyregion_merged_df(sources_df, p_run):
 
     srcs_df = srcs_df.loc[
         srcs_df['img_diff'] != -1
-    ].copy()
+    ]
 
     return srcs_df
