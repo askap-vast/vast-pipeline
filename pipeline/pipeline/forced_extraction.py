@@ -182,6 +182,7 @@ def parallel_write_parquet(df, run_path):
             run_path=run_path,
             meta=('out', '?')
         )
+        .compute(num_workers=n_cpu, scheduler='processes')
     )
     pass
 
