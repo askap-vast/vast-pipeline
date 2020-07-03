@@ -279,6 +279,13 @@ class Source(models.Model):
         help_text='Eta metric for peak flux.'
     )
 
+    new_high_sigma = models.FloatField(
+        help_text=(
+            'The largest sigma value for the new source'
+            ' if it was placed in previous image.'
+        )
+    )
+
     objects = SourceQuerySet.as_manager()
 
     def __str__(self):

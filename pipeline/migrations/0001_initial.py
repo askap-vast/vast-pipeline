@@ -143,6 +143,7 @@ class Migration(migrations.Migration):
                 ('v_peak', models.FloatField(help_text='V metric for peak flux.')),
                 ('eta_int', models.FloatField(help_text='Eta metric for int flux.')),
                 ('eta_peak', models.FloatField(help_text='Eta metric for peak flux.')),
+                ('new_high_sigma', models.FloatField(help_text='The largest sigma value for the new source if it was placed in previous image.')),
                 ('cross_match_sources', models.ManyToManyField(through='pipeline.CrossMatch', to='pipeline.SurveySource')),
                 ('related', models.ManyToManyField(related_name='_source_related_+', to='pipeline.Source')),
                 ('run', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='pipeline.Run')),

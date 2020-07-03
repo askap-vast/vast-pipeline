@@ -7,9 +7,11 @@ from astropy.coordinates import Angle
 
 from ..models import SurveySource
 from .association import association
+from .new_sources import new_sources
 from .forced_extraction import forced_extraction
 from .finalise import final_operations
 from .loading import upload_images
+from .utils import get_src_skyregion_merged_df
 
 
 logger = logging.getLogger(__name__)
@@ -77,23 +79,40 @@ class Pipeline():
             self.config,
         )
 
-        # STEP #3: Run forced extraction/photometry if asked
+        # STEP #3: Merge sky regions and sources ready for
+        # steps 4 and 5 below.
+        missing_sources_df = get_src_skyregion_merged_df(
+            sources_df,
+            p_run
+        )
+
+        # STEP #4 New source analysis
+        new_sources_df = new_sources(
+            sources_df,
+            missing_sources_df,
+            self.config.MIN_NEW_SOURCE_SIGMA,
+            p_run
+        )
+
+        # STEP #5: Run forced extraction/photometry if asked
         if self.config.MONITOR:
             sources_df, meas_dj_obj = forced_extraction(
                 sources_df,
                 self.config.ASTROMETRIC_UNCERTAINTY_RA / 3600.,
                 self.config.ASTROMETRIC_UNCERTAINTY_DEC / 3600.,
                 p_run,
-                meas_dj_obj
+                meas_dj_obj,
+                missing_sources_df
             )
 
-        # STEP #4: finalise the df getting unique sources, calculating
+        # STEP #6: finalise the df getting unique sources, calculating
         # metrics and upload data to database
         final_operations(
             sources_df,
             images[0].name,
             p_run,
-            meas_dj_obj
+            meas_dj_obj,
+            new_sources_df
         )
 
         pass

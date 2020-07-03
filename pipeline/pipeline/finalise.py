@@ -11,7 +11,8 @@ from .utils import get_source_models, parallel_groupby
 logger = logging.getLogger(__name__)
 
 
-def final_operations(sources_df, first_img, p_run, meas_dj_obj):
+def final_operations(
+    sources_df, first_img, p_run, meas_dj_obj, new_sources_df):
     timer = StopWatch()
 
     # calculate source fields
@@ -20,10 +21,21 @@ def final_operations(sources_df, first_img, p_run, meas_dj_obj):
         sources_df.source.unique().shape[0]
     )
     timer.reset()
-    srcs_df = parallel_groupby(sources_df, first_img)
+    srcs_df = parallel_groupby(sources_df)
     logger.info('Groupby-apply time: %.2f seconds', timer.reset())
     # fill NaNs as resulted from calculated metrics with 0
     srcs_df = srcs_df.fillna(0.)
+
+    # add new sources
+    srcs_df['new'] = srcs_df.index.isin(new_sources_df.source)
+
+    srcs_df = pd.merge(
+        srcs_df,
+        new_sources_df[['source', 'new_high_sigma']],
+        left_on='source', right_on='source', how='left'
+    )
+
+    srcs_df['new_high_sigma'] = srcs_df['new_high_sigma'].fillna(0.)
 
     # generate the source models
     srcs_df['src_dj'] = srcs_df.apply(

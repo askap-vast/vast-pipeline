@@ -73,6 +73,14 @@ FLOAT_FIELDS = {
         'precision': 3,
         'scale': 1,
     },
+    'flux_int_err': {
+        'precision': 3,
+        'scale': 1,
+    },
+    'flux_peak_err': {
+        'precision': 3,
+        'scale': 1,
+    },
     'v_int': {
         'precision': 2,
         'scale': 1,
@@ -113,6 +121,10 @@ FLOAT_FIELDS = {
         'precision': 3,
         'scale': 1,
     },
+    'new_high_sigma': {
+        'precision': 3,
+        'scale': 1
+    }
 }
 
 
@@ -370,7 +382,9 @@ def MeasurementIndex(request):
         'dec_err',
         'uncertainty_ns',
         'flux_int',
+        'flux_int_err',
         'flux_peak',
+        'flux_peak_err',
         'has_siblings',
         'forced'
     ]
@@ -398,7 +412,9 @@ def MeasurementIndex(request):
                     'Dec Error (arcsec)',
                     'Uncertainty NS (arcsec)',
                     'Int. Flux (mJy)',
+                    'Int. Flux Error (mJy)',
                     'Peak Flux (mJy/beam)',
+                    'Peak Flux Error (mJy/beam)',
                     'Has siblings',
                     'Forced Extraction'
                 ],
@@ -503,7 +519,8 @@ def SourceIndex(request):
         'v_peak',
         'eta_peak',
         'contains_siblings',
-        'new'
+        'new',
+        'new_high_sigma'
     ]
 
     colsfields = generate_colsfields(fields, '/sources/')
@@ -538,6 +555,7 @@ def SourceIndex(request):
                     '\u03B7 peak flux',
                     'Contains siblings',
                     'New Source',
+                    'New High Sigma'
                 ],
                 'search': False,
             }
@@ -592,7 +610,8 @@ class SourceViewSet(ModelViewSet):
             'selavy_measurements',
             'forced_measurements',
             'relations',
-            'contains_siblings'
+            'contains_siblings',
+            'new_high_sigma'
         ]
         for fld in flux_qry_flds:
             for limit in ['max', 'min']:
@@ -664,7 +683,8 @@ def SourceQuery(request):
         'v_peak',
         'eta_peak',
         'contains_siblings',
-        'new'
+        'new',
+        'new_high_sigma'
     ]
 
     colsfields = generate_colsfields(fields, '/sources/')
@@ -703,6 +723,7 @@ def SourceQuery(request):
                     '\u03B7 peak flux',
                     'Contains siblings',
                     'New Source',
+                    'New High Sigma'
                 ],
                 'search': False,
             }
