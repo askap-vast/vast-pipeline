@@ -248,7 +248,6 @@ class SelavyImage(FitsImage):
         ] = self.config.SELAVY_LOCAL_RMS_ZERO_FILL_VALUE
 
         df['snr'] = df['flux_peak'].values / df['local_rms'].values
-
         df['compactness'] = df['flux_int'].values / df['flux_peak'].values
 
         if self.config.USE_CONDON_ERRORS:
