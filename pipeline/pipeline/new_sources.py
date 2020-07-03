@@ -221,8 +221,8 @@ def new_sources(sources_df, missing_sources_df, min_new_source_sigma, p_run):
     # calculate the sigma of the source if it was placed in the
     # minimum rms region of the previous images
     new_sources_df['diff_sigma'] = (
-        new_sources_df['flux_peak']
-        / new_sources_df['img_diff_rms_min']
+        new_sources_df['flux_peak'].values
+        / new_sources_df['img_diff_rms_min'].values
     )
 
     # keep those that are above the user specified threshold
