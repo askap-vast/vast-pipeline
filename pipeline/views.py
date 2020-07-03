@@ -396,11 +396,8 @@ def MeasurementIndex(request):
         'flux_int',
         'flux_int_err',
         'flux_peak',
-<<<<<<< HEAD
         'flux_peak_err',
-=======
         'compactness',
->>>>>>> Added compactness and nearest neighbour metrics
         'has_siblings',
         'forced'
     ]
@@ -430,11 +427,8 @@ def MeasurementIndex(request):
                     'Int. Flux (mJy)',
                     'Int. Flux Error (mJy)',
                     'Peak Flux (mJy/beam)',
-<<<<<<< HEAD
                     'Peak Flux Error (mJy/beam)',
-=======
                     'Compactness'
->>>>>>> Added compactness and nearest neighbour metrics
                     'Has siblings',
                     'Forced Extraction'
                 ],
@@ -641,12 +635,9 @@ class SourceViewSet(ModelViewSet):
             'forced_measurements',
             'relations',
             'contains_siblings',
-<<<<<<< HEAD
             'new_high_sigma'
-=======
             'avg_compactness',
             'n_neighbour_dist'
->>>>>>> Added compactness and nearest neighbour metrics
         ]
 
         neighbour_unit = self.request.query_params.get('NeighbourUnit')
