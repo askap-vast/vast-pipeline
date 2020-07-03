@@ -259,8 +259,8 @@ def new_sources(sources_df, missing_sources_df, min_sigma, p_run):
 
     # calculate the true sigma
     new_sources_df['true_sigma'] = (
-        new_sources_df['flux_peak']
-        / new_sources_df['img_diff_true_rms']
+        new_sources_df['flux_peak'].values
+        / new_sources_df['img_diff_true_rms'].values
     )
 
     # We only care about the highest true sigma
