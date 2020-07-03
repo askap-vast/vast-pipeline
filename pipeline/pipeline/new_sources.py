@@ -67,7 +67,6 @@ def get_image_rms_measurements(group):
     )
 
     valid_indexes = group[valid].index.values
-    not_valid_indexes = group[~valid].index.values
 
     rms_values = data[
         array_coords[0][valid],
