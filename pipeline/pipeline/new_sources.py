@@ -124,7 +124,7 @@ def parallel_get_rms_measurements(df):
     return df
 
 
-def new_sources(sources_df, missing_sources_df, min_new_source_sigma, p_run):
+def new_sources(sources_df, missing_sources_df, min_sigma, p_run):
     """
     Process the new sources detected to see if they are
     valid.
