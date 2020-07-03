@@ -131,7 +131,7 @@ def parallel_extraction(df, df_images, df_sources, min_sigma):
 
     # drop the source for which we would have no hope of detecting
     predrop_shape = out.shape[0]
-    out['max_snr'] = out['flux_peak'] / out['image_rms_min']
+    out['max_snr'] = out['flux_peak'].values / out['image_rms_min'].values
     out = out[out['max_snr'] > min_sigma].reset_index(drop=True)
     postdrop_shape = out.shape[0]
     logger.debug("Min forced sigma dropped %i sources", (
