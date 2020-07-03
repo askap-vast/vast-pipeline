@@ -176,7 +176,11 @@ function modules() {
   var d3CelestialImage = gulp.src('./node_modules/d3-celestial/images/*')
     .pipe(gulp.dest(paths.cssDir + '/images'));
 
-  return merge(bootstrapJS, chartJS, dataTables, fontAwesome, jquery, jqueryEasing, d3Celestial, d3CelestialData, d3CelestialImage);
+  // particles.js
+  var particlesJs = gulp.src('./node_modules/particles.js/particles.js')
+    .pipe(gulp.dest(paths.vendor + '/particles.js'));
+
+  return merge(bootstrapJS, chartJS, dataTables, fontAwesome, jquery, jqueryEasing, d3Celestial, d3CelestialData, d3CelestialImage, particlesJs);
 }
 
 // CSS task

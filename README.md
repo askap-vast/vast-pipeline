@@ -8,6 +8,7 @@ If you intend to contribute to the code base please read and follow the guidelin
 ## Table of Contents
 
 - [Pipeline Configuration](#pipeline-configuration)
+- [Pipeline Login](#pipeline-login)
 - [Pipeline Usage](#pipeline-usage)
 	- [Initialise a Pipeline Run](#initialise-a-pipeline-run)
 	- [Run a Pipeline Instance](#run-a-pipeline-instance)
@@ -97,6 +98,19 @@ vast-pipeline/
 ├── manage.py
 └── README.md
 ```
+
+## Pipeline Login
+Currently the pipeline support only login via GitHub Team and/or as Django administrator.
+
+Please make sure to fill the `SOCIAL_AUTH_GITHUB_KEY, SOCIAL_AUTH_GITHUB_SECRET, SOCIAL_AUTH_GITHUB_TEAM_ID, SOCIAL_AUTH_GITHUB_TEAM_ADMIN` in your [`.env`](./webinterface/.env.template) file. Also be sure to be part of the GitHub team, if not ask @srggrs, @ajstewart or @marxide to be added.
+
+You can also login on your __local__ version for doing some develpment by creating an admin user:
+
+```bash
+$ ./manage.py createsuperuser
+```
+
+Fill in your details and then login with the created credentials at `localhost:8000/pipe-admin` (change ip and port if needed). That will log you in the Django admin site. Go to `localhost:8000` or click "site" on the right top corner to enter the vast pipeline website.
 
 ## Pipeline Usage
 All the pipeline commands are run using the Django global `./manage.py <command>` interface. Therefore you need to activate the `Python` environment. You can have a look at the available commands for the pipeline app:

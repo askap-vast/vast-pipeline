@@ -40,7 +40,8 @@
     "datatables.net-bs4": "1.10.20",
     "jquery": "3.4.1",
     "jquery.easing": "^1.4.1",
-    "js9": "git+https://github.com/ericmandel/js9.git#v3.0"
+    "js9": "git+https://github.com/ericmandel/js9.git#v3.0",
+    "particles.js": "^2.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.10.2",
