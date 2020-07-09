@@ -428,7 +428,7 @@ def MeasurementIndex(request):
                     'Int. Flux Error (mJy)',
                     'Peak Flux (mJy/beam)',
                     'Peak Flux Error (mJy/beam)',
-                    'Compactness'
+                    'Compactness',
                     'Has siblings',
                     'Forced Extraction'
                 ],

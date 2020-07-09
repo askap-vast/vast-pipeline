@@ -56,6 +56,7 @@ class MeasurementSerializer(serializers.ModelSerializer):
             'flux_int_err',
             'flux_peak',
             'flux_peak_err',
+            'compactness',
             'has_siblings',
             'forced',
         ]
