@@ -22,9 +22,10 @@ from rest_framework.authentication import (
     SessionAuthentication, BasicAuthentication
 )
 from rest_framework.permissions import IsAuthenticated
+
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.contrib.auth.decorators import login_required
-
+from django.contrib import messages
 
 from .models import Image, Measurement, Run, Source, SkyRegion
 from .serializers import (
@@ -285,6 +286,18 @@ class RunViewSet(ModelViewSet):
 # Run detail
 @login_required
 def RunDetail(request, id):
+    if request.method == 'POST':
+        p_run = Run.objects.get(id=id)
+        txt = request.POST.get('comment-text')
+        if not txt:
+            messages.info(request, 'Comment empty!')
+        elif len(txt) > Run._meta.get_field('comment').max_length:
+            messages.error(request, 'Comment too long!')
+        else:
+            p_run.comment = txt
+            p_run.save()
+            messages.success(request, 'Comment update successfully!')
+
     p_run = Run.objects.filter(id=id).values().get()
     p_run['nr_imgs'] = Image.objects.filter(run__id=p_run['id']).count()
     p_run['nr_srcs'] = Source.objects.filter(run__id=p_run['id']).count()
@@ -295,6 +308,7 @@ def RunDetail(request, id):
         run__id=p_run['id'],
         new=True,
     ).count()
+
     return render(request, 'run_detail.html', {'p_run': p_run})
 
 
