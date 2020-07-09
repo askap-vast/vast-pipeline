@@ -19,6 +19,12 @@
   <!-- Page Heading -->
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
 	  <h1 class="h3 mb-2 text-gray-800">Pipeline Run: {{ p_run.name }}</h1>
+    <a class="btn btn-sm btn-primary btn-icon-split shadow-sm" href="#" data-toggle="modal" data-target="#updateCommment">
+      <span class="icon text-white-600">
+        <i class="fa fa-comment fa-lg"></i>
+      </span>
+      <span class="text">Update Comment</span>
+    </a>
 	</div>
 
   <div class="row">
@@ -118,3 +124,30 @@
 <!-- /.container-fluid -->
 
 {% endblock content %}
+
+{% block modal %}
+
+<!-- Update Comment Modal-->
+<div class="modal fade" id="updateCommment" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Update "{{ p_run.name }}" comment below</h5>
+        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form action="" method="post">
+          <div class="form-group">
+            <textarea class="form-control" id="comment-text" placeholder="Insert comment here"></textarea>
+          </div>
+          <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+          <a class="btn btn-primary" href="{% url 'pipeline:run_detail' p_run.id %}">Update</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock modal %}

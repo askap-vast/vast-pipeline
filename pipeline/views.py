@@ -22,6 +22,7 @@ from rest_framework.authentication import (
     SessionAuthentication, BasicAuthentication
 )
 from rest_framework.permissions import IsAuthenticated
+
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.contrib.auth.decorators import login_required
 
@@ -285,17 +286,29 @@ class RunViewSet(ModelViewSet):
 # Run detail
 @login_required
 def RunDetail(request, id):
-    p_run = Run.objects.filter(id=id).values().get()
-    p_run['nr_imgs'] = Image.objects.filter(run__id=p_run['id']).count()
-    p_run['nr_srcs'] = Source.objects.filter(run__id=p_run['id']).count()
-    p_run['nr_meas'] = Measurement.objects.filter(image__run__id=p_run['id']).count()
-    p_run['nr_frcd'] = Measurement.objects.filter(
-        image__run=p_run['id'], forced=True).count()
-    p_run['new_srcs'] = Source.objects.filter(
-        run__id=p_run['id'],
-        new=True,
-    ).count()
-    return render(request, 'run_detail.html', {'p_run': p_run})
+    if request.method == 'GET':
+        p_run = Run.objects.filter(id=id).values().get()
+        p_run['nr_imgs'] = Image.objects.filter(run__id=p_run['id']).count()
+        p_run['nr_srcs'] = Source.objects.filter(run__id=p_run['id']).count()
+        p_run['nr_meas'] = Measurement.objects.filter(image__run__id=p_run['id']).count()
+        p_run['nr_frcd'] = Measurement.objects.filter(
+            image__run=p_run['id'], forced=True).count()
+        p_run['new_srcs'] = Source.objects.filter(
+            run__id=p_run['id'],
+            new=True,
+        ).count()
+        return render(request, 'run_detail.html', {'p_run': p_run})
+
+    if request.method == 'POST':
+        comment_tx = request.POST['comment-text']
+        print(comment_tx)
+        pass
+
+
+# Update Run Comment
+@login_required
+def UpdateRunComment(request, id):
+    pass
 
 
 # Images table
