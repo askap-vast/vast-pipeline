@@ -11,8 +11,6 @@ from astropy.coordinates import SkyCoord
 from datetime import datetime
 from django.conf import settings
 
-import pipeline.config_template as base_cfg
-
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +98,7 @@ def load_validate_cfg(cfg):
 
     # validate every config from the config template
     for key in [k for k in dir(mod) if k.isupper()]:
-        if key not in dir(base_cfg):
+        if key.lower() not in settings.PIPE_RUN_CONFIG_DEFAULTS.keys():
             raise Exception(f'configuration not valid, missing key: {key}!')
 
     return mod
