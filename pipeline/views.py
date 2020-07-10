@@ -25,7 +25,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.contrib.auth.decorators import login_required
-
+from django.contrib import messages
 
 from .models import Image, Measurement, Run, Source, SkyRegion
 from .serializers import (
@@ -286,29 +286,30 @@ class RunViewSet(ModelViewSet):
 # Run detail
 @login_required
 def RunDetail(request, id):
-    if request.method == 'GET':
-        p_run = Run.objects.filter(id=id).values().get()
-        p_run['nr_imgs'] = Image.objects.filter(run__id=p_run['id']).count()
-        p_run['nr_srcs'] = Source.objects.filter(run__id=p_run['id']).count()
-        p_run['nr_meas'] = Measurement.objects.filter(image__run__id=p_run['id']).count()
-        p_run['nr_frcd'] = Measurement.objects.filter(
-            image__run=p_run['id'], forced=True).count()
-        p_run['new_srcs'] = Source.objects.filter(
-            run__id=p_run['id'],
-            new=True,
-        ).count()
-        return render(request, 'run_detail.html', {'p_run': p_run})
-
     if request.method == 'POST':
-        comment_tx = request.POST['comment-text']
-        print(comment_tx)
-        pass
+        p_run = Run.objects.get(id=id)
+        txt = request.POST.get('comment-text')
+        if not txt:
+            messages.info(request, 'Comment empty!')
+        elif len(txt) > Run._meta.get_field('comment').max_length:
+            messages.error(request, 'Comment too long!')
+        else:
+            p_run.comment = txt
+            p_run.save()
+            messages.success(request, 'Comment update successfully!')
 
+    p_run = Run.objects.filter(id=id).values().get()
+    p_run['nr_imgs'] = Image.objects.filter(run__id=p_run['id']).count()
+    p_run['nr_srcs'] = Source.objects.filter(run__id=p_run['id']).count()
+    p_run['nr_meas'] = Measurement.objects.filter(image__run__id=p_run['id']).count()
+    p_run['nr_frcd'] = Measurement.objects.filter(
+        image__run=p_run['id'], forced=True).count()
+    p_run['new_srcs'] = Source.objects.filter(
+        run__id=p_run['id'],
+        new=True,
+    ).count()
 
-# Update Run Comment
-@login_required
-def UpdateRunComment(request, id):
-    pass
+    return render(request, 'run_detail.html', {'p_run': p_run})
 
 
 # Images table
