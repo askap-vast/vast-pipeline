@@ -465,7 +465,7 @@ class MeasurementViewSet(ModelViewSet):
 
 @login_required
 def MeasurementDetail(request, id, action=None):
-    # source data
+    # measurement data
     measurement = Measurement.objects.all().order_by('id')
     if action:
         if action == 'next':
