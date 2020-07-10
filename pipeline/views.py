@@ -778,6 +778,18 @@ def SourceQuery(request):
 # Source detail
 @login_required
 def SourceDetail(request, id, action=None):
+    if request.method == 'POST':
+        source = Source.objects.get(id=id)
+        txt = request.POST.get('comment-text')
+        if not txt:
+            messages.info(request, 'Comment empty!')
+        elif len(txt) > Source._meta.get_field('comment').max_length:
+            messages.error(request, 'Comment too long!')
+        else:
+            source.comment = txt
+            source.save()
+            messages.success(request, 'Comment update successfully!')
+
     # source data
     source = Source.objects.all()
     if action:
