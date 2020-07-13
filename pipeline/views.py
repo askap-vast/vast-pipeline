@@ -296,7 +296,7 @@ def RunDetail(request, id):
         else:
             p_run.comment = txt
             p_run.save()
-            messages.success(request, 'Comment update successfully!')
+            messages.success(request, 'Comment updated successfully!')
 
     p_run = Run.objects.filter(id=id).values().get()
     p_run['nr_imgs'] = Image.objects.filter(run__id=p_run['id']).count()
