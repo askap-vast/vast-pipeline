@@ -4,6 +4,7 @@ from shutil import copyfile
 
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings as cfg
+from jinja2 import Template
 
 from pipeline.models import Run
 
@@ -55,10 +56,17 @@ class Command(BaseCommand):
 
         # copy default config into the pipeline run folder
         logger.info('copying default config in pipeline run folder')
-        copyfile(
-            os.path.join(cfg.BASE_DIR, 'pipeline', 'config_template.py'),
-            os.path.join(ds_path, 'config.py')
+        template_f = os.path.join(
+            cfg.BASE_DIR,
+            'pipeline',
+            'config_template.py.j2'
         )
+        with open(template_f, 'r') as fp:
+            template_str = fp.read()
+
+        tm = Template(template_str)
+        with open(os.path.join(ds_path, 'config.py'), 'w') as fp:
+            fp.write(tm.render(**cfg.PIPE_RUN_CONFIG_DEFAULTS))
 
         logger.info((
             'pipeline run initialisation successful! Please modify the '

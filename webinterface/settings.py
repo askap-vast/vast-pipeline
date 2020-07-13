@@ -244,3 +244,26 @@ FLUX_DEFAULT_MIN_ERROR = env('FLUX_DEFAULT_MIN_ERROR', cast=float, default=0.001
 
 # minimum default accepted error on ra and dec
 POS_DEFAULT_MIN_ERROR = env('POS_DEFAULT_MIN_ERROR', cast=float, default=0.01)
+
+# Default pipeline run config values
+PIPE_RUN_CONFIG_DEFAULTS = {
+    'pipe_run_path': None,
+    'image_files': [],
+    'selavy_files': [],
+    'background_files': [],
+    'noise_files': [],
+    'source_finder': 'selavy',
+    'monitor': False,
+    'monitor_min_sigma': 3.0,
+    'astrometric_uncertainty_ra': 1,
+    'astrometric_uncertainty_dec': 1,
+    'association_method': 'basic',
+    'association_radius': 5.,
+    'association_de_ruiter_radius': 5.68,
+    'association_beamwidth_limit': 1.0,
+    'new_source_min_sigma': 5.0,
+    'default_survey': None,
+    'flux_perc_error': 0,
+    'use_condon_errors': True,
+    'selavy_local_rms_zero_fill_value': 0.2,
+}
