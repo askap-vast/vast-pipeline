@@ -103,7 +103,8 @@ class Pipeline():
                 p_run,
                 meas_dj_obj,
                 missing_sources_df,
-                self.config.MONITOR_MIN_SIGMA
+                self.config.MONITOR_MIN_SIGMA,
+                self.config.MONITOR_EDGE_BUFFER_SCALE,
             )
 
         # STEP #6: finalise the df getting unique sources, calculating

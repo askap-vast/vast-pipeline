@@ -269,6 +269,7 @@ class ForcedPhot:
         nbeam: int = 3,
         cluster_threshold: Optional[float] = 1.5,
         stamps: bool = False,
+        edge_buffer = 1.0
     ) -> Tuple[Any, ...]:
         """Perform the forced photometry returning the flux density and uncertainty.
         Example usage:
@@ -306,7 +307,7 @@ class ForcedPhot:
             np.atleast_1d,
             astropy.wcs.utils.skycoord_to_pixel(positions, self.w)
         )
-        X0, Y0 = self._filter_out_of_range(X0, Y0, nbeam)
+        X0, Y0 = self._filter_out_of_range(X0, Y0, nbeam, edge_buffer)
         self.cluster(X0, Y0, threshold=cluster_threshold)
 
         if stamps:
@@ -562,7 +563,7 @@ class ForcedPhot:
                 g,
             )
 
-    def _filter_out_of_range(self, X0, Y0, nbeam):
+    def _filter_out_of_range(self, X0, Y0, nbeam, edge_buffer):
         """
         X0, Y0 = _filter_out_of_range(X0, Y0, nbeam)
         Filter out sources which are beyond the image range.
@@ -578,6 +579,8 @@ class ForcedPhot:
             (nbeam / 2. * self.BMAJ.to('arcsec') /
             self.pixelscale).value
         )
+
+        npix = int(npix * edge_buffer)
 
         X0_mask = (X0 < npix) | (X0 > self.NAXIS1 - npix)
         Y0_mask = (Y0 < npix) | (Y0 > self.NAXIS2 - npix)

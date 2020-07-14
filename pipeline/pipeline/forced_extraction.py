@@ -23,7 +23,7 @@ from ..utils.utils import StopWatch
 logger = logging.getLogger(__name__)
 
 
-def extract_from_image(df, images_df):
+def extract_from_image(df, images_df, edge_buffer):
     P_islands = SkyCoord(
         df['wavg_ra'].values * u.deg,
         df['wavg_dec'].values * u.deg
@@ -39,6 +39,7 @@ def extract_from_image(df, images_df):
     flux, flux_err, chisq, DOF = FP.measure(
         P_islands,
         cluster_threshold=3,
+        edge_buffer=edge_buffer
     )
 
     # make up the measurements name from the image
@@ -82,7 +83,7 @@ def extract_from_image(df, images_df):
     return df
 
 
-def parallel_extraction(df, df_images, df_sources, min_sigma):
+def parallel_extraction(df, df_images, df_sources, min_sigma, edge_buffer):
     '''
     parallelize forced extraction with Dask
     '''
@@ -142,7 +143,11 @@ def parallel_extraction(df, df_images, df_sources, min_sigma):
     out = (
         dd.from_pandas(out, n_cpu)
         .groupby('image')
-        .apply(extract_from_image, images_df=df_images, meta=col_dtype)
+        .apply(
+            extract_from_image,
+            images_df=df_images,
+            edge_buffer=edge_buffer,
+            meta=col_dtype)
         .dropna(subset=['flux_int'])
         .compute(num_workers=n_cpu, scheduler='processes')
         .rename(columns={'wavg_ra':'ra', 'wavg_dec':'dec'})
@@ -189,7 +194,7 @@ def parallel_write_parquet(df, run_path):
 
 def forced_extraction(
         sources_df, cfg_err_ra, cfg_err_dec, p_run,
-        meas_dj_obj, extr_df, min_sigma
+        meas_dj_obj, extr_df, min_sigma, edge_buffer
     ):
     """
     check and extract expected measurements, and associated them with the
@@ -215,7 +220,9 @@ def forced_extraction(
     extr_df = extr_df[['wavg_ra', 'wavg_dec', 'img_diff', 'detection']]
 
     timer.reset()
-    extr_df = parallel_extraction(extr_df, images_df, sources_df, min_sigma)
+    extr_df = parallel_extraction(
+        extr_df, images_df, sources_df, min_sigma, edge_buffer
+    )
     logger.info(
         'Force extraction step time: %.2f seconds', timer.reset()
     )

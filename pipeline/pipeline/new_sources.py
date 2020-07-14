@@ -31,8 +31,7 @@ def get_image_rms_measurements(group):
     image = group.iloc[0]['img_diff_rms_path']
 
     with fits.open(image) as hdul:
-        header = hdul[0].header
-        wcs = WCS(header, naxis=2)
+        wcs = WCS(hdul[0].header, naxis=2)
 
         try:
             # ASKAP tile images
@@ -88,8 +87,8 @@ def parallel_get_rms_measurements(df):
     """
 
     out = df[[
-            'source', 'wavg_ra', 'wavg_dec',
-            'img_diff_rms_path'
+        'source', 'wavg_ra', 'wavg_dec',
+        'img_diff_rms_path'
     ]]
 
     col_dtype = {

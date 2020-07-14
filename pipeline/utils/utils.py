@@ -91,6 +91,8 @@ def load_validate_cfg(cfg):
     else:
         if 'MONITOR_MIN_SIGMA' not in dir(mod):
             raise Exception('MONITOR_MIN_SIGMA must be defined!')
+        if 'MONITOR_EDGE_BUFFER_SCALE' not in dir(mod):
+            raise Exception('MONITOR_EDGE_BUFFER_SCALE must be defined!')
         for lst in ['BACKGROUND_FILES', 'NOISE_FILES']:
             for file in getattr(mod, lst):
                 if not os.path.exists(file):

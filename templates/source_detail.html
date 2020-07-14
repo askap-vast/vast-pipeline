@@ -206,7 +206,7 @@
     return new Promise(resolve => {
       JS9.Load(
         "/cutout/"+imageName+"/large",
-        {id: imageName, scalemin: -0.001, scalemax: 0.004, color:'gray', invert: true, onload: () => { return resolve(); }},
+        {id: imageName, scalemin: -0.001, scalemax: 0.002, color:'gray', invert: true, onload: () => { return resolve(); }},
         {display: displayId}
       );
     });
