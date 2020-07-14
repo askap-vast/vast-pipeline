@@ -72,7 +72,8 @@ def RunIndex(request):
         'path',
         'comment',
         'n_images',
-        'n_sources'
+        'n_sources',
+        'status'
     ]
 
     colsfields = generate_colsfields(fields, "/piperuns/")
@@ -91,7 +92,7 @@ def RunIndex(request):
                 'colsFields': colsfields,
                 'colsNames': [
                     'Name', 'Run Datetime', 'Path', 'Comment', 'Nr Images',
-                    'Nr Sources'
+                    'Nr Sources', 'Run Status'
                 ],
                 'search': True,
             }
@@ -112,7 +113,10 @@ class RunViewSet(ModelViewSet):
 # Run detail
 @login_required
 def RunDetail(request, id):
-    p_run = Run.objects.filter(id=id).values().get()
+    p_run_model = Run.objects.filter(id=id).get()
+    p_run = p_run_model.__dict__
+    p_run.pop('_state')
+    p_run['status'] = p_run_model.get_status_display()
     p_run['nr_imgs'] = Image.objects.filter(run__id=p_run['id']).count()
     p_run['nr_srcs'] = Source.objects.filter(run__id=p_run['id']).count()
     p_run['nr_meas'] = Measurement.objects.filter(image__run__id=p_run['id']).count()

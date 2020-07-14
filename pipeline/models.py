@@ -115,6 +115,15 @@ class SurveySource(models.Model):
         return f"{self.id} {self.name}"
 
 
+class RunQuerySet(models.QuerySet):
+
+    def check_max_runs(self, max_runs=5):
+        """
+        Check if number of running pipeline runs is above threshold
+        """
+        return self.filter(status='RUN').count() >= max_runs
+
+
 class Run(models.Model):
     """
     A Run is essentially a pipeline run/processing istance over a set of
@@ -141,6 +150,20 @@ class Run(models.Model):
         default='',
         blank=True
     )# A description of this pipeline run
+    STATUS_CHOICES = [
+        ('INI', 'Initialised'),
+        ('RUN', 'Running'),
+        ('END', 'Completed'),
+        ('ERR', 'Error'),
+    ]
+    status = models.CharField(
+        max_length=3,
+        choices=STATUS_CHOICES,
+        default='INI',
+        help_text='Status of the pipeline run.'
+    )# pipeline run status
+
+    objects = RunQuerySet.as_manager()
 
     class Meta:
         ordering = ['name']
@@ -408,7 +431,7 @@ class Image(models.Model):
         return self.name
 
 
-class SourceQuerySet(models.QuerySet):
+class MeasurementQuerySet(models.QuerySet):
 
     def cone_search(self, ra, dec, radius_deg):
         """
@@ -576,7 +599,7 @@ class Measurement(models.Model):
         help_text='True: the measurement is forced extracted.'
     )
 
-    objects = SourceQuerySet.as_manager()
+    objects = MeasurementQuerySet.as_manager()
 
     class Meta:
         ordering = ['ra']

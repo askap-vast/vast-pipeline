@@ -5,13 +5,17 @@ import logging
 from astropy import units as u
 from astropy.coordinates import Angle
 
-from ..models import SurveySource
+from django.conf import settings as dj_cfg
+from django.db import transaction
+
+from ..models import Run, SurveySource
 from .association import association
 from .new_sources import new_sources
 from .forced_extraction import forced_extraction
 from .finalise import final_operations
 from .loading import upload_images
 from .utils import get_src_skyregion_merged_df
+from .errors import MaxPipelineRunsError
 
 
 logger = logging.getLogger(__name__)
@@ -51,6 +55,7 @@ class Pipeline():
         }
 
     def process_pipeline(self, p_run):
+        # upload/retrieve image data
         images, meas_dj_obj = upload_images(
             self.img_paths,
             self.config,
@@ -117,3 +122,24 @@ class Pipeline():
         )
 
         pass
+
+    @staticmethod
+    def check_current_runs():
+        if Run.objects.check_max_runs(dj_cfg.MAX_PIPELINE_RUNS):
+            raise MaxPipelineRunsError
+
+    @staticmethod
+    def set_status(pipe_run, status=None):
+        if status and status == 'RUN':
+            # set run status
+            with transaction.atomic():
+                if pipe_run.status != 'RUN':
+                    pipe_run.status = 'RUN'
+                    pipe_run.save()
+
+        if status and status == 'END':
+            # set completed status
+            with transaction.atomic():
+                if pipe_run.status != 'END':
+                    pipe_run.status = 'END'
+                    pipe_run.save()

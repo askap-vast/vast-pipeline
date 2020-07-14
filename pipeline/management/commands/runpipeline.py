@@ -62,6 +62,7 @@ class Command(BaseCommand):
         except Exception as e:
             if options['verbosity'] > 1:
                 traceback.print_exc()
+            logger.exception('Config error:\n%s', e)
             raise CommandError(f'Config error:\n{e}')
 
         # Create the pipeline run in DB
@@ -78,11 +79,23 @@ class Command(BaseCommand):
 
         # run the pipeline operations
         try:
+            # check if max runs number is reached
+            pipeline.check_current_runs()
+            # run the pipeline
+            pipeline.set_status(p_run, 'RUN')
             pipeline.process_pipeline(p_run)
         except Exception as e:
+            # set the pipeline status as error
+            pipeline.set_status(p_run, 'ERR')
+
             if options['verbosity'] > 1:
                 traceback.print_exc()
+            logger.exception('Processing error:\n%s', e)
             raise CommandError(f'Processing error:\n{e}')
+
+        # set the pipeline status as completed
+        pipeline.set_status(p_run, 'END')
+
         logger.info(
             'total pipeline processing time %.2f sec',
             stopwatch.reset()
