@@ -53,12 +53,12 @@ def get_image_rms_measurements(group):
 
     # check for pixel wrapping
     x_valid = np.logical_or(
-        array_coords[0] > data.shape[0],
+        array_coords[0] >= data.shape[0],
         array_coords[0] < 0
     )
 
     y_valid = np.logical_or(
-        array_coords[1] > data.shape[1],
+        array_coords[1] >= data.shape[1],
         array_coords[1] < 0
     )
 
