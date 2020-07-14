@@ -121,7 +121,7 @@ class RunQuerySet(models.QuerySet):
         """
         Check if number of running pipeline runs is above threshold
         """
-        return self.filter(status='RUN').count() > max_runs
+        return self.filter(status='RUN').count() >= max_runs
 
 
 class Run(models.Model):
