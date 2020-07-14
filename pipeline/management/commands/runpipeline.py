@@ -62,6 +62,7 @@ class Command(BaseCommand):
         except Exception as e:
             if options['verbosity'] > 1:
                 traceback.print_exc()
+            logger.exception('Config error:\n%s', e)
             raise CommandError(f'Config error:\n{e}')
 
         # Create the pipeline run in DB
@@ -85,6 +86,7 @@ class Command(BaseCommand):
         except Exception as e:
             if options['verbosity'] > 1:
                 traceback.print_exc()
+            logger.exception('Processing error:\n%s', e)
             raise CommandError(f'Processing error:\n{e}')
         logger.info(
             'total pipeline processing time %.2f sec',
