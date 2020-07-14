@@ -735,8 +735,13 @@ class ImageCutout(APIView):
             "normal": f"{measurement.name}_cutout.fits",
         }
 
+        try:
+            data = image_hdu.data[0, 0, :, :]
+        except Exception as e:
+            data = image_hdu.data
+
         cutout = Cutout2D(
-            image_hdu.data, coord, Angle(sizes[size]), wcs=WCS(image_hdu.header),
+            data, coord, Angle(sizes[size]), wcs=WCS(image_hdu.header, naxis=2),
             mode='partial'
         )
 
