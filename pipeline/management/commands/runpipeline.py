@@ -85,6 +85,9 @@ class Command(BaseCommand):
             pipeline.set_status(p_run, 'RUN')
             pipeline.process_pipeline(p_run)
         except Exception as e:
+            # set the pipeline status as error
+            pipeline.set_status(p_run, 'ERR')
+
             if options['verbosity'] > 1:
                 traceback.print_exc()
             logger.exception('Processing error:\n%s', e)
