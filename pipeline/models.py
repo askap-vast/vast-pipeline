@@ -141,6 +141,18 @@ class Run(models.Model):
         default='',
         blank=True
     )# A description of this pipeline run
+    STATUS_CHOICES = [
+        ('INI', 'Initialised'),
+        ('RUN', 'Running'),
+        ('END', 'Completed'),
+    ]
+    status = models.CharField(
+        max_length=3,
+        choices=STATUS_CHOICES,
+        default='INI',
+        help_text='Status of the pipeline run.'
+    )# pipeline run status
+
 
     class Meta:
         ordering = ['name']
