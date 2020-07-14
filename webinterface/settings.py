@@ -267,3 +267,6 @@ PIPE_RUN_CONFIG_DEFAULTS = {
     'use_condon_errors': True,
     'selavy_local_rms_zero_fill_value': 0.2,
 }
+
+# default max concurrent pipeline runs
+MAX_PIPELINE_RUNS = 3
