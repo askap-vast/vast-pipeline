@@ -69,11 +69,11 @@ def RunIndex(request):
     fields = [
         'name',
         'time',
-        'status',
         'path',
         'comment',
         'n_images',
-        'n_sources'
+        'n_sources',
+        'status'
     ]
 
     colsfields = generate_colsfields(fields, "/piperuns/")
@@ -91,8 +91,8 @@ def RunIndex(request):
                 'api': '/api/piperuns/?format=datatables',
                 'colsFields': colsfields,
                 'colsNames': [
-                    'Name', 'Run Datetime', 'Run Status', 'Path', 'Comment',
-                    'Nr Images', 'Nr Sources'
+                    'Name', 'Run Datetime', 'Path', 'Comment', 'Nr Images',
+                    'Nr Sources', 'Run Status'
                 ],
                 'search': True,
             }
