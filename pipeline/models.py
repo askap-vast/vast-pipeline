@@ -154,6 +154,7 @@ class Run(models.Model):
         ('INI', 'Initialised'),
         ('RUN', 'Running'),
         ('END', 'Completed'),
+        ('ERR', 'Error'),
     ]
     status = models.CharField(
         max_length=3,
