@@ -1,4 +1,4 @@
-# VAST Pipeline Prototype - Developing Notes
+# VAST Pipeline - Developing Notes
 
 This document explains how to contribute to the project code base.
 

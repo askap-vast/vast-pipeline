@@ -1,4 +1,4 @@
-# VAST Pipeline Prototype - Installation Notes
+# VAST Pipeline - Installation Notes
 
 This document explains how to install all the packages that the pipeline needs to run, as well as the PostgreSQL database. Following this documentation should get you started with a good __LOCAL__ development environment, where you can mess up things, but always go back and fix it up.
 
