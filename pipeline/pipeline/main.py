@@ -5,13 +5,16 @@ import logging
 from astropy import units as u
 from astropy.coordinates import Angle
 
-from ..models import SurveySource
+from django.conf import settings as dj_cfg
+
+from ..models import Run, SurveySource
 from .association import association
 from .new_sources import new_sources
 from .forced_extraction import forced_extraction
 from .finalise import final_operations
 from .loading import upload_images
 from .utils import get_src_skyregion_merged_df
+from .errors import MaxPipelineRunsError
 
 
 logger = logging.getLogger(__name__)
@@ -117,3 +120,8 @@ class Pipeline():
         )
 
         pass
+
+    @staticmethod
+    def check_current_runs():
+        if Run.objects.check_max_runs(dj_cfg.MAX_PIPELINE_RUNS):
+            raise MaxPipelineRunsError

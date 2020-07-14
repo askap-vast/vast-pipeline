@@ -78,6 +78,9 @@ class Command(BaseCommand):
 
         # run the pipeline operations
         try:
+            # check if max runs number is reached
+            pipeline.check_current_runs()
+            # run the pipeline
             pipeline.process_pipeline(p_run)
         except Exception as e:
             if options['verbosity'] > 1:
