@@ -269,7 +269,7 @@ class ForcedPhot:
         nbeam: int = 3,
         cluster_threshold: Optional[float] = 1.5,
         stamps: bool = False,
-        edge_buffer = 1.0
+        edge_buffer: float = 1.0
     ) -> Tuple[Any, ...]:
         """Perform the forced photometry returning the flux density and uncertainty.
         Example usage:
