@@ -16,12 +16,10 @@ def on_sky_sep(ra_1, ra_2, dec_1, dec_2):
         np.sin(dec_1) * np.sin(dec_2) +
         np.cos(dec_1) * np.cos(dec_2) * np.cos(ra_1 - ra_2)
     )
+    # fix errors on separation values over 1
+    separation[separation > 1.] = 1.
 
-   separation[separation > 1.] = 1.
-
-    separation = np.arccos(separation)
-
-    return separation
+    return np.arccos(separation)
 
 
 def calc_error_radius(ra, ra_err, dec, dec_err):
