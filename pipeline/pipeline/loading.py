@@ -104,6 +104,13 @@ def upload_images(paths, config, pipeline_run):
         )
         del measurements, image, band_id, img, out_bulk
 
+    # write images parquet file under pipeline run folder
+    images_df = pd.DataFrame(map(lambda x: x.__dict__, images))
+    images_df = images_df.drop('_state', axis=1)
+    images_df.to_parquet(
+        os.path.join(base_folder, 'images.parquet')
+    )
+
     logger.info(
         'Total images upload/loading time: %.2f seconds',
         timer.reset_init()
