@@ -101,7 +101,7 @@ def get_create_img(p_run, band_id, image):
         ).exists():
             img.run.add(p_run)
 
-        return (img, True)
+        return (img, skyreg, True)
 
     # at this stage, measurement parquet file is not created but
     # assume location
@@ -138,7 +138,7 @@ def get_create_img(p_run, band_id, image):
     img.save()
     img.run.add(p_run)
 
-    return (img, False)
+    return (img, skyreg, False)
 
 
 def get_create_p_run(name, path):
