@@ -19,7 +19,7 @@ def on_sky_sep(ra_1, ra_2, dec_1, dec_2):
 
    separation[separation > 1.] = 1.
 
-    separation = np.arccos(arccos_argument)
+    separation = np.arccos(separation)
 
     return separation
 
