@@ -242,7 +242,6 @@ def groupby_funcs(df):
     dataframe.
     '''
     # calculated average ra, dec, fluxes and metrics
-    df = df.sort_values(by='datetime')
     d = {}
     d['img_list'] = df['image'].values.tolist()
     if df['forced'].any():
