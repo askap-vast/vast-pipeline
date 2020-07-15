@@ -82,7 +82,7 @@ $(document).ready(function() {
                 "targets": 3,
                 "data": "image",
                 "render": function ( data, type, row, meta ) {
-                    return '<a href="/images/'+ row[12] + '"target="_blank">' + row[3] + '</a>';
+                    return '<a href="/images/'+ row[14] + '"target="_blank">' + row[3] + '</a>';
                 }
             },
             {
