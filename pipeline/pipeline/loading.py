@@ -160,7 +160,6 @@ def upload_sources(pipeline_run, srcs_df):
 
     # add source related object in DB
     logger.info('Populate "related" field of sources...')
-    srcs_df = srcs_df.set_index('source')
     related_df = srcs_df.loc[
         srcs_df['related_list'] != -1, ['related_list', 'src_dj']
     ]
