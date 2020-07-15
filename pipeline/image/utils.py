@@ -12,7 +12,7 @@ def on_sky_sep(ra_1, ra_2, dec_1, dec_2):
     Needed for fast calculation on dataframes as astropy is
     slow. All units are radians.
     """
-    arccos_argument = (
+    separation = (
         np.sin(dec_1) * np.sin(dec_2) +
         np.cos(dec_1) * np.cos(dec_2) * np.cos(ra_1 - ra_2)
     )
