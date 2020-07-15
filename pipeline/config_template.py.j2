@@ -57,6 +57,9 @@ MONITOR = {{ monitor }}
 # area of minimum rms in the image from which it is to be extracted from. If lower than this
 # value it is skipped
 MONITOR_MIN_SIGMA = {{ monitor_min_sigma }}
+# MONITOR_EDGE_BUFFER_SCALE is a multiplicative scaling factor to the buffer size of the
+# forced photometry from the image edge.
+MONITOR_EDGE_BUFFER_SCALE = {{ monitor_edge_buffer_scale }}
 
 # The position uncertainty is in reality a combination of the fitting errors and the
 # astrometric uncertainty of the image/survey/instrument.
