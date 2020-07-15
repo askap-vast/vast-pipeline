@@ -563,7 +563,7 @@ class ForcedPhot:
                 g,
             )
 
-    def _filter_out_of_range(self, X0, Y0, nbeam, edge_buffer):
+    def _filter_out_of_range(self, X0, Y0, nbeam, edge_buffer=1.):
         """
         X0, Y0 = _filter_out_of_range(X0, Y0, nbeam)
         Filter out sources which are beyond the image range.
