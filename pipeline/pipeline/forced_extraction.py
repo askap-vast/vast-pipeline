@@ -104,7 +104,7 @@ def parallel_extraction(df, df_images, df_sources, min_sigma, edge_buffer):
         'bmin': 'f',
         'pa': 'f',
         'image_id': 'i',
-        'time': 'datetime64[ns]'
+        'time': 'M'
     }
     out = (
         df.explode('img_diff')
