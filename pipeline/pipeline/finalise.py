@@ -35,7 +35,7 @@ def final_operations(
 
     srcs_df = pd.merge(
         srcs_df,
-        new_sources_df[['new_high_sigma']],
+        new_sources_df['new_high_sigma'],
         left_on='source', right_index=True, how='left'
     )
 
