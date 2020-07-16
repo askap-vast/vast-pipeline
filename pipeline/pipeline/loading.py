@@ -23,6 +23,7 @@ def upload_images(paths, config, pipeline_run):
     '''
     timer = StopWatch()
     images = []
+    skyregions = []
     meas_dj_obj = pd.DataFrame()
 
     for path in paths['selavy']:
@@ -38,10 +39,14 @@ def upload_images(paths, config, pipeline_run):
         band_id = get_create_img_band(image)
 
         # 1.2 create image and skyregion entry in DB
-        img, exists_f = get_create_img(pipeline_run, band_id, image)
+        img, skyreg, exists_f = get_create_img(
+            pipeline_run, band_id, image
+        )
 
-        # add image to list
+        # add image and skyregion to respective lists
         images.append(img)
+        if skyreg not in skyregions:
+            skyregions.append(skyreg)
         if exists_f:
             logger.info(
                 'Image %s already processed, grab measurements',
@@ -103,6 +108,21 @@ def upload_images(paths, config, pipeline_run):
             index=False
         )
         del measurements, image, band_id, img, out_bulk
+
+    # write images parquet file under pipeline run folder
+    images_df = pd.DataFrame(map(lambda x: x.__dict__, images))
+    images_df = images_df.drop('_state', axis=1)
+    images_df.to_parquet(
+        os.path.join(config.PIPE_RUN_PATH, 'images.parquet'),
+        index=False
+    )
+    # write skyregions parquet file under pipeline run folder
+    skyregs_df = pd.DataFrame(map(lambda x: x.__dict__, skyregions))
+    skyregs_df = skyregs_df.drop('_state', axis=1)
+    skyregs_df.to_parquet(
+        os.path.join(config.PIPE_RUN_PATH, 'skyregions.parquet'),
+        index=False
+    )
 
     logger.info(
         'Total images upload/loading time: %.2f seconds',
