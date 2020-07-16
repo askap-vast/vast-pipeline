@@ -22,7 +22,6 @@ logger = logging.getLogger(__name__)
 def check_primary_image(row):
     return row['primary'] in row['img_list']
 
-
 def get_image_rms_measurements(group):
     """
     Take the coordinates provided from the group
@@ -79,7 +78,6 @@ def get_image_rms_measurements(group):
 
     return group
 
-
 def parallel_get_rms_measurements(df):
     """
     Wrapper function to use 'get_image_rms_measurements'
@@ -117,7 +115,6 @@ def parallel_get_rms_measurements(df):
     )
 
     return df
-
 
 def new_sources(sources_df, missing_sources_df, min_sigma, p_run):
     """
@@ -200,7 +197,7 @@ def new_sources(sources_df, missing_sources_df, min_sigma, p_run):
     # in time.
     new_sources_df = new_sources_df[
         new_sources_df.img_diff_time < new_sources_df.detection_time
-    ].reset_index(drop=True)
+    ]
 
     # merge the detection fluxes in
     new_sources_df = pd.merge(
@@ -245,7 +242,7 @@ def new_sources(sources_df, missing_sources_df, min_sigma, p_run):
     new_sources_df['img_diff_true_rms'] = new_sources_df['img_diff_true_rms'].fillna(0.)
     new_sources_df = new_sources_df[
         new_sources_df['img_diff_true_rms'] != 0
-    ].reset_index(drop=True)
+    ]
 
     # calculate the true sigma
     new_sources_df['true_sigma'] = (
@@ -267,4 +264,4 @@ def new_sources(sources_df, missing_sources_df, min_sigma, p_run):
         'Total new source analysis time: %.2f seconds', timer.reset_init()
     )
 
-    return new_sources_df
+    return new_sources_df.set_index('source')

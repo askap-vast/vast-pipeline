@@ -31,12 +31,12 @@ def final_operations(
     srcs_df = srcs_df.fillna(0.)
 
     # add new sources
-    srcs_df['new'] = srcs_df.index.isin(new_sources_df.source)
+    srcs_df['new'] = srcs_df.index.isin(new_sources_df.index)
 
     srcs_df = pd.merge(
         srcs_df,
-        new_sources_df[['source', 'new_high_sigma']],
-        left_on='source', right_on='source', how='left'
+        new_sources_df['new_high_sigma'],
+        left_on='source', right_index=True, how='left'
     )
 
     srcs_df['new_high_sigma'] = srcs_df['new_high_sigma'].fillna(0.)
