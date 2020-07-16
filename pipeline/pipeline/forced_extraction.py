@@ -9,6 +9,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from django.conf import settings
 from django.db import transaction
+from pyarrow.parquet import read_schema
 
 from pipeline.models import Image, Measurement
 from pipeline.image.utils import on_sky_sep
@@ -104,7 +105,7 @@ def parallel_extraction(df, df_images, df_sources, min_sigma, edge_buffer):
         'bmin': 'f',
         'pa': 'f',
         'image_id': 'i',
-        'time': 'M'
+        'time': 'datetime64[ns]'
     }
     out = (
         df.explode('img_diff')
@@ -287,9 +288,10 @@ def forced_extraction(
     extr_df['spectral_index_from_TT'] = False
     extr_df['has_siblings'] = False
 
-    col_order = list(pd.read_parquet(
-        images_df.iloc[0]['measurements_path'],
-    ).drop('id', axis=1))
+    col_order = read_schema(
+        images_df.iloc[0]['measurements_path']
+    ).names
+    col_order.remove('id')
 
     remaining = list(set(extr_df.columns) - set(col_order))
 
