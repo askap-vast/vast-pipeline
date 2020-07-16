@@ -77,8 +77,9 @@ def extract_from_image(df, images_df, edge_buffer):
     df['bmaj'] = images_df.at[img_name, 'beam_bmaj'] * 3600.
     df['bmin'] = images_df.at[img_name, 'beam_bmin'] * 3600.
     df['pa'] = images_df.at[img_name, 'beam_bpa']
-    # add image id
+    # add image id and time
     df['image_id'] = images_df.at[img_name, 'id']
+    df['time'] = images_df.at[img_name, 'datetime']
 
     return df
 
@@ -92,10 +93,7 @@ def parallel_extraction(df, df_images, df_sources, min_sigma, edge_buffer):
         'wavg_ra': 'f',
         'wavg_dec': 'f',
         'image': 'U',
-        'detection': 'U',
-        'image_rms_min': 'f',
         'flux_peak': 'f',
-        'max_snr': 'f',
         'island_id': 'U',
         'component_id': 'U',
         'name': 'U',
@@ -106,6 +104,7 @@ def parallel_extraction(df, df_images, df_sources, min_sigma, edge_buffer):
         'bmin': 'f',
         'pa': 'f',
         'image_id': 'i',
+        'time': 'datetime64[ns]'
     }
     out = (
         df.explode('img_diff')
@@ -138,6 +137,8 @@ def parallel_extraction(df, df_images, df_sources, min_sigma, edge_buffer):
     logger.debug("Min forced sigma dropped %i sources", (
         predrop_shape - postdrop_shape
     ))
+
+    out = out.drop(['max_snr', 'image_rms_min', 'detection'], axis=1)
 
     n_cpu = cpu_count() - 1
     out = (
@@ -178,6 +179,7 @@ def parallel_write_parquet(df, run_path):
     '''
     parallelize writing parquet files for forced measurments
     '''
+    df = df.drop(['d2d', 'dr'], axis=1)
     n_cpu = cpu_count() - 1
     (
         dd.from_pandas(df, n_cpu)
@@ -206,8 +208,8 @@ def forced_extraction(
     cols = [
         'id', 'name', 'measurements_path', 'path', 'noise_path',
         'beam_bmaj', 'beam_bmin', 'beam_bpa', 'background_path',
-        'rms_min', 'skyreg__centre_ra', 'skyreg__centre_dec',
-        'skyreg__xtr_radius'
+        'rms_min', 'datetime', 'skyreg__centre_ra',
+        'skyreg__centre_dec', 'skyreg__xtr_radius'
     ]
 
     images_df = pd.DataFrame(list(
@@ -265,21 +267,33 @@ def forced_extraction(
         default_pos_err
     )
     extr_df['weight_ns'] = 1. / extr_df['uncertainty_ns'].values**2
-    extr_df['interim_ew'] = (
-        extr_df['ra'].values * extr_df['weight_ew'].values
-    )
-    extr_df['interim_ns'] = (
-        extr_df['dec'].values * extr_df['weight_ns'].values
-    )
 
     extr_df['flux_peak'] = extr_df['flux_int']
     extr_df['flux_peak_err'] = extr_df['flux_int_err']
     extr_df['local_rms'] = extr_df['flux_int_err']
+    extr_df['snr'] = (
+        extr_df['flux_peak'].values
+        / extr_df['local_rms'].values
+    )
     extr_df['spectral_index'] = 0.
     extr_df['dr'] = 0.
     extr_df['d2d'] = 0.
     extr_df['forced'] = True
     extr_df['compactness'] = 1.
+    extr_df['psf_bmaj'] = extr_df['bmaj']
+    extr_df['psf_bmin'] = extr_df['bmin']
+    extr_df['psf_pa'] = extr_df['pa']
+    extr_df['flag_c4'] = False
+    extr_df['spectral_index_from_TT'] = False
+    extr_df['has_siblings'] = False
+
+    col_order = list(pd.read_parquet(
+        images_df.iloc[0]['measurements_path'],
+    ).drop('id', axis=1))
+
+    remaining = list(set(extr_df.columns) - set(col_order))
+
+    extr_df = extr_df[col_order + remaining]
 
     # Create measurement Django objects
     extr_df['meas_dj'] = extr_df.apply(
