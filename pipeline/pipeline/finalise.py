@@ -64,9 +64,30 @@ def final_operations(
     # upload sources and related to DB
     upload_sources(p_run, srcs_df)
 
+    # get db ids for sources
+    srcs_df['id'] = srcs_df['src_dj'].apply(getattr, args=('id',))
+
+    # write relations to parquet file
+    related_df = srcs_df[['id', 'related_list']].explode(
+        'related_list'
+    ).rename(
+        columns={'related_list': 'relation'}
+    )
+
+    # need to replace relation source ids with db ids
+    # as db ids is what's written to the association parquet
+    related_indexes = related_df[related_df['relation'] != -1].index.values
+
+    related_df.loc[related_indexes, 'relation'] = srcs_df.loc[
+        related_df.loc[related_indexes]['relation'].values
+    ]['id'].values
+
+    related_df.to_parquet(
+        os.path.join(p_run.path, 'relations.parquet')
+    )
+
     # write sources to parquet file
     srcs_df = srcs_df.drop(['related_list', 'img_list'], axis=1)
-    srcs_df['id'] = srcs_df['src_dj'].apply(getattr, args=('id',))
     (
         srcs_df.drop('src_dj', axis=1)
         .to_parquet(os.path.join(p_run.path, 'sources.parquet'))
