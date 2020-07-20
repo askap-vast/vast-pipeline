@@ -25,14 +25,14 @@ logger = logging.getLogger(__name__)
 
 class Pipeline():
     '''
-    Holds all the state associated with a pipeline instance (usually
-    just one is used)
+    Instance of a pipeline. All the methods runs the pipeline opearations,
+    such as association
     '''
 
     def __init__(self, name, config_path):
         '''
-        We limit the size of the cube cache so we don't hit the max
-        files open limit or use too much RAM
+        Initialise the pipeline with attributed such as configuration file
+        path, name, and list of images and related files (e.g. selavy)
         '''
         self.name = name
         self.config = self.load_cfg(config_path)
