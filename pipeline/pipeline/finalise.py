@@ -79,8 +79,9 @@ def final_operations(
     related_indexes = related_df[related_df['related_with'] != -1].index.values
 
     related_df.loc[related_indexes, 'related_with'] = srcs_df.loc[
-        related_df.loc[related_indexes]['related_with'].values
-    ]['id'].values
+        related_df.loc[related_indexes, 'related_with'].values,
+        'id'
+    ].values
 
     related_df.to_parquet(
         os.path.join(p_run.path, 'relations.parquet')
