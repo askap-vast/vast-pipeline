@@ -71,15 +71,15 @@ def final_operations(
     related_df = srcs_df[['id', 'related_list']].explode(
         'related_list'
     ).rename(
-        columns={'related_list': 'relation'}
+        columns={'related_list': 'related_with'}
     )
 
     # need to replace relation source ids with db ids
     # as db ids is what's written to the association parquet
-    related_indexes = related_df[related_df['relation'] != -1].index.values
+    related_indexes = related_df[related_df['related_with'] != -1].index.values
 
-    related_df.loc[related_indexes, 'relation'] = srcs_df.loc[
-        related_df.loc[related_indexes]['relation'].values
+    related_df.loc[related_indexes, 'related_with'] = srcs_df.loc[
+        related_df.loc[related_indexes]['related_with'].values
     ]['id'].values
 
     related_df.to_parquet(
