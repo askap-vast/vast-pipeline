@@ -5,7 +5,7 @@ import pandas as pd
 from django.db import transaction
 
 from ..image.main import SelavyImage
-from ..models import Association, Measurement, Source
+from ..models import Association, Measurement, Source, Band
 from .utils import (
     get_create_img, get_create_img_band, get_measurement_models
 )
@@ -24,6 +24,7 @@ def upload_images(paths, config, pipeline_run):
     timer = StopWatch()
     images = []
     skyregions = []
+    bands = []
     meas_dj_obj = pd.DataFrame()
 
     for path in paths['selavy']:
@@ -36,11 +37,13 @@ def upload_images(paths, config, pipeline_run):
         logger.info('Reading image %s ...', image.name)
 
         # 1.1 get/create the frequency band
-        band_id = get_create_img_band(image)
+        band = get_create_img_band(image)
+        if band not in bands:
+            bands.append(band)
 
         # 1.2 create image and skyregion entry in DB
         img, skyreg, exists_f = get_create_img(
-            pipeline_run, band_id, image
+            pipeline_run, band.id, image
         )
 
         # add image and skyregion to respective lists
@@ -107,7 +110,7 @@ def upload_images(paths, config, pipeline_run):
             img.measurements_path,
             index=False
         )
-        del measurements, image, band_id, img, out_bulk
+        del measurements, image, band, img, out_bulk
 
     # write images parquet file under pipeline run folder
     images_df = pd.DataFrame(map(lambda x: x.__dict__, images))
@@ -121,6 +124,13 @@ def upload_images(paths, config, pipeline_run):
     skyregs_df = skyregs_df.drop('_state', axis=1)
     skyregs_df.to_parquet(
         os.path.join(config.PIPE_RUN_PATH, 'skyregions.parquet'),
+        index=False
+    )
+    # write skyregions parquet file under pipeline run folder
+    bands_df = pd.DataFrame(map(lambda x: x.__dict__, bands))
+    bands_df = bands_df.drop('_state', axis=1)
+    bands_df.to_parquet(
+        os.path.join(config.PIPE_RUN_PATH, 'bands.parquet'),
         index=False
     )
 
