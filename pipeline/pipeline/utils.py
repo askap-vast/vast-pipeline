@@ -80,14 +80,14 @@ def get_create_img_band(image):
     for band in Band.objects.all():
         diff = abs(freq - band.frequency) / float(band.frequency)
         if diff < 0.02:
-            return band.id
+            return band
 
     # no band has been found so create it
     band = Band(name=str(freq), frequency=freq, bandwidth=freq_band)
     logger.info('Adding new frequency band: %s', band)
     band.save()
 
-    return band.id
+    return band
 
 
 def get_create_img(p_run, band_id, image):
