@@ -5,7 +5,7 @@ import pandas as pd
 from django.db import transaction
 
 from ..image.main import SelavyImage
-from ..models import Association, Measurement, Source, Band
+from ..models import Association, Measurement, Source
 from .utils import (
     get_create_img, get_create_img_band, get_measurement_models
 )
