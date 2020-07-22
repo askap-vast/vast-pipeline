@@ -138,17 +138,22 @@ class Run(models.Model):
                 message='Name contains not allowed characters!',
                 inverse_match=True
             ),
-        ]
+        ],
+        help_text='name of the pipeline run'
     )
     time = models.DateTimeField(
         auto_now=True,
         help_text='Datetime of run.'
     )# run date/time of the pipeline run
-    path = models.FilePathField(max_length=200)# the path to the pipeline run
+    path = models.FilePathField(
+        max_length=200,
+        help_text='path to the pipeline run'
+    )
     comment = models.TextField(
         max_length=1000,
         default='',
-        blank=True
+        blank=True,
+        help_text='main comment of pipeline run'
     )# A description of this pipeline run
     STATUS_CHOICES = [
         ('INI', 'Initialised'),
@@ -199,8 +204,12 @@ class Band(models.Model):
     associated with one band.
     """
     name = models.CharField(max_length=12, unique=True)
-    frequency = models.IntegerField()# central frequency of band (integer MHz)
-    bandwidth = models.IntegerField()# bandwidth (MHz)
+    frequency = models.IntegerField(
+        help_text='central frequency of band (integer MHz)'
+    )
+    bandwidth = models.IntegerField(
+        help_text='bandwidth (MHz)'
+    )
 
     class Meta:
         ordering = ['frequency']
