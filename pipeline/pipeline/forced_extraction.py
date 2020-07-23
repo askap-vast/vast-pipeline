@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import dask.dataframe as dd
 from psutil import cpu_count
+from glob import glob
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -304,17 +305,27 @@ def forced_extraction(
     # Delete previous forced measurements and update new forced
     # measurements in the db
     with transaction.atomic():
-        obj_to_delete = Measurement.objects.filter(
-            image__run=p_run, forced=True
+        # get the forced measurements ids for the current pipeline run
+        path_glob = glob(
+            os.path.join(p_run.path, 'forced_measurements_*.parquet')
         )
-        if obj_to_delete.exists():
-            n_del, detail_del = obj_to_delete.delete()
-            logger.info(
-                ('Deleting all previous forced measurement objects for '
-                 'this run. Total objects deleted: %i'),
-                n_del,
+        if path_glob:
+            ids = (
+                dd.read_parquet(path_glob, columns='id')
+                .values
+                .compute()
+                .tolist()
             )
-            logger.debug('(type, #deleted): %s', detail_del)
+            obj_to_delete = Measurement.objects.filter(id__in=ids)
+            del ids
+            if obj_to_delete.exists():
+                n_del, detail_del = obj_to_delete.delete()
+                logger.info(
+                    ('Deleting all previous forced measurement and association'
+                     ' objects for this run. Total objects deleted: %i'),
+                    n_del,
+                )
+                logger.debug('(type, #deleted): %s', detail_del)
 
         batch_size = 10_000
         for idx in range(0, extr_df['meas_dj'].size, batch_size):
