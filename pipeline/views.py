@@ -2,6 +2,8 @@ import io
 import os
 import json
 import logging
+import dask.dataframe as dd
+from dask import compute
 from typing import Dict, Any
 
 from astropy.io import fits
@@ -113,15 +115,40 @@ class RunViewSet(ModelViewSet):
 # Run detail
 @login_required
 def RunDetail(request, id):
-    p_run_model = Run.objects.filter(id=id).get()
+    p_run_model = Run.objects.filter(id=id).prefetch_related('image_set').get()
     p_run = p_run_model.__dict__
-    p_run.pop('_state')
     p_run['status'] = p_run_model.get_status_display()
-    p_run['nr_imgs'] = Image.objects.filter(run__id=p_run['id']).count()
+    images = list(p_run_model.image_set.values('name', 'datetime'))
+    img_paths = list(map(
+        lambda x: os.path.join(
+            settings.PIPELINE_WORKING_DIR,
+            'images',
+            '_'.join([
+                x['name'].replace('.','_'),
+                x['datetime'].strftime('%Y-%m-%dT%H_%M_%S%z')
+            ]),
+            'measurements.parquet'
+        ),
+        p_run_model.image_set.values('name', 'datetime')
+    ))
+    p_run['nr_imgs'] = len(img_paths)
     p_run['nr_srcs'] = Source.objects.filter(run__id=p_run['id']).count()
-    p_run['nr_meas'] = Measurement.objects.filter(image__run__id=p_run['id']).count()
-    p_run['nr_frcd'] = Measurement.objects.filter(
-        image__run=p_run['id'], forced=True).count()
+    p_run['nr_meas'] = (
+        dd.read_parquet(
+            img_paths,
+            columns='id'
+        )
+        .count()
+        .compute()
+    )
+    p_run['nr_frcd'] = (
+        dd.read_parquet(
+            os.path.join(p_run['path'], 'forced_measurements_*.parquet'),
+            columns='id'
+        )
+        .count()
+        .compute()
+    )
     p_run['new_srcs'] = Source.objects.filter(
         run__id=p_run['id'],
         new=True,
