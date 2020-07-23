@@ -339,10 +339,19 @@ class Image(models.Model):
         max_length=200,
         db_column='meas_path'
     )# the path to the measurements parquet that belongs to this image
+    POLARISATION_CHOICES = [
+        ('I', 'I'),
+        ('XX', 'XX'),
+        ('YY', 'YY'),
+        ('Q', 'Q'),
+        ('U', 'U'),
+        ('V', 'V'),
+    ]
     polarisation = models.CharField(
         max_length=2,
-        help_text='Polarisation of the image e.g. I,XX,YY,Q,U,V.'
-    )# eg XX,YY,I,Q,U,V
+        choices=POLARISATION_CHOICES,
+        help_text='Polarisation of the image one of I,XX,YY,Q,U,V.'
+    )
     name = models.CharField(
         max_length=200,
         help_text='Name of the image.'
