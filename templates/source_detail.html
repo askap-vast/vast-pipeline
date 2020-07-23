@@ -14,7 +14,7 @@
 {% block breadcrumb %}
 
 <li class="breadcrumb-item">
-  <a href="{% url 'pipeline:source_index' %}">Sources</a>
+  <a href="{% url 'pipeline:source_query' %}">Sources</a>
 </li>
 <li class="breadcrumb-item">
   <a href="{% url 'pipeline:source_detail' source.id %}">{{ source.name }}</a>
