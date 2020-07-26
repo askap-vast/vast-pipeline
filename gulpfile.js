@@ -135,6 +135,12 @@ function modules() {
   var bootstrapJS = gulp.src('./node_modules/bootstrap/dist/js/*')
     .pipe(gulp.dest(paths.vendor + '/bootstrap/js'));
 
+  // Bootstrap Select
+  var bootstrapSelectJS = gulp.src('./node_modules/bootstrap-select/dist/js/*')
+    .pipe(gulp.dest(paths.vendor + '/bootstrap-select/js'));
+  var bootstrapSelectCSS = gulp.src('./node_modules/bootstrap-select/dist/css/*')
+    .pipe(gulp.dest(paths.vendor + '/bootstrap-select/css'));
+
   // ChartJS
   var chartJS = gulp.src([
       './node_modules/chart.js/dist/*.js',
