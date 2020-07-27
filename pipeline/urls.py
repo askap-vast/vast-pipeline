@@ -14,6 +14,7 @@ router.register(r'piperuns', views.RunViewSet, 'api_pipe_runs')
 router.register(r'images', views.ImageViewSet, 'api_images')
 router.register(r'measurements', views.MeasurementViewSet, 'api_measurements')
 router.register(r'sources', views.SourceViewSet, 'api_sources')
+router.register(r'rawimages', views.RawImageListSet, 'api_rawimages')
 
 urlpatterns = [
     path('piperuns', views.RunIndex, name='run_index'),

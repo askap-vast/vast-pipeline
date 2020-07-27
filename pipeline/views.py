@@ -2,7 +2,11 @@ import io
 import os
 import json
 import logging
+import dask.bag as db
+
 from typing import Dict, Any
+from glob import glob
+from itertools import tee
 
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
@@ -17,11 +21,12 @@ from django.urls import reverse
 from django.conf import settings
 
 from rest_framework.views import APIView
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ModelViewSet, ViewSet
 from rest_framework.authentication import (
     SessionAuthentication, BasicAuthentication
 )
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.contrib.auth.decorators import login_required
 
@@ -29,7 +34,7 @@ from django.contrib.auth.decorators import login_required
 from .models import Image, Measurement, Run, Source
 from .serializers import (
     ImageSerializer, MeasurementSerializer, RunSerializer,
-    SourceSerializer
+    SourceSerializer, RawImageSelavyListSerializer
 )
 from .utils.utils import (
     deg2dms, deg2hms, gal2equ, ned_search, simbad_search
@@ -858,3 +863,50 @@ class MeasurementQuery(APIView):
             filename=f"image-{image_id}_{ra_deg:.5f}_{dec_deg:+.5f}_radius-{radius_deg:.3f}.reg",
         )
         return response
+
+
+class RawImageListSet(ViewSet):
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request):
+        # generate the folders path regex, e.g. /path/to/images/**/*.fits
+        # first generate the list of main subfolders, e.g. [EPOCH01, ... ]
+        img_root = settings.RAW_IMAGE_DIR
+        img_subfolders_gen = filter(
+            lambda x: os.path.isdir(os.path.join(img_root, x)),
+            os.listdir(img_root)
+        )
+        img_subfolders1, img_subfolders2 = tee(img_subfolders_gen)
+        img_regex_list = list(map(
+            lambda x: os.path.join(img_root, x, '**/*.fits'),
+            img_subfolders1
+        ))
+        selavy_regex_list = list(map(
+            lambda x: os.path.join(img_root, x, '**/*.txt'),
+            img_subfolders2
+        ))
+        # generate raw image list in parallel
+        dask_list = db.from_sequence(img_regex_list)
+        fits_files = (
+            dask_list.map(lambda x: glob(x, recursive=True))
+            .flatten()
+            .compute()
+        )
+        # generate response datastructure
+
+
+        # generate raw image list in parallel
+        dask_list = db.from_sequence(selavy_regex_list)
+        selavy_files = (
+            dask_list.map(lambda x: glob(x, recursive=True))
+            .flatten()
+            .compute()
+        )
+        data = {
+            'fits': fits_files,
+            'selavy': selavy_files
+        }
+        serializer = RawImageSelavyListSerializer(data)
+
+        return Response(serializer.data)
