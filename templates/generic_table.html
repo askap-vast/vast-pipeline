@@ -5,6 +5,9 @@
 {% block head %}
   <!-- Custom styles for this page -->
   <link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
+  <!-- Bootstrap-select minified CSS -->
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap-select/css/bootstrap-select.min.css' %}">
+
 {% endblock head %}
 
 {% block breadcrumb %}
@@ -27,7 +30,7 @@
       <p class="mb-4">{{ text.description }}</p>
     </div>
     {% if 'run' in text.title|lower %}
-    <a class="btn btn-sm btn-primary btn-icon-split shadow-sm" href="#" data-toggle="modal" data-target="#newPipeRun">
+    <a id="RunConfigButton" class="btn btn-sm btn-primary btn-icon-split shadow-sm" href="#" data-toggle="modal" data-target="#newPipeRun">
       <span class="icon text-white-600">
         <i class="fa fa-plus fa-lg"></i>
       </span>
@@ -81,7 +84,18 @@
         <form action="{% url 'pipeline:run_index' %}" method="post" id="commentForm">
           {% csrf_token %}
           <div class="form-group">
-            <textarea class="form-control" name="comment-text" placeholder="Insert comment here" form="commentForm"></textarea>
+            <label for="imagesFilesDropDown" class="col-form-label">Select images files</label><br>
+            <select id="imagesFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-max-options="2" title="Choose image files" data-actions-box="true">
+            </select>
+            <label for="selavyFilesDropDown" class="col-form-label">Select selavy files</label><br>
+            <select id="selavyFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-max-options="2" title="Choose selavy files" data-actions-box="true">
+            </select>
+            <label for="bkgFilesDropDown" class="col-form-label">Select background files</label><br>
+            <select id="bkgFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-max-options="2" title="Choose background files" data-actions-box="true">
+            </select>
+            <label for="noiseFilesDropDown" class="col-form-label">Select noise or rms files</label><br>
+            <select id="noiseFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-max-options="2" title="Choose noise or rms files" data-actions-box="true">
+            </select>
           </div>
           <div class="modal-footer">
             <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
@@ -102,6 +116,10 @@
 <!-- Page level plugins -->
 <script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
 <script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+<!-- Bootstrap-select minified JavaScript -->
+<script src="{% static 'vendor/bootstrap-select/js/bootstrap-select.min.js' %}"></script>
+<!-- Run Config modal script -->
+<script type="text/javascript" src="{% static 'js/run-config.min.js' %}"></script>
 
 <!-- Page level custom scripts -->
 {{ datatable|json_script:"datatable-conf" }}
