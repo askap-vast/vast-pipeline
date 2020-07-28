@@ -27,13 +27,10 @@ $(document).ready(function() {
   });
 
   $("#monitorSwitch").on('click', function(e) {
-    if (this.checked) {
-      $("#bkgFilesDropDown").attr('disabled',false).selectpicker('refresh');
-      $("#noiseFilesDropDown").attr('disabled',false).selectpicker('refresh');
-    } else {
-      $("#bkgFilesDropDown").attr('disabled',true).selectpicker('refresh');
-      $("#noiseFilesDropDown").attr('disabled',true).selectpicker('refresh');
-    };
+    $("#bkgFilesDropDown").attr('disabled',!this.checked).selectpicker('refresh');
+    $("#noiseFilesDropDown").attr('disabled',!this.checked).selectpicker('refresh');
+    $("#monitorMinSigmaSelect").prop('disabled',!this.checked);
+    $("#monitorEdgeBufferScaleSelect").prop('disabled',!this.checked);
   });
 
 });

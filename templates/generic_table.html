@@ -92,7 +92,17 @@
             </select>
             <div class="custom-control custom-switch">
               <input type="checkbox" class="custom-control-input" id="monitorSwitch">
-              <label class="custom-control-label" for="monitorSwitch">Turn on source force extraction backward and forward in time</label>
+              <label class="custom-control-label" for="monitorSwitch">Monitor: Turn on source force extraction backward and forward in time</label>
+            </div>
+            <div class="row">
+              <div class="col">
+                <label class="col-form-label" for="monitorMinSigmaSelect">Monitor Min Sigma</label>
+                <input id="monitorMinSigmaSelect" type="number" class="form-control bg-light border-0" value="3.0" min="0" step="0.01" aria-label="monitorMinSigmaSearch" aria-describedby="basic-addon2" disabled>
+              </div>
+              <div class="col">
+                <label class="col-form-label" for="monitorMinSigmaSelect">Monitor Edge Buffer Scale</label>
+                <input id="monitorEdgeBufferScaleSelect" type="number" class="form-control bg-light border-0" value="1.2" min="0" step="0.01" aria-label="monitorEdgeBufferScaleSearch" aria-describedby="basic-addon2" disabled>
+              </div>
             </div>
             <label for="bkgFilesDropDown" class="col-form-label">Select background files</label><br>
             <select id="bkgFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-max-options="2" data-header="Choose background files" data-actions-box="true" disabled>
