@@ -13,7 +13,6 @@ $(document).ready(function() {
       url: "/api/rawimages/",
       success: function(result) {
         // populate the images and selavy menus
-        // console.log(result);
          $.each(result.fits, function (idx, item) {
           $("#imagesFilesDropDown").append('<option>' + item + '</option>');
           $("#bkgFilesDropDown").append('<option>' + item + '</option>');
