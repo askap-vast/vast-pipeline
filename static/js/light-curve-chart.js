@@ -83,7 +83,7 @@ let conf = {
         left: 10,
         right: 25,
         top: 5,
-        bottom: 0
+        bottom: 0,
       }
     },
     plugins:{
@@ -97,29 +97,29 @@ let conf = {
         distribution: 'linear',
         gridLines: {
           display: false,
-          drawBorder: false
+          drawBorder: false,
         },
         ticks: {
-          maxTicksLimit: 7
+          maxTicksLimit: 7,
         }
       }],
       yAxes: [{
         scaleLabel: {
           display: true,
-          labelString: 'Int. Flux (mJy)'
+          labelString: 'Int. Flux (mJy)',
         },
         ticks: {
           maxTicksLimit: 5,
           padding: 10,
           max: ymax,
-          min: ymin
+          min: ymin,
         },
         gridLines: {
           color: "rgb(234, 236, 244)",
           zeroLineColor: "rgb(234, 236, 244)",
           drawBorder: false,
           borderDash: [2],
-          zeroLineBorderDash: [2]
+          zeroLineBorderDash: [2],
         }
       }],
     },
