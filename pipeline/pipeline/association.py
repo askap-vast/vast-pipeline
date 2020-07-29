@@ -61,10 +61,10 @@ def calc_de_ruiter(df):
 def _get_min_col(method):
     """
     Returns the column names needed for filtering the 'to-many'
-    associations depending on the mehod (advanced or trap).
+    associations depending on the method (advanced or trap).
     """
     if method == 'advanced':
-        col = 'd2d'
+        col = 'd2d_skyc2'
         min_col = 'min_' + col
     else:
         col = 'dr'
