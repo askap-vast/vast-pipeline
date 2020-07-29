@@ -4,11 +4,13 @@ import numpy as np
 import pandas as pd
 import dask.dataframe as dd
 from psutil import cpu_count
+from glob import glob
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from django.conf import settings
 from django.db import transaction
+from pyarrow.parquet import read_schema
 
 from pipeline.models import Image, Measurement
 from pipeline.image.utils import on_sky_sep
@@ -23,7 +25,7 @@ from ..utils.utils import StopWatch
 logger = logging.getLogger(__name__)
 
 
-def extract_from_image(df, images_df):
+def extract_from_image(df, images_df, edge_buffer):
     P_islands = SkyCoord(
         df['wavg_ra'].values * u.deg,
         df['wavg_dec'].values * u.deg
@@ -39,6 +41,7 @@ def extract_from_image(df, images_df):
     flux, flux_err, chisq, DOF = FP.measure(
         P_islands,
         cluster_threshold=3,
+        edge_buffer=edge_buffer
     )
 
     # make up the measurements name from the image
@@ -76,13 +79,14 @@ def extract_from_image(df, images_df):
     df['bmaj'] = images_df.at[img_name, 'beam_bmaj'] * 3600.
     df['bmin'] = images_df.at[img_name, 'beam_bmin'] * 3600.
     df['pa'] = images_df.at[img_name, 'beam_bpa']
-    # add image id
+    # add image id and time
     df['image_id'] = images_df.at[img_name, 'id']
+    df['time'] = images_df.at[img_name, 'datetime']
 
     return df
 
 
-def parallel_extraction(df, df_images, df_sources, min_sigma):
+def parallel_extraction(df, df_images, df_sources, min_sigma, edge_buffer):
     '''
     parallelize forced extraction with Dask
     '''
@@ -91,10 +95,7 @@ def parallel_extraction(df, df_images, df_sources, min_sigma):
         'wavg_ra': 'f',
         'wavg_dec': 'f',
         'image': 'U',
-        'detection': 'U',
-        'image_rms_min': 'f',
         'flux_peak': 'f',
-        'max_snr': 'f',
         'island_id': 'U',
         'component_id': 'U',
         'name': 'U',
@@ -105,6 +106,7 @@ def parallel_extraction(df, df_images, df_sources, min_sigma):
         'bmin': 'f',
         'pa': 'f',
         'image_id': 'i',
+        'time': 'datetime64[ns]'
     }
     out = (
         df.explode('img_diff')
@@ -138,11 +140,17 @@ def parallel_extraction(df, df_images, df_sources, min_sigma):
         predrop_shape - postdrop_shape
     ))
 
+    out = out.drop(['max_snr', 'image_rms_min', 'detection'], axis=1)
+
     n_cpu = cpu_count() - 1
     out = (
         dd.from_pandas(out, n_cpu)
         .groupby('image')
-        .apply(extract_from_image, images_df=df_images, meta=col_dtype)
+        .apply(
+            extract_from_image,
+            images_df=df_images,
+            edge_buffer=edge_buffer,
+            meta=col_dtype)
         .dropna(subset=['flux_int'])
         .compute(num_workers=n_cpu, scheduler='processes')
         .rename(columns={'wavg_ra':'ra', 'wavg_dec':'dec'})
@@ -173,6 +181,7 @@ def parallel_write_parquet(df, run_path):
     '''
     parallelize writing parquet files for forced measurments
     '''
+    df = df.drop(['d2d', 'dr'], axis=1)
     n_cpu = cpu_count() - 1
     (
         dd.from_pandas(df, n_cpu)
@@ -189,7 +198,7 @@ def parallel_write_parquet(df, run_path):
 
 def forced_extraction(
         sources_df, cfg_err_ra, cfg_err_dec, p_run,
-        meas_dj_obj, extr_df, min_sigma
+        meas_dj_obj, extr_df, min_sigma, edge_buffer
     ):
     """
     check and extract expected measurements, and associated them with the
@@ -201,8 +210,8 @@ def forced_extraction(
     cols = [
         'id', 'name', 'measurements_path', 'path', 'noise_path',
         'beam_bmaj', 'beam_bmin', 'beam_bpa', 'background_path',
-        'rms_min', 'skyreg__centre_ra', 'skyreg__centre_dec',
-        'skyreg__xtr_radius'
+        'rms_min', 'datetime', 'skyreg__centre_ra',
+        'skyreg__centre_dec', 'skyreg__xtr_radius'
     ]
 
     images_df = pd.DataFrame(list(
@@ -215,7 +224,9 @@ def forced_extraction(
     extr_df = extr_df[['wavg_ra', 'wavg_dec', 'img_diff', 'detection']]
 
     timer.reset()
-    extr_df = parallel_extraction(extr_df, images_df, sources_df, min_sigma)
+    extr_df = parallel_extraction(
+        extr_df, images_df, sources_df, min_sigma, edge_buffer
+    )
     logger.info(
         'Force extraction step time: %.2f seconds', timer.reset()
     )
@@ -258,21 +269,34 @@ def forced_extraction(
         default_pos_err
     )
     extr_df['weight_ns'] = 1. / extr_df['uncertainty_ns'].values**2
-    extr_df['interim_ew'] = (
-        extr_df['ra'].values * extr_df['weight_ew'].values
-    )
-    extr_df['interim_ns'] = (
-        extr_df['dec'].values * extr_df['weight_ns'].values
-    )
 
     extr_df['flux_peak'] = extr_df['flux_int']
     extr_df['flux_peak_err'] = extr_df['flux_int_err']
     extr_df['local_rms'] = extr_df['flux_int_err']
+    extr_df['snr'] = (
+        extr_df['flux_peak'].values
+        / extr_df['local_rms'].values
+    )
     extr_df['spectral_index'] = 0.
     extr_df['dr'] = 0.
     extr_df['d2d'] = 0.
     extr_df['forced'] = True
     extr_df['compactness'] = 1.
+    extr_df['psf_bmaj'] = extr_df['bmaj']
+    extr_df['psf_bmin'] = extr_df['bmin']
+    extr_df['psf_pa'] = extr_df['pa']
+    extr_df['flag_c4'] = False
+    extr_df['spectral_index_from_TT'] = False
+    extr_df['has_siblings'] = False
+
+    col_order = read_schema(
+        images_df.iloc[0]['measurements_path']
+    ).names
+    col_order.remove('id')
+
+    remaining = list(set(extr_df.columns) - set(col_order))
+
+    extr_df = extr_df[col_order + remaining]
 
     # Create measurement Django objects
     extr_df['meas_dj'] = extr_df.apply(
@@ -281,17 +305,27 @@ def forced_extraction(
     # Delete previous forced measurements and update new forced
     # measurements in the db
     with transaction.atomic():
-        obj_to_delete = Measurement.objects.filter(
-            image__run=p_run, forced=True
+        # get the forced measurements ids for the current pipeline run
+        path_glob = glob(
+            os.path.join(p_run.path, 'forced_measurements_*.parquet')
         )
-        if obj_to_delete.exists():
-            n_del, detail_del = obj_to_delete.delete()
-            logger.info(
-                ('Deleting all previous forced measurement objects for '
-                 'this run. Total objects deleted: %i'),
-                n_del,
+        if path_glob:
+            ids = (
+                dd.read_parquet(path_glob, columns='id')
+                .values
+                .compute()
+                .tolist()
             )
-            logger.debug('(type, #deleted): %s', detail_del)
+            obj_to_delete = Measurement.objects.filter(id__in=ids)
+            del ids
+            if obj_to_delete.exists():
+                n_del, detail_del = obj_to_delete.delete()
+                logger.info(
+                    ('Deleting all previous forced measurement and association'
+                     ' objects for this run. Total objects deleted: %i'),
+                    n_del,
+                )
+                logger.debug('(type, #deleted): %s', detail_del)
 
         batch_size = 10_000
         for idx in range(0, extr_df['meas_dj'].size, batch_size):

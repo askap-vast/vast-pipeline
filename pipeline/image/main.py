@@ -166,8 +166,8 @@ class SelavyImage(FitsImage):
     def __init__(self, path, paths, hdu_index=0, config=None):
         # inherit from parent
         self.selavy_path = paths['selavy'][path]
-        self.noise_path = paths['noise'][path]
-        self.background_path = paths['background'][path]
+        self.noise_path = paths['noise'].get(path, '')
+        self.background_path = paths['background'].get(path, '')
         self.config = config
         super().__init__(path, hdu_index)
 

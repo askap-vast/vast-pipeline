@@ -5,13 +5,19 @@ import logging
 from astropy import units as u
 from astropy.coordinates import Angle
 
-from ..models import SurveySource
+from django.conf import settings
+from django.db import transaction
+
+from importlib.util import spec_from_file_location, module_from_spec
+
+from ..models import Run, SurveySource
 from .association import association
 from .new_sources import new_sources
 from .forced_extraction import forced_extraction
 from .finalise import final_operations
 from .loading import upload_images
 from .utils import get_src_skyregion_merged_df
+from .errors import MaxPipelineRunsError, PipelineConfigError
 
 
 logger = logging.getLogger(__name__)
@@ -19,38 +25,129 @@ logger = logging.getLogger(__name__)
 
 class Pipeline():
     '''
-    Holds all the state associated with a pipeline instance (usually
-    just one is used)
+    Instance of a pipeline. All the methods runs the pipeline opearations,
+    such as association
     '''
 
-    def __init__(self, config=None):
+    def __init__(self, name, config_path):
         '''
-        We limit the size of the cube cache so we don't hit the max
-        files open limit or use too much RAM
+        Initialise the pipeline with attributed such as configuration file
+        path, name, and list of images and related files (e.g. selavy)
         '''
-        self.config = config
+        self.name = name
+        self.config = self.load_cfg(config_path)
 
         # A dictionary of path to Fits images, eg
         # "/data/images/I1233234.FITS" and selavy catalogues
         # Used as a cache to avoid reloading cubes all the time.
         self.img_paths = {}
         self.img_paths['selavy'] = {
-            x:y for x,y in zip(config.IMAGE_FILES, config.SELAVY_FILES)
+            x:y for x,y in zip(
+                self.config.IMAGE_FILES,
+                self.config.SELAVY_FILES
+            )
         }
         self.img_paths['noise'] = {
             x:y for x,y in zip(
-                config.IMAGE_FILES,
-                config.NOISE_FILES
+                self.config.IMAGE_FILES,
+                self.config.NOISE_FILES
             )
         }
         self.img_paths['background'] = {
             x:y for x,y in zip(
-                config.IMAGE_FILES,
-                config.BACKGROUND_FILES
+                self.config.IMAGE_FILES,
+                self.config.BACKGROUND_FILES
             )
         }
 
+    @staticmethod
+    def load_cfg(cfg):
+        """
+        Check the given Config path. Throw exception if any problems
+        return the config object as module/class
+        """
+        if not os.path.exists(cfg):
+            raise PipelineConfigError(
+                'pipeline run config file not existent'
+            )
+
+        # load the run config as a Python module
+        spec = spec_from_file_location('run_config', cfg)
+        mod = module_from_spec(spec)
+        spec.loader.exec_module(mod)
+
+        return mod
+
+
+    def validate_cfg(self):
+        """
+        validate a pipeline run configuration against default parameters and
+        for different settings (e.g. force extraction)
+        """
+        # do sanity checks
+        if (getattr(self.config, 'IMAGE_FILES') and
+            getattr(self.config, 'SELAVY_FILES')):
+            for lst in ['IMAGE_FILES', 'SELAVY_FILES']:
+                for file in getattr(self.config, lst):
+                    if not os.path.exists(file):
+                        raise PipelineConfigError(
+                            f'file:\n{file}\ndoes not exists!'
+                        )
+        else:
+            raise PipelineConfigError(
+                'no image file paths passed or Selavy file paths!'
+            )
+
+        source_finder_names = settings.SOURCE_FINDERS
+        if getattr(self.config, 'SOURCE_FINDER') not in source_finder_names:
+            raise PipelineConfigError((
+                f"Invalid source finder {getattr(self.config, 'SOURCE_FINDER')}."
+                f' Choices are {source_finder_names}'
+            ))
+
+        association_methods = ['basic', 'advanced']
+        if getattr(self.config, 'ASSOCIATION_METHOD') not in association_methods:
+            raise PipelineConfigError((
+                'ASSOCIATION_METHOD is not valid!'
+                " Must be a value contained in: {}.".format(association_methods)
+            ))
+
+        # validate min_new_source_sigma value
+        if 'NEW_SOURCE_MIN_SIGMA' not in dir(self.config):
+            raise PipelineConfigError('NEW_SOURCE_MIN_SIGMA must be defined!')
+
+        # validate Forced extraction settings
+        if getattr(self.config, 'MONITOR') and not(
+            getattr(self.config, 'BACKGROUND_FILES') and getattr(self.config, 'NOISE_FILES')
+            ):
+            raise PipelineConfigError(
+                'Expecting list of background MAP and RMS files!'
+            )
+        else:
+            if 'MONITOR_MIN_SIGMA' not in dir(self.config):
+                raise PipelineConfigError('MONITOR_MIN_SIGMA must be defined!')
+            if 'MONITOR_EDGE_BUFFER_SCALE' not in dir(self.config):
+                raise PipelineConfigError(
+                    'MONITOR_EDGE_BUFFER_SCALE must be defined!'
+                )
+            for lst in ['BACKGROUND_FILES', 'NOISE_FILES']:
+                for file in getattr(self.config, lst):
+                    if not os.path.exists(file):
+                        raise PipelineConfigError(
+                            f'file:\n{file}\ndoes not exists!'
+                        )
+
+        # validate every config from the config template
+        for key in [k for k in dir(self.config) if k.isupper()]:
+            if key.lower() not in settings.PIPE_RUN_CONFIG_DEFAULTS.keys():
+                raise PipelineConfigError(
+                    f'configuration not valid, missing key: {key}!'
+                )
+
+        pass
+
     def process_pipeline(self, p_run):
+        # upload/retrieve image data
         images, meas_dj_obj = upload_images(
             self.img_paths,
             self.config,
@@ -103,7 +200,8 @@ class Pipeline():
                 p_run,
                 meas_dj_obj,
                 missing_sources_df,
-                self.config.MONITOR_MIN_SIGMA
+                self.config.MONITOR_MIN_SIGMA,
+                self.config.MONITOR_EDGE_BUFFER_SCALE,
             )
 
         # STEP #6: finalise the df getting unique sources, calculating
@@ -117,3 +215,24 @@ class Pipeline():
         )
 
         pass
+
+    @staticmethod
+    def check_current_runs():
+        if Run.objects.check_max_runs(settings.MAX_PIPELINE_RUNS):
+            raise MaxPipelineRunsError
+
+    @staticmethod
+    def set_status(pipe_run, status=None):
+        if status and status == 'RUN':
+            # set run status
+            with transaction.atomic():
+                if pipe_run.status != 'RUN':
+                    pipe_run.status = 'RUN'
+                    pipe_run.save()
+
+        if status and status == 'END':
+            # set completed status
+            with transaction.atomic():
+                if pipe_run.status != 'END':
+                    pipe_run.status = 'END'
+                    pipe_run.save()

@@ -31,12 +31,12 @@ def final_operations(
     srcs_df = srcs_df.fillna(0.)
 
     # add new sources
-    srcs_df['new'] = srcs_df.index.isin(new_sources_df.source)
+    srcs_df['new'] = srcs_df.index.isin(new_sources_df.index)
 
     srcs_df = pd.merge(
         srcs_df,
-        new_sources_df[['source', 'new_high_sigma']],
-        left_on='source', right_on='source', how='left'
+        new_sources_df['new_high_sigma'],
+        left_on='source', right_index=True, how='left'
     )
 
     srcs_df['new_high_sigma'] = srcs_df['new_high_sigma'].fillna(0.)
@@ -64,9 +64,31 @@ def final_operations(
     # upload sources and related to DB
     upload_sources(p_run, srcs_df)
 
+    # get db ids for sources
+    srcs_df['id'] = srcs_df['src_dj'].apply(getattr, args=('id',))
+
+    # write relations to parquet file
+    related_df = srcs_df[['id', 'related_list']].explode(
+        'related_list'
+    ).rename(
+        columns={'related_list': 'related_with'}
+    )
+
+    # need to replace relation source ids with db ids
+    # as db ids is what's written to the association parquet
+    related_indexes = related_df[related_df['related_with'] != -1].index.values
+
+    related_df.loc[related_indexes, 'related_with'] = srcs_df.loc[
+        related_df.loc[related_indexes, 'related_with'].values,
+        'id'
+    ].values
+
+    related_df.to_parquet(
+        os.path.join(p_run.path, 'relations.parquet')
+    )
+
     # write sources to parquet file
     srcs_df = srcs_df.drop(['related_list', 'img_list'], axis=1)
-    srcs_df['id'] = srcs_df['src_dj'].apply(getattr, args=('id',))
     (
         srcs_df.drop('src_dj', axis=1)
         .to_parquet(os.path.join(p_run.path, 'sources.parquet'))

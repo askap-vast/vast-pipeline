@@ -1,4 +1,4 @@
-# VAST Pipeline Prototype
+# VAST Pipeline
 This repository holds the code of the Radio Transient detection pipeline for the VAST project.
 
 Installation instructions are described in [`INSTALL.md`](./INSTALL.md).

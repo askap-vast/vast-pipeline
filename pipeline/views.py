@@ -27,7 +27,7 @@ from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
-from .models import Image, Measurement, Run, Source, SkyRegion
+from .models import Image, Measurement, Run, Source
 from .serializers import (
     ImageSerializer, MeasurementSerializer, RunSerializer,
     SourceSerializer
@@ -35,183 +35,10 @@ from .serializers import (
 from .utils.utils import (
     deg2dms, deg2hms, gal2equ, ned_search, simbad_search
 )
+from .utils.view import generate_colsfields, get_skyregions_collection
 
 
 logger = logging.getLogger(__name__)
-
-# Defines the float format and scaling for all
-# parameters presented in DATATABLES via AJAX call
-FLOAT_FIELDS = {
-    'ra': {
-        'precision': 4,
-        'scale': 1,
-    },
-    'ra_err': {
-        'precision': 4,
-        'scale': 3600.,
-    },
-    'uncertainty_ew': {
-        'precision': 4,
-        'scale': 3600.,
-    },
-    'dec': {
-        'precision': 4,
-        'scale': 1,
-    },
-    'dec_err': {
-        'precision': 4,
-        'scale': 3600,
-    },
-    'uncertainty_ns': {
-        'precision': 4,
-        'scale': 3600.,
-    },
-    'flux_int': {
-        'precision': 3,
-        'scale': 1,
-    },
-    'flux_peak': {
-        'precision': 3,
-        'scale': 1,
-    },
-    'flux_int_err': {
-        'precision': 3,
-        'scale': 1,
-    },
-    'flux_peak_err': {
-        'precision': 3,
-        'scale': 1,
-    },
-    'v_int': {
-        'precision': 2,
-        'scale': 1,
-    },
-    'eta_int': {
-        'precision': 2,
-        'scale': 1,
-    },
-    'v_peak': {
-        'precision': 2,
-        'scale': 1,
-    },
-    'eta_peak': {
-        'precision': 2,
-        'scale': 1,
-    },
-    'avg_flux_int': {
-        'precision': 3,
-        'scale': 1,
-    },
-    'avg_flux_peak': {
-        'precision': 3,
-        'scale': 1,
-    },
-    'max_flux_peak': {
-        'precision': 3,
-        'scale': 1,
-    },
-    'rms_median': {
-        'precision': 3,
-        'scale': 1,
-    },
-    'rms_min': {
-        'precision': 3,
-        'scale': 1,
-    },
-    'rms_max': {
-        'precision': 3,
-        'scale': 1,
-    },
-    'new_high_sigma': {
-        'precision': 3,
-        'scale': 1
-    },
-    'compactness': {
-        'precision': 3,
-        'scale': 1,
-    },
-    'avg_compactness': {
-        'precision': 3,
-        'scale': 1,
-    },
-    'n_neighbour_dist': {
-        'precision': 2,
-        'scale': 60.,
-    },
-}
-
-
-def generate_colsfields(fields, url_prefix):
-    colsfields = []
-
-    for col in fields:
-        if col == 'name':
-            colsfields.append({
-                'data': col, 'render': {
-                    'url': {
-                        'prefix': url_prefix,
-                        'col': 'name'
-                    }
-                }
-            })
-        elif col in FLOAT_FIELDS:
-            colsfields.append({
-                'data': col,
-                'render': {
-                    'float': {
-                        'col': col,
-                        'precision': FLOAT_FIELDS[col]['precision'],
-                        'scale': FLOAT_FIELDS[col]['scale'],
-                    }
-                }
-            })
-        else:
-            colsfields.append({'data': col})
-
-    return colsfields
-
-
-def get_skyregions_collection():
-    """
-    Produce Sky region geometry shapes for d3-celestial.
-    """
-    skyregions = SkyRegion.objects.all()
-
-    features = []
-
-    for skr in skyregions:
-        ra = skr.centre_ra - 180.
-        dec = skr.centre_dec
-        width_ra = skr.width_ra / 2.
-        width_dec = skr.width_dec / 2.
-        id = skr.id
-        features.append(
-            {
-                "type": "Feature",
-                "id": f"SkyRegion{id}",
-                "properties": {
-                    "n": f"{id:02d}",
-                    "loc": [ra, dec]
-                },
-                "geometry": {
-                    "type": "MultiLineString",
-                    "coordinates": [[
-                        [ra+width_ra, dec+width_dec],
-                        [ra+width_ra, dec-width_dec],
-                        [ra-width_ra, dec-width_dec],
-                        [ra-width_ra, dec+width_dec],
-                        [ra+width_ra, dec+width_dec]
-                    ]]
-                }
-            }
-        )
-
-    skyregions_collection = {
-        "type": "FeatureCollection",
-        "features" : features
-    }
-
-    return skyregions_collection
 
 
 def Login(request):
@@ -246,7 +73,8 @@ def RunIndex(request):
         'path',
         'comment',
         'n_images',
-        'n_sources'
+        'n_sources',
+        'status'
     ]
 
     colsfields = generate_colsfields(fields, "/piperuns/")
@@ -265,7 +93,7 @@ def RunIndex(request):
                 'colsFields': colsfields,
                 'colsNames': [
                     'Name', 'Run Datetime', 'Path', 'Comment', 'Nr Images',
-                    'Nr Sources'
+                    'Nr Sources', 'Run Status'
                 ],
                 'search': True,
             }
@@ -525,74 +353,6 @@ def MeasurementDetail(request, id, action=None):
 
     context = {'measurement': measurement}
     return render(request, 'measurement_detail.html', context)
-
-
-# Sources table
-@login_required
-def SourceIndex(request):
-    fields = [
-        'name',
-        'comment',
-        'wavg_ra',
-        'wavg_dec',
-        'avg_flux_int',
-        'avg_flux_peak',
-        'max_flux_peak',
-        'avg_compactness',
-        'measurements',
-        'selavy_measurements',
-        'forced_measurements',
-        'n_neighbour_dist',
-        'relations',
-        'v_int',
-        'eta_int',
-        'v_peak',
-        'eta_peak',
-        'contains_siblings',
-        'new',
-        'new_high_sigma'
-    ]
-
-    colsfields = generate_colsfields(fields, '/sources/')
-
-    return render(
-        request,
-        'generic_table.html',
-        {
-            'text': {
-                'title': 'Sources',
-                'description': 'List of all sources below',
-                'breadcrumb': {'title': 'Sources', 'url': request.path},
-            },
-            'datatable': {
-                'api': '/api/sources/?format=datatables',
-                'colsFields': colsfields,
-                'colsNames': [
-                    'Name',
-                    'Comment',
-                    'W. Avg. RA',
-                    'W. Avg. Dec',
-                    'Avg. Int. Flux (mJy)',
-                    'Avg. Peak Flux (mJy/beam)',
-                    'Max Peak Flux (mJy/beam)',
-                    'Avg. Compactness',
-                    'Total Datapoints',
-                    'Selavy Datapoints',
-                    'Forced Datapoints',
-                    'Nearest Neighbour Dist. (arcmin)',
-                    'Relations',
-                    'V int flux',
-                    '\u03B7 int flux',
-                    'V peak flux',
-                    '\u03B7 peak flux',
-                    'Contains siblings',
-                    'New Source',
-                    'New High Sigma'
-                ],
-                'search': False,
-            }
-        }
-    )
 
 
 class SourceViewSet(ModelViewSet):
@@ -934,8 +694,13 @@ class ImageCutout(APIView):
             "normal": f"{measurement.name}_cutout.fits",
         }
 
+        try:
+            data = image_hdu.data[0, 0, :, :]
+        except Exception as e:
+            data = image_hdu.data
+
         cutout = Cutout2D(
-            image_hdu.data, coord, Angle(sizes[size]), wcs=WCS(image_hdu.header),
+            data, coord, Angle(sizes[size]), wcs=WCS(image_hdu.header, naxis=2),
             mode='partial'
         )
 

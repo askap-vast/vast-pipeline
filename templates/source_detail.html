@@ -14,7 +14,7 @@
 {% block breadcrumb %}
 
 <li class="breadcrumb-item">
-  <a href="{% url 'pipeline:source_index' %}">Sources</a>
+  <a href="{% url 'pipeline:source_query' %}">Sources</a>
 </li>
 <li class="breadcrumb-item">
   <a href="{% url 'pipeline:source_detail' source.id %}">{{ source.name }}</a>
@@ -242,7 +242,7 @@
     return new Promise(resolve => {
       JS9.Load(
         "/cutout/"+imageName+"/large",
-        {id: imageName, scalemin: -0.001, scalemax: 0.004, color:'gray', invert: true, onload: () => { return resolve(); }},
+        {id: imageName, scalemin: -0.001, scalemax: 0.002, color:'gray', invert: true, onload: () => { return resolve(); }},
         {display: displayId}
       );
     });

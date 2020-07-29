@@ -7,6 +7,7 @@ django==3.0.5
 django-environ==0.4.5
 djangorestframework-datatables==0.5.1
 djangorestframework==3.11.0
+jinja2==2.11.2
 numpy==1.18.1
 pandas==1.0.1
 psutil==5.7.0

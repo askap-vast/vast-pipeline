@@ -7,7 +7,7 @@ from django.conf import settings
 
 from pipeline.pipeline.main import Pipeline
 from pipeline.pipeline.utils import get_create_p_run
-from pipeline.utils.utils import load_validate_cfg, StopWatch
+from pipeline.utils.utils import StopWatch
 
 
 logger = logging.getLogger(__name__)
@@ -54,35 +54,52 @@ class Command(BaseCommand):
         # grab only the name from the path
         p_run_name = p_run_name.split(os.path.sep)[-1]
 
-        cfg_path = os.path.join(run_folder, 'config.py')
+        # intitialise the pipeline with the configuration
+        pipeline = Pipeline(
+            name=p_run_name,
+            config_path=os.path.join(run_folder, 'config.py')
+        )
 
         # load and validate run configs
         try:
-            cfg = load_validate_cfg(cfg_path)
+            pipeline.validate_cfg()
         except Exception as e:
             if options['verbosity'] > 1:
                 traceback.print_exc()
+            logger.exception('Config error:\n%s', e)
             raise CommandError(f'Config error:\n{e}')
 
         # Create the pipeline run in DB
-        p_run = get_create_p_run(p_run_name, cfg.PIPE_RUN_PATH)
+        p_run = get_create_p_run(
+            pipeline.name,
+            pipeline.config.PIPE_RUN_PATH
+        )
 
-        logger.info("Source finder: %s", cfg.SOURCE_FINDER)
-        logger.info("Using pipeline run '%s'", p_run_name)
-        logger.info("Source monitoring: %s", cfg.MONITOR)
+        logger.info("Source finder: %s", pipeline.config.SOURCE_FINDER)
+        logger.info("Using pipeline run '%s'", pipeline.name)
+        logger.info("Source monitoring: %s", pipeline.config.MONITOR)
 
         stopwatch = StopWatch()
 
-        # intitialise the pipeline with the configuration
-        pipeline = Pipeline(config=cfg)
-
         # run the pipeline operations
         try:
+            # check if max runs number is reached
+            pipeline.check_current_runs()
+            # run the pipeline
+            pipeline.set_status(p_run, 'RUN')
             pipeline.process_pipeline(p_run)
         except Exception as e:
+            # set the pipeline status as error
+            pipeline.set_status(p_run, 'ERR')
+
             if options['verbosity'] > 1:
                 traceback.print_exc()
+            logger.exception('Processing error:\n%s', e)
             raise CommandError(f'Processing error:\n{e}')
+
+        # set the pipeline status as completed
+        pipeline.set_status(p_run, 'END')
+
         logger.info(
             'total pipeline processing time %.2f sec',
             stopwatch.reset()
