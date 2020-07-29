@@ -30,7 +30,7 @@
       <p class="mb-4">{{ text.description }}</p>
     </div>
     {% if 'run' in text.title|lower %}
-    <a id="RunConfigButton" class="btn btn-sm btn-primary btn-icon-split shadow-sm" href="#" data-toggle="modal" data-target="#newPipeRun">
+    <a id="newPipeRunButton" class="btn btn-sm btn-primary btn-icon-split shadow-sm" href="#" data-toggle="modal" data-target="#newPipeRun">
       <span class="icon text-white-600">
         <i class="fa fa-plus fa-lg"></i>
       </span>
@@ -70,7 +70,7 @@
 
 {% block modal %}
 
-<!-- Update Comment Modal-->
+<!-- Pipepline Run Create Modal-->
 <div class="modal fade" id="newPipeRun" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-dialog-pipeconfig" role="document">
     <div class="modal-content">
@@ -81,18 +81,28 @@
         </button>
       </div>
       <div class="modal-body">
-        <form action="{% url 'pipeline:run_index' %}" method="post" id="commentForm">
+        <form action="" method="post" id="newPipeRunForm">
           {% csrf_token %}
-          <div class="form-group">
-            <label for="imagesFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select images files</label><br>
+          <div id="pipeRunDetailsForm" class="form-group">
+            <div class="row">
+              <div class="col">
+                <label for="pipeRunName" class="col-form-label font-weight-bold text-gray-800">Input Pipeline Run Name</label>
+                <input id="pipeRunName" type="text" class="form-control bg-light border-0" placeholder="e.g. my_pipeline_run">
+                <label for="pipeRunComment" class="col-form-label font-weight-bold text-gray-800">Insert Pipeline Run Comment</label>
+                <textarea id="pipeRunComment" class="form-control bg-light border-0" placeholder="Insert pipeline run comment here (optional)" form="newPipeRunForm"></textarea>
+              </div>
+            </div>
+          </div>
+          <div id="pipeRunConfigForm" class="form-group">
+            <label for="imagesFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select images files</label>
             <select id="imagesFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-max-options="2" data-header="Choose image files" data-actions-box="true">
             </select>
-            <label for="selavyFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select selavy files</label><br>
+            <label for="selavyFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select selavy files</label>
             <select id="selavyFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-max-options="2" data-header="Choose selavy files" data-actions-box="true">
             </select>
             <div class="custom-control custom-switch">
               <input type="checkbox" class="custom-control-input" id="monitorSwitch">
-              <label class="custom-control-label font-weight-bold text-gray-800" for="monitorSwitch">Monitor: Turn on source force extraction backward and forward in time</label>
+              <label class="custom-control-label font-weight-bold text-gray-800" for="monitorSwitch">Monitor: Turn on force extraction for sources backward and forward in time</label>
             </div>
             <div class="row">
               <div class="col">
@@ -104,10 +114,10 @@
                 <input id="monitorEdgeBufferScaleSelect" type="number" class="form-control bg-light border-0" value="1.2" min="0" step="0.01" aria-label="monitorEdgeBufferScaleSearch" aria-describedby="basic-addon2" disabled>
               </div>
             </div>
-            <label for="bkgFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select background files</label><br>
+            <label for="bkgFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select background files</label>
             <select id="bkgFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-max-options="2" data-header="Choose background files" data-actions-box="true" disabled>
             </select>
-            <label for="noiseFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select noise or rms files</label><br>
+            <label for="noiseFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select noise or rms files</label>
             <select id="noiseFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-max-options="2" data-header="Choose noise or rms files" data-actions-box="true" disabled>
             </select>
             <div class="row">
@@ -157,8 +167,30 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
-            <input class="btn btn-primary" type="submit" value="Create">
+            <button class="btn btn-secondary btn-icon-split" type="button" data-dismiss="modal">
+              <span class="icon">
+                <i class="fa fa-window-close"></i>
+              </span>
+              <span class="text">Cancel</span>
+            </button>
+            <a id="pipeRunNext" href="#" class="btn btn-primary btn-icon-split">
+              <span class="text">Next</span>
+              <span class="icon">
+                <i class="fas fa-arrow-right fa-sm"></i>
+              </span>
+            </a>
+            <a id="pipeRunBack" href="#" class="btn btn-primary btn-icon-split">
+              <span class="icon">
+                <i class="fas fa-arrow-left fa-sm"></i>
+              </span>
+              <span class="text">Back</span>
+            </a>
+            <button id="createPipeRun" class="btn btn-success btn-icon-split" type="submit">
+              <span class="text">Create</span>
+              <span class="icon">
+                <i class="fas fa-arrow-up fa-sm"></i>
+              </span>
+            </button>
           </div>
         </form>
       </div>

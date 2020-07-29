@@ -1,6 +1,13 @@
 $(document).ready(function() {
 
-  $("#RunConfigButton").on('click', function(e) {
+  $("#newPipeRunButton").on('click', function(e) {
+    // hide second part of form
+    $("#pipeRunConfigForm").hide();
+    $("#createPipeRun").hide();
+    $("#pipeRunBack").hide();
+    $("#pipeRunDetailsForm").show();
+    $("#pipeRunNext").show();
+    // issue the request to get list of images and selavy files
     $.ajax({
       type: "GET",
       url: "/api/rawimages/",
@@ -31,6 +38,22 @@ $(document).ready(function() {
     $("#noiseFilesDropDown").attr('disabled',!this.checked).selectpicker('refresh');
     $("#monitorMinSigmaSelect").prop('disabled',!this.checked);
     $("#monitorEdgeBufferScaleSelect").prop('disabled',!this.checked);
+  });
+
+  $("#pipeRunNext").on('click', function(e) {
+    $("#pipeRunConfigForm").show();
+    $("#pipeRunBack").show();
+    $("#createPipeRun").show();
+    $("#pipeRunNext").hide();
+    $("#pipeRunDetailsForm").hide();
+  });
+
+  $("#pipeRunBack").on('click', function(e) {
+    $("#pipeRunConfigForm").hide();
+    $("#pipeRunBack").hide();
+    $("#createPipeRun").hide();
+    $("#pipeRunNext").show();
+    $("#pipeRunDetailsForm").show();
   });
 
 });
