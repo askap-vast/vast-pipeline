@@ -57,7 +57,17 @@ def Home(request):
     totals['nr_pruns'] = Run.objects.count()
     totals['nr_imgs'] = Image.objects.count()
     totals['nr_srcs'] = Source.objects.count()
-    totals['nr_meas'] = Measurement.objects.count()
+    totals['nr_meas'] = (
+        dd.read_parquet(
+            os.path.join(
+                settings.PIPELINE_WORKING_DIR,
+                'images/**/measurements.parquet',
+            ),
+            columns='id'
+        )
+        .count()
+        .compute()
+    )
     context = {
         'totals': totals,
         'd3_celestial_skyregions': get_skyregions_collection()
