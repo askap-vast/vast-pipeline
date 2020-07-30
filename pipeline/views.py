@@ -476,7 +476,6 @@ class SourceViewSet(ModelViewSet):
             'n_meas_sel',
             'n_meas_forced',
             'n_rel',
-            'contains_siblings',
             'new_high_sigma',
             'avg_compactness',
             'n_neighbour_dist'
@@ -501,7 +500,7 @@ class SourceViewSet(ModelViewSet):
             qry_dict['new'] = True
 
         if 'no_siblings' in self.request.query_params:
-            qry_dict['contains_siblings'] = False
+            qry_dict['n_sibl'] = 0
 
         if qry_dict:
             qs = qs.filter(**qry_dict)
