@@ -10,12 +10,16 @@ let data_f = [];
 let labels = [];
 let errors = {};
 let errors_f = {};
+let max_values = [];
+let min_values = [];
 dataConf.dataQuery.forEach( function(obj) {
   let dtObj = new Date(obj.datetime);
   let dtObjString = dtObj.toISOString();
   let err = obj.flux_int_err.toFixed(3);
   let flux = obj.flux_int.toFixed(3);
   labels.push(dtObjString);
+  max_values.push(parseFloat(flux) + parseFloat(err));
+  min_values.push(parseFloat(flux) - parseFloat(err));
   if (obj.forced == true) {
       data.push({x: dtObj, y: null});
       data_f.push({x: dtObj, y: flux});
@@ -28,6 +32,9 @@ dataConf.dataQuery.forEach( function(obj) {
       errors_f[dtObjString] = {plus: null, minus: null};
   }
 });
+let max_max_value = Math.max.apply(null, max_values)
+let ymax = max_max_value * 1.05;
+let ymin = Math.min.apply(null, min_values) - (ymax - max_max_value);
 let conf = {
   type: 'line',
   data: {
@@ -76,7 +83,7 @@ let conf = {
         left: 10,
         right: 25,
         top: 5,
-        bottom: 0
+        bottom: 0,
       }
     },
     plugins:{
@@ -90,10 +97,10 @@ let conf = {
         distribution: 'linear',
         gridLines: {
           display: false,
-          drawBorder: false
+          drawBorder: false,
         },
         ticks: {
-          maxTicksLimit: 7
+          maxTicksLimit: 7,
         }
       }],
       yAxes: [{
@@ -104,13 +111,15 @@ let conf = {
         ticks: {
           maxTicksLimit: 5,
           padding: 10,
+          max: ymax,
+          min: ymin,
         },
         gridLines: {
           color: "rgb(234, 236, 244)",
           zeroLineColor: "rgb(234, 236, 244)",
           drawBorder: false,
           borderDash: [2],
-          zeroLineBorderDash: [2]
+          zeroLineBorderDash: [2],
         }
       }],
     },
