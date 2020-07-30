@@ -148,8 +148,9 @@ class Run(models.Model):
     comment = models.TextField(
         max_length=1000,
         default='',
-        blank=True
-    )# A description of this pipeline run
+        blank=True,
+        help_text='A description of this pipeline run'
+    )
     STATUS_CHOICES = [
         ('INI', 'Initialised'),
         ('RUN', 'Running'),
@@ -161,7 +162,15 @@ class Run(models.Model):
         choices=STATUS_CHOICES,
         default='INI',
         help_text='Status of the pipeline run.'
-    )# pipeline run status
+    )
+    n_images = models.IntegerField(
+        default=0,
+        help_text='number of images processed in this run'
+    )
+    n_sources = models.IntegerField(
+        default=0,
+        help_text='number of sources extracted in this run'
+    )
 
     objects = RunQuerySet.as_manager()
 
