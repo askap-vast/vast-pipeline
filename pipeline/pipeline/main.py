@@ -206,13 +206,22 @@ class Pipeline():
 
         # STEP #6: finalise the df getting unique sources, calculating
         # metrics and upload data to database
-        final_operations(
+        nr_sources = final_operations(
             sources_df,
             images[0].name,
             p_run,
             meas_dj_obj,
             new_sources_df
         )
+
+        # calculate number processed images
+        nr_img_processed = len(images)
+
+        # update pipeline run with the nr images and sources
+        with transaction.atomic():
+            p_run.n_images = nr_img_processed
+            p_run.n_sources = nr_sources
+            p_run.save()
 
         pass
 
@@ -225,14 +234,14 @@ class Pipeline():
     def set_status(pipe_run, status=None):
         if status and status == 'RUN':
             # set run status
-            with transaction.atomic():
-                if pipe_run.status != 'RUN':
+            if pipe_run.status != 'RUN':
+                with transaction.atomic():
                     pipe_run.status = 'RUN'
                     pipe_run.save()
 
         if status and status == 'END':
             # set completed status
-            with transaction.atomic():
-                if pipe_run.status != 'END':
+            if pipe_run.status != 'END':
+                with transaction.atomic():
                     pipe_run.status = 'END'
                     pipe_run.save()

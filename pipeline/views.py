@@ -115,10 +115,7 @@ def RunIndex(request):
 class RunViewSet(ModelViewSet):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [IsAuthenticated]
-    queryset = Run.objects.annotate(
-        n_images=Count("image", distinct=True),
-        n_sources=Count("source", distinct=True),
-    )
+    queryset = Run.objects.all()
     serializer_class = RunSerializer
 
 
