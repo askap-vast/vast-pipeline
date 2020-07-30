@@ -134,6 +134,12 @@
       <!-- Main Content -->
       <div id="content">
 
+        {% if maintainance_message %}
+        <div class="bg-gradient-warning text-gray-900">
+          <strong class="text-lg">MAINTAINER MESSAGE: </strong>{{ maintainance_message }}
+        </div>
+        {% endif %}
+
         <!-- Topbar -->
         <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
 
