@@ -322,6 +322,22 @@ class Source(models.Model):
     n_neighbour_dist = models.FloatField(
         help_text='Distance to the nearest neighbour (deg)'
     )
+    # total metrics to report in UI
+    n_meas = models.IntegerField(
+        help_text='total measurements of the source'
+    )
+    n_meas_sel = models.IntegerField(
+        help_text='total selavy extracted measurements of the source'
+    )
+    n_meas_forced = models.IntegerField(
+        help_text='total force extracted measurements of the source'
+    )
+    n_rel = models.IntegerField(
+        help_text='total relations of the source with other sources'
+    )
+    n_sibl = models.IntegerField(
+        help_text='total siblings of the source'
+    )
 
     objects = SourceQuerySet.as_manager()
 
