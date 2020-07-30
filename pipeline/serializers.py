@@ -74,6 +74,7 @@ class SourceSerializer(serializers.ModelSerializer):
     contains_siblings = serializers.BooleanField(read_only=True)
     wavg_ra = serializers.SerializerMethodField()
     wavg_dec = serializers.SerializerMethodField()
+    contains_siblings = serializers.SerializerMethodField()
 
     class Meta:
         model = Source
@@ -85,3 +86,6 @@ class SourceSerializer(serializers.ModelSerializer):
 
     def get_wavg_dec(self, source):
         return deg2dms(source.wavg_dec, dms_format=True)
+
+    def get_contains_siblings(self, source):
+        return True if source.n_sibl > 0 else False

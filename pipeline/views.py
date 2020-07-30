@@ -452,30 +452,7 @@ class SourceViewSet(ModelViewSet):
     serializer_class = SourceSerializer
 
     def get_queryset(self):
-        qs = Source.objects.annotate(
-            measurements=Count('measurement', distinct=True),
-            selavy_measurements=Count(
-                'measurement',
-                filter=Q(measurement__forced=False),
-                distinct=True
-            ),
-            forced_measurements=Count(
-                'measurement',
-                filter=Q(measurement__forced=True),
-                distinct=True
-            ),
-            relations=Count('related', distinct=True),
-            siblings_count=Count(
-                'measurement',
-                filter=Q(measurement__has_siblings=True),
-                distinct=True
-            ),
-            contains_siblings=Case(
-                When(siblings_count__gt=0, then=Value(True)),
-                default=Value(False),
-                output_field=BooleanField()
-            )
-        )
+        qs = Source.objects.all()
 
         radius_conversions = {
             "arcsec": 3600.,
@@ -495,10 +472,10 @@ class SourceViewSet(ModelViewSet):
             'v_peak',
             'eta_int',
             'eta_peak',
-            'measurements',
-            'selavy_measurements',
-            'forced_measurements',
-            'relations',
+            'n_meas',
+            'n_meas_sel',
+            'n_meas_forced',
+            'n_rel',
             'contains_siblings',
             'new_high_sigma',
             'avg_compactness',
@@ -566,11 +543,11 @@ def SourceQuery(request):
         'avg_flux_peak',
         'max_flux_peak',
         'avg_compactness',
-        'measurements',
-        'selavy_measurements',
-        'forced_measurements',
+        'n_meas',
+        'n_meas_sel',
+        'n_meas_forced',
         'n_neighbour_dist',
-        'relations',
+        'n_rel',
         'v_int',
         'eta_int',
         'v_peak',
@@ -590,10 +567,6 @@ def SourceQuery(request):
         'sources_query.html',
         {
             'breadcrumb': {'title': 'Sources', 'url': request.path},
-            # 'text': {
-            #     'title': 'Sources',
-            #     'description': 'List of all sources below',
-            # },
             'runs': p_runs,
             'datatable': {
                 'api': '/api/sources/?format=datatables',
