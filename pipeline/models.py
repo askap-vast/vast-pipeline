@@ -138,13 +138,17 @@ class Run(models.Model):
                 message='Name contains not allowed characters!',
                 inverse_match=True
             ),
-        ]
+        ],
+        help_text='name of the pipeline run'
     )
     time = models.DateTimeField(
         auto_now=True,
         help_text='Datetime of run.'
     )# run date/time of the pipeline run
-    path = models.FilePathField(max_length=200)# the path to the pipeline run
+    path = models.FilePathField(
+        max_length=200,
+        help_text='path to the pipeline run'
+    )
     comment = models.TextField(
         max_length=1000,
         default='',
@@ -208,8 +212,12 @@ class Band(models.Model):
     associated with one band.
     """
     name = models.CharField(max_length=12, unique=True)
-    frequency = models.IntegerField()# central frequency of band (integer MHz)
-    bandwidth = models.IntegerField()# bandwidth (MHz)
+    frequency = models.IntegerField(
+        help_text='central frequency of band (integer MHz)'
+    )
+    bandwidth = models.IntegerField(
+        help_text='bandwidth (MHz)'
+    )
 
     class Meta:
         ordering = ['frequency']
@@ -355,10 +363,19 @@ class Image(models.Model):
         max_length=200,
         db_column='meas_path'
     )# the path to the measurements parquet that belongs to this image
+    POLARISATION_CHOICES = [
+        ('I', 'I'),
+        ('XX', 'XX'),
+        ('YY', 'YY'),
+        ('Q', 'Q'),
+        ('U', 'U'),
+        ('V', 'V'),
+    ]
     polarisation = models.CharField(
         max_length=2,
-        help_text='Polarisation of the image e.g. I,XX,YY,Q,U,V.'
-    )# eg XX,YY,I,Q,U,V
+        choices=POLARISATION_CHOICES,
+        help_text='Polarisation of the image one of I,XX,YY,Q,U,V.'
+    )
     name = models.CharField(
         max_length=200,
         help_text='Name of the image.'
