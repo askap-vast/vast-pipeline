@@ -14,20 +14,21 @@ $(document).ready(function() {
       success: function(result) {
         // populate the images and selavy menus
          $.each(result.fits, function (idx, item) {
-          $("#imagesFilesDropDown").append('<option>' + item + '</option>');
-          $("#bkgFilesDropDown").append('<option>' + item + '</option>');
-          $("#noiseFilesDropDown").append('<option>' + item + '</option>');
+          $("#imagesFilesDropDown").append('<option title="' + item.title + '" data-tokens="' + item.datatokens + '">' + item.path + '</option>');
+          $("#bkgFilesDropDown").append('<option title="' + item.title + '" data-tokens="' + item.datatokens + '">' + item.path + '</option>');
+          $("#noiseFilesDropDown").append('<option title="' + item.title + '" data-tokens="' + item.datatokens + '">' + item.path + '</option>');
          });
          $.each(result.selavy, function (idx, item) {
-          $("#selavyFilesDropDown").append('<option>' + item + '</option>');
+          $("#selavyFilesDropDown").append('<option title="' + item.title + '" data-tokens="' + item.datatokens + '">' + item.path + '</option>');
          });
+         // refresh the state of the drop-down menus
          $('#imagesFilesDropDown').selectpicker('refresh');
          $('#selavyFilesDropDown').selectpicker('refresh');
          $('#bkgFilesDropDown').selectpicker('refresh');
          $('#noiseFilesDropDown').selectpicker('refresh');
       },
       error: function(result) {
-        alert('error');
+        alert('unable to retrieve file paths');
       }
     });
   });

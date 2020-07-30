@@ -3,6 +3,7 @@ import os
 import json
 import logging
 import dask.bag as db
+import pandas as pd
 
 from typing import Dict, Any
 from glob import glob
@@ -869,6 +870,31 @@ class RawImageListSet(ViewSet):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [IsAuthenticated]
 
+    @staticmethod
+    def gen_title_data_tokens(list_of_paths):
+        '''
+        generate a dataframe with extra columns for HTML tags title
+        and data-tokens to generate something like:
+        <option title={{title}} data-tokens={{datatokens}}>{{path}}</option>
+        this assume a path like this:
+        EPOCH06x/COMBINED/STOKESI_SELAVY/VAST_2118-06A.EPOCH06x.I.selavy.components.txt
+        For the following dataframe columns
+                                                     path
+        EPOCH06x/COMBINED/STOKESI_SELAVY/VAST_2118-06A...
+                                                 title
+        VAST_2118-06A.EPOCH06x.I.selavy.components.txt
+                                               datatokens
+        EPOCH06x VAST_2118-06A.EPOCH06x.I.selavy.compo...
+        '''
+        df = pd.DataFrame(list_of_paths, columns=['path'])
+        df['title'] = df['path'].str.split(pat=os.sep).str.get(-1)
+        df['datatokens'] = (
+            df['path'].str.split(pat=os.sep).str.get(0)
+            .str.cat(df['title'], sep=' ')
+        )
+
+        return df.to_dict(orient='records')
+
     def list(self, request):
         # generate the folders path regex, e.g. /path/to/images/**/*.fits
         # first generate the list of main subfolders, e.g. [EPOCH01, ... ]
@@ -891,6 +917,8 @@ class RawImageListSet(ViewSet):
         fits_files = (
             dask_list.map(lambda x: glob(x, recursive=True))
             .flatten()
+            # remove base path
+            .map(lambda x: os.path.relpath(x, img_root))
             .compute()
         )
         # generate response datastructure
@@ -901,11 +929,13 @@ class RawImageListSet(ViewSet):
         selavy_files = (
             dask_list.map(lambda x: glob(x, recursive=True))
             .flatten()
+            # remove base path
+            .map(lambda x: os.path.relpath(x, img_root))
             .compute()
         )
         data = {
-            'fits': fits_files,
-            'selavy': selavy_files
+            'fits': self.gen_title_data_tokens(fits_files),
+            'selavy': self.gen_title_data_tokens(selavy_files)
         }
         serializer = RawImageSelavyListSerializer(data)
 
