@@ -18,6 +18,17 @@ function obj_formatter(obj) {
         };
         obj.render = floatFormat;
         return obj;
+    } else if (obj.render.hasOwnProperty('contains_sibl')) {
+        let col = obj.render.contains_sibl.col;
+        let sibl_bool = function(data, type, row, meta) {
+            if (row[col] > 0) {
+                return true;
+            } else {
+                return false;
+            }
+        };
+        obj.render = sibl_bool;
+        return obj;
     };
 };
 

@@ -153,8 +153,8 @@ class Run(models.Model):
         max_length=1000,
         default='',
         blank=True,
-        help_text='main comment of pipeline run'
-    )# A description of this pipeline run
+        help_text='A description of this pipeline run'
+    )
     STATUS_CHOICES = [
         ('INI', 'Initialised'),
         ('RUN', 'Running'),
@@ -166,7 +166,15 @@ class Run(models.Model):
         choices=STATUS_CHOICES,
         default='INI',
         help_text='Status of the pipeline run.'
-    )# pipeline run status
+    )
+    n_images = models.IntegerField(
+        default=0,
+        help_text='number of images processed in this run'
+    )
+    n_sources = models.IntegerField(
+        default=0,
+        help_text='number of sources extracted in this run'
+    )
 
     objects = RunQuerySet.as_manager()
 
@@ -321,6 +329,22 @@ class Source(models.Model):
     )
     n_neighbour_dist = models.FloatField(
         help_text='Distance to the nearest neighbour (deg)'
+    )
+    # total metrics to report in UI
+    n_meas = models.IntegerField(
+        help_text='total measurements of the source'
+    )
+    n_meas_sel = models.IntegerField(
+        help_text='total selavy extracted measurements of the source'
+    )
+    n_meas_forced = models.IntegerField(
+        help_text='total force extracted measurements of the source'
+    )
+    n_rel = models.IntegerField(
+        help_text='total relations of the source with other sources'
+    )
+    n_sibl = models.IntegerField(
+        help_text='total siblings of the source'
     )
 
     objects = SourceQuerySet.as_manager()
