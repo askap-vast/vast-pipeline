@@ -278,7 +278,8 @@ def many_to_many_advanced(temp_srcs, method):
         m_to_m.shape[0]
     )
 
-    col, min_col = _get_min_col(method)
+    dist_col = 'd2d_skyc2' if method == 'advanced' else 'dr'
+    min_col = 'min_' + dist_col
 
     # get the minimum de ruiter value for each extracted source
     m_to_m[min_col] = (
