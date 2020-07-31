@@ -101,7 +101,8 @@ def RunIndex(request):
                     'Nr Sources', 'Run Status'
                 ],
                 'search': True,
-            }
+            },
+            'runconfig' : settings.PIPE_RUN_CONFIG_DEFAULTS
         }
     )
 

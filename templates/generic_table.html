@@ -101,17 +101,17 @@
             <select id="selavyFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-header="Choose selavy files" data-actions-box="true">
             </select>
             <div class="custom-control custom-switch">
-              <input type="checkbox" class="custom-control-input" id="monitorSwitch">
+              <input type="checkbox" class="custom-control-input" id="monitorSwitch" {% if runconfig.monitor %} checked="checked" {% endif %}>
               <label class="custom-control-label font-weight-bold text-gray-800" for="monitorSwitch">Monitor: Turn on force extraction for sources backward and forward in time</label>
             </div>
             <div class="row">
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="monitorMinSigmaSelect">Monitor Min Sigma</label>
-                <input id="monitorMinSigmaSelect" type="number" class="form-control bg-light border-0" value="3.0" min="0" step="0.01" aria-label="monitorMinSigmaSearch" aria-describedby="basic-addon2" disabled>
+                <input id="monitorMinSigmaSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.monitor_min_sigma }}" min="0" step="0.01" aria-label="monitorMinSigmaSearch" aria-describedby="basic-addon2" disabled>
               </div>
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="monitorEdgeBufferScaleSelect">Monitor Edge Buffer Scale</label>
-                <input id="monitorEdgeBufferScaleSelect" type="number" class="form-control bg-light border-0" value="1.2" min="0" step="0.01" aria-label="monitorEdgeBufferScaleSearch" aria-describedby="basic-addon2" disabled>
+                <input id="monitorEdgeBufferScaleSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.monitor_edge_buffer_scale }}" min="0" step="0.01" aria-label="monitorEdgeBufferScaleSearch" aria-describedby="basic-addon2" disabled>
               </div>
             </div>
             <label for="bkgFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select background files</label>
@@ -128,41 +128,41 @@
                   <option value="advanced">Advanced</option>
                 </select>
                 <label class="col-form-label font-weight-bold text-gray-800" for="astroUncertRaSelect">Astrometric Uncertainty Ra</label>
-                <input id="astroUncertRaSelect" type="number" class="form-control bg-light border-0" value="1.0" min="0" step="0.01" aria-label="astroUncertRaSearch" aria-describedby="basic-addon2">
+                <input id="astroUncertRaSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.astrometric_uncertainty_ra }}" min="0" step="0.01" aria-label="astroUncertRaSearch" aria-describedby="basic-addon2">
               </div>
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="associationRadiusSelect">Association Radius</label>
-                <input id="associationRadiusSelect" type="number" class="form-control bg-light border-0" value="5.0" min="0" step="0.01" aria-label="associationRadiusSearch" aria-describedby="basic-addon2">
+                <input id="associationRadiusSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.association_radius }}" min="0" step="0.01" aria-label="associationRadiusSearch" aria-describedby="basic-addon2">
                 <label class="col-form-label font-weight-bold text-gray-800" for="astroUncertDecSelect">Astrometric Uncertainty Dec</label>
-                <input id="astroUncertDecSelect" type="number" class="form-control bg-light border-0" value="1.0" min="0" step="0.01" aria-label="astroUncertDecSearch" aria-describedby="basic-addon2">
+                <input id="astroUncertDecSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.astrometric_uncertainty_dec }}" min="0" step="0.01" aria-label="astroUncertDecSearch" aria-describedby="basic-addon2">
               </div>
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="associationDeRuiterSelect">Association De Ruiter Radius</label>
-                <input id="associationDeRuiterSelect" type="number" class="form-control bg-light border-0" value="5.68" min="0" step="0.01" aria-label="associationDeRuiterSearch" aria-describedby="basic-addon2">
+                <input id="associationDeRuiterSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.association_de_ruiter_radius }}" min="0" step="0.01" aria-label="associationDeRuiterSearch" aria-describedby="basic-addon2">
                 <label class="col-form-label font-weight-bold text-gray-800" for="newSourceMinSigSelect">New Source Min Sigma</label>
-                <input id="newSourceMinSigSelect" type="number" class="form-control bg-light border-0" value="5.0" min="0" step="0.01" aria-label="newSourceMinSigSearch" aria-describedby="basic-addon2">
+                <input id="newSourceMinSigSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.new_source_min_sigma }}" min="0" step="0.01" aria-label="newSourceMinSigSearch" aria-describedby="basic-addon2">
               </div>
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="associationBeamWidthSelect">Association Beam Width</label>
-                <input id="associationBeamWidthSelect" type="number" class="form-control bg-light border-0" value="1.0" min="0" step="0.01" aria-label="associationBeamWidthSearch" aria-describedby="basic-addon2">
+                <input id="associationBeamWidthSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.association_beamwidth_limit }}" min="0" step="0.01" aria-label="associationBeamWidthSearch" aria-describedby="basic-addon2">
                 <label class="col-form-label font-weight-bold text-gray-800" for="surveySelect">Default Survey (TBC)</label>
                 <select id="surveySelect" class="form-control bg-light border-0" aria-label="surveySearch" aria-describedby="basic-addon2" disabled>
-                  <option value="None" selected>None</option>
+                  <option value="{{ runconfig.default_survey }}" selected>None</option>
                 </select>
               </div>
             </div>
             <div class="row">
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="fluxPercErrorSelect">Flux Percentage Error</label>
-                <input id="fluxPercErrorSelect" type="number" class="form-control bg-light border-0" value="0" min="0" max="100" step="0.01" aria-label="fluxPercErrorSearch" aria-describedby="basic-addon2">
+                <input id="fluxPercErrorSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.flux_perc_error }}" min="0" max="100" step="0.01" aria-label="fluxPercErrorSearch" aria-describedby="basic-addon2">
               </div>
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="localRmsZeroFillSelect">Selavy Local RMS Zero Fill Value</label>
-                <input id="localRmsZeroFillSelect" type="number" class="form-control bg-light border-0" value="0.2" min="0" step="0.01" aria-label="localRmsZeroFillSearch" aria-describedby="basic-addon2">
+                <input id="localRmsZeroFillSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.selavy_local_rms_zero_fill_value }}" min="0" step="0.01" aria-label="localRmsZeroFillSearch" aria-describedby="basic-addon2">
               </div>
             </div>
             <div class="custom-control custom-switch">
-              <input type="checkbox" class="custom-control-input" id="condomErrorSwitch" checked="checked">
+              <input type="checkbox" class="custom-control-input" id="condomErrorSwitch" {% if runconfig.use_condon_errors %} checked="checked" {% endif %}>
               <label class="custom-control-label font-weight-bold text-gray-800" for="condomErrorSwitch">Use Condon Errors</label>
             </div>
           </div>
