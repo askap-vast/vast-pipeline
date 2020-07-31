@@ -58,21 +58,6 @@ def calc_de_ruiter(df):
     return dr
 
 
-def _get_min_col(method):
-    """
-    Returns the column names needed for filtering the 'to-many'
-    associations depending on the method (advanced or trap).
-    """
-    if method == 'advanced':
-        col = 'd2d_skyc2'
-        min_col = 'min_' + col
-    else:
-        col = 'dr'
-        min_col = 'min_' + col
-
-    return col, min_col
-
-
 def one_to_many_basic(sources_df, skyc2_srcs):
     '''
     Finds and processes the one-to-many associations in the basic
