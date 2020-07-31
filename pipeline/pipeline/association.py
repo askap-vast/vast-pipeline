@@ -185,7 +185,7 @@ def one_to_many_advanced(temp_srcs, sources_df, method):
 
     # Get the column to check for the minimum depending on the method
     # set the column names needed for filtering the 'to-many'
-    # associations depending on the method (advanced or trap)
+    # associations depending on the method (advanced or deruiter)
     dist_col = 'd2d_skyc2' if method == 'advanced' else 'dr'
 
     # go through the doubles and
@@ -435,7 +435,7 @@ def advanced_association(
     del temp_skyc1_srcs, temp_skyc2_srcs
 
     # Step 4: Calculate and perform De Ruiter radius cut
-    if method == 'trap':
+    if method == 'deruiter':
         temp_srcs['dr'] = calc_de_ruiter(temp_srcs)
         temp_srcs = temp_srcs[temp_srcs['dr'] <= dr_limit]
     else:
@@ -547,8 +547,8 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
                 limit,
             )
 
-        elif method in ['advanced', 'trap']:
-            if method == 'trap':
+        elif method in ['advanced', 'deruiter']:
+            if method == 'deruiter':
                 bw_max = Angle(
                     bw_limit * (image.beam_bmaj * 3600. / 2.) * u.arcsec
                 )
@@ -564,6 +564,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
                 dr_limit,
                 bw_max
             )
+
         else:
             raise Exception('association method not implemented!')
 
