@@ -56,4 +56,11 @@ $(document).ready(function() {
     $("#pipeRunDetailsForm").show();
   });
 
+  $("#pipeRunReset").on('click', function(e) {
+    let dropDownMenus = ['#imagesFilesDropDown', '#selavyFilesDropDown', '#bkgFilesDropDown', '#noiseFilesDropDown'];
+    $.each(dropDownMenus, function (idx, item) {
+      $(item).val('default').selectpicker('refresh');
+    });
+  });
+
 });
