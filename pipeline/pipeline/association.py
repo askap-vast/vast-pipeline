@@ -184,7 +184,9 @@ def one_to_many_advanced(temp_srcs, sources_df, method):
     )
 
     # Get the column to check for the minimum depending on the method
-    col, min_col = _get_min_col(method)
+    # set the column names needed for filtering the 'to-many'
+    # associations depending on the method (advanced or trap)
+    dist_col = 'd2d_skyc2' if method == 'advanced' else 'dr'
 
     # go through the doubles and
     # 1. Keep the closest de ruiter as the primary id
