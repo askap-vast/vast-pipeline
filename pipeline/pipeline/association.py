@@ -201,7 +201,7 @@ def one_to_many_advanced(temp_srcs, sources_df, method):
         min_dist_idx = duplicated_skyc1.loc[src_selection, dist_col].idxmin()
         # Select the others
         idx_to_change = duplicated_skyc1.index.values[
-            (duplicated_skyc1.index.values != min_idx) &
+            (duplicated_skyc1.index.values != min_dist_idx) &
             src_selection
         ]
         # how many new source ids we need to make?
@@ -218,13 +218,13 @@ def one_to_many_advanced(temp_srcs, sources_df, method):
         temp_srcs.loc[idx_to_change, 'source_skyc1'] = new_src_ids
         # populate the 'related' field for skyc1
         # original source with duplicated
-        orig_src = temp_srcs.at[min_idx, 'related_skyc1']
+        orig_src = temp_srcs.at[min_dist_idx, 'related_skyc1']
         if isinstance(orig_src, list):
-            temp_srcs.at[min_idx, 'related_skyc1'] = (
+            temp_srcs.at[min_dist_idx, 'related_skyc1'] = (
                 orig_src + new_src_ids.tolist()
             )
         else:
-            temp_srcs.at[min_idx, 'related_skyc1'] = new_src_ids.tolist()
+            temp_srcs.at[min_dist_idx, 'related_skyc1'] = new_src_ids.tolist()
         # other sources with original
         temp_srcs.loc[idx_to_change, 'related_skyc1'] = temp_srcs.loc[
             idx_to_change,
@@ -283,11 +283,11 @@ def many_to_many_advanced(temp_srcs, method):
 
     # get the minimum de ruiter value for each extracted source
     m_to_m[min_col] = (
-        m_to_m.groupby('index_old_skyc2')[col]
+        m_to_m.groupby('index_old_skyc2')[dist_col]
         .transform('min')
     )
     # get the ids of those crossmatches that are larger than the minimum
-    m_to_m_to_drop = m_to_m[m_to_m[col] != m_to_m[min_col]].index.values
+    m_to_m_to_drop = m_to_m[m_to_m[dist_col] != m_to_m[min_col]].index.values
     # and drop these from the temp_srcs
     temp_srcs = temp_srcs.drop(m_to_m_to_drop)
 
