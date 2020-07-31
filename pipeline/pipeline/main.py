@@ -105,7 +105,7 @@ class Pipeline():
                 f' Choices are {source_finder_names}'
             ))
 
-        association_methods = ['basic', 'advanced']
+        association_methods = ['basic', 'advanced', 'deruiter']
         if getattr(self.config, 'ASSOCIATION_METHOD') not in association_methods:
             raise PipelineConfigError((
                 'ASSOCIATION_METHOD is not valid!'

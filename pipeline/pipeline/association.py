@@ -156,7 +156,7 @@ def one_to_many_basic(sources_df, skyc2_srcs):
     return sources_df, skyc2_srcs
 
 
-def one_to_many_advanced(temp_srcs, sources_df):
+def one_to_many_advanced(temp_srcs, sources_df, method):
     '''
     Finds and processes the one-to-many associations in the basic
     association. The same logic is applied as in
@@ -182,6 +182,12 @@ def one_to_many_advanced(temp_srcs, sources_df):
         'Detected #%i one-to-many assocations, cleaning...',
         duplicated_skyc1.shape[0]
     )
+
+    # Get the column to check for the minimum depending on the method
+    # set the column names needed for filtering the 'to-many'
+    # associations depending on the method (advanced or deruiter)
+    dist_col = 'd2d_skyc2' if method == 'advanced' else 'dr'
+
     # go through the doubles and
     # 1. Keep the closest de ruiter as the primary id
     # 2. Increment a new source id for others
@@ -191,11 +197,11 @@ def one_to_many_advanced(temp_srcs, sources_df):
     for i, msrc in enumerate(multi_srcs):
         # Make the selection
         src_selection = duplicated_skyc1['source_skyc1'] == msrc
-        # Get the min dr idx
-        min_dr_idx = duplicated_skyc1.loc[src_selection, 'dr'].idxmin()
+        # Get the min d2d or dr idx
+        min_dist_idx = duplicated_skyc1.loc[src_selection, dist_col].idxmin()
         # Select the others
         idx_to_change = duplicated_skyc1.index.values[
-            (duplicated_skyc1.index.values != min_dr_idx) &
+            (duplicated_skyc1.index.values != min_dist_idx) &
             src_selection
         ]
         # how many new source ids we need to make?
@@ -212,13 +218,13 @@ def one_to_many_advanced(temp_srcs, sources_df):
         temp_srcs.loc[idx_to_change, 'source_skyc1'] = new_src_ids
         # populate the 'related' field for skyc1
         # original source with duplicated
-        orig_src = temp_srcs.at[min_dr_idx, 'related_skyc1']
+        orig_src = temp_srcs.at[min_dist_idx, 'related_skyc1']
         if isinstance(orig_src, list):
-            temp_srcs.at[min_dr_idx, 'related_skyc1'] = (
+            temp_srcs.at[min_dist_idx, 'related_skyc1'] = (
                 orig_src + new_src_ids.tolist()
             )
         else:
-            temp_srcs.at[min_dr_idx, 'related_skyc1'] = new_src_ids.tolist()
+            temp_srcs.at[min_dist_idx, 'related_skyc1'] = new_src_ids.tolist()
         # other sources with original
         temp_srcs.loc[idx_to_change, 'related_skyc1'] = temp_srcs.loc[
             idx_to_change,
@@ -242,7 +248,7 @@ def one_to_many_advanced(temp_srcs, sources_df):
     return temp_srcs, sources_df
 
 
-def many_to_many_advanced(temp_srcs):
+def many_to_many_advanced(temp_srcs, method):
     '''
     Finds and processes the many-to-many associations in the advanced
     association. We do not want to build many-to-many associations as
@@ -250,7 +256,8 @@ def many_to_many_advanced(temp_srcs):
     The skyc2 sources which are listed more than once are found, and of
     these, those which have a skyc1 source association which is also
     listed twice in the associations are selected. The closest (by
-    de Ruiter radius) is kept where as the other associations are dropped.
+    limit or de Ruiter radius, depending on the method) is kept where
+    as the other associations are dropped.
 
     This follows the same logic used by the TraP (see TraP documentation).
     '''
@@ -270,13 +277,17 @@ def many_to_many_advanced(temp_srcs):
         'Detected #%i many-to-many assocations, cleaning...',
         m_to_m.shape[0]
     )
+
+    dist_col = 'd2d_skyc2' if method == 'advanced' else 'dr'
+    min_col = 'min_' + dist_col
+
     # get the minimum de ruiter value for each extracted source
-    m_to_m['min_dr'] = (
-        m_to_m.groupby('index_old_skyc2')['dr']
+    m_to_m[min_col] = (
+        m_to_m.groupby('index_old_skyc2')[dist_col]
         .transform('min')
     )
     # get the ids of those crossmatches that are larger than the minimum
-    m_to_m_to_drop = m_to_m[m_to_m.dr != m_to_m.min_dr].index.values
+    m_to_m_to_drop = m_to_m[m_to_m[dist_col] != m_to_m[min_col]].index.values
     # and drop these from the temp_srcs
     temp_srcs = temp_srcs.drop(m_to_m_to_drop)
 
@@ -307,6 +318,7 @@ def many_to_one_advanced(temp_srcs):
         'Detected #%i many-to-one associations',
         duplicated_skyc2.shape[0]
     )
+
     multi_srcs = duplicated_skyc2['index_old_skyc2'].unique()
     for i, msrc in enumerate(multi_srcs):
         # Make the selection
@@ -383,7 +395,7 @@ def basic_association(
 
 
 def advanced_association(
-        sources_df, skyc1_srcs, skyc1,
+        method, sources_df, skyc1_srcs, skyc1,
         skyc2_srcs, skyc2, dr_limit, bw_max
     ):
     '''
@@ -423,17 +435,22 @@ def advanced_association(
     del temp_skyc1_srcs, temp_skyc2_srcs
 
     # Step 4: Calculate and perform De Ruiter radius cut
-    temp_srcs['dr'] = calc_de_ruiter(temp_srcs)
-    temp_srcs = temp_srcs[temp_srcs['dr'] <= dr_limit]
+    if method == 'deruiter':
+        temp_srcs['dr'] = calc_de_ruiter(temp_srcs)
+        temp_srcs = temp_srcs[temp_srcs['dr'] <= dr_limit]
+    else:
+        temp_srcs['dr'] = 0.
 
     # Now have the 'good' matches
     # Step 5: Check for one-to-many, many-to-one and many-to-many
     # associations. First the many-to-many
-    temp_srcs = many_to_many_advanced(temp_srcs)
+    temp_srcs = many_to_many_advanced(temp_srcs, method)
 
     # Next one-to-many
     # Get the sources which are doubled
-    temp_srcs, sources_df = one_to_many_advanced(temp_srcs, sources_df)
+    temp_srcs, sources_df = one_to_many_advanced(
+        temp_srcs, sources_df, method
+    )
 
     # Finally many-to-one associations, the opposite of above but we
     # don't have to create new ids for these so it's much simpler in fact
@@ -530,11 +547,15 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
                 limit,
             )
 
-        elif method == 'advanced':
-            bw_max = Angle(
-                bw_limit * (image.beam_bmaj * 3600. / 2.) * u.arcsec
-            )
+        elif method in ['advanced', 'deruiter']:
+            if method == 'deruiter':
+                bw_max = Angle(
+                    bw_limit * (image.beam_bmaj * 3600. / 2.) * u.arcsec
+                )
+            else:
+                bw_max = limit
             sources_df, skyc1_srcs = advanced_association(
+                method,
                 sources_df,
                 skyc1_srcs,
                 skyc1,
@@ -543,6 +564,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
                 dr_limit,
                 bw_max
             )
+
         else:
             raise Exception('association method not implemented!')
 
