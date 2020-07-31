@@ -483,7 +483,7 @@ def SourceQuery(request):
         'eta_int',
         'v_peak',
         'eta_peak',
-        'contains_siblings',
+        'n_sibl',
         'new',
         'new_high_sigma'
     ]

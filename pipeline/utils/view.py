@@ -121,6 +121,14 @@ def generate_colsfields(fields, url_prefix):
                     }
                 }
             })
+        elif col == 'n_sibl':
+            colsfields.append({
+                'data': col, 'render': {
+                    'contains_sibl': {
+                        'col': col
+                    }
+                }
+            })
         elif col in FLOAT_FIELDS:
             colsfields.append({
                 'data': col,
@@ -134,6 +142,7 @@ def generate_colsfields(fields, url_prefix):
             })
         else:
             colsfields.append({'data': col})
+
 
     return colsfields
 
