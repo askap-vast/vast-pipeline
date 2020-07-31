@@ -198,7 +198,7 @@ def one_to_many_advanced(temp_srcs, sources_df, method):
         # Make the selection
         src_selection = duplicated_skyc1['source_skyc1'] == msrc
         # Get the min d2d or dr idx
-        min_idx = duplicated_skyc1.loc[src_selection, col].idxmin()
+        min_dist_idx = duplicated_skyc1.loc[src_selection, dist_col].idxmin()
         # Select the others
         idx_to_change = duplicated_skyc1.index.values[
             (duplicated_skyc1.index.values != min_idx) &
