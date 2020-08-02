@@ -41,11 +41,21 @@ $(document).ready(function() {
   });
 
   $("#pipeRunNext").on('click', function(e) {
-    $("#pipeRunConfigForm").show();
-    $("#pipeRunBack").show();
-    $("#createPipeRun").show();
-    $("#pipeRunNext").hide();
-    $("#pipeRunDetailsForm").hide();
+    let runName = document.getElementById('pipeRunName');
+    if (runName.checkValidity()) {
+      if (/^[A-Za-z0-9_-]+$/.test(runName.value)) {
+        $('#runNameInv1').hide();
+        $("#pipeRunConfigForm").show();
+        $("#pipeRunBack").show();
+        $("#createPipeRun").show();
+        $("#pipeRunNext").hide();
+        $("#pipeRunDetailsForm").hide();
+      } else {
+    $('#runNameInv2').show();
+  }
+    } else {
+      $('#runNameInv1').show();
+    }
   });
 
   $("#pipeRunBack").on('click', function(e) {

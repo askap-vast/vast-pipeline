@@ -81,13 +81,19 @@
         </button>
       </div>
       <div class="modal-body">
-        <form action="" method="post" id="newPipeRunForm">
+        <form action="" method="post" id="newPipeRunForm" novalidate>
           {% csrf_token %}
           <div id="pipeRunDetailsForm" class="form-group">
             <div class="row">
               <div class="col">
                 <label for="pipeRunName" class="col-form-label font-weight-bold text-gray-800">Input Pipeline Run Name</label>
-                <input id="pipeRunName" type="text" class="form-control bg-light border-0" placeholder="e.g. my_pipeline_run">
+                <input id="pipeRunName" type="text" class="form-control bg-light border-0" placeholder="e.g. my_pipeline_run" required>
+                <div id="runNameInv1"  class="invalid-feedback">
+                  Please specify a name
+                </div>
+                <div id="runNameInv2" class="invalid-feedback">
+                  Spaces and symbols not allowed
+                </div>
                 <label for="pipeRunComment" class="col-form-label font-weight-bold text-gray-800">Insert Pipeline Run Comment</label>
                 <textarea id="pipeRunComment" class="form-control bg-light border-0" placeholder="Insert pipeline run comment here (optional)" form="newPipeRunForm"></textarea>
               </div>
