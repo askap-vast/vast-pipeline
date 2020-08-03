@@ -260,10 +260,10 @@ $(document).ready(function() {
     let relations_min = document.getElementById("RelationsMinSelect");
     let relations_max = document.getElementById("RelationsMaxSelect");
     if (relations_min.value) {
-      qry_url = qry_url + "&min_relations=" + relations_min.value;
+      qry_url = qry_url + "&min_n_rel=" + relations_min.value;
     };
     if (relations_max.value) {
-      qry_url = qry_url + "&max_relations=" + relations_max.value;
+      qry_url = qry_url + "&max_n_rel=" + relations_max.value;
     };
     let neighbour_min = document.getElementById("NeighbourMinSelect");
     let neighbour_max = document.getElementById("NeighbourMaxSelect");
