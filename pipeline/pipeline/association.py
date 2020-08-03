@@ -233,7 +233,6 @@ def one_to_many_advanced(temp_srcs, sources_df, method):
 
         # Check for generate copies of previous crossmatches and copy
         # the past source rows ready to append
-
         for new_id in new_src_ids:
             sources_to_copy = sources_df[
                 sources_df['source'] == msrc
@@ -662,6 +661,7 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
                 'uncertainty_ns_skyc2'
             ], axis=1
         )
+
         #generate new sky coord ready for next iteration
         skyc1 = SkyCoord(
             ra=skyc1_srcs['ra'] * u.degree,
