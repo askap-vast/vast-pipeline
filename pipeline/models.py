@@ -2,6 +2,7 @@ import logging
 import math
 from django.db import models
 from django.core.validators import RegexValidator
+from django.contrib.auth.models import User
 
 
 # Create your models here.
@@ -129,6 +130,8 @@ class Run(models.Model):
     A Run is essentially a pipeline run/processing istance over a set of
     images
     """
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+
     name = models.CharField(
         max_length=64,
         unique=True,
