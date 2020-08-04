@@ -124,7 +124,9 @@ def get_create_img(p_run, band_id, image):
     # FYI attributs and/or method starting with _ are hidden
     # and with __ can't be modified/called
     for fld in img._meta.get_fields():
-        if getattr(fld, 'attname', None) and getattr(image, fld.attname, None):
+        if getattr(fld, 'attname', None) and (
+            getattr(image, fld.attname, None) is not None
+        ):
             setattr(img, fld.attname, getattr(image, fld.attname))
 
     # get create the sky region and associate with image
