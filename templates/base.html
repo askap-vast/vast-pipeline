@@ -22,6 +22,8 @@
 
   <!-- SB admin 2 template CSS-->
   <link href="{% static 'css/sb-admin-2.min.css' %}" rel="stylesheet">
+  <!-- Custom styles on top of the SB admin template-->
+  <link href="{% static 'css/pipeline.min.css' %}" rel="stylesheet">
 
   <!-- Custom styles on top of the SB admin template-->
   <link href="{% static 'css/pipeline.min.css' %}" rel="stylesheet">
@@ -136,6 +138,12 @@
 
       <!-- Main Content -->
       <div id="content">
+
+        {% if maintainance_message %}
+        <div id="maintainanceMessage" class="text-gray-900 text-center">
+          <strong class="text-lg">MAINTAINER MESSAGE: </strong>{{ maintainance_message }}
+        </div>
+        {% endif %}
 
         <!-- Topbar -->
         <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">

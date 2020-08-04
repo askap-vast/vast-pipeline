@@ -69,6 +69,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'social_django.context_processors.backends',
                 'social_django.context_processors.login_redirect',
+                'pipeline.context_processors.maintainance_banner',
             ],
             'libraries': {
                 'unit_tags': 'pipeline.utils.unit_tags'
@@ -276,3 +277,6 @@ PIPE_RUN_CONFIG_DEFAULTS = {
 
 # default max concurrent pipeline runs
 MAX_PIPELINE_RUNS = 3
+
+# pipeline maintainance message/banner
+PIPELINE_MAINTAINANCE_MESSAGE = env('PIPELINE_MAINTAINANCE_MESSAGE', cast=str, default=None)
