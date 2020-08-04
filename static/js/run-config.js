@@ -36,8 +36,8 @@ $(document).ready(function() {
   $("#monitorSwitch").on('click', function(e) {
     $("#bkgFilesDropDown").attr('disabled',!this.checked).selectpicker('refresh');
     $("#noiseFilesDropDown").attr('disabled',!this.checked).selectpicker('refresh');
-    $("#monitorMinSigmaSelect").prop('disabled',!this.checked);
-    $("#monitorEdgeBufferScaleSelect").prop('disabled',!this.checked);
+    $("#monitorMinSigmaSelect").prop('readonly',!this.checked);
+    $("#monitorEdgeBufferScaleSelect").prop('readonly',!this.checked);
   });
 
   $("#pipeRunNext").on('click', function(e) {
