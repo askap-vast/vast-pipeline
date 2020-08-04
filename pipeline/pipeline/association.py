@@ -501,6 +501,14 @@ def advanced_association(
         .reset_index(drop=True)
     )
 
+    # also need to append any related sources that created a new
+    # source, we can use the skyc2_srcs_toappend to get these
+    skyc1_srcs = skyc1_srcs.append(
+        skyc2_srcs_toappend.loc[
+            ~skyc2_srcs_toappend.source.isin(skyc1_srcs.source)
+        ]
+    )
+
     return sources_df, skyc1_srcs
 
 
