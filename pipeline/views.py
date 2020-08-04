@@ -231,6 +231,12 @@ def RunDetail(request, id):
         new=True,
     ).count()
 
+    # read run config
+    f_path = os.path.join(p_run['path'], 'config.py')
+    if os.path.exists(f_path):
+        with open(f_path) as fp:
+            p_run['config_txt'] = fp.read()
+
     return render(request, 'run_detail.html', {'p_run': p_run})
 
 
