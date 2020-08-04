@@ -17,9 +17,10 @@ from astropy.wcs.utils import proj_plane_pixel_scales
 
 from django.http import FileResponse, Http404
 from django.db.models import Count, F, Q, Case, When, Value, BooleanField
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.conf import settings
+from django.contrib import messages
 
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, ViewSet
@@ -41,6 +42,8 @@ from .utils.utils import (
     deg2dms, deg2hms, gal2equ, ned_search, simbad_search
 )
 from .utils.view import generate_colsfields, get_skyregions_collection
+from .management.commands.initpiperun import initialise_run
+from .forms import PipelineRunForm
 
 
 logger = logging.getLogger(__name__)
@@ -72,6 +75,40 @@ def Home(request):
 # Runs table
 @login_required
 def RunIndex(request):
+    if request.method == 'POST':
+        form = PipelineRunForm(request.POST)
+        if form.is_valid():
+            try:
+                # TODO: re-write files lists into the form, couldn't get it to work
+                cfg_data = form.cleaned_data
+                run_dict = {
+                    key: val for key, val in cfg_data.items() if 'run' in key
+                }
+                for key in run_dict.keys():
+                    cfg_data.pop(key)
+                cfg_data['image_files'] = request.POST.getlist('image_files')
+                cfg_data['selavy_files'] = request.POST.getlist('selavy_files')
+                cfg_data['background_files'] = request.POST.getlist('background_files')
+                cfg_data['noise_files'] = request.POST.getlist('noise_files')
+
+                p_run = initialise_run(**run_dict, config=cfg_data)
+                messages.success(
+                    request,
+                    f'Pipeline run {p_run.name} initilialised successfully!'
+                )
+                return redirect('pipeline:run_detail', id=p_run.id)
+            except Exception as e:
+                messages.error(
+                    request,
+                    f'Issue in pipeline run initilisation: {e}'
+                )
+        else:
+            messages.error(
+                request,
+                f'Form not valid: {form.errors}'
+            )
+
+
     fields = [
         'name',
         'time',
