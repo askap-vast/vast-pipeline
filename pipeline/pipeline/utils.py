@@ -124,7 +124,9 @@ def get_create_img(p_run, band_id, image):
     # FYI attributs and/or method starting with _ are hidden
     # and with __ can't be modified/called
     for fld in img._meta.get_fields():
-        if getattr(fld, 'attname', None) and getattr(image, fld.attname, None):
+        if getattr(fld, 'attname', None) and (
+            getattr(image, fld.attname, None) is not None
+        ):
             setattr(img, fld.attname, getattr(image, fld.attname))
 
     # get create the sky region and associate with image
@@ -173,7 +175,8 @@ def prep_skysrc_df(image, perc_error, ini_df=False):
     'flux_peak',
     'flux_peak_err',
     'forced',
-    'compactness'
+    'compactness',
+    'has_siblings'
     ]
 
     df = pd.read_parquet(image.measurements_path, columns=cols)
@@ -221,13 +224,13 @@ def get_eta_metric(row, df, peak=False):
     Works on the grouped by dataframe using the fluxes
     of the assoicated measurements.
     '''
-    if row['Nsrc'] == 1:
+    if row['n_meas'] == 1:
         return 0.
 
     suffix = 'peak' if peak else 'int'
     weights = 1. / df[f'flux_{suffix}_err'].values**2
     fluxes = df[f'flux_{suffix}'].values
-    eta = (row['Nsrc'] / (row['Nsrc']-1)) * (
+    eta = (row['n_meas'] / (row['n_meas']-1)) * (
         (weights * fluxes**2).mean() - (
             (weights * fluxes).mean()**2 / weights.mean()
         )
@@ -244,7 +247,11 @@ def groupby_funcs(df):
     # calculated average ra, dec, fluxes and metrics
     d = {}
     d['img_list'] = df['image'].values.tolist()
-    if df['forced'].any():
+    d['n_meas_forced'] = df['forced'].sum()
+    d['n_meas'] = df['id'].count()
+    d['n_meas_sel'] = d['n_meas'] - d['n_meas_forced']
+    d['n_sibl'] = df['has_siblings'].sum()
+    if d['n_meas_forced'] > 0:
         non_forced_sel = df['forced'] != True
         d['wavg_ra'] = (
             df.loc[non_forced_sel, 'interim_ew'].sum() /
@@ -270,7 +277,6 @@ def groupby_funcs(df):
 
     for col in ['flux_int', 'flux_peak']:
         d[f'{col}_sq'] = (df[col]**2).mean()
-    d['Nsrc'] = df['id'].count()
     d['v_int'] = df['flux_int'].std() / df['flux_int'].mean()
     d['v_peak'] = df['flux_peak'].std() / df['flux_peak'].mean()
     d['eta_int'] = get_eta_metric(d, df)
@@ -278,8 +284,6 @@ def groupby_funcs(df):
     # remove not used cols
     for col in ['flux_int_sq', 'flux_peak_sq']:
         d.pop(col)
-    d.pop('Nsrc')
-    # set new source
 
     # get unique related sources
     list_uniq_related = list(set(
@@ -295,6 +299,10 @@ def groupby_funcs(df):
 def parallel_groupby(df):
     col_dtype = {
         'img_list': 'O',
+        'n_meas_forced': 'i',
+        'n_meas': 'i',
+        'n_meas_sel': 'i',
+        'n_sibl': 'i',
         'wavg_ra': 'f',
         'wavg_dec': 'f',
         'avg_compactness': 'f',
@@ -307,7 +315,7 @@ def parallel_groupby(df):
         'v_peak': 'f',
         'eta_int': 'f',
         'eta_peak': 'f',
-        'related_list': 'O',
+        'related_list': 'O'
     }
     n_cpu = cpu_count() - 1
     out = dd.from_pandas(df, n_cpu)
@@ -319,6 +327,7 @@ def parallel_groupby(df):
         )
         .compute(num_workers=n_cpu, scheduler='processes')
     )
+    out['n_rel'] = out['related_list'].apply(lambda x: 0 if x == -1 else len(x))
     return out
 
 

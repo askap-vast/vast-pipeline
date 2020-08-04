@@ -2,6 +2,7 @@ import io
 import os
 import json
 import logging
+import dask.dataframe as dd
 import dask.bag as db
 import pandas as pd
 
@@ -64,7 +65,17 @@ def Home(request):
     totals['nr_pruns'] = Run.objects.count()
     totals['nr_imgs'] = Image.objects.count()
     totals['nr_srcs'] = Source.objects.count()
-    totals['nr_meas'] = Measurement.objects.count()
+    totals['nr_meas'] = (
+        dd.read_parquet(
+            os.path.join(
+                settings.PIPELINE_WORKING_DIR,
+                'images/**/measurements.parquet',
+            ),
+            columns='id'
+        )
+        .count()
+        .compute()
+    )
     context = {
         'totals': totals,
         'd3_celestial_skyregions': get_skyregions_collection()
@@ -147,25 +158,47 @@ def RunIndex(request):
 class RunViewSet(ModelViewSet):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [IsAuthenticated]
-    queryset = Run.objects.annotate(
-        n_images=Count("image", distinct=True),
-        n_sources=Count("source", distinct=True),
-    )
+    queryset = Run.objects.all()
     serializer_class = RunSerializer
 
 
 # Run detail
 @login_required
 def RunDetail(request, id):
-    p_run_model = Run.objects.filter(id=id).get()
+    p_run_model = Run.objects.filter(id=id).prefetch_related('image_set').get()
     p_run = p_run_model.__dict__
-    p_run.pop('_state')
     p_run['status'] = p_run_model.get_status_display()
-    p_run['nr_imgs'] = Image.objects.filter(run__id=p_run['id']).count()
+    images = list(p_run_model.image_set.values('name', 'datetime'))
+    img_paths = list(map(
+        lambda x: os.path.join(
+            settings.PIPELINE_WORKING_DIR,
+            'images',
+            '_'.join([
+                x['name'].replace('.','_'),
+                x['datetime'].strftime('%Y-%m-%dT%H_%M_%S%z')
+            ]),
+            'measurements.parquet'
+        ),
+        p_run_model.image_set.values('name', 'datetime')
+    ))
+    p_run['nr_imgs'] = len(img_paths)
     p_run['nr_srcs'] = Source.objects.filter(run__id=p_run['id']).count()
-    p_run['nr_meas'] = Measurement.objects.filter(image__run__id=p_run['id']).count()
-    p_run['nr_frcd'] = Measurement.objects.filter(
-        image__run=p_run['id'], forced=True).count()
+    p_run['nr_meas'] = (
+        dd.read_parquet(
+            img_paths,
+            columns='id'
+        )
+        .count()
+        .compute()
+    )
+    p_run['nr_frcd'] = (
+        dd.read_parquet(
+            os.path.join(p_run['path'], 'forced_measurements_*.parquet'),
+            columns='id'
+        )
+        .count()
+        .compute()
+    )
     p_run['new_srcs'] = Source.objects.filter(
         run__id=p_run['id'],
         new=True,
@@ -388,104 +421,13 @@ def MeasurementDetail(request, id, action=None):
     return render(request, 'measurement_detail.html', context)
 
 
-# Sources table
-@login_required
-def SourceIndex(request):
-    fields = [
-        'name',
-        'comment',
-        'wavg_ra',
-        'wavg_dec',
-        'avg_flux_int',
-        'avg_flux_peak',
-        'max_flux_peak',
-        'avg_compactness',
-        'measurements',
-        'selavy_measurements',
-        'forced_measurements',
-        'n_neighbour_dist',
-        'relations',
-        'v_int',
-        'eta_int',
-        'v_peak',
-        'eta_peak',
-        'contains_siblings',
-        'new',
-        'new_high_sigma'
-    ]
-
-    colsfields = generate_colsfields(fields, '/sources/')
-
-    return render(
-        request,
-        'generic_table.html',
-        {
-            'text': {
-                'title': 'Sources',
-                'description': 'List of all sources below',
-                'breadcrumb': {'title': 'Sources', 'url': request.path},
-            },
-            'datatable': {
-                'api': '/api/sources/?format=datatables',
-                'colsFields': colsfields,
-                'colsNames': [
-                    'Name',
-                    'Comment',
-                    'W. Avg. RA',
-                    'W. Avg. Dec',
-                    'Avg. Int. Flux (mJy)',
-                    'Avg. Peak Flux (mJy/beam)',
-                    'Max Peak Flux (mJy/beam)',
-                    'Avg. Compactness',
-                    'Total Datapoints',
-                    'Selavy Datapoints',
-                    'Forced Datapoints',
-                    'Nearest Neighbour Dist. (arcmin)',
-                    'Relations',
-                    'V int flux',
-                    '\u03B7 int flux',
-                    'V peak flux',
-                    '\u03B7 peak flux',
-                    'Contains siblings',
-                    'New Source',
-                    'New High Sigma'
-                ],
-                'search': False,
-            }
-        }
-    )
-
-
 class SourceViewSet(ModelViewSet):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = SourceSerializer
 
     def get_queryset(self):
-        qs = Source.objects.annotate(
-            measurements=Count('measurement', distinct=True),
-            selavy_measurements=Count(
-                'measurement',
-                filter=Q(measurement__forced=False),
-                distinct=True
-            ),
-            forced_measurements=Count(
-                'measurement',
-                filter=Q(measurement__forced=True),
-                distinct=True
-            ),
-            relations=Count('related', distinct=True),
-            siblings_count=Count(
-                'measurement',
-                filter=Q(measurement__has_siblings=True),
-                distinct=True
-            ),
-            contains_siblings=Case(
-                When(siblings_count__gt=0, then=Value(True)),
-                default=Value(False),
-                output_field=BooleanField()
-            )
-        )
+        qs = Source.objects.all()
 
         radius_conversions = {
             "arcsec": 3600.,
@@ -505,11 +447,10 @@ class SourceViewSet(ModelViewSet):
             'v_peak',
             'eta_int',
             'eta_peak',
-            'measurements',
-            'selavy_measurements',
-            'forced_measurements',
-            'relations',
-            'contains_siblings',
+            'n_meas',
+            'n_meas_sel',
+            'n_meas_forced',
+            'n_rel',
             'new_high_sigma',
             'avg_compactness',
             'n_neighbour_dist'
@@ -534,7 +475,7 @@ class SourceViewSet(ModelViewSet):
             qry_dict['new'] = True
 
         if 'no_siblings' in self.request.query_params:
-            qry_dict['contains_siblings'] = False
+            qry_dict['n_sibl'] = 0
 
         if qry_dict:
             qs = qs.filter(**qry_dict)
@@ -576,16 +517,16 @@ def SourceQuery(request):
         'avg_flux_peak',
         'max_flux_peak',
         'avg_compactness',
-        'measurements',
-        'selavy_measurements',
-        'forced_measurements',
+        'n_meas',
+        'n_meas_sel',
+        'n_meas_forced',
         'n_neighbour_dist',
-        'relations',
+        'n_rel',
         'v_int',
         'eta_int',
         'v_peak',
         'eta_peak',
-        'contains_siblings',
+        'n_sibl',
         'new',
         'new_high_sigma'
     ]
@@ -600,10 +541,6 @@ def SourceQuery(request):
         'sources_query.html',
         {
             'breadcrumb': {'title': 'Sources', 'url': request.path},
-            # 'text': {
-            #     'title': 'Sources',
-            #     'description': 'List of all sources below',
-            # },
             'runs': p_runs,
             'datatable': {
                 'api': '/api/sources/?format=datatables',

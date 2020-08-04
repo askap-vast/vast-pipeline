@@ -138,18 +138,23 @@ class Run(models.Model):
                 message='Name contains not allowed characters!',
                 inverse_match=True
             ),
-        ]
+        ],
+        help_text='name of the pipeline run'
     )
     time = models.DateTimeField(
         auto_now=True,
         help_text='Datetime of run.'
     )# run date/time of the pipeline run
-    path = models.FilePathField(max_length=200)# the path to the pipeline run
+    path = models.FilePathField(
+        max_length=200,
+        help_text='path to the pipeline run'
+    )
     comment = models.TextField(
         max_length=1000,
         default='',
-        blank=True
-    )# A description of this pipeline run
+        blank=True,
+        help_text='A description of this pipeline run'
+    )
     STATUS_CHOICES = [
         ('INI', 'Initialised'),
         ('RUN', 'Running'),
@@ -161,7 +166,15 @@ class Run(models.Model):
         choices=STATUS_CHOICES,
         default='INI',
         help_text='Status of the pipeline run.'
-    )# pipeline run status
+    )
+    n_images = models.IntegerField(
+        default=0,
+        help_text='number of images processed in this run'
+    )
+    n_sources = models.IntegerField(
+        default=0,
+        help_text='number of sources extracted in this run'
+    )
 
     objects = RunQuerySet.as_manager()
 
@@ -199,8 +212,12 @@ class Band(models.Model):
     associated with one band.
     """
     name = models.CharField(max_length=12, unique=True)
-    frequency = models.IntegerField()# central frequency of band (integer MHz)
-    bandwidth = models.IntegerField()# bandwidth (MHz)
+    frequency = models.IntegerField(
+        help_text='central frequency of band (integer MHz)'
+    )
+    bandwidth = models.IntegerField(
+        help_text='bandwidth (MHz)'
+    )
 
     class Meta:
         ordering = ['frequency']
@@ -313,6 +330,22 @@ class Source(models.Model):
     n_neighbour_dist = models.FloatField(
         help_text='Distance to the nearest neighbour (deg)'
     )
+    # total metrics to report in UI
+    n_meas = models.IntegerField(
+        help_text='total measurements of the source'
+    )
+    n_meas_sel = models.IntegerField(
+        help_text='total selavy extracted measurements of the source'
+    )
+    n_meas_forced = models.IntegerField(
+        help_text='total force extracted measurements of the source'
+    )
+    n_rel = models.IntegerField(
+        help_text='total relations of the source with other sources'
+    )
+    n_sibl = models.IntegerField(
+        help_text='total siblings of the source'
+    )
 
     objects = SourceQuerySet.as_manager()
 
@@ -330,10 +363,19 @@ class Image(models.Model):
         max_length=200,
         db_column='meas_path'
     )# the path to the measurements parquet that belongs to this image
+    POLARISATION_CHOICES = [
+        ('I', 'I'),
+        ('XX', 'XX'),
+        ('YY', 'YY'),
+        ('Q', 'Q'),
+        ('U', 'U'),
+        ('V', 'V'),
+    ]
     polarisation = models.CharField(
         max_length=2,
-        help_text='Polarisation of the image e.g. I,XX,YY,Q,U,V.'
-    )# eg XX,YY,I,Q,U,V
+        choices=POLARISATION_CHOICES,
+        help_text='Polarisation of the image one of I,XX,YY,Q,U,V.'
+    )
     name = models.CharField(
         max_length=200,
         help_text='Name of the image.'

@@ -11,6 +11,7 @@ from pipeline.utils.utils import StopWatch
 from .loading import upload_associations, upload_sources
 from .utils import get_source_models, parallel_groupby
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -94,6 +95,9 @@ def final_operations(
         .to_parquet(os.path.join(p_run.path, 'sources.parquet'))
     )
 
+    # calculate total number of extracted sources
+    nr_sources = srcs_df['id'].count()
+
     # update measurments with sources to get associations
     sources_df = (
         sources_df.drop('related', axis=1)
@@ -122,3 +126,5 @@ def final_operations(
     logger.info(
         'Total final operations time: %.2f seconds', timer.reset_init()
     )
+
+    return nr_sources

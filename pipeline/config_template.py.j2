@@ -71,14 +71,14 @@ ASTROMETRIC_UNCERTAINTY_DEC = {{ astrometric_uncertainty_dec }}  # arcsec
 ###
 # OPTIONS THAT CONTROL THE SOURCE ASSOCIATION
 ###
-ASSOCIATION_METHOD = '{{ association_method }}' # 'basic' or 'advanced'
+ASSOCIATION_METHOD = '{{ association_method }}' # 'basic', 'advanced' or 'deruiter'
 
-# options that apply to basic association
-ASSOCIATION_RADIUS = {{ association_radius }} # arcsec, basic only
+# options that apply to basic and advanced association
+ASSOCIATION_RADIUS = {{ association_radius }} # arcsec, basic and advanced only
 
-# options that apply to advanced association
-ASSOCIATION_DE_RUITER_RADIUS = {{ association_de_ruiter_radius }} # unitless, advanced only
-ASSOCIATION_BEAMWIDTH_LIMIT = {{ association_beamwidth_limit }}   # multiplicative factor, advanced only
+# options that apply to deruiter association
+ASSOCIATION_DE_RUITER_RADIUS = {{ association_de_ruiter_radius }} # unitless, deruiter only
+ASSOCIATION_BEAMWIDTH_LIMIT = {{ association_beamwidth_limit }}   # multiplicative factor, deruiter only
 
 ###
 # OPTIONS THAT CONTROL THE NEW SOURCE ANALYSIS
