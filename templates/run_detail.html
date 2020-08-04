@@ -30,7 +30,7 @@
             <div class="row no-gutters align-items-center">
               <div class="col mr-2">
                 <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Nr Images</div>
-                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ p_run.nr_imgs|intcomma }}</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ p_run.n_images|intcomma }}</div>
               </div>
               <div class="col-auto">
                 <i class="fas fa-images fa-2x text-gray-300"></i>
@@ -48,7 +48,7 @@
             <div class="row no-gutters align-items-center">
               <div class="col mr-2">
                 <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Total Nr Sources</div>
-                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ p_run.nr_srcs|intcomma }}</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ p_run.n_sources|intcomma }}</div>
               </div>
               <div class="col-auto">
                 <i class="fas fa-share-alt fa-2x text-gray-300"></i>
@@ -105,7 +105,11 @@
           <h6 class="m-0 font-weight-bold text-primary">Details</h6>
         </div>
         <div class="card-body">
-          <p><strong>User: </strong>Guest</p>
+          <p><strong>User: </strong>{% if p_run.user %}
+          {{ p_run.user }}
+          {% else %}
+          None
+          {% endif %}</p>
           <p><strong>Processing Datetime: </strong> {{ p_run.time }}</p>
           <p><strong>Run Status: </strong> {{ p_run.status }}</p>
           <p><strong>Comment: </strong> {{ p_run.comment }}</p>

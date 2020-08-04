@@ -4,6 +4,7 @@ from shutil import copyfile
 
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings as cfg
+from django.http import Http404
 from jinja2 import Template
 
 from pipeline.models import Run
@@ -14,17 +15,19 @@ from pipeline.pipeline.utils import get_create_p_run
 logger = logging.getLogger(__name__)
 
 
-def initialise_run(run_name, run_comment='', config=None):
+def initialise_run(run_name, run_comment='', user=None, config=None, cmd_f=True):
     # check for duplicated run name
     p_run = Run.objects.filter(name__exact=run_name)
     if p_run:
-        raise PipelineInitError('Pipeline run name already used. Change name')
+        msg = 'Pipeline run name already used. Change name'
+        raise PipelineInitError(msg) if cmd_f else Http404(msg)
 
     # create the pipeline run folder
     run_path = os.path.join(cfg.PIPELINE_WORKING_DIR, run_name)
 
     if os.path.exists(run_path):
-        raise PipelineInitError('pipeline run path already present!')
+        msg = 'pipeline run path already present!'
+        raise PipelineInitError(msg) if cmd_f else Http404(msg)
     else:
         logger.info('creating pipeline run folder')
         os.mkdir(run_path)
@@ -47,7 +50,7 @@ def initialise_run(run_name, run_comment='', config=None):
             fp.write(tm.render(**cfg.PIPE_RUN_CONFIG_DEFAULTS))
 
     # create entry in db
-    p_run = get_create_p_run(run_name, run_path, run_comment)
+    p_run = get_create_p_run(run_name, run_path, run_comment, user)
 
     return p_run
 

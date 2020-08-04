@@ -86,23 +86,46 @@ def Home(request):
 # Runs table
 @login_required
 def RunIndex(request):
+
+    def wrap_init_run(run_details, run_config):
+        '''
+        wrap initialise_run to handle 404 errors
+        '''
+        try:
+            p_run = initialise_run(
+                **run_details,
+                config=run_config,
+                cmd_f=False
+            )
+            return p_run
+        except Exception as e:
+            # raise Http404(f'Error: {e}')
+            pass
+
     if request.method == 'POST':
         form = PipelineRunForm(request.POST)
         if form.is_valid():
             try:
                 # TODO: re-write files lists into the form, couldn't get it to work
                 cfg_data = form.cleaned_data
+
+                # get the user data
                 run_dict = {
                     key: val for key, val in cfg_data.items() if 'run' in key
                 }
+
+                # remove user data from run config data
                 for key in run_dict.keys():
                     cfg_data.pop(key)
+
+                run_dict['user'] = request.user
+
                 cfg_data['image_files'] = request.POST.getlist('image_files')
                 cfg_data['selavy_files'] = request.POST.getlist('selavy_files')
                 cfg_data['background_files'] = request.POST.getlist('background_files')
                 cfg_data['noise_files'] = request.POST.getlist('noise_files')
 
-                p_run = initialise_run(**run_dict, config=cfg_data)
+                p_run = wrap_init_run(run_dict, cfg_data)
                 messages.success(
                     request,
                     f'Pipeline run {p_run.name} initilialised successfully!'
@@ -167,42 +190,47 @@ class RunViewSet(ModelViewSet):
 def RunDetail(request, id):
     p_run_model = Run.objects.filter(id=id).prefetch_related('image_set').get()
     p_run = p_run_model.__dict__
+    p_run['user'] = p_run_model.user.username
     p_run['status'] = p_run_model.get_status_display()
-    images = list(p_run_model.image_set.values('name', 'datetime'))
-    img_paths = list(map(
-        lambda x: os.path.join(
-            settings.PIPELINE_WORKING_DIR,
-            'images',
-            '_'.join([
-                x['name'].replace('.','_'),
-                x['datetime'].strftime('%Y-%m-%dT%H_%M_%S%z')
-            ]),
-            'measurements.parquet'
-        ),
-        p_run_model.image_set.values('name', 'datetime')
-    ))
-    p_run['nr_imgs'] = len(img_paths)
-    p_run['nr_srcs'] = Source.objects.filter(run__id=p_run['id']).count()
-    p_run['nr_meas'] = (
-        dd.read_parquet(
-            img_paths,
-            columns='id'
+    if p_run_model.image_set.exists():
+        images = list(p_run_model.image_set.values('name', 'datetime'))
+        img_paths = list(map(
+            lambda x: os.path.join(
+                settings.PIPELINE_WORKING_DIR,
+                'images',
+                '_'.join([
+                    x['name'].replace('.','_'),
+                    x['datetime'].strftime('%Y-%m-%dT%H_%M_%S%z')
+                ]),
+                'measurements.parquet'
+            ),
+            p_run_model.image_set.values('name', 'datetime')
+        ))
+        p_run['nr_meas'] = (
+            dd.read_parquet(img_paths, columns='id')
+            .count()
+            .compute()
         )
-        .count()
-        .compute()
+    else:
+        p_run['nr_meas'] = 'N.A.'
+
+    forced_path = glob(
+        os.path.join(p_run['path'], 'forced_measurements_*.parquet')
     )
-    p_run['nr_frcd'] = (
-        dd.read_parquet(
-            os.path.join(p_run['path'], 'forced_measurements_*.parquet'),
-            columns='id'
+    if forced_path:
+        p_run['nr_frcd'] = (
+            dd.read_parquet(forced_path, columns='id')
+            .count()
+            .compute()
         )
-        .count()
-        .compute()
-    )
+    else:
+        p_run['nr_frcd'] = 'N.A.'
+
     p_run['new_srcs'] = Source.objects.filter(
         run__id=p_run['id'],
         new=True,
     ).count()
+
     return render(request, 'run_detail.html', {'p_run': p_run})
 
 
