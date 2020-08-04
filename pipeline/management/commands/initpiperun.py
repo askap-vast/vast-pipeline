@@ -14,7 +14,7 @@ from pipeline.pipeline.utils import get_create_p_run
 logger = logging.getLogger(__name__)
 
 
-def initialise_run(run_name):
+def initialise_run(run_name, config=None):
     # check for duplicated run name
     p_run = Run.objects.filter(name__exact=run_name)
     if p_run:
@@ -41,7 +41,10 @@ def initialise_run(run_name):
 
     tm = Template(template_str)
     with open(os.path.join(run_path, 'config.py'), 'w') as fp:
-        fp.write(tm.render(**cfg.PIPE_RUN_CONFIG_DEFAULTS))
+        if config:
+            fp.write(tm.render(**config))
+        else:
+            fp.write(tm.render(**cfg.PIPE_RUN_CONFIG_DEFAULTS))
 
     # create entry in db
     p_run = get_create_p_run(run_name, run_path)
