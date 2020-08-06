@@ -23,6 +23,7 @@ from django.urls import reverse
 from django.conf import settings
 from django.contrib import messages
 
+from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, ViewSet
 from rest_framework.authentication import (
@@ -45,6 +46,7 @@ from .utils.utils import (
 from .utils.view import generate_colsfields, get_skyregions_collection
 from .management.commands.initpiperun import initialise_run
 from .forms import PipelineRunForm
+from .pipeline.main import Pipeline
 
 
 logger = logging.getLogger(__name__)
@@ -973,3 +975,40 @@ class RawImageListSet(ViewSet):
         serializer = RawImageSelavyListSerializer(data)
 
         return Response(serializer.data)
+
+
+class ValidateRunConfigSet(ViewSet):
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
+    lookup_value_regex = '[\w]+'
+    lookup_field = 'runname'
+
+    def retrieve(self, request, runname=None):
+        if not runname:
+            return Response(
+                {'message': 'Run name parameter null or not passed'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        path = os.path.join(
+            settings.PIPELINE_WORKING_DIR,
+            runname,
+            'config.py'
+        )
+
+        if not os.path.exists(path):
+            return Response(
+                {'message': f'Path: {path} not existent'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        pipeline = Pipeline(name=runname, config_path=path)
+
+        try:
+            pipeline.validate_cfg()
+        except Exception as e:
+            valid = False
+            return Response(
+                {'message': f'Error in config validation:\n{e}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return Response({'valid': True})
