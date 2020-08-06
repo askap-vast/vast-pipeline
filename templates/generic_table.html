@@ -101,10 +101,10 @@
           </div>
           <div id="pipeRunConfigForm" class="form-group">
             <label for="imagesFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select images files</label>
-            <select id="imagesFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-header="Choose image files" data-actions-box="true" name="image_files">
+            <select id="imagesFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-header="Choose image files" data-actions-box="true" name="image_files" data-selected-text-format="count > 5">
             </select>
             <label for="selavyFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select selavy files</label>
-            <select id="selavyFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-header="Choose selavy files" data-actions-box="true" name="selavy_files">
+            <select id="selavyFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-header="Choose selavy files" data-actions-box="true" name="selavy_files" data-selected-text-format="count > 5">
             </select>
             <div class="custom-control custom-switch">
               <input type="checkbox" class="custom-control-input" id="monitorSwitch" {% if runconfig.monitor %} checked="checked" {% endif %} name="monitor">
@@ -121,10 +121,10 @@
               </div>
             </div>
             <label for="bkgFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select background files</label>
-            <select id="bkgFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-header="Choose background files" data-actions-box="true" name="background_files" disabled>
+            <select id="bkgFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-header="Choose background files" data-actions-box="true" name="background_files" data-selected-text-format="count > 5" disabled>
             </select>
             <label for="noiseFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select noise or rms files</label>
-            <select id="noiseFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-header="Choose noise or rms files" data-actions-box="true" name="noise_files" disabled>
+            <select id="noiseFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-header="Choose noise or rms files" data-actions-box="true" name="noise_files" data-selected-text-format="count > 5" disabled>
             </select>
             <div class="row">
               <div class="col">
