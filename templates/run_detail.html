@@ -24,7 +24,6 @@
   <div class="row">
 		<!-- Nr Images -->
       <div class="col-xl-3 col-md-6 mb-4">
-      {# <div class="col-xl-3 mb-4"> #}
         <div class="card border-left-primary shadow h-100 py-2">
           <div class="card-body">
             <div class="row no-gutters align-items-center">
@@ -42,7 +41,6 @@
 
 			<!-- Nr Catalogs -->
       <div class="col-xl-3 col-md-6 mb-4">
-      {# <div class="col-xl-3 mb-4"> #}
         <div class="card border-left-warning shadow h-100 py-2">
           <div class="card-body">
             <div class="row no-gutters align-items-center">
@@ -60,7 +58,6 @@
 
 			<!-- Extracted Sources -->
       <div class="col-xl-3 col-md-6 mb-4">
-      {# <div class="col-xl-3 mb-4"> #}
         <div class="card border-left-info shadow h-100 py-2">
           <div class="card-body">
             <div class="row no-gutters align-items-center">
@@ -78,7 +75,6 @@
 
 			<!-- Extracted Sources -->
       <div class="col-xl-3 col-md-6 mb-4">
-      {# <div class="col-xl-3 mb-4"> #}
         <div class="card border-left-success shadow h-100 py-2">
           <div class="card-body">
             <div class="row no-gutters align-items-center">
@@ -97,7 +93,7 @@
 	</div>
 
   <div class="row">
-  	<div class="col-lg-6">
+  	<div class="col-lg-3">
 
       <!-- Basic Card Example -->
       <div class="card shadow mb-4">
@@ -117,10 +113,10 @@
       </div>
 
   	</div>
-	</div>
+	<!-- </div> -->
 
-  <div class="row">
-    <div class="col">
+  <!-- <div class="row"> -->
+    <div class="col-lg-9">
       <div class="card shadow mb-4">
         <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
           <h6 class="m-0 font-weight-bold text-primary">Config File</h6>
@@ -136,31 +132,33 @@
           </div>
         </div>
         <div class="card-body">
-          <pre class="pre-scrollable">
-            <code>{{ p_run.config_txt }}</code>
-          </pre>
+          <pre class="pre-scrollable"><code>{{ p_run.config_txt }}</code></pre>
         </div>
       </div>
     </div>
   </div>
 
   <div class="row">
-    <div class="col">
+    <div class="col-lg-3">
+
+      <!-- Basic Card Example -->
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">User Comments</h6>
+        </div>
+        <div class="card-body">
+        </div>
+      </div>
+
+    </div>
+    <div class="col-lg-9">
       <div class="card shadow mb-4">
         <a href="#collapseLogCard" class="d-block card-header py-3" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="collapseLogCard">
           <h6 class="m-0 font-weight-bold text-primary">Log File</h6>
         </a>
         <div class="collapse show" id="collapseLogCard">
           <div class="card-body">
-            <pre class="pre-scrollable">
-              <code>
-                {% if p_run.log_txt %}
-                {{ p_run.log_txt }}
-                {% else %}
-                N.A.
-                {% endif %}
-            </code>
-            </pre>
+            <pre class="pre-scrollable"><code>{% if p_run.log_txt %}{{ p_run.log_txt }}{% else %}N.A.{% endif %}</code></pre>
           </div>
         </div>
       </div>
