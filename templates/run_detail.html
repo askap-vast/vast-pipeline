@@ -134,6 +134,29 @@
     </div>
   </div>
 
+  <div class="row">
+    <div class="col">
+      <div class="card shadow mb-4">
+        <a href="#collapseLogCard" class="d-block card-header py-3" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="collapseLogCard">
+          <h6 class="m-0 font-weight-bold text-primary">Config File</h6>
+        </a>
+        <div class="collapse show" id="collapseLogCard">
+          <div class="card-body">
+            <pre class="pre-scrollable">
+              <code>
+                {% if p_run.log_txt %}
+                {{ p_run.log_txt }}
+                {% else %}
+                N.A.
+                {% endif %}
+            </code>
+            </pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 <!-- /.container-fluid -->
 
