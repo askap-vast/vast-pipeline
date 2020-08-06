@@ -190,7 +190,7 @@ class RunViewSet(ModelViewSet):
 def RunDetail(request, id):
     p_run_model = Run.objects.filter(id=id).prefetch_related('image_set').get()
     p_run = p_run_model.__dict__
-    p_run['user'] = p_run_model.user.username
+    p_run['user'] = p_run_model.user.username if p_run_model.user else None
     p_run['status'] = p_run_model.get_status_display()
     if p_run_model.image_set.exists():
         images = list(p_run_model.image_set.values('name', 'datetime'))
