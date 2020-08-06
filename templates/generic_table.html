@@ -132,6 +132,7 @@
                 <select id="associationTypeSelect" class="form-control bg-light border-0" aria-label="associationTypeSearch" aria-describedby="basic-addon2" name="association_method">
                   <option value="basic" selected>Basic</option>
                   <option value="advanced">Advanced</option>
+                  <option value="deruiter">De Ruiter</option>
                 </select>
                 <label class="col-form-label font-weight-bold text-gray-800" for="astroUncertRaSelect">Astrometric Uncertainty Ra</label>
                 <input id="astroUncertRaSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.astrometric_uncertainty_ra }}" min="0" step="0.01" aria-label="astroUncertRaSearch" aria-describedby="basic-addon2" name="astrometric_uncertainty_ra">
@@ -144,7 +145,7 @@
               </div>
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="associationDeRuiterSelect">Association De Ruiter Radius</label>
-                <input id="associationDeRuiterSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.association_de_ruiter_radius }}" min="0" step="0.01" aria-label="associationDeRuiterSearch" aria-describedby="basic-addon2" name="association_de_ruiter_radius">
+                <input id="associationDeRuiterSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.association_de_ruiter_radius }}" min="0" step="0.01" aria-label="associationDeRuiterSearch" aria-describedby="basic-addon2" name="association_de_ruiter_radius" readonly>
                 <label class="col-form-label font-weight-bold text-gray-800" for="newSourceMinSigSelect">New Source Min Sigma</label>
                 <input id="newSourceMinSigSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.new_source_min_sigma }}" min="0" step="0.01" aria-label="newSourceMinSigSearch" aria-describedby="basic-addon2" name="new_source_min_sigma">
               </div>

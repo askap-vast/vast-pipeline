@@ -73,4 +73,10 @@ $(document).ready(function() {
     });
   });
 
+  $("#associationTypeSelect").change(function (e) {
+    let condition = this.value == 'deruiter';
+    $("#associationRadiusSelect").prop('readonly', condition);
+    $("#associationDeRuiterSelect").prop('readonly', !condition);
+  });
+
 });
