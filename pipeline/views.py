@@ -915,6 +915,11 @@ class RawImageListSet(ViewSet):
         # generate the folders path regex, e.g. /path/to/images/**/*.fits
         # first generate the list of main subfolders, e.g. [EPOCH01, ... ]
         img_root = settings.RAW_IMAGE_DIR
+        if not os.path.exists(img_root):
+            msg = 'Raw image folder does not exists'
+            messages.error(request, msg)
+            raise Http404(msg)
+
         img_subfolders_gen = filter(
             lambda x: os.path.isdir(os.path.join(img_root, x)),
             os.listdir(img_root)
@@ -937,8 +942,8 @@ class RawImageListSet(ViewSet):
             .map(lambda x: os.path.relpath(x, img_root))
             .compute()
         )
-        # generate response datastructure
-
+        if not fits_files:
+            messages.info(request, 'no fits files found')
 
         # generate raw image list in parallel
         dask_list = db.from_sequence(selavy_regex_list)
@@ -949,6 +954,10 @@ class RawImageListSet(ViewSet):
             .map(lambda x: os.path.relpath(x, img_root))
             .compute()
         )
+        if not fits_files:
+            messages.info(request, 'no selavy files found')
+
+        # generate response datastructure
         data = {
             'fits': self.gen_title_data_tokens(fits_files),
             'selavy': self.gen_title_data_tokens(selavy_files)
