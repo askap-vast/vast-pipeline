@@ -304,21 +304,21 @@ def forced_extraction(
     )
     # Delete previous forced measurements and update new forced
     # measurements in the db
-    with transaction.atomic():
-        # get the forced measurements ids for the current pipeline run
-        path_glob = glob(
-            os.path.join(p_run.path, 'forced_measurements_*.parquet')
+    # get the forced measurements ids for the current pipeline run
+    path_glob = glob(
+        os.path.join(p_run.path, 'forced_measurements_*.parquet')
+    )
+    if path_glob:
+        ids = (
+            dd.read_parquet(path_glob, columns='id')
+            .values
+            .compute()
+            .tolist()
         )
-        if path_glob:
-            ids = (
-                dd.read_parquet(path_glob, columns='id')
-                .values
-                .compute()
-                .tolist()
-            )
-            obj_to_delete = Measurement.objects.filter(id__in=ids)
-            del ids
-            if obj_to_delete.exists():
+        obj_to_delete = Measurement.objects.filter(id__in=ids)
+        del ids
+        if obj_to_delete.exists():
+            with transaction.atomic():
                 n_del, detail_del = obj_to_delete.delete()
                 logger.info(
                     ('Deleting all previous forced measurement and association'
