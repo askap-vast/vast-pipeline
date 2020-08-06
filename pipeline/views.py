@@ -896,6 +896,7 @@ class RawImageListSet(ViewSet):
         EPOCH06x VAST_2118-06A.EPOCH06x.I.selavy.compo...
         '''
         df = pd.DataFrame(list_of_paths, columns=['path'])
+        df = df.sort_values('path')
         df['title'] = df['path'].str.split(pat=os.sep).str.get(-1)
         df['datatokens'] = (
             df['path'].str.split(pat=os.sep).str.get(0)
