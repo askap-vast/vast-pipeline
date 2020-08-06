@@ -130,7 +130,7 @@
             </a>
             <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownRunConfig">
               <div class="dropdown-header">Actions:</div>
-              <a class="dropdown-item" href="#">Validate Config</a>
+              <a class="dropdown-item" href="{% url 'pipeline:api_validateruncfg-detail' p_run.name %}">Validate Config</a>
               <a class="dropdown-item" href="#">Write Current Config</a>
             </div>
           </div>
