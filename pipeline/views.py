@@ -220,11 +220,21 @@ def RunDetail(request, id):
         os.path.join(p_run['path'], 'forced_measurements_*.parquet')
     )
     if forced_path:
-        p_run['nr_frcd'] = (
-            dd.read_parquet(forced_path, columns='id')
-            .count()
-            .compute()
-        )
+        try:
+            p_run['nr_frcd'] = (
+                dd.read_parquet(forced_path, columns='id')
+                .count()
+                .compute()
+            )
+        except Exception as e:
+            messages.error(
+                request,
+                (
+                    'Issues in reading forced measurements parquet:\n'
+                    f'{e.args[0][:500]}'
+                )
+            )
+            pass
     else:
         p_run['nr_frcd'] = 'N.A.'
 
