@@ -130,7 +130,7 @@ class Run(models.Model):
     A Run is essentially a pipeline run/processing istance over a set of
     images
     """
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
 
     name = models.CharField(
         max_length=64,
