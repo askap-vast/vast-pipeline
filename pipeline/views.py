@@ -120,10 +120,12 @@ def RunIndex(request):
 
                 run_dict['user'] = request.user
 
-                cfg_data['image_files'] = request.POST.getlist('image_files')
-                cfg_data['selavy_files'] = request.POST.getlist('selavy_files')
-                cfg_data['background_files'] = request.POST.getlist('background_files')
-                cfg_data['noise_files'] = request.POST.getlist('noise_files')
+                f_list = [
+                    'image_files', 'selavy_files', 'background_files',
+                    'noise_files'
+                ]
+                for files in f_list:
+                    cfg_data[files] = request.POST.getlist(files)
 
                 p_run = wrap_init_run(run_dict, cfg_data)
                 messages.success(
@@ -938,8 +940,6 @@ class RawImageListSet(ViewSet):
         fits_files = (
             dask_list.map(lambda x: glob(x, recursive=True))
             .flatten()
-            # remove base path
-            .map(lambda x: os.path.relpath(x, img_root))
             .compute()
         )
         if not fits_files:
@@ -950,8 +950,6 @@ class RawImageListSet(ViewSet):
         selavy_files = (
             dask_list.map(lambda x: glob(x, recursive=True))
             .flatten()
-            # remove base path
-            .map(lambda x: os.path.relpath(x, img_root))
             .compute()
         )
         if not fits_files:
