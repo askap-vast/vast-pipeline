@@ -1,6 +1,7 @@
 import io
 import os
 import json
+import glob
 import logging
 import dask.dataframe as dd
 from dask import compute
@@ -148,14 +149,21 @@ def RunDetail(request, id):
         .count()
         .compute()
     )
-    p_run['nr_frcd'] = (
-        dd.read_parquet(
-            os.path.join(p_run['path'], 'forced_measurements_*.parquet'),
-            columns='id'
-        )
-        .count()
-        .compute()
+    # check if forced parquets exist
+    forced_parquets = glob.glob(
+        os.path.join(p_run['path'], 'forced_measurements_*.parquet')
     )
+    if len(forced_parquets) > 0:
+        p_run['nr_frcd'] = (
+            dd.read_parquet(
+                forced_parquets,
+                columns='id'
+            )
+            .count()
+            .compute()
+        )
+    else:
+        p_run['nr_frcd'] = 0
     p_run['new_srcs'] = Source.objects.filter(
         run__id=p_run['id'],
         new=True,
