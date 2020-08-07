@@ -16,6 +16,7 @@ class PipelineRunForm(forms.Form):
     astrometric_uncertainty_dec = forms.FloatField()
     association_de_ruiter_radius = forms.FloatField()
     new_source_min_sigma = forms.FloatField()
+    default_survey = forms.CharField()
     association_beamwidth_limit = forms.FloatField()
     flux_perc_error = forms.FloatField()
     selavy_local_rms_zero_fill_value = forms.FloatField()

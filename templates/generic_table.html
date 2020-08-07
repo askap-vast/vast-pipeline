@@ -153,7 +153,7 @@
                 <label class="col-form-label font-weight-bold text-gray-800" for="associationBeamWidthSelect">Association Beam Width</label>
                 <input id="associationBeamWidthSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.association_beamwidth_limit }}" min="0" step="0.01" aria-label="associationBeamWidthSearch" aria-describedby="basic-addon2" name="association_beamwidth_limit">
                 <label class="col-form-label font-weight-bold text-gray-800" for="surveySelect">Default Survey (TBC)</label>
-                <select id="surveySelect" class="form-control bg-light border-0" aria-label="surveySearch" aria-describedby="basic-addon2" name="default_survey" disabled>
+                <select id="surveySelect" class="form-control bg-light border-0" aria-label="surveySearch" aria-describedby="basic-addon2" name="default_survey" readonly>
                   <option value="{{ runconfig.default_survey }}" selected>None</option>
                 </select>
               </div>
