@@ -2,6 +2,7 @@ import io
 import os
 import json
 import logging
+import traceback
 import dask.dataframe as dd
 import dask.bag as db
 import pandas as pd
@@ -1000,15 +1001,16 @@ class ValidateRunConfigSet(ViewSet):
                 {'message': f'Path: {path} not existent'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        pipeline = Pipeline(name=runname, config_path=path)
 
         try:
+            pipeline = Pipeline(name=runname, config_path=path)
             pipeline.validate_cfg()
         except Exception as e:
-            valid = False
-            return Response(
-                {'message': f'Error in config validation:\n{e}'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            trace = traceback.format_exc().splitlines()
+            trace = '\n'.join(trace[-4:])
+            msg = {
+                'message': f'Error in config validation:\n{e}{trace}'
+            }
+            return Response(msg, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({'valid': True})
