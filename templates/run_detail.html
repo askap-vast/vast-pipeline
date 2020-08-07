@@ -127,12 +127,13 @@
             <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownRunConfig">
               <div class="dropdown-header">Actions:</div>
               <a class="dropdown-item" href="#" data-toggle="modal" data-target="#feedbackModal">Validate Config</a>
-              <a class="dropdown-item" href="#">Write Current Config</a>
+              {% csrf_token %}
+              <a id="writeConfig"  class="dropdown-item" href="#">Write Current Config</a>
             </div>
           </div>
         </div>
         <div class="card-body">
-          <pre class="pre-scrollable"><code>{{ p_run.config_txt }}</code></pre>
+          <pre id="runConfigText" class="pre-scrollable" contenteditable="true"><code>{{ p_run.config_txt }}</code></pre>
         </div>
       </div>
       <!-- log file card -->
@@ -178,6 +179,6 @@
 
 {% block custom_page_scripts %}
 
-<script id="runDetailScript" src="{% static 'js/run-detail.min.js' %}" apiUrl="{% url 'pipeline:api_validateruncfg-detail' p_run.name %}"></script>
+<script id="runDetailScript" src="{% static 'js/run-detail.min.js' %}" apiValidateUrl="{% url 'pipeline:api_validateruncfg-detail' p_run.name %}" apiWriteCfgUrl="{% url 'pipeline:run_detail' p_run.id %}"></script>
 
 {% endblock custom_page_scripts %}
