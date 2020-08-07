@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% load humanize %}
 
 {% block breadcrumb %}
@@ -125,7 +126,7 @@
             </a>
             <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownRunConfig">
               <div class="dropdown-header">Actions:</div>
-              <a class="dropdown-item" href="{% url 'pipeline:api_validateruncfg-detail' p_run.name %}">Validate Config</a>
+              <a class="dropdown-item" href="#" data-toggle="modal" data-target="#feedbackModal">Validate Config</a>
               <a class="dropdown-item" href="#">Write Current Config</a>
             </div>
           </div>
@@ -152,3 +153,31 @@
 <!-- /.container-fluid -->
 
 {% endblock content %}
+
+
+{% block modal %}
+<div  id="feedbackModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Feedback</h5>
+        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock modal %}
+
+
+{% block custom_page_scripts %}
+
+<script id="runDetailScript" src="{% static 'js/run-detail.min.js' %}" apiUrl="{% url 'pipeline:api_validateruncfg-detail' p_run.name %}"></script>
+
+{% endblock custom_page_scripts %}

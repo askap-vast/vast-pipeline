@@ -987,7 +987,15 @@ class ValidateRunConfigSet(ViewSet):
     def retrieve(self, request, runname=None):
         if not runname:
             return Response(
-                {'message': 'Run name parameter null or not passed'},
+                {
+                    'message': {
+                        'severity': 'danger',
+                        'text': [
+                            'Error in config validation:',
+                            'Run name parameter null or not passed'
+                        ]
+                    }
+                },
                 status=status.HTTP_400_BAD_REQUEST
             )
         path = os.path.join(
@@ -998,7 +1006,15 @@ class ValidateRunConfigSet(ViewSet):
 
         if not os.path.exists(path):
             return Response(
-                {'message': f'Path: {path} not existent'},
+                {
+                    'message': {
+                        'severity': 'danger',
+                        'text': [
+                            'Error in config validation:',
+                            f'Path {path} not existent'
+                        ]
+                    }
+                },
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -1009,8 +1025,20 @@ class ValidateRunConfigSet(ViewSet):
             trace = traceback.format_exc().splitlines()
             trace = '\n'.join(trace[-4:])
             msg = {
-                'message': f'Error in config validation:\n{e}{trace}'
+                'message': {
+                'severity': 'danger',
+                'text': (
+                    f'Error in config validation:\n{e}\n{trace}'
+                ).split('\n')
+                }
             }
             return Response(msg, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({'valid': True})
+        msg = {
+            'message': {
+            'severity': 'success',
+            'text': ['Configuration is valid.']
+            }
+        }
+
+        return Response(msg, status=status.HTTP_202_ACCEPTED)
