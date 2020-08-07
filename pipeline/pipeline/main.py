@@ -19,7 +19,7 @@ from .loading import upload_images
 from .utils import (
     get_src_skyregion_merged_df,
     group_skyregions,
-    get_para_assoc_image_df
+    get_parallel_assoc_image_df
 )
 from .errors import MaxPipelineRunsError, PipelineConfigError
 
@@ -175,7 +175,9 @@ class Pipeline():
         # 2.2 Associate with other measurements
         if self.config.ASSOCIATION_PARALLEL and n_skyregion_groups > 1:
 
-            images_df = get_para_assoc_image_df(images, skyregion_groups)
+            images_df = get_parallel_assoc_image_df(
+                images, skyregion_groups
+            )
 
             sources_df = parallel_association(
                 images_df,

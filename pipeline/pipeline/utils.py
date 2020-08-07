@@ -490,7 +490,12 @@ def get_src_skyregion_merged_df(sources_df, p_run):
     return srcs_df
 
 
-def _get_relations(row, coords, ids):
+def _get_skyregion_relations(row, coords, ids):
+    '''
+    For each sky region row a list is returned that
+    contains the ids of other sky regions that overlap
+    with the row sky region (including itself).
+    '''
     target = SkyCoord(
         row['centre_ra'],
         row['centre_dec'],
@@ -509,6 +514,12 @@ def _get_relations(row, coords, ids):
 
 
 def group_skyregions(df):
+    '''
+    Logic to group sky regions into overlapping groups.
+    Returns a dataframe containing the sky region id as
+    the index and a column containing a list of the
+    sky region group number it belongs to.
+    '''
     sr_coords = SkyCoord(
         df['centre_ra'],
         df['centre_dec'],
@@ -517,7 +528,11 @@ def group_skyregions(df):
 
     df = df.set_index('id')
 
-    results = df.apply(_get_relations, args=(sr_coords, df.index), axis=1)
+    results = df.apply(
+        _get_skyregion_relations,
+        args=(sr_coords, df.index),
+        axis=1
+    )
 
     skyreg_groups = {}
     # keep track of all checked ids
@@ -563,7 +578,7 @@ def group_skyregions(df):
     return skyreg_group_ids
 
 
-def get_para_assoc_image_df(images, skyregion_groups):
+def get_parallel_assoc_image_df(images, skyregion_groups):
 
     skyreg_ids = [i.skyreg_id for i in images]
 
