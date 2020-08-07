@@ -941,13 +941,22 @@ class RawImageListSet(ViewSet):
         )
         img_subfolders1, img_subfolders2 = tee(img_subfolders_gen)
         img_regex_list = list(map(
-            lambda x: os.path.join(img_root, x, '**/*.fits'),
+            lambda x: os.path.join(img_root, x, '**' + os.sep + '*.fits'),
             img_subfolders1
         ))
         selavy_regex_list = list(map(
-            lambda x: os.path.join(img_root, x, '**/*.txt'),
+            lambda x: os.path.join(img_root, x, '**' + os.sep + '*.txt'),
             img_subfolders2
         ))
+        # add home directory for user and jupyter-user (user = github name)
+        req_user = request.user.username
+        for user in [f'~{req_user}', f'~jupyter-{req_user}']:
+            print(user)
+            user_home = os.path.expanduser(user)
+            if os.path.exists(user_home):
+                img_regex_list.append(os.path.join(user_home, '**' + os.sep + '*.fits'))
+                selavy_regex_list.append(os.path.join(user_home, '**' + os.sep + '*.txt'))
+
         # generate raw image list in parallel
         dask_list = db.from_sequence(img_regex_list)
         fits_files = (
