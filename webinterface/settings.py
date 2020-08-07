@@ -259,6 +259,7 @@ PIPE_RUN_CONFIG_DEFAULTS = {
     'monitor_edge_buffer_scale': 1.2,
     'astrometric_uncertainty_ra': 1,
     'astrometric_uncertainty_dec': 1,
+    'association_parallel': False,
     'association_method': 'basic',
     'association_radius': 10.,
     'association_de_ruiter_radius': 5.68,

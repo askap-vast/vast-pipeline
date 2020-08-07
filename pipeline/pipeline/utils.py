@@ -3,6 +3,8 @@ import logging
 import numpy as np
 import pandas as pd
 from astropy.io import fits
+from astropy.coordinates import SkyCoord
+import astropy.units as u
 import dask.dataframe as dd
 from django.conf import settings
 
@@ -486,3 +488,95 @@ def get_src_skyregion_merged_df(sources_df, p_run):
     ]
 
     return srcs_df
+
+
+def _get_relations(row, coords, ids):
+    target = SkyCoord(
+        row['centre_ra'],
+        row['centre_dec'],
+        unit=(u.deg, u.deg)
+    )
+
+    seps = target.separation(coords)
+
+    # place a slight buffer on the radius to make sure
+    # any neighbouring fields are caught
+    mask = seps <= row['xtr_radius'] * 1.1 * u.deg
+
+    related_ids = ids[mask].to_list()
+
+    return related_ids
+
+
+def group_skyregions(df):
+    sr_coords = SkyCoord(
+        df['centre_ra'],
+        df['centre_dec'],
+        unit=(u.deg, u.deg)
+    )
+
+    df = df.set_index('id')
+
+    results = df.apply(_get_relations, args=(sr_coords, df.index), axis=1)
+
+    skyreg_groups = {}
+    # keep track of all checked ids
+    master_done = []
+
+    for skyreg_id, neighbours in results.iteritems():
+
+        if skyreg_id not in master_done:
+            # define a local done list for the sky region group
+            sr_done = []
+            master_done.append(skyreg_id)
+            sr_done.append(skyreg_id)
+            skyreg_group = len(skyreg_groups) + 1
+            skyreg_groups[skyreg_group] = list(neighbours)
+
+            while sorted(sr_done) != sorted(skyreg_groups[skyreg_group]):
+                for other_skyreg_id in skyreg_groups[skyreg_group]:
+                    if other_skyreg_id not in sr_done:
+                        sr_done.append(j)
+                        new_vals = results.loc[j]
+                        for k in new_vals:
+                            if k not in skyreg_groups[skyreg_group]:
+                                skyreg_groups[skyreg_group].append(k)
+
+            # Reached the end of the group so append all to the master
+            # done list
+            for j in skyreg_groups[skyreg_group]:
+                master_done.append(j)
+        else:
+            # continue if already placed in group
+            continue
+
+    # flip the dictionary around
+    skyreg_group_ids = {}
+    for i in skyreg_groups:
+        for j in skyreg_groups[i]:
+            skyreg_group_ids[j]=i
+
+    skyreg_group_ids = pd.DataFrame.from_dict(
+        skyreg_group_ids, orient='index'
+    ).rename(columns={0: 'skyreg_group'})
+
+    return skyreg_group_ids
+
+
+def get_para_assoc_image_df(images, skyregion_groups):
+
+    skyreg_ids = [i.skyreg_id for i in images]
+
+    images_df = pd.DataFrame({
+        'image': images,
+        'skyreg_id': skyreg_ids,
+    })
+
+    images_df = images_df.merge(
+        skyregion_groups,
+        how='left',
+        left_on='skyreg_id',
+        right_index=True
+    )
+
+    return images_df

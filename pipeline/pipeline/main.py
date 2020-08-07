@@ -11,12 +11,16 @@ from django.db import transaction
 from importlib.util import spec_from_file_location, module_from_spec
 
 from ..models import Run, SurveySource
-from .association import association
+from .association import association, parallel_association
 from .new_sources import new_sources
 from .forced_extraction import forced_extraction
 from .finalise import final_operations
 from .loading import upload_images
-from .utils import get_src_skyregion_merged_df
+from .utils import (
+    get_src_skyregion_merged_df,
+    group_skyregions,
+    get_para_assoc_image_df
+)
 from .errors import MaxPipelineRunsError, PipelineConfigError
 
 
@@ -148,33 +152,55 @@ class Pipeline():
 
     def process_pipeline(self, p_run):
         # upload/retrieve image data
-        images, meas_dj_obj = upload_images(
+        images, meas_dj_obj, skyregs_df = upload_images(
             self.img_paths,
             self.config,
             p_run
         )
 
         # STEP #2: measurements association
-        # 2.1 Associate Measurements with reference survey sources
-        if SurveySource.objects.exists():
-            pass
-
-        # 2.2 Associate with other measurements
         # order images by time
         images.sort(key=operator.attrgetter('datetime'))
         limit = Angle(self.config.ASSOCIATION_RADIUS * u.arcsec)
         dr_limit = self.config.ASSOCIATION_DE_RUITER_RADIUS
         bw_limit = self.config.ASSOCIATION_BEAMWIDTH_LIMIT
 
-        sources_df = association(
-            p_run,
-            images,
-            meas_dj_obj,
-            limit,
-            dr_limit,
-            bw_limit,
-            self.config,
-        )
+        # 2.1 Check if sky regions to be associated can be
+        # split into connected point groups
+        skyregion_groups = group_skyregions(skyregs_df)
+        n_skyregion_groups = skyregion_groups[
+            'skyreg_group'
+        ].unique().shape[0]
+
+        # 2.2 Associate with other measurements
+        if self.config.ASSOCIATION_PARALLEL and n_skyregion_groups > 1:
+
+            images_df = get_para_assoc_image_df(images, skyregion_groups)
+
+            sources_df = parallel_association(
+                images_df,
+                meas_dj_obj,
+                limit,
+                dr_limit,
+                bw_limit,
+                self.config,
+                n_skyregion_groups,
+            )
+
+        else:
+
+            sources_df = association(
+                images,
+                meas_dj_obj,
+                limit,
+                dr_limit,
+                bw_limit,
+                self.config,
+            )
+
+        # 2.3 Associate Measurements with reference survey sources
+        if SurveySource.objects.exists():
+            pass
 
         # STEP #3: Merge sky regions and sources ready for
         # steps 4 and 5 below.

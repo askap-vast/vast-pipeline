@@ -1,6 +1,8 @@
 import logging
 import numpy as np
 import pandas as pd
+import dask.dataframe as dd
+from psutil import cpu_count
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -512,7 +514,7 @@ def advanced_association(
     return sources_df, skyc1_srcs
 
 
-def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
+def association(images, meas_dj_obj, limit, dr_limit, bw_limit,
     config):
     '''
     The main association function that does the common tasks between basic
@@ -521,6 +523,9 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
     timer = StopWatch()
     method = config.ASSOCIATION_METHOD
     logger.info('Association mode selected: %s.', method)
+
+    if isinstance(images, pd.DataFrame):
+        images = images['image'].to_list()
 
     # initialise sky source dataframe
     skyc1_srcs = prep_skysrc_df(
@@ -681,3 +686,98 @@ def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
         'Total association time: %.2f seconds', timer.reset_init()
     )
     return sources_df
+
+
+def _correct_parallel_source_ids(df, correction):
+
+    df.loc[:, 'source'] = df['source'] + correction
+    related_mask = ~(df['related'].isna())
+
+    new_related = []
+
+    for i in df.loc[related_mask, 'related'].values:
+        new = []
+        for j in i:
+            new.append(j+9000)
+        new_related.append(new)
+    df.loc[
+        df[related_mask].index.values, 'related'
+    ] = new_related
+
+    return df
+
+
+def parallel_association(
+    images_df, meas_dj_obj, limit, dr_limit, bw_limit,
+    config, n_skyregion_groups
+):
+    logger.info(
+        "Running parallel association for %i sky region groups.",
+        n_skyregion_groups
+    )
+
+    meta = {
+        'id': 'i',
+        'uncertainty_ew': 'f',
+        'weight_ew': 'f',
+        'uncertainty_ns': 'f',
+        'weight_ns': 'f',
+        'flux_int': 'f',
+        'flux_int_err': 'f',
+        'flux_peak': 'f',
+        'flux_peak_err': 'f',
+        'forced': '?',
+        'compactness': 'f',
+        'has_siblings': '?',
+        'image': 'U',
+        'datetime': 'datetime64[ns]',
+        'source': 'i',
+        'ra': 'f',
+        'dec': 'f',
+        'd2d': 'f',
+        'dr': 'f',
+        'related': 'O',
+        'interim_ew': 'f',
+        'interim_ns': 'f',
+    }
+
+    required_cpu = n_skyregion_groups + 1
+    available_cpu = cpu_count() - 1
+
+    n_cpu = required_cpu if required_cpu < available_cpu else available_cpu
+
+    results = (
+        dd.from_pandas(images_df, n_cpu)
+        .groupby('skyreg_group')
+        .apply(
+            association,
+            meas_dj_obj=meas_dj_obj,
+            limit=limit,
+            dr_limit=dr_limit,
+            bw_limit=bw_limit,
+            config=config,
+            meta=meta
+        ).compute(n_workers=n_cpu, scheduler='processes')
+    )
+
+    indexes = results.index.levels[0].values
+
+    corr_results = results.loc[indexes[0]]
+
+    for i in indexes[1:]:
+        temp_df = results.loc[i].copy()
+        max_id = corr_results.source.max()
+        corr_group = _correct_parallel_source_ids(
+            temp_df, max_id
+        )
+        corr_results = corr_results.append(
+            corr_group,
+            ignore_index=True
+        )
+
+        del corr_group
+
+    del temp_df
+    del results
+
+    return corr_results
