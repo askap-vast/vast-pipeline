@@ -2,6 +2,16 @@
 {% load static %}
 {% load humanize %}
 
+
+{% block head %}
+
+<!-- PrismJS CSS -->
+<link rel="stylesheet" href="{% static 'vendor/prismjs/prism.css' %}">
+<link rel="stylesheet" href="{% static 'vendor/prismjs/line-numbers/prism-line-numbers.css' %}">
+
+{% endblock head %}
+
+
 {% block breadcrumb %}
 
 <li class="breadcrumb-item">
@@ -133,7 +143,7 @@
           </div>
         </div>
         <div class="card-body">
-          <pre id="runConfigText" class="pre-scrollable" contenteditable="true"><code>{{ p_run.config_txt }}</code></pre>
+          <pre id="runConfigText" class="pre-scrollable" contenteditable="true"><code class="language-python line-numbers">{{ p_run.config_txt }}</code></pre>
         </div>
       </div>
       <!-- log file card -->
@@ -178,6 +188,11 @@
 
 
 {% block custom_page_scripts %}
+
+<!-- PrismJS -->
+<script src="{% static 'vendor/prismjs/prism.js' %}"></script>
+<script src="{% static 'vendor/prismjs/prism-python.min.js' %}"></script>
+<script src="{% static 'vendor/prismjs/line-numbers/prism-line-numbers.min.js' %}"></script>
 
 <script id="runDetailScript" src="{% static 'js/run-detail.min.js' %}" apiValidateUrl="{% url 'pipeline:api_validateruncfg-detail' p_run.name %}" apiWriteCfgUrl="{% url 'pipeline:run_detail' p_run.id %}"></script>
 
