@@ -2,6 +2,7 @@ import logging
 import math
 from django.db import models
 from django.core.validators import RegexValidator
+from django.contrib.auth.models import User
 
 
 # Create your models here.
@@ -697,3 +698,15 @@ class Association(models.Model):
             f'distance: {self.d2d:.2f}' if self.dr == 0 else
             f'distance: {self.dr:.2f}'
         )
+
+
+class SourceFav(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    source = models.ForeignKey(Source, on_delete=models.CASCADE)
+
+    comment = models.TextField(
+        max_length=500,
+        default='',
+        blank=True,
+        help_text='Why did you include this as favourite'
+    )
