@@ -18,6 +18,8 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.conf import settings
 
+from rest_framework import status
+from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.authentication import (
@@ -810,6 +812,34 @@ class SourceFavViewSet(ModelViewSet):
             qs = qs.filter(user__username=user)
 
         return qs
+
+    def create(self, request):
+        print(request.data)
+        # TODO: couldn't get this below to work, so need to re-write using
+        # serializer
+        # serializer = SourceFavSerializer(data=request.data)
+        # if serializer.is_valid():
+        #     serializer.save()
+        #     return Response(serializer.data, status=status.HTTP_201_CREATED)
+        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        data = dict(
+            source_id = request.data.get('source_id'),
+            user_id = request.user.id,
+            comment = request.data.get('comment')
+        )
+        try:
+            fav = SourceFav(**data)
+            fav.save()
+        except Exception as e:
+            Response(
+                {'message': f'Errors:\n{e}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return Response(
+            {'message': 'Favourite source created successfully'},
+            status=status.HTTP_201_CREATED
+        )
 
 
 @login_required
