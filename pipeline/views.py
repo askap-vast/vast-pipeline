@@ -28,10 +28,10 @@ from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.contrib.auth.decorators import login_required
 
 
-from .models import Image, Measurement, Run, Source
+from .models import Image, Measurement, Run, Source, SourceFav
 from .serializers import (
     ImageSerializer, MeasurementSerializer, RunSerializer,
-    SourceSerializer
+    SourceSerializer, SourceFavSerializer
 )
 from .utils.utils import (
     deg2dms, deg2hms, gal2equ, ned_search, simbad_search
@@ -796,3 +796,46 @@ class MeasurementQuery(APIView):
             filename=f"image-{image_id}_{ra_deg:.5f}_{dec_deg:+.5f}_radius-{radius_deg:.3f}.reg",
         )
         return response
+
+
+class SourceFavViewSet(ModelViewSet):
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = SourceFavSerializer
+
+    def get_queryset(self):
+        qs = SourceFav.objects.all().order_by('id')
+        user = self.request.query_params.get('user')
+        if user:
+            qs = qs.filter(user__username=user)
+
+        return qs
+
+
+@login_required
+def UserSourceFavsList(request):
+    fields = ['source.name', 'comment']
+
+    colsfields = generate_colsfields(fields, '/sources/')
+    print(colsfields)
+
+    return render(
+        request,
+        'generic_table.html',
+        {
+            'text': {
+                'title': 'Favourite Sources',
+                'description': 'List of favourite (starred) sources',
+                'breadcrumb': {'title': 'Favourite Sources', 'url': request.path},
+            },
+            'datatable': {
+                'api': (
+                    reverse('pipeline:api_sources_favs-list') +
+                    f'?format=datatables&user={request.user.username}'
+                ),
+                'colsFields': colsfields,
+                'colsNames': ['Source', 'Comment'],
+                'search': True,
+            }
+        }
+    )

@@ -1,10 +1,18 @@
 // Formatting function for API
 function obj_formatter(obj) {
   if (obj.render.hasOwnProperty('url')) {
-    let [prefix, col] = [obj.render.url.prefix, obj.render.url.col];
-    let hrefValue = function(data, type, row, meta) {
-      return '<a href="' + prefix + row.id + ' "target="_blank">' + row[col] + '</a>';
-    };
+    let hrefValue = null;
+    if (obj.render.url.hasOwnProperty('nested')) {
+      let [prefix, col] = [obj.render.url.prefix, obj.render.url.col];
+      hrefValue = function(data, type, row, meta) {
+        return '<a href="' + prefix + row[col].id + ' "target="_blank">' + data + '</a>';
+      };
+    } else {
+      let [prefix, col] = [obj.render.url.prefix, obj.render.url.col];
+      hrefValue = function(data, type, row, meta) {
+        return '<a href="' + prefix + row.id + ' "target="_blank">' + row[col] + '</a>';
+      };
+    }
     obj.render = hrefValue;
     return obj;
   } else if (obj.render.hasOwnProperty('float')) {

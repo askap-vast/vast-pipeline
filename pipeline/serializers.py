@@ -1,8 +1,10 @@
 import os
+
+from django.contrib.auth.models import User
 from rest_framework import serializers
 
 from .utils.utils import deg2dms, deg2hms
-from .models import Image, Measurement, Run, Source
+from .models import Image, Measurement, Run, Source, SourceFav
 
 
 class RunSerializer(serializers.ModelSerializer):
@@ -85,3 +87,26 @@ class SourceSerializer(serializers.ModelSerializer):
 
     def get_wavg_dec(self, source):
         return deg2dms(source.wavg_dec, dms_format=True)
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields =['username']
+
+
+class SourceNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Source
+        fields= ['id', 'name']
+        datatables_always_serialize = ('id',)
+
+
+class SourceFavSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    source = SourceNameSerializer(read_only=True)
+
+    class Meta:
+        model = SourceFav
+        fields = '__all__'
+        datatables_always_serialize = ('id', 'source', 'user')
