@@ -12,14 +12,14 @@ from astropy.nddata import Cutout2D
 from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
 
-from django.http import FileResponse, Http404
+from django.http import FileResponse, Http404, HttpResponseRedirect
 from django.db.models import Count, F, Q, Case, When, Value, BooleanField
 from django.shortcuts import render
 from django.urls import reverse
 from django.conf import settings
+from django.contrib import messages
 
 from rest_framework import status
-from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.authentication import (
@@ -814,7 +814,6 @@ class SourceFavViewSet(ModelViewSet):
         return qs
 
     def create(self, request):
-        print(request.data)
         # TODO: couldn't get this below to work, so need to re-write using
         # serializer
         # serializer = SourceFavSerializer(data=request.data)
@@ -828,18 +827,26 @@ class SourceFavViewSet(ModelViewSet):
             comment = request.data.get('comment')
         )
         try:
-            fav = SourceFav(**data)
-            fav.save()
+            check = (
+                SourceFav.objects.filter(
+                    user__id=data['user_id'],
+                    source__id=data['source_id']
+                )
+                .exists()
+            )
+            if check:
+                messages.error(request, 'Source already added to favourites!')
+            else:
+                fav = SourceFav(**data)
+                fav.save()
+                messages.info(request, 'Favourite source created successfully')
         except Exception as e:
-            Response(
-                {'message': f'Errors:\n{e}'},
-                status=status.HTTP_400_BAD_REQUEST
+            messages.error(
+                request,
+                f'Errors in adding source to favourites: \n{e}'
             )
 
-        return Response(
-            {'message': 'Favourite source created successfully'},
-            status=status.HTTP_201_CREATED
-        )
+        return HttpResponseRedirect(reverse('pipeline:source_favs'))
 
 
 @login_required
@@ -847,7 +854,6 @@ def UserSourceFavsList(request):
     fields = ['source.name', 'comment']
 
     colsfields = generate_colsfields(fields, '/sources/')
-    print(colsfields)
 
     return render(
         request,
