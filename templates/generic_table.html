@@ -102,19 +102,22 @@
           <div id="pipeRunConfigForm" class="form-group">
             <label for="imagesFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select images files</label>
             <a href="#" data-toggle="tooltip" data-placement="top" title=
-                "The primary ASKAP sky images to process."
+                "The primary ASKAP FITS files to process."
             ><i class="fas fa-info-circle"></i></a>
             <select id="imagesFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-header="Choose image files" data-actions-box="true" name="image_files" data-selected-text-format="count > 5">
             </select>
             <label for="selavyFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select selavy files</label>
             <a href="#" data-toggle="tooltip" data-placement="top" title=
-                "The selavy component files for the selected images."
+                "The selavy component '.txt' files for the selected images. The order must match."
             ><i class="fas fa-info-circle"></i></a>
             <select id="selavyFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-header="Choose selavy files" data-actions-box="true" name="selavy_files" data-selected-text-format="count > 5">
             </select>
             <div class="custom-control custom-switch">
               <input type="checkbox" class="custom-control-input" id="monitorSwitch" {% if runconfig.monitor %} checked="checked" {% endif %} name="monitor">
               <label class="custom-control-label font-weight-bold text-gray-800" for="monitorSwitch">Monitor: Turn on force extraction for sources backward and forward in time</label>
+              <a href="#" data-toggle="tooltip" data-placement="top" title=
+                  "Forced extractions will be peformed both forwards and backwards in time to fill in 'gaps' in the lightcurves. Be aware that this will                        increase processing time."
+              ><i class="fas fa-info-circle"></i></a>
             </div>
             <div class="row">
               <div class="col">
@@ -127,42 +130,80 @@
               </div>
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="monitorEdgeBufferScaleSelect">Monitor Edge Buffer Scale</label>
+                <a href="#" data-toggle="tooltip" data-placement="top" title=
+                    "The monitoring can sometimes fail when sources are near the edge of the image. While a minimum distance limit from the image edge
+                    is already in place this is sometimes not enough, in these cases this buffer value can be increased to avoid errors. Hence, only worry
+                    about this parameter if you are experiencing monitoring issues."
+                ><i class="fas fa-info-circle"></i></a>
                 <input id="monitorEdgeBufferScaleSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.monitor_edge_buffer_scale }}" min="0" step="0.01" aria-label="monitorEdgeBufferScaleSearch" aria-describedby="basic-addon2" name="monitor_edge_buffer_scale" readonly>
               </div>
             </div>
             <label for="bkgFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select background files</label>
+            <a href="#" data-toggle="tooltip" data-placement="top" title=
+                "The background maps for the selected images to process. The order must match."
+            ><i class="fas fa-info-circle"></i></a>
             <select id="bkgFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-header="Choose background files" data-actions-box="true" name="background_files" data-selected-text-format="count > 5" disabled>
             </select>
-            <label for="noiseFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select noise or rms files</label>
+            <label for="noiseFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select noise (rms) files</label>
+            <a href="#" data-toggle="tooltip" data-placement="top" title=
+                "The noise maps for the selected images to process. The order must match."
+            ><i class="fas fa-info-circle"></i></a>
             <select id="noiseFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-header="Choose noise or rms files" data-actions-box="true" name="noise_files" data-selected-text-format="count > 5" disabled>
             </select>
             <div class="row">
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="associationTypeSelect">Association Method</label>
+                <a href="#" data-html="true" data-toggle="tooltip" data-placement="top" title=
+                    "Select which association method you would like to use. <br /> <b>Basic</b>: Astropy nearest match.<br /> <b>Advanced</b>: Astropy                            search around sky that considers all potential matches.<br /> <b>De Ruiter</b>: Same as advanced but using the De Ruiter radius as
+                    the deciding metric."
+                ><i class="fas fa-info-circle"></i></a>
                 <select id="associationTypeSelect" class="form-control bg-light border-0" aria-label="associationTypeSearch" aria-describedby="basic-addon2" name="association_method">
                   <option value="basic" selected>Basic</option>
                   <option value="advanced">Advanced</option>
                   <option value="deruiter">De Ruiter</option>
                 </select>
-                <label class="col-form-label font-weight-bold text-gray-800" for="astroUncertRaSelect">Astrometric Uncertainty Ra</label>
+                <label class="col-form-label font-weight-bold text-gray-800" for="astroUncertRaSelect">Astrometric Uncertainty RA (arcsec)</label>
+                <a href="#" data-toggle="tooltip" data-placement="top" title=
+                    "Base astrometric RA uncertainty in arcseconds that will be added in quadrature to the fitting uncertainties."
+                ><i class="fas fa-info-circle"></i></a>
                 <input id="astroUncertRaSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.astrometric_uncertainty_ra }}" min="0" step="0.01" aria-label="astroUncertRaSearch" aria-describedby="basic-addon2" name="astrometric_uncertainty_ra">
               </div>
               <div class="col">
-                <label class="col-form-label font-weight-bold text-gray-800" for="associationRadiusSelect">Association Radius</label>
+                <label class="col-form-label font-weight-bold text-gray-800" for="associationRadiusSelect">Association Radius (arcsec)</label>
+                <a href="#" data-toggle="tooltip" data-placement="top" title=
+                    "Used with 'Basic' and 'Advanced' methods only. The maximum distance in arcsec for two sources to be considered as an association."
+                ><i class="fas fa-info-circle"></i></a>
                 <input id="associationRadiusSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.association_radius }}" min="0" step="0.01" aria-label="associationRadiusSearch" aria-describedby="basic-addon2" name="association_radius">
-                <label class="col-form-label font-weight-bold text-gray-800" for="astroUncertDecSelect">Astrometric Uncertainty Dec</label>
+                <label class="col-form-label font-weight-bold text-gray-800" for="astroUncertDecSelect">Astrometric Uncertainty Dec (arcsec)</label>
+                <a href="#" data-toggle="tooltip" data-placement="top" title=
+                    "Base astrometric Dec uncertainty in arcseconds that will be added in quadrature to the fitting uncertainties."
+                ><i class="fas fa-info-circle"></i></a>
                 <input id="astroUncertDecSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.astrometric_uncertainty_dec }}" min="0" step="0.01" aria-label="astroUncertDecSearch" aria-describedby="basic-addon2" name="astrometric_uncertainty_dec">
               </div>
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="associationDeRuiterSelect">Association De Ruiter Radius</label>
+                <a href="#" data-toggle="tooltip" data-placement="top" title=
+                    "Used with the 'De Ruiter' method only. The maximum De Ruiter radius value for which sources are considered to be associated."
+                ><i class="fas fa-info-circle"></i></a>
                 <input id="associationDeRuiterSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.association_de_ruiter_radius }}" min="0" step="0.01" aria-label="associationDeRuiterSearch" aria-describedby="basic-addon2" name="association_de_ruiter_radius" readonly>
                 <label class="col-form-label font-weight-bold text-gray-800" for="newSourceMinSigSelect">New Source Min Sigma</label>
+                <a href="#" data-toggle="tooltip" data-placement="top" title=
+                    "For a source to be flagged as a new source it must first meet the requirement that any previous images it could have been seen in,
+                    if the source was placed in the loweset rms value of the image, the signal-to-noise value much be higher than this parameter."
+                ><i class="fas fa-info-circle"></i></a>
                 <input id="newSourceMinSigSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.new_source_min_sigma }}" min="0" step="0.01" aria-label="newSourceMinSigSearch" aria-describedby="basic-addon2" name="new_source_min_sigma">
               </div>
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="associationBeamWidthSelect">Association Beam Width</label>
+                <a href="#" data-toggle="tooltip" data-placement="top" title=
+                    "Used with the 'De Ruiter' method only. A hard limit on the distance between two associated sources which is this parameter multipled by
+                    half the respective image major beam axis value."
+                ><i class="fas fa-info-circle"></i></a>
                 <input id="associationBeamWidthSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.association_beamwidth_limit }}" min="0" step="0.01" aria-label="associationBeamWidthSearch" aria-describedby="basic-addon2" name="association_beamwidth_limit">
                 <label class="col-form-label font-weight-bold text-gray-800" for="surveySelect">Default Survey (TBC)</label>
+                <a href="#" data-toggle="tooltip" data-placement="top" title=
+                    "Feature coming soon."
+                ><i class="fas fa-info-circle"></i></a>
                 <select id="surveySelect" class="form-control bg-light border-0" aria-label="surveySearch" aria-describedby="basic-addon2" name="default_survey" readonly>
                   <option value="{{ runconfig.default_survey }}" selected>None</option>
                 </select>
@@ -170,17 +211,26 @@
             </div>
             <div class="row">
               <div class="col">
-                <label class="col-form-label font-weight-bold text-gray-800" for="fluxPercErrorSelect">Flux Percentage Error</label>
+                <label class="col-form-label font-weight-bold text-gray-800" for="fluxPercErrorSelect">Flux Percentage Error (%)</label>
+                <a href="#" data-toggle="tooltip" data-placement="top" title=
+                    "Use this value to apply a minimum percentage error to the fluxes."
+                ><i class="fas fa-info-circle"></i></a>
                 <input id="fluxPercErrorSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.flux_perc_error }}" min="0" max="100" step="0.01" aria-label="fluxPercErrorSearch" aria-describedby="basic-addon2" name="flux_perc_error">
               </div>
               <div class="col">
-                <label class="col-form-label font-weight-bold text-gray-800" for="localRmsZeroFillSelect">Selavy Local RMS Zero Fill Value</label>
+                <label class="col-form-label font-weight-bold text-gray-800" for="localRmsZeroFillSelect">Selavy Local RMS Zero Fill Value (mJy)</label>
+                <a href="#" data-toggle="tooltip" data-placement="top" title=
+                    "Rarely, a source in the selavy catalogue can have a local rms value of zero. This selects the default value to replace these zero values                     with to avoid errors."
+                ><i class="fas fa-info-circle"></i></a>
                 <input id="localRmsZeroFillSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.selavy_local_rms_zero_fill_value }}" min="0" step="0.01" aria-label="localRmsZeroFillSearch" aria-describedby="basic-addon2" name="selavy_local_rms_zero_fill_value">
               </div>
             </div>
             <div class="custom-control custom-switch">
               <input type="checkbox" class="custom-control-input" id="condomErrorSwitch" {% if runconfig.use_condon_errors %} checked="checked" {% endif %} name="use_condon_errors">
               <label class="custom-control-label font-weight-bold text-gray-800" for="condomErrorSwitch">Use Condon Errors</label>
+              <a href="#" data-toggle="tooltip" data-placement="top" title=
+                  "Replaces the selavy catalogue flux and positional errors with those defined by Condon '97, calculated by the pipeline."
+              ><i class="fas fa-info-circle"></i></a>
             </div>
           </div>
           <div class="modal-footer">
