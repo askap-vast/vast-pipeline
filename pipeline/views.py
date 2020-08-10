@@ -1007,7 +1007,7 @@ class RawImageListSet(ViewSet):
 class ValidateRunConfigSet(ViewSet):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [IsAuthenticated]
-    lookup_value_regex = '[\w]+'
+    lookup_value_regex = '[-\w]+'
     lookup_field = 'runname'
 
     def retrieve(self, request, runname=None):
