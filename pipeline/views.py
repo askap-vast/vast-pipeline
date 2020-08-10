@@ -20,6 +20,7 @@ from django.conf import settings
 from django.contrib import messages
 
 from rest_framework import status
+from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.authentication import (
@@ -848,10 +849,33 @@ class SourceFavViewSet(ModelViewSet):
 
         return HttpResponseRedirect(reverse('pipeline:source_favs'))
 
+    def destroy(self, request, pk=None):
+        try:
+            qs = SourceFav.objects.filter(id=pk)
+            if qs.exists():
+                qs.delete()
+                messages.success(
+                    request,
+                    'Favourite source deleted successfully'
+                )
+                return Response({'message': 'ok'}, status=status.HTTP_200_OK)
+            else:
+                messages.info(request, 'Not found')
+                return Response(
+                    {'message': 'not found'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        except Exception as e:
+            messages.error(request, 'Error in deleting the favourite source')
+            return Response(
+                {'message': 'error in request'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
 
 @login_required
 def UserSourceFavsList(request):
-    fields = ['source.name', 'comment']
+    fields = ['source.name', 'comment', 'deletefield']
 
     colsfields = generate_colsfields(fields, '/sources/')
 
@@ -870,7 +894,7 @@ def UserSourceFavsList(request):
                     f'?format=datatables&user={request.user.username}'
                 ),
                 'colsFields': colsfields,
-                'colsNames': ['Source', 'Comment'],
+                'colsNames': ['Source', 'Comment', 'Delete'],
                 'search': True,
             }
         }
