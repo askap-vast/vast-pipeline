@@ -35,4 +35,4 @@ class PipelineInitError(PipelineError):
     Error for issue in the pipeline initialisation
     """
     def __init__(self, msg=None):
-        super(PipelineConfigError, self).__init__(msg)
+        super(PipelineInitError, self).__init__(msg)
