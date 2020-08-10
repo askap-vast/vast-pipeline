@@ -1,5 +1,7 @@
 $(document).ready(function() {
 
+  $('[data-toggle="tooltip"]').tooltip();
+
   $("#newPipeRunButton").on('click', function(e) {
     // hide second part of form
     $("#pipeRunConfigForm").hide();

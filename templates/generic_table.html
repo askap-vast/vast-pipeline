@@ -289,9 +289,4 @@
 {{ datatable|json_script:"datatable-conf" }}
 <script src="{% static 'js/datatables-pipeline.min.js' %}"></script>
 
-<script>
-$(document).ready(function(){
-  $('[data-toggle="tooltip"]').tooltip(); 
-});
-</script>
 {% endblock custom_page_scripts %}
