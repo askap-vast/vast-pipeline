@@ -130,12 +130,14 @@
       <div class="card shadow mb-4">
         <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
           <h6 class="m-0 font-weight-bold text-primary">Config File</h6>
+          <h6 class="m-0 font-weight-bold text-warning" hidden><i>- - - Edit mode - - -</i></h6>
           <div class="dropdown no-arrow">
             <a class="dropdown-toggle" href="#" role="button" id="dropdownRunConfig" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
             </a>
             <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownRunConfig">
               <div class="dropdown-header">Actions:</div>
+              <a id="editConfig" class="dropdown-item" href="#">Edit Config</a>
               <a class="dropdown-item" href="#" data-toggle="modal" data-target="#feedbackModal">Validate Config</a>
               {% csrf_token %}
               <a id="writeConfig"  class="dropdown-item" href="#">Write Current Config</a>
@@ -143,7 +145,7 @@
           </div>
         </div>
         <div class="card-body">
-          <pre id="runConfigText" class="pre-scrollable" contenteditable="true"><code class="language-python line-numbers">{{ p_run.config_txt }}</code></pre>
+          <pre id="runConfigText" class="pre-scrollable" contenteditable="false"><code class="language-python line-numbers code-whitespace">{{ p_run.config_txt }}</code></pre>
         </div>
       </div>
       <!-- log file card -->
@@ -168,7 +170,7 @@
 
 {% block modal %}
 <div  id="feedbackModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" role="document">
+  <div id="feedbackModalDialog" class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="exampleModalLabel">Feedback</h5>

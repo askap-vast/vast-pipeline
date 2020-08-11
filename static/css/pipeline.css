@@ -24,3 +24,11 @@
 .wrap-form-control-readonly[readonly]:focus {
   box-shadow: inset 0 0px 0 #ddd;
 }
+
+.code-whitespace {
+  white-space: pre;
+}
+
+#feedbackModalDialog {
+  max-width: 75%;
+}
