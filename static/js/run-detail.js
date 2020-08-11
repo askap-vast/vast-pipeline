@@ -9,7 +9,6 @@ $(document).ready(function() {
     let edit_txt_check = document.getElementById('editModeTitle').hidden;
     $('#editModeTitle').prop('hidden', !edit_txt_check);
     $('#runConfigText').prop('contenteditable', edit_txt_check);
-    }
   });
 
   $('#feedbackModal').on('show.bs.modal', function(e) {
