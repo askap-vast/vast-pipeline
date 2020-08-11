@@ -1,4 +1,16 @@
+// const Prism = require('prismjs');
+Prism.hooks.add('before-sanity-check', function (env) {
+    env.code = env.element.innerText;
+});
+
 $(document).ready(function() {
+
+  $('#editConfig').on('click', function(e) {
+    let edit_txt_check = document.getElementById('editModeTitle').hidden;
+    $('#editModeTitle').prop('hidden', !edit_txt_check);
+    $('#runConfigText').prop('contenteditable', edit_txt_check);
+    }
+  });
 
   $('#feedbackModal').on('show.bs.modal', function(e) {
     let apiUrl = document.getElementById('runDetailScript').getAttribute('apiValidateUrl');
