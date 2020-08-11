@@ -41,28 +41,50 @@ class Pipeline():
         self.name = name
         self.config = self.load_cfg(config_path)
 
+        # Check if provided files are lists and convert to
+        # dictionaries if so
+        for i in [
+            'IMAGE_FILES', 'SELAVY_FILES',
+            'BACKGROUND_FILES', 'NOISE_FILES'
+        ]:
+            if isinstance(getattr(self.config, i), list):
+                setattr(
+                    self.config,
+                    lst,
+                    self._convert_list_to_dict(
+                        getattr(self.config, lst)
+                    )
+                )
+
         # A dictionary of path to Fits images, eg
         # "/data/images/I1233234.FITS" and selavy catalogues
         # Used as a cache to avoid reloading cubes all the time.
         self.img_paths = {}
-        self.img_paths['selavy'] = {
-            x:y for x,y in zip(
-                self.config.IMAGE_FILES,
-                self.config.SELAVY_FILES
-            )
-        }
-        self.img_paths['noise'] = {
-            x:y for x,y in zip(
-                self.config.IMAGE_FILES,
-                self.config.NOISE_FILES
-            )
-        }
-        self.img_paths['background'] = {
-            x:y for x,y in zip(
-                self.config.IMAGE_FILES,
-                self.config.BACKGROUND_FILES
-            )
-        }
+        self.img_epochs = {}
+
+        for key in sorted(self.config.IMAGE_FILES.keys()):
+            self.img_paths['selavy'] = {
+                x:y for x,y in zip(
+                    self.config.IMAGE_FILES[key],
+                    self.config.SELAVY_FILES[key]
+                )
+            }
+            self.img_paths['noise'] = {
+                x:y for x,y in zip(
+                    self.config.IMAGE_FILES[key],
+                    self.config.NOISE_FILES[key]
+                )
+            }
+            self.img_paths['background'] = {
+                x:y for x,y in zip(
+                    self.config.IMAGE_FILES[key],
+                    self.config.BACKGROUND_FILES[key]
+                )
+            }
+            for x in self.config.IMAGE_FILES[key]:
+                self.img_epochs[os.path.basename(x)].append(
+                    key
+                )
 
     @staticmethod
     def load_cfg(cfg):
@@ -83,6 +105,15 @@ class Pipeline():
         return mod
 
 
+    def _convert_list_to_dict(l):
+        """
+        Convert users list entry to a dictionary for pipeline processing.
+        """
+        conversion = {i + 1: val for i, val in enumerate(l)}
+
+        return conversion
+
+
     def validate_cfg(self):
         """
         validate a pipeline run configuration against default parameters and
@@ -92,11 +123,12 @@ class Pipeline():
         if (getattr(self.config, 'IMAGE_FILES') and
             getattr(self.config, 'SELAVY_FILES')):
             for lst in ['IMAGE_FILES', 'SELAVY_FILES']:
-                for file in getattr(self.config, lst):
-                    if not os.path.exists(file):
-                        raise PipelineConfigError(
-                            f'file:\n{file}\ndoes not exists!'
-                        )
+                for key in getattr(self.config, lst):
+                    for file in getattr(self.config, lst)[key]:
+                        if not os.path.exists(file):
+                            raise PipelineConfigError(
+                                f'file:\n{file}\ndoes not exists!'
+                            )
         else:
             raise PipelineConfigError(
                 'no image file paths passed or Selavy file paths!'
@@ -134,8 +166,8 @@ class Pipeline():
                 raise PipelineConfigError(
                     'MONITOR_EDGE_BUFFER_SCALE must be defined!'
                 )
-            for lst in ['BACKGROUND_FILES', 'NOISE_FILES']:
-                for file in getattr(self.config, lst):
+            for key in getattr(self.config, lst):
+                for file in getattr(self.config, lst)[key]:
                     if not os.path.exists(file):
                         raise PipelineConfigError(
                             f'file:\n{file}\ndoes not exists!'
@@ -161,6 +193,9 @@ class Pipeline():
         # STEP #2: measurements association
         # order images by time
         images.sort(key=operator.attrgetter('datetime'))
+        image_epochs = [
+            self.img_epochs[img.name] for img in images
+        ]
         limit = Angle(self.config.ASSOCIATION_RADIUS * u.arcsec)
         dr_limit = self.config.ASSOCIATION_DE_RUITER_RADIUS
         bw_limit = self.config.ASSOCIATION_BEAMWIDTH_LIMIT
@@ -178,6 +213,7 @@ class Pipeline():
             images_df = get_parallel_assoc_image_df(
                 images, skyregion_groups
             )
+            images_df['epoch'] = image_epochs
 
             sources_df = parallel_association(
                 images_df,
@@ -190,9 +226,15 @@ class Pipeline():
             )
 
         else:
+            images_df = pd.DataFrame.from_dict(
+                {
+                    'image': images,
+                    'epoch': image_epochs
+                }
+            )
 
             sources_df = association(
-                images,
+                images_df,
                 meas_dj_obj,
                 limit,
                 dr_limit,

@@ -156,7 +156,95 @@ def get_create_p_run(name, path):
     return p_run
 
 
-def prep_skysrc_df(image, perc_error, ini_df=False):
+def remove_duplicate_measurements(sources_df, ini_df=False):
+    """
+    Remove duplicate sources from dataframe
+    """
+    min_source = sources_df['source'].min()
+
+    # sort by the distance from the image centre so we know
+    # that the first source is always the one to keep
+    sources_df = sources_df.sort_values(by='dist_from_centre')
+
+    sources_sc = SkyCoord(
+        df['ra'],
+        df['dec']
+        unit=u.deg, u.deg
+    )
+
+    # perform search around sky to get all self matches
+    idxc, idxcatalog, d2d_around, _ = sources_sc.search_around_sky(
+        catalog, 0.5 * u.arcsec
+    )
+
+    # create df from results
+    results = pd.DataFrame(data={'source_id': idxc, 'match_id':idxcatalog})
+    # create a pair column defining each pair ith index
+    results['pair'] = results.apply(tuple, 1).apply(sorted).apply(tuple)
+    # Drop the duplicate pairs (pairs are sorted so this works)
+    results = results.drop_duplicates('pair')
+    # No longer need pair
+    results = results.drop('pair', axis=1)
+    # Create a subtract column to easily identify pairs with itself
+    results['pair_sub'] = results['source_id'] - results['match_id']
+    # We're only interested in the sources which have matches.
+    results = results.loc[
+        results.duplicated('source_id', keep=False)
+    ].sort_values(by='source_id')
+    # Drop all self matches and we are left with those to drop
+    # in the match id column.
+    to_drop = results.loc[results['pair_sub'] != 0]['match_id']
+    # Get the index values from the ith values
+    to_drop_indexes = results.iloc[to_drop].index.values
+    # Drop them from sources
+    sources_df = sources_df.drop(to_drop_indexes).sort_values(
+        by='ra'
+    )
+    # Reset the source number
+    if not ini_df:
+        sources_df['source'] = range(
+            min_source, sources_df.shape[0] + 1
+        )
+
+    del results
+
+    return sources_df
+
+
+def _load_measurements(image, cols, start_id=0):
+    image_centre = SkyCoord(
+        image['ra'],
+        image['dec'],
+        unit=(u.deg, u.deg)
+    )
+
+    df = pd.read_parquet(image.measurements_path, columns=cols)
+    df['image'] = image.name
+    df['datetime'] = image.datetime
+    # these are the first 'sources'
+    df['source'] = df.index + start_id + 1 if ini_df else -1
+    df['ra_source'] = df['ra']
+    df['dec_source'] = df['dec']
+    df['d2d'] = 0.
+    df['dr'] = 0.
+    df['related'] = None
+
+    sources_sc = SkyCoord(
+        df['ra'],
+        df['dec']
+        unit=u.deg, u.deg
+    )
+
+    seps = sources_sc.separation(image_centre).degree
+    df['dist_from_centre'] = seps
+
+    del sources_sc
+    del seps
+
+    return df
+
+
+def prep_skysrc_df(images, perc_error, ini_df=False):
     '''
     initiliase the source dataframe to use in association logic by
     reading the measurement parquet file and creating columns
@@ -181,16 +269,17 @@ def prep_skysrc_df(image, perc_error, ini_df=False):
     'has_siblings'
     ]
 
-    df = pd.read_parquet(image.measurements_path, columns=cols)
-    df['image'] = image.name
-    df['datetime'] = image.datetime
-    # these are the first 'sources'
-    df['source'] = df.index + 1 if ini_df else -1
-    df['ra_source'] = df['ra']
-    df['dec_source'] = df['dec']
-    df['d2d'] = 0.
-    df['dr'] = 0.
-    df['related'] = None
+    df = _load_measurements(images[0], cols)
+
+    if len(images) > 1:
+        for img in images[1:]:
+            df = df.append(
+                _load_measurements(img, cols, df.source.max()),
+                ignore_index=True
+            )
+
+        df = remove_duplicate_measurements(df)
+
     logger.info('Correcting flux errors with config error setting...')
     for col in ['flux_int', 'flux_peak']:
         df[f'{col}_err'] = np.hypot(
@@ -578,7 +667,7 @@ def group_skyregions(df):
     return skyreg_group_ids
 
 
-def get_parallel_assoc_image_df(images, skyregion_groups):
+def get_parallel_assoc_image_df(images, skyregion_groups, img_epochs):
 
     skyreg_ids = [i.skyreg_id for i in images]
 

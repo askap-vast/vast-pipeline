@@ -514,7 +514,7 @@ def advanced_association(
     return sources_df, skyc1_srcs
 
 
-def association(images, meas_dj_obj, limit, dr_limit, bw_limit,
+def association(images_df, meas_dj_obj, limit, dr_limit, bw_limit,
     config):
     '''
     The main association function that does the common tasks between basic
@@ -524,12 +524,17 @@ def association(images, meas_dj_obj, limit, dr_limit, bw_limit,
     method = config.ASSOCIATION_METHOD
     logger.info('Association mode selected: %s.', method)
 
-    if isinstance(images, pd.DataFrame):
-        images = images['image'].to_list()
+    # if isinstance(images, pd.DataFrame):
+    #     images = images['image'].to_list()
+    unique_epochs = images_df['epoch'].sort_values(by='epoch').unique()
+
+    first_images = images_df.loc[
+        images_df['epoch'] == unique_epochs[0]
+    ]['image'].to_list()
 
     # initialise sky source dataframe
     skyc1_srcs = prep_skysrc_df(
-        images[0],
+        first_images,
         config.FLUX_PERC_ERROR,
         ini_df=True
     )
