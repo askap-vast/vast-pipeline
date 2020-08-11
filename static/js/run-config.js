@@ -37,7 +37,6 @@ $(document).ready(function() {
 
   $("#monitorSwitch").on('click', function(e) {
     $("#bkgFilesDropDown").attr('disabled',!this.checked).selectpicker('refresh');
-    $("#noiseFilesDropDown").attr('disabled',!this.checked).selectpicker('refresh');
     $("#monitorMinSigmaSelect").prop('readonly',!this.checked);
     $("#monitorEdgeBufferScaleSelect").prop('readonly',!this.checked);
   });

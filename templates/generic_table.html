@@ -112,6 +112,12 @@
             ><i class="fas fa-info-circle"></i></a>
             <select id="selavyFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-header="Choose selavy files" data-actions-box="true" name="selavy_files" data-selected-text-format="count > 5">
             </select>
+            <label for="noiseFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select noise (rms) files</label>
+            <a href="#" data-toggle="tooltip" data-placement="top" title=
+                "The noise maps for the selected images to process. The order must match."
+            ><i class="fas fa-info-circle"></i></a>
+            <select id="noiseFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-header="Choose noise or rms files" data-actions-box="true" name="noise_files" data-selected-text-format="count > 5">
+            </select>
             <div class="custom-control custom-switch">
               <input type="checkbox" class="custom-control-input" id="monitorSwitch" {% if runconfig.monitor %} checked="checked" {% endif %} name="monitor">
               <label class="custom-control-label font-weight-bold text-gray-800" for="monitorSwitch">Monitor: Turn on force extraction for sources backward and forward in time</label>
@@ -143,12 +149,6 @@
                 "The background maps for the selected images to process. The order must match."
             ><i class="fas fa-info-circle"></i></a>
             <select id="bkgFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-header="Choose background files" data-actions-box="true" name="background_files" data-selected-text-format="count > 5" disabled>
-            </select>
-            <label for="noiseFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select noise (rms) files</label>
-            <a href="#" data-toggle="tooltip" data-placement="top" title=
-                "The noise maps for the selected images to process. The order must match."
-            ><i class="fas fa-info-circle"></i></a>
-            <select id="noiseFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-header="Choose noise or rms files" data-actions-box="true" name="noise_files" data-selected-text-format="count > 5" disabled>
             </select>
             <div class="row">
               <div class="col">
