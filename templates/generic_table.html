@@ -123,10 +123,10 @@
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="monitorMinSigmaSelect">Monitor Min Sigma</label>
                 <a href="#" data-toggle="tooltip" data-placement="top" title=
-                    "Defines the minimum signal-to-noise ratio a source has to be if it was placed in the area of minimum noise 
+                    "Defines the minimum signal-to-noise ratio a source has to be if it was placed in the area of minimum noise
                     in the image from which it is to be extracted from. If lower than this value then no forced extraction occurs."
                 ><i class="fas fa-info-circle"></i></a>
-                <input id="monitorMinSigmaSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.monitor_min_sigma }}" min="0" step="0.01" aria-label="monitorMinSigmaSearch" aria-describedby="basic-addon2" name="monitor_min_sigma" readonly>
+                <input id="monitorMinSigmaSelect" type="number" class="form-control bg-light border-0 wrap-form-control-readonly" value="{{ runconfig.monitor_min_sigma }}" min="0" step="0.01" aria-label="monitorMinSigmaSearch" aria-describedby="basic-addon2" name="monitor_min_sigma" readonly>
               </div>
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="monitorEdgeBufferScaleSelect">Monitor Edge Buffer Scale</label>
@@ -135,7 +135,7 @@
                     is already in place this is sometimes not enough, in these cases this buffer value can be increased to avoid errors. Hence, only worry
                     about this parameter if you are experiencing monitoring issues."
                 ><i class="fas fa-info-circle"></i></a>
-                <input id="monitorEdgeBufferScaleSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.monitor_edge_buffer_scale }}" min="0" step="0.01" aria-label="monitorEdgeBufferScaleSearch" aria-describedby="basic-addon2" name="monitor_edge_buffer_scale" readonly>
+                <input id="monitorEdgeBufferScaleSelect" type="number" class="form-control bg-light border-0 wrap-form-control-readonly" value="{{ runconfig.monitor_edge_buffer_scale }}" min="0" step="0.01" aria-label="monitorEdgeBufferScaleSearch" aria-describedby="basic-addon2" name="monitor_edge_buffer_scale" readonly>
               </div>
             </div>
             <label for="bkgFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select background files</label>
@@ -173,7 +173,7 @@
                 <a href="#" data-toggle="tooltip" data-placement="top" title=
                     "Used with 'Basic' and 'Advanced' methods only. The maximum distance in arcsec for two sources to be considered as an association."
                 ><i class="fas fa-info-circle"></i></a>
-                <input id="associationRadiusSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.association_radius }}" min="0" step="0.01" aria-label="associationRadiusSearch" aria-describedby="basic-addon2" name="association_radius">
+                <input id="associationRadiusSelect" type="number" class="form-control bg-light border-0 wrap-form-control-readonly" value="{{ runconfig.association_radius }}" min="0" step="0.01" aria-label="associationRadiusSearch" aria-describedby="basic-addon2" name="association_radius">
                 <label class="col-form-label font-weight-bold text-gray-800" for="astroUncertDecSelect">Astrometric Uncertainty Dec (arcsec)</label>
                 <a href="#" data-toggle="tooltip" data-placement="top" title=
                     "Base astrometric Dec uncertainty in arcseconds that will be added in quadrature to the fitting uncertainties."
@@ -185,7 +185,7 @@
                 <a href="#" data-toggle="tooltip" data-placement="top" title=
                     "Used with the 'De Ruiter' method only. The maximum De Ruiter radius value for which sources are considered to be associated."
                 ><i class="fas fa-info-circle"></i></a>
-                <input id="associationDeRuiterSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.association_de_ruiter_radius }}" min="0" step="0.01" aria-label="associationDeRuiterSearch" aria-describedby="basic-addon2" name="association_de_ruiter_radius" readonly>
+                <input id="associationDeRuiterSelect" type="number" class="form-control bg-light border-0 wrap-form-control-readonly" value="{{ runconfig.association_de_ruiter_radius }}" min="0" step="0.01" aria-label="associationDeRuiterSearch" aria-describedby="basic-addon2" name="association_de_ruiter_radius" readonly>
                 <label class="col-form-label font-weight-bold text-gray-800" for="newSourceMinSigSelect">New Source Min Sigma</label>
                 <a href="#" data-toggle="tooltip" data-placement="top" title=
                     "For a source to be flagged as a new source it must first meet the requirement that any previous images it could have been seen in,
