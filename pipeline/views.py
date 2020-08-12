@@ -89,33 +89,8 @@ def Home(request):
 # Runs table
 @login_required
 def RunIndex(request):
-
-    def wrap_init_run(run_details, run_config):
-        '''
-        wrap initialise_run to handle 404 errors
-        '''
-        try:
-            p_run = initialise_run(
-                **run_details,
-                config=run_config,
-                # cmd_f=False
-            )
-            messages.success(
-                request,
-                f'Pipeline run {p_run.name} initilialised successfully!'
-            )
-            return p_run, 'ok'
-        except Exception as e:
-            messages.error(
-                request,
-                f'Issue in pipeline run initilisation: {e}'
-            )
-            raise Http404(f'Error: {e}')
-            # return None, 'error'
-
     if request.method == 'POST':
-        # this post is for writing the config text (modified or not) from the
-        #  UI to a config.py file
+        # this POST section is for initialise a pipeline run
         form = PipelineRunForm(request.POST)
         if form.is_valid():
             # TODO: re-write files lists into the form, couldn't get it to work
@@ -212,6 +187,8 @@ def RunDetail(request, id):
     # build config path for POST and later
     f_path = os.path.join(p_run['path'], 'config.py')
     if request.method == 'POST':
+        # this post is for writing the config text (modified or not) from the
+        #  UI to a config.py file
         config_text = request.POST.get('config_text', None)
         if config_text:
             try:
