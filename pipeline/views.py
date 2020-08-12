@@ -263,6 +263,7 @@ def MeasurementIndex(request):
         'flux_peak',
         'flux_peak_err',
         'compactness',
+        'snr',
         'has_siblings',
         'forced'
     ]
@@ -294,6 +295,7 @@ def MeasurementIndex(request):
                     'Peak Flux (mJy/beam)',
                     'Peak Flux Error (mJy/beam)',
                     'Compactness',
+                    'SNR',
                     'Has siblings',
                     'Forced Extraction'
                 ],
@@ -410,6 +412,8 @@ class SourceViewSet(ModelViewSet):
             'n_rel',
             'new_high_sigma',
             'avg_compactness',
+            'max_snr',
+            'avg_snr',
             'n_neighbour_dist'
         ]
 
@@ -473,6 +477,8 @@ def SourceQuery(request):
         'avg_flux_int',
         'avg_flux_peak',
         'max_flux_peak',
+        'max_snr',
+        'avg_snr',
         'avg_compactness',
         'n_meas',
         'n_meas_sel',
@@ -510,6 +516,8 @@ def SourceQuery(request):
                     'Avg. Int. Flux (mJy)',
                     'Avg. Peak Flux (mJy/beam)',
                     'Max Peak Flux (mJy/beam)',
+                    'Max SNR',
+                    'Avg. SNR',
                     'Avg. Compactness',
                     'Total Datapoints',
                     'Selavy Datapoints',

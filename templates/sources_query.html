@@ -92,6 +92,9 @@
             <option value="v_int" selected>Int Flux</option>
             <option value="v_peak">Peak Flux</option>
           </select>
+          <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Max SNR</h1>
+          <input id="MaxSnrMinSelect" type="number" class="form-control bg-light border-0 small" placeholder="Min" min="0" step="1" aria-label="MaxSnrMinSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <input id="MaxSnrMaxSelect" type="number" class="form-control bg-light border-0 small" placeholder="Max" min="0" step="1" aria-label="MaxSnrMaxSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
         </div>
         <div class="col-lg-1">
           <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">&eta; Metric</h1>
@@ -101,6 +104,9 @@
             <option value="eta_int" selected>Int Flux</option>
             <option value="eta_peak">Peak Flux</option>
           </select>
+          <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Avg. SNR</h1>
+          <input id="AvgSnrMinSelect" type="number" class="form-control bg-light border-0 small" placeholder="Min" min="0" step="1" aria-label="AvgSnrMinSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
+          <input id="AvgSnrMaxSelect" type="number" class="form-control bg-light border-0 small" placeholder="Max" min="0" step="1" aria-label="AvgSnrMaxSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
         </div>
         <div class="col-lg-1">
           <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Datapoints</h1>
@@ -114,7 +120,7 @@
           <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Selavy</h1>
           <input id="SelavyMinSelect" type="number" class="form-control bg-light border-0 small" placeholder="Min" min="1" step="1" aria-label="SelavyMinSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
           <input id="SelavyMaxSelect" type="number" class="form-control bg-light border-0 small" placeholder="Max" min="1" step="1" aria-label="SelavyMaxSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
-          <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">Forced</h1>
+          <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:2rem">Forced</h1>
           <input id="ForcedMinSelect" type="number" class="form-control bg-light border-0 small" placeholder="Min" min="0" step="1" aria-label="ForcedMinSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
           <input id="ForcedMaxSelect" type="number" class="form-control bg-light border-0 small" placeholder="Max" min="0" step="1" aria-label="ForcedMaxSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
         </div>
@@ -141,7 +147,7 @@
             <input class="custom-control-input" id="containsSiblingsSelect" type="checkbox">
             <label class="custom-control-label" for="containsSiblingsSelect" style="margin-bottom:1rem">No siblings</label>
           </div>
-        <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:1rem">New Source High Sigma</h1>
+        <h1 class="h6 mb-2 font-weight-bold text-gray-800" style="margin-top:2.5rem">New Source High Sigma</h1>
         <input id="NewSigmaMinSelect" type="number" class="form-control bg-light border-0 small" placeholder="Min" min="0" step="1" aria-label="NewSigmaMinSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
         <input id="NewSigmaMaxSelect" type="number" class="form-control bg-light border-0 small" placeholder="Max" min="0" step="1" aria-label="NewSigmaMaxSearch" aria-describedby="basic-addon2" style="margin-bottom:1rem">
         </div>
