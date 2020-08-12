@@ -5,8 +5,8 @@ class PipelineError(Exception):
 
     def __init__(self, msg=None):
         self.msg = (
-            'Generic Pipeline error: {0}.'.format(msg) if msg else
-            'Generic Pipeline error.'
+            'Pipeline error: {0}.'.format(msg) if msg else
+            'Undefined Pipeline error.'
         )
 
     def __str__(self):

@@ -98,39 +98,52 @@ def RunIndex(request):
             p_run = initialise_run(
                 **run_details,
                 config=run_config,
-                cmd_f=False
+                # cmd_f=False
             )
-            return p_run
+            messages.success(
+                request,
+                f'Pipeline run {p_run.name} initilialised successfully!'
+            )
+            return p_run, 'ok'
         except Exception as e:
-            # raise Http404(f'Error: {e}')
-            pass
+            messages.error(
+                request,
+                f'Issue in pipeline run initilisation: {e}'
+            )
+            raise Http404(f'Error: {e}')
+            # return None, 'error'
 
     if request.method == 'POST':
+        # this post is for writing the config text (modified or not) from the
+        #  UI to a config.py file
         form = PipelineRunForm(request.POST)
         if form.is_valid():
+            # TODO: re-write files lists into the form, couldn't get it to work
+            cfg_data = form.cleaned_data
+
+            # get the user data
+            run_dict = {
+                key: val for key, val in cfg_data.items() if 'run' in key
+            }
+
+            # remove user data from run config data
+            for key in run_dict.keys():
+                cfg_data.pop(key)
+
+            run_dict['user'] = request.user
+
+            f_list = [
+                'image_files', 'selavy_files', 'background_files',
+                'noise_files'
+            ]
+            for files in f_list:
+                cfg_data[files] = request.POST.getlist(files)
+
             try:
-                # TODO: re-write files lists into the form, couldn't get it to work
-                cfg_data = form.cleaned_data
-
-                # get the user data
-                run_dict = {
-                    key: val for key, val in cfg_data.items() if 'run' in key
-                }
-
-                # remove user data from run config data
-                for key in run_dict.keys():
-                    cfg_data.pop(key)
-
-                run_dict['user'] = request.user
-
-                f_list = [
-                    'image_files', 'selavy_files', 'background_files',
-                    'noise_files'
-                ]
-                for files in f_list:
-                    cfg_data[files] = request.POST.getlist(files)
-
-                p_run = wrap_init_run(run_dict, cfg_data)
+                p_run = initialise_run(
+                    **run_dict,
+                    config=cfg_data
+                )
                 messages.success(
                     request,
                     f'Pipeline run {p_run.name} initilialised successfully!'
@@ -141,12 +154,13 @@ def RunIndex(request):
                     request,
                     f'Issue in pipeline run initilisation: {e}'
                 )
+                return redirect('pipeline:run_index')
         else:
             messages.error(
                 request,
                 f'Form not valid: {form.errors}'
             )
-
+            return redirect('pipeline:run_index')
 
     fields = [
         'name',
