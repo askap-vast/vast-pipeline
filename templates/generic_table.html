@@ -125,6 +125,13 @@
                   "Forced extractions will be peformed both forwards and backwards in time to fill in 'gaps' in the lightcurves. Be aware that this will                        increase processing time."
               ><i class="fas fa-info-circle"></i></a>
             </div>
+            <label for="bkgFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select background files for use in monitoring</label>
+            <a href="#" data-toggle="tooltip" data-placement="top" title=
+                "Only required if you are using the monitoring feature. The background maps for the selected images to process. 
+                The order must match."
+            ><i class="fas fa-info-circle"></i></a>
+            <select id="bkgFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-header="Choose background files" data-actions-box="true" name="background_files" data-selected-text-format="count > 5" disabled>
+            </select>
             <div class="row">
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="monitorMinSigmaSelect">Monitor Min Sigma</label>
@@ -144,12 +151,6 @@
                 <input id="monitorEdgeBufferScaleSelect" type="number" class="form-control bg-light border-0 wrap-form-control-readonly" value="{{ runconfig.monitor_edge_buffer_scale }}" min="0" step="0.01" aria-label="monitorEdgeBufferScaleSearch" aria-describedby="basic-addon2" name="monitor_edge_buffer_scale" readonly>
               </div>
             </div>
-            <label for="bkgFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select background files</label>
-            <a href="#" data-toggle="tooltip" data-placement="top" title=
-                "The background maps for the selected images to process. The order must match."
-            ><i class="fas fa-info-circle"></i></a>
-            <select id="bkgFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-header="Choose background files" data-actions-box="true" name="background_files" data-selected-text-format="count > 5" disabled>
-            </select>
             <div class="row">
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="associationTypeSelect">Association Method</label>
