@@ -1,5 +1,16 @@
 {% extends "base.html" %}
+{% load static %}
 {% load humanize %}
+
+
+{% block head %}
+
+<!-- PrismJS CSS -->
+<link rel="stylesheet" href="{% static 'vendor/prismjs/prism.css' %}">
+<link rel="stylesheet" href="{% static 'vendor/prismjs/line-numbers/prism-line-numbers.css' %}">
+
+{% endblock head %}
+
 
 {% block breadcrumb %}
 
@@ -24,13 +35,12 @@
   <div class="row">
 		<!-- Nr Images -->
       <div class="col-xl-3 col-md-6 mb-4">
-      {# <div class="col-xl-3 mb-4"> #}
         <div class="card border-left-primary shadow h-100 py-2">
           <div class="card-body">
             <div class="row no-gutters align-items-center">
               <div class="col mr-2">
                 <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Nr Images</div>
-                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ p_run.nr_imgs|intcomma }}</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ p_run.n_images|intcomma }}</div>
               </div>
               <div class="col-auto">
                 <i class="fas fa-images fa-2x text-gray-300"></i>
@@ -39,16 +49,14 @@
           </div>
         </div>
       </div>
-
 			<!-- Nr Catalogs -->
       <div class="col-xl-3 col-md-6 mb-4">
-      {# <div class="col-xl-3 mb-4"> #}
         <div class="card border-left-warning shadow h-100 py-2">
           <div class="card-body">
             <div class="row no-gutters align-items-center">
               <div class="col mr-2">
                 <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Total Nr Sources</div>
-                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ p_run.nr_srcs|intcomma }}</div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ p_run.n_sources|intcomma }}</div>
               </div>
               <div class="col-auto">
                 <i class="fas fa-share-alt fa-2x text-gray-300"></i>
@@ -57,10 +65,8 @@
           </div>
         </div>
       </div>
-
 			<!-- Extracted Sources -->
       <div class="col-xl-3 col-md-6 mb-4">
-      {# <div class="col-xl-3 mb-4"> #}
         <div class="card border-left-info shadow h-100 py-2">
           <div class="card-body">
             <div class="row no-gutters align-items-center">
@@ -75,10 +81,8 @@
           </div>
         </div>
       </div>
-
 			<!-- Extracted Sources -->
       <div class="col-xl-3 col-md-6 mb-4">
-      {# <div class="col-xl-3 mb-4"> #}
         <div class="card border-left-success shadow h-100 py-2">
           <div class="card-body">
             <div class="row no-gutters align-items-center">
@@ -93,29 +97,105 @@
           </div>
         </div>
       </div>
-
 	</div>
 
   <div class="row">
-  	<div class="col-lg-6">
-
-      <!-- Basic Card Example -->
+  	<div class="col-lg-3">
       <div class="card shadow mb-4">
         <div class="card-header py-3">
           <h6 class="m-0 font-weight-bold text-primary">Details</h6>
         </div>
         <div class="card-body">
-          <p><strong>User: </strong>Guest</p>
+          <p><strong>User: </strong>{% if p_run.user %}
+          {{ p_run.user }}
+          {% else %}
+          None (executed from command line)
+          {% endif %}</p>
           <p><strong>Processing Datetime: </strong> {{ p_run.time }}</p>
           <p><strong>Run Status: </strong> {{ p_run.status }}</p>
           <p><strong>Comment: </strong> {{ p_run.comment }}</p>
         </div>
       </div>
-
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">User Comments</h6>
+        </div>
+        <div class="card-body">
+          TBC
+        </div>
+      </div>
   	</div>
-	</div>
+    <div class="col-lg-9">
+      <!-- config file card -->
+      <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+          <h6 class="m-0 font-weight-bold text-primary">Config File</h6>
+          <h6 id="editModeTitle" class="m-0 font-weight-bold text-warning" hidden><i>- - - Edit mode - - -</i></h6>
+          <div class="dropdown no-arrow">
+            <a class="dropdown-toggle" href="#" role="button" id="dropdownRunConfig" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownRunConfig">
+              <div class="dropdown-header">Actions:</div>
+              <a id="editConfig" class="dropdown-item" href="#">Toggle on/off Config Edit</a>
+              <a class="dropdown-item" href="#" data-toggle="modal" data-target="#feedbackModal">Validate Config</a>
+              {% csrf_token %}
+              <a id="writeConfig"  class="dropdown-item" href="#">Write Current Config</a>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <pre id="runConfigText" class="pre-scrollable" contenteditable="false"><code id="runConfigTextCode" class="language-python line-numbers" style="white-space: pre">{{ p_run.config_txt }}</code></pre>
+        </div>
+      </div>
+      <!-- log file card -->
+      <div class="card shadow mb-4">
+        <a href="#collapseLogCard" class="d-block card-header py-3" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="collapseLogCard">
+          <h6 class="m-0 font-weight-bold text-primary">Log File</h6>
+        </a>
+        <div class="collapse" id="collapseLogCard">
+          <div class="card-body">
+            <pre class="pre-scrollable"><code>{% if p_run.log_txt %}{{ p_run.log_txt }}{% else %}N.A.{% endif %}</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
 </div>
 <!-- /.container-fluid -->
 
 {% endblock content %}
+
+
+{% block modal %}
+<div  id="feedbackModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div id="feedbackModalDialog" class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Feedback</h5>
+        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock modal %}
+
+
+{% block custom_page_scripts %}
+
+<!-- PrismJS -->
+<script src="{% static 'vendor/prismjs/prism.js' %}"></script>
+<script src="{% static 'vendor/prismjs/prism-python.min.js' %}"></script>
+<script src="{% static 'vendor/prismjs/line-numbers/prism-line-numbers.min.js' %}"></script>
+
+<script id="runDetailScript" src="{% static 'js/run-detail.min.js' %}" apiValidateUrl="{% url 'pipeline:api_validateruncfg-detail' p_run.name %}" apiWriteCfgUrl="{% url 'pipeline:run_detail' p_run.id %}"></script>
+
+{% endblock custom_page_scripts %}

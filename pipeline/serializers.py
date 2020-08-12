@@ -86,3 +86,14 @@ class SourceSerializer(serializers.ModelSerializer):
 
     def get_wavg_dec(self, source):
         return deg2dms(source.wavg_dec, dms_format=True)
+
+
+class RawImageSelavyObjSerializer(serializers.Serializer):
+    path = serializers.CharField()
+    title = serializers.CharField()
+    datatokens = serializers.CharField()
+
+
+class RawImageSelavyListSerializer(serializers.Serializer):
+    fits = RawImageSelavyObjSerializer(many=True)
+    selavy = RawImageSelavyObjSerializer(many=True)
