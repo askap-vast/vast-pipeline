@@ -68,17 +68,15 @@ def Home(request):
     totals['nr_pruns'] = Run.objects.count()
     totals['nr_imgs'] = Image.objects.count()
     totals['nr_srcs'] = Source.objects.count()
+    meas_glob = glob(os.path.join(
+        settings.PIPELINE_WORKING_DIR,
+        'images/**/measurements.parquet',
+    ))
     totals['nr_meas'] = (
-        dd.read_parquet(
-            os.path.join(
-                settings.PIPELINE_WORKING_DIR,
-                'images/**/measurements.parquet',
-            ),
-            columns='id'
-        )
+        dd.read_parquet(meas_glob, columns='id')
         .count()
         .compute()
-    )
+    ) if meas_glob else 0
     context = {
         'totals': totals,
         'd3_celestial_skyregions': get_skyregions_collection()
