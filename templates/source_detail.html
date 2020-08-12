@@ -30,11 +30,13 @@
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
 	  <h1 class="h3 mb-2 text-gray-800"><strong>Source:</strong> {{ source.name }}</h1>
     <div class="">
-      <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-success btn-icon-split shadow-sm" data-toggle="modal" data-target="#starSource">
-        <span class="icon text-white-600">
-          <i class="fas fa-star fa-sm"></i>
-        </span>
-      </a>
+      <span {% if not sourcefav  %}data-toggle="modal"{% endif %} data-target="#starSource">
+        <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm" data-toggle="tooltip" title="Add to favourites" >
+          <span class="icon text-white-600">
+            <i class="fas fa-star" {% if sourcefav  %}style="color: #ffe271"{% endif %}></i>
+          </span>
+        </a>
+      </span>
       <a href="http://simbad.u-strasbg.fr/simbad/sim-coo?CooEpoch=2000&Coord={{ source.aladin_ra }}d{{ source.aladin_dec }}d&Radius.unit=arcmin&CooEqui=2000&CooFrame=FK5&Radius=10'" class="d-none d-sm-inline-block btn btn-sm btn-info btn-icon-split shadow-sm" target="_blank">
         <span class="icon text-white-600">
           <i class="fas fa-info-circle fa-sm"></i>
@@ -239,6 +241,9 @@
 
 {{ measurements.dataQuery|json_script:"data-js9" }}
 <script type="text/javascript">
+  // $(document).ready(function() {
+    // $('[data-toggle="tooltip"]').tooltip();
+  // });
   function loadFitsImage(imageName, displayId) {
     return new Promise(resolve => {
       JS9.Load(

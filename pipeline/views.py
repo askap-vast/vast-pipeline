@@ -656,7 +656,18 @@ def SourceDetail(request, id, action=None):
         'order': [2, 'asc']
     }
 
-    context = {'source': source, 'measurements': measurements}
+    context = {
+        'source': source,
+        'measurements': measurements,
+        # falg to deactivate starring and render yellow star
+        'sourcefav': (
+            SourceFav.objects.filter(
+                user__id=request.user.id,
+                source__id=source['id']
+            )
+            .exists()
+        )
+    }
     return render(request, 'source_detail.html', context)
 
 
@@ -822,11 +833,9 @@ class SourceFavViewSet(ModelViewSet):
         #     serializer.save()
         #     return Response(serializer.data, status=status.HTTP_201_CREATED)
         # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        data = dict(
-            source_id = request.data.get('source_id'),
-            user_id = request.user.id,
-            comment = request.data.get('comment')
-        )
+        data = request.data.dict()
+        data.pop('csrfmiddlewaretoken')
+        data['user_id'] = request.user.id
         try:
             check = (
                 SourceFav.objects.filter(
