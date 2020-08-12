@@ -72,11 +72,12 @@ def Home(request):
         settings.PIPELINE_WORKING_DIR,
         'images/**/measurements.parquet',
     ))
+    check_run_db = Run.objects.exists()
     totals['nr_meas'] = (
         dd.read_parquet(meas_glob, columns='id')
         .count()
         .compute()
-    ) if meas_glob else 0
+    ) if (check_run_db and meas_glob) else 0
     context = {
         'totals': totals,
         'd3_celestial_skyregions': get_skyregions_collection()
