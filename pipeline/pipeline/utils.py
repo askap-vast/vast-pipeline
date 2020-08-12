@@ -178,7 +178,8 @@ def prep_skysrc_df(image, perc_error, ini_df=False):
     'flux_peak_err',
     'forced',
     'compactness',
-    'has_siblings'
+    'has_siblings',
+    'snr'
     ]
 
     df = pd.read_parquet(image.measurements_path, columns=cols)
@@ -266,10 +267,19 @@ def groupby_funcs(df):
         d['avg_compactness'] = df.loc[
             non_forced_sel, 'compactness'
         ].mean()
+        d['max_snr'] = df.loc[
+            non_forced_sel, 'snr'
+        ].max()
+        d['avg_snr'] = df.loc[
+            non_forced_sel, 'snr'
+        ].mean()
+
     else:
         d['wavg_ra'] = df['interim_ew'].sum() / df['weight_ew'].sum()
         d['wavg_dec'] = df['interim_ns'].sum() / df['weight_ns'].sum()
         d['avg_compactness'] = df['compactness'].mean()
+        d['max_snr'] = df['snr'].max()
+        d['avg_snr'] = df['snr'].mean()
 
     d['wavg_uncertainty_ew'] = 1. / np.sqrt(df['weight_ew'].sum())
     d['wavg_uncertainty_ns'] = 1. / np.sqrt(df['weight_ns'].sum())
@@ -308,6 +318,8 @@ def parallel_groupby(df):
         'wavg_ra': 'f',
         'wavg_dec': 'f',
         'avg_compactness': 'f',
+        'max_snr': 'f',
+        'avg_snr': 'f',
         'wavg_uncertainty_ew': 'f',
         'wavg_uncertainty_ns': 'f',
         'avg_flux_int': 'f',

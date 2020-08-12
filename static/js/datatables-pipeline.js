@@ -241,6 +241,22 @@ $(document).ready(function() {
     if (compactness_max.value) {
       qry_url = qry_url + "&max_avg_compactness=" + compactness_max.value;
     };
+    let max_snr_min = document.getElementById("MaxSnrMinSelect");
+    let max_snr_max = document.getElementById("MaxSnrMaxSelect");
+    if (max_snr_min.value) {
+      qry_url = qry_url + "&min_max_snr=" + max_snr_min.value;
+    };
+    if (max_snr_max.value) {
+      qry_url = qry_url + "&max_max_snr=" + max_snr_max.value;
+    };
+    let avg_snr_min = document.getElementById("AvgSnrMinSelect");
+    let avg_snr_max = document.getElementById("AvgSnrMaxSelect");
+    if (avg_snr_min.value) {
+      qry_url = qry_url + "&min_avg_snr=" + avg_snr_min.value;
+    };
+    if (avg_snr_max.value) {
+      qry_url = qry_url + "&max_avg_snr=" + avg_snr_max.value;
+    };
     let selavy_min = document.getElementById("SelavyMinSelect");
     let selavy_max = document.getElementById("SelavyMaxSelect");
     if (selavy_min.value) {
