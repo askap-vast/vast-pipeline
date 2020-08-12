@@ -61,6 +61,7 @@ class MeasurementSerializer(serializers.ModelSerializer):
             'flux_peak',
             'flux_peak_err',
             'compactness',
+            'snr',
             'has_siblings',
             'forced',
         ]
@@ -124,3 +125,14 @@ class SourceFavSerializer(serializers.ModelSerializer):
 
     def get_piperun(self, obj):
         return obj.source.run.name
+
+
+class RawImageSelavyObjSerializer(serializers.Serializer):
+    path = serializers.CharField()
+    title = serializers.CharField()
+    datatokens = serializers.CharField()
+
+
+class RawImageSelavyListSerializer(serializers.Serializer):
+    fits = RawImageSelavyObjSerializer(many=True)
+    selavy = RawImageSelavyObjSerializer(many=True)

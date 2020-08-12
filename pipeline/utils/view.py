@@ -95,12 +95,24 @@ FLOAT_FIELDS = {
         'scale': 1,
     },
     'avg_compactness': {
-        'precision': 3,
+        'precision': 2,
         'scale': 1,
     },
     'n_neighbour_dist': {
         'precision': 2,
         'scale': 60.,
+    },
+    'snr': {
+        'precision': 2,
+        'scale': 1,
+    },
+    'max_snr': {
+        'precision': 2,
+        'scale': 1,
+    },
+    'avg_snr': {
+        'precision': 2,
+        'scale': 1,
     },
 }
 

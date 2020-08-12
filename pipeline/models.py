@@ -130,6 +130,8 @@ class Run(models.Model):
     A Run is essentially a pipeline run/processing istance over a set of
     images
     """
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+
     name = models.CharField(
         max_length=64,
         unique=True,
@@ -307,6 +309,12 @@ class Source(models.Model):
     )
     avg_compactness = models.FloatField(
         help_text='The average compactness.'
+    )
+    max_snr = models.FloatField(
+        help_text='The maximum signal-to-noise ratio value of the detections.'
+    )
+    avg_snr = models.FloatField(
+        help_text='The average signal-to-noise ratio value of the detections.'
     )
 
     # metrics
@@ -598,6 +606,10 @@ class Measurement(models.Model):
     local_rms = models.FloatField(
         help_text='Local rms in mJy from Selavy.'
     )# mJy/beam
+
+    snr = models.FloatField(
+        help_text='Signal-to-noise ratio of the measurement.'
+    )
 
     flag_c4 = models.BooleanField(
         default=False,

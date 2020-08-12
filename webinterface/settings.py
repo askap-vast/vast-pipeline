@@ -234,6 +234,11 @@ SURVEYS_WORKING_DIR = env('SURVEYS_WORKING_DIR', cast=str, default=os.path.join(
 if '/' not in SURVEYS_WORKING_DIR:
     SURVEYS_WORKING_DIR = os.path.join(BASE_DIR, SURVEYS_WORKING_DIR)
 
+# raw image data folder (containing FITS files, selavy, etc)
+RAW_IMAGE_DIR = env('RAW_IMAGE_DIR', cast=str, default=os.path.join(BASE_DIR, 'raw-images'))
+if '/' not in RAW_IMAGE_DIR:
+    RAW_IMAGE_DIR = os.path.join(BASE_DIR, RAW_IMAGE_DIR)
+
 # allowed source finders
 SOURCE_FINDERS = ['selavy']
 
