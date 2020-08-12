@@ -884,7 +884,7 @@ class SourceFavViewSet(ModelViewSet):
 
 @login_required
 def UserSourceFavsList(request):
-    fields = ['source.name', 'comment', 'deletefield']
+    fields = ['source.name', 'comment', 'piperun', 'deletefield']
 
     colsfields = generate_colsfields(fields, '/sources/')
 
@@ -903,7 +903,7 @@ def UserSourceFavsList(request):
                     f'?format=datatables&user={request.user.username}'
                 ),
                 'colsFields': colsfields,
-                'colsNames': ['Source', 'Comment', 'Delete'],
+                'colsNames': ['Source', 'Comment', 'Pipeline Run', 'Delete'],
                 'search': True,
             }
         }

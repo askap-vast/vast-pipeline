@@ -106,6 +106,7 @@ class SourceNameSerializer(serializers.ModelSerializer):
 class SourceFavSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     source = SourceNameSerializer(read_only=True)
+    piperun = serializers.SerializerMethodField()
     deletefield = serializers.SerializerMethodField()
 
     class Meta:
@@ -120,3 +121,6 @@ class SourceFavSerializer(serializers.ModelSerializer):
             '<i class="fas fa-trash"></i></a>'
         )
         return string
+
+    def get_piperun(self, obj):
+        return obj.source.run.name
