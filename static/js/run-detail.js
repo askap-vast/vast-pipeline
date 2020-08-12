@@ -9,6 +9,13 @@ $(document).ready(function() {
     let edit_txt_check = document.getElementById('editModeTitle').hidden;
     $('#editModeTitle').prop('hidden', !edit_txt_check);
     $('#runConfigText').prop('contenteditable', edit_txt_check);
+    if (!edit_txt_check) {
+      let pre_tag = document.getElementById('runConfigText'),
+        code = document.getElementById('runConfigTextCode');
+      code.innerHTML = pre_tag.innerText
+      pre_tag.innerHTML = code.outerHTML
+      Prism.highlightElement(pre_tag.firstChild);
+    }
   });
 
   $('#feedbackModal').on('show.bs.modal', function(e) {
@@ -27,7 +34,7 @@ $(document).ready(function() {
   });
 
   $("#writeConfig").on('click', function(e) {
-    let cfg_text = document.getElementById('runConfigText').textContent;
+    let cfg_text = document.getElementById('runConfigText').innerText;
     let apiUrl = document.getElementById('runDetailScript').getAttribute('apiWriteCfgUrl');
     function getCookie(name) {
       let cookieValue = null;
