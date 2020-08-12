@@ -127,7 +127,7 @@
             </div>
             <label for="bkgFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select background files for use in monitoring</label>
             <a href="#" data-toggle="tooltip" data-placement="top" title=
-                "Only required if you are using the monitoring feature. The background maps for the selected images to process. 
+                "Only required if you are using the monitoring feature. The background maps for the selected images to process.
                 The order must match."
             ><i class="fas fa-info-circle"></i></a>
             <select id="bkgFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-header="Choose background files" data-actions-box="true" name="background_files" data-selected-text-format="count > 5" disabled>
@@ -143,21 +143,14 @@
               </div>
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="monitorEdgeBufferScaleSelect">Monitor Edge Buffer Scale</label>
-                <a href="#" data-toggle="tooltip" data-placement="top" title=
-                    "The monitoring can sometimes fail when sources are near the edge of the image. While a minimum distance limit from the image edge
-                    is already in place this is sometimes not enough, in these cases this buffer value can be increased to avoid errors. Hence, only worry
-                    about this parameter if you are experiencing monitoring issues."
-                ><i class="fas fa-info-circle"></i></a>
+                <a href="#" data-toggle="tooltip" data-placement="top" title="The monitoring can sometimes fail when sources are near the edge of the image. While a minimum distance limit from the image edge is already in place this is sometimes not enough, in these cases this buffer value can be increased to avoid errors. Hence, only worry about this parameter if you are experiencing monitoring issues."><i class="fas fa-info-circle"></i></a>
                 <input id="monitorEdgeBufferScaleSelect" type="number" class="form-control bg-light border-0 wrap-form-control-readonly" value="{{ runconfig.monitor_edge_buffer_scale }}" min="0" step="0.01" aria-label="monitorEdgeBufferScaleSearch" aria-describedby="basic-addon2" name="monitor_edge_buffer_scale" readonly>
               </div>
             </div>
             <div class="row">
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="associationTypeSelect">Association Method</label>
-                <a href="#" data-html="true" data-toggle="tooltip" data-placement="top" title=
-                    "Select which association method you would like to use. <br /> <b>Basic</b>: Astropy nearest match.<br /> <b>Advanced</b>: Astropy                            search around sky that considers all potential matches.<br /> <b>De Ruiter</b>: Same as advanced but using the De Ruiter radius as
-                    the deciding metric."
-                ><i class="fas fa-info-circle"></i></a>
+                <a href="#" data-html="true" data-toggle="tooltip" data-placement="top" title="Select which association method you would like to use.<br /><b>Basic</b>: Astropy nearest match.<br/><b>Advanced</b>: Astropy search around sky that considers all potential matches.<br/><b>De Ruiter</b>: Same as advanced but using the De Ruiter radius as the deciding metric."><i class="fas fa-info-circle"></i></a>
                 <select id="associationTypeSelect" class="form-control bg-light border-0" aria-label="associationTypeSearch" aria-describedby="basic-addon2" name="association_method">
                   <option value="basic" selected>Basic</option>
                   <option value="advanced">Advanced</option>
@@ -195,12 +188,12 @@
                 <input id="newSourceMinSigSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.new_source_min_sigma }}" min="0" step="0.01" aria-label="newSourceMinSigSearch" aria-describedby="basic-addon2" name="new_source_min_sigma">
               </div>
               <div class="col">
-                <label class="col-form-label font-weight-bold text-gray-800" for="associationBeamWidthSelect">Association Beam Width (De Ruiter only)</label>
+                <label class="col-form-label font-weight-bold text-gray-800" for="associationBeamWidthSelect">Association Beam Width</label>
                 <a href="#" data-toggle="tooltip" data-placement="top" title=
                     "Used with the 'De Ruiter' method only. A hard limit on the distance between two associated sources which is this parameter multipled by
                     half the respective image major beam axis value."
                 ><i class="fas fa-info-circle"></i></a>
-                <input id="associationBeamWidthSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.association_beamwidth_limit }}" min="0" step="0.01" aria-label="associationBeamWidthSearch" aria-describedby="basic-addon2" name="association_beamwidth_limit">
+                <input id="associationBeamWidthSelect" type="number" class="form-control bg-light border-0 wrap-form-control-readonly" value="{{ runconfig.association_beamwidth_limit }}" min="0" step="0.01" aria-label="associationBeamWidthSearch" aria-describedby="basic-addon2" name="association_beamwidth_limit" readonly>
                 <label class="col-form-label font-weight-bold text-gray-800" for="surveySelect">Default Survey (TBC)</label>
                 <a href="#" data-toggle="tooltip" data-placement="top" title=
                     "Feature coming soon."
