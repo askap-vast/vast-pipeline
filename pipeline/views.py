@@ -1183,7 +1183,7 @@ def UserSourceFavsList(request):
         'source.name': reverse('pipeline:source_detail', args=[1])[:-2],
         'source.run.name': reverse('pipeline:run_detail', args=[1])[:-2]
     }
-    colsfields = generate_colsfields(fields, api_col_dict)
+    colsfields = generate_colsfields(fields, api_col_dict, ['deletefield'])
 
     return render(
         request,
