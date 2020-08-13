@@ -117,7 +117,7 @@ FLOAT_FIELDS = {
 }
 
 
-def generate_colsfields(fields, url_prefix):
+def generate_colsfields(fields, url_prefix_dict):
     """
     generate data to be included in context for datatable
     """
@@ -128,7 +128,7 @@ def generate_colsfields(fields, url_prefix):
             colsfields.append({
                 'data': col, 'render': {
                     'url': {
-                        'prefix': url_prefix,
+                        'prefix': url_prefix_dict[col],
                         'col': 'name'
                     }
                 }
@@ -142,7 +142,7 @@ def generate_colsfields(fields, url_prefix):
                 'data': col,
                 'render': {
                     'url': {
-                        'prefix': url_prefix,
+                        'prefix': url_prefix_dict[col],
                         'col': main_col,
                         'nested': True,
                     }

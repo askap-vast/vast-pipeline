@@ -148,7 +148,10 @@ def RunIndex(request):
         'status'
     ]
 
-    colsfields = generate_colsfields(fields, "/piperuns/")
+    colsfields = generate_colsfields(
+        fields,
+        {'name': reverse('pipeline:run_detail', args=[1])[:-2]}
+    )
 
     return render(
         request,
@@ -160,7 +163,10 @@ def RunIndex(request):
                 'breadcrumb': {'title': 'Pipeline Runs', 'url': request.path},
             },
             'datatable': {
-                'api': '/api/piperuns/?format=datatables',
+                'api': (
+                    reverse('pipeline:api_pipe_runs-list') +
+                    '?format=datatables'
+                ),
                 'colsFields': colsfields,
                 'colsNames': [
                     'Name', 'Run Datetime', 'Path', 'Comment', 'Nr Images',
@@ -283,7 +289,10 @@ def ImageIndex(request):
         'rms_max'
     ]
 
-    colsfields = generate_colsfields(fields, '/images/')
+    colsfields = generate_colsfields(
+        fields,
+        {'name': reverse('pipeline:image_detail', args=[1])[:-2]}
+    )
 
     return render(
         request,
@@ -295,7 +304,10 @@ def ImageIndex(request):
                 'breadcrumb': {'title': 'Images', 'url': request.path},
             },
             'datatable': {
-                'api': '/api/images/?format=datatables',
+                'api': (
+                    reverse('pipeline:api_images-list') +
+                    '?format=datatables'
+                ),
                 'colsFields': colsfields,
                 'colsNames': [
                     'Name',
@@ -375,7 +387,10 @@ def MeasurementIndex(request):
         'forced'
     ]
 
-    colsfields = generate_colsfields(fields, '/measurements/')
+    colsfields = generate_colsfields(
+        fields,
+        {'name': reverse('pipeline:measurement_detail', args=[1])[:-2]}
+    )
 
     return render(
         request,
@@ -387,7 +402,10 @@ def MeasurementIndex(request):
                 'breadcrumb': {'title': 'Measurements', 'url': request.path},
             },
             'datatable': {
-                'api': '/api/measurements/?format=datatables',
+                'api': (
+                    reverse('pipeline:api_measurements-list') +
+                    '?format=datatables'
+                ),
                 'colsFields': colsfields,
                 'colsNames': [
                     'Name',
@@ -601,7 +619,10 @@ def SourceQuery(request):
         'new_high_sigma'
     ]
 
-    colsfields = generate_colsfields(fields, '/sources/')
+    colsfields = generate_colsfields(
+        fields,
+        {'name': reverse('pipeline:source_detail', args=[1])[:-2]}
+    )
 
     # get all pipeline run names
     p_runs = list(Run.objects.values('name').all())
@@ -613,7 +634,10 @@ def SourceQuery(request):
             'breadcrumb': {'title': 'Sources', 'url': request.path},
             'runs': p_runs,
             'datatable': {
-                'api': '/api/sources/?format=datatables',
+                'api': (
+                    reverse('pipeline:api_sources-list') +
+                    '?format=datatables'
+                ),
                 'colsFields': colsfields,
                 'colsNames': [
                     'Name',
@@ -1155,7 +1179,11 @@ class SourceFavViewSet(ModelViewSet):
 def UserSourceFavsList(request):
     fields = ['source.name', 'comment', 'source.run.name', 'deletefield']
 
-    colsfields = generate_colsfields(fields, '/sources/')
+    api_col_dict = {
+        'source.name': reverse('pipeline:source_detail', args=[1])[:-2],
+        'source.run.name': reverse('pipeline:run_detail', args=[1])[:-2]
+    }
+    colsfields = generate_colsfields(fields, api_col_dict)
 
     return render(
         request,
