@@ -137,7 +137,7 @@ def generate_colsfields(fields, url_prefix):
             # this is for nested fields to build a render with column name
             # and id in url. The API results should look like:
             # {... , main_col : {'name': value, 'id': value, ... }}
-            main_col = col.split('.')[0]
+            main_col = col.rsplit('.', 1)[0]
             colsfields.append({
                 'data': col,
                 'render': {

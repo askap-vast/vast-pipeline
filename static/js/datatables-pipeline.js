@@ -5,7 +5,10 @@ function obj_formatter(obj) {
     if (obj.render.url.hasOwnProperty('nested')) {
       let [prefix, col] = [obj.render.url.prefix, obj.render.url.col];
       hrefValue = function(data, type, row, meta) {
-        return '<a href="' + prefix + row[col].id + ' "target="_blank">' + data + '</a>';
+        // split the col on the . for nested JSON and build the selection
+        let sel = row;
+        col.split('.').forEach(item => sel = sel[item]);
+        return '<a href="' + prefix + sel.id + ' "target="_blank">' + data + '</a>';
       };
     } else {
       let [prefix, col] = [obj.render.url.prefix, obj.render.url.col];
@@ -49,7 +52,7 @@ $(document).ready(function() {
     let testFields = dataConf.colsFields;
     testFields.forEach( function(obj) {
       if (obj.hasOwnProperty('render')) {
-          obj = obj_formatter(obj)
+        obj = obj_formatter(obj)
       }
     });
     var dataTableConf = {

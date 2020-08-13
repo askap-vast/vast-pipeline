@@ -97,17 +97,24 @@ class UserSerializer(serializers.ModelSerializer):
         fields =['username']
 
 
+class RunNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Run
+        fields = ['id', 'name']
+        datatables_always_serialize = ('id',)
+
+
 class SourceNameSerializer(serializers.ModelSerializer):
+    run = RunNameSerializer()
     class Meta:
         model = Source
-        fields= ['id', 'name']
+        fields= ['id', 'name', 'run']
         datatables_always_serialize = ('id',)
 
 
 class SourceFavSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     source = SourceNameSerializer(read_only=True)
-    piperun = serializers.SerializerMethodField()
     deletefield = serializers.SerializerMethodField()
 
     class Meta:
@@ -122,9 +129,6 @@ class SourceFavSerializer(serializers.ModelSerializer):
             '<i class="fas fa-trash"></i></a>'
         )
         return string
-
-    def get_piperun(self, obj):
-        return obj.source.run.name
 
 
 class RawImageSelavyObjSerializer(serializers.Serializer):

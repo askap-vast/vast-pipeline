@@ -1153,7 +1153,7 @@ class SourceFavViewSet(ModelViewSet):
 
 @login_required
 def UserSourceFavsList(request):
-    fields = ['source.name', 'comment', 'piperun', 'deletefield']
+    fields = ['source.name', 'comment', 'source.run.name', 'deletefield']
 
     colsfields = generate_colsfields(fields, '/sources/')
 
