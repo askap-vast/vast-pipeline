@@ -310,11 +310,11 @@ class Source(models.Model):
     avg_compactness = models.FloatField(
         help_text='The average compactness.'
     )
+    min_snr = models.FloatField(
+        help_text='The minimum signal-to-noise ratio value of the detections.'
+    )
     max_snr = models.FloatField(
         help_text='The maximum signal-to-noise ratio value of the detections.'
-    )
-    avg_snr = models.FloatField(
-        help_text='The average signal-to-noise ratio value of the detections.'
     )
 
     # metrics

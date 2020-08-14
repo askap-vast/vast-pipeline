@@ -537,8 +537,8 @@ class SourceViewSet(ModelViewSet):
             'n_rel',
             'new_high_sigma',
             'avg_compactness',
+            'min_snr',
             'max_snr',
-            'avg_snr',
             'n_neighbour_dist'
         ]
 
@@ -602,8 +602,8 @@ def SourceQuery(request):
         'avg_flux_int',
         'avg_flux_peak',
         'max_flux_peak',
+        'min_snr',
         'max_snr',
-        'avg_snr',
         'avg_compactness',
         'n_meas',
         'n_meas_sel',
@@ -647,8 +647,8 @@ def SourceQuery(request):
                     'Avg. Int. Flux (mJy)',
                     'Avg. Peak Flux (mJy/beam)',
                     'Max Peak Flux (mJy/beam)',
+                    'Min SNR',
                     'Max SNR',
-                    'Avg. SNR',
                     'Avg. Compactness',
                     'Total Datapoints',
                     'Selavy Datapoints',
