@@ -1,1 +1,2 @@
+gevent==20.6.2
 gunicorn==20.0.4
