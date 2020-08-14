@@ -1149,7 +1149,7 @@ class SourceFavViewSet(ModelViewSet):
                 f'Errors in adding source to favourites: \n{e}'
             )
 
-        return HttpResponseRedirect(reverse('pipeline:source_favs'))
+        return HttpResponseRedirect(reverse('pipeline:source_detail', args=[data['source_id']]))
 
     def destroy(self, request, pk=None):
         try:
