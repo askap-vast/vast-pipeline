@@ -106,11 +106,11 @@ FLOAT_FIELDS = {
         'precision': 2,
         'scale': 1,
     },
-    'max_snr': {
+    'min_snr': {
         'precision': 2,
         'scale': 1,
     },
-    'avg_snr': {
+    'max_snr': {
         'precision': 2,
         'scale': 1,
     },
