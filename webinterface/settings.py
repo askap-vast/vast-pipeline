@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_datatables',
     'social_django',
+    'background_task',
     # pipeline app and others
     'pipeline',
 ] + env('EXTRA_APPS', cast=list, default=[])
