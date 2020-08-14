@@ -119,12 +119,12 @@ conda activate pipeline_env
 Note that if you want to install the development requirements, graphviz needs to be installed on your system (Ubuntu: `sudo apt-get install graphviz`, Mac: `brew install graphviz`).
 
 ```bash
-pip install -r requirements/requirements-dev.txt
+pip install -r requirements/dev.txt
 ```
 or with conda (some packages will not be installed properly so check and eventually install them manually, if not with `conda`, with `pip`):
 ```bash
-while read requirement; do conda install --yes $requirement; done < requirements/requirements-dev.txt
-while read requirement; do conda install --yes $requirement; done < requirements/requirements.txt
+while read requirement; do conda install --yes $requirement; done < requirements/dev.txt
+while read requirement; do conda install --yes $requirement; done < requirements/base.txt
 ```
 
 ## Pipeline Front End Assets Quickstart
