@@ -17,7 +17,7 @@ from astropy.nddata import Cutout2D
 from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
 
-from django.http import FileResponse, Http404
+from django.http import FileResponse, Http404, HttpResponseRedirect
 from django.db.models import Count, F, Q, Case, When, Value, BooleanField
 from django.shortcuts import render, redirect
 from django.urls import reverse
@@ -25,6 +25,7 @@ from django.conf import settings
 from django.contrib import messages
 
 from rest_framework import status
+from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, ViewSet
 from rest_framework.authentication import (
@@ -36,10 +37,11 @@ from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.contrib.auth.decorators import login_required
 
 
-from .models import Image, Measurement, Run, Source
+from .models import Image, Measurement, Run, Source, SourceFav
 from .serializers import (
     ImageSerializer, MeasurementSerializer, RunSerializer,
-    SourceSerializer, RawImageSelavyListSerializer
+    SourceSerializer, RawImageSelavyListSerializer,
+    SourceFavSerializer
 )
 from .utils.utils import (
     deg2dms, deg2hms, gal2equ, ned_search, simbad_search
@@ -146,7 +148,10 @@ def RunIndex(request):
         'status'
     ]
 
-    colsfields = generate_colsfields(fields, "/piperuns/")
+    colsfields = generate_colsfields(
+        fields,
+        {'name': reverse('pipeline:run_detail', args=[1])[:-2]}
+    )
 
     return render(
         request,
@@ -158,7 +163,10 @@ def RunIndex(request):
                 'breadcrumb': {'title': 'Pipeline Runs', 'url': request.path},
             },
             'datatable': {
-                'api': '/api/piperuns/?format=datatables',
+                'api': (
+                    reverse('pipeline:api_pipe_runs-list') +
+                    '?format=datatables'
+                ),
                 'colsFields': colsfields,
                 'colsNames': [
                     'Name', 'Run Datetime', 'Path', 'Comment', 'Nr Images',
@@ -281,7 +289,10 @@ def ImageIndex(request):
         'rms_max'
     ]
 
-    colsfields = generate_colsfields(fields, '/images/')
+    colsfields = generate_colsfields(
+        fields,
+        {'name': reverse('pipeline:image_detail', args=[1])[:-2]}
+    )
 
     return render(
         request,
@@ -293,7 +304,10 @@ def ImageIndex(request):
                 'breadcrumb': {'title': 'Images', 'url': request.path},
             },
             'datatable': {
-                'api': '/api/images/?format=datatables',
+                'api': (
+                    reverse('pipeline:api_images-list') +
+                    '?format=datatables'
+                ),
                 'colsFields': colsfields,
                 'colsNames': [
                     'Name',
@@ -373,7 +387,10 @@ def MeasurementIndex(request):
         'forced'
     ]
 
-    colsfields = generate_colsfields(fields, '/measurements/')
+    colsfields = generate_colsfields(
+        fields,
+        {'name': reverse('pipeline:measurement_detail', args=[1])[:-2]}
+    )
 
     return render(
         request,
@@ -385,7 +402,10 @@ def MeasurementIndex(request):
                 'breadcrumb': {'title': 'Measurements', 'url': request.path},
             },
             'datatable': {
-                'api': '/api/measurements/?format=datatables',
+                'api': (
+                    reverse('pipeline:api_measurements-list') +
+                    '?format=datatables'
+                ),
                 'colsFields': colsfields,
                 'colsNames': [
                     'Name',
@@ -599,7 +619,10 @@ def SourceQuery(request):
         'new_high_sigma'
     ]
 
-    colsfields = generate_colsfields(fields, '/sources/')
+    colsfields = generate_colsfields(
+        fields,
+        {'name': reverse('pipeline:source_detail', args=[1])[:-2]}
+    )
 
     # get all pipeline run names
     p_runs = list(Run.objects.values('name').all())
@@ -611,7 +634,10 @@ def SourceQuery(request):
             'breadcrumb': {'title': 'Sources', 'url': request.path},
             'runs': p_runs,
             'datatable': {
-                'api': '/api/sources/?format=datatables',
+                'api': (
+                    reverse('pipeline:api_sources-list') +
+                    '?format=datatables'
+                ),
                 'colsFields': colsfields,
                 'colsNames': [
                     'Name',
@@ -766,7 +792,18 @@ def SourceDetail(request, id, action=None):
         'order': [2, 'asc']
     }
 
-    context = {'source': source, 'measurements': measurements}
+    context = {
+        'source': source,
+        'measurements': measurements,
+        # falg to deactivate starring and render yellow star
+        'sourcefav': (
+            SourceFav.objects.filter(
+                user__id=request.user.id,
+                source__id=source['id']
+            )
+            .exists()
+        )
+    }
     return render(request, 'source_detail.html', context)
 
 
@@ -1066,3 +1103,105 @@ class ValidateRunConfigSet(ViewSet):
         }
 
         return Response(msg, status=status.HTTP_202_ACCEPTED)
+
+
+class SourceFavViewSet(ModelViewSet):
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = SourceFavSerializer
+
+    def get_queryset(self):
+        qs = SourceFav.objects.all().order_by('id')
+        user = self.request.query_params.get('user')
+        if user:
+            qs = qs.filter(user__username=user)
+
+        return qs
+
+    def create(self, request):
+        # TODO: couldn't get this below to work, so need to re-write using
+        # serializer
+        # serializer = SourceFavSerializer(data=request.data)
+        # if serializer.is_valid():
+        #     serializer.save()
+        #     return Response(serializer.data, status=status.HTTP_201_CREATED)
+        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        data = request.data.dict()
+        data.pop('csrfmiddlewaretoken')
+        data['user_id'] = request.user.id
+        try:
+            check = (
+                SourceFav.objects.filter(
+                    user__id=data['user_id'],
+                    source__id=data['source_id']
+                )
+                .exists()
+            )
+            if check:
+                messages.error(request, 'Source already added to favourites!')
+            else:
+                fav = SourceFav(**data)
+                fav.save()
+                messages.info(request, 'Added to favourites successfully')
+        except Exception as e:
+            messages.error(
+                request,
+                f'Errors in adding source to favourites: \n{e}'
+            )
+
+        return HttpResponseRedirect(reverse('pipeline:source_detail', args=[data['source_id']]))
+
+    def destroy(self, request, pk=None):
+        try:
+            qs = SourceFav.objects.filter(id=pk)
+            if qs.exists():
+                qs.delete()
+                messages.success(
+                    request,
+                    'Favourite source deleted successfully'
+                )
+                return Response({'message': 'ok'}, status=status.HTTP_200_OK)
+            else:
+                messages.info(request, 'Not found')
+                return Response(
+                    {'message': 'not found'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        except Exception as e:
+            messages.error(request, 'Error in deleting the favourite source')
+            return Response(
+                {'message': 'error in request'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+@login_required
+def UserSourceFavsList(request):
+    fields = ['source.name', 'comment', 'source.run.name', 'deletefield']
+
+    api_col_dict = {
+        'source.name': reverse('pipeline:source_detail', args=[1])[:-2],
+        'source.run.name': reverse('pipeline:run_detail', args=[1])[:-2]
+    }
+    colsfields = generate_colsfields(fields, api_col_dict, ['deletefield'])
+
+    return render(
+        request,
+        'generic_table.html',
+        {
+            'text': {
+                'title': 'Favourite Sources',
+                'description': 'List of favourite (starred) sources',
+                'breadcrumb': {'title': 'Favourite Sources', 'url': request.path},
+            },
+            'datatable': {
+                'api': (
+                    reverse('pipeline:api_sources_favs-list') +
+                    f'?format=datatables&user={request.user.username}'
+                ),
+                'colsFields': colsfields,
+                'colsNames': ['Source', 'Comment', 'Pipeline Run', 'Delete'],
+                'search': True,
+            }
+        }
+    )

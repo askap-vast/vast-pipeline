@@ -1,8 +1,11 @@
 import os
+
+from django.urls import reverse
+from django.contrib.auth.models import User
 from rest_framework import serializers
 
 from .utils.utils import deg2dms, deg2hms
-from .models import Image, Measurement, Run, Source
+from .models import Image, Measurement, Run, Source, SourceFav
 
 
 class RunSerializer(serializers.ModelSerializer):
@@ -86,6 +89,46 @@ class SourceSerializer(serializers.ModelSerializer):
 
     def get_wavg_dec(self, source):
         return deg2dms(source.wavg_dec, dms_format=True)
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields =['username']
+
+
+class RunNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Run
+        fields = ['id', 'name']
+        datatables_always_serialize = ('id',)
+
+
+class SourceNameSerializer(serializers.ModelSerializer):
+    run = RunNameSerializer()
+    class Meta:
+        model = Source
+        fields= ['id', 'name', 'run']
+        datatables_always_serialize = ('id',)
+
+
+class SourceFavSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    source = SourceNameSerializer(read_only=True)
+    deletefield = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SourceFav
+        fields = '__all__'
+        datatables_always_serialize = ('id', 'source', 'user')
+
+    def get_deletefield(self, obj):
+        redirect = reverse('pipeline:api_sources_favs-detail', args=[obj.id])
+        string = (
+            f'<a href="{redirect}" class="text-danger" onclick="sendDelete(event)">'
+            '<i class="fas fa-trash"></i></a>'
+        )
+        return string
 
 
 class RawImageSelavyObjSerializer(serializers.Serializer):

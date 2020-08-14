@@ -1,35 +1,46 @@
 // Formatting function for API
 function obj_formatter(obj) {
-    if (obj.render.hasOwnProperty('url')) {
-        let [prefix, col] = [obj.render.url.prefix, obj.render.url.col];
-        let hrefValue = function(data, type, row, meta) {
-            return '<a href="' + prefix + row.id + ' "target="_blank">' + row[col] + '</a>';
-        };
-        obj.render = hrefValue;
-        return obj;
-    } else if (obj.render.hasOwnProperty('float')) {
-        let [precision, scale, col] = [
-            obj.render.float.precision,
-            obj.render.float.scale,
-            obj.render.float.col
-        ];
-        let floatFormat = function(data, type, row, meta) {
-            return (row[col] * scale).toFixed(precision);
-        };
-        obj.render = floatFormat;
-        return obj;
-    } else if (obj.render.hasOwnProperty('contains_sibl')) {
-        let col = obj.render.contains_sibl.col;
-        let sibl_bool = function(data, type, row, meta) {
-            if (row[col] > 0) {
-                return true;
-            } else {
-                return false;
-            }
-        };
-        obj.render = sibl_bool;
-        return obj;
+  if (obj.render.hasOwnProperty('url')) {
+    let hrefValue = null;
+    if (obj.render.url.hasOwnProperty('nested')) {
+      let [prefix, col] = [obj.render.url.prefix, obj.render.url.col];
+      hrefValue = function(data, type, row, meta) {
+        // split the col on the . for nested JSON and build the selection
+        let sel = row;
+        col.split('.').forEach(item => sel = sel[item]);
+        return '<a href="' + prefix + sel.id + ' "target="_blank">' + data + '</a>';
+      };
+    } else {
+      let [prefix, col] = [obj.render.url.prefix, obj.render.url.col];
+      hrefValue = function(data, type, row, meta) {
+        return '<a href="' + prefix + row.id + ' "target="_blank">' + row[col] + '</a>';
+      };
+    }
+    obj.render = hrefValue;
+    return obj;
+  } else if (obj.render.hasOwnProperty('float')) {
+    let [precision, scale, col] = [
+      obj.render.float.precision,
+      obj.render.float.scale,
+      obj.render.float.col
+    ];
+    let floatFormat = function(data, type, row, meta) {
+        return (row[col] * scale).toFixed(precision);
     };
+    obj.render = floatFormat;
+    return obj;
+  } else if (obj.render.hasOwnProperty('contains_sibl')) {
+    let col = obj.render.contains_sibl.col;
+    let sibl_bool = function(data, type, row, meta) {
+      if (row[col] > 0) {
+        return true;
+      } else {
+        return false;
+      }
+    };
+    obj.render = sibl_bool;
+    return obj;
+  };
 };
 
 
@@ -41,7 +52,7 @@ $(document).ready(function() {
     let testFields = dataConf.colsFields;
     testFields.forEach( function(obj) {
       if (obj.hasOwnProperty('render')) {
-          obj = obj_formatter(obj)
+        obj = obj_formatter(obj)
       }
     });
     var dataTableConf = {
