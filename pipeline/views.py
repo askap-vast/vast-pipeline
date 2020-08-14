@@ -1142,7 +1142,7 @@ class SourceFavViewSet(ModelViewSet):
             else:
                 fav = SourceFav(**data)
                 fav.save()
-                messages.info(request, 'Favourite source created successfully')
+                messages.info(request, 'Added to favourites successfully')
         except Exception as e:
             messages.error(
                 request,
