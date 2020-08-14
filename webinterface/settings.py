@@ -18,7 +18,6 @@ SECRET_KEY = env('SECRET_KEY', cast=str, default='FillMeUPWithSomeComplicatedStr
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG', cast=bool, default=True)
-
 ALLOWED_HOSTS = env('ALLOWED_HOSTS', cast=list, default=[])
 INTERNAL_IPS = [
     '127.0.0.1',
@@ -179,9 +178,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = env('STATIC_URL', cast=str, default='/static/')
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'static'),
-)
+STATICFILES_DIRS = env('STATICFILES_DIRS', cast=list, default=[os.path.join(BASE_DIR, 'static')])
 STATIC_ROOT = env('STATIC_ROOT', cast=str, default=os.path.join(BASE_DIR, 'staticfiles'))
 
 # Logging
