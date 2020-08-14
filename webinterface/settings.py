@@ -38,7 +38,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_datatables',
     'social_django',
+<<<<<<< HEAD
     'crispy_forms',
+=======
+    'background_task',
+>>>>>>> added background task app in settings
     # pipeline app and others
     'vast_pipeline',
 ] + env('EXTRA_APPS', cast=list, default=[])
