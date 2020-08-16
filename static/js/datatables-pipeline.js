@@ -239,10 +239,10 @@ $(document).ready(function() {
     let datapts_min = document.getElementById("datapointMinSelect");
     let datapts_max = document.getElementById("datapointMaxSelect");
     if (datapts_min.value) {
-      qry_url = qry_url + "&min_measurements=" + datapts_min.value;
+      qry_url = qry_url + "&min_n_meas=" + datapts_min.value;
     };
     if (datapts_max.value) {
-      qry_url = qry_url + "&max_measurements=" + datapts_max.value;
+      qry_url = qry_url + "&max_n_meas=" + datapts_max.value;
     };
     let compactness_min = document.getElementById("compactnessMinSelect");
     let compactness_max = document.getElementById("compactnessMaxSelect");
@@ -271,18 +271,18 @@ $(document).ready(function() {
     let selavy_min = document.getElementById("SelavyMinSelect");
     let selavy_max = document.getElementById("SelavyMaxSelect");
     if (selavy_min.value) {
-      qry_url = qry_url + "&min_selavy_measurements=" + selavy_min.value;
+      qry_url = qry_url + "&min_n_meas_sel=" + selavy_min.value;
     };
     if (selavy_max.value) {
-      qry_url = qry_url + "&max_selavy_measurements=" + selavy_max.value;
+      qry_url = qry_url + "&max_n_meas_sel=" + selavy_max.value;
     };
     let forced_min = document.getElementById("ForcedMinSelect");
     let forced_max = document.getElementById("ForcedMaxSelect");
     if (forced_min.value) {
-      qry_url = qry_url + "&min_forced_measurements=" + forced_min.value;
+      qry_url = qry_url + "&min_n_meas_forced=" + forced_min.value;
     };
     if (forced_max.value) {
-      qry_url = qry_url + "&max_forced_measurements=" + forced_max.value;
+      qry_url = qry_url + "&max_n_meas_forced=" + forced_max.value;
     };
     let relations_min = document.getElementById("RelationsMinSelect");
     let relations_max = document.getElementById("RelationsMaxSelect");
