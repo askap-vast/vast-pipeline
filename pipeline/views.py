@@ -82,7 +82,8 @@ def Home(request):
     ) if (check_run_db and meas_glob) else 0
     context = {
         'totals': totals,
-        'd3_celestial_skyregions': get_skyregions_collection()
+        'd3_celestial_skyregions': get_skyregions_collection(),
+        'static_url': settings.STATIC_URL
     }
     return render(request, 'index.html', context)
 
