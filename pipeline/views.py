@@ -503,6 +503,10 @@ def MeasurementDetail(request, id, action=None):
         ))
 
     context = {'measurement': measurement}
+    # add base url for using in JS9 if assigned
+    if settings.BASE_URL and settings.BASE_URL != '':
+        context['base_url'] = settings.BASE_URL.strip('/')
+
     return render(request, 'measurement_detail.html', context)
 
 
