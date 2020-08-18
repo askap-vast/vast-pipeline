@@ -796,7 +796,7 @@ def SourceDetail(request, id, action=None):
     context = {
         'source': source,
         'measurements': measurements,
-        # falg to deactivate starring and render yellow star
+        # flag to deactivate starring and render yellow star
         'sourcefav': (
             SourceFav.objects.filter(
                 user__id=request.user.id,
@@ -805,6 +805,10 @@ def SourceDetail(request, id, action=None):
             .exists()
         )
     }
+    # add base url for using in JS9 if assigned
+    if settings.BASE_URL and settings.BASE_URL != '':
+        context['base_url'] = settings.BASE_URL.strip('/')
+
     return render(request, 'source_detail.html', context)
 
 
