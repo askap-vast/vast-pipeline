@@ -12,7 +12,7 @@ $(document).ready(function() {
     // issue the request to get list of images and selavy files
     $.ajax({
       type: "GET",
-      url: "/api/rawimages/",
+      url: e.currentTarget.getAttribute('rawImgApi'),
       success: function(result) {
         // populate the images and selavy menus
          $.each(result.fits, function (idx, item) {
