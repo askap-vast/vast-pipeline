@@ -526,7 +526,7 @@ def association(images_df, meas_dj_obj, limit, dr_limit, bw_limit,
 
     # if isinstance(images, pd.DataFrame):
     #     images = images['image'].to_list()
-    unique_epochs = images_df['epoch'].sort_values(by='epoch').unique()
+    unique_epochs = images_df.sort_values(by='epoch')['epoch'].unique()
 
     first_images = images_df.loc[
         images_df['epoch'] == unique_epochs[0]
@@ -546,10 +546,13 @@ def association(images_df, meas_dj_obj, limit, dr_limit, bw_limit,
     # initialise the sources dataframe using first image as base
     sources_df = skyc1_srcs.copy()
 
-    for it, image in enumerate(images[1:]):
+    for it, epoch in enumerate(unique_epochs[1:]):
         logger.info('Association iteration: #%i', it + 1)
         # load skyc2 source measurements and create SkyCoord
-        skyc2_srcs = prep_skysrc_df(image, config.FLUX_PERC_ERROR)
+        images = images_df.loc[
+            images_df['epoch'] == epoch
+        ]['image'].to_list()
+        skyc2_srcs = prep_skysrc_df(images, config.FLUX_PERC_ERROR)
         skyc2 = SkyCoord(
             ra=skyc2_srcs['ra'].values * u.degree,
             dec=skyc2_srcs['dec'].values * u.degree
@@ -734,6 +737,7 @@ def parallel_association(
         'forced': '?',
         'compactness': 'f',
         'has_siblings': '?',
+        'snr': 'f',
         'image': 'U',
         'datetime': 'datetime64[ns]',
         'source': 'i',

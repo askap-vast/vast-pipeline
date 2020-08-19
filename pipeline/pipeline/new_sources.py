@@ -116,7 +116,9 @@ def parallel_get_rms_measurements(df):
 
     return df
 
-def new_sources(sources_df, missing_sources_df, min_sigma, p_run):
+def new_sources(
+    sources_df, missing_sources_df, images_epochs_df, min_sigma, p_run
+):
     """
     Process the new sources detected to see if they are
     valid.
@@ -128,14 +130,27 @@ def new_sources(sources_df, missing_sources_df, min_sigma, p_run):
 
     cols = [
         'id', 'name', 'noise_path', 'datetime',
-        'rms_median', 'rms_min', 'rms_max'
+        'rms_median', 'rms_min', 'rms_max',
+        'ra', 'dec'
     ]
+
+    images_epochs_df['name'] = images_epochs_df['image'].apply(
+        lambda x: x.name
+    )
 
     images_df = pd.DataFrame(list(
         Image.objects.filter(
             run=p_run
         ).values(*tuple(cols))
     )).set_index('name')
+
+    images_df = images_df[['name', 'epoch']].merge(
+        images_epochs_df,
+        left_index=True,
+        right_on='name'
+    )
+
+    del images_epochs_df
 
     # Get rid of sources that are not 'new', i.e. sources which the
     # first sky region image is not in the image list

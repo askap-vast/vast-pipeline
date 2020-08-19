@@ -5,6 +5,8 @@ import logging
 from astropy import units as u
 from astropy.coordinates import Angle
 
+import pandas as pd
+
 from django.conf import settings
 from django.db import transaction
 
@@ -40,14 +42,15 @@ class Pipeline():
         '''
         self.name = name
         self.config = self.load_cfg(config_path)
+        self._reorder_images = False
 
         # Check if provided files are lists and convert to
         # dictionaries if so
-        for i in [
+        for lst in [
             'IMAGE_FILES', 'SELAVY_FILES',
             'BACKGROUND_FILES', 'NOISE_FILES'
         ]:
-            if isinstance(getattr(self.config, i), list):
+            if isinstance(getattr(self.config, lst), list):
                 setattr(
                     self.config,
                     lst,
@@ -55,36 +58,40 @@ class Pipeline():
                         getattr(self.config, lst)
                     )
                 )
+                self._reorder_images = True
+
 
         # A dictionary of path to Fits images, eg
         # "/data/images/I1233234.FITS" and selavy catalogues
         # Used as a cache to avoid reloading cubes all the time.
-        self.img_paths = {}
+        self.img_paths = {
+            'selavy': {},
+            'noise': {},
+            'background': {}
+        }
         self.img_epochs = {}
 
         for key in sorted(self.config.IMAGE_FILES.keys()):
-            self.img_paths['selavy'] = {
-                x:y for x,y in zip(
-                    self.config.IMAGE_FILES[key],
-                    self.config.SELAVY_FILES[key]
-                )
-            }
-            self.img_paths['noise'] = {
-                x:y for x,y in zip(
-                    self.config.IMAGE_FILES[key],
-                    self.config.NOISE_FILES[key]
-                )
-            }
-            self.img_paths['background'] = {
-                x:y for x,y in zip(
-                    self.config.IMAGE_FILES[key],
-                    self.config.BACKGROUND_FILES[key]
-                )
-            }
+            for x,y in zip(
+                self.config.IMAGE_FILES[key],
+                self.config.SELAVY_FILES[key]
+            ):
+                self.img_paths['selavy'][x] = y
+
+            for x,y in zip(
+                self.config.IMAGE_FILES[key],
+                self.config.NOISE_FILES[key]
+            ):
+                self.img_paths['noise'][x] = y
+
+            for x,y in zip(
+                self.config.IMAGE_FILES[key],
+                self.config.BACKGROUND_FILES[key]
+            ):
+                self.img_paths['background'][x] = y
+
             for x in self.config.IMAGE_FILES[key]:
-                self.img_epochs[os.path.basename(x)].append(
-                    key
-                )
+                self.img_epochs[os.path.basename(x)] = key
 
     @staticmethod
     def load_cfg(cfg):
@@ -105,11 +112,11 @@ class Pipeline():
         return mod
 
 
-    def _convert_list_to_dict(l):
+    def _convert_list_to_dict(self, l):
         """
         Convert users list entry to a dictionary for pipeline processing.
         """
-        conversion = {i + 1: val for i, val in enumerate(l)}
+        conversion = {i + 1: [val,] for i, val in enumerate(l)}
 
         return conversion
 
@@ -193,6 +200,14 @@ class Pipeline():
         # STEP #2: measurements association
         # order images by time
         images.sort(key=operator.attrgetter('datetime'))
+
+        # If the user has given lists we need to reorder the
+        # image epochs such that they are in date order.
+        if self._reorder_images:
+            self.image_epochs = {}
+            for i, img in enumerate(images):
+                self.image_epochs[img.name] = i + 1
+
         image_epochs = [
             self.img_epochs[img.name] for img in images
         ]
@@ -257,6 +272,7 @@ class Pipeline():
         new_sources_df = new_sources(
             sources_df,
             missing_sources_df,
+            images_df,
             self.config.NEW_SOURCE_MIN_SIGMA,
             p_run
         )

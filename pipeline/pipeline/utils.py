@@ -162,6 +162,7 @@ def remove_duplicate_measurements(sources_df, ini_df=False):
     """
     Remove duplicate sources from dataframe
     """
+    logger.debug('Cleaning duplicate sources from epoch...')
     min_source = sources_df['source'].min()
 
     # sort by the distance from the image centre so we know
@@ -169,14 +170,14 @@ def remove_duplicate_measurements(sources_df, ini_df=False):
     sources_df = sources_df.sort_values(by='dist_from_centre')
 
     sources_sc = SkyCoord(
-        df['ra'],
-        df['dec']
-        unit=u.deg, u.deg
+        sources_df['ra'],
+        sources_df['dec'],
+        unit=(u.deg, u.deg)
     )
 
     # perform search around sky to get all self matches
     idxc, idxcatalog, d2d_around, _ = sources_sc.search_around_sky(
-        catalog, 0.5 * u.arcsec
+        sources_sc, 2.5 * u.arcsec
     )
 
     # create df from results
@@ -197,7 +198,10 @@ def remove_duplicate_measurements(sources_df, ini_df=False):
     # in the match id column.
     to_drop = results.loc[results['pair_sub'] != 0]['match_id']
     # Get the index values from the ith values
-    to_drop_indexes = results.iloc[to_drop].index.values
+    to_drop_indexes = sources_df.iloc[to_drop].index.values
+    logger.debug(
+        "Dropping %i duplicate measurements.", to_drop_indexes.shape[0]
+    )
     # Drop them from sources
     sources_df = sources_df.drop(to_drop_indexes).sort_values(
         by='ra'
@@ -208,15 +212,17 @@ def remove_duplicate_measurements(sources_df, ini_df=False):
             min_source, sources_df.shape[0] + 1
         )
 
+    sources_df = sources_df.reset_index(drop=True)
+
     del results
 
     return sources_df
 
 
-def _load_measurements(image, cols, start_id=0):
+def _load_measurements(image, cols, start_id=0, ini_df=False):
     image_centre = SkyCoord(
-        image['ra'],
-        image['dec'],
+        image.ra,
+        image.dec,
         unit=(u.deg, u.deg)
     )
 
@@ -233,8 +239,8 @@ def _load_measurements(image, cols, start_id=0):
 
     sources_sc = SkyCoord(
         df['ra'],
-        df['dec']
-        unit=u.deg, u.deg
+        df['dec'],
+        unit=(u.deg, u.deg)
     )
 
     seps = sources_sc.separation(image_centre).degree
@@ -255,39 +261,42 @@ def prep_skysrc_df(images, perc_error, ini_df=False):
     ini_df: flag to initialise source id depending if inital df or not
     '''
     cols = [
-    'id',
-    'ra',
-    'uncertainty_ew',
-    'weight_ew',
-    'dec',
-    'uncertainty_ns',
-    'weight_ns',
-    'flux_int',
-    'flux_int_err',
-    'flux_peak',
-    'flux_peak_err',
-    'forced',
-    'compactness',
-    'has_siblings',
-    'snr'
+        'id',
+        'ra',
+        'uncertainty_ew',
+        'weight_ew',
+        'dec',
+        'uncertainty_ns',
+        'weight_ns',
+        'flux_int',
+        'flux_int_err',
+        'flux_peak',
+        'flux_peak_err',
+        'forced',
+        'compactness',
+        'has_siblings',
+        'snr'
     ]
 
-    df = _load_measurements(images[0], cols)
+    df = _load_measurements(images[0], cols, ini_df=ini_df)
 
     if len(images) > 1:
         for img in images[1:]:
             df = df.append(
-                _load_measurements(img, cols, df.source.max()),
+                _load_measurements(img, cols, df.source.max(), ini_df=ini_df),
                 ignore_index=True
             )
 
-        df = remove_duplicate_measurements(df)
+        df = remove_duplicate_measurements(df, ini_df=ini_df)
 
-    logger.info('Correcting flux errors with config error setting...')
-    for col in ['flux_int', 'flux_peak']:
-        df[f'{col}_err'] = np.hypot(
-            df[f'{col}_err'].values, perc_error * df[col].values
-        )
+    df = df.drop('dist_from_centre', axis=1)
+
+    if perc_error != 0.0:
+        logger.info('Correcting flux errors with config error setting...')
+        for col in ['flux_int', 'flux_peak']:
+            df[f'{col}_err'] = np.hypot(
+                df[f'{col}_err'].values, perc_error * df[col].values
+            )
 
     return df
 
@@ -654,8 +663,8 @@ def group_skyregions(df):
             while sorted(sr_done) != sorted(skyreg_groups[skyreg_group]):
                 for other_skyreg_id in skyreg_groups[skyreg_group]:
                     if other_skyreg_id not in sr_done:
-                        sr_done.append(j)
-                        new_vals = results.loc[j]
+                        sr_done.append(other_skyreg_id)
+                        new_vals = results.loc[other_skyreg_id]
                         for k in new_vals:
                             if k not in skyreg_groups[skyreg_group]:
                                 skyreg_groups[skyreg_group].append(k)
@@ -681,7 +690,7 @@ def group_skyregions(df):
     return skyreg_group_ids
 
 
-def get_parallel_assoc_image_df(images, skyregion_groups, img_epochs):
+def get_parallel_assoc_image_df(images, skyregion_groups):
 
     skyreg_ids = [i.skyreg_id for i in images]
 
