@@ -2,6 +2,17 @@
 
 This guide explain the installation and compilation of the front end assets (HTML, CSS, JS and relative modules). We make use of a `node` installation with `npm` and `gulp` tasks.
 
+## Table of Contents
+
+- [Installation of node packages](#installation-of-node-packages)
+- [FrontEnd Tasks with `gulp`](#frontend-tasks-with-gulp)
+  - [1. Dependencies installation](#1-install-dependencies-under-vendor-folder)
+  - [2. Building CSS and Javascript](#2-building-css-and-javascript-files)
+  - [3. Run Developement Server](#3-run-developement-server)
+  - [4. Debug Task](#4-debug-task)
+  - [5. Clean Task](#5-clean-task)
+- [FrontEnd assets for Production](#frontend-assets-for-production)
+
 ## Installation of node packages
 After installing a `node` version and `npm`, install the node modules using from the base folder (`vast-pipeline`):
 
@@ -27,7 +38,7 @@ Using `gulp` and `npm` scripts you can:
 2. Building (e.g. minify/uglify) CSS and/or Javascript files.
 3. Run a developement server that hot-reload your web page when any HTML, CSS or Javascript file is modified.
 
-Listing `gulp` tasks and understanding sub-tasks within tasks, you might need `gulp-cli` installed globally (see `npm i --global gulp-cli`, more info [here](https://gulpjs.com/docs/en/getting-started/quick-start)), and then run:
+Listing `gulp` tasks and understanding sub-tasks within tasks, you might need `gulp-cli` installed globally (i.e. `npm i --global gulp-cli`, more info [here](https://gulpjs.com/docs/en/getting-started/quick-start)), and then run:
 
 ```bash
 gulp --tasks
@@ -156,7 +167,7 @@ gulp watch
 The latter will open your dev server, that will auto reload and apply your latest changes in any CSS, Javascript and/or HTML files. As pointed out in the gulp task tree above the `watch` task run both the vendor and build tasks.
 
 
-### Debug Task
+### 4. Debug Task
 This task is for debugging the paths used in the others task, but also serve as a palce hodler to debug commands.
 
 ```bash
@@ -165,7 +176,7 @@ npm run debug
 gulp debug
 ```
 
-### Clean Task
+### 5. Clean Task
 This task delete the vendor folder (`/static/vendor`) along with all the files.
 
 ```bash
@@ -173,3 +184,14 @@ npm run clean
 # or
 gulp clean
 ```
+
+## FrontEnd assets for Production
+In order to compile the frontend assets for production, activate the Python virtual environment, then run:
+
+```bash
+(pipeline_env)$ npm run js9staticprod && ./manage.py collectstatic -c
+```
+
+This command will collect all static assets (Javascript and CSS files) and copy them to `STATIC_ROOT` path in setting.py, so make sure you have permission to write to that. `STATIC_ROOT` is assigned to `./staticfiles` by default, otherwise assigned to the path you defined in your `.env` file.
+
+Then you can move that folder to where it can be served by the production static files server ([Ningx](https://www.nginx.com/) or [Apache](https://httpd.apache.org/) are usually good choices, in case refere to the [Django documentation](https://docs.djangoproject.com/en/3.1/howto/deployment/)).
