@@ -194,4 +194,4 @@ In order to compile the frontend assets for production, activate the Python virt
 
 This command will collect all static assets (Javascript and CSS files) and copy them to `STATIC_ROOT` path in setting.py, so make sure you have permission to write to that. `STATIC_ROOT` is assigned to `./staticfiles` by default, otherwise assigned to the path you defined in your `.env` file.
 
-Then you can move that folder to where it can be served by the production static files server ([Ningx](https://www.nginx.com/) or [Apache](https://httpd.apache.org/) are usually good choices, in case refere to the [Django documentation](https://docs.djangoproject.com/en/3.1/howto/deployment/)).
+Then you can move that folder to where it can be served by the production static files server ([Ningx](https://www.nginx.com/) or [Apache](https://httpd.apache.org/) are usually good choices, in case refere to the [Django documentation](https://docs.djangoproject.com/en/3.1/howto/deployment/).

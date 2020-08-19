@@ -13,8 +13,9 @@ If you intend to contribute to the code base please read and follow the guidelin
 	- [Initialise a Pipeline Run](#initialise-a-pipeline-run)
 	- [Run a Pipeline Instance](#run-a-pipeline-instance)
 	- [Resetting a Pipeline Run](#resetting-a-pipeline-run)
-	- [Import survey data](#import-survey-data)
+	- [Import survey data (TBC)](#import-survey-data)
 - [Data Exploration via Django Web Server](#data-exploration-via-django-web-server)
+- [Production Deployment](#production-deployment)
 
 ## Pipeline Configuration
 The following instructions, will get you started in setting up the database and pipeline configuration
@@ -35,13 +36,13 @@ NOTE: the connection details (host and port) are the same that you setup in [`IN
 3. Create the database user and database name, by running:
 
 ```bash
-$:./init-tools/init-db.sh localhost 5432 postgres postgres vast vastpsw vastdb
+$ ./init-tools/init-db.sh localhost 5432 postgres postgres vast vastpsw vastdb
 ```
 
   For help on the command run it without arguments
 
 ```bash
-$:./init-tools/init-db.sh
+$ ./init-tools/init-db.sh
 Usage: init-db.sh HOST PORT ADMINUSER ADMINPSW USER USERPSW DBNAME
 Eg:    init-db.sh localhost 5432 postgres postgres vast vastpsw vastdb
 
@@ -62,7 +63,7 @@ creating db 'vastdb'
 4. Create the database tables. Remember first to activate the Python environment as described in [`INSTALL.md`](./INSTALL.md).
 
 ```bash
-(pipeline_env)$:./manage.py migrate
+(pipeline_env)$ ./manage.py migrate
 ```
 
 5. Create the directories listed at the bottom of `settings.py` and update the details on your setting configuration file `.env` (single name, e.g. `pipeline-runs` means path relative to `BASE_DIR`, so the main folder where you cloned the repo).
@@ -116,7 +117,7 @@ Fill in your details and then login with the created credentials at `localhost:8
 All the pipeline commands are run using the Django global `./manage.py <command>` interface. Therefore you need to activate the `Python` environment. You can have a look at the available commands for the pipeline app:
 
 ```bash
-(pipeline_env)$: ./manage.py help
+(pipeline_env)$ ./manage.py help
 ```
 
 Output:
@@ -141,7 +142,7 @@ In order to process the images in the pipeline, you must create/initialise a pip
 The pipeline run creation is done using the `initpiperun` django command, which requires a pipeline run folder. The command creates a folder with the pipeline run name under the settings `PROJECT_WORKING_DIR` defined in [settings](./webinterface/settings.template.py).
 
 ```bash
-(pipeline_env)$: ./manage.py initpiperun --help
+(pipeline_env)$ ./manage.py initpiperun --help
 ```
 
 Output:
@@ -178,7 +179,7 @@ optional arguments:
 The command yields the following folder structure:
 
 ```bash
-(pipeline_env)$: ./manage.py initpiperun my_pipe_run
+(pipeline_env)$ ./manage.py initpiperun my_pipe_run
 ```
 
 Output:
@@ -193,7 +194,7 @@ Output:
 The pipeline is run using `runpipeline` django command.
 
 ```bash
-(pipeline_env)$: ./manage.py runpipeline --help
+(pipeline_env)$ ./manage.py runpipeline --help
 ```
 
 Output:
@@ -230,7 +231,7 @@ optional arguments:
 
 General usage:
 ```bash
-(pipeline_env)$: ./manage.py runpipeline path/to/my_pipe_run
+(pipeline_env)$ ./manage.py runpipeline path/to/my_pipe_run
 ```
 
 ### Resetting a Pipeline Run
@@ -239,22 +240,45 @@ Detailed commands for resetting the database can be found in [`DEVELOPING.md`](.
 
 Resetting a pipeline run can be done using the `clearpiperun` command: it will delete all images (and related objects such as sources) associated with that pipeline run, if that images does not belong to another pipeline run. It will deleted all the sources associated with that pipeline run.
 ```bash
-(pipeline_env)$: ./manage.py clearpiperun my_pipe_run
+(pipeline_env)$ ./manage.py clearpiperun my_pipe_run
 ```
 
 ### Import survey data
 
-TBC
+This functionality is still not developed
 
 
 ## Data Exploration via Django Web Server
 
+Make sure you installed and compiled correctly the frontend assets see [guide](./INSTALL.md#pipeline-front-end-assets-quickstart)
+
 1. Start the Django development web server:
 
 ```bash
-(pipeline_env)$: ./manage.py runserver
+(pipeline_env)$ ./manage.py runserver
 ```
 
-2. Test the webserver by pointing your browser at http://127.0.0.1:8000
+2. Test the webserver by pointing your browser at http://127.0.0.1:8000 or http://localhost:8000
 
 The webserver is independent of `runpipeline` and you can use the website while the pipeline commands are running.
+
+## Production Deployment
+This section describes a simple deployment without using Docker containers, assuming serving the static files using [WhiteNoise](http://whitenoise.evans.io/en/stable/). It is possible serving the static files using other methods (e.g. Nginx). And in the future it is possible to upgrade the deployment stack using Docker container and Docjer compose (we foresee 3 main containers: Django, Dask and Traefik). We recommend in any case reading [Django deployment documentation](https://docs.djangoproject.com/en/3.1/howto/deployment/) for general knowledge.
+
+We assume deployment to a __UNIX server__.
+
+The following steps describes how to set up the Django side of the production deployment, and can be of reference for a future Dockerization. They assumed you have `SSH` access to your remote server and have `sudo` priviledges.
+
+1. Clone the repo in a suitable path, e.g. `/opt/`.
+
+  ```bash
+  $ cd /opt && sudo git clone https://github.com/askap-vast/vast-pipeline
+  ```
+
+2. Follow the installation instructions in [`INSTALL.md`](./INSTALL.md). We recommend installing the Python virtual environment under the pipeline folder.
+
+  ```bash
+  $ cd /opt/vast-pipeline && virtualenv -p python3 pipeline_env
+  ```
+
+3. Configure your `.env` files with all the right settings.
