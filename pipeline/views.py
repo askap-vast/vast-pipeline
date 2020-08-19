@@ -2,9 +2,14 @@ import io
 import os
 import json
 import logging
+import traceback
 import dask.dataframe as dd
-from dask import compute
+import dask.bag as db
+import pandas as pd
+
 from typing import Dict, Any
+from glob import glob
+from itertools import tee
 
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
@@ -12,31 +17,39 @@ from astropy.nddata import Cutout2D
 from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
 
-from django.http import FileResponse, Http404
+from django.http import FileResponse, Http404, HttpResponseRedirect
 from django.db.models import Count, F, Q, Case, When, Value, BooleanField
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.conf import settings
+from django.contrib import messages
 
+from rest_framework import status
+from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ModelViewSet, ViewSet
 from rest_framework.authentication import (
     SessionAuthentication, BasicAuthentication
 )
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.contrib.auth.decorators import login_required
 
 
-from .models import Image, Measurement, Run, Source
+from .models import Image, Measurement, Run, Source, SourceFav
 from .serializers import (
     ImageSerializer, MeasurementSerializer, RunSerializer,
-    SourceSerializer
+    SourceSerializer, RawImageSelavyListSerializer,
+    SourceFavSerializer
 )
 from .utils.utils import (
     deg2dms, deg2hms, gal2equ, ned_search, simbad_search
 )
 from .utils.view import generate_colsfields, get_skyregions_collection
+from .management.commands.initpiperun import initialise_run
+from .forms import PipelineRunForm
+from .pipeline.main import Pipeline
 
 
 logger = logging.getLogger(__name__)
@@ -57,17 +70,16 @@ def Home(request):
     totals['nr_pruns'] = Run.objects.count()
     totals['nr_imgs'] = Image.objects.count()
     totals['nr_srcs'] = Source.objects.count()
+    meas_glob = glob(os.path.join(
+        settings.PIPELINE_WORKING_DIR,
+        'images/**/measurements.parquet',
+    ))
+    check_run_db = Run.objects.exists()
     totals['nr_meas'] = (
-        dd.read_parquet(
-            os.path.join(
-                settings.PIPELINE_WORKING_DIR,
-                'images/**/measurements.parquet',
-            ),
-            columns='id'
-        )
+        dd.read_parquet(meas_glob, columns='id')
         .count()
         .compute()
-    )
+    ) if (check_run_db and meas_glob) else 0
     context = {
         'totals': totals,
         'd3_celestial_skyregions': get_skyregions_collection()
@@ -78,6 +90,54 @@ def Home(request):
 # Runs table
 @login_required
 def RunIndex(request):
+    if request.method == 'POST':
+        # this POST section is for initialise a pipeline run
+        form = PipelineRunForm(request.POST)
+        if form.is_valid():
+            # TODO: re-write files lists into the form, couldn't get it to work
+            cfg_data = form.cleaned_data
+
+            # get the user data
+            run_dict = {
+                key: val for key, val in cfg_data.items() if 'run' in key
+            }
+
+            # remove user data from run config data
+            for key in run_dict.keys():
+                cfg_data.pop(key)
+
+            run_dict['user'] = request.user
+
+            f_list = [
+                'image_files', 'selavy_files', 'background_files',
+                'noise_files'
+            ]
+            for files in f_list:
+                cfg_data[files] = request.POST.getlist(files)
+
+            try:
+                p_run = initialise_run(
+                    **run_dict,
+                    config=cfg_data
+                )
+                messages.success(
+                    request,
+                    f'Pipeline run {p_run.name} initilialised successfully!'
+                )
+                return redirect('pipeline:run_detail', id=p_run.id)
+            except Exception as e:
+                messages.error(
+                    request,
+                    f'Issue in pipeline run initilisation: {e}'
+                )
+                return redirect('pipeline:run_index')
+        else:
+            messages.error(
+                request,
+                f'Form not valid: {form.errors}'
+            )
+            return redirect('pipeline:run_index')
+
     fields = [
         'name',
         'time',
@@ -88,7 +148,10 @@ def RunIndex(request):
         'status'
     ]
 
-    colsfields = generate_colsfields(fields, "/piperuns/")
+    colsfields = generate_colsfields(
+        fields,
+        {'name': reverse('pipeline:run_detail', args=[1])[:-2]}
+    )
 
     return render(
         request,
@@ -100,14 +163,18 @@ def RunIndex(request):
                 'breadcrumb': {'title': 'Pipeline Runs', 'url': request.path},
             },
             'datatable': {
-                'api': '/api/piperuns/?format=datatables',
+                'api': (
+                    reverse('pipeline:api_pipe_runs-list') +
+                    '?format=datatables'
+                ),
                 'colsFields': colsfields,
                 'colsNames': [
                     'Name', 'Run Datetime', 'Path', 'Comment', 'Nr Images',
                     'Nr Sources', 'Run Status'
                 ],
                 'search': True,
-            }
+            },
+            'runconfig' : settings.PIPE_RUN_CONFIG_DEFAULTS
         }
     )
 
@@ -124,42 +191,88 @@ class RunViewSet(ModelViewSet):
 def RunDetail(request, id):
     p_run_model = Run.objects.filter(id=id).prefetch_related('image_set').get()
     p_run = p_run_model.__dict__
+    # build config path for POST and later
+    f_path = os.path.join(p_run['path'], 'config.py')
+    if request.method == 'POST':
+        # this post is for writing the config text (modified or not) from the
+        #  UI to a config.py file
+        config_text = request.POST.get('config_text', None)
+        if config_text:
+            try:
+                with open(f_path, 'w') as fp:
+                    fp.write(config_text)
+
+                messages.success(
+                    request,
+                    'Pipeline config written successfully'
+                )
+            except Exception as e:
+                messages.error(request, f'Error in writing config: {e}')
+        else:
+            messages.info(request, 'Config text null')
+
+    p_run['user'] = p_run_model.user.username if p_run_model.user else None
     p_run['status'] = p_run_model.get_status_display()
-    images = list(p_run_model.image_set.values('name', 'datetime'))
-    img_paths = list(map(
-        lambda x: os.path.join(
-            settings.PIPELINE_WORKING_DIR,
-            'images',
-            '_'.join([
-                x['name'].replace('.','_'),
-                x['datetime'].strftime('%Y-%m-%dT%H_%M_%S%z')
-            ]),
-            'measurements.parquet'
-        ),
-        p_run_model.image_set.values('name', 'datetime')
-    ))
-    p_run['nr_imgs'] = len(img_paths)
-    p_run['nr_srcs'] = Source.objects.filter(run__id=p_run['id']).count()
-    p_run['nr_meas'] = (
-        dd.read_parquet(
-            img_paths,
-            columns='id'
+    if p_run_model.image_set.exists():
+        images = list(p_run_model.image_set.values('name', 'datetime'))
+        img_paths = list(map(
+            lambda x: os.path.join(
+                settings.PIPELINE_WORKING_DIR,
+                'images',
+                '_'.join([
+                    x['name'].replace('.','_'),
+                    x['datetime'].strftime('%Y-%m-%dT%H_%M_%S%z')
+                ]),
+                'measurements.parquet'
+            ),
+            p_run_model.image_set.values('name', 'datetime')
+        ))
+        p_run['nr_meas'] = (
+            dd.read_parquet(img_paths, columns='id')
+            .count()
+            .compute()
         )
-        .count()
-        .compute()
+    else:
+        p_run['nr_meas'] = 'N.A.'
+
+    forced_path = glob(
+        os.path.join(p_run['path'], 'forced_measurements_*.parquet')
     )
-    p_run['nr_frcd'] = (
-        dd.read_parquet(
-            os.path.join(p_run['path'], 'forced_measurements_*.parquet'),
-            columns='id'
-        )
-        .count()
-        .compute()
-    )
+    if forced_path:
+        try:
+            p_run['nr_frcd'] = (
+                dd.read_parquet(forced_path, columns='id')
+                .count()
+                .compute()
+            )
+        except Exception as e:
+            messages.error(
+                request,
+                (
+                    'Issues in reading forced measurements parquet:\n'
+                    f'{e.args[0][:500]}'
+                )
+            )
+            pass
+    else:
+        p_run['nr_frcd'] = 'N.A.'
+
     p_run['new_srcs'] = Source.objects.filter(
         run__id=p_run['id'],
         new=True,
     ).count()
+
+    # read run config
+    if os.path.exists(f_path):
+        with open(f_path) as fp:
+            p_run['config_txt'] = fp.read()
+
+    # read run log file
+    f_path = os.path.join(p_run['path'], 'log.txt')
+    if os.path.exists(f_path):
+        with open(f_path) as fp:
+            p_run['log_txt'] = fp.read()
+
     return render(request, 'run_detail.html', {'p_run': p_run})
 
 
@@ -176,7 +289,10 @@ def ImageIndex(request):
         'rms_max'
     ]
 
-    colsfields = generate_colsfields(fields, '/images/')
+    colsfields = generate_colsfields(
+        fields,
+        {'name': reverse('pipeline:image_detail', args=[1])[:-2]}
+    )
 
     return render(
         request,
@@ -188,7 +304,10 @@ def ImageIndex(request):
                 'breadcrumb': {'title': 'Images', 'url': request.path},
             },
             'datatable': {
-                'api': '/api/images/?format=datatables',
+                'api': (
+                    reverse('pipeline:api_images-list') +
+                    '?format=datatables'
+                ),
                 'colsFields': colsfields,
                 'colsNames': [
                     'Name',
@@ -263,11 +382,15 @@ def MeasurementIndex(request):
         'flux_peak',
         'flux_peak_err',
         'compactness',
+        'snr',
         'has_siblings',
         'forced'
     ]
 
-    colsfields = generate_colsfields(fields, '/measurements/')
+    colsfields = generate_colsfields(
+        fields,
+        {'name': reverse('pipeline:measurement_detail', args=[1])[:-2]}
+    )
 
     return render(
         request,
@@ -279,7 +402,10 @@ def MeasurementIndex(request):
                 'breadcrumb': {'title': 'Measurements', 'url': request.path},
             },
             'datatable': {
-                'api': '/api/measurements/?format=datatables',
+                'api': (
+                    reverse('pipeline:api_measurements-list') +
+                    '?format=datatables'
+                ),
                 'colsFields': colsfields,
                 'colsNames': [
                     'Name',
@@ -294,6 +420,7 @@ def MeasurementIndex(request):
                     'Peak Flux (mJy/beam)',
                     'Peak Flux Error (mJy/beam)',
                     'Compactness',
+                    'SNR',
                     'Has siblings',
                     'Forced Extraction'
                 ],
@@ -410,6 +537,8 @@ class SourceViewSet(ModelViewSet):
             'n_rel',
             'new_high_sigma',
             'avg_compactness',
+            'min_snr',
+            'max_snr',
             'n_neighbour_dist'
         ]
 
@@ -473,6 +602,8 @@ def SourceQuery(request):
         'avg_flux_int',
         'avg_flux_peak',
         'max_flux_peak',
+        'min_snr',
+        'max_snr',
         'avg_compactness',
         'n_meas',
         'n_meas_sel',
@@ -488,7 +619,10 @@ def SourceQuery(request):
         'new_high_sigma'
     ]
 
-    colsfields = generate_colsfields(fields, '/sources/')
+    colsfields = generate_colsfields(
+        fields,
+        {'name': reverse('pipeline:source_detail', args=[1])[:-2]}
+    )
 
     # get all pipeline run names
     p_runs = list(Run.objects.values('name').all())
@@ -500,7 +634,10 @@ def SourceQuery(request):
             'breadcrumb': {'title': 'Sources', 'url': request.path},
             'runs': p_runs,
             'datatable': {
-                'api': '/api/sources/?format=datatables',
+                'api': (
+                    reverse('pipeline:api_sources-list') +
+                    '?format=datatables'
+                ),
                 'colsFields': colsfields,
                 'colsNames': [
                     'Name',
@@ -510,6 +647,8 @@ def SourceQuery(request):
                     'Avg. Int. Flux (mJy)',
                     'Avg. Peak Flux (mJy/beam)',
                     'Max Peak Flux (mJy/beam)',
+                    'Min SNR',
+                    'Max SNR',
                     'Avg. Compactness',
                     'Total Datapoints',
                     'Selavy Datapoints',
@@ -653,7 +792,18 @@ def SourceDetail(request, id, action=None):
         'order': [2, 'asc']
     }
 
-    context = {'source': source, 'measurements': measurements}
+    context = {
+        'source': source,
+        'measurements': measurements,
+        # falg to deactivate starring and render yellow star
+        'sourcefav': (
+            SourceFav.objects.filter(
+                user__id=request.user.id,
+                source__id=source['id']
+            )
+            .exists()
+        )
+    }
     return render(request, 'source_detail.html', context)
 
 
@@ -796,3 +946,262 @@ class MeasurementQuery(APIView):
             filename=f"image-{image_id}_{ra_deg:.5f}_{dec_deg:+.5f}_radius-{radius_deg:.3f}.reg",
         )
         return response
+
+
+class RawImageListSet(ViewSet):
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    @staticmethod
+    def gen_title_data_tokens(list_of_paths):
+        '''
+        generate a dataframe with extra columns for HTML tags title
+        and data-tokens to generate something like:
+        <option title={{title}} data-tokens={{datatokens}}>{{path}}</option>
+        this assume a path like this:
+        EPOCH06x/COMBINED/STOKESI_SELAVY/VAST_2118-06A.EPOCH06x.I.selavy.components.txt
+        For the following dataframe columns
+                                                     path
+        EPOCH06x/COMBINED/STOKESI_SELAVY/VAST_2118-06A...
+                                                 title
+        VAST_2118-06A.EPOCH06x.I.selavy.components.txt
+                                               datatokens
+        EPOCH06x VAST_2118-06A.EPOCH06x.I.selavy.compo...
+        '''
+        df = pd.DataFrame(list_of_paths, columns=['path'])
+        df = df.sort_values('path')
+        df['title'] = df['path'].str.split(pat=os.sep).str.get(-1)
+        df['datatokens'] = (
+            df['path'].str.split(pat=os.sep).str.get(0)
+            .str.cat(df['title'], sep=' ')
+        )
+
+        return df.to_dict(orient='records')
+
+    def list(self, request):
+        # generate the folders path regex, e.g. /path/to/images/**/*.fits
+        # first generate the list of main subfolders, e.g. [EPOCH01, ... ]
+        img_root = settings.RAW_IMAGE_DIR
+        if not os.path.exists(img_root):
+            msg = 'Raw image folder does not exists'
+            messages.error(request, msg)
+            raise Http404(msg)
+
+        img_subfolders_gen = filter(
+            lambda x: os.path.isdir(os.path.join(img_root, x)),
+            os.listdir(img_root)
+        )
+        img_subfolders1, img_subfolders2 = tee(img_subfolders_gen)
+        img_regex_list = list(map(
+            lambda x: os.path.join(img_root, x, '**' + os.sep + '*.fits'),
+            img_subfolders1
+        ))
+        selavy_regex_list = list(map(
+            lambda x: os.path.join(img_root, x, '**' + os.sep + '*.txt'),
+            img_subfolders2
+        ))
+        # add home directory for user and jupyter-user (user = github name)
+        req_user = request.user.username
+        for user in [f'~{req_user}', f'~jupyter-{req_user}']:
+            print(user)
+            user_home = os.path.expanduser(user)
+            if os.path.exists(user_home):
+                img_regex_list.append(os.path.join(user_home, '**' + os.sep + '*.fits'))
+                selavy_regex_list.append(os.path.join(user_home, '**' + os.sep + '*.txt'))
+
+        # generate raw image list in parallel
+        dask_list = db.from_sequence(img_regex_list)
+        fits_files = (
+            dask_list.map(lambda x: glob(x, recursive=True))
+            .flatten()
+            .compute()
+        )
+        if not fits_files:
+            messages.info(request, 'no fits files found')
+
+        # generate raw image list in parallel
+        dask_list = db.from_sequence(selavy_regex_list)
+        selavy_files = (
+            dask_list.map(lambda x: glob(x, recursive=True))
+            .flatten()
+            .compute()
+        )
+        if not fits_files:
+            messages.info(request, 'no selavy files found')
+
+        # generate response datastructure
+        data = {
+            'fits': self.gen_title_data_tokens(fits_files),
+            'selavy': self.gen_title_data_tokens(selavy_files)
+        }
+        serializer = RawImageSelavyListSerializer(data)
+
+        return Response(serializer.data)
+
+
+class ValidateRunConfigSet(ViewSet):
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
+    lookup_value_regex = '[-\w]+'
+    lookup_field = 'runname'
+
+    def retrieve(self, request, runname=None):
+        if not runname:
+            return Response(
+                {
+                    'message': {
+                        'severity': 'danger',
+                        'text': [
+                            'Error in config validation:',
+                            'Run name parameter null or not passed'
+                        ]
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        path = os.path.join(
+            settings.PIPELINE_WORKING_DIR,
+            runname,
+            'config.py'
+        )
+
+        if not os.path.exists(path):
+            return Response(
+                {
+                    'message': {
+                        'severity': 'danger',
+                        'text': [
+                            'Error in config validation:',
+                            f'Path {path} not existent'
+                        ]
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            pipeline = Pipeline(name=runname, config_path=path)
+            pipeline.validate_cfg()
+        except Exception as e:
+            trace = traceback.format_exc().splitlines()
+            trace = '\n'.join(trace[-4:])
+            msg = {
+                'message': {
+                'severity': 'danger',
+                'text': (
+                    f'Error in config validation:\n{e}\n{trace}'
+                ).split('\n')
+                }
+            }
+            return Response(msg, status=status.HTTP_400_BAD_REQUEST)
+
+        msg = {
+            'message': {
+            'severity': 'success',
+            'text': ['Configuration is valid.']
+            }
+        }
+
+        return Response(msg, status=status.HTTP_202_ACCEPTED)
+
+
+class SourceFavViewSet(ModelViewSet):
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = SourceFavSerializer
+
+    def get_queryset(self):
+        qs = SourceFav.objects.all().order_by('id')
+        user = self.request.query_params.get('user')
+        if user:
+            qs = qs.filter(user__username=user)
+
+        return qs
+
+    def create(self, request):
+        # TODO: couldn't get this below to work, so need to re-write using
+        # serializer
+        # serializer = SourceFavSerializer(data=request.data)
+        # if serializer.is_valid():
+        #     serializer.save()
+        #     return Response(serializer.data, status=status.HTTP_201_CREATED)
+        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        data = request.data.dict()
+        data.pop('csrfmiddlewaretoken')
+        data['user_id'] = request.user.id
+        try:
+            check = (
+                SourceFav.objects.filter(
+                    user__id=data['user_id'],
+                    source__id=data['source_id']
+                )
+                .exists()
+            )
+            if check:
+                messages.error(request, 'Source already added to favourites!')
+            else:
+                fav = SourceFav(**data)
+                fav.save()
+                messages.info(request, 'Added to favourites successfully')
+        except Exception as e:
+            messages.error(
+                request,
+                f'Errors in adding source to favourites: \n{e}'
+            )
+
+        return HttpResponseRedirect(reverse('pipeline:source_detail', args=[data['source_id']]))
+
+    def destroy(self, request, pk=None):
+        try:
+            qs = SourceFav.objects.filter(id=pk)
+            if qs.exists():
+                qs.delete()
+                messages.success(
+                    request,
+                    'Favourite source deleted successfully'
+                )
+                return Response({'message': 'ok'}, status=status.HTTP_200_OK)
+            else:
+                messages.info(request, 'Not found')
+                return Response(
+                    {'message': 'not found'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        except Exception as e:
+            messages.error(request, 'Error in deleting the favourite source')
+            return Response(
+                {'message': 'error in request'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+@login_required
+def UserSourceFavsList(request):
+    fields = ['source.name', 'comment', 'source.run.name', 'deletefield']
+
+    api_col_dict = {
+        'source.name': reverse('pipeline:source_detail', args=[1])[:-2],
+        'source.run.name': reverse('pipeline:run_detail', args=[1])[:-2]
+    }
+    colsfields = generate_colsfields(fields, api_col_dict, ['deletefield'])
+
+    return render(
+        request,
+        'generic_table.html',
+        {
+            'text': {
+                'title': 'Favourite Sources',
+                'description': 'List of favourite (starred) sources',
+                'breadcrumb': {'title': 'Favourite Sources', 'url': request.path},
+            },
+            'datatable': {
+                'api': (
+                    reverse('pipeline:api_sources_favs-list') +
+                    f'?format=datatables&user={request.user.username}'
+                ),
+                'colsFields': colsfields,
+                'colsNames': ['Source', 'Comment', 'Pipeline Run', 'Delete'],
+                'search': True,
+            }
+        }
+    )

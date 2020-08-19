@@ -49,3 +49,11 @@ class MeasurementAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 admin.site.register(Measurement, MeasurementAdmin)
+
+
+class SourceFavAdmin(admin.ModelAdmin):
+    list_display = ('user', 'source', 'comment')
+    list_filter = ('user',)
+    search_fields = ('user','source')
+
+admin.site.register(SourceFav, SourceFavAdmin)

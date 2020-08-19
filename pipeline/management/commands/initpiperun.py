@@ -7,8 +7,51 @@ from django.conf import settings as cfg
 from jinja2 import Template
 
 from pipeline.models import Run
+from pipeline.pipeline.errors import PipelineInitError
+from pipeline.pipeline.utils import get_create_p_run
+
 
 logger = logging.getLogger(__name__)
+
+
+def initialise_run(run_name, run_comment='', user=None, config=None):
+    # check for duplicated run name
+    p_run = Run.objects.filter(name__exact=run_name)
+    if p_run:
+        msg = 'Pipeline run name already used. Change name'
+        raise PipelineInitError(msg)
+
+    # create the pipeline run folder
+    run_path = os.path.join(cfg.PIPELINE_WORKING_DIR, run_name)
+
+    if os.path.exists(run_path):
+        msg = 'pipeline run path already present!'
+        raise PipelineInitError(msg)
+    else:
+        logger.info('creating pipeline run folder')
+        os.mkdir(run_path)
+
+    # copy default config into the pipeline run folder
+    logger.info('copying default config in pipeline run folder')
+    template_f = os.path.join(
+        cfg.BASE_DIR,
+        'pipeline',
+        'config_template.py.j2'
+    )
+    with open(template_f, 'r') as fp:
+        template_str = fp.read()
+
+    tm = Template(template_str)
+    with open(os.path.join(run_path, 'config.py'), 'w') as fp:
+        if config:
+            fp.write(tm.render(**config))
+        else:
+            fp.write(tm.render(**cfg.PIPE_RUN_CONFIG_DEFAULTS))
+
+    # create entry in db
+    p_run = get_create_p_run(run_name, run_path, run_comment, user)
+
+    return p_run
 
 
 class Command(BaseCommand):
@@ -40,33 +83,11 @@ class Command(BaseCommand):
             options['traceback'] = True
 
         name = options['run_folder_path'][0]
-        # check for duplicated run name
-        p_run = Run.objects.filter(name__exact=name)
-        if p_run:
-            raise CommandError('Pipeline run name already used. Change name')
 
-        # create the pipeline run folder
-        ds_path = os.path.join(cfg.PIPELINE_WORKING_DIR, name)
-
-        if os.path.exists(ds_path):
-            raise CommandError('pipeline run path already present!')
-        else:
-            logger.info('creating pipeline run folder')
-            os.mkdir(ds_path)
-
-        # copy default config into the pipeline run folder
-        logger.info('copying default config in pipeline run folder')
-        template_f = os.path.join(
-            cfg.BASE_DIR,
-            'pipeline',
-            'config_template.py.j2'
-        )
-        with open(template_f, 'r') as fp:
-            template_str = fp.read()
-
-        tm = Template(template_str)
-        with open(os.path.join(ds_path, 'config.py'), 'w') as fp:
-            fp.write(tm.render(**cfg.PIPE_RUN_CONFIG_DEFAULTS))
+        try:
+            p_run = initialise_run(name)
+        except Exception as e:
+            raise CommandError(e)
 
         logger.info((
             'pipeline run initialisation successful! Please modify the '
