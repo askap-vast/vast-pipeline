@@ -5,11 +5,12 @@ import pandas as pd
 from django.db import transaction
 
 from ..image.main import SelavyImage
-from ..models import Association, Measurement, Source
+from ..models import Association, Measurement, Source, RelatedSource
 from .utils import (
     get_create_img, get_create_img_band, get_measurement_models
 )
 from ..utils.utils import StopWatch
+from ..utils.model import bulk_upload_model
 
 
 logger = logging.getLogger(__name__)
@@ -168,18 +169,10 @@ def upload_sources(pipeline_run, srcs_df):
         )
         logger.info('Bulk created #%i sources', len(out_bulk))
 
-    # add source related object in DB
+
+def upload_related_sources(related):
     logger.info('Populate "related" field of sources...')
-    related_df = srcs_df.loc[
-        srcs_df['related_list'] != -1, ['related_list', 'src_dj']
-    ]
-    for idx, row in related_df.iterrows():
-        for src_id in row['related_list']:
-            try:
-                row['src_dj'].related.add(srcs_df.at[src_id, 'src_dj'])
-            except Exception as e:
-                logger.debug('Error in related update:\n%s', e)
-                pass
+    bulk_upload_model(related, RelatedSource)
 
 
 @transaction.atomic
