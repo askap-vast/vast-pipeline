@@ -184,7 +184,7 @@ def remove_duplicate_measurements(
     )
 
     # create df from results
-    results = pd.DataFrame(data={'source_id': idxc, 'match_id':idxcatalog})
+    results = pd.DataFrame(data={'source_id': idxc, 'match_id': idxcatalog})
     # create a pair column defining each pair ith index
     results['pair'] = results.apply(tuple, 1).apply(sorted).apply(tuple)
     # Drop the duplicate pairs (pairs are sorted so this works)
@@ -209,15 +209,17 @@ def remove_duplicate_measurements(
     sources_df = sources_df.drop(to_drop_indexes).sort_values(
         by='ra'
     )
+
+    # reset the source_df index
+    sources_df = sources_df.reset_index(drop=True)
+
     # Reset the source number
-    if not ini_df:
+    if ini_df:
+        sources_df['source'] = sources_df.index + 1
+    else:
         sources_df['source'] = range(
             min_source, sources_df.shape[0] + 1
         )
-
-    sources_df = sources_df.reset_index(drop=True)
-    if ini_df:
-        sources_df['source'] = sources_df.index + 1
 
     del results
 
