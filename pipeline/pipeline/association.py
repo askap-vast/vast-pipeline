@@ -515,7 +515,7 @@ def advanced_association(
 
 
 def association(images_df, meas_dj_obj, limit, dr_limit, bw_limit,
-    config):
+    duplicate_limit, config):
     '''
     The main association function that does the common tasks between basic
     and advanced modes.
@@ -536,8 +536,10 @@ def association(images_df, meas_dj_obj, limit, dr_limit, bw_limit,
     skyc1_srcs = prep_skysrc_df(
         first_images,
         config.FLUX_PERC_ERROR,
+        duplicate_limit,
         ini_df=True
     )
+    skyc1_srcs['epoch'] = unique_epochs[0]
     # create base catalogue
     skyc1 = SkyCoord(
         ra=skyc1_srcs['ra'].values * u.degree,
@@ -552,7 +554,12 @@ def association(images_df, meas_dj_obj, limit, dr_limit, bw_limit,
         images = images_df.loc[
             images_df['epoch'] == epoch
         ]['image'].to_list()
-        skyc2_srcs = prep_skysrc_df(images, config.FLUX_PERC_ERROR)
+        skyc2_srcs = prep_skysrc_df(
+            images,
+            config.FLUX_PERC_ERROR,
+            duplicate_limit
+        )
+        skyc2_srcs['epoch'] = epoch
         skyc2 = SkyCoord(
             ra=skyc2_srcs['ra'].values * u.degree,
             dec=skyc2_srcs['dec'].values * u.degree
@@ -716,7 +723,7 @@ def _correct_parallel_source_ids(df, correction):
 
 
 def parallel_association(
-    images_df, meas_dj_obj, limit, dr_limit, bw_limit,
+    images_df, meas_dj_obj, limit, dr_limit, bw_limit, duplicate_limit,
     config, n_skyregion_groups
 ):
     logger.info(
@@ -746,6 +753,7 @@ def parallel_association(
         'd2d': 'f',
         'dr': 'f',
         'related': 'O',
+        'epoch': 'i',
         'interim_ew': 'f',
         'interim_ns': 'f',
     }
@@ -764,6 +772,7 @@ def parallel_association(
             limit=limit,
             dr_limit=dr_limit,
             bw_limit=bw_limit,
+            duplicate_limit=duplicate_limit,
             config=config,
             meta=meta
         ).compute(n_workers=n_cpu, scheduler='processes')

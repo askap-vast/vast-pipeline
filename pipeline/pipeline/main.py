@@ -214,6 +214,9 @@ class Pipeline():
         limit = Angle(self.config.ASSOCIATION_RADIUS * u.arcsec)
         dr_limit = self.config.ASSOCIATION_DE_RUITER_RADIUS
         bw_limit = self.config.ASSOCIATION_BEAMWIDTH_LIMIT
+        duplicate_limit = Angle(
+            self.config.ASSOCIATION_EPOCH_DUPLICATE_RADIUS * u.arcsec
+        )
 
         # 2.1 Check if sky regions to be associated can be
         # split into connected point groups
@@ -236,6 +239,7 @@ class Pipeline():
                 limit,
                 dr_limit,
                 bw_limit,
+                duplicate_limit,
                 self.config,
                 n_skyregion_groups,
             )
@@ -254,6 +258,7 @@ class Pipeline():
                 limit,
                 dr_limit,
                 bw_limit,
+                duplicate_limit,
                 self.config,
             )
 
@@ -265,6 +270,8 @@ class Pipeline():
         # steps 4 and 5 below.
         missing_sources_df = get_src_skyregion_merged_df(
             sources_df,
+            images_df,
+            skyregs_df,
             p_run
         )
 
@@ -272,7 +279,6 @@ class Pipeline():
         new_sources_df = new_sources(
             sources_df,
             missing_sources_df,
-            images_df,
             self.config.NEW_SOURCE_MIN_SIGMA,
             p_run
         )

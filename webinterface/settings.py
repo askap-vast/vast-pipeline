@@ -262,6 +262,7 @@ PIPE_RUN_CONFIG_DEFAULTS = {
     'astrometric_uncertainty_ra': 1,
     'astrometric_uncertainty_dec': 1,
     'association_parallel': False,
+    'association_epoch_duplicate_radius': 2.5,
     'association_method': 'basic',
     'association_radius': 10.,
     'association_de_ruiter_radius': 5.68,

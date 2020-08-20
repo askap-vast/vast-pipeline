@@ -3,7 +3,7 @@ import logging
 import numpy as np
 import pandas as pd
 from astropy.io import fits
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, Angle
 import astropy.units as u
 import dask.dataframe as dd
 from django.conf import settings
@@ -158,11 +158,14 @@ def get_create_p_run(name, path, comment='', user=None):
     return p_run
 
 
-def remove_duplicate_measurements(sources_df, ini_df=False):
+def remove_duplicate_measurements(
+    sources_df, dup_lim=Angle(2.5 * u.arcsec), ini_df=False
+):
     """
     Remove duplicate sources from dataframe
     """
     logger.debug('Cleaning duplicate sources from epoch...')
+    logger.debug('Using crossmatch radius of %f arcsec.', dup_lim.arcsec)
     min_source = sources_df['source'].min()
 
     # sort by the distance from the image centre so we know
@@ -177,7 +180,7 @@ def remove_duplicate_measurements(sources_df, ini_df=False):
 
     # perform search around sky to get all self matches
     idxc, idxcatalog, d2d_around, _ = sources_sc.search_around_sky(
-        sources_sc, 2.5 * u.arcsec
+        sources_sc, dup_lim
     )
 
     # create df from results
@@ -213,6 +216,8 @@ def remove_duplicate_measurements(sources_df, ini_df=False):
         )
 
     sources_df = sources_df.reset_index(drop=True)
+    if ini_df:
+        sources_df['source'] = sources_df.index + 1
 
     del results
 
@@ -252,7 +257,7 @@ def _load_measurements(image, cols, start_id=0, ini_df=False):
     return df
 
 
-def prep_skysrc_df(images, perc_error, ini_df=False):
+def prep_skysrc_df(images, perc_error, duplicate_limit, ini_df=False):
     '''
     initiliase the source dataframe to use in association logic by
     reading the measurement parquet file and creating columns
@@ -287,7 +292,9 @@ def prep_skysrc_df(images, perc_error, ini_df=False):
                 ignore_index=True
             )
 
-        df = remove_duplicate_measurements(df, ini_df=ini_df)
+        df = remove_duplicate_measurements(
+            df, dup_lim=duplicate_limit, ini_df=ini_df
+        )
 
     df = df.drop('dist_from_centre', axis=1)
 
@@ -448,6 +455,7 @@ def parallel_groupby(df):
 def calc_ave_coord(grp):
     d = {}
     d['img_list'] = grp['image'].values.tolist()
+    d['epoch_list'] = grp['epoch'].values.tolist()
     d['wavg_ra'] = grp['interim_ew'].sum() / grp['weight_ew'].sum()
     d['wavg_dec'] = grp['interim_ns'].sum() / grp['weight_ns'].sum()
     return pd.Series(d)
@@ -456,6 +464,7 @@ def calc_ave_coord(grp):
 def parallel_groupby_coord(df):
     col_dtype = {
         'img_list': 'O',
+        'epoch_list': 'O',
         'wavg_ra': 'f',
         'wavg_dec': 'f',
     }
@@ -516,7 +525,17 @@ def get_image_list_diff(row):
     return out
 
 
-def get_src_skyregion_merged_df(sources_df, p_run):
+def get_names_and_epochs(grp):
+    d = {}
+    d['skyreg_img_epoch_list'] = [[[x,],y] for x,y in zip(
+        grp['name'].values.tolist(),
+        grp['epoch'].values.tolist(),
+    )]
+
+    return pd.Series(d)
+
+
+def get_src_skyregion_merged_df(sources_df, images_df, skyreg_df, p_run):
     """
     check and extract expected measurements, and associated them with the
     related source(s)
@@ -535,22 +554,16 @@ def get_src_skyregion_merged_df(sources_df, p_run):
         'id', 'centre_ra', 'centre_dec', 'xtr_radius'
     ]
 
-    images_df = pd.DataFrame(list(
-        Image.objects.filter(
-            run=p_run
-        ).select_related('skyreg').order_by('datetime').values(*tuple(cols))
-    )).explode('skyreg__id')
-
-    skyreg_df = pd.DataFrame(list(
-        SkyRegion.objects.all().filter(run=p_run).values(*tuple(skyreg_cols))
-    ))
+    images_df['name'] = images_df['image'].apply(
+        lambda x: x.name
+    )
 
     skyreg_df = skyreg_df.join(
         pd.DataFrame(
-            images_df.groupby('skyreg__id').apply(
-                lambda x: x['name'].values.tolist()
+            images_df.groupby('skyreg_id').apply(
+                get_names_and_epochs
             )
-        ).rename(columns={0:'skyreg_img_list'}),
+        ),
         on='id'
     )
 
@@ -563,6 +576,7 @@ def get_src_skyregion_merged_df(sources_df, p_run):
 
     # create dataframe with all skyregions and sources combinations
     src_skyrg_df = cross_join(srcs_df.reset_index(), skyreg_df)
+
     src_skyrg_df['sep'] = np.rad2deg(
         on_sky_sep(
             np.deg2rad(src_skyrg_df['wavg_ra'].values),
@@ -575,11 +589,24 @@ def get_src_skyregion_merged_df(sources_df, p_run):
     # select rows where separation is less than sky region radius
     # drop not more useful columns and groupby source id
     # compute list of images
+    src_skyrg_df = src_skyrg_df.loc[
+        src_skyrg_df.sep < src_skyrg_df.xtr_radius,
+        ['source', 'skyreg_img_epoch_list', 'sep']
+    ].explode('skyreg_img_epoch_list')
+
+    src_skyrg_df[
+        ['skyreg_img_list', 'skyreg_epoch']
+    ] = src_skyrg_df['skyreg_img_epoch_list'].apply(pd.Series)
+
     src_skyrg_df = (
-        src_skyrg_df.loc[
-            src_skyrg_df['sep'] < src_skyrg_df['xtr_radius'],
-            ['source', 'skyreg_img_list']
-        ]
+        src_skyrg_df.sort_values(
+            ['source', 'skyreg_epoch', 'sep']
+        )
+        .drop_duplicates(['source', 'skyreg_epoch'])
+        .drop(
+            ['skyreg_img_epoch_list', 'sep', 'skyreg_epoch'],
+            axis=1
+        )
         .groupby('source')
         .agg('sum') # sum because we need to preserve order
     )
