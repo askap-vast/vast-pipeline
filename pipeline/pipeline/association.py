@@ -713,7 +713,7 @@ def _correct_parallel_source_ids(df, correction):
     for i in df.loc[related_mask, 'related'].values:
         new = []
         for j in i:
-            new.append(j+9000)
+            new.append(j + correction)
         new_related.append(new)
     df.loc[
         df[related_mask].index.values, 'related'
