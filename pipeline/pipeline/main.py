@@ -260,16 +260,8 @@ class Pipeline():
 
     @staticmethod
     def set_status(pipe_run, status=None):
-        if status and status == 'RUN':
-            # set run status
-            if pipe_run.status != 'RUN':
-                with transaction.atomic():
-                    pipe_run.status = 'RUN'
-                    pipe_run.save()
-
-        if status and status == 'END':
-            # set completed status
-            if pipe_run.status != 'END':
-                with transaction.atomic():
-                    pipe_run.status = 'END'
-                    pipe_run.save()
+        choices = [x[0] for x in Run._meta.get_field('status').choices]
+        if status and status in choices and pipe_run.status != status:
+            with transaction.atomic():
+                pipe_run.status = status
+                pipe_run.save()

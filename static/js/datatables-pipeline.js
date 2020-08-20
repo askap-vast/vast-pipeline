@@ -1,35 +1,46 @@
 // Formatting function for API
 function obj_formatter(obj) {
-    if (obj.render.hasOwnProperty('url')) {
-        let [prefix, col] = [obj.render.url.prefix, obj.render.url.col];
-        let hrefValue = function(data, type, row, meta) {
-            return '<a href="' + prefix + row.id + ' "target="_blank">' + row[col] + '</a>';
-        };
-        obj.render = hrefValue;
-        return obj;
-    } else if (obj.render.hasOwnProperty('float')) {
-        let [precision, scale, col] = [
-            obj.render.float.precision,
-            obj.render.float.scale,
-            obj.render.float.col
-        ];
-        let floatFormat = function(data, type, row, meta) {
-            return (row[col] * scale).toFixed(precision);
-        };
-        obj.render = floatFormat;
-        return obj;
-    } else if (obj.render.hasOwnProperty('contains_sibl')) {
-        let col = obj.render.contains_sibl.col;
-        let sibl_bool = function(data, type, row, meta) {
-            if (row[col] > 0) {
-                return true;
-            } else {
-                return false;
-            }
-        };
-        obj.render = sibl_bool;
-        return obj;
+  if (obj.render.hasOwnProperty('url')) {
+    let hrefValue = null;
+    if (obj.render.url.hasOwnProperty('nested')) {
+      let [prefix, col] = [obj.render.url.prefix, obj.render.url.col];
+      hrefValue = function(data, type, row, meta) {
+        // split the col on the . for nested JSON and build the selection
+        let sel = row;
+        col.split('.').forEach(item => sel = sel[item]);
+        return '<a href="' + prefix + sel.id + ' "target="_blank">' + data + '</a>';
+      };
+    } else {
+      let [prefix, col] = [obj.render.url.prefix, obj.render.url.col];
+      hrefValue = function(data, type, row, meta) {
+        return '<a href="' + prefix + row.id + ' "target="_blank">' + row[col] + '</a>';
+      };
+    }
+    obj.render = hrefValue;
+    return obj;
+  } else if (obj.render.hasOwnProperty('float')) {
+    let [precision, scale, col] = [
+      obj.render.float.precision,
+      obj.render.float.scale,
+      obj.render.float.col
+    ];
+    let floatFormat = function(data, type, row, meta) {
+        return (row[col] * scale).toFixed(precision);
     };
+    obj.render = floatFormat;
+    return obj;
+  } else if (obj.render.hasOwnProperty('contains_sibl')) {
+    let col = obj.render.contains_sibl.col;
+    let sibl_bool = function(data, type, row, meta) {
+      if (row[col] > 0) {
+        return true;
+      } else {
+        return false;
+      }
+    };
+    obj.render = sibl_bool;
+    return obj;
+  };
 };
 
 
@@ -41,7 +52,7 @@ $(document).ready(function() {
     let testFields = dataConf.colsFields;
     testFields.forEach( function(obj) {
       if (obj.hasOwnProperty('render')) {
-          obj = obj_formatter(obj)
+        obj = obj_formatter(obj)
       }
     });
     var dataTableConf = {
@@ -228,10 +239,10 @@ $(document).ready(function() {
     let datapts_min = document.getElementById("datapointMinSelect");
     let datapts_max = document.getElementById("datapointMaxSelect");
     if (datapts_min.value) {
-      qry_url = qry_url + "&min_measurements=" + datapts_min.value;
+      qry_url = qry_url + "&min_n_meas=" + datapts_min.value;
     };
     if (datapts_max.value) {
-      qry_url = qry_url + "&max_measurements=" + datapts_max.value;
+      qry_url = qry_url + "&max_n_meas=" + datapts_max.value;
     };
     let compactness_min = document.getElementById("compactnessMinSelect");
     let compactness_max = document.getElementById("compactnessMaxSelect");
@@ -241,21 +252,37 @@ $(document).ready(function() {
     if (compactness_max.value) {
       qry_url = qry_url + "&max_avg_compactness=" + compactness_max.value;
     };
+    let min_snr_min = document.getElementById("MinSnrMinSelect");
+    let min_snr_max = document.getElementById("MinSnrMaxSelect");
+    if (min_snr_min.value) {
+      qry_url = qry_url + "&min_min_snr=" + min_snr_min.value;
+    };
+    if (min_snr_max.value) {
+      qry_url = qry_url + "&max_min_snr=" + min_snr_max.value;
+    };
+    let max_snr_min = document.getElementById("MaxSnrMinSelect");
+    let max_snr_max = document.getElementById("MaxSnrMaxSelect");
+    if (max_snr_min.value) {
+      qry_url = qry_url + "&min_max_snr=" + max_snr_min.value;
+    };
+    if (max_snr_max.value) {
+      qry_url = qry_url + "&max_max_snr=" + max_snr_max.value;
+    };
     let selavy_min = document.getElementById("SelavyMinSelect");
     let selavy_max = document.getElementById("SelavyMaxSelect");
     if (selavy_min.value) {
-      qry_url = qry_url + "&min_selavy_measurements=" + selavy_min.value;
+      qry_url = qry_url + "&min_n_meas_sel=" + selavy_min.value;
     };
     if (selavy_max.value) {
-      qry_url = qry_url + "&max_selavy_measurements=" + selavy_max.value;
+      qry_url = qry_url + "&max_n_meas_sel=" + selavy_max.value;
     };
     let forced_min = document.getElementById("ForcedMinSelect");
     let forced_max = document.getElementById("ForcedMaxSelect");
     if (forced_min.value) {
-      qry_url = qry_url + "&min_forced_measurements=" + forced_min.value;
+      qry_url = qry_url + "&min_n_meas_forced=" + forced_min.value;
     };
     if (forced_max.value) {
-      qry_url = qry_url + "&max_forced_measurements=" + forced_max.value;
+      qry_url = qry_url + "&max_n_meas_forced=" + forced_max.value;
     };
     let relations_min = document.getElementById("RelationsMinSelect");
     let relations_max = document.getElementById("RelationsMaxSelect");

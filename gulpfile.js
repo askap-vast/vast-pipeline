@@ -135,6 +135,12 @@ function modules() {
   var bootstrapJS = gulp.src('./node_modules/bootstrap/dist/js/*')
     .pipe(gulp.dest(paths.vendor + '/bootstrap/js'));
 
+  // Bootstrap Select
+  var bootstrapSelectJS = gulp.src('./node_modules/bootstrap-select/dist/js/*')
+    .pipe(gulp.dest(paths.vendor + '/bootstrap-select/js'));
+  var bootstrapSelectCSS = gulp.src('./node_modules/bootstrap-select/dist/css/*')
+    .pipe(gulp.dest(paths.vendor + '/bootstrap-select/css'));
+
   // ChartJS
   var chartJS = gulp.src([
       './node_modules/chart.js/dist/*.js',
@@ -180,7 +186,19 @@ function modules() {
   var particlesJs = gulp.src('./node_modules/particles.js/particles.js')
     .pipe(gulp.dest(paths.vendor + '/particles.js'));
 
-  return merge(bootstrapJS, chartJS, dataTables, fontAwesome, jquery, jqueryEasing, d3Celestial, d3CelestialData, d3CelestialImage, particlesJs);
+  // PrismJs
+  var prismJs = gulp.src('./node_modules/prismjs/prism.js')
+    .pipe(gulp.dest(paths.vendor + '/prismjs'));
+  var prismJsPy = gulp.src('./node_modules/prismjs/components/prism-python.min.js')
+    .pipe(gulp.dest(paths.vendor + '/prismjs'));
+  var prismJsLineNum = gulp.src('./node_modules/prismjs/plugins/line-numbers/prism-line-numbers.min.js')
+    .pipe(gulp.dest(paths.vendor + '/prismjs/line-numbers'));
+  var prismJsCss = gulp.src('./node_modules/prismjs/themes/prism.css')
+    .pipe(gulp.dest(paths.vendor + '/prismjs'));
+  var prismJsLineNumCss = gulp.src('./node_modules/prismjs/plugins/line-numbers/prism-line-numbers.css')
+    .pipe(gulp.dest(paths.vendor + '/prismjs/line-numbers'));
+
+  return merge(bootstrapJS, chartJS, dataTables, fontAwesome, jquery, jqueryEasing, d3Celestial, d3CelestialData, d3CelestialImage, particlesJs, prismJs, prismJsPy, prismJsLineNum, prismJsCss, prismJsLineNumCss);
 }
 
 // CSS task

@@ -2,6 +2,7 @@ import logging
 import math
 from django.db import models
 from django.core.validators import RegexValidator
+from django.contrib.auth.models import User
 
 
 # Create your models here.
@@ -129,6 +130,8 @@ class Run(models.Model):
     A Run is essentially a pipeline run/processing istance over a set of
     images
     """
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+
     name = models.CharField(
         max_length=64,
         unique=True,
@@ -306,6 +309,12 @@ class Source(models.Model):
     )
     avg_compactness = models.FloatField(
         help_text='The average compactness.'
+    )
+    min_snr = models.FloatField(
+        help_text='The minimum signal-to-noise ratio value of the detections.'
+    )
+    max_snr = models.FloatField(
+        help_text='The maximum signal-to-noise ratio value of the detections.'
     )
 
     # metrics
@@ -598,6 +607,10 @@ class Measurement(models.Model):
         help_text='Local rms in mJy from Selavy.'
     )# mJy/beam
 
+    snr = models.FloatField(
+        help_text='Signal-to-noise ratio of the measurement.'
+    )
+
     flag_c4 = models.BooleanField(
         default=False,
         help_text='Fit flag from Selavy.'
@@ -697,3 +710,15 @@ class Association(models.Model):
             f'distance: {self.d2d:.2f}' if self.dr == 0 else
             f'distance: {self.dr:.2f}'
         )
+
+
+class SourceFav(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    source = models.ForeignKey(Source, on_delete=models.CASCADE)
+
+    comment = models.TextField(
+        max_length=500,
+        default='',
+        blank=True,
+        help_text='Why did you include this as favourite'
+    )
