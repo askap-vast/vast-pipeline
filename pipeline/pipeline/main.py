@@ -252,6 +252,10 @@ class Pipeline():
                 }
             )
 
+            images_df['skyreg_id'] = images_df['image'].apply(
+                lambda x: x.skyreg_id
+            )
+
             sources_df = association(
                 images_df,
                 meas_dj_obj,
