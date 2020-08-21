@@ -191,15 +191,15 @@ def remove_duplicate_measurements(
     results = results.drop_duplicates('pair')
     # No longer need pair
     results = results.drop('pair', axis=1)
-    # Create a subtract column to easily identify pairs with itself
-    results['pair_sub'] = results['source_id'] - results['match_id']
     # We're only interested in the sources which have matches.
     results = results.loc[
         results.duplicated('source_id', keep=False)
     ].sort_values(by='source_id')
     # Drop all self matches and we are left with those to drop
     # in the match id column.
-    to_drop = results.loc[results['pair_sub'] != 0]['match_id']
+    to_drop = results.loc[
+        results['source_id'] != results['match_id']
+    ]['match_id']
     # Get the index values from the ith values
     to_drop_indexes = sources_df.iloc[to_drop].index.values
     logger.debug(
