@@ -122,7 +122,7 @@ def final_operations(
 
     # update measurments with sources to get associations
     sources_df = (
-        sources_df.drop('related', axis=1)# TODO: check if this columns is there
+        sources_df.drop('related', axis=1)
         .merge(srcs_df.rename(columns={'id': 'source_id'}), on='source')
         .merge(meas_dj_obj, on='id')
     )
