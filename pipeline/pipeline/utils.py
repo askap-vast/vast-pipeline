@@ -216,10 +216,6 @@ def remove_duplicate_measurements(
     # Reset the source number
     if ini_df:
         sources_df['source'] = sources_df.index + 1
-    else:
-        sources_df['source'] = range(
-            min_source, sources_df.shape[0] + 1
-        )
 
     del results
 

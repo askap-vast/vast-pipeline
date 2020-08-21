@@ -514,7 +514,7 @@ def advanced_association(
     return sources_df, skyc1_srcs
 
 
-def association(images_df, meas_dj_obj, limit, dr_limit, bw_limit,
+def association(images_df, limit, dr_limit, bw_limit,
     duplicate_limit, config):
     '''
     The main association function that does the common tasks between basic
@@ -554,6 +554,11 @@ def association(images_df, meas_dj_obj, limit, dr_limit, bw_limit,
         images = images_df.loc[
             images_df['epoch'] == epoch
         ]['image'].to_list()
+        max_beam_maj = images_df.loc[
+            images_df['epoch'] == epoch
+        ]['image'].apply(
+            lambda x: x.beam_bmaj
+        ).max()
         skyc2_srcs = prep_skysrc_df(
             images,
             config.FLUX_PERC_ERROR,
@@ -578,7 +583,7 @@ def association(images_df, meas_dj_obj, limit, dr_limit, bw_limit,
         elif method in ['advanced', 'deruiter']:
             if method == 'deruiter':
                 bw_max = Angle(
-                    bw_limit * (image.beam_bmaj * 3600. / 2.) * u.arcsec
+                    bw_limit * (max_beam_maj * 3600. / 2.) * u.arcsec
                 )
             else:
                 bw_max = limit
@@ -723,7 +728,7 @@ def _correct_parallel_source_ids(df, correction):
 
 
 def parallel_association(
-    images_df, meas_dj_obj, limit, dr_limit, bw_limit, duplicate_limit,
+    images_df, limit, dr_limit, bw_limit, duplicate_limit,
     config, n_skyregion_groups
 ):
     logger.info(
@@ -765,7 +770,7 @@ def parallel_association(
         .groupby('skyreg_group')
         .apply(
             association,
-            meas_dj_obj=meas_dj_obj,
+            # meas_dj_obj=meas_dj_obj,
             limit=limit,
             dr_limit=dr_limit,
             bw_limit=bw_limit,
