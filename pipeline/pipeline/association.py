@@ -758,10 +758,7 @@ def parallel_association(
         'interim_ns': 'f',
     }
 
-    required_cpu = n_skyregion_groups + 1
-    available_cpu = cpu_count() - 1
-
-    n_cpu = required_cpu if required_cpu < available_cpu else available_cpu
+    n_cpu = cpu_count() - 1
 
     results = (
         dd.from_pandas(images_df, n_cpu)
