@@ -710,19 +710,18 @@ def association(images_df, limit, dr_limit, bw_limit,
 
 def _correct_parallel_source_ids(df, correction):
 
-    df.loc[:, 'source'] = df['source'] + correction
+    df.loc[:, 'source'] = df['source'].values + correction
     related_mask = ~(df['related'].isna())
 
-    new_related = []
+    new_relations = df.loc[
+        related_mask, 'related'
+    ].explode() + correction
 
-    for i in df.loc[related_mask, 'related'].values:
-        new = []
-        for j in i:
-            new.append(j + correction)
-        new_related.append(new)
     df.loc[
         df[related_mask].index.values, 'related'
-    ] = new_related
+    ] = new_relations.groupby(level=0).apply(
+        lambda x: x.values.tolist()
+    )
 
     return df
 
@@ -782,22 +781,19 @@ def parallel_association(
 
     indexes = results.index.levels[0].values
 
-    corr_results = results.loc[indexes[0]]
-
     for i in indexes[1:]:
-        temp_df = results.loc[i].copy()
-        max_id = corr_results.source.max()
-        corr_group = _correct_parallel_source_ids(
-            temp_df, max_id
+        max_id = results.loc[i - 1].source.max()
+        corr_df = _correct_parallel_source_ids(
+            results.loc[i].loc[:, ['source', 'related']],
+            max_id
         )
-        corr_results = corr_results.append(
-            corr_group,
-            ignore_index=True
-        )
+        # I couldn't get the value set to work without a copy
+        # warning without setting the multi-index first.
+        corr_df.index = results.loc[(i, slice(None)), ].index
+        results.loc[
+            (i, slice(None)) , ['source', 'related']
+        ] = corr_df
 
-        del corr_group
+    results = results.reset_index(drop=True)
 
-    del temp_df
-    del results
-
-    return corr_results
+    return results

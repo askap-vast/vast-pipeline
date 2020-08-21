@@ -538,11 +538,13 @@ def get_src_skyregion_merged_df(sources_df, images_df, skyreg_df, p_run):
     check and extract expected measurements, and associated them with the
     related source(s)
     """
+    logger.info("Creating ideal source coverage df...")
 
-    timer = StopWatch()
+    merged_timer = StopWatch()
 
     # get all the skyregions and related images
     cols = [
+        # beam columns are used in new sources next
         'id', 'name', 'measurements_path', 'path', 'noise_path',
         'beam_bmaj', 'beam_bmin', 'beam_bpa', 'background_path',
         'datetime', 'skyreg__id'
@@ -568,9 +570,9 @@ def get_src_skyregion_merged_df(sources_df, images_df, skyreg_df, p_run):
     sources_df = sources_df.sort_values(by='datetime')
     # calculate some metrics on sources
     # compute only some necessary metrics in the groupby
-    timer.reset()
+    timer = StopWatch()
     srcs_df = parallel_groupby_coord(sources_df)
-    logger.info('Groupby-apply time: %.2f seconds', timer.reset())
+    logger.debug('Groupby-apply time: %.2f seconds', timer.reset())
 
     # create dataframe with all skyregions and sources combinations
     src_skyrg_df = cross_join(srcs_df.reset_index(), skyreg_df)
@@ -594,7 +596,10 @@ def get_src_skyregion_merged_df(sources_df, images_df, skyreg_df, p_run):
 
     src_skyrg_df[
         ['skyreg_img_list', 'skyreg_epoch']
-    ] = src_skyrg_df['skyreg_img_epoch_list'].apply(pd.Series)
+    ] = pd.DataFrame(
+        src_skyrg_df['skyreg_img_epoch_list'].tolist(),
+        index=src_skyrg_df.index
+    )
 
     src_skyrg_df = (
         src_skyrg_df.sort_values(
@@ -623,6 +628,10 @@ def get_src_skyregion_merged_df(sources_df, images_df, skyreg_df, p_run):
     srcs_df = srcs_df.loc[
         srcs_df['img_diff'] != -1
     ]
+
+    logger.info(
+        'Ideal source coverage time: %.2f seconds', merged_timer.reset()
+    )
 
     return srcs_df
 
