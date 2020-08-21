@@ -169,7 +169,6 @@ class Pipeline():
         sources_df = association(
             p_run,
             images,
-            meas_dj_obj,
             limit,
             dr_limit,
             bw_limit,
