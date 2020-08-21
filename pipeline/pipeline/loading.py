@@ -10,13 +10,29 @@ from .utils import (
     get_create_img, get_create_img_band, get_measurement_models
 )
 from ..utils.utils import StopWatch
-from ..utils.model import bulk_upload_model
 
 
 logger = logging.getLogger(__name__)
 
 
 @transaction.atomic
+def bulk_upload_model(objs, djmodel, batch_size=10_000):
+    '''
+    bulk upload a pandas series of django models to db
+    objs: pandas.Series
+    djmodel: django.model
+    '''
+    size = objs.size
+    objs = objs.values.tolist()
+
+    for idx in range(0, size, batch_size):
+        out_bulk = djmodel.objects.bulk_create(
+            objs[idx : idx + batch_size],
+            batch_size
+        )
+        logger.info('Bulk created #%i %s', len(out_bulk), djmodel.__name__)
+
+
 def upload_images(paths, config, pipeline_run):
     '''
     carry the first part of the pipeline, by uploading all the images
@@ -38,14 +54,16 @@ def upload_images(paths, config, pipeline_run):
         logger.info('Reading image %s ...', image.name)
 
         # 1.1 get/create the frequency band
-        band = get_create_img_band(image)
+        with transaction.atomic():
+            band = get_create_img_band(image)
         if band not in bands:
             bands.append(band)
 
         # 1.2 create image and skyregion entry in DB
-        img, skyreg, exists_f = get_create_img(
-            pipeline_run, band.id, image
-        )
+        with transaction.atomic():
+            img, skyreg, exists_f = get_create_img(
+                pipeline_run, band.id, image
+            )
 
         # add image and skyregion to respective lists
         images.append(img)
@@ -64,9 +82,7 @@ def upload_images(paths, config, pipeline_run):
                 )
                 .to_frame()
             )
-            measurements['id'] = measurements.meas_dj.apply(
-                getattr, args=('id',)
-            )
+            measurements['id'] = measurements['meas_dj'].apply(lambda x: x.id)
             meas_dj_obj = meas_dj_obj.append(measurements)
             continue
 
@@ -83,21 +99,10 @@ def upload_images(paths, config, pipeline_run):
             get_measurement_models, axis=1
         )
         # do a upload without evaluate the objects, that should be faster
-        # see https://docs.djangoproject.com/en/2.2/ref/models/querysets/
-        batch_size = 10_000
-        for idx in range(0, measurements['meas_dj'].size, batch_size):
-            out_bulk = Measurement.objects.bulk_create(
-                measurements['meas_dj'].iloc[
-                    idx : idx + batch_size
-                ].values.tolist(),
-                batch_size
-            )
-            logger.info('Bulk uploaded #%i measurements', len(out_bulk))
+        bulk_upload_model(measurements['meas_dj'], Measurement)
 
         # make a columns with the measurement id
-        measurements['id'] = measurements['meas_dj'].apply(
-            getattr, args=('id',)
-        )
+        measurements['id'] = measurements['meas_dj'].apply(lambda x: x.id)
         meas_dj_obj = meas_dj_obj.append(
             measurements.loc[:, ['id','meas_dj']]
         )
@@ -111,7 +116,7 @@ def upload_images(paths, config, pipeline_run):
             img.measurements_path,
             index=False
         )
-        del measurements, image, band, img, out_bulk
+        del measurements, image, band, img
 
     # write images parquet file under pipeline run folder
     images_df = pd.DataFrame(map(lambda x: x.__dict__, images))
@@ -142,32 +147,26 @@ def upload_images(paths, config, pipeline_run):
     return images, meas_dj_obj
 
 
-@transaction.atomic
 def upload_sources(pipeline_run, srcs_df):
     '''
     delete previous sources for given pipeline run and bulk upload
     new found sources as well as related sources
     '''
     # create sources in DB
-    # TODO remove deleting existing sources
-    if Source.objects.filter(run=pipeline_run).exists():
-        logger.info('Removing objects from previous pipeline run')
-        n_del, detail_del = Source.objects.filter(run=pipeline_run).delete()
-        logger.info(
-            ('Deleting all sources and related objects for this run. '
-             'Total objects deleted: %i'),
-            n_del,
-        )
-        logger.debug('(type, #deleted): %s', detail_del)
+    with transaction.atomic():
+        if Source.objects.filter(run=pipeline_run).exists():
+            logger.info('Removing objects from previous pipeline run')
+            n_del, detail_del = (
+                Source.objects.filter(run=pipeline_run).delete()
+            )
+            logger.info(
+                ('Deleting all sources and related objects for this run. '
+                 'Total objects deleted: %i'),
+                n_del,
+            )
+            logger.debug('(type, #deleted): %s', detail_del)
 
-    logger.info('Uploading associations to db...')
-    batch_size = 10_000
-    for idx in range(0, srcs_df['src_dj'].size, batch_size):
-        out_bulk = Source.objects.bulk_create(
-            srcs_df['src_dj'].iloc[idx : idx + batch_size].tolist(),
-            batch_size
-        )
-        logger.info('Bulk created #%i sources', len(out_bulk))
+    bulk_upload_model(srcs_df['src_dj'], Source)
 
 
 def upload_related_sources(related):
@@ -175,12 +174,5 @@ def upload_related_sources(related):
     bulk_upload_model(related, RelatedSource)
 
 
-@transaction.atomic
 def upload_associations(associations_list):
-    batch_size = 10_000
-    for idx in range(0, associations_list.size, batch_size):
-        out_bulk = Association.objects.bulk_create(
-            associations_list.iloc[idx : idx + batch_size].tolist(),
-            batch_size
-        )
-        logger.info('Bulk created #%i associations', len(out_bulk))
+    bulk_upload_model(associations_list, Association)

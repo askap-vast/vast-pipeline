@@ -338,7 +338,7 @@ def forced_extraction(
             logger.info('Bulk uploaded #%i measurements', len(out_bulk))
 
     # make the measurement id column and rename to source
-    extr_df['id'] = extr_df['meas_dj'].apply(getattr, args=('id',))
+    extr_df['id'] = extr_df['meas_dj'].apply(lambda x: x.id)
     extr_df = extr_df.rename(columns={'source_tmp_id':'source'})
 
     # write forced measurements to specific parquet
