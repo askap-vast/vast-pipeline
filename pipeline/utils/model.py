@@ -10,12 +10,14 @@ logger = logging.getLogger(__name__)
 @transaction.atomic
 def bulk_upload_model(objs, djmodel, batch_size=10_000):
     '''
-    bulk upload data to db
+    bulk upload a pandas series of django models to db
+    objs: pandas.Series
+    djmodel: django.model
     '''
-    if isinstance(objs, pd.Series):
-        objs = objs.values.tolist()
+    size = objs.size
+    objs = objs.values.tolist()
 
-    for idx in range(0, len(objs), batch_size):
+    for idx in range(0, size, batch_size):
         out_bulk = djmodel.objects.bulk_create(
             objs[idx : idx + batch_size],
             batch_size

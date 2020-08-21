@@ -92,18 +92,14 @@ def final_operations(
     related_df['to_source_id'] = related_df['to_source_id'].map(
         related_df['from_source_id'].to_dict()
     )
+    # drop relationships with the same source
+    related_df = related_df[
+        related_df['from_source_id'] != related_df['to_source_id']
+    ]
     # write symmetrical relations to parquet
     related_df.to_parquet(
         os.path.join(p_run.path, 'relations.parquet'),
         index=False
-    )
-    # drop the duplicated column before upload to db as relations are symmetrical
-    related_df['pairs'] = related_df.apply(
-        lambda row: tuple(sorted(row.values.tolist())), axis=1
-    )
-    related_df = (
-        related_df.drop_duplicates(subset='pairs')
-        .drop('pairs', axis=1)
     )
     # create related models and write them to db
     related_df['rel_src_dj'] = related_df.apply(
