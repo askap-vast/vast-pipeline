@@ -281,7 +281,7 @@ class Source(models.Model):
     related = models.ManyToManyField(
         'self',
         through='RelatedSource',
-        symmetrical=True,
+        symmetrical=False,
         through_fields=('from_source', 'to_source')
     )
 
@@ -384,6 +384,14 @@ class RelatedSource(models.Model):
         on_delete=models.CASCADE,
         related_name='related_sources'
     )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                name='%(app_label)s_%(class)s_unique_pair',
+                fields=['from_source', 'to_source']
+            )
+        ]
 
 
 class Image(models.Model):
