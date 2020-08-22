@@ -272,8 +272,12 @@ class Pipeline():
 
         # STEP #3: Merge sky regions and sources ready for
         # steps 4 and 5 below.
+        missing_source_cols = [
+            'source', 'datetime', 'image', 'epoch',
+            'interim_ew', 'weight_ew', 'interim_ns', 'weight_ns'
+        ]
         missing_sources_df = get_src_skyregion_merged_df(
-            sources_df,
+            sources_df[missing_source_cols],
             images_df,
             skyregs_df,
             p_run

@@ -165,7 +165,7 @@ def remove_duplicate_measurements(
     Remove duplicate sources from dataframe
     """
     logger.debug('Cleaning duplicate sources from epoch...')
-    logger.debug('Using crossmatch radius of %f arcsec.', dup_lim.arcsec)
+    logger.debug('Using crossmatch radius of %.2f arcsec.', dup_lim.arcsec)
     min_source = sources_df['source'].min()
 
     # sort by the distance from the image centre so we know
@@ -542,17 +542,9 @@ def get_src_skyregion_merged_df(sources_df, images_df, skyreg_df, p_run):
 
     merged_timer = StopWatch()
 
-    # get all the skyregions and related images
-    cols = [
-        # beam columns are used in new sources next
-        'id', 'name', 'measurements_path', 'path', 'noise_path',
-        'beam_bmaj', 'beam_bmin', 'beam_bpa', 'background_path',
-        'datetime', 'skyreg__id'
-    ]
-
-    skyreg_cols = [
-        'id', 'centre_ra', 'centre_dec', 'xtr_radius'
-    ]
+    skyreg_df = skyreg_df.drop(
+        ['x', 'y', 'z', 'width_ra', 'width_dec'], axis=1
+    )
 
     images_df['name'] = images_df['image'].apply(
         lambda x: x.name
@@ -573,6 +565,8 @@ def get_src_skyregion_merged_df(sources_df, images_df, skyreg_df, p_run):
     timer = StopWatch()
     srcs_df = parallel_groupby_coord(sources_df)
     logger.debug('Groupby-apply time: %.2f seconds', timer.reset())
+
+    del sources_df
 
     # create dataframe with all skyregions and sources combinations
     src_skyrg_df = cross_join(srcs_df.reset_index(), skyreg_df)
@@ -601,13 +595,15 @@ def get_src_skyregion_merged_df(sources_df, images_df, skyreg_df, p_run):
         index=src_skyrg_df.index
     )
 
+    src_skyrg_df = src_skyrg_df.drop('skyreg_img_epoch_list', axis=1)
+
     src_skyrg_df = (
         src_skyrg_df.sort_values(
             ['source', 'skyreg_epoch', 'sep']
         )
         .drop_duplicates(['source', 'skyreg_epoch'])
         .drop(
-            ['skyreg_img_epoch_list', 'sep', 'skyreg_epoch'],
+            ['sep', 'skyreg_epoch'],
             axis=1
         )
         .groupby('source')
