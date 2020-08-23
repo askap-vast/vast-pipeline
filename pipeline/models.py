@@ -452,18 +452,6 @@ class Image(models.Model):
         help_text='Duration of the observation.'
     )
 
-    flux_gain = models.FloatField(
-        default=1,
-        help_text=(
-            'Gain of the image, multiplicative factor to change the '
-            'relative flux scale.'
-        )
-    )
-    flux_gain_err = models.FloatField(
-        default=0,
-        help_text='Error (std) on the image gain (flux gain).'
-    )
-
     ra = models.FloatField(
         help_text='RA of the image centre (Deg).'
     )
