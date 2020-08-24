@@ -641,7 +641,7 @@ class Measurement(models.Model):
 
     has_siblings = models.BooleanField(
         default=False,
-        help_text='True if the fit come from an island.'
+        help_text='True if the fit comes from an island that has more than 1 component.'
     )
     component_id = models.CharField(
         max_length=64,
