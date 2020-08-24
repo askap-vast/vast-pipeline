@@ -90,7 +90,7 @@ def final_operations(
     )
     # for the column 'from_source_id', replace relation source ids with db id
     related_df['to_source_id'] = related_df['to_source_id'].map(
-        related_df['from_source_id'].to_dict()
+        srcs_df['id'].to_dict()
     )
     # drop relationships with the same source
     related_df = related_df[
