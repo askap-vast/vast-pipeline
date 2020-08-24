@@ -714,7 +714,7 @@ class Association(models.Model):
     )
     dr = models.FloatField(
         default=0.,
-        help_text='De Roiter radius calculated in advanced association.'
+        help_text='De Ruiter radius calculated in advanced association.'
     )
 
     def __str__(self):

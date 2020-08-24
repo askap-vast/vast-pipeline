@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('d2d', models.FloatField(default=0.0, help_text='astronomical distance calculated by Astropy, arcsec.')),
-                ('dr', models.FloatField(default=0.0, help_text='De Roiter radius calculated in advanced association.')),
+                ('dr', models.FloatField(default=0.0, help_text='De Ruiter radius calculated in advanced association.')),
             ],
         ),
         migrations.CreateModel(
