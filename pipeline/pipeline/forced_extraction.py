@@ -25,7 +25,9 @@ from ..utils.utils import StopWatch
 logger = logging.getLogger(__name__)
 
 
-def extract_from_image(df, images_df, edge_buffer):
+def extract_from_image(
+    df, images_df, edge_buffer, cluster_threshold, allow_nan
+):
     P_islands = SkyCoord(
         df['wavg_ra'].values * u.deg,
         df['wavg_dec'].values * u.deg
@@ -40,7 +42,8 @@ def extract_from_image(df, images_df, edge_buffer):
     FP = ForcedPhot(image, background, noise)
     flux, flux_err, chisq, DOF = FP.measure(
         P_islands,
-        cluster_threshold=3,
+        cluster_threshold=cluster_threshold,
+        allow_nan=allow_nan,
         edge_buffer=edge_buffer
     )
 
@@ -86,7 +89,10 @@ def extract_from_image(df, images_df, edge_buffer):
     return df
 
 
-def parallel_extraction(df, df_images, df_sources, min_sigma, edge_buffer):
+def parallel_extraction(
+    df, df_images, df_sources, min_sigma, edge_buffer,
+    cluster_threshold, allow_nan
+):
     '''
     parallelize forced extraction with Dask
     '''
@@ -150,6 +156,8 @@ def parallel_extraction(df, df_images, df_sources, min_sigma, edge_buffer):
             extract_from_image,
             images_df=df_images,
             edge_buffer=edge_buffer,
+            cluster_threshold=cluster_threshold,
+            allow_nan=allow_nan,
             meta=col_dtype)
         .dropna(subset=['flux_int'])
         .compute(num_workers=n_cpu, scheduler='processes')
@@ -198,7 +206,8 @@ def parallel_write_parquet(df, run_path):
 
 def forced_extraction(
         sources_df, cfg_err_ra, cfg_err_dec, p_run,
-        meas_dj_obj, extr_df, min_sigma, edge_buffer
+        meas_dj_obj, extr_df, min_sigma, edge_buffer,
+        cluster_threshold, allow_nan
     ):
     """
     check and extract expected measurements, and associated them with the
@@ -225,7 +234,8 @@ def forced_extraction(
 
     timer.reset()
     extr_df = parallel_extraction(
-        extr_df, images_df, sources_df, min_sigma, edge_buffer
+        extr_df, images_df, sources_df, min_sigma, edge_buffer,
+        cluster_threshold, allow_nan
     )
     logger.info(
         'Force extraction step time: %.2f seconds', timer.reset()
