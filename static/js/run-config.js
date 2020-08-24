@@ -39,6 +39,8 @@ $(document).ready(function() {
     $("#bkgFilesDropDown").attr('disabled',!this.checked).selectpicker('refresh');
     $("#monitorMinSigmaSelect").prop('readonly',!this.checked);
     $("#monitorEdgeBufferScaleSelect").prop('readonly',!this.checked);
+    $("#monitorClusterThresholdSelect").prop('readonly',!this.checked);
+    $("#monitorAllowNanSwitch").attr('disabled',!this.checked);
   });
 
   $("#pipeRunNext").on('click', function(e) {

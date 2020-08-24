@@ -167,18 +167,24 @@ class Pipeline():
                 'Expecting list of background MAP and RMS files!'
             )
         else:
-            if 'MONITOR_MIN_SIGMA' not in dir(self.config):
-                raise PipelineConfigError('MONITOR_MIN_SIGMA must be defined!')
-            if 'MONITOR_EDGE_BUFFER_SCALE' not in dir(self.config):
-                raise PipelineConfigError(
-                    'MONITOR_EDGE_BUFFER_SCALE must be defined!'
-                )
-            for key in getattr(self.config, lst):
-                for file in getattr(self.config, lst)[key]:
-                    if not os.path.exists(file):
-                        raise PipelineConfigError(
-                            f'file:\n{file}\ndoes not exists!'
-                        )
+            monitor_settings = [
+                'MONITOR_MIN_SIGMA',
+                'MONITOR_EDGE_BUFFER_SCALE',
+                'MONITOR_CLUSTER_THRESHOLD',
+                'MONITOR_ALLOW_NAN',
+            ]
+            for mon_set in monitor_settings:
+                if mon_set not in dir(self.config):
+                    raise PipelineConfigError(
+                        mon_set + ' must be defined!'
+                    )
+            for lst in ['BACKGROUND_FILES', 'NOISE_FILES']:
+                for key in getattr(self.config, lst):
+                    for file in getattr(self.config, lst)[key]:
+                        if not os.path.exists(file):
+                            raise PipelineConfigError(
+                                f'file:\n{file}\ndoes not exists!'
+                            )
 
         # validate every config from the config template
         for key in [k for k in dir(self.config) if k.isupper()]:
@@ -302,6 +308,8 @@ class Pipeline():
                 missing_sources_df,
                 self.config.MONITOR_MIN_SIGMA,
                 self.config.MONITOR_EDGE_BUFFER_SCALE,
+                self.config.MONITOR_CLUSTER_THRESHOLD,
+                self.config.MONITOR_ALLOW_NAN
             )
 
         # STEP #6: finalise the df getting unique sources, calculating

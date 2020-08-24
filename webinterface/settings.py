@@ -259,6 +259,8 @@ PIPE_RUN_CONFIG_DEFAULTS = {
     'monitor': False,
     'monitor_min_sigma': 3.0,
     'monitor_edge_buffer_scale': 1.2,
+    'monitor_cluster_threshold': 3.0,
+    'monitor_allow_nan': False,
     'astrometric_uncertainty_ra': 1,
     'astrometric_uncertainty_dec': 1,
     'association_parallel': False,
