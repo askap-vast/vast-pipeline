@@ -70,10 +70,13 @@ class Command(BaseCommand):
             raise CommandError(f'Config error:\n{e}')
 
         # Create the pipeline run in DB
-        p_run = get_create_p_run(
+        p_run, flag_exist = get_create_p_run(
             pipeline.name,
             pipeline.config.PIPE_RUN_PATH
         )
+        if flag_exist:
+            logger.info('Clean up pipeline run before re-process data')
+            p_run.image_set.clear()
 
         logger.info("Source finder: %s", pipeline.config.SOURCE_FINDER)
         logger.info("Using pipeline run '%s'", pipeline.name)
