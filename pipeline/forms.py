@@ -10,6 +10,8 @@ class PipelineRunForm(forms.Form):
     monitor = forms.BooleanField(required=False)
     monitor_min_sigma = forms.FloatField()
     monitor_edge_buffer_scale = forms.FloatField()
+    monitor_cluster_threshold = forms.FloatField()
+    monitor_allow_nan = forms.BooleanField(required=False)
     association_method = forms.CharField()
     astrometric_uncertainty_ra = forms.FloatField()
     association_radius = forms.FloatField()
