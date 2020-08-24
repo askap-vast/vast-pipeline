@@ -493,11 +493,6 @@ class Image(models.Model):
         help_text='Background maximum RMS from the provided RMS map (mJy).'
     )
 
-    flux_percentile = models.FloatField(
-        default=0,
-        help_text='Pixel flux at 95th percentile'
-    )
-
     class Meta:
         ordering = ['datetime']
 
