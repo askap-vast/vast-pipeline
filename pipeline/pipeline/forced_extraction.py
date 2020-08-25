@@ -337,15 +337,15 @@ def forced_extraction(
                 )
                 logger.debug('(type, #deleted): %s', detail_del)
 
-        batch_size = 10_000
-        for idx in range(0, extr_df['meas_dj'].size, batch_size):
-            out_bulk = Measurement.objects.bulk_create(
-                extr_df['meas_dj'].iloc[
-                    idx : idx + batch_size
-                ].values.tolist(),
-                batch_size
-            )
-            logger.info('Bulk uploaded #%i measurements', len(out_bulk))
+    batch_size = 10_000
+    for idx in range(0, extr_df['meas_dj'].size, batch_size):
+        out_bulk = Measurement.objects.bulk_create(
+            extr_df['meas_dj'].iloc[
+                idx : idx + batch_size
+            ].values.tolist(),
+            batch_size
+        )
+        logger.info('Bulk uploaded #%i measurements', len(out_bulk))
 
     # make the measurement id column and rename to source
     extr_df['id'] = extr_df['meas_dj'].apply(lambda x: x.id)
