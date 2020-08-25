@@ -11,7 +11,9 @@ A very exahustive set of general guidelines can be follow [here](https://github.
 - [Solving your `models.py`/migrations issues](#solving-your-modelspymigrations-issues)
 	- [1. You modify `models.py`](#1-you-modify-modelspy)
 	- [2. Someone else modified `models.py` and you pull the changes](#2-someone-else-modified-modelspy-and-you-pull-the-changes)
-- [Reset the database](#reset-the-database)
+- [Removing/Clearing Data](#removingclearing-data)
+  - [Reset the database](#reset-the-database)
+  - [Clearing Run Data](#clearing-run-data)
 - [Run Tests](#run-tests)
 
 ## Terminology
@@ -106,12 +108,38 @@ Or even better
 
 6. Continue with the normal development cycle (i.e. branch off master, do changes, commit everything, _including your changes in the models/migrations even done with the squashing!_)
 
-## Reset the database
+## Removing/Clearing Data
+
+The following sub-sections show how to completely drop every data in the database and how to remove only the data related to one or more pipeline runs.
+
+### Reset the database
 
 Make sure you installed the [requirements `dev.txt`](./requirements/dev.txt). And `django_extensions` is in `EXTRA_APPS` in your setting configuration file `.env` (e.g. `EXTRA_APPS=django_extensions,another_app,...`).
 
 ```bash
-(pipeline_env)$: ./manage.py reset_db && ./manage.py migrate
+(pipeline_env)$ ./manage.py reset_db  && ./manage.py migrate
+# use the following for no confirmation prompt
+(pipeline_env)$ ./manage.py reset_db --noinput  && ./manage.py migrate
+```
+
+### Clearing Run Data
+
+It is convenient removing the data belonging to one or more pipeline run, while developing the code base. This is particularly useful to save time and don't upload the image data along with the measurents. The data related to the pipeline are the Sources, Associations, Forced extractions entries in database and the parquet files in the respective folder.
+
+```bash
+(pipeline_env)$ ./manage.py clearpiperun path/to/my-pipe-run
+```
+
+To clear more than one run:
+
+```bash
+(pipeline_env)$ ./manage.py clearpiperun path/to/my-pipe-run1 my-pipe-run2 path/to/my-pipe-run3
+```
+
+The command accept both a path or a name of the pipeline run(s). To remove __all__ the runs, issue:
+
+```bash
+(pipeline_env)$ ./manage.py clearpiperun clearall
 ```
 
 ## Run Tests
@@ -121,5 +149,5 @@ Test are found under the folder [tests](./pipeline/tests/). Have a look and feel
 Run the tests with the following:
 
 ```bash
-(pipeline_env)$: ./manage.py test pipeline
+(pipeline_env)$ ./manage.py test pipeline
 ```

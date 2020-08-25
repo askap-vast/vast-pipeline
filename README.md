@@ -239,7 +239,9 @@ Detailed commands for resetting the database can be found in [`DEVELOPING.md`](.
 
 Resetting a pipeline run can be done using the `clearpiperun` command: it will delete all images (and related objects such as sources) associated with that pipeline run, if that images does not belong to another pipeline run. It will deleted all the sources associated with that pipeline run.
 ```bash
-(pipeline_env)$: ./manage.py clearpiperun my_pipe_run
+(pipeline_env)$ ./manage.py clearpiperun path/to/my_pipe_run
+# or
+(pipeline_env)$ ./manage.py clearpiperun my_pipe_run
 ```
 
 ### Import survey data
