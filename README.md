@@ -150,12 +150,12 @@ Output:
 usage: manage.py initpiperun [-h] [--version] [-v {0,1,2,3}]
                              [--settings SETTINGS] [--pythonpath PYTHONPATH]
                              [--traceback] [--no-color] [--force-color]
-                             run_folder_path
+                             runname
 
 Create the pipeline run folder structure to run a pipeline instance
 
 positional arguments:
-  run_folder_path       path to the pipeline run folder
+  runname       Name of the pipeline run.
 
 optional arguments:
   -h, --help            show this help message and exit
