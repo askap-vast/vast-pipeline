@@ -3,7 +3,6 @@ import logging
 import traceback
 
 from django.core.management.base import BaseCommand, CommandError
-from django.conf import settings
 
 from pipeline.pipeline.main import Pipeline
 from pipeline.pipeline.utils import get_create_p_run
