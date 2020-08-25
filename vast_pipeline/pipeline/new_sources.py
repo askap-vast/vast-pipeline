@@ -9,7 +9,11 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.wcs import WCS
-from astropy.wcs.utils import skycoord_to_pixel
+from astropy.wcs.utils import (
+    skycoord_to_pixel,
+    proj_plane_pixel_scales
+)
+from scipy.ndimage import distance_transform_cdt
 
 from vast_pipeline.models import Image
 from vast_pipeline.utils.utils import StopWatch
@@ -21,7 +25,18 @@ logger = logging.getLogger(__name__)
 def check_primary_image(row):
     return row['primary'] in row['img_list']
 
-def get_image_rms_measurements(group):
+def gen_array_coords_from_wcs(coords, wcs):
+    array_coords = wcs.world_to_array_index(coords)
+    array_coords = np.array([
+        np.array(array_coords[0]),
+        np.array(array_coords[1]),
+    ])
+
+    return array_coords
+
+def get_image_rms_measurements(
+    group, nbeam: int = 3, edge_buffer: float = 1.0
+):
     """
     Take the coordinates provided from the group
     and measure the array value in the provided image.
@@ -29,7 +44,8 @@ def get_image_rms_measurements(group):
     image = group.iloc[0]['img_diff_rms_path']
 
     with fits.open(image) as hdul:
-        wcs = WCS(hdul[0].header, naxis=2)
+        header = hdul[0].header
+        wcs = WCS(header, naxis=2)
 
         try:
             # ASKAP tile images
@@ -38,30 +54,71 @@ def get_image_rms_measurements(group):
             # ASKAP SWarp images
             data = hdul[0].data
 
+    # Here we mimic the forced fits behaviour,
+    # sources within 3 beam widths of the image
+    # edges are ignored. The user buffer is also
+    # applied for consistency.
+    pixelscale = (
+        proj_plane_pixel_scales(wcs)[1] * u.deg
+    ).to(u.arcsec)
+
+    bmaj = header["BMAJ"] * u.deg
+
+    npix = round(
+        (nbeam / 2. * bmaj.to('arcsec') /
+        pixelscale).value
+    )
+
+    npix = int(npix * edge_buffer)
+
     coords = SkyCoord(
         group.wavg_ra, group.wavg_dec, unit=(u.deg, u.deg)
     )
 
-    array_coords = wcs.world_to_array_index(coords)
-    array_coords = np.array([
-        np.array(array_coords[0]),
-        np.array(array_coords[1]),
-    ])
+    array_coords = gen_array_coords_from_wcs(coords, wcs)
 
     # check for pixel wrapping
     x_valid = np.logical_or(
-        array_coords[0] >= data.shape[0],
-        array_coords[0] < 0
+        array_coords[0] >= (data.shape[0] - npix),
+        array_coords[0] < npix
     )
 
     y_valid = np.logical_or(
-        array_coords[1] >= data.shape[1],
-        array_coords[1] < 0
+        array_coords[1] >= (data.shape[1] - npix),
+        array_coords[1] < npix
     )
 
     valid = ~np.logical_or(
         x_valid, y_valid
     )
+
+    valid_indexes = group[valid].index.values
+
+    group = group.loc[valid_indexes]
+
+    # Now we also need to check proximity to NaN values
+    # as forced fits may also drop these values
+    coords = SkyCoord(
+        group.wavg_ra, group.wavg_dec, unit=(u.deg, u.deg)
+    )
+
+    array_coords = gen_array_coords_from_wcs(coords, wcs)
+
+    # convert to binary for taxicab distance calc
+    binary_data = (~np.isnan(data)).astype(int)
+
+    # calculate 'taxicab' distances to the nearest NaN value
+    # as this is *much* faster than
+    distances = distance_transform_cdt(binary_data, metric='taxicab')
+
+    distance_values = distances[
+        array_coords[0],
+        array_coords[1]
+    ]
+
+    acceptable = np.ceil(bmaj.to('arcsec') / 2. / pixelscale)
+
+    valid = distance_values > acceptable
 
     valid_indexes = group[valid].index.values
 
@@ -77,7 +134,7 @@ def get_image_rms_measurements(group):
 
     return group
 
-def parallel_get_rms_measurements(df):
+def parallel_get_rms_measurements(df, edge_buffer: float = 1.0):
     """
     Wrapper function to use 'get_image_rms_measurements'
     in parallel with Dask.
@@ -103,6 +160,7 @@ def parallel_get_rms_measurements(df):
         .groupby('img_diff_rms_path')
         .apply(
             get_image_rms_measurements,
+            edge_buffer=edge_buffer,
             meta=col_dtype
         ).compute(num_workers=n_cpu, scheduler='processes')
     )
@@ -115,7 +173,9 @@ def parallel_get_rms_measurements(df):
 
     return df
 
-def new_sources(sources_df, missing_sources_df, min_sigma, p_run):
+def new_sources(
+    sources_df, missing_sources_df, min_sigma, edge_buffer, p_run
+):
     """
     Process the new sources detected to see if they are
     valid.
@@ -234,7 +294,7 @@ def new_sources(sources_df, missing_sources_df, min_sigma, p_run):
     # measure the actual rms in the previous images at
     # the source location.
     new_sources_df = parallel_get_rms_measurements(
-        new_sources_df
+        new_sources_df, edge_buffer=edge_buffer
     )
 
     # this removes those that are out of range

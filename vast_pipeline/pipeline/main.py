@@ -229,6 +229,7 @@ class Pipeline():
             sources_df,
             missing_sources_df,
             self.config.NEW_SOURCE_MIN_SIGMA,
+            self.config.MONITOR_EDGE_BUFFER_SCALE,
             p_run
         )
 
