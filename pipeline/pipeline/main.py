@@ -123,7 +123,7 @@ class Pipeline():
             raise PipelineConfigError(
                 'Expecting list of background MAP and RMS files!'
             )
-        else:
+        elif getattr(self.config, 'MONITOR'):
             monitor_settings = [
                 'MONITOR_MIN_SIGMA',
                 'MONITOR_EDGE_BUFFER_SCALE',
@@ -132,9 +132,8 @@ class Pipeline():
             ]
             for mon_set in monitor_settings:
                 if mon_set not in dir(self.config):
-                    raise PipelineConfigError(
-                        mon_set + ' must be defined!'
-                    )
+                    raise PipelineConfigError(mon_set + ' must be defined!')
+
             for lst in ['BACKGROUND_FILES', 'NOISE_FILES']:
                 for file in getattr(self.config, lst):
                     if not os.path.exists(file):
