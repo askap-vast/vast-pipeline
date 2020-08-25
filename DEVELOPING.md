@@ -124,7 +124,7 @@ Make sure you installed the [requirements `dev.txt`](./requirements/dev.txt). An
 
 ### Clearing Run Data
 
-It is convenient removing the data belonging to one or more pipeline run, while developing the code base. This is particularly useful to save time and don't upload the image data along with the measurents. The data related to the pipeline are the Sources, Associations, Forced extractions entries in database and the parquet files in the respective folder.
+It is convenient removing the data belonging to one or more pipeline run, while developing the code base. This is particularly useful to save time and don't upload the image data along with the measurents. The data related to the pipeline are the Sources, Associations, Forced extractions entries in database and the parquet files in the respective folder. By default the command will keep the run folder with the config and the log files.
 
 ```bash
 (pipeline_env)$ ./manage.py clearpiperun path/to/my-pipe-run
@@ -140,6 +140,18 @@ The command accept both a path or a name of the pipeline run(s). To remove __all
 
 ```bash
 (pipeline_env)$ ./manage.py clearpiperun clearall
+```
+
+The command to keep the parquet files is:
+
+```bash
+(pipeline_env)$ ./manage.py clearpiperun path/to/my-pipe-run --keep-parquet
+```
+
+The remove completely the pipeline folder
+
+```bash
+(pipeline_env)$ ./manage.py clearpiperun path/to/my-pipe-run --remove-all
 ```
 
 ## Run Tests
