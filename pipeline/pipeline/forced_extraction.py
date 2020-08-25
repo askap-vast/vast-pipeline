@@ -337,6 +337,11 @@ def forced_extraction(
                 )
                 logger.debug('(type, #deleted): %s', detail_del)
 
+        # delete parquet files
+        logger.debug('Removing forced measurements parquet files')
+        for parquet in path_glob:
+            os.remove(parquet)
+
         batch_size = 10_000
         for idx in range(0, extr_df['meas_dj'].size, batch_size):
             out_bulk = Measurement.objects.bulk_create(
