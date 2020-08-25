@@ -25,6 +25,7 @@ from django.conf import settings
 from django.contrib import messages
 
 from rest_framework import status
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, ViewSet
@@ -590,6 +591,17 @@ class SourceViewSet(ModelViewSet):
 
         return qs
 
+    @action(detail=True, methods=['get'])
+    def related(self, request, pk=None):
+        qs = Source.objects.filter(related__in=[pk]).order_by('id')
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(qs, many=True)
+        return Response(serializer.data)
+
 
 # Sources Query
 @login_required
@@ -678,70 +690,52 @@ def SourceDetail(request, id, action=None):
         if action == 'next':
             src = source.filter(id__gt=id)
             if src.exists():
-                source = src.annotate(
-                    run_name=F('run__name'),
-                    relations_ids=ArrayAgg('related__id'),
-                    relations_names=ArrayAgg('related__name')
-                ).values().first()
+                source = (
+                    src.annotate(run_name=F('run__name'))
+                    .values()
+                    .first()
+                )
             else:
-                source = source.filter(id=id).annotate(
-                    run_name=F('run__name'),
-                    relations_ids=ArrayAgg('related__id'),
-                    relations_names=ArrayAgg('related__name')
-                ).values().get()
+                source = (
+                    source.filter(id=id)
+                    .annotate(run_name=F('run__name'))
+                    .values()
+                    .get()
+                )
         elif action == 'prev':
             src = source.filter(id__lt=id)
             if src.exists():
-                source = src.annotate(
-                    run_name=F('run__name'),
-                    relations_ids=ArrayAgg('related__id'),
-                    relations_names=ArrayAgg('related__name')
-                ).values().last()
+                source = (
+                    src.annotate(run_name=F('run__name'))
+                    .values()
+                    .last()
+                )
             else:
-                source = source.filter(id=id).annotate(
-                    run_name=F('run__name'),
-                    relations_ids=ArrayAgg('related__id'),
-                    relations_names=ArrayAgg('related__name')
-                ).values().get()
+                source = (
+                    source.filter(id=id)
+                    .annotate(run_name=F('run__name'))
+                    .values()
+                    .get()
+                )
     else:
-        source = source.filter(id=id).annotate(
-            run_name=F('run__name'),
-            relations_ids=ArrayAgg('related__id'),
-            relations_names=ArrayAgg('related__name')
-        ).values().get()
+        source = (
+            source.filter(id=id)
+            .annotate(run_name=F('run__name'))
+            .values()
+            .get()
+        )
     source['aladin_ra'] = source['wavg_ra']
     source['aladin_dec'] = source['wavg_dec']
     source['aladin_zoom'] = 0.36
-    if not source['relations_ids'] == [None]:
-        # this enables easy presenting in the template
-        source['relations_info'] = list(zip(
-            source['relations_ids'],
-            source['relations_names']
-        ))
     source['wavg_ra'] = deg2hms(source['wavg_ra'], hms_format=True)
     source['wavg_dec'] = deg2dms(source['wavg_dec'], dms_format=True)
-    source['datatable'] = {'colsNames': [
-        'ID',
-        'Name',
-        'Date (UTC)',
-        'Image',
-        'RA (deg)',
-        'RA Error (arcsec)',
-        'Dec (deg)',
-        'Dec Error (arcsec)',
-        'Int. Flux (mJy)',
-        'Int. Flux Error (mJy)',
-        'Peak Flux (mJy/beam)',
-        'Peak Flux Error (mJy/beam)',
-        'Has siblings',
-        'Forced Extraction',
-        'Image ID'
-    ]}
 
     # source data
     cols = [
         'id',
         'name',
+        'datetime',
+        'image_name',
         'ra',
         'ra_err',
         'dec',
@@ -752,8 +746,6 @@ def SourceDetail(request, id, action=None):
         'flux_peak_err',
         'has_siblings',
         'forced',
-        'datetime',
-        'image_name',
         'image_id'
     ]
     measurements = list(
@@ -770,32 +762,97 @@ def SourceDetail(request, id, action=None):
     # add the data for the datatable api
     measurements = {
         'table': 'source_detail',
+        'table_id': 'dataTableMeasurements',
         'dataQuery': measurements,
-        'colsFields': [
-            'id',
-            'name',
-            'datetime',
-            'image_name',
-            'ra',
-            'ra_err',
-            'dec',
-            'dec_err',
-            'flux_int',
-            'flux_int_err',
-            'flux_peak',
-            'flux_peak_err',
-            'has_siblings',
-            'forced',
-            'image_id'
+        'colsFields': cols,
+        'search': True,
+        'order': [2, 'asc'],
+        'colsNames': [
+            'ID',
+            'Name',
+            'Date (UTC)',
+            'Image',
+            'RA (deg)',
+            'RA Error (arcsec)',
+            'Dec (deg)',
+            'Dec Error (arcsec)',
+            'Int. Flux (mJy)',
+            'Int. Flux Error (mJy)',
+            'Peak Flux (mJy/beam)',
+            'Peak Flux Error (mJy/beam)',
+            'Has siblings',
+            'Forced Extraction',
+            'Image ID'
+        ]
+    }
+
+    # generate context for related sources datatable
+    related_fields = [
+        'name',
+        'comment',
+        'wavg_ra',
+        'wavg_dec',
+        'avg_flux_int',
+        'avg_flux_peak',
+        'max_flux_peak',
+        'min_snr',
+        'max_snr',
+        'avg_compactness',
+        'n_meas',
+        'n_meas_sel',
+        'n_meas_forced',
+        'n_neighbour_dist',
+        'n_rel',
+        'v_int',
+        'eta_int',
+        'v_peak',
+        'eta_peak',
+        'n_sibl',
+        'new',
+        'new_high_sigma'
+    ]
+    related_colsfields = generate_colsfields(
+        related_fields,
+        {'name': reverse('pipeline:source_detail', args=[1])[:-2]}
+    )
+    related_datatables = {
+        'table_id': 'dataTableRelated',
+        'api': (
+            reverse('pipeline:api_sources-related', args=[source['id']]) +
+            '?format=datatables'
+        ),
+        'colsFields': related_colsfields,
+        'colsNames': [
+            'Name',
+            'Comment',
+            'W. Avg. RA',
+            'W. Avg. Dec',
+            'Avg. Int. Flux (mJy)',
+            'Avg. Peak Flux (mJy/beam)',
+            'Max Peak Flux (mJy/beam)',
+            'Min SNR',
+            'Max SNR',
+            'Avg. Compactness',
+            'Total Datapoints',
+            'Selavy Datapoints',
+            'Forced Datapoints',
+            'Nearest Neighbour Dist. (arcmin)',
+            'Relations',
+            'V int flux',
+            '\u03B7 int flux',
+            'V peak flux',
+            '\u03B7 peak flux',
+            'Contains siblings',
+            'New Source',
+            'New High Sigma'
         ],
         'search': True,
-        'order': [2, 'asc']
     }
 
     context = {
         'source': source,
-        'measurements': measurements,
-        # falg to deactivate starring and render yellow star
+        'datatables': [measurements, related_datatables],
+        # flag to deactivate starring and render yellow star
         'sourcefav': (
             SourceFav.objects.filter(
                 user__id=request.user.id,
