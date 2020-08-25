@@ -185,7 +185,7 @@ $(document).ready(function() {
   // Trigger the update search on the datatable
   $("#catalogSearch").on('click', function(e) {
     let PipeRun = document.getElementById("runSelect");
-    let qry_url = dataConf.api;
+    let qry_url = dataConfParsed.api;
     if (PipeRun.value != '') {
       qry_url = qry_url + "&run=" + encodeURIComponent(PipeRun.value);
     };
@@ -350,7 +350,7 @@ $(document).ready(function() {
     };
     document.getElementById("newSourceSelect").checked = false;
     document.getElementById("containsSiblingsSelect").checked = false;
-    table.ajax.url(dataConf.api);
+    table.ajax.url(dataConfParsed.api);
     table.ajax.reload();
   });
 

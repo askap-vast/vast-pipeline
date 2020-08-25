@@ -15,6 +15,7 @@ from pyarrow.parquet import read_schema
 from pipeline.models import Image, Measurement
 from pipeline.image.utils import on_sky_sep
 
+from .loading import bulk_upload_model
 from .forced_phot import ForcedPhot
 from .utils import (
     cross_join, get_measurement_models, parallel_groupby_coord
@@ -337,15 +338,7 @@ def forced_extraction(
                 )
                 logger.debug('(type, #deleted): %s', detail_del)
 
-        batch_size = 10_000
-        for idx in range(0, extr_df['meas_dj'].size, batch_size):
-            out_bulk = Measurement.objects.bulk_create(
-                extr_df['meas_dj'].iloc[
-                    idx : idx + batch_size
-                ].values.tolist(),
-                batch_size
-            )
-            logger.info('Bulk uploaded #%i measurements', len(out_bulk))
+    bulk_upload_model(extr_df['meas_dj'], Measurement)
 
     # make the measurement id column and rename to source
     extr_df['id'] = extr_df['meas_dj'].apply(lambda x: x.id)
