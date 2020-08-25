@@ -202,12 +202,12 @@ usage: manage.py runpipeline [-h] [--version] [-v {0,1,2,3}]
                              [--settings SETTINGS] [--pythonpath PYTHONPATH]
                              [--traceback] [--no-color] [--force-color]
                              [--skip-checks]
-                             run_folder_path
+                             piperun
 
-Process the pipeline for a list of images or a Selavy catalog
+Process the pipeline for a list of images and Selavy catalogs
 
 positional arguments:
-  run_folder_path       path to the pipeline run folder
+  piperun       Path or name of the pipeline run.
 
 optional arguments:
   -h, --help            show this help message and exit
