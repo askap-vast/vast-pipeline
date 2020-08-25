@@ -3,7 +3,7 @@
 django-extensions
 pygraphviz
 ipdb
-ipython
+ipython==7.10.2
 pip-tools
 tabulate
 django-debug-toolbar

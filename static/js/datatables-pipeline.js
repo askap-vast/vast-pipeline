@@ -46,137 +46,146 @@ function obj_formatter(obj) {
 
 // Call the dataTables jQuery plugin
 $(document).ready(function() {
-  let dataConf = JSON.parse(document.getElementById('datatable-conf').textContent);
-  if (dataConf.hasOwnProperty('api')) {
-    // build conf for server side datatable
-    let testFields = dataConf.colsFields;
-    testFields.forEach( function(obj) {
-      if (obj.hasOwnProperty('render')) {
-        obj = obj_formatter(obj)
-      }
-    });
-    var dataTableConf = {
-      bFilter: dataConf.search,
-      hover: true,
-      serverSide: true,
-      ajax: dataConf.api,
-      columns: dataConf.colsFields,
-      order: dataConf.order,
-    };
-  } else {
-    // expect that there is a 'data' attribute with the data
-    // data are in this format
-    // let dataSet = [
-    // ["Edinburgh", "5421", "2011/04/25"],
-    // ["Sydney", "3636", "2002/02/04"],
-    // ...
-    // ];
-    let dataSet = [];
-    dataConf.dataQuery.forEach( function(obj) {
-      let row = [];
-      dataConf.colsFields.forEach(function(elem) {
-        row.push(obj[elem])
-      })
-      dataSet.push(row)
-    });
-    var dataTableConf = {
-      bFilter: dataConf.search,
-      hover: true,
-      serverSide: false,
-      data: dataSet,
-      order: dataConf.order,
-    };
-    if (dataConf.table == 'source_detail') {
+
+  let dataConfParsed = JSON.parse(document.getElementById('datatable-conf').textContent);
+  let dataConfList = (Array.isArray(dataConfParsed)) ? dataConfParsed : [dataConfParsed];
+  for (let dataConf of dataConfList){
+    let table_id = (dataConfList.length == 1) ? '#dataTable' : '#' + dataConf.table_id;
+    if (dataConf.hasOwnProperty('api')) {
+      // build conf for server side datatable
+      let testFields = dataConf.colsFields;
+      testFields.forEach( function(obj) {
+        if (obj.hasOwnProperty('render')) {
+          obj = obj_formatter(obj)
+        }
+      });
+      var dataTableConf = {
+        bFilter: dataConf.search,
+        hover: true,
+        serverSide: true,
+        ajax: dataConf.api,
+        columns: dataConf.colsFields,
+        order: dataConf.order,
+      };
+    } else {
+      // expect that there is a 'data' attribute with the data
+      // data are in this format
+      // let dataSet = [
+      // ["Edinburgh", "5421", "2011/04/25"],
+      // ["Sydney", "3636", "2002/02/04"],
+      // ...
+      // ];
+      let dataSet = [];
+      dataConf.dataQuery.forEach( function(obj) {
+        let row = [];
+        dataConf.colsFields.forEach(function(elem) {
+          row.push(obj[elem])
+        })
+        dataSet.push(row)
+      });
+      // initialise the datatable configuration
+      var dataTableConf = {
+        bFilter: dataConf.search,
+        hover: true,
+        serverSide: false,
+        data: dataSet,
+        order: dataConf.order,
+      };
+      if (dataConf.table == 'source_detail') {
+        let tableElement = document.getElementById(table_id.replace('#', '')),
+          meas_url = tableElement.getAttribute('MeasApi'),
+          img_url = tableElement.getAttribute('ImgApi');
         dataTableConf.columnDefs = [
-            {
-                "targets": 0,
-                "searchable": true,
-                "visible": false
-            },
-            {
-                "targets": 1,
-                "data": "name",
-                "render": function ( data, type, row, meta ) {
-                    return '<a href="/measurements/'+ row[0] + '"target="_blank">' + row[1] + '</a>';
-                }
-            },
-            {
-                "targets": 3,
-                "data": "image",
-                "render": function ( data, type, row, meta ) {
-                    return '<a href="/images/'+ row[14] + '"target="_blank">' + row[3] + '</a>';
-                }
-            },
-            {
-                "targets": 4,
-                "data": "ra",
-                "render": function ( data, type, row, meta ) {
-                    return row[4].toFixed(4);
-                }
-            },
-            {
-                "targets": 5,
-                "data": "ra_err",
-                "render": function ( data, type, row, meta ) {
-                    return (row[5] * 3600.).toFixed(4);
-                }
-            },
-            {
-                "targets": 6,
-                "data": "dec",
-                "render": function ( data, type, row, meta ) {
-                    return row[6].toFixed(4);
-                }
-            },
-            {
-                "targets": 7,
-                "data": "dec_err",
-                "render": function ( data, type, row, meta ) {
-                    return (row[7] * 3600.).toFixed(4);
-                }
-            },
-            {
-                "targets": 8,
-                "data": "flux_int",
-                "render": function ( data, type, row, meta ) {
-                    return (row[8]).toFixed(3);
-                }
-            },
-            {
-                "targets": 9,
-                "data": "flux_int_err",
-                "render": function ( data, type, row, meta ) {
-                    return (row[9]).toFixed(3);
-                }
-            },
-            {
-                "targets": 10,
-                "data": "flux_peak",
-                "render": function ( data, type, row, meta ) {
-                    return (row[10]).toFixed(3);
-                }
-            },
-            {
-                "targets": 11,
-                "data": "flux_peak_err",
-                "render": function ( data, type, row, meta ) {
-                    return (row[11]).toFixed(3);
-                }
-            },
-            {
-                "targets": 14,
-                "searchable": false,
-                "visible": false
-            },
-        ]
+          {
+            "targets": 0,
+            "searchable": true,
+            "visible": false
+          },
+          {
+            "targets": 1,
+            "data": "name",
+            "render": function ( data, type, row, meta ) {
+              return '<a href="' + meas_url + row[0] + '"target="_blank">' + row[1] + '</a>';
+            }
+          },
+          {
+            "targets": 3,
+            "data": "image",
+            "render": function ( data, type, row, meta ) {
+              return '<a href="' + img_url + row[14] + '"target="_blank">' + row[3] + '</a>';
+            }
+          },
+          {
+            "targets": 4,
+            "data": "ra",
+            "render": function ( data, type, row, meta ) {
+              return row[4].toFixed(4);
+            }
+          },
+          {
+            "targets": 5,
+            "data": "ra_err",
+            "render": function ( data, type, row, meta ) {
+                return (row[5] * 3600.).toFixed(4);
+            }
+          },
+          {
+            "targets": 6,
+            "data": "dec",
+            "render": function ( data, type, row, meta ) {
+                return row[6].toFixed(4);
+            }
+          },
+          {
+            "targets": 7,
+            "data": "dec_err",
+            "render": function ( data, type, row, meta ) {
+                return (row[7] * 3600.).toFixed(4);
+            }
+          },
+          {
+            "targets": 8,
+            "data": "flux_int",
+            "render": function ( data, type, row, meta ) {
+                return (row[8]).toFixed(3);
+            }
+          },
+          {
+            "targets": 9,
+            "data": "flux_int_err",
+            "render": function ( data, type, row, meta ) {
+                return (row[9]).toFixed(3);
+            }
+          },
+          {
+            "targets": 10,
+            "data": "flux_peak",
+            "render": function ( data, type, row, meta ) {
+                return (row[10]).toFixed(3);
+            }
+          },
+          {
+            "targets": 11,
+            "data": "flux_peak_err",
+            "render": function ( data, type, row, meta ) {
+                return (row[11]).toFixed(3);
+            }
+          },
+          {
+            "targets": 14,
+            "searchable": false,
+            "visible": false
+          }
+        ];
+      };
     };
-  };
-  var table = $('#dataTable').DataTable(dataTableConf);
+    var table = $(table_id).DataTable(dataTableConf);
+  }
 
   // Trigger the update search on the datatable
   $("#catalogSearch").on('click', function(e) {
     let PipeRun = document.getElementById("runSelect");
-    let qry_url = dataConf.api;
+    let qry_url = dataConfParsed.api;
     if (PipeRun.value != '') {
       qry_url = qry_url + "&run=" + encodeURIComponent(PipeRun.value);
     };
@@ -341,7 +350,7 @@ $(document).ready(function() {
     };
     document.getElementById("newSourceSelect").checked = false;
     document.getElementById("containsSiblingsSelect").checked = false;
-    table.ajax.url(dataConf.api);
+    table.ajax.url(dataConfParsed.api);
     table.ajax.reload();
   });
 
