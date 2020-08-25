@@ -6,6 +6,7 @@ from glob import glob
 from django.core.management.base import BaseCommand, CommandError
 
 from pipeline.models import Run
+from pipeline.pipeline.forced_extraction import remove_forced_meas
 from ..helpers import get_p_run_name
 
 
@@ -81,6 +82,10 @@ class Command(BaseCommand):
 
             logger.info("Deleting pipeline '%s' from database", p_run_name)
             p_run.delete()
+
+            # remove forced measurements in db if presents
+            forced_parquets = remove_forced_meas(p_run.path)
+
             # Delete parquet or folder eventually
             if not options['keep_parquet'] and not options['remove_all']:
                 logger.info('Deleting pipeline "%s" parquets', p_run_name)
