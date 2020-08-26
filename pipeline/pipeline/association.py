@@ -735,6 +735,8 @@ def parallel_association(
         n_skyregion_groups
     )
 
+    timer = StopWatch()
+
     meta = {
         'id': 'i',
         'uncertainty_ew': 'f',
@@ -795,5 +797,9 @@ def parallel_association(
         ] = corr_df
 
     results = results.reset_index(drop=True)
+
+    logger.info(
+        'Total parallel association time: %.2f seconds', timer.reset_init()
+    )
 
     return results
