@@ -26,6 +26,36 @@ from ..utils.utils import StopWatch
 logger = logging.getLogger(__name__)
 
 
+def remove_forced_meas(run_path):
+    '''
+    remove forced measurements from the database if forced parquet files
+    are found
+    '''
+    path_glob = glob(
+        os.path.join(run_path, 'forced_measurements_*.parquet')
+    )
+    if path_glob:
+        ids = (
+            dd.read_parquet(path_glob, columns='id')
+            .values
+            .compute()
+            .tolist()
+        )
+        obj_to_delete = Measurement.objects.filter(id__in=ids)
+        del ids
+        if obj_to_delete.exists():
+            with transaction.atomic():
+                n_del, detail_del = obj_to_delete.delete()
+                logger.info(
+                    ('Deleting all previous forced measurement and association'
+                     ' objects for this run. Total objects deleted: %i'),
+                    n_del,
+                )
+                logger.debug('(type, #deleted): %s', detail_del)
+
+    return path_glob
+
+
 def extract_from_image(
     df, images_df, edge_buffer, cluster_threshold, allow_nan
 ):
@@ -316,27 +346,12 @@ def forced_extraction(
     # Delete previous forced measurements and update new forced
     # measurements in the db
     # get the forced measurements ids for the current pipeline run
-    path_glob = glob(
-        os.path.join(p_run.path, 'forced_measurements_*.parquet')
-    )
-    if path_glob:
-        ids = (
-            dd.read_parquet(path_glob, columns='id')
-            .values
-            .compute()
-            .tolist()
-        )
-        obj_to_delete = Measurement.objects.filter(id__in=ids)
-        del ids
-        if obj_to_delete.exists():
-            with transaction.atomic():
-                n_del, detail_del = obj_to_delete.delete()
-                logger.info(
-                    ('Deleting all previous forced measurement and association'
-                     ' objects for this run. Total objects deleted: %i'),
-                    n_del,
-                )
-                logger.debug('(type, #deleted): %s', detail_del)
+    forced_parquets = remove_forced_meas(p_run.path)
+
+    # delete parquet files
+    logger.debug('Removing forced measurements parquet files')
+    for parquet in forced_parquets:
+        os.remove(parquet)
 
     bulk_upload_model(extr_df['meas_dj'], Measurement)
 

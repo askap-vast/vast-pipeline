@@ -3,11 +3,12 @@ import logging
 import traceback
 
 from django.core.management.base import BaseCommand, CommandError
-from django.conf import settings
 
+from pipeline.pipeline.forced_extraction import remove_forced_meas
 from pipeline.pipeline.main import Pipeline
 from pipeline.pipeline.utils import get_create_p_run
 from pipeline.utils.utils import StopWatch
+from ..helpers import get_p_run_name
 
 
 logger = logging.getLogger(__name__)
@@ -18,20 +19,21 @@ class Command(BaseCommand):
     This script is used to process images with the ASKAP transient pipeline.
     Use --help for usage, and refer README.
     """
-    help = 'Process the pipeline for a list of images or a Selavy catalog'
+    help = 'Process the pipeline for a list of images and Selavy catalogs'
 
     def add_arguments(self, parser):
         # positional arguments
         parser.add_argument(
-            'run_folder_path',
-            nargs=1,
+            'piperun',
             type=str,
-            help='path to the pipeline run folder'
+            help='Path or name of the pipeline run.'
         )
 
     def handle(self, *args, **options):
-        p_run_path = options['run_folder_path'][0]
-        run_folder = os.path.realpath(p_run_path)
+        p_run_name, run_folder = get_p_run_name(
+            options['piperun'],
+            return_folder=True
+        )
         # configure logging
         root_logger = logging.getLogger('')
         f_handler = logging.FileHandler(
@@ -46,13 +48,6 @@ class Command(BaseCommand):
             root_logger.setLevel(logging.DEBUG)
             # set the traceback on
             options['traceback'] = True
-
-        p_run_name = p_run_path
-        # remove ending / if present
-        if p_run_name[-1] == '/':
-            p_run_name = p_run_name[:-1]
-        # grab only the name from the path
-        p_run_name = p_run_name.split(os.path.sep)[-1]
 
         # intitialise the pipeline with the configuration
         pipeline = Pipeline(
@@ -70,14 +65,26 @@ class Command(BaseCommand):
             raise CommandError(f'Config error:\n{e}')
 
         # Create the pipeline run in DB
-        p_run = get_create_p_run(
+        p_run, flag_exist = get_create_p_run(
             pipeline.name,
             pipeline.config.PIPE_RUN_PATH
         )
+        # clean up pipeline images and forced measurements for re-runs
+        if flag_exist:
+            logger.info('Cleaning up pipeline run before re-process data')
+            p_run.image_set.clear()
 
-        logger.info("Source finder: %s", pipeline.config.SOURCE_FINDER)
-        logger.info("Using pipeline run '%s'", pipeline.name)
-        logger.info("Source monitoring: %s", pipeline.config.MONITOR)
+            if not pipeline.config.MONITOR:
+                logger.info(
+                    'Cleaning up forced measurements before re-process data'
+                )
+                forced_parquets = remove_forced_meas(p_run.path)
+                for parquet in forced_parquets:
+                    os.remove(parquet)
+
+        logger.info('Source finder: %s', pipeline.config.SOURCE_FINDER)
+        logger.info('Using pipeline run "%s"', pipeline.name)
+        logger.info('Source monitoring: %s', pipeline.config.MONITOR)
 
         stopwatch = StopWatch()
 
