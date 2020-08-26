@@ -128,11 +128,13 @@ function js9FixStaticUrl(bc) {
   if (result.error) {
     throw result.error
   }
-  let static_url = result.parsed.STATIC_URL || '/static/'
-  let fileContent = fs.readFileSync(paths.js9Target + '/js9prefs.js', 'utf8')
+  let base_url = result.parsed.BASE_URL || null,
+    static_url = result.parsed.STATIC_URL || '/static/',
+    fileContent = fs.readFileSync(paths.js9Target + '/js9prefs.js', 'utf8')
+  let serving_url = (base_url) ? '/' + base_url.split('/').join('') + '/' + static_url.split('/').join('') + '/' : static_url
   return fs.writeFile(
     paths.js9Target + '/js9prefs.js',
-    fileContent.replace('/static/', static_url),
+    fileContent.replace('/static/', serving_url),
     bc
   );
 }

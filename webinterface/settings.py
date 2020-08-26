@@ -228,7 +228,7 @@ LOGGING = {
 if not DEBUG:
     # ideally you want to check the site rating at https://securityheaders.com/
     # as suggested here https://adamj.eu/tech/2019/04/10/how-to-score-a+-for-security-headers-on-your-django-website/
-    SECURE_SSL_REDIRECT = True
+    # SECURE_SSL_REDIRECT = True # set this to True when your reverse proxy server does not redirect http to https
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = 3600 # see https://docs.djangoproject.com/en/3.1/ref/middleware/#http-strict-transport-security
