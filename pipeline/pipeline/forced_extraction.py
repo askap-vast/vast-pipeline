@@ -195,7 +195,7 @@ def parallel_write_parquet(df, run_path):
 
     # writing parquets using Dask bag
     bags = db.from_sequence(dfs)
-    bags = bags.map(lambda el: write_group_to_parquet(el[0], el[1]))
+    bags = bags.starmap(lambda df, fname: write_group_to_parquet(df, fname))
     bags.compute(num_workers=n_cpu)
 
     pass
