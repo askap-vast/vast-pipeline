@@ -304,3 +304,7 @@ The following steps describes how to set up the Django side of the production de
   ```
 
 8. Finalise the installation of the unit file. Some good instructions on where to put, link and install the unit file are described in the [Jupyter Hub docs](https://jupyterhub.readthedocs.io/en/stable/installation-guide-hard.html#setup-systemd-service)
+
+### Security
+
+By default the settings file has some security parameters that are set when you run the web app in production (`DEBUG = False`), but you can read more in the Django documentation or in this [blog post](https://adamj.eu/tech/2019/04/10/how-to-score-a+-for-security-headers-on-your-django-website/) in which they explain how to get an A+ rating for your web site.
