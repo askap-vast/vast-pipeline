@@ -117,7 +117,7 @@ def RunIndex(request):
                 cfg_data[files] = request.POST.getlist(files)
 
             try:
-                p_run = initialise_run(
+                p_run, _ = initialise_run(
                     **run_dict,
                     config=cfg_data
                 )
@@ -127,6 +127,7 @@ def RunIndex(request):
                 )
                 return redirect('pipeline:run_detail', id=p_run.id)
             except Exception as e:
+                print("error!!")
                 messages.error(
                     request,
                     f'Issue in pipeline run initilisation: {e}'
