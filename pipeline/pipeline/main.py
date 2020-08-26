@@ -58,6 +58,10 @@ class Pipeline():
                         getattr(self.config, lst)
                     )
                 )
+                # If the user has entered just lists we don't have
+                # access to the dates until the Image instances are
+                # created. So we flag this as true so that we can
+                # reorder the epochs.
                 self._reorder_images = True
 
 
