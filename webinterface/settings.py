@@ -231,10 +231,13 @@ if not DEBUG:
     # SECURE_SSL_REDIRECT = True # set this to True when your reverse proxy server does not redirect http to https
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    SECURE_HSTS_SECONDS = 3600 # see https://docs.djangoproject.com/en/3.1/ref/middleware/#http-strict-transport-security
+    SECURE_HSTS_SECONDS = 31536000 # see https://docs.djangoproject.com/en/3.1/ref/middleware/#http-strict-transport-security
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
     SECURE_REFERRER_POLICY = 'same-origin' # see https://docs.djangoproject.com/en/3.0/ref/middleware/#referrer-policy
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
     # from https://ubuntu.com/blog/django-behind-a-proxy-fixing-absolute-urls
     USE_X_FORWARDED_HOST = True
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
