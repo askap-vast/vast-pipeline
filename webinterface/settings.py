@@ -179,6 +179,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 BASE_URL = env('BASE_URL', cast=str, default=None)
 STATIC_URL = env('STATIC_URL', cast=str, default='/static/')
+if BASE_URL:
+    STATIC_URL = '/' + BASE_URL.strip('/') + '/' + STATIC_URL.strip('/') + '/'
 STATICFILES_DIRS = env('STATICFILES_DIRS', cast=list, default=[os.path.join(BASE_DIR, 'static')])
 STATIC_ROOT = env('STATIC_ROOT', cast=str, default=os.path.join(BASE_DIR, 'staticfiles'))
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
@@ -221,6 +223,18 @@ LOGGING = {
         },
     }
 }
+
+# PRODUCTION SETTINGS
+if not DEBUG:
+    # ideally you want to check the site rating at https://securityheaders.com/
+    # as suggested here https://adamj.eu/tech/2019/04/10/how-to-score-a+-for-security-headers-on-your-django-website/
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 3600 # see https://docs.djangoproject.com/en/3.1/ref/middleware/#http-strict-transport-security
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_REFERRER_POLICY = 'same-origin' # see https://docs.djangoproject.com/en/3.0/ref/middleware/#referrer-policy
 
 # PIPELINE settings
 # project default folder
