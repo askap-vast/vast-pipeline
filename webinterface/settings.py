@@ -235,6 +235,9 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
     SECURE_REFERRER_POLICY = 'same-origin' # see https://docs.djangoproject.com/en/3.0/ref/middleware/#referrer-policy
+    # from https://ubuntu.com/blog/django-behind-a-proxy-fixing-absolute-urls
+    USE_X_FORWARDED_HOST = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # PIPELINE settings
 # project default folder
