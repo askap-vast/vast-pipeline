@@ -263,7 +263,7 @@ Make sure you installed and compiled correctly the frontend assets see [guide](.
 The webserver is independent of `runpipeline` and you can use the website while the pipeline commands are running.
 
 ## Production Deployment
-This section describes a simple deployment without using Docker containers, assuming serving the static files using [WhiteNoise](http://whitenoise.evans.io/en/stable/). It is possible serving the static files using other methods (e.g. Nginx). And in the future it is possible to upgrade the deployment stack using Docker container and Docjer compose (we foresee 3 main containers: Django, Dask and Traefik). We recommend in any case reading [Django deployment documentation](https://docs.djangoproject.com/en/3.1/howto/deployment/) for general knowledge.
+This section describes a simple deployment without using Docker containers, assuming serving the static files using [WhiteNoise](http://whitenoise.evans.io/en/stable/). It is possible serving the static files using other methods (e.g. Nginx). And in the future it is possible to upgrade the deployment stack using Docker container and Docker compose (we foresee 3 main containers: Django, Dask and Traefik). We recommend in any case reading [Django deployment documentation](https://docs.djangoproject.com/en/3.1/howto/deployment/) for general knowledge.
 
 We assume deployment to a __UNIX server__.
 
@@ -282,3 +282,25 @@ The following steps describes how to set up the Django side of the production de
   ```
 
 3. Configure your `.env` files with all the right settings.
+
+4. Check that your server is running fine by changing `DEBUG = True` in the `.env` file.
+
+5. Run Django deployment checklist command to see what are you missing. It is possible that some options are turned off, as implemented in the reverse proxy or load balancer of your server (e.g. `SECURE_SSL_REDIRECT = False` or not set, assumes your reverse proxy redirect HTTP to HTTPS).
+
+  ```bash
+  (pipeline_env)$ ./manage.py check --deploy
+  ```
+
+6. Build up the static and fix url in JS9:
+
+  ```bash
+  (pipeline_env)$ cd /opt/vast-pipeline && npm ci && npm start && npm run js9staticprod && ./manage.py collectstatic -c --noinput
+  ```
+
+7. Set up a unit/systemd file as recommended in [Gunicorn docs](https://docs.gunicorn.org/en/latest/deploy.html#systemd) (feel free to use the socket or an IP and port). An example of command to write in the file is (assuming a virtual environment is installed in `venv` under the main pipeline folder):
+
+  ```bash
+  ExecStart=/opt/vast-pipeline/venv/bin/gunicorn -w 3 -k gevent --worker-connections=1000 --timeout 120 -b 127.0.0.1:8000 webinterface.wsgi
+  ```
+
+8. Finalise the installation of the unit file. Some good instructions on where to put, link and install the unit file are described in the [Jupyter Hub docs](https://jupyterhub.readthedocs.io/en/stable/installation-guide-hard.html#setup-systemd-service)
