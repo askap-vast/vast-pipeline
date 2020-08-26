@@ -4,6 +4,7 @@ import traceback
 
 from django.core.management.base import BaseCommand, CommandError
 
+from pipeline.pipeline.forced_extraction import remove_forced_meas
 from pipeline.pipeline.main import Pipeline
 from pipeline.pipeline.utils import get_create_p_run
 from pipeline.utils.utils import StopWatch
@@ -68,13 +69,22 @@ class Command(BaseCommand):
             pipeline.name,
             pipeline.config.PIPE_RUN_PATH
         )
+        # clean up pipeline images and forced measurements for re-runs
         if flag_exist:
-            logger.info('Clean up pipeline run before re-process data')
+            logger.info('Cleaning up pipeline run before re-process data')
             p_run.image_set.clear()
 
-        logger.info("Source finder: %s", pipeline.config.SOURCE_FINDER)
-        logger.info("Using pipeline run '%s'", pipeline.name)
-        logger.info("Source monitoring: %s", pipeline.config.MONITOR)
+            if not pipeline.config.MONITOR:
+                logger.info(
+                    'Cleaning up forced measurements before re-process data'
+                )
+                forced_parquets = remove_forced_meas(p_run.path)
+                for parquet in forced_parquets:
+                    os.remove(parquet)
+
+        logger.info('Source finder: %s', pipeline.config.SOURCE_FINDER)
+        logger.info('Using pipeline run "%s"', pipeline.name)
+        logger.info('Source monitoring: %s', pipeline.config.MONITOR)
 
         stopwatch = StopWatch()
 
