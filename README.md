@@ -244,7 +244,7 @@ Resetting a pipeline run can be done using the `clearpiperun` command: it will d
 (pipeline_env)$ ./manage.py clearpiperun my_pipe_run
 ```
 
-More Details on the `clearpiperun` command can be found in the [Developing guidelines](./DEVELOPING.md#clearing-run-data).
+More details on the `clearpiperun` command can be found in the [Developing guidelines](./DEVELOPING.md#clearing-run-data).
 
 ### Import survey data
 
