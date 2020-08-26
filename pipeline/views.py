@@ -127,7 +127,6 @@ def RunIndex(request):
                 )
                 return redirect('pipeline:run_detail', id=p_run.id)
             except Exception as e:
-                print("error!!")
                 messages.error(
                     request,
                     f'Issue in pipeline run initilisation: {e}'
