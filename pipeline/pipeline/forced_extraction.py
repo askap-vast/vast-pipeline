@@ -195,6 +195,7 @@ def parallel_extraction(
         .compute(num_workers=n_cpu, scheduler='processes')
         .rename(columns={'wavg_ra':'ra', 'wavg_dec':'dec'})
     )
+
     return out
 
 
@@ -240,6 +241,10 @@ def forced_extraction(
     check and extract expected measurements, and associated them with the
     related source(s)
     """
+    logger.info(
+        'Starting force extraction step.'
+    )
+
     timer = StopWatch()
 
     # get all the skyregions and related images

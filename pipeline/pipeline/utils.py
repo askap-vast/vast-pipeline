@@ -452,6 +452,7 @@ def parallel_groupby(df):
 
 def calc_ave_coord(grp):
     d = {}
+    grp = grp.sort_values(by='datetime')
     d['img_list'] = grp['image'].values.tolist()
     d['epoch_list'] = grp['epoch'].values.tolist()
     d['wavg_ra'] = grp['interim_ew'].sum() / grp['weight_ew'].sum()
@@ -518,6 +519,22 @@ def get_image_list_diff(row):
 
     # set empty list to -1
     if not out:
+        return -1
+
+    # Check that an epoch has not already been seen (just not in the 'ideal' image)
+    out_epochs = [
+        row['skyreg_epoch'][pair[0]] for pair in enumerate(
+            row['skyreg_img_list']
+        ) if pair[1] in out
+    ]
+
+    out = [
+        out[pair[0]] for pair in enumerate(
+            out_epochs
+        ) if pair[1] not in row['epoch_list']
+    ]
+
+    if not out:
         out = -1
 
     return out
@@ -525,9 +542,10 @@ def get_image_list_diff(row):
 
 def get_names_and_epochs(grp):
     d = {}
-    d['skyreg_img_epoch_list'] = [[[x,],y] for x,y in zip(
+    d['skyreg_img_epoch_list'] = [[[x,], y, z] for x,y,z in zip(
         grp['name'].values.tolist(),
         grp['epoch'].values.tolist(),
+        grp['datetime'].values.tolist()
     )]
 
     return pd.Series(d)
@@ -548,6 +566,9 @@ def get_src_skyregion_merged_df(sources_df, images_df, skyreg_df, p_run):
 
     images_df['name'] = images_df['image'].apply(
         lambda x: x.name
+    )
+    images_df['datetime'] = images_df['image'].apply(
+        lambda x: x.datetime
     )
 
     skyreg_df = skyreg_df.join(
@@ -589,7 +610,7 @@ def get_src_skyregion_merged_df(sources_df, images_df, skyreg_df, p_run):
     ].explode('skyreg_img_epoch_list')
 
     src_skyrg_df[
-        ['skyreg_img_list', 'skyreg_epoch']
+        ['skyreg_img_list', 'skyreg_epoch', 'skyreg_datetime']
     ] = pd.DataFrame(
         src_skyrg_df['skyreg_img_epoch_list'].tolist(),
         index=src_skyrg_df.index
@@ -599,14 +620,23 @@ def get_src_skyregion_merged_df(sources_df, images_df, skyreg_df, p_run):
 
     src_skyrg_df = (
         src_skyrg_df.sort_values(
-            ['source', 'skyreg_epoch', 'sep']
+            ['source', 'sep']
         )
         .drop_duplicates(['source', 'skyreg_epoch'])
+        .sort_values(by='skyreg_datetime')
         .drop(
-            ['sep', 'skyreg_epoch'],
+            ['sep', 'skyreg_datetime'],
             axis=1
         )
-        .groupby('source')
+    )
+    # annoyingly epoch needs to be not a list to drop duplicates
+    # but then we need to sum the epochs into a list
+    src_skyrg_df['skyreg_epoch'] = src_skyrg_df['skyreg_epoch'].apply(
+        lambda x: [x,]
+    )
+
+    src_skyrg_df = (
+        src_skyrg_df.groupby('source')
         .agg('sum') # sum because we need to preserve order
     )
 
@@ -617,13 +647,20 @@ def get_src_skyregion_merged_df(sources_df, images_df, skyreg_df, p_run):
 
     del src_skyrg_df
 
-    srcs_df['img_diff'] = srcs_df[['img_list', 'skyreg_img_list']].apply(
+    srcs_df['img_diff'] = srcs_df[
+        ['img_list', 'skyreg_img_list', 'epoch_list', 'skyreg_epoch']
+    ].apply(
         get_image_list_diff, axis=1
     )
 
     srcs_df = srcs_df.loc[
         srcs_df['img_diff'] != -1
     ]
+
+    srcs_df = srcs_df.drop(
+        ['epoch_list', 'skyreg_epoch'],
+        axis=1
+    )
 
     logger.info(
         'Ideal source coverage time: %.2f seconds', merged_timer.reset()

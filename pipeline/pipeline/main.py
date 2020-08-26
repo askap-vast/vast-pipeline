@@ -293,7 +293,7 @@ class Pipeline():
         )
 
         # STEP #4 New source analysis
-        new_sources_df = new_sources(
+        new_sources_df, missing_sources_df = new_sources(
             sources_df,
             missing_sources_df,
             self.config.NEW_SOURCE_MIN_SIGMA,

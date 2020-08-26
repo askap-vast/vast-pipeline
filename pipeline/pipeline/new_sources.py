@@ -266,4 +266,4 @@ def new_sources(
         'Total new source analysis time: %.2f seconds', timer.reset_init()
     )
 
-    return new_sources_df.set_index('source')
+    return new_sources_df.set_index('source'), missing_sources_df
