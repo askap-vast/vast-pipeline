@@ -132,7 +132,7 @@
             ><i class="fas fa-info-circle"></i></a>
             <select id="bkgFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-header="Choose background files" data-actions-box="true" name="background_files" data-selected-text-format="count > 5" disabled>
             </select>
-            <div class="row">
+            <div class="row align-items-center">
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="monitorMinSigmaSelect">Monitor Min Sigma</label>
                 <a href="#" data-toggle="tooltip" data-placement="top" title=
@@ -170,11 +170,6 @@
                   <option value="advanced">Advanced</option>
                   <option value="deruiter">De Ruiter</option>
                 </select>
-                <label class="col-form-label font-weight-bold text-gray-800" for="astroUncertRaSelect">Astrometric Uncertainty RA (arcsec)</label>
-                <a href="#" data-toggle="tooltip" data-placement="top" title=
-                    "Base astrometric RA uncertainty in arcseconds that will be added in quadrature to the fitting uncertainties."
-                ><i class="fas fa-info-circle"></i></a>
-                <input id="astroUncertRaSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.astrometric_uncertainty_ra }}" min="0" step="0.01" aria-label="astroUncertRaSearch" aria-describedby="basic-addon2" name="astrometric_uncertainty_ra">
               </div>
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="associationRadiusSelect">Association Radius (arcsec)</label>
@@ -182,11 +177,6 @@
                     "Used with 'Basic' and 'Advanced' methods only. The maximum distance in arcsec for two sources to be considered as an association."
                 ><i class="fas fa-info-circle"></i></a>
                 <input id="associationRadiusSelect" type="number" class="form-control bg-light border-0 wrap-form-control-readonly" value="{{ runconfig.association_radius }}" min="0" step="0.01" aria-label="associationRadiusSearch" aria-describedby="basic-addon2" name="association_radius">
-                <label class="col-form-label font-weight-bold text-gray-800" for="astroUncertDecSelect">Astrometric Uncertainty Dec (arcsec)</label>
-                <a href="#" data-toggle="tooltip" data-placement="top" title=
-                    "Base astrometric Dec uncertainty in arcseconds that will be added in quadrature to the fitting uncertainties."
-                ><i class="fas fa-info-circle"></i></a>
-                <input id="astroUncertDecSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.astrometric_uncertainty_dec }}" min="0" step="0.01" aria-label="astroUncertDecSearch" aria-describedby="basic-addon2" name="astrometric_uncertainty_dec">
               </div>
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="associationDeRuiterSelect">Association De Ruiter Radius</label>
@@ -194,12 +184,6 @@
                     "Used with the 'De Ruiter' method only. The maximum De Ruiter radius value for which sources are considered to be associated."
                 ><i class="fas fa-info-circle"></i></a>
                 <input id="associationDeRuiterSelect" type="number" class="form-control bg-light border-0 wrap-form-control-readonly" value="{{ runconfig.association_de_ruiter_radius }}" min="0" step="0.01" aria-label="associationDeRuiterSearch" aria-describedby="basic-addon2" name="association_de_ruiter_radius" readonly>
-                <label class="col-form-label font-weight-bold text-gray-800" for="newSourceMinSigSelect">New Source Min Sigma</label>
-                <a href="#" data-toggle="tooltip" data-placement="top" title=
-                    "For a source to be flagged as a new source it must first meet the requirement that any previous images it could have been seen in,
-                    if the source was placed in the loweset rms value of the image, the signal-to-noise value much be higher than this parameter."
-                ><i class="fas fa-info-circle"></i></a>
-                <input id="newSourceMinSigSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.new_source_min_sigma }}" min="0" step="0.01" aria-label="newSourceMinSigSearch" aria-describedby="basic-addon2" name="new_source_min_sigma">
               </div>
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="associationBeamWidthSelect">Association Beam Width</label>
@@ -208,6 +192,50 @@
                     half the respective image major beam axis value."
                 ><i class="fas fa-info-circle"></i></a>
                 <input id="associationBeamWidthSelect" type="number" class="form-control bg-light border-0 wrap-form-control-readonly" value="{{ runconfig.association_beamwidth_limit }}" min="0" step="0.01" aria-label="associationBeamWidthSearch" aria-describedby="basic-addon2" name="association_beamwidth_limit" readonly>
+              </div>
+            </div>
+            <div class="row align-items-center">
+              <div class="col">
+                <div class="custom-control custom-switch">
+                  <input type="checkbox" class="custom-control-input" id="assocParallelSwitch" {% if runconfig.association_parallel %} checked="checked" {% endif %} name="association_parallel">
+                  <label class="custom-control-label font-weight-bold text-gray-800" for="assocParallelSwitch">Parallel Association: Turn on parallel association</label>
+                  <a href="#" data-toggle="tooltip" data-placement="top" title=
+                    "When parallel association is used, the pipeline will attempt to split the input images into distinct sky region groups and associate these groups in parallel. It's recommeneded to only use this option when you have 3 or more distinct sky regions to process."
+                  ><i class="fas fa-info-circle"></i></a>
+                </div>
+              </div>
+              <div class="col">
+                <label class="col-form-label font-weight-bold text-gray-800" for="assocDuplicateRadiusSelect">Association Epoch Duplicate Radius (arcsec)</label>
+                <a href="#" data-toggle="tooltip" data-placement="top" title=
+                  "Base astrometric RA uncertainty in arcseconds that will be added in quadrature to the fitting uncertainties."
+                ><i class="fas fa-info-circle"></i></a>
+              <input id="astroUncertRaSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.association_epoch_duplicate_radius }}" min="0" step="0.01" aria-label="assocDuplicateRadiusSelect" aria-describedby="basic-addon2" name="association_epoch_duplicate_radius">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col">
+                <label class="col-form-label font-weight-bold text-gray-800" for="astroUncertRaSelect">Astrometric Uncertainty RA (arcsec)</label>
+                <a href="#" data-toggle="tooltip" data-placement="top" title=
+                    "Base astrometric RA uncertainty in arcseconds that will be added in quadrature to the fitting uncertainties."
+                ><i class="fas fa-info-circle"></i></a>
+                <input id="astroUncertRaSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.astrometric_uncertainty_ra }}" min="0" step="0.01" aria-label="astroUncertRaSearch" aria-describedby="basic-addon2" name="astrometric_uncertainty_ra">
+              </div>
+              <div class="col">
+                <label class="col-form-label font-weight-bold text-gray-800" for="astroUncertDecSelect">Astrometric Uncertainty Dec (arcsec)</label>
+                <a href="#" data-toggle="tooltip" data-placement="top" title=
+                    "Base astrometric Dec uncertainty in arcseconds that will be added in quadrature to the fitting uncertainties."
+                ><i class="fas fa-info-circle"></i></a>
+                <input id="astroUncertDecSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.astrometric_uncertainty_dec }}" min="0" step="0.01" aria-label="astroUncertDecSearch" aria-describedby="basic-addon2" name="astrometric_uncertainty_dec">
+              </div>
+              <div class="col">
+                <label class="col-form-label font-weight-bold text-gray-800" for="newSourceMinSigSelect">New Source Min Sigma</label>
+                <a href="#" data-toggle="tooltip" data-placement="top" title=
+                    "For a source to be flagged as a new source it must first meet the requirement that any previous images it could have been seen in,
+                    if the source was placed in the loweset rms value of the image, the signal-to-noise value much be higher than this parameter."
+                ><i class="fas fa-info-circle"></i></a>
+                <input id="newSourceMinSigSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.new_source_min_sigma }}" min="0" step="0.01" aria-label="newSourceMinSigSearch" aria-describedby="basic-addon2" name="new_source_min_sigma">
+              </div>
+              <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="surveySelect">Default Survey (TBC)</label>
                 <a href="#" data-toggle="tooltip" data-placement="top" title=
                     "Feature coming soon."
@@ -217,7 +245,7 @@
                 </select>
               </div>
             </div>
-            <div class="row">
+            <div class="row align-items-center">
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="fluxPercErrorSelect">Flux Percentage Error (%)</label>
                 <a href="#" data-toggle="tooltip" data-placement="top" title=
@@ -232,13 +260,15 @@
                 ><i class="fas fa-info-circle"></i></a>
                 <input id="localRmsZeroFillSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.selavy_local_rms_zero_fill_value }}" min="0" step="0.01" aria-label="localRmsZeroFillSearch" aria-describedby="basic-addon2" name="selavy_local_rms_zero_fill_value">
               </div>
-            </div>
-            <div class="custom-control custom-switch">
-              <input type="checkbox" class="custom-control-input" id="condomErrorSwitch" {% if runconfig.use_condon_errors %} checked="checked" {% endif %} name="use_condon_errors">
-              <label class="custom-control-label font-weight-bold text-gray-800" for="condomErrorSwitch">Use Condon Errors</label>
-              <a href="#" data-toggle="tooltip" data-placement="top" title=
-                  "Replaces the selavy catalogue flux and positional errors with those defined by Condon '97, calculated by the pipeline."
-              ><i class="fas fa-info-circle"></i></a>
+              <div class="col">
+                <div class="custom-control custom-switch">
+                  <input type="checkbox" class="custom-control-input" id="condomErrorSwitch" {% if runconfig.use_condon_errors %} checked="checked" {% endif %} name="use_condon_errors">
+                  <label class="custom-control-label font-weight-bold text-gray-800" for="condomErrorSwitch">Use Condon Errors</label>
+                  <a href="#" data-toggle="tooltip" data-placement="top" title=
+                      "Replaces the selavy catalogue flux and positional errors with those defined by Condon '97, calculated by the pipeline."
+                  ><i class="fas fa-info-circle"></i></a>
+                </div>
+              </div>
             </div>
           </div>
           <div class="modal-footer">
