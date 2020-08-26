@@ -70,7 +70,7 @@ function js9Dir() {
 
 function js9MakeConfig() {
   var config = run(
-    './configure --with-webdir=' + paths.js9Target + ' --with-helper=nodejs',
+    './configure --with-webdir=' + paths.js9Target,
     {cwd: './node_modules/js9'}
   )
   return config();

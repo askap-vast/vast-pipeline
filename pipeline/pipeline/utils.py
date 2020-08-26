@@ -148,14 +148,14 @@ def get_create_img(p_run, band_id, image):
 def get_create_p_run(name, path, comment='', user=None):
     p_run = Run.objects.filter(name__exact=name)
     if p_run:
-        return p_run.get()
+        return p_run.get(), True
 
     p_run = Run(name=name, comment=comment, path=path)
     if user:
         p_run.user = user
     p_run.save()
 
-    return p_run
+    return p_run, False
 
 
 def remove_duplicate_measurements(

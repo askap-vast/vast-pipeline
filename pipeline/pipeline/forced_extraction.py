@@ -3,6 +3,7 @@ import logging
 import numpy as np
 import pandas as pd
 import dask.dataframe as dd
+import dask.bag as db
 from psutil import cpu_count
 from glob import glob
 
@@ -15,6 +16,7 @@ from pyarrow.parquet import read_schema
 from pipeline.models import Image, Measurement
 from pipeline.image.utils import on_sky_sep
 
+from .loading import bulk_upload_model
 from .forced_phot import ForcedPhot
 from .utils import (
     cross_join, get_measurement_models, parallel_groupby_coord
@@ -23,6 +25,36 @@ from ..utils.utils import StopWatch
 
 
 logger = logging.getLogger(__name__)
+
+
+def remove_forced_meas(run_path):
+    '''
+    remove forced measurements from the database if forced parquet files
+    are found
+    '''
+    path_glob = glob(
+        os.path.join(run_path, 'forced_measurements_*.parquet')
+    )
+    if path_glob:
+        ids = (
+            dd.read_parquet(path_glob, columns='id')
+            .values
+            .compute()
+            .tolist()
+        )
+        obj_to_delete = Measurement.objects.filter(id__in=ids)
+        del ids
+        if obj_to_delete.exists():
+            with transaction.atomic():
+                n_del, detail_del = obj_to_delete.delete()
+                logger.info(
+                    ('Deleting all previous forced measurement and association'
+                     ' objects for this run. Total objects deleted: %i'),
+                    n_del,
+                )
+                logger.debug('(type, #deleted): %s', detail_del)
+
+    return path_glob
 
 
 def extract_from_image(
@@ -166,41 +198,36 @@ def parallel_extraction(
     return out
 
 
-def write_group_to_parquet(df, run_path):
+def write_group_to_parquet(df, fname):
     '''
     write a dataframe correpondent to a single group/image
     to a parquet file
     '''
-    img_name = df['image'].iloc[0]
-    fname = os.path.join(
-        run_path,
-        'forced_measurements_' + img_name.replace('.','_') +
-        '.parquet'
-    )
     (
-        df.drop(['source', 'meas_dj', 'image'], axis=1)
+        df.drop(['d2d', 'dr', 'source', 'meas_dj', 'image'], axis=1)
         .to_parquet(fname, index=False)
     )
 
-    return {'out': True}
+    pass
 
 
 def parallel_write_parquet(df, run_path):
     '''
     parallelize writing parquet files for forced measurments
     '''
-    df = df.drop(['d2d', 'dr'], axis=1)
-    n_cpu = cpu_count() - 1
-    (
-        dd.from_pandas(df, n_cpu)
-        .groupby('image')
-        .apply(
-            write_group_to_parquet,
-            run_path=run_path,
-            meta=('out', '?')
-        )
-        .compute(num_workers=n_cpu, scheduler='processes')
+    images = df['image'].unique().tolist()
+    get_fname = lambda n: os.path.join(
+        run_path,
+        'forced_measurements_' + n.replace('.','_') + '.parquet'
     )
+    dfs = list(map(lambda x: (df[df['image'] == x], get_fname(x)), images))
+    n_cpu = cpu_count() - 1
+
+    # writing parquets using Dask bag
+    bags = db.from_sequence(dfs)
+    bags = bags.starmap(lambda df, fname: write_group_to_parquet(df, fname))
+    bags.compute(num_workers=n_cpu)
+
     pass
 
 
@@ -309,43 +336,19 @@ def forced_extraction(
     extr_df = extr_df[col_order + remaining]
 
     # Create measurement Django objects
-    extr_df['meas_dj'] = extr_df.apply(
-        get_measurement_models, axis=1
-    )
+    extr_df['meas_dj'] = extr_df.apply(get_measurement_models, axis=1)
+
     # Delete previous forced measurements and update new forced
     # measurements in the db
     # get the forced measurements ids for the current pipeline run
-    path_glob = glob(
-        os.path.join(p_run.path, 'forced_measurements_*.parquet')
-    )
-    if path_glob:
-        ids = (
-            dd.read_parquet(path_glob, columns='id')
-            .values
-            .compute()
-            .tolist()
-        )
-        obj_to_delete = Measurement.objects.filter(id__in=ids)
-        del ids
-        if obj_to_delete.exists():
-            with transaction.atomic():
-                n_del, detail_del = obj_to_delete.delete()
-                logger.info(
-                    ('Deleting all previous forced measurement and association'
-                     ' objects for this run. Total objects deleted: %i'),
-                    n_del,
-                )
-                logger.debug('(type, #deleted): %s', detail_del)
+    forced_parquets = remove_forced_meas(p_run.path)
 
-        batch_size = 10_000
-        for idx in range(0, extr_df['meas_dj'].size, batch_size):
-            out_bulk = Measurement.objects.bulk_create(
-                extr_df['meas_dj'].iloc[
-                    idx : idx + batch_size
-                ].values.tolist(),
-                batch_size
-            )
-            logger.info('Bulk uploaded #%i measurements', len(out_bulk))
+    # delete parquet files
+    logger.debug('Removing forced measurements parquet files')
+    for parquet in forced_parquets:
+        os.remove(parquet)
+
+    bulk_upload_model(extr_df['meas_dj'], Measurement)
 
     # make the measurement id column and rename to source
     extr_df['id'] = extr_df['meas_dj'].apply(lambda x: x.id)
