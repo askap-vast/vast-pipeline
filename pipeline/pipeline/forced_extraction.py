@@ -3,6 +3,7 @@ import logging
 import numpy as np
 import pandas as pd
 import dask.dataframe as dd
+import dask.bag as db
 from psutil import cpu_count
 from glob import glob
 
@@ -197,41 +198,36 @@ def parallel_extraction(
     return out
 
 
-def write_group_to_parquet(df, run_path):
+def write_group_to_parquet(df, fname):
     '''
     write a dataframe correpondent to a single group/image
     to a parquet file
     '''
-    img_name = df['image'].iloc[0]
-    fname = os.path.join(
-        run_path,
-        'forced_measurements_' + img_name.replace('.','_') +
-        '.parquet'
-    )
     (
-        df.drop(['source', 'meas_dj', 'image'], axis=1)
+        df.drop(['d2d', 'dr', 'source', 'meas_dj', 'image'], axis=1)
         .to_parquet(fname, index=False)
     )
 
-    return {'out': True}
+    pass
 
 
 def parallel_write_parquet(df, run_path):
     '''
     parallelize writing parquet files for forced measurments
     '''
-    df = df.drop(['d2d', 'dr'], axis=1)
-    n_cpu = cpu_count() - 1
-    (
-        dd.from_pandas(df, n_cpu)
-        .groupby('image')
-        .apply(
-            write_group_to_parquet,
-            run_path=run_path,
-            meta=('out', '?')
-        )
-        .compute(num_workers=n_cpu, scheduler='processes')
+    images = df['image'].unique().tolist()
+    get_fname = lambda n: os.path.join(
+        run_path,
+        'forced_measurements_' + n.replace('.','_') + '.parquet'
     )
+    dfs = list(map(lambda x: (df[df['image'] == x], get_fname(x)), images))
+    n_cpu = cpu_count() - 1
+
+    # writing parquets using Dask bag
+    bags = db.from_sequence(dfs)
+    bags = bags.starmap(lambda df, fname: write_group_to_parquet(df, fname))
+    bags.compute(num_workers=n_cpu)
+
     pass
 
 
@@ -340,9 +336,8 @@ def forced_extraction(
     extr_df = extr_df[col_order + remaining]
 
     # Create measurement Django objects
-    extr_df['meas_dj'] = extr_df.apply(
-        get_measurement_models, axis=1
-    )
+    extr_df['meas_dj'] = extr_df.apply(get_measurement_models, axis=1)
+
     # Delete previous forced measurements and update new forced
     # measurements in the db
     # get the forced measurements ids for the current pipeline run
