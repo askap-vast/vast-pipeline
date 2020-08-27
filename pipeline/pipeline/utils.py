@@ -169,7 +169,9 @@ def remove_duplicate_measurements(
     Remove duplicate sources from dataframe
     """
     logger.debug('Cleaning duplicate sources from epoch...')
-    logger.debug('Using crossmatch radius of %.2f arcsec.', dup_lim.arcsec)
+    logger.debug(
+        'Using duplicate crossmatch radius of %.2f arcsec.', dup_lim.arcsec
+    )
     min_source = sources_df['source'].min()
 
     # sort by the distance from the image centre so we know
