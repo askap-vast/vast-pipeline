@@ -83,9 +83,6 @@ ASTROMETRIC_UNCERTAINTY_DEC = 1  # arcsec
 ###
 ASSOCIATION_METHOD = 'deruiter' # 'basic', 'advanced' or 'deruiter'
 
-# options that apply to basic and advanced association
-ASSOCIATION_RADIUS = 15.0 # arcsec, basic and advanced only
-
 # options that apply to deruiter association
 ASSOCIATION_DE_RUITER_RADIUS = 5.68 # unitless, deruiter only
 ASSOCIATION_BEAMWIDTH_LIMIT = 2.   # multiplicative factor, deruiter only

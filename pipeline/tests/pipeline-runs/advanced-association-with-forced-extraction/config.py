@@ -86,10 +86,6 @@ ASSOCIATION_METHOD = 'advanced' # 'basic', 'advanced' or 'deruiter'
 # options that apply to basic and advanced association
 ASSOCIATION_RADIUS = 15.0 # arcsec, basic and advanced only
 
-# options that apply to deruiter association
-ASSOCIATION_DE_RUITER_RADIUS = 5.68 # unitless, deruiter only
-ASSOCIATION_BEAMWIDTH_LIMIT = 1.5   # multiplicative factor, deruiter only
-
 ###
 # OPTIONS THAT CONTROL THE NEW SOURCE ANALYSIS
 ###

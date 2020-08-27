@@ -113,18 +113,38 @@ class Pipeline():
                 f' Must be a value contained in: {association_methods}.'
             ))
 
+        # validate config keys for each association method
+        ass_method = getattr(self.config, 'ASSOCIATION_METHOD')
+        if ass_method == 'basic' or ass_method == 'advanced':
+            if not getattr(self.config, 'ASSOCIATION_RADIUS'):
+                raise PipelineConfigError('ASSOCIATION_RADIUS missing!')
+        else:
+            # deruiter association
+            if (
+                not getattr(self.config, 'ASSOCIATION_DE_RUITER_RADIUS') or not
+                getattr(self.config, 'ASSOCIATION_BEAMWIDTH_LIMIT')
+                ):
+                raise PipelineConfigError((
+                    'ASSOCIATION_DE_RUITER_RADIUS or '
+                    'ASSOCIATION_BEAMWIDTH_LIMIT missing!'
+                ))
+
         # validate min_new_source_sigma value
         if 'NEW_SOURCE_MIN_SIGMA' not in dir(self.config):
             raise PipelineConfigError('NEW_SOURCE_MIN_SIGMA must be defined!')
 
         # validate Forced extraction settings
-        if getattr(self.config, 'MONITOR') and not(
-            getattr(self.config, 'BACKGROUND_FILES') and getattr(self.config, 'NOISE_FILES')
-            ):
-            raise PipelineConfigError(
-                'Expecting list of background MAP and RMS files!'
-            )
-        elif getattr(self.config, 'MONITOR'):
+        if getattr(self.config, 'MONITOR'):
+            if not getattr(self.config, 'BACKGROUND_FILES'):
+                raise PipelineConfigError(
+                    'Expecting list of background MAP files!'
+                )
+            for file in getattr(self.config, 'BACKGROUND_FILES'):
+                if not os.path.exists(file):
+                    raise PipelineConfigError(
+                        f'file:\n{file}\ndoes not exists!'
+                    )
+
             monitor_settings = [
                 'MONITOR_MIN_SIGMA',
                 'MONITOR_EDGE_BUFFER_SCALE',
@@ -134,13 +154,6 @@ class Pipeline():
             for mon_set in monitor_settings:
                 if mon_set not in dir(self.config):
                     raise PipelineConfigError(mon_set + ' must be defined!')
-
-            for lst in ['BACKGROUND_FILES', 'NOISE_FILES']:
-                for file in getattr(self.config, lst):
-                    if not os.path.exists(file):
-                        raise PipelineConfigError(
-                            f'file:\n{file}\ndoes not exists!'
-                        )
 
         # validate every config from the config template
         for key in [k for k in dir(self.config) if k.isupper()]:
