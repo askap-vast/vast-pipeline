@@ -106,11 +106,11 @@ class Pipeline():
                 f' Choices are {source_finder_names}'
             ))
 
-        association_methods = ['basic', 'advanced', 'deruiter']
+        association_methods = settings.DEFAULT_ASSOCIATION_METHODS
         if getattr(self.config, 'ASSOCIATION_METHOD') not in association_methods:
             raise PipelineConfigError((
                 'ASSOCIATION_METHOD is not valid!'
-                " Must be a value contained in: {}.".format(association_methods)
+                f' Must be a value contained in: {association_methods}.'
             ))
 
         # validate min_new_source_sigma value

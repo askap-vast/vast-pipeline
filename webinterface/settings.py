@@ -264,6 +264,9 @@ SOURCE_FINDERS = ['selavy']
 # default source finder
 DEFAULT_SOURCE_FINDER = 'selavy'
 
+# defaults source association methods
+DEFAULT_ASSOCIATION_METHODS = ['basic', 'advanced', 'deruiter']
+
 # minimum default accepted error on flux
 FLUX_DEFAULT_MIN_ERROR = env('FLUX_DEFAULT_MIN_ERROR', cast=float, default=0.001)
 
