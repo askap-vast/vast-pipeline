@@ -49,7 +49,7 @@ def initialise_run(run_name, run_comment='', user=None, config=None):
             fp.write(tm.render(**sett.PIPE_RUN_CONFIG_DEFAULTS))
 
     # create entry in db
-    p_run = get_create_p_run(run_name, run_path, run_comment, user)
+    p_run, _ = get_create_p_run(run_name, run_path, run_comment, user)
 
     return p_run
 

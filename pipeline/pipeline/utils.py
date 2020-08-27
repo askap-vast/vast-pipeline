@@ -144,6 +144,10 @@ def get_create_img(p_run, band_id, image):
 
 
 def get_create_p_run(name, path, comment='', user=None):
+    '''
+    get or create a pipeline run in db, return the run django object and
+    a flag True/False if has been created or already exists
+    '''
     p_run = Run.objects.filter(name__exact=name)
     if p_run:
         return p_run.get(), True
