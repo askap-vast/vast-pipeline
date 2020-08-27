@@ -27,15 +27,6 @@ SELAVY_FILES = [
     './pipeline/tests/data/epoch04.selavy.components.txt',
 ]
 
-# background map files
-BACKGROUND_FILES = [
-    # insert background map file path(s) here
-    './pipeline/tests/data/epoch01.meanMap.fits',
-    './pipeline/tests/data/epoch02.meanMap.fits',
-    './pipeline/tests/data/epoch03.meanMap.fits',
-    './pipeline/tests/data/epoch04.meanMap.fits',
-]
-
 # Noise or RMS files
 NOISE_FILES = [
     # insert RMS file path(s) here
@@ -43,6 +34,15 @@ NOISE_FILES = [
     './pipeline/tests/data/epoch02.noiseMap.fits',
     './pipeline/tests/data/epoch03.noiseMap.fits',
     './pipeline/tests/data/epoch04.noiseMap.fits',
+]
+
+# background map files
+BACKGROUND_FILES = [
+    # insert background map file path(s) here
+    './pipeline/tests/data/epoch01.meanMap.fits',
+    './pipeline/tests/data/epoch02.meanMap.fits',
+    './pipeline/tests/data/epoch03.meanMap.fits',
+    './pipeline/tests/data/epoch04.meanMap.fits',
 ]
 
 ###

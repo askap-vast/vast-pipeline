@@ -86,8 +86,9 @@ class Pipeline():
         """
         # do sanity checks
         if (getattr(self.config, 'IMAGE_FILES') and
-            getattr(self.config, 'SELAVY_FILES')):
-            for lst in ['IMAGE_FILES', 'SELAVY_FILES']:
+            getattr(self.config, 'SELAVY_FILES') and
+            getattr(self.config, 'NOISE_FILES')):
+            for lst in ['IMAGE_FILES', 'SELAVY_FILES', 'NOISE_FILES']:
                 for file in getattr(self.config, lst):
                     if not os.path.exists(file):
                         raise PipelineConfigError(
@@ -95,7 +96,7 @@ class Pipeline():
                         )
         else:
             raise PipelineConfigError(
-                'no image file paths passed or Selavy file paths!'
+                'No image and/or Selavy and/or noise file paths passed!'
             )
 
         source_finder_names = settings.SOURCE_FINDERS
