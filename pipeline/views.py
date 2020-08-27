@@ -19,7 +19,7 @@ from astropy.wcs.utils import proj_plane_pixel_scales
 
 from django.http import FileResponse, Http404, HttpResponseRedirect
 from django.db.models import Count, F, Q, Case, When, Value, BooleanField
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.conf import settings
 from django.contrib import messages
@@ -193,26 +193,6 @@ class RunViewSet(ModelViewSet):
 def RunDetail(request, id):
     p_run_model = Run.objects.filter(id=id).prefetch_related('image_set').get()
     p_run = p_run_model.__dict__
-    # build config path for POST and later
-    f_path = os.path.join(p_run['path'], 'config.py')
-    if request.method == 'POST':
-        # this post is for writing the config text (modified or not) from the
-        #  UI to a config.py file
-        config_text = request.POST.get('config_text', None)
-        if config_text:
-            try:
-                with open(f_path, 'w') as fp:
-                    fp.write(config_text)
-
-                messages.success(
-                    request,
-                    'Pipeline config written successfully'
-                )
-            except Exception as e:
-                messages.error(request, f'Error in writing config: {e}')
-        else:
-            messages.info(request, 'Config text null')
-
     p_run['user'] = p_run_model.user.username if p_run_model.user else None
     p_run['status'] = p_run_model.get_status_display()
     if p_run_model.image_set.exists() and p_run_model.status == 'END':
@@ -268,6 +248,7 @@ def RunDetail(request, id):
         p_run['new_srcs'] = 'N.A.'
 
     # read run config
+    f_path = os.path.join(p_run['path'], 'config.py')
     if os.path.exists(f_path):
         with open(f_path) as fp:
             p_run['config_txt'] = fp.read()
@@ -1108,31 +1089,28 @@ class RawImageListSet(ViewSet):
         return Response(serializer.data)
 
 
-class ValidateRunConfigSet(ViewSet):
+class RunConfigSet(ViewSet):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [IsAuthenticated]
-    lookup_value_regex = '[-\w]+'
-    lookup_field = 'runname'
+    queryset = Run.objects.all()
 
-    def retrieve(self, request, runname=None):
-        if not runname:
+    @action(detail=True, methods=['get'])
+    def validate(self, request, pk=None):
+        if not pk:
             return Response(
                 {
                     'message': {
                         'severity': 'danger',
                         'text': [
                             'Error in config validation:',
-                            'Run name parameter null or not passed'
+                            'Run pk parameter null or not passed'
                         ]
                     }
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
-        path = os.path.join(
-            settings.PIPELINE_WORKING_DIR,
-            runname,
-            'config.py'
-        )
+        p_run = get_object_or_404(self.queryset, pk=pk)
+        path = os.path.join(p_run.path, 'config.py')
 
         if not os.path.exists(path):
             return Response(
@@ -1149,7 +1127,7 @@ class ValidateRunConfigSet(ViewSet):
             )
 
         try:
-            pipeline = Pipeline(name=runname, config_path=path)
+            pipeline = Pipeline(name=p_run.name, config_path=path)
             pipeline.validate_cfg()
         except Exception as e:
             trace = traceback.format_exc().splitlines()
