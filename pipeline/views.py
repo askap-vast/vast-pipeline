@@ -193,6 +193,26 @@ class RunViewSet(ModelViewSet):
 def RunDetail(request, id):
     p_run_model = Run.objects.filter(id=id).prefetch_related('image_set').get()
     p_run = p_run_model.__dict__
+    # build config path for POST and later
+    f_path = os.path.join(p_run['path'], 'config.py')
+    if request.method == 'POST':
+        # this post is for writing the config text (modified or not) from the
+        #  UI to a config.py file
+        config_text = request.POST.get('config_text', None)
+        if config_text:
+            try:
+                with open(f_path, 'w') as fp:
+                    fp.write(config_text)
+
+                messages.success(
+                    request,
+                    'Pipeline config written successfully'
+                )
+            except Exception as e:
+                messages.error(request, f'Error in writing config: {e}')
+        else:
+            messages.info(request, 'Config text null')
+
     p_run['user'] = p_run_model.user.username if p_run_model.user else None
     p_run['status'] = p_run_model.get_status_display()
     if p_run_model.image_set.exists() and p_run_model.status == 'END':
@@ -248,7 +268,6 @@ def RunDetail(request, id):
         p_run['new_srcs'] = 'N.A.'
 
     # read run config
-    f_path = os.path.join(p_run['path'], 'config.py')
     if os.path.exists(f_path):
         with open(f_path) as fp:
             p_run['config_txt'] = fp.read()
