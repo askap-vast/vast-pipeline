@@ -117,7 +117,7 @@ def RunIndex(request):
                 cfg_data[files] = request.POST.getlist(files)
 
             try:
-                p_run, _ = initialise_run(
+                p_run = initialise_run(
                     **run_dict,
                     config=cfg_data
                 )
