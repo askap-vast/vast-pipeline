@@ -215,7 +215,7 @@ def RunDetail(request, id):
 
     p_run['user'] = p_run_model.user.username if p_run_model.user else None
     p_run['status'] = p_run_model.get_status_display()
-    if p_run_model.image_set.exists():
+    if p_run_model.image_set.exists() and p_run_model.status == 'END':
         images = list(p_run_model.image_set.values('name', 'datetime'))
         img_paths = list(map(
             lambda x: os.path.join(
@@ -240,7 +240,7 @@ def RunDetail(request, id):
     forced_path = glob(
         os.path.join(p_run['path'], 'forced_measurements_*.parquet')
     )
-    if forced_path:
+    if forced_path and p_run_model.status == 'END':
         try:
             p_run['nr_frcd'] = (
                 dd.read_parquet(forced_path, columns='id')
@@ -259,10 +259,13 @@ def RunDetail(request, id):
     else:
         p_run['nr_frcd'] = 'N.A.'
 
-    p_run['new_srcs'] = Source.objects.filter(
-        run__id=p_run['id'],
-        new=True,
-    ).count()
+    if p_run_model.status == 'END':
+        p_run['new_srcs'] = Source.objects.filter(
+            run__id=p_run['id'],
+            new=True,
+        ).count()
+    else:
+        p_run['new_srcs'] = 'N.A.'
 
     # read run config
     if os.path.exists(f_path):
