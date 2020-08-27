@@ -792,7 +792,9 @@ class ForcedPhot:
         flux = np.zeros(len(X0))
         flux_err = np.zeros(len(X0))
 
-        if (not allow_nan) or (good.sum() == 0):
+        if (np.any(~good) and (not allow_nan)) or (good.sum() == 0):
+            # either >=1 bad point and no bad points allowed
+            # OR
             # no good points left
             if stamps:
                 return (
