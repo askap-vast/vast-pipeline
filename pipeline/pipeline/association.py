@@ -512,7 +512,7 @@ def advanced_association(
     return sources_df, skyc1_srcs
 
 
-def association(p_run, images, meas_dj_obj, limit, dr_limit, bw_limit,
+def association(p_run, images, limit, dr_limit, bw_limit,
     config):
     '''
     The main association function that does the common tasks between basic

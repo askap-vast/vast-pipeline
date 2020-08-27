@@ -30,7 +30,7 @@
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
 	  <h1 class="h3 mb-2 text-gray-800"><strong>Source:</strong> {{ source.name }}</h1>
     <div class="">
-      <span {% if not sourcefav  %}data-toggle="modal"{% endif %} data-target="#starSource">
+      <span {% if not sourcefav %}data-toggle="modal"{% endif %} data-target="#starSource">
         <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm" data-toggle="tooltip" title="Add to favourites" >
           <span class="icon text-white-600">
             <i class="fas fa-star" {% if sourcefav  %}style="color: #ffe271"{% endif %}></i>
@@ -77,19 +77,6 @@
           <p><strong>New Source: </strong> {{ source.new }}</p>
           <p><strong>Nr Datapoints: </strong> {{ source.measurements }}</p>
           <p><strong>Pipeline Run: </strong> <a href="{% url 'pipeline:run_detail' source.run_id %}">{{ source.run_name }}</a></p>
-          <p><strong>Related: </strong>
-          {% if source.relations_info %}
-            {% for a,b in source.relations_info %}
-              <!-- if the comma is only in the if statement then there is an ugly space -->
-              {% if not forloop.last %}
-                <a href="{% url 'pipeline:source_detail' a %}" target="_blank">{{ b }}</a>,
-              {% else %}
-                <a href="{% url 'pipeline:source_detail' a %}" target="_blank">{{ b }}</a>
-              {% endif %}
-            {% endfor %}
-          {% else %}
-            None.
-          {% endif %}</p>
           <p><strong>Comment: </strong> {{ source.comment }}</p>
         </div>
       </div>
@@ -132,7 +119,7 @@
             <div class="JS9Menubar" id="SUPERMENU_" data-displays="*"></div>
           </div>
           <div class="row">
-            {% for measurement in measurements.dataQuery %}
+            {% for measurement in datatables.0.dataQuery %}
               <div class="card">
                 <div class="card-header">
                   <p class="mb-0"><a href="{% url 'pipeline:image_detail' measurement.image_id %}" target="_blank">{{ measurement.image_name }}</a></p>
@@ -148,29 +135,59 @@
       </div>
     </div>
 
-  <!-- DataTales Source Measurements -->
+  <!-- DataTable Source Measurements -->
   <div class="card shadow mb-4">
     <div class="card-header py-3">
       <h6 class="m-0 font-weight-bold text-primary">Source Measurements</h6>
     </div>
     <div class="card-body">
       <div class="table-responsive">
-        <table class="table table-bordered table-striped table-hover" id="dataTable" width="100%" cellspacing="0">
+        <table class="table table-bordered table-striped table-hover" id="{{ datatables.0.table_id }}" width="100%" cellspacing="0" MeasApi="{% url 'pipeline:api_measurements-list' %}" ImgApi="{% url 'pipeline:api_images-list' %}">
           <thead>
             <tr>
-              {% for name in source.datatable.colsNames %}
+              {% for name in datatables.0.colsNames %}
               <th>{{ name }}</th>
               {% endfor %}
             </tr>
           </thead>
           <tfoot>
             <tr>
-              {% for name in source.datatable.colsNames %}
+              {% for name in datatables.0.colsNames %}
               <th>{{ name }}</th>
               {% endfor %}
             </tr>
           </tfoot>
         </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Datatable Related Sources -->
+  <div class="card shadow mb-4">
+    <a href="#collapseRelatedSources" class="d-block card-header py-3" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="collapseRelatedSources">
+      <h6 class="m-0 font-weight-bold text-primary">Related Sources</h6>
+    </a>
+    <!-- Card Content - Collapse -->
+    <div class="collapse show" id="collapseRelatedSources">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-bordered table-striped table-hover" id="{{ datatables.1.table_id }}" width="100%" cellspacing="0">
+            <thead>
+              <tr>
+                {% for name in datatables.1.colsNames %}
+                <th>{{ name }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tfoot>
+              <tr>
+                {% for name in datatables.1.colsNames %}
+                <th>{{ name }}</th>
+                {% endfor %}
+              </tr>
+            </tfoot>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -225,11 +242,11 @@
 <script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
 
 <!-- Datatable scripts -->
-{{ measurements|json_script:"datatable-conf" }}
+{{ datatables|json_script:"datatable-conf" }}
 <script src="{% static 'js/datatables-pipeline.min.js' %}"></script>
 
 <!-- Chart scripts -->
-{{ measurements|json_script:"chart-data" }}
+{{ datatables.0|json_script:"chart-data" }}
 <script src="{% static 'vendor/chart.js/Chart.bundle.min.js' %}"></script>
 <script src="{% static 'vendor/chart.js/Plugin.Errorbars.min.js' %}"></script>
 <script src="{% static 'js/light-curve-chart.min.js' %}"></script>
@@ -239,7 +256,7 @@
 <script type='text/javascript' src='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js' charset='utf-8'></script>
 <script src="{% static 'js/aladin-script.min.js' %}"></script>
 
-{{ measurements.dataQuery|json_script:"data-js9" }}
+{{ datatables.0.dataQuery|json_script:"data-js9" }}
 <script type="text/javascript">
   // $(document).ready(function() {
     // $('[data-toggle="tooltip"]').tooltip();

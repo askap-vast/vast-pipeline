@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 
-from django.test import TestCase
+from django.test import SimpleTestCase
 from django.conf import settings as s
 
 from rest_framework.renderers import JSONRenderer
@@ -10,7 +10,7 @@ import pipeline.serializers as ser
 import pipeline.models as mod
 
 
-class SerializerTest(TestCase):
+class SerializerTest(SimpleTestCase):
     """
     testing serializers
     """

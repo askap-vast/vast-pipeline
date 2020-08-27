@@ -52,6 +52,12 @@ MONITOR_MIN_SIGMA = {{ monitor_min_sigma }}
 # MONITOR_EDGE_BUFFER_SCALE is a multiplicative scaling factor to the buffer size of the
 # forced photometry from the image edge.
 MONITOR_EDGE_BUFFER_SCALE = {{ monitor_edge_buffer_scale }}
+# MONITOR_CLUSTER_THRESHOLD represents the cluster_threshold parameter used in the forced
+# extraction. If unsure leave as default.
+MONITOR_CLUSTER_THRESHOLD = {{ monitor_cluster_threshold }}
+# MONITOR_ALLOW_NAN governs whether a source is attempted to be fit even if there are NaN's
+# present in the rms or background maps.
+MONITOR_ALLOW_NAN = {{ monitor_allow_nan }}
 
 # The position uncertainty is in reality a combination of the fitting errors and the
 # astrometric uncertainty of the image/survey/instrument.

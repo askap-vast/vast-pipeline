@@ -151,12 +151,12 @@ Output:
 usage: manage.py initpiperun [-h] [--version] [-v {0,1,2,3}]
                              [--settings SETTINGS] [--pythonpath PYTHONPATH]
                              [--traceback] [--no-color] [--force-color]
-                             run_folder_path
+                             runname
 
 Create the pipeline run folder structure to run a pipeline instance
 
 positional arguments:
-  run_folder_path       path to the pipeline run folder
+  runname       Name of the pipeline run.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -203,12 +203,12 @@ usage: manage.py runpipeline [-h] [--version] [-v {0,1,2,3}]
                              [--settings SETTINGS] [--pythonpath PYTHONPATH]
                              [--traceback] [--no-color] [--force-color]
                              [--skip-checks]
-                             run_folder_path
+                             piperun
 
-Process the pipeline for a list of images or a Selavy catalog
+Process the pipeline for a list of images and Selavy catalogs
 
 positional arguments:
-  run_folder_path       path to the pipeline run folder
+  piperun       Path or name of the pipeline run.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -240,8 +240,12 @@ Detailed commands for resetting the database can be found in [`DEVELOPING.md`](.
 
 Resetting a pipeline run can be done using the `clearpiperun` command: it will delete all images (and related objects such as sources) associated with that pipeline run, if that images does not belong to another pipeline run. It will deleted all the sources associated with that pipeline run.
 ```bash
+(pipeline_env)$ ./manage.py clearpiperun path/to/my_pipe_run
+# or
 (pipeline_env)$ ./manage.py clearpiperun my_pipe_run
 ```
+
+More details on the `clearpiperun` command can be found in the [Developing guidelines](./DEVELOPING.md#clearing-run-data).
 
 ### Import survey data
 
