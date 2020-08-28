@@ -13,8 +13,9 @@ If you intend to contribute to the code base please read and follow the guidelin
 	- [Initialise a Pipeline Run](#initialise-a-pipeline-run)
 	- [Run a Pipeline Instance](#run-a-pipeline-instance)
 	- [Resetting a Pipeline Run](#resetting-a-pipeline-run)
-	- [Import survey data](#import-survey-data)
+	- [Import survey data (TBC)](#import-survey-data)
 - [Data Exploration via Django Web Server](#data-exploration-via-django-web-server)
+- [Production Deployment](#production-deployment)
 
 ## Pipeline Configuration
 The following instructions, will get you started in setting up the database and pipeline configuration
@@ -35,13 +36,13 @@ NOTE: the connection details (host and port) are the same that you setup in [`IN
 3. Create the database user and database name, by running:
 
 ```bash
-$:./init-tools/init-db.sh localhost 5432 postgres postgres vast vastpsw vastdb
+$ ./init-tools/init-db.sh localhost 5432 postgres postgres vast vastpsw vastdb
 ```
 
   For help on the command run it without arguments
 
 ```bash
-$:./init-tools/init-db.sh
+$ ./init-tools/init-db.sh
 Usage: init-db.sh HOST PORT ADMINUSER ADMINPSW USER USERPSW DBNAME
 Eg:    init-db.sh localhost 5432 postgres postgres vast vastpsw vastdb
 
@@ -62,7 +63,7 @@ creating db 'vastdb'
 4. Create the database tables. Remember first to activate the Python environment as described in [`INSTALL.md`](./INSTALL.md).
 
 ```bash
-(pipeline_env)$:./manage.py migrate
+(pipeline_env)$ ./manage.py migrate
 ```
 
 5. Create the directories listed at the bottom of `settings.py` and update the details on your setting configuration file `.env` (single name, e.g. `pipeline-runs` means path relative to `BASE_DIR`, so the main folder where you cloned the repo).
@@ -116,7 +117,7 @@ Fill in your details and then login with the created credentials at `localhost:8
 All the pipeline commands are run using the Django global `./manage.py <command>` interface. Therefore you need to activate the `Python` environment. You can have a look at the available commands for the pipeline app:
 
 ```bash
-(pipeline_env)$: ./manage.py help
+(pipeline_env)$ ./manage.py help
 ```
 
 Output:
@@ -141,7 +142,7 @@ In order to process the images in the pipeline, you must create/initialise a pip
 The pipeline run creation is done using the `initpiperun` django command, which requires a pipeline run folder. The command creates a folder with the pipeline run name under the settings `PROJECT_WORKING_DIR` defined in [settings](./webinterface/settings.template.py).
 
 ```bash
-(pipeline_env)$: ./manage.py initpiperun --help
+(pipeline_env)$ ./manage.py initpiperun --help
 ```
 
 Output:
@@ -178,7 +179,7 @@ optional arguments:
 The command yields the following folder structure:
 
 ```bash
-(pipeline_env)$: ./manage.py initpiperun my_pipe_run
+(pipeline_env)$ ./manage.py initpiperun my_pipe_run
 ```
 
 Output:
@@ -193,7 +194,7 @@ Output:
 The pipeline is run using `runpipeline` django command.
 
 ```bash
-(pipeline_env)$: ./manage.py runpipeline --help
+(pipeline_env)$ ./manage.py runpipeline --help
 ```
 
 Output:
@@ -230,7 +231,7 @@ optional arguments:
 
 General usage:
 ```bash
-(pipeline_env)$: ./manage.py runpipeline path/to/my_pipe_run
+(pipeline_env)$ ./manage.py runpipeline path/to/my_pipe_run
 ```
 
 ### Resetting a Pipeline Run
@@ -248,17 +249,66 @@ More details on the `clearpiperun` command can be found in the [Developing guide
 
 ### Import survey data
 
-TBC
+This functionality is still not developed
 
 
 ## Data Exploration via Django Web Server
 
+Make sure you installed and compiled correctly the frontend assets see [guide](./INSTALL.md#pipeline-front-end-assets-quickstart)
+
 1. Start the Django development web server:
 
 ```bash
-(pipeline_env)$: ./manage.py runserver
+(pipeline_env)$ ./manage.py runserver
 ```
 
-2. Test the webserver by pointing your browser at http://127.0.0.1:8000
+2. Test the webserver by pointing your browser at http://127.0.0.1:8000 or http://localhost:8000
 
 The webserver is independent of `runpipeline` and you can use the website while the pipeline commands are running.
+
+## Production Deployment
+This section describes a simple deployment without using Docker containers, assuming the use of [WhiteNoise](http://whitenoise.evans.io/en/stable/) to serve the static files. It is possible to serve the static files using other methods (e.g. Nginx). And in the future it is possible to upgrade the deployment stack using Docker container and Docker compose (we foresee 3 main containers: Django, Dask and Traefik). We recommend in any case reading [Django deployment documentation](https://docs.djangoproject.com/en/3.1/howto/deployment/) for general knowledge.
+
+We assume deployment to a __UNIX server__.
+
+The following steps describes how to set up the Django side of the production deployment, and can be of reference for a future Dockerization. They assumed you have `SSH` access to your remote server and have `sudo` priviledges.
+
+1. Clone the repo in a suitable path, e.g. `/opt/`.
+
+  ```bash
+  $ cd /opt && sudo git clone https://github.com/askap-vast/vast-pipeline
+  ```
+
+2. Follow the installation instructions in [`INSTALL.md`](./INSTALL.md). We recommend installing the Python virtual environment under the pipeline folder.
+
+  ```bash
+  $ cd /opt/vast-pipeline && virtualenv -p python3 pipeline_env
+  ```
+
+3. Configure your `.env` files with all the right settings.
+
+4. Check that your server is running fine by changing `DEBUG = True` in the `.env` file.
+
+5. Run Django deployment checklist command to see what are you missing. It is possible that some options are turned off, as implemented in the reverse proxy or load balancer of your server (e.g. `SECURE_SSL_REDIRECT = False` or not set, assumes your reverse proxy redirect HTTP to HTTPS).
+
+  ```bash
+  (pipeline_env)$ ./manage.py check --deploy
+  ```
+
+6. Build up the static and fix url in JS9:
+
+  ```bash
+  (pipeline_env)$ cd /opt/vast-pipeline && npm ci && npm start && npm run js9staticprod && ./manage.py collectstatic -c --noinput
+  ```
+
+7. Set up a unit/systemd file as recommended in [Gunicorn docs](https://docs.gunicorn.org/en/latest/deploy.html#systemd) (feel free to use the socket or an IP and port). An example of command to write in the file is (assuming a virtual environment is installed in `venv` under the main pipeline folder):
+
+  ```bash
+  ExecStart=/opt/vast-pipeline/venv/bin/gunicorn -w 3 -k gevent --worker-connections=1000 --timeout 120 -b 127.0.0.1:8000 webinterface.wsgi
+  ```
+
+8. Finalise the installation of the unit file. Some good instructions on where to put, link and install the unit file are described in the [Jupyter Hub docs](https://jupyterhub.readthedocs.io/en/stable/installation-guide-hard.html#setup-systemd-service)
+
+### Security
+
+By default the settings file has some security parameters that are set when you run the web app in production (`DEBUG = False`), but you can read more in the Django documentation or in this [blog post](https://adamj.eu/tech/2019/04/10/how-to-score-a+-for-security-headers-on-your-django-website/) in which they explain how to get an A+ rating for your web site.

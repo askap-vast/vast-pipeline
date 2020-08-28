@@ -137,6 +137,6 @@
 <script type="text/javascript" src="{% static 'vendor/d3-celestial/d3.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'vendor/d3-celestial/d3.geo.projection.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'vendor/d3-celestial/celestial.min.js' %}"></script>
-<script type="text/javascript" src="{% static 'js/d3-celestial-script.min.js' %}"></script>
+<script id="d3CelestialScript" type="text/javascript" src="{% static 'js/d3-celestial-script.min.js' %}" staticUrl="{{ static_url }}"></script>
 
 {% endblock custom_page_scripts %}

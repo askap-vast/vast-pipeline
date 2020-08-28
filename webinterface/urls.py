@@ -2,7 +2,6 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path
-from django.views.generic import TemplateView
 from pipeline.views import Home, Login
 
 
@@ -21,3 +20,10 @@ if settings.DEBUG and 'debug_toolbar' in settings.INSTALLED_APPS:
     urlpatterns = [
         path('__debug__/', include(debug_toolbar.urls)),
     ] + urlpatterns
+
+# for production to change the base URL (e.g. server has other apps, like
+# jupyter hub running)
+if settings.BASE_URL and settings.BASE_URL != '':
+    urlpatterns = [
+        path(settings.BASE_URL.strip('/') + '/', include(urlpatterns))
+    ]
