@@ -35,6 +35,9 @@ dataConf.dataQuery.forEach( function(obj) {
 let max_max_value = Math.max.apply(null, max_values)
 let ymax = max_max_value * 1.05;
 let ymin = Math.min.apply(null, min_values) - (ymax - max_max_value);
+if (ymin > 0) {
+    ymin = 0
+}
 let conf = {
   type: 'line',
   data: {
