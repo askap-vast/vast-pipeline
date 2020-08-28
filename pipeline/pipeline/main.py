@@ -258,7 +258,6 @@ class Pipeline():
 
             sources_df = parallel_association(
                 images_df,
-                # meas_dj_obj,
                 limit,
                 dr_limit,
                 bw_limit,
@@ -281,7 +280,6 @@ class Pipeline():
 
             sources_df = association(
                 images_df,
-                # meas_dj_obj,
                 limit,
                 dr_limit,
                 bw_limit,
