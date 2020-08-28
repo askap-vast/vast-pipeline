@@ -61,8 +61,9 @@ def extract_from_image(
     df, images_df, edge_buffer, cluster_threshold, allow_nan
 ):
     P_islands = SkyCoord(
-        df['wavg_ra'].values * u.deg,
-        df['wavg_dec'].values * u.deg
+        df['wavg_ra'].values,
+        df['wavg_dec'].values,
+        unit=(u.deg, u.deg)
     )
 
     img_name = df['image'].iloc[0]
@@ -133,7 +134,6 @@ def parallel_extraction(
         'wavg_ra': 'f',
         'wavg_dec': 'f',
         'image': 'U',
-        'flux_peak': 'f',
         'island_id': 'U',
         'component_id': 'U',
         'name': 'U',
@@ -178,7 +178,7 @@ def parallel_extraction(
         predrop_shape - postdrop_shape
     ))
 
-    out = out.drop(['max_snr', 'image_rms_min', 'detection'], axis=1)
+    out = out.drop(['max_snr', 'image_rms_min', 'detection', 'flux_peak'], axis=1)
 
     n_cpu = cpu_count() - 1
     out = (
@@ -190,7 +190,8 @@ def parallel_extraction(
             edge_buffer=edge_buffer,
             cluster_threshold=cluster_threshold,
             allow_nan=allow_nan,
-            meta=col_dtype)
+            meta=col_dtype
+        )
         .dropna(subset=['flux_int'])
         .compute(num_workers=n_cpu, scheduler='processes')
         .rename(columns={'wavg_ra':'ra', 'wavg_dec':'dec'})
