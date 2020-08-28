@@ -19,7 +19,7 @@ from astropy.wcs.utils import proj_plane_pixel_scales
 
 from django.http import FileResponse, Http404, HttpResponseRedirect
 from django.db.models import Count, F, Q, Case, When, Value, BooleanField
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.conf import settings
 from django.contrib import messages
@@ -83,7 +83,8 @@ def Home(request):
     ) if (check_run_db and meas_glob) else 0
     context = {
         'totals': totals,
-        'd3_celestial_skyregions': get_skyregions_collection()
+        'd3_celestial_skyregions': get_skyregions_collection(),
+        'static_url': settings.STATIC_URL
     }
     return render(request, 'index.html', context)
 
@@ -214,7 +215,7 @@ def RunDetail(request, id):
 
     p_run['user'] = p_run_model.user.username if p_run_model.user else None
     p_run['status'] = p_run_model.get_status_display()
-    if p_run_model.image_set.exists():
+    if p_run_model.image_set.exists() and p_run_model.status == 'END':
         images = list(p_run_model.image_set.values('name', 'datetime'))
         img_paths = list(map(
             lambda x: os.path.join(
@@ -239,7 +240,7 @@ def RunDetail(request, id):
     forced_path = glob(
         os.path.join(p_run['path'], 'forced_measurements_*.parquet')
     )
-    if forced_path:
+    if forced_path and p_run_model.status == 'END':
         try:
             p_run['nr_frcd'] = (
                 dd.read_parquet(forced_path, columns='id')
@@ -258,10 +259,13 @@ def RunDetail(request, id):
     else:
         p_run['nr_frcd'] = 'N.A.'
 
-    p_run['new_srcs'] = Source.objects.filter(
-        run__id=p_run['id'],
-        new=True,
-    ).count()
+    if p_run_model.status == 'END':
+        p_run['new_srcs'] = Source.objects.filter(
+            run__id=p_run['id'],
+            new=True,
+        ).count()
+    else:
+        p_run['new_srcs'] = 'N.A.'
 
     # read run config
     if os.path.exists(f_path):
@@ -503,6 +507,10 @@ def MeasurementDetail(request, id, action=None):
         ))
 
     context = {'measurement': measurement}
+    # add base url for using in JS9 if assigned
+    if settings.BASE_URL and settings.BASE_URL != '':
+        context['base_url'] = settings.BASE_URL.strip('/')
+
     return render(request, 'measurement_detail.html', context)
 
 
@@ -861,6 +869,10 @@ def SourceDetail(request, id, action=None):
             .exists()
         )
     }
+    # add base url for using in JS9 if assigned
+    if settings.BASE_URL and settings.BASE_URL != '':
+        context['base_url'] = settings.BASE_URL.strip('/')
+
     return render(request, 'source_detail.html', context)
 
 
@@ -1096,31 +1108,28 @@ class RawImageListSet(ViewSet):
         return Response(serializer.data)
 
 
-class ValidateRunConfigSet(ViewSet):
+class RunConfigSet(ViewSet):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [IsAuthenticated]
-    lookup_value_regex = '[-\w]+'
-    lookup_field = 'runname'
+    queryset = Run.objects.all()
 
-    def retrieve(self, request, runname=None):
-        if not runname:
+    @action(detail=True, methods=['get'])
+    def validate(self, request, pk=None):
+        if not pk:
             return Response(
                 {
                     'message': {
                         'severity': 'danger',
                         'text': [
                             'Error in config validation:',
-                            'Run name parameter null or not passed'
+                            'Run pk parameter null or not passed'
                         ]
                     }
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
-        path = os.path.join(
-            settings.PIPELINE_WORKING_DIR,
-            runname,
-            'config.py'
-        )
+        p_run = get_object_or_404(self.queryset, pk=pk)
+        path = os.path.join(p_run.path, 'config.py')
 
         if not os.path.exists(path):
             return Response(
@@ -1137,7 +1146,7 @@ class ValidateRunConfigSet(ViewSet):
             )
 
         try:
-            pipeline = Pipeline(name=runname, config_path=path)
+            pipeline = Pipeline(name=p_run.name, config_path=path)
             pipeline.validate_cfg()
         except Exception as e:
             trace = traceback.format_exc().splitlines()

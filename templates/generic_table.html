@@ -30,7 +30,7 @@
       <p class="mb-4">{{ text.description }}</p>
     </div>
     {% if 'run' in text.title|lower %}
-    <a id="newPipeRunButton" class="btn btn-sm btn-primary btn-icon-split shadow-sm" href="#" data-toggle="modal" data-target="#newPipeRun">
+    <a id="newPipeRunButton" class="btn btn-sm btn-primary btn-icon-split shadow-sm" href="#" data-toggle="modal" data-target="#newPipeRun" rawImgApi="{% url 'pipeline:api_rawimages-list' %}">
       <span class="icon text-white-600">
         <i class="fa fa-plus fa-lg"></i>
       </span>

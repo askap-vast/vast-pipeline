@@ -44,6 +44,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -176,10 +177,13 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
-
+BASE_URL = env('BASE_URL', cast=str, default=None)
 STATIC_URL = env('STATIC_URL', cast=str, default='/static/')
+if BASE_URL:
+    STATIC_URL = '/' + BASE_URL.strip('/') + '/' + STATIC_URL.strip('/') + '/'
 STATICFILES_DIRS = env('STATICFILES_DIRS', cast=list, default=[os.path.join(BASE_DIR, 'static')])
 STATIC_ROOT = env('STATIC_ROOT', cast=str, default=os.path.join(BASE_DIR, 'staticfiles'))
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Logging
 LOGGING = {
@@ -220,6 +224,24 @@ LOGGING = {
     }
 }
 
+# PRODUCTION SETTINGS
+if not DEBUG:
+    # ideally you want to check the site rating at https://securityheaders.com/
+    # as suggested here https://adamj.eu/tech/2019/04/10/how-to-score-a+-for-security-headers-on-your-django-website/
+    # SECURE_SSL_REDIRECT = True # set this to True when your reverse proxy server does not redirect http to https
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000 # see https://docs.djangoproject.com/en/3.1/ref/middleware/#http-strict-transport-security
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_REFERRER_POLICY = 'same-origin' # see https://docs.djangoproject.com/en/3.0/ref/middleware/#referrer-policy
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    # from https://ubuntu.com/blog/django-behind-a-proxy-fixing-absolute-urls
+    USE_X_FORWARDED_HOST = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 # PIPELINE settings
 # project default folder
 PIPELINE_WORKING_DIR = env('PIPELINE_WORKING_DIR', cast=str, default=os.path.join(BASE_DIR, 'pipeline-runs'))
@@ -241,6 +263,9 @@ SOURCE_FINDERS = ['selavy']
 
 # default source finder
 DEFAULT_SOURCE_FINDER = 'selavy'
+
+# defaults source association methods
+DEFAULT_ASSOCIATION_METHODS = ['basic', 'advanced', 'deruiter']
 
 # minimum default accepted error on flux
 FLUX_DEFAULT_MIN_ERROR = env('FLUX_DEFAULT_MIN_ERROR', cast=float, default=0.001)

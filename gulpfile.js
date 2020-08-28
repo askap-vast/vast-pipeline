@@ -107,6 +107,38 @@ function js9Config(bc) {
   return fs.writeFile(paths.js9Target + '/js9prefs.js', outConfig, bc);
 }
 
+// JS9 CSS have some references to *.gif wrong and Django collectstatic
+// command (with WhiteNoise installed) failed
+// see issue https://github.com/ericmandel/js9/issues/74
+function js9DelCSS() {
+  return del([
+    paths.js9Target + '/**/*.css',
+    '!' + paths.js9Target + '/js9-allinone.css',
+  ]);
+}
+
+function js9MoveGif() {
+  return gulp
+    .src([paths.js9Target + '/images/*.gif'])
+    .pipe(gulp.dest(paths.js9Target));
+}
+
+function js9FixStaticUrl(bc) {
+  const result = require('dotenv').config({'path': './webinterface/.env'})
+  if (result.error) {
+    throw result.error
+  }
+  let base_url = result.parsed.BASE_URL || null,
+    static_url = result.parsed.STATIC_URL || '/static/',
+    fileContent = fs.readFileSync(paths.js9Target + '/js9prefs.js', 'utf8')
+  let serving_url = (base_url) ? '/' + base_url.split('/').join('') + '/' + static_url.split('/').join('') + '/' : static_url
+  return fs.writeFile(
+    paths.js9Target + '/js9prefs.js',
+    fileContent.replace('/static/', serving_url),
+    bc
+  );
+}
+
 // BrowserSync
 function browserSync(done) {
   browsersync.init(
@@ -266,3 +298,4 @@ exports.build = build;
 exports.watch = watch;
 exports.default = build;
 exports.debug = debug;
+exports.js9staticprod = gulp.parallel(js9DelCSS, js9MoveGif, js9FixStaticUrl);
