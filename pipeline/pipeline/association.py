@@ -521,7 +521,16 @@ def association(images_df, limit, dr_limit, bw_limit,
     and advanced modes.
     '''
     timer = StopWatch()
+
+    if 'skyreg_group' in images_df.columns:
+        skyreg_group = images_df['skyreg_group'].iloc[0]
+        skyreg_tag = " (sky region group %s)" % skyreg_group
+    else:
+        skyreg_tag = ""
+
     method = config.ASSOCIATION_METHOD
+
+    logger.info('Starting association%s.', skyreg_tag)
     logger.info('Association mode selected: %s.', method)
 
     # if isinstance(images, pd.DataFrame):
@@ -549,7 +558,7 @@ def association(images_df, limit, dr_limit, bw_limit,
     sources_df = skyc1_srcs.copy()
 
     for it, epoch in enumerate(unique_epochs[1:]):
-        logger.info('Association iteration: #%i', it + 1)
+        logger.info('Association iteration: #%i%s', it + 1, skyreg_tag)
         # load skyc2 source measurements and create SkyCoord
         images = images_df.loc[
             images_df['epoch'] == epoch
@@ -602,7 +611,8 @@ def association(images_df, limit, dr_limit, bw_limit,
             raise Exception('association method not implemented!')
 
         logger.info(
-            'Calculating weighted average RA and Dec for sources...'
+            'Calculating weighted average RA and Dec for sources%s...',
+            skyreg_tag
         )
 
         # account for RA wrapping
@@ -663,7 +673,8 @@ def association(images_df, limit, dr_limit, bw_limit,
         logger.debug('Groupby concat time %f', stats.reset())
 
         logger.info(
-            'Finalising base sources catalogue ready for next iteration...'
+            'Finalising base sources catalogue ready for next iteration%s...',
+            skyreg_tag
         )
         # merge the weighted ra and dec and replace the values
         skyc1_srcs = skyc1_srcs.merge(
@@ -692,7 +703,9 @@ def association(images_df, limit, dr_limit, bw_limit,
             ra=skyc1_srcs['ra'] * u.degree,
             dec=skyc1_srcs['dec'] * u.degree
         )
-        logger.info('Association iteration #%i complete.', it + 1)
+        logger.info(
+            'Association iteration #%i complete%s.', it + 1, skyreg_tag
+        )
 
     # End of iteration over images, ra and dec columns are actually the
     # average over each iteration so remove ave ra and ave dec used for
@@ -703,7 +716,9 @@ def association(images_df, limit, dr_limit, bw_limit,
     )
 
     logger.info(
-        'Total association time: %.2f seconds', timer.reset_init()
+        'Total association time: %.2f seconds%s.',
+        timer.reset_init(),
+        skyreg_tag
     )
     return sources_df
 
@@ -771,7 +786,6 @@ def parallel_association(
         .groupby('skyreg_group')
         .apply(
             association,
-            # meas_dj_obj=meas_dj_obj,
             limit=limit,
             dr_limit=dr_limit,
             bw_limit=bw_limit,
