@@ -267,7 +267,7 @@ Make sure you installed and compiled correctly the frontend assets see [guide](.
 The webserver is independent of `runpipeline` and you can use the website while the pipeline commands are running.
 
 ## Production Deployment
-This section describes a simple deployment without using Docker containers, assuming serving the static files using [WhiteNoise](http://whitenoise.evans.io/en/stable/). It is possible serving the static files using other methods (e.g. Nginx). And in the future it is possible to upgrade the deployment stack using Docker container and Docker compose (we foresee 3 main containers: Django, Dask and Traefik). We recommend in any case reading [Django deployment documentation](https://docs.djangoproject.com/en/3.1/howto/deployment/) for general knowledge.
+This section describes a simple deployment without using Docker containers, assuming the use of [WhiteNoise](http://whitenoise.evans.io/en/stable/) to serve the static files. It is possible to serve the static files using other methods (e.g. Nginx). And in the future it is possible to upgrade the deployment stack using Docker container and Docker compose (we foresee 3 main containers: Django, Dask and Traefik). We recommend in any case reading [Django deployment documentation](https://docs.djangoproject.com/en/3.1/howto/deployment/) for general knowledge.
 
 We assume deployment to a __UNIX server__.
 
