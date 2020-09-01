@@ -10,7 +10,8 @@ from astropy.coordinates import Angle
 
 from .loading import upload_associations, upload_sources
 from .utils import (
-    get_or_append_list, get_source_models, prep_skysrc_df
+    get_or_append_list, get_source_models, prep_skysrc_df,
+    create_new_related, add_new_relations
 )
 from ..models import Association
 from ..utils.utils import StopWatch
@@ -191,61 +192,182 @@ def one_to_many_advanced(temp_srcs, sources_df, method):
     dist_col = 'd2d_skyc2' if method == 'advanced' else 'dr'
 
     # go through the doubles and
-    # 1. Keep the closest de ruiter as the primary id
+    # 1. Keep the closest d2d or de ruiter as the primary id
     # 2. Increment a new source id for others
     # 3. Add a copy of the previously matched
     # source into sources.
-    multi_srcs = duplicated_skyc1['source_skyc1'].unique()
-    for i, msrc in enumerate(multi_srcs):
-        # Make the selection
-        src_selection = duplicated_skyc1['source_skyc1'] == msrc
-        # Get the min d2d or dr idx
-        min_dist_idx = duplicated_skyc1.loc[src_selection, dist_col].idxmin()
-        # Select the others
-        idx_to_change = duplicated_skyc1.index.values[
-            (duplicated_skyc1.index.values != min_dist_idx) &
-            src_selection
-        ]
-        # how many new source ids we need to make?
-        num_to_add = idx_to_change.shape[0]
-        # define a start src id for new forks
-        start_src_id = sources_df['source'].values.max() + 1
-        # Define new source ids
-        new_src_ids = np.arange(
-            start_src_id,
-            start_src_id + num_to_add,
-            dtype=int
-        )
-        # Apply the change to the temp sources
-        temp_srcs.loc[idx_to_change, 'source_skyc1'] = new_src_ids
-        # populate the 'related' field for skyc1
-        # original source with duplicated
-        orig_src = temp_srcs.at[min_dist_idx, 'related_skyc1']
-        if isinstance(orig_src, list):
-            temp_srcs.at[min_dist_idx, 'related_skyc1'] = (
-                orig_src + new_src_ids.tolist()
-            )
-        else:
-            temp_srcs.at[min_dist_idx, 'related_skyc1'] = new_src_ids.tolist()
-        # other sources with original
-        temp_srcs.loc[idx_to_change, 'related_skyc1'] = temp_srcs.loc[
-            idx_to_change,
-            'related_skyc1'
-        ].apply(get_or_append_list, elem=msrc)
+    # multi_srcs = duplicated_skyc1['source_skyc1'].unique()
 
-        # Check for generate copies of previous crossmatches and copy
-        # the past source rows ready to append
-        for new_id in new_src_ids:
-            sources_to_copy = sources_df[
-                sources_df['source'] == msrc
-            ].copy()
-            # change source id with new one
-            sources_to_copy['source'] = new_id
-            # append copies of skyc1 to source_df
-            sources_df = sources_df.append(
-                sources_to_copy,
-                ignore_index=True
-            )
+    # Get the duplicated, sort by the distance column
+    duplicated_skyc1 = duplicated_skyc1.sort_values(by=['source_skyc1', dist_col])
+
+    # Get those that need to be given a new ID number (i.e. not the min dist_col)
+    idx_to_change = duplicated_skyc1.index.values[
+        duplicated_skyc1.duplicated('source_skyc1')
+    ]
+
+    # Create a new `new_source_id` column to store the 'correct' IDs
+    duplicated_skyc1['new_source_id'] = duplicated_skyc1['source_skyc1']
+
+    # Define the range of new source ids
+    start_new_src_id = sources_df['source'].values.max() + 1
+
+    new_source_ids = np.arange(
+        start_new_src_id,
+        start_new_src_id + idx_to_change.shape[0],
+        dtype=int
+    )
+
+    # Assign the new IDs
+    duplicated_skyc1.loc[idx_to_change, 'new_source_id'] = new_source_ids
+
+    # Now we need to sort out the related, essentially here the 'original'
+    # and 'non original' need to be treated differently.
+    # The original source need all the assoicated new ids appended to the
+    # related column.
+    # The not_original ones need just the original ID appended.
+    not_original = duplicated_skyc1.loc[
+        duplicated_skyc1.duplicated('source_skyc1')
+    ]
+
+    original = duplicated_skyc1.drop_duplicates(
+        'source_skyc1'
+    )
+
+    new_original_related = pd.DataFrame(
+        not_original[
+            ['source_skyc1', 'new_source_id']
+        ].groupby('source_skyc1').apply(
+            create_new_related
+        )
+    )
+
+    original['related_skyc1'] = original[
+        ['related_skyc1', 'source_skyc1']
+    ].apply(
+        add_new_relations,
+        args=(new_original_related,),
+        axis=1
+    )
+
+    not_original['related_skyc1'] = not_original.apply(
+        add_new_relations,
+        axis=1
+    )
+
+    duplicated_skyc1 = original.append(not_original)
+
+    del original
+    del not_original
+
+    # Apply the updates to the actual temp_srcs.
+    temp_srcs.loc[idx_to_change, 'source_skyc1'] = new_source_ids
+    temp_srcs.loc[
+        duplicated_skyc1.index.values,
+        'related_skyc1'
+    ] = duplicated_skyc1.loc[
+        duplicated_skyc1.index.values,
+        'related_skyc1'
+    ].values
+
+    # Finally we need to copy copies of the previous sources in the
+    # sources_df to complete the new sources.
+
+    # To do this we get only the non-original sources
+    duplicated_skyc1 = duplicated_skyc1.loc[
+        duplicated_skyc1.duplicated('source_skyc1')
+    ]
+
+    # Get all the indexes required for each original
+    # `source_skyc1` value
+    source_df_index_to_copy = pd.DataFrame(
+        duplicated_skyc1.groupby(
+            'source_skyc1'
+        ).apply(
+            lambda grp: sources_df[
+                sources_df['source'] == grp.name
+            ].index.values.tolist()
+        )
+    )
+
+    # merge these so it's easy to explode and copy the index values.
+    duplicated_skyc1 = (
+        duplicated_skyc1.loc[:,['source_skyc1', 'new_source_id']]
+        .merge(
+            source_df_index_to_copy,
+            left_on='source_skyc1',
+            right_index=True,
+            how='left'
+        )
+        .rename(columns={0: 'source_index'})
+        .explode('source_index')
+    )
+
+    # Get the sources
+    sources_to_copy = sources_df.loc[
+        duplicated_skyc1['source_index'].values
+    ]
+
+    # Apply the new_source_id
+    sources_to_copy.loc[:, 'source'] = duplicated_skyc1['new_source_id'].values
+
+    # and finally append.
+    sources_df = sources_df.append(
+        sources_to_copy,
+        ignore_index=True
+    )
+
+
+    # for i, msrc in enumerate(multi_srcs):
+    #     # Make the selection
+    #     src_selection = duplicated_skyc1['source_skyc1'] == msrc
+    #     # Get the min d2d or dr idx
+    #     min_dist_idx = duplicated_skyc1.loc[src_selection, dist_col].idxmin()
+    #     # Select the others
+    #     idx_to_change = duplicated_skyc1.index.values[
+    #         (duplicated_skyc1.index.values != min_dist_idx) &
+    #         src_selection
+    #     ]
+    #     # how many new source ids we need to make?
+    #     num_to_add = idx_to_change.shape[0]
+    #     # define a start src id for new forks
+    #     start_src_id = sources_df['source'].values.max() + 1
+    #     # Define new source ids
+    #     new_src_ids = np.arange(
+    #         start_src_id,
+    #         start_src_id + num_to_add,
+    #         dtype=int
+    #     )
+    #     # Apply the change to the temp sources
+    #     temp_srcs.loc[idx_to_change, 'source_skyc1'] = new_src_ids
+    #     # populate the 'related' field for skyc1
+    #     # original source with duplicated
+    #     orig_src = temp_srcs.at[min_dist_idx, 'related_skyc1']
+    #     if isinstance(orig_src, list):
+    #         temp_srcs.at[min_dist_idx, 'related_skyc1'] = (
+    #             orig_src + new_src_ids.tolist()
+    #         )
+    #     else:
+    #         temp_srcs.at[min_dist_idx, 'related_skyc1'] = new_src_ids.tolist()
+    #     # other sources with original
+    #     temp_srcs.loc[idx_to_change, 'related_skyc1'] = temp_srcs.loc[
+    #         idx_to_change,
+    #         'related_skyc1'
+    #     ].apply(get_or_append_list, elem=msrc)
+    #
+    #     # Check for generate copies of previous crossmatches and copy
+    #     # the past source rows ready to append
+    #     for new_id in new_src_ids:
+    #         sources_to_copy = sources_df[
+    #             sources_df['source'] == msrc
+    #         ].copy()
+    #         # change source id with new one
+    #         sources_to_copy['source'] = new_id
+    #         # append copies of skyc1 to source_df
+    #         sources_df = sources_df.append(
+    #             sources_to_copy,
+    #             ignore_index=True
+    #         )
 
     return temp_srcs, sources_df
 

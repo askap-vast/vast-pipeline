@@ -324,6 +324,35 @@ def get_or_append_list(obj_in, elem):
     return [elem]
 
 
+def add_new_relations(row, source_ids=pd.DataFrame()):
+    if source_ids.empty:
+        if isinstance(row['related_skyc1'], list):
+            out = row['related_skyc1'].append(row['source_skyc1'])
+        else:
+            out = [row['source_skyc1'],]
+
+    else:
+        source_ids = source_ids.loc[row['source_skyc1']].iloc[0]
+        if isinstance(row['related_skyc1'], list):
+            out = row['related_skyc1'] + source_ids
+        else:
+            out = source_ids
+
+    return out
+
+
+def create_new_related(grp):
+    grp = (
+        grp.explode('new_source_id')
+        .dropna()
+        .drop(
+            grp[grp['new_source_id'] == -1].index.values
+        )
+    )
+
+    return grp['new_source_id'].tolist()
+
+
 def cross_join(left, right):
     return (
         left.assign(key=1)
