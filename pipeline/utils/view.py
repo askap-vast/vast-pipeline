@@ -188,7 +188,8 @@ def get_skyregions_collection():
     features = []
 
     for skr in skyregions:
-        ra = skr.centre_ra - 180.
+        ra_fix = 360. if skr.centre_ra > 180. else 0.
+        ra = skr.centre_ra - ra_fix
         dec = skr.centre_dec
         width_ra = skr.width_ra / 2.
         width_dec = skr.width_dec / 2.
