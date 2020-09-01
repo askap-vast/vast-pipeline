@@ -120,6 +120,11 @@
                 <strong>Nr Selavy: </strong>{{ source.n_meas_sel }}<br>
                 <strong>Nr Forced: </strong>{{ source.n_meas_forced }}
               </p>
+              <p>
+                <strong>Nr Relations: </strong>{{ source.n_rel }} 
+                {% if source.n_rel > 0 %}(<a href="#relatedHeader">Table</a>){% endif %}<br>
+                <strong>Nr Siblings: </strong>{{ source.n_sibl }}
+              </p>
             </div>
             <div class="col-xl">
               <p>
@@ -134,11 +139,10 @@
                 </strong>{% if source.new %}{{ source.new_high_sigma|floatformat:2 }}{% else %}N/A{% endif %}
               </p>
               <p>
-                <strong>Nr Relations: </strong>{{ source.n_rel }} 
-                {% if source.n_rel > 0 %}
-                  (<a href="#relatedHeader">Table</a>)
-                {% endif %}<br>
-                <strong>Nr Siblings: </strong>{{ source.n_sibl }}
+                <strong>Max Vs metric (peak): </strong>{{ source.vs_max_peak|floatformat:2 }}<br>
+                <strong>Max Vs metric (int): </strong>{{ source.vs_max_int|floatformat:2 }}<br>
+                <strong>Max |m| metric (peak): </strong>{{ source.m_abs_max_peak|floatformat:2 }}<br>
+                <strong>Max |m| metric (int): </strong>{{ source.m_abs_max_int|floatformat:2 }}
               </p>
               <p>
                 <a href="#lightcurveHeader">Lightcurve</a><br>
@@ -446,6 +450,18 @@
       dec: dec
     });
     JS9.SetZoom(zoom);
+  }
+
+  function getLightcurvePlot(fluxType = "peak") {
+    let usePeakFlux = fluxType === "peak";
+    fetch("{% url 'vast_pipeline:api_source_plots-lightcurve' source.id %}?peak_flux=" + usePeakFlux)
+      .then(function (response) {
+        return response.json()
+      })
+      .then(function (item) {
+        $("#lightCurveBokeh").empty();
+        return Bokeh.embed.embed_item(item, "lightCurveBokeh")
+      })
   }
   // when JS9 is ready, load the cutout images into the correct display panels
   $(document).on("JS9:ready", async function () {

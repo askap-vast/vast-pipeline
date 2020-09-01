@@ -1,4 +1,5 @@
 # Change Log
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), with an added `List of PRs` section and links to the relevant PRs on the individal updates. This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -27,6 +28,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Adds steps to populate new measurement count fields in pipeline run [#362](https://github.com/askap-vast/vast-pipeline/pull/362).
 - Source order from the query is preserved on source detail view [#364](https://github.com/askap-vast/vast-pipeline/pull/364).
 - Setting `HOME_DATA_DIR` to specify a directory relative to the user's home directory to scan for FITS and text files to use in a Run initialised with the UI [#361](https://github.com/askap-vast/vast-pipeline/pull/361).
+- Adds a node graph to accompany the lightcurve that shows which measurement pairs exceed the default variability metric thresholds (`Vs >= 4.3`, `|m| >= 0.26`) [#305](https://github.com/askap-vast/vast-pipeline/pull/305).
+- Adds the `MeasurementPair` model to store two variability metrics for each flux type: Vs, the t-statistic; and m, the modulation index. The maximum of these metrics are also added to the `Source` model for joinless queries. These metrics are calculated during the pipeline run [#305](https://github.com/askap-vast/vast-pipeline/pull/305).
+- Adds radio buttons to change the lightcurve data points between peak and integrated fluxes [#305](https://github.com/askap-vast/vast-pipeline/pull/305).
 - Fills out information on all webinterface detail pages [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 - Adds frequency information the measurements and images webinterface tables. [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 - Adds celestial plot and tables to webinterface pipeline detail page [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
@@ -51,6 +55,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Changed `dom` layout on datatables [#363](https://github.com/askap-vast/vast-pipeline/pull/363).
 - Changed external results table pagination buttons on source detail webinterface page pagination to include less numbers to avoid overlap [#363](https://github.com/askap-vast/vast-pipeline/pull/363).
 - Changes measurement counts view on website to use new model parameters [#362](https://github.com/askap-vast/vast-pipeline/pull/362).
+- Lightcurve plot now generated using Bokeh [#305](https://github.com/askap-vast/vast-pipeline/pull/305).
 - Multiple changes to webinterface page layouts [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 - Changes source names to the format `ASKAP_hhmmss.ss(+/-)ddmmss.ss` [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 - Simplified webinterface navbar [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
@@ -67,6 +72,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### Removed
 
 - Removed any storage of `meas_dj_obj` or `src_dj_obj` in the pipeline [#382](https://github.com/askap-vast/vast-pipeline/pull/382).
+- Removed `static/vendor/chart-js` package [#305](https://github.com/askap-vast/vast-pipeline/pull/305).
 - Removed `static/css/collapse-box.css`, content moved to `pipeline.css` [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 
 #### List of PRs
@@ -84,6 +90,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [#364](https://github.com/askap-vast/vast-pipeline/pull/361) feat: preserve source query order on detail view.
 - [#361](https://github.com/askap-vast/vast-pipeline/pull/361) feat, fix: restrict home dir scan to specified directory.
 - [#372](https://github.com/askap-vast/vast-pipeline/pull/372) fix: fix social auth scope setting name.
+- [#305](https://github.com/askap-vast/vast-pipeline/pull/305) feat: 2 epoch metrics
 - [#345](https://github.com/askap-vast/vast-pipeline/pull/345) feat, fix: Website improvements.
 
 ## [0.1.0](https://github.com/askap-vast/vast-pipeline/releases/0.1.0) (2020/09/27)
@@ -91,6 +98,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 First release of the Vast Pipeline. This was able to process 707 images (EPOCH01 to EPOCH11x) on a machine with 64 GB of RAM.
 
 #### List of PRs
+
 - [#347](https://github.com/askap-vast/vast-pipeline/pull/347) feat: Towards first release
 - [#354](https://github.com/askap-vast/vast-pipeline/pull/354) fix, model: Updated Band model fields to floats
 - [#346](https://github.com/askap-vast/vast-pipeline/pull/346) fix: fix JS9 overflow in measurement detail view

@@ -12,8 +12,8 @@ from vast_pipeline.pipeline.model_generator import (
     related_models_generator,
     association_models_generator
 )
-from vast_pipeline.models import Association, Measurement, Source, RelatedSource
-from .utils import (
+from vast_pipeline.models import Association, Measurement, Source, RelatedSource, MeasurementPair
+from vast_pipeline.pipeline.utils import (
     get_create_img, get_create_img_band
 )
 from vast_pipeline.utils.utils import StopWatch
@@ -198,5 +198,12 @@ def make_upload_measurements(measurements_df):
     )
 
     measurements_df['id'] = meas_dj_ids
-
     return measurements_df
+
+
+def upload_associations(associations_list):
+    bulk_upload_model(associations_list, Association)
+
+
+def upload_measurement_pairs(measurement_pairs_list):
+    bulk_upload_model(measurement_pairs_list, MeasurementPair)

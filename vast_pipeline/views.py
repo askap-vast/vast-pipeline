@@ -883,6 +883,10 @@ class SourceViewSet(ModelViewSet):
             'v_peak',
             'eta_int',
             'eta_peak',
+            'vs_max_int',
+            'vs_max_peak',
+            'm_abs_max_int',
+            'm_abs_max_peak',
             'n_meas',
             'n_meas_sel',
             'n_meas_forced',
@@ -982,6 +986,10 @@ def SourceQuery(request):
         'eta_int',
         'v_peak',
         'eta_peak',
+        'vs_max_int',
+        'vs_max_peak',
+        'm_abs_max_int',
+        'm_abs_max_peak',
         'n_sibl',
         'new',
         'new_high_sigma'
@@ -1033,6 +1041,10 @@ def SourceQuery(request):
                     '\u03B7 int flux',
                     'V peak flux',
                     '\u03B7 peak flux',
+                    'Max Vs int',
+                    'Max Vs peak',
+                    'Max |m| int',
+                    'Max |m| peak',
                     'Contains siblings',
                     'New Source',
                     'New High Sigma'
@@ -1830,3 +1842,32 @@ class UtilitiesSet(ViewSet):
         serializer = ExternalSearchSerializer(data=results_dict_list, many=True)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
+
+
+class SourcePlotsSet(ViewSet):
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    @rest_framework.decorators.action(methods=['get'], detail=True)
+    def lightcurve(self, request: Request, pk: int = None) -> Response:
+        """Create lightcurve and 2-epoch metric graph plots for a source.
+
+        Args:
+            request (Request): Django REST Framework request object.
+            pk (int, optional): Source object primary key. Defaults to None.
+
+        Raises:
+            Http404: if a Source with the given `pk` cannot be found.
+
+        Returns:
+            Response: Django REST Framework response object containing the Bokeh plot in
+                JSON format to be embedded in the HTML template.
+        """
+        try:
+            source = Source.objects.get(pk=pk)
+        except Source.DoesNotExist:
+            raise Http404
+        # TODO raster plots version for Slack posts
+        use_peak_flux = request.query_params.get("peak_flux", "true").lower() == "true"
+        plot_document = plot_lightcurve(source, use_peak_flux=use_peak_flux)
+        return Response(json_item(plot_document))
