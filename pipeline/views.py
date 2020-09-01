@@ -240,7 +240,7 @@ def RunDetail(request, id):
     else:
         p_run['nr_frcd'] = 'N.A.'
 
-    if p_run_model.status == 'END':
+    if p_run_model.status == 'Completed':
         p_run['new_srcs'] = Source.objects.filter(
             run__id=p_run['id'],
             new=True,
