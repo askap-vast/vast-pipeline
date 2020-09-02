@@ -130,6 +130,11 @@ def one_to_many_basic(sources_df, skyc2_srcs):
         'source'
     )
 
+    # If I don't do this I get SetWithCopy warnings
+    # and I have no idea why
+    original = original.copy()
+    not_original = not_original.copy()
+
     new_original_related = pd.DataFrame(
         not_original[
             ['source', 'new_source_id']
@@ -292,6 +297,11 @@ def one_to_many_advanced(temp_srcs, sources_df, method):
         'source_skyc1'
     )
 
+    # If I don't do this I get SetWithCopy warnings
+    # and I have no idea why
+    original = original.copy()
+    not_original = not_original.copy()
+
     new_original_related = pd.DataFrame(
         not_original[
             ['source_skyc1', 'new_source_id']
@@ -300,15 +310,15 @@ def one_to_many_advanced(temp_srcs, sources_df, method):
         )
     )
 
-    original['related_skyc1'] = original[
-        ['related_skyc1', 'source_skyc1']
+    original.loc[:, 'related_skyc1'] = original.loc[
+        :, ['related_skyc1', 'source_skyc1']
     ].apply(
         add_new_one_to_many_relations,
         args=(True, new_original_related),
         axis=1
     )
 
-    not_original['related_skyc1'] = not_original.apply(
+    not_original.loc[:, 'related_skyc1'] = not_original.apply(
         add_new_one_to_many_relations,
         args=(True,),
         axis=1
