@@ -190,7 +190,25 @@ def remove_duplicate_measurements(
     )
 
     # create df from results
-    results = pd.DataFrame(data={'source_id': idxc, 'match_id': idxcatalog})
+    results = pd.DataFrame(
+        data={
+            'source_id': idxc,
+            'match_id': idxcatalog,
+            'source_image': sources_df.iloc[idxc]['image'].tolist(),
+            'match_image': sources_df.iloc[idxcatalog]['image'].tolist()
+        }
+    )
+
+    # Drop those that are matched from the same image
+    matching_image_mask = (
+        results['source_image'] != results['match_image']
+    )
+
+    results = (
+        results.loc[matching_image_mask]
+        .drop(['source_image', 'match_image'], axis=1)
+    )
+
     # create a pair column defining each pair ith index
     results['pair'] = results.apply(tuple, 1).apply(sorted).apply(tuple)
     # Drop the duplicate pairs (pairs are sorted so this works)
