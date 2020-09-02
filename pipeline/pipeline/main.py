@@ -88,8 +88,19 @@ class Pipeline():
         if (getattr(self.config, 'IMAGE_FILES') and
             getattr(self.config, 'SELAVY_FILES') and
             getattr(self.config, 'NOISE_FILES')):
+            img_f_list = getattr(self.config, 'IMAGE_FILES')
             for lst in ['IMAGE_FILES', 'SELAVY_FILES', 'NOISE_FILES']:
-                for file in getattr(self.config, lst):
+                # checks for duplicates in each list
+                cfg_list = getattr(self.config, lst)
+                if len(set(cfg_list)) != len(cfg_list):
+                    raise PipelineConfigError(f'Duplicated files in: \n{lst}')
+                # check if nr of files match nr of images
+                if len(cfg_list) != len(img_f_list):
+                    raise PipelineConfigError(
+                        f'Number of {lst} files not matching number of images'
+                    )
+                # check if file exists
+                for file in cfg_list:
                     if not os.path.exists(file):
                         raise PipelineConfigError(
                             f'file:\n{file}\ndoes not exists!'
@@ -139,7 +150,20 @@ class Pipeline():
                 raise PipelineConfigError(
                     'Expecting list of background MAP files!'
                 )
-            for file in getattr(self.config, 'BACKGROUND_FILES'):
+            # check for duplicated values
+            backgrd_f_list = getattr(self.config, 'BACKGROUND_FILES')
+            if len(set(backgrd_f_list)) != len(backgrd_f_list):
+                raise PipelineConfigError(
+                    'Duplicated files in: BACKGROUND_FILES list'
+                )
+            # check if provided more background files than images
+            if len(backgrd_f_list) != len(getattr(self.config, 'IMAGE_FILES')):
+                raise PipelineConfigError((
+                    'Number of BACKGROUND_FILES different from number of'
+                    ' IMAGE_FILES files'
+                ))
+            # check if all background files exist
+            for file in backgrd_f_list:
                 if not os.path.exists(file):
                     raise PipelineConfigError(
                         f'file:\n{file}\ndoes not exists!'
