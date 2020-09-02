@@ -11,7 +11,7 @@ from astropy.coordinates import Angle
 from .loading import upload_associations, upload_sources
 from .utils import (
     get_source_models, prep_skysrc_df,
-    create_new_related_one_to_many, add_new_one_to_many_relations,
+    add_new_one_to_many_relations,
     add_new_many_to_one_relations
 )
 from ..models import Association
@@ -139,7 +139,7 @@ def one_to_many_basic(sources_df, skyc2_srcs):
         not_original[
             ['source', 'new_source_id']
         ].groupby('source').apply(
-            create_new_related_one_to_many
+            lambda grp: grp['new_source_id'].tolist()
         )
     )
 
@@ -306,7 +306,7 @@ def one_to_many_advanced(temp_srcs, sources_df, method):
         not_original[
             ['source_skyc1', 'new_source_id']
         ].groupby('source_skyc1').apply(
-            create_new_related_one_to_many
+            lambda grp: grp['new_source_id'].tolist()
         )
     )
 
@@ -870,6 +870,9 @@ def association(images_df, limit, dr_limit, bw_limit,
         sources_df.drop(['ra', 'dec'], axis=1)
         .rename(columns={'ra_source':'ra', 'dec_source':'dec'})
     )
+
+    del skyc1_srcs
+    del skyc2_srcs
 
     logger.info(
         'Total association time: %.2f seconds%s.',
