@@ -196,7 +196,7 @@ def RunDetail(request, id):
     # build config path for POST and later
     p_run['user'] = p_run_model.user.username if p_run_model.user else None
     p_run['status'] = p_run_model.get_status_display()
-    if p_run_model.image_set.exists() and p_run_model.status == 'END':
+    if p_run_model.image_set.exists() and p_run_model.status == 'Completed':
         images = list(p_run_model.image_set.values('name', 'datetime'))
         img_paths = list(map(
             lambda x: os.path.join(
@@ -221,7 +221,7 @@ def RunDetail(request, id):
     forced_path = glob(
         os.path.join(p_run['path'], 'forced_measurements_*.parquet')
     )
-    if forced_path and p_run_model.status == 'END':
+    if forced_path and p_run_model.status == 'Completed':
         try:
             p_run['nr_frcd'] = (
                 dd.read_parquet(forced_path, columns='id')
@@ -949,6 +949,8 @@ class MeasurementQuery(APIView):
         columns = ["id", "name", "ra", "dec", "bmaj", "bmin", "pa", "forced", "source", "source__name"]
         selection_model = request.GET.get("selection_model", "measurement")
         selection_id = request.GET.get("selection_id", None)
+        run_id = request.GET.get("run_id", None)
+        no_forced = request.GET.get("forced", False)
 
         # validate selection query params
         if selection_id is not None:
@@ -970,6 +972,10 @@ class MeasurementQuery(APIView):
             .cone_search(ra_deg, dec_deg, radius_deg)
             .values(*columns, __name=F(selection_name))
         )
+        if run_id:
+            measurements = measurements.filter(source__run__id=run_id)
+        if no_forced:
+            measurements = measurements.filter(forced=False)
         measurement_region_file = io.StringIO()
         for meas in measurements:
             if selection_id is not None:
