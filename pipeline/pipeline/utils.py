@@ -215,10 +215,6 @@ def remove_duplicate_measurements(
     results = results.drop_duplicates('pair')
     # No longer need pair
     results = results.drop('pair', axis=1)
-    # We're only interested in the sources which have matches.
-    results = results.loc[
-        results.duplicated('source_id', keep=False)
-    ].sort_values(by='source_id')
     # Drop all self matches and we are left with those to drop
     # in the match id column.
     to_drop = results.loc[
