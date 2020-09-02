@@ -949,6 +949,8 @@ class MeasurementQuery(APIView):
         columns = ["id", "name", "ra", "dec", "bmaj", "bmin", "pa", "forced", "source", "source__name"]
         selection_model = request.GET.get("selection_model", "measurement")
         selection_id = request.GET.get("selection_id", None)
+        run_id = request.GET.get("run_id", None)
+        no_forced = request.GET.get("forced", True)
 
         # validate selection query params
         if selection_id is not None:
@@ -970,6 +972,10 @@ class MeasurementQuery(APIView):
             .cone_search(ra_deg, dec_deg, radius_deg)
             .values(*columns, __name=F(selection_name))
         )
+        if run_id:
+            measurements = measurements.filter(source__run__id=run_id)
+        if no_forced:
+            measurements = measurements.filter(forced=False)
         measurement_region_file = io.StringIO()
         for meas in measurements:
             if selection_id is not None:
