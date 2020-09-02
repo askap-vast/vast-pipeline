@@ -324,17 +324,20 @@ def get_or_append_list(obj_in, elem):
     return [elem]
 
 
-def add_new_relations(row, source_ids=pd.DataFrame()):
+def add_new_relations(row, advanced=False, source_ids=pd.DataFrame()):
+    related_col = 'related_skyc1' if advanced else 'related'
+    source_col = 'source_skyc1' if advanced else 'source'
+
     if source_ids.empty:
-        if isinstance(row['related_skyc1'], list):
-            out = row['related_skyc1'].append(row['source_skyc1'])
+        if isinstance(row[related_col], list):
+            out = row[related_col].append(row[source_col])
         else:
-            out = [row['source_skyc1'],]
+            out = [row[source_col],]
 
     else:
-        source_ids = source_ids.loc[row['source_skyc1']].iloc[0]
-        if isinstance(row['related_skyc1'], list):
-            out = row['related_skyc1'] + source_ids
+        source_ids = source_ids.loc[row[source_col]].iloc[0]
+        if isinstance(row[related_col], list):
+            out = row[related_col] + source_ids
         else:
             out = source_ids
 
