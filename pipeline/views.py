@@ -950,7 +950,7 @@ class MeasurementQuery(APIView):
         selection_model = request.GET.get("selection_model", "measurement")
         selection_id = request.GET.get("selection_id", None)
         run_id = request.GET.get("run_id", None)
-        no_forced = request.GET.get("forced", True)
+        no_forced = request.GET.get("forced", False)
 
         # validate selection query params
         if selection_id is not None:
