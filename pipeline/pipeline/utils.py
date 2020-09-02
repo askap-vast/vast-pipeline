@@ -368,14 +368,6 @@ def add_new_one_to_many_relations(
     return out
 
 
-def create_new_related_many_to_one(grp):
-    relations = []
-    for i in grp.index:
-        relations.append(grp.drop(i)['source_skyc1'].tolist())
-
-    return pd.Series(relations, index=grp.index)
-
-
 def add_new_many_to_one_relations(row):
     if isinstance(row['related_skyc1'], list):
         out = row['related_skyc1'] + row['new_relations']

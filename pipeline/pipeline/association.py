@@ -12,7 +12,7 @@ from .loading import upload_associations, upload_sources
 from .utils import (
     get_source_models, prep_skysrc_df,
     create_new_related_one_to_many, add_new_one_to_many_relations,
-    create_new_related_many_to_one, add_new_many_to_one_relations
+    add_new_many_to_one_relations
 )
 from ..models import Association
 from ..utils.utils import StopWatch
@@ -460,17 +460,28 @@ def many_to_one_advanced(temp_srcs):
         duplicated_skyc2.shape[0]
     )
 
-    # multi_srcs = duplicated_skyc2['index_old_skyc2'].unique()
-    new_relations = (
+    new_relations = pd.DataFrame(
         duplicated_skyc2
         .groupby('index_old_skyc2')
-        .apply(create_new_related_many_to_one)
-        .droplevel(0)
+        .apply(lambda grp: grp['source_skyc1'].tolist())
+    ).rename(columns={0: 'new_relations'})
+
+    duplicated_skyc2 = duplicated_skyc2.merge(
+        new_relations,
+        left_on='index_old_skyc2',
+        right_index=True,
+        how='left'
     )
 
-    duplicated_skyc2['new_relations'] = new_relations.loc[
-        duplicated_skyc2.index.values
-    ].values
+    duplicated_skyc2['new_relations'] = (
+        duplicated_skyc2.apply(
+            lambda x: list(
+                set(x['new_relations'])
+                - set([x['source_skyc1'],])
+            ),
+            axis=1
+        )
+    )
 
     duplicated_skyc2['related_skyc1'] = (
         duplicated_skyc2.apply(
