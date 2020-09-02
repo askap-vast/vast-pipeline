@@ -312,19 +312,25 @@ def prep_skysrc_df(images, perc_error, duplicate_limit, ini_df=False):
     return df
 
 
-def get_or_append_list(obj_in, elem):
-    '''
-    return a list with elem in it, if obj_in is list append to it
-    '''
-    if isinstance(obj_in, list):
-        out = obj_in
-        out.append(elem)
-        return out
+def create_new_related_one_to_many(grp):
+    grp = (
+        grp.explode('new_source_id')
+        .dropna()
+        .drop(
+            grp[grp['new_source_id'] == -1].index.values
+        )
+    )
 
-    return [elem]
+    return grp['new_source_id'].tolist()
 
 
-def add_new_relations(row, advanced=False, source_ids=pd.DataFrame()):
+def add_new_one_to_many_relations(
+    row, advanced=False, source_ids=pd.DataFrame()
+):
+    """
+    This handles the relation information being created from the
+    one_to_many functions in association.
+    """
     related_col = 'related_skyc1' if advanced else 'related'
     source_col = 'source_skyc1' if advanced else 'source'
 
@@ -344,16 +350,21 @@ def add_new_relations(row, advanced=False, source_ids=pd.DataFrame()):
     return out
 
 
-def create_new_related(grp):
-    grp = (
-        grp.explode('new_source_id')
-        .dropna()
-        .drop(
-            grp[grp['new_source_id'] == -1].index.values
-        )
-    )
+def create_new_related_many_to_one(grp):
+    relations = []
+    for i in grp.index:
+        relations.append(grp.drop(i)['source_skyc1'].tolist())
 
-    return grp['new_source_id'].tolist()
+    return pd.Series(relations, index=grp.index)
+
+
+def add_new_many_to_one_relations(row):
+    if isinstance(row['related_skyc1'], list):
+        out = row['related_skyc1'] + row['new_relations']
+    else:
+        out = row['new_relations']
+
+    return out
 
 
 def cross_join(left, right):
