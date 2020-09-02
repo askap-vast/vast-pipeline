@@ -163,3 +163,13 @@ Run the tests with the following:
 ```bash
 (pipeline_env)$ ./manage.py test pipeline
 ```
+
+Two example tests, currently working are run with the following:
+
+```bash
+(pipeline_env)$ ./manage.py test pipeline.tests.test_runpipeline.CheckRunConfigValidationTest
+```
+
+```bash
+(pipeline_env)$ ./manage.py test pipeline.tests.test_webserver
+```
