@@ -930,9 +930,13 @@ class MeasurementQuery(APIView):
         on an Image. Optionally highlight sources based on a Measurement or Source ID.
 
         Args:
-            request: Django HTTPRequest. Supports two URL GET parameters:
-                selection_model: either "measurement" or "source" (defaults to "measurement"); and
-                selection_id: the id for the given `selection_model`.
+            request: Django HTTPRequest. Supports 4 URL GET parameters:
+                - selection_model: either "measurement" or "source" (defaults to "measurement").
+                - selection_id: the id for the given `selection_model`.
+                - run_id: (optional) only return measurements for sources with the given pipeline
+                    run id (defaults to None).
+                - no_forced: (optional) If true, exclude forced-photometry measurements (defaults
+                    to False).
                 Measurement objects that match the given selection criterion will be
                 highlighted. e.g. ?selection_model=measurement&selection_id=100 will highlight
                 the Measurement object with id=100. ?selection_model=source&selection_id=5
