@@ -930,9 +930,13 @@ class MeasurementQuery(APIView):
         on an Image. Optionally highlight sources based on a Measurement or Source ID.
 
         Args:
-            request: Django HTTPRequest. Supports two URL GET parameters:
-                selection_model: either "measurement" or "source" (defaults to "measurement"); and
-                selection_id: the id for the given `selection_model`.
+            request: Django HTTPRequest. Supports 4 URL GET parameters:
+                - selection_model: either "measurement" or "source" (defaults to "measurement").
+                - selection_id: the id for the given `selection_model`.
+                - run_id: (optional) only return measurements for sources with the given pipeline
+                    run id (defaults to None).
+                - no_forced: (optional) If true, exclude forced-photometry measurements (defaults
+                    to False).
                 Measurement objects that match the given selection criterion will be
                 highlighted. e.g. ?selection_model=measurement&selection_id=100 will highlight
                 the Measurement object with id=100. ?selection_model=source&selection_id=5
@@ -949,6 +953,8 @@ class MeasurementQuery(APIView):
         columns = ["id", "name", "ra", "dec", "bmaj", "bmin", "pa", "forced", "source", "source__name"]
         selection_model = request.GET.get("selection_model", "measurement")
         selection_id = request.GET.get("selection_id", None)
+        run_id = request.GET.get("run_id", None)
+        no_forced = request.GET.get("forced", False)
 
         # validate selection query params
         if selection_id is not None:
@@ -970,6 +976,10 @@ class MeasurementQuery(APIView):
             .cone_search(ra_deg, dec_deg, radius_deg)
             .values(*columns, __name=F(selection_name))
         )
+        if run_id:
+            measurements = measurements.filter(source__run__id=run_id)
+        if no_forced:
+            measurements = measurements.filter(forced=False)
         measurement_region_file = io.StringIO()
         for meas in measurements:
             if selection_id is not None:
