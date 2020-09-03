@@ -196,7 +196,7 @@ def RunDetail(request, id):
     # build config path for POST and later
     p_run['user'] = p_run_model.user.username if p_run_model.user else None
     p_run['status'] = p_run_model.get_status_display()
-    if p_run_model.image_set.exists() and p_run_model.status == 'END':
+    if p_run_model.image_set.exists() and p_run_model.status == 'Completed':
         images = list(p_run_model.image_set.values('name', 'datetime'))
         img_paths = list(map(
             lambda x: os.path.join(
@@ -221,7 +221,7 @@ def RunDetail(request, id):
     forced_path = glob(
         os.path.join(p_run['path'], 'forced_measurements_*.parquet')
     )
-    if forced_path and p_run_model.status == 'END':
+    if forced_path and p_run_model.status == 'Completed':
         try:
             p_run['nr_frcd'] = (
                 dd.read_parquet(forced_path, columns='id')
