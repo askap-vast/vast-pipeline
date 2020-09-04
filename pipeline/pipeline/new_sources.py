@@ -1,5 +1,6 @@
 import os
 import logging
+import warnings
 
 from pipeline.models import Image
 
@@ -12,11 +13,13 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.wcs.utils import skycoord_to_pixel
+from astropy.utils.exceptions import AstropyWarning
 
 from pipeline.utils.utils import StopWatch
 
 
 logger = logging.getLogger(__name__)
+warnings.simplefilter("ignore", category=AstropyWarning)
 
 
 def check_primary_image(row):
