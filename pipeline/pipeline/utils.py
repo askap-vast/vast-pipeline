@@ -19,26 +19,6 @@ from pipeline.image.utils import on_sky_sep
 logger = logging.getLogger(__name__)
 
 
-def optimize_floats(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Credit to Robbert van der Gugten
-    bigdatarepublic
-    """
-    floats = df.select_dtypes(include=['float64']).columns.tolist()
-    df[floats] = df[floats].apply(pd.to_numeric, downcast='float')
-    return df
-
-
-def optimize_ints(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Credit to Robbert van der Gugten
-    bigdatarepublic
-    """
-    ints = df.select_dtypes(include=['int64']).columns.tolist()
-    df[ints] = df[ints].apply(pd.to_numeric, downcast='integer')
-    return df
-
-
 def get_measurement_models(row):
     one_m = Measurement()
     for fld in one_m._meta.get_fields():
@@ -270,9 +250,6 @@ def _load_measurements(image, cols, start_id=0, ini_df=False):
     )
 
     df = pd.read_parquet(image.measurements_path, columns=cols)
-    # Do bit of optimisation here to attempt to control memory
-    # won't automise the below columns because values will change
-    df = optimize_ints(optimize_floats(df))
     df['image'] = image.name
     df['datetime'] = image.datetime
     # these are the first 'sources'
