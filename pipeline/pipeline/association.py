@@ -131,7 +131,8 @@ def one_to_many_basic(sources_df, skyc2_srcs):
     )
 
     # If I don't do this I get SetWithCopy warnings
-    # and I have no idea why
+    # and I have no idea why. I think drop_duplicates
+    # may return a frame with the copy parameter being true?
     original = original.copy()
     not_original = not_original.copy()
 
@@ -298,7 +299,8 @@ def one_to_many_advanced(temp_srcs, sources_df, method):
     )
 
     # If I don't do this I get SetWithCopy warnings
-    # and I have no idea why
+    # and I have no idea why. I think drop_duplicates
+    # may return a frame with the copy parameter being true?
     original = original.copy()
     not_original = not_original.copy()
 
@@ -707,8 +709,9 @@ def association(images_df, limit, dr_limit, bw_limit,
     skyc1_srcs['epoch'] = unique_epochs[0]
     # create base catalogue
     skyc1 = SkyCoord(
-        ra=skyc1_srcs['ra'].values * u.degree,
-        dec=skyc1_srcs['dec'].values * u.degree
+        skyc1_srcs['ra'].values,
+        skyc1_srcs['dec'].values,
+        unit=(u.deg, u.deg)
     )
     # initialise the sources dataframe using first image as base
     sources_df = skyc1_srcs.copy()
@@ -832,6 +835,7 @@ def association(images_df, limit, dr_limit, bw_limit,
             'Finalising base sources catalogue ready for next iteration%s...',
             skyreg_tag
         )
+
         # merge the weighted ra and dec and replace the values
         skyc1_srcs = skyc1_srcs.merge(
             weighted_df,
@@ -856,8 +860,9 @@ def association(images_df, limit, dr_limit, bw_limit,
 
         #generate new sky coord ready for next iteration
         skyc1 = SkyCoord(
-            ra=skyc1_srcs['ra'] * u.degree,
-            dec=skyc1_srcs['dec'] * u.degree
+            ra=skyc1_srcs['ra'].values,
+            dec=skyc1_srcs['dec'].values,
+            unit=(u.deg, u.deg)
         )
         logger.info(
             'Association iteration #%i complete%s.', it + 1, skyreg_tag
