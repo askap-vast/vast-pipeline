@@ -633,7 +633,15 @@ def get_src_skyregion_merged_df(sources_df, images_df, skyreg_df, p_run):
     del sources_df
 
     # create dataframe with all skyregions and sources combinations
-    src_skyrg_df = cross_join(srcs_df.reset_index(), skyreg_df)
+    src_skyrg_df = cross_join(
+        srcs_df.reset_index().drop(['epoch_list', 'img_list'], axis=1),
+        skyreg_df.drop('skyreg_img_epoch_list', axis=1)
+    )
+
+    skyreg_df = skyreg_df.set_index('id').drop(
+        ['centre_ra', 'centre_dec', 'xtr_radius'],
+        axis=1
+    )
 
     src_skyrg_df['sep'] = np.rad2deg(
         on_sky_sep(
@@ -647,10 +655,16 @@ def get_src_skyregion_merged_df(sources_df, images_df, skyreg_df, p_run):
     # select rows where separation is less than sky region radius
     # drop not more useful columns and groupby source id
     # compute list of images
-    src_skyrg_df = src_skyrg_df.loc[
-        src_skyrg_df.sep < src_skyrg_df.xtr_radius,
-        ['source', 'skyreg_img_epoch_list', 'sep']
-    ].explode('skyreg_img_epoch_list')
+    src_skyrg_df = (
+        src_skyrg_df.loc[
+            src_skyrg_df.sep < src_skyrg_df.xtr_radius,
+            ['source', 'id', 'sep']
+        ].merge(skyreg_df, left_on='id', right_index=True)
+        .drop('id', axis=1)
+        .explode('skyreg_img_epoch_list')
+    )
+
+    del skyreg_df
 
     src_skyrg_df[
         ['skyreg_img_list', 'skyreg_epoch', 'skyreg_datetime']
