@@ -329,7 +329,8 @@ $(document).ready(function() {
       'coordInput', 'radiusSelect', 'datapointMinSelect', 'datapointMaxSelect',
       'RelationsMinSelect', 'RelationsMaxSelect', 'SelavyMinSelect', 'SelavyMaxSelect',
       'NewSigmaMinSelect', 'NewSigmaMaxSelect', 'NeighbourMinSelect', 'NeighbourMaxSelect',
-      'compactnessMinSelect', 'compactnessMaxSelect',
+      'compactnessMinSelect', 'compactnessMaxSelect', 'objectNameInput', 'MinSnrMinSelect',
+      'MinSnrMaxSelect', 'MaxSnrMinSelect', 'MaxSnrMaxSelect',
       ];
     var input;
     for (input of inputs) {
@@ -337,6 +338,9 @@ $(document).ready(function() {
     };
     document.getElementById("newSourceSelect").checked = false;
     document.getElementById("containsSiblingsSelect").checked = false;
+    // clear validation classes
+    $("#objectNameInput").removeClass(["is-valid", "is-invalid"]);
+    $("#coordInput").removeClass(["is-valid", "is-invalid"]);
     table.ajax.url(dataConfParsed.api);
     table.ajax.reload();
   });
