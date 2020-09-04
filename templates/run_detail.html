@@ -139,8 +139,11 @@
               <div class="dropdown-header">Actions:</div>
               <a id="editConfig" class="dropdown-item" href="#">Toggle on/off Config Edit</a>
               <a class="dropdown-item" href="#" data-toggle="modal" data-target="#feedbackModal">Validate Config</a>
-              {% csrf_token %}
-              <a id="writeConfig"  class="dropdown-item" href="#">Write Current Config</a>
+              <form id="runConfigForm" action="{% url 'pipeline:api_runcfg-write' p_run.id %}" method="post" novalidate>
+                {% csrf_token %}
+                <input id="configTextInput" type="hidden" name="config_text"></input>
+                <button id="writeConfig" class="dropdown-item">Write Current Config</button>
+              </form>
             </div>
           </div>
         </div>

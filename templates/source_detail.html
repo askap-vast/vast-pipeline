@@ -294,7 +294,7 @@
     // overlay nearby components as regions
     measurementData.forEach((measurement, i) => {
       var displayId = "JS9_"+(i+1);
-      var region_url = addBaseUrl('/measurements/' + measurement.image_id + '/' + measurement.ra + ',' + measurement.dec + ',20arcmin/region?selection_model=source&selection_id={{ source.id }}');
+      var region_url = addBaseUrl('/measurements/' + measurement.image_id + '/' + measurement.ra + ',' + measurement.dec + ',20arcmin/region?selection_model=source&selection_id={{ source.id }}&run_id={{ source.run_id }}');
       var opts = Object.assign({}, JS9.Regions.opts);
       opts.tooltip = "$xreg.data.text";
       JS9.NewShapeLayer("components", opts, {display: displayId});
