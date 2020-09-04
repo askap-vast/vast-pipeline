@@ -25,7 +25,8 @@ from django.conf import settings
 from django.contrib import messages
 
 from rest_framework import status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, ViewSet
@@ -33,16 +34,14 @@ from rest_framework.authentication import (
     SessionAuthentication, BasicAuthentication
 )
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.contrib.auth.decorators import login_required
-
 
 from .models import Image, Measurement, Run, Source, SourceFav
 from .serializers import (
     ImageSerializer, MeasurementSerializer, RunSerializer,
     SourceSerializer, RawImageSelavyListSerializer,
-    SourceFavSerializer
+    SourceFavSerializer, SesameResultSerializer, CoordinateValidatorSerializer,
 )
 from .utils.utils import deg2dms, deg2hms, parse_coord
 from .utils.view import generate_colsfields, get_skyregions_collection
@@ -1292,74 +1291,55 @@ def UserSourceFavsList(request):
     )
 
 
-def sesame_search(request) -> JsonResponse:
+@api_view()
+def sesame_search(request: Request) -> Response:
     """Query the Sesame name resolver service and return a coordinate.
 
     Args:
-        request (HttpRequest): Django HttpRequest object with GET parameters:
+        request (Request): Django REST framework Request object with GET parameters:
             - object_name (str): Object name to query.
             - service (str, optional): Sesame service to query (all, simbad, ned, vizier).
                 Defaults to "all".
 
     Returns:
-        JsonResponse: a dict with keys
-            - coord (str): the resolved object coord as a str in hmsdms format, colon separated
-                in ICRS equatorial frame. RA in hourangle, Dec in degrees.
-            - error (str): contains the error message if an error occurred, in which case coord
-                will be null.
+        Response: a Django REST framework Response. Will return JSON with status code:
+            - 400 if the query params fail validation (i.e. if an invalid Sesame service
+                or no object name is provided) or if the name resolution fails. Error
+                messages are returned as an array of strings under the relevant query
+                parameter key. e.g. {"object_name": ["This field may not be blank."]}.
+            - 200 if successful. Response data contains the passed in query parameters and
+                the resolved coordinate as a sexagesimal string with units hourangle, deg
+                under the key `coord`.
     """
-    object_name = request.GET.get("object_name", "")
-    service = request.GET.get("service", "all")
-    try:
-        _ = name_resolve.sesame_database.set(service)
-    except ValueError:
-        data = {
-            "error": f"Failed to set Sesame database to {service}",
-            "coord": None,
-        }
-        return JsonResponse(data)
+    object_name = request.query_params.get("object_name", "")
+    service = request.query_params.get("service", "all")
 
-    try:
-        coord = SkyCoord.from_name(object_name)
-    except name_resolve.NameResolveError as e:
-        data = {
-            "error": str(e),
-            "coord": None,
-        }
-        return JsonResponse(data)
+    serializer = SesameResultSerializer(data=dict(object_name=object_name, service=service))
+    serializer.is_valid(raise_exception=True)
 
-    data = {
-        "coord": coord.to_string(style="hmsdms", sep=":"),
-    }
-    return JsonResponse(data)
+    return Response(serializer.data)
 
 
-def coordinate_validator(request) -> JsonResponse:
+@api_view()
+def coordinate_validator(request: Request) -> Response:
     """Validate a coordinate string.
 
     Args:
-        request (HttpRequest): Django HttpRequest object with GET parameters:
-            - coord: the coordinate string to validate.
-            - frame: the frame for the given coordinate string e.g. icrs, galactic.
+        request (Request): Django REST framework Request object with GET parameters:
+            - coord (str): the coordinate string to validate.
+            - frame (str): the frame for the given coordinate string e.g. icrs, galactic.
 
     Returns:
-        JsonResponse: a dict with keys
-            - valid (bool)
-            - message (str, optional): the error message if the coordinate string is invalid
+        Response: a Django REST framework Response. Will return JSON with status code:
+            - 400 if the query params fail validation, i.e. if a frame unknown to Astropy
+                is given, or the coordinate string fails to parse. Error messages are
+                returned as an array of strings under the relevant query parameter key.
+                e.g. {"coord": ["This field may not be blank."]}.
+            - 200 if the coordinate string successfully validates. No other data is returned.
     """
-    coord_string = request.GET.get("coord", "")
-    coord_frame = request.GET.get("frame", "")
+    coord_string = request.query_params.get("coord", "")
+    frame = request.query_params.get("frame", "")
 
-    try:
-        _ = parse_coord(coord_string, coord_frame=coord_frame)
-    except ValueError as e:
-        data = {
-            "valid": False,
-            "message": str(e.args[0]),
-        }
-        return JsonResponse(data)
-
-    data = {
-        "valid": True,
-    }
-    return JsonResponse(data)
+    serializer = CoordinateValidatorSerializer(data=dict(coord=coord_string, frame=frame))
+    serializer.is_valid(raise_exception=True)
+    return Response()

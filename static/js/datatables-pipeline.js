@@ -342,7 +342,7 @@ $(document).ready(function() {
   });
 
   // Object name resolver
-  $("#objectResolveButton").on('click', function(e) {
+  $("#objectResolveButton").on('click', function (e) {
     e.preventDefault();  // stop page navigation
     let objectNameInput = $('#objectNameInput');
     let objectNameInputValidation = $('#objectNameInputValidation');
@@ -354,24 +354,24 @@ $(document).ready(function() {
     objectNameInput.removeClass(['is-invalid', 'is-valid']);
     objectNameInputValidation.text(null);
     // perform sesame query
-    $.get(
-      sesameUrl,
-      {object_name: objectNameInput.val(), service: sesameService},
-      function(data) {
-        if ('error' in data) {
-          // provide feedback to the user on query failure with form validation
-          objectNameInput.addClass('is-invalid');
-          objectNameInputValidation.text(data['error']);
-        } else {
-          objectNameInput.addClass('is-valid');
-        }
-        coordInput.val(data['coord']);
+    $.get(sesameUrl, {
+      object_name: objectNameInput.val(),
+      service: sesameService
+    }).done(function (data) {
+      objectNameInput.addClass('is-valid');
+      coordInput.val(data['coord']);
+    }).fail(function (jqxhr) {
+      let data = jqxhr.responseJSON;
+      objectNameInput.addClass('is-invalid');
+      coordInput.val(null);
+      if ("object_name" in data) {
+        objectNameInputValidation.text(data.object_name.join(" "));
       }
-    );
+    });
   });
 
   // Coordinate validator
-  $("#coordInput").on('blur', function(e) {
+  $("#coordInput").on('blur', function (e) {
     e.preventDefault();
     let coordInput = $('#coordInput');
     let coordString = coordInput.val();
@@ -382,18 +382,18 @@ $(document).ready(function() {
     // clear any previous validation
     coordInput.removeClass(['is-invalid', 'is-valid']);
     coordInputValidation.text(null);
-    $.get(
-      validatorUrl,
-      {coord: coordString, frame: coordFrame},
-      function(data) {
-        if (!data['valid']) {
-          coordInput.addClass('is-invalid');
-          coordInputValidation.text(data['message']);
-        } else {
-          coordInput.addClass('is-valid');
-        }
+    $.get(validatorUrl, {
+      coord: coordString,
+      frame: coordFrame
+    }).done(function (data) {
+      coordInput.addClass('is-valid');
+    }).fail(function (jqxhr) {
+      let data = jqxhr.responseJSON;
+      coordInput.addClass('is-invalid');
+      if ("coord" in data) {
+        coordInputValidation.text(data.coord.join(" "));
       }
-    )
-  })
+    });
+  });
 
 });

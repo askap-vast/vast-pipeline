@@ -48,6 +48,6 @@ urlpatterns = [
         name="measurements_region"
     ),
     path('api/', include(router.urls)),
-    path('sesame/', views.sesame_search, name='sesame_search'),
-    path('coordinate_validator/', views.coordinate_validator, name='coordinate_validator'),
+    path('api/sesame/', views.sesame_search, name='sesame_search'),
+    path('api/coordinate_validator/', views.coordinate_validator, name='coordinate_validator'),
 ]
