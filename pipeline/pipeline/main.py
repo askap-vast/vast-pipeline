@@ -134,7 +134,22 @@ class Pipeline():
         if (getattr(self.config, 'IMAGE_FILES') and
             getattr(self.config, 'SELAVY_FILES') and
             getattr(self.config, 'NOISE_FILES')):
+            img_f_list = getattr(self.config, 'IMAGE_FILES')
+            img_f_list = sum([*img_f_list.values()], [])
             for lst in ['IMAGE_FILES', 'SELAVY_FILES', 'NOISE_FILES']:
+                cfg_list = getattr(self.config, lst)
+                cfg_list = sum([*cfg_list.values()], [])
+
+                # checks for duplicates in each list
+                if len(set(cfg_list)) != len(cfg_list):
+                    raise PipelineConfigError(f'Duplicated files in: \n{lst}')
+
+                # check if nr of files match nr of images
+                if len(cfg_list) != len(img_f_list):
+                    raise PipelineConfigError(
+                        f'Number of {lst} files not matching number of images'
+                    )
+
                 for key in getattr(self.config, lst):
                     for file in getattr(self.config, lst)[key]:
                         if not os.path.exists(file):
@@ -186,6 +201,21 @@ class Pipeline():
                 raise PipelineConfigError(
                     'Expecting list of background MAP files!'
                 )
+
+            # check for duplicated values
+            backgrd_f_list = getattr(self.config, 'BACKGROUND_FILES')
+            backgrd_f_list = sum([*backgrd_f_list.values()], [])
+            if len(set(backgrd_f_list)) != len(backgrd_f_list):
+                raise PipelineConfigError(
+                    'Duplicated files in: BACKGROUND_FILES list'
+                )
+            # check if provided more background files than images
+            if len(backgrd_f_list) != len(img_f_list):
+                raise PipelineConfigError((
+                    'Number of BACKGROUND_FILES different from number of'
+                    ' IMAGE_FILES files'
+                ))
+
             for key in getattr(self.config, 'BACKGROUND_FILES'):
                 for file in getattr(self.config, 'BACKGROUND_FILES')[key]:
                     if not os.path.exists(file):

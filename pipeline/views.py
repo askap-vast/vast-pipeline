@@ -194,28 +194,9 @@ def RunDetail(request, id):
     p_run_model = Run.objects.filter(id=id).prefetch_related('image_set').get()
     p_run = p_run_model.__dict__
     # build config path for POST and later
-    f_path = os.path.join(p_run['path'], 'config.py')
-    if request.method == 'POST':
-        # this post is for writing the config text (modified or not) from the
-        #  UI to a config.py file
-        config_text = request.POST.get('config_text', None)
-        if config_text:
-            try:
-                with open(f_path, 'w') as fp:
-                    fp.write(config_text)
-
-                messages.success(
-                    request,
-                    'Pipeline config written successfully'
-                )
-            except Exception as e:
-                messages.error(request, f'Error in writing config: {e}')
-        else:
-            messages.info(request, 'Config text null')
-
     p_run['user'] = p_run_model.user.username if p_run_model.user else None
     p_run['status'] = p_run_model.get_status_display()
-    if p_run_model.image_set.exists() and p_run_model.status == 'END':
+    if p_run_model.image_set.exists() and p_run_model.status == 'Completed':
         images = list(p_run_model.image_set.values('name', 'datetime'))
         img_paths = list(map(
             lambda x: os.path.join(
@@ -240,7 +221,7 @@ def RunDetail(request, id):
     forced_path = glob(
         os.path.join(p_run['path'], 'forced_measurements_*.parquet')
     )
-    if forced_path and p_run_model.status == 'END':
+    if forced_path and p_run_model.status == 'Completed':
         try:
             p_run['nr_frcd'] = (
                 dd.read_parquet(forced_path, columns='id')
@@ -259,7 +240,7 @@ def RunDetail(request, id):
     else:
         p_run['nr_frcd'] = 'N.A.'
 
-    if p_run_model.status == 'END':
+    if p_run_model.status == 'Completed':
         p_run['new_srcs'] = Source.objects.filter(
             run__id=p_run['id'],
             new=True,
@@ -268,6 +249,7 @@ def RunDetail(request, id):
         p_run['new_srcs'] = 'N.A.'
 
     # read run config
+    f_path = os.path.join(p_run['path'], 'config.py')
     if os.path.exists(f_path):
         with open(f_path) as fp:
             p_run['config_txt'] = fp.read()
@@ -948,9 +930,13 @@ class MeasurementQuery(APIView):
         on an Image. Optionally highlight sources based on a Measurement or Source ID.
 
         Args:
-            request: Django HTTPRequest. Supports two URL GET parameters:
-                selection_model: either "measurement" or "source" (defaults to "measurement"); and
-                selection_id: the id for the given `selection_model`.
+            request: Django HTTPRequest. Supports 4 URL GET parameters:
+                - selection_model: either "measurement" or "source" (defaults to "measurement").
+                - selection_id: the id for the given `selection_model`.
+                - run_id: (optional) only return measurements for sources with the given pipeline
+                    run id (defaults to None).
+                - no_forced: (optional) If true, exclude forced-photometry measurements (defaults
+                    to False).
                 Measurement objects that match the given selection criterion will be
                 highlighted. e.g. ?selection_model=measurement&selection_id=100 will highlight
                 the Measurement object with id=100. ?selection_model=source&selection_id=5
@@ -967,6 +953,8 @@ class MeasurementQuery(APIView):
         columns = ["id", "name", "ra", "dec", "bmaj", "bmin", "pa", "forced", "source", "source__name"]
         selection_model = request.GET.get("selection_model", "measurement")
         selection_id = request.GET.get("selection_id", None)
+        run_id = request.GET.get("run_id", None)
+        no_forced = request.GET.get("forced", False)
 
         # validate selection query params
         if selection_id is not None:
@@ -988,6 +976,10 @@ class MeasurementQuery(APIView):
             .cone_search(ra_deg, dec_deg, radius_deg)
             .values(*columns, __name=F(selection_name))
         )
+        if run_id:
+            measurements = measurements.filter(source__run__id=run_id)
+        if no_forced:
+            measurements = measurements.filter(forced=False)
         measurement_region_file = io.StringIO()
         for meas in measurements:
             if selection_id is not None:
@@ -1169,6 +1161,43 @@ class RunConfigSet(ViewSet):
         }
 
         return Response(msg, status=status.HTTP_202_ACCEPTED)
+
+    @action(detail=True, methods=['post'])
+    def write(self, request, pk=None):
+        # this post is for writing the config text (modified or not)
+        # from the UI to a config.py file
+        if not pk:
+            messages.error(
+                request,
+                'Error in config write: Run pk parameter null or not passed'
+            )
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        try:
+            p_run = get_object_or_404(self.queryset, pk=pk)
+        except Exception as e:
+            messages.error(request, f'Error in config write: {e}')
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        config_text = request.POST.get('config_text', None)
+        if config_text:
+            f_path = os.path.join(p_run.path, 'config.py')
+            try:
+                with open(f_path, 'w') as fp:
+                    fp.write(config_text)
+
+                messages.success(
+                    request,
+                    'Pipeline config written successfully'
+                )
+            except Exception as e:
+                messages.error(request, f'Error in config write: {e}')
+        else:
+            messages.info(request, 'Error in config write: Config text null')
+
+        return HttpResponseRedirect(
+            reverse('pipeline:run_detail', args=[p_run.id])
+        )
 
 
 class SourceFavViewSet(ModelViewSet):
