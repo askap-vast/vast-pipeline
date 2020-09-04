@@ -189,31 +189,18 @@ $(document).ready(function() {
     if (PipeRun.value != '') {
       qry_url = qry_url + "&run=" + encodeURIComponent(PipeRun.value);
     };
-    let coordunits = document.getElementById("coordUnit");
-    let objectname = document.getElementById("objectSearch");
-    let objectservice = document.getElementById("objectService");
+    let coordframe = document.getElementById("coordFrameSelect");
     let radius = document.getElementById("radiusSelect");
-    let ra = document.getElementById("raSelect");
-    let dec = document.getElementById("decSelect");
+    let coord = document.getElementById("coordInput");
     let unit = document.getElementById("radiusUnit");
-    // Object search overrules RA and Dec search
-    if (objectname.value) {
-      qry_url = qry_url + "&objectname=" + encodeURIComponent(objectname.value);
-    }
-    if (objectservice.value) {
-      qry_url = qry_url + "&objectservice=" + objectservice.value;
-    }
-    if (coordunits.value) {
-      qry_url = qry_url + "&coordsys=" + coordunits.value;
+    if (coordframe.value) {
+      qry_url = qry_url + "&coordsys=" + coordframe.value;
     };
     if (radius.value) {
       qry_url = qry_url + "&radius=" + radius.value;
     };
-    if (ra.value) {
-      qry_url = qry_url + "&ra=" + ra.value;
-    };
-    if (dec.value) {
-      qry_url = qry_url + "&dec=" + dec.value;
+    if (coord.value) {
+      qry_url = qry_url + "&coord=" + encodeURIComponent(coord.value);
     };
     if (unit.value) {
         qry_url = qry_url + "&radiusunit=" + unit.value
@@ -337,9 +324,9 @@ $(document).ready(function() {
       return this.defaultSelected
     });
     let inputs = [
-      'objectSearch', 'fluxMinSelect', 'fluxMaxSelect', 'varVMinSelect', 'varVMaxSelect',
+      'fluxMinSelect', 'fluxMaxSelect', 'varVMinSelect', 'varVMaxSelect',
       'varEtaMinSelect', 'varEtaMaxSelect', 'ForcedMinSelect', 'ForcedMaxSelect',
-      'raSelect', 'decSelect', 'radiusSelect', 'datapointMinSelect', 'datapointMaxSelect',
+      'coordInput', 'radiusSelect', 'datapointMinSelect', 'datapointMaxSelect',
       'RelationsMinSelect', 'RelationsMaxSelect', 'SelavyMinSelect', 'SelavyMaxSelect',
       'NewSigmaMinSelect', 'NewSigmaMaxSelect', 'NeighbourMinSelect', 'NeighbourMaxSelect',
       'compactnessMinSelect', 'compactnessMaxSelect',
@@ -353,5 +340,60 @@ $(document).ready(function() {
     table.ajax.url(dataConfParsed.api);
     table.ajax.reload();
   });
+
+  // Object name resolver
+  $("#objectResolveButton").on('click', function(e) {
+    e.preventDefault();  // stop page navigation
+    let objectNameInput = $('#objectNameInput');
+    let objectNameInputValidation = $('#objectNameInputValidation');
+    let sesameService = $('input[name="sesameService"]:checked').val();
+    let sesameUrl = $('#objectResolveButton').data('sesame-url');
+    let coordInput = $('#coordInput');
+
+    // clear any previous validation
+    objectNameInput.removeClass(['is-invalid', 'is-valid']);
+    objectNameInputValidation.text(null);
+    // perform sesame query
+    $.get(
+      sesameUrl,
+      {object_name: objectNameInput.val(), service: sesameService},
+      function(data) {
+        if ('error' in data) {
+          // provide feedback to the user on query failure with form validation
+          objectNameInput.addClass('is-invalid');
+          objectNameInputValidation.text(data['error']);
+        } else {
+          objectNameInput.addClass('is-valid');
+        }
+        coordInput.val(data['coord']);
+      }
+    );
+  });
+
+  // Coordinate validator
+  $("#coordInput").on('blur', function(e) {
+    e.preventDefault();
+    let coordInput = $('#coordInput');
+    let coordString = coordInput.val();
+    let coordFrame = $('#coordFrameSelect').val();
+    let validatorUrl = coordInput.data('validator-url');
+    let coordInputValidation = $('#coordInputValidation');
+
+    // clear any previous validation
+    coordInput.removeClass(['is-invalid', 'is-valid']);
+    coordInputValidation.text(null);
+    $.get(
+      validatorUrl,
+      {coord: coordString, frame: coordFrame},
+      function(data) {
+        if (!data['valid']) {
+          coordInput.addClass('is-invalid');
+          coordInputValidation.text(data['message']);
+        } else {
+          coordInput.addClass('is-valid');
+        }
+      }
+    )
+  })
 
 });

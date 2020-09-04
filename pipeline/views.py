@@ -12,12 +12,12 @@ from glob import glob
 from itertools import tee
 
 from astropy.io import fits
-from astropy.coordinates import SkyCoord, Angle
+from astropy.coordinates import SkyCoord, Angle, name_resolve
 from astropy.nddata import Cutout2D
 from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
 
-from django.http import FileResponse, Http404, HttpResponseRedirect
+from django.http import FileResponse, Http404, HttpResponseRedirect, JsonResponse
 from django.db.models import Count, F, Q, Case, When, Value, BooleanField
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
@@ -44,9 +44,7 @@ from .serializers import (
     SourceSerializer, RawImageSelavyListSerializer,
     SourceFavSerializer
 )
-from .utils.utils import (
-    deg2dms, deg2hms, gal2equ, ned_search, simbad_search
-)
+from .utils.utils import deg2dms, deg2hms, parse_coord
 from .utils.view import generate_colsfields, get_skyregions_collection
 from .management.commands.initpiperun import initialise_run
 from .forms import PipelineRunForm
@@ -559,21 +557,13 @@ class SourceViewSet(ModelViewSet):
 
         radius = self.request.query_params.get('radius')
         radiusUnit = self.request.query_params.get('radiusunit')
-        objectname = self.request.query_params.get('objectname')
-        objectservice = self.request.query_params.get('objectservice')
         coordsys = self.request.query_params.get('coordsys')
-        if objectname is not None:
-            if objectservice == 'simbad':
-                wavg_ra, wavg_dec = simbad_search(objectname)
-            elif objectservice == 'ned':
-                wavg_ra, wavg_dec = ned_search(objectname)
-        else:
-            wavg_ra = self.request.query_params.get('ra')
-            wavg_dec = self.request.query_params.get('dec')
-            # galactic coordinates won't be entered if the user
-            # has entered an object query
-            if coordsys == 'galactic':
-                wavg_ra, wavg_dec = gal2equ(wavg_ra, wavg_dec)
+        coord_string = self.request.query_params.get('coord')
+        wavg_ra, wavg_dec = None, None
+        if coord_string:
+            coord = parse_coord(coord_string, coord_frame=coordsys).transform_to("icrs")
+            wavg_ra = coord.ra.deg
+            wavg_dec = coord.dec.deg
 
         if wavg_ra and wavg_dec and radius:
             radius = float(radius) / radius_conversions[radiusUnit]
@@ -1300,3 +1290,76 @@ def UserSourceFavsList(request):
             }
         }
     )
+
+
+def sesame_search(request) -> JsonResponse:
+    """Query the Sesame name resolver service and return a coordinate.
+
+    Args:
+        request (HttpRequest): Django HttpRequest object with GET parameters:
+            - object_name (str): Object name to query.
+            - service (str, optional): Sesame service to query (all, simbad, ned, vizier).
+                Defaults to "all".
+
+    Returns:
+        JsonResponse: a dict with keys
+            - coord (str): the resolved object coord as a str in hmsdms format, colon separated
+                in ICRS equatorial frame. RA in hourangle, Dec in degrees.
+            - error (str): contains the error message if an error occurred, in which case coord
+                will be null.
+    """
+    object_name = request.GET.get("object_name", "")
+    service = request.GET.get("service", "all")
+    try:
+        _ = name_resolve.sesame_database.set(service)
+    except ValueError:
+        data = {
+            "error": f"Failed to set Sesame database to {service}",
+            "coord": None,
+        }
+        return JsonResponse(data)
+
+    try:
+        coord = SkyCoord.from_name(object_name)
+    except name_resolve.NameResolveError as e:
+        data = {
+            "error": str(e),
+            "coord": None,
+        }
+        return JsonResponse(data)
+
+    data = {
+        "coord": coord.to_string(style="hmsdms", sep=":"),
+    }
+    return JsonResponse(data)
+
+
+def coordinate_validator(request) -> JsonResponse:
+    """Validate a coordinate string.
+
+    Args:
+        request (HttpRequest): Django HttpRequest object with GET parameters:
+            - coord: the coordinate string to validate.
+            - frame: the frame for the given coordinate string e.g. icrs, galactic.
+
+    Returns:
+        JsonResponse: a dict with keys
+            - valid (bool)
+            - message (str, optional): the error message if the coordinate string is invalid
+    """
+    coord_string = request.GET.get("coord", "")
+    coord_frame = request.GET.get("frame", "")
+
+    try:
+        _ = parse_coord(coord_string, coord_frame=coord_frame)
+    except ValueError as e:
+        data = {
+            "valid": False,
+            "message": str(e.args[0]),
+        }
+        return JsonResponse(data)
+
+    data = {
+        "valid": True,
+    }
+    return JsonResponse(data)

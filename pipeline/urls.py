@@ -47,5 +47,7 @@ urlpatterns = [
         views.MeasurementQuery.as_view(),
         name="measurements_region"
     ),
-    path('api/', include(router.urls))
+    path('api/', include(router.urls)),
+    path('sesame/', views.sesame_search, name='sesame_search'),
+    path('coordinate_validator/', views.coordinate_validator, name='coordinate_validator'),
 ]
