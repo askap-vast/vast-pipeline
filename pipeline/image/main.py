@@ -17,7 +17,6 @@ from pipeline.survey.translators import tr_selavy
 logger = logging.getLogger(__name__)
 
 
-
 # TODO: improve using Py abstract class ABC
 class Image(object):
     """generic abstract class for an image"""
