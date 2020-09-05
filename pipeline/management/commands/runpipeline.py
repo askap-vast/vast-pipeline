@@ -1,6 +1,7 @@
 import os
 import logging
 import traceback
+import warnings
 
 from django.core.management.base import BaseCommand, CommandError
 
@@ -9,6 +10,7 @@ from pipeline.pipeline.main import Pipeline
 from pipeline.pipeline.utils import get_create_p_run
 from pipeline.utils.utils import StopWatch
 from ..helpers import get_p_run_name
+from astropy.utils.exceptions import AstropyWarning
 
 
 logger = logging.getLogger(__name__)
@@ -63,6 +65,9 @@ class Command(BaseCommand):
                 traceback.print_exc()
             logger.exception('Config error:\n%s', e)
             raise CommandError(f'Config error:\n{e}')
+
+        if pipeline.config.SUPPRESS_ASTROPY_WARNINGS:
+            warnings.simplefilter("ignore", category=AstropyWarning)
 
         # Create the pipeline run in DB
         p_run, flag_exist = get_create_p_run(

@@ -1,6 +1,5 @@
 import os
 import logging
-import warnings
 
 import numpy as np
 import pandas as pd
@@ -8,7 +7,6 @@ from django.conf import settings
 from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
-from astropy.utils.exceptions import AstropyWarning
 
 from .utils import calc_error_radius
 from .utils import calc_condon_flux_errors
@@ -17,7 +15,7 @@ from pipeline.survey.translators import tr_selavy
 
 
 logger = logging.getLogger(__name__)
-warnings.simplefilter("ignore", category=AstropyWarning)
+
 
 
 # TODO: improve using Py abstract class ABC

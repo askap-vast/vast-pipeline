@@ -40,7 +40,6 @@ from itertools import chain
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import logging
-import warnings
 import astropy
 import astropy.nddata
 import astropy.wcs
@@ -51,11 +50,9 @@ from astropy.io import fits
 from astropy.modeling import fitting, models
 from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
-from astropy.utils.exceptions import AstropyWarning
 
 
 logger = logging.getLogger(__name__)
-warnings.simplefilter("ignore", category=AstropyWarning)
 
 pa_offset = 90. * u.deg
 
