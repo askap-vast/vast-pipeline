@@ -17,7 +17,7 @@ from astropy.nddata import Cutout2D
 from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
 
-from django.http import FileResponse, Http404, HttpResponseRedirect, JsonResponse
+from django.http import FileResponse, Http404, HttpResponseRedirect
 from django.db.models import Count, F, Q, Case, When, Value, BooleanField
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
