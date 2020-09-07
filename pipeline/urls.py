@@ -17,6 +17,7 @@ router.register(r'sources', views.SourceViewSet, 'api_sources')
 router.register(r'rawimages', views.RawImageListSet, 'api_rawimages')
 router.register(r'runcfg', views.RunConfigSet, 'api_runcfg')
 router.register(r'sourcesfavs', views.SourceFavViewSet, 'api_sources_favs')
+router.register(r'utils', views.UtilitiesSet, 'api_utils')
 
 urlpatterns = [
     path('piperuns', views.RunIndex, name='run_index'),
@@ -48,6 +49,4 @@ urlpatterns = [
         name="measurements_region"
     ),
     path('api/', include(router.urls)),
-    path('api/sesame/', views.sesame_search, name='sesame_search'),
-    path('api/coordinate_validator/', views.coordinate_validator, name='coordinate_validator'),
 ]
