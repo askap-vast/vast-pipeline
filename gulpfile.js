@@ -240,12 +240,12 @@ function cssTask() {
       paths.css,
       '!' + paths.cssMin,
     ])
-    // .pipe(sourcemaps.init())
-    .pipe(rename({
-      suffix: '.min'
-    }))
-    .pipe(cleanCSS())
-    // .pipe(sourcemaps.write())
+    .pipe(sourcemaps.init())
+      .pipe(rename({
+        suffix: '.min'
+      }))
+      .pipe(cleanCSS())
+    .pipe(sourcemaps.write('map'))
     .pipe(gulp.dest(paths.cssDir))
     .pipe(browsersync.stream());
 }
@@ -257,16 +257,18 @@ function jsTask() {
       paths.js,
       '!' + paths.jsMin,
     ])
-    .pipe(babel({
-      presets: ['@babel/env']
-    }))
-    .pipe(uglify())
-    // .pipe(header(banner, {
-    //   pkg: pkg
-    // }))
-    .pipe(rename({
-      suffix: '.min'
-    }))
+    .pipe(sourcemaps.init())
+      .pipe(babel({
+        presets: ['@babel/env']
+      }))
+      .pipe(uglify())
+      // .pipe(header(banner, {
+      //   pkg: pkg
+      // }))
+      .pipe(rename({
+        suffix: '.min'
+      }))
+    .pipe(sourcemaps.write('map'))
     .pipe(gulp.dest(paths.jsDir))
     .pipe(browsersync.stream());
 }
