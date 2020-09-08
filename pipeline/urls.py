@@ -17,6 +17,7 @@ router.register(r'sources', views.SourceViewSet, 'api_sources')
 router.register(r'rawimages', views.RawImageListSet, 'api_rawimages')
 router.register(r'runcfg', views.RunConfigSet, 'api_runcfg')
 router.register(r'sourcesfavs', views.SourceFavViewSet, 'api_sources_favs')
+router.register(r'utils', views.UtilitiesSet, 'api_utils')
 
 urlpatterns = [
     path('piperuns', views.RunIndex, name='run_index'),
@@ -47,5 +48,5 @@ urlpatterns = [
         views.MeasurementQuery.as_view(),
         name="measurements_region"
     ),
-    path('api/', include(router.urls))
+    path('api/', include(router.urls)),
 ]
