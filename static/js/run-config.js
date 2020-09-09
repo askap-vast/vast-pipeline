@@ -12,7 +12,7 @@ $(document).ready(function() {
     // issue the request to get list of images and selavy files
     $.ajax({
       type: "GET",
-      url: "/api/rawimages/",
+      url: e.currentTarget.getAttribute('rawImgApi'),
       success: function(result) {
         // populate the images and selavy menus
          $.each(result.fits, function (idx, item) {
@@ -39,6 +39,8 @@ $(document).ready(function() {
     $("#bkgFilesDropDown").attr('disabled',!this.checked).selectpicker('refresh');
     $("#monitorMinSigmaSelect").prop('readonly',!this.checked);
     $("#monitorEdgeBufferScaleSelect").prop('readonly',!this.checked);
+    $("#monitorClusterThresholdSelect").prop('readonly',!this.checked);
+    $("#monitorAllowNanSwitch").attr('disabled',!this.checked);
   });
 
   $("#pipeRunNext").on('click', function(e) {

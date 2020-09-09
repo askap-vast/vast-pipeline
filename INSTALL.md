@@ -119,12 +119,12 @@ conda activate pipeline_env
 Note that if you want to install the development requirements, graphviz needs to be installed on your system (Ubuntu: `sudo apt-get install graphviz`, Mac: `brew install graphviz`).
 
 ```bash
-pip install -r requirements/requirements-dev.txt
+(pipeline_env)$ pip install -r requirements/dev.txt
 ```
 or with conda (some packages will not be installed properly so check and eventually install them manually, if not with `conda`, with `pip`):
 ```bash
-while read requirement; do conda install --yes $requirement; done < requirements/requirements-dev.txt
-while read requirement; do conda install --yes $requirement; done < requirements/requirements.txt
+(pipeline_env)$ while read requirement; do conda install --yes $requirement; done < requirements/dev.txt
+(pipeline_env)$ while read requirement; do conda install --yes $requirement; done < requirements/base.txt
 ```
 
 ## Pipeline Front End Assets Quickstart
@@ -148,7 +148,7 @@ $ pwd
 $ npm ci && npm start
 ```
 
-__NOTE__: make sure you are in the root of the repo, as shown above. That command "clean install" all the dependencies, copies files into the `static/vendor` folder and minified CSS and JS files. For more details of compilation of frontend assets (e.g. single tasks), and developement set up read the [front end `README.md`](./static/README.md).
+__NOTE__: make sure you are in the root of the repo, as shown above. That command "clean install" all the dependencies, copies files into the `static/vendor` folder and minified CSS and JS files. For more details of compilation of frontend assets (e.g. single tasks), and developement set up read the [Front End `README.md`](./static/README.md).
 
 ---
 

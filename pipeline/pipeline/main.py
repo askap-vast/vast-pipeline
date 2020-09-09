@@ -86,16 +86,28 @@ class Pipeline():
         """
         # do sanity checks
         if (getattr(self.config, 'IMAGE_FILES') and
-            getattr(self.config, 'SELAVY_FILES')):
-            for lst in ['IMAGE_FILES', 'SELAVY_FILES']:
-                for file in getattr(self.config, lst):
+            getattr(self.config, 'SELAVY_FILES') and
+            getattr(self.config, 'NOISE_FILES')):
+            img_f_list = getattr(self.config, 'IMAGE_FILES')
+            for lst in ['IMAGE_FILES', 'SELAVY_FILES', 'NOISE_FILES']:
+                # checks for duplicates in each list
+                cfg_list = getattr(self.config, lst)
+                if len(set(cfg_list)) != len(cfg_list):
+                    raise PipelineConfigError(f'Duplicated files in: \n{lst}')
+                # check if nr of files match nr of images
+                if len(cfg_list) != len(img_f_list):
+                    raise PipelineConfigError(
+                        f'Number of {lst} files not matching number of images'
+                    )
+                # check if file exists
+                for file in cfg_list:
                     if not os.path.exists(file):
                         raise PipelineConfigError(
                             f'file:\n{file}\ndoes not exists!'
                         )
         else:
             raise PipelineConfigError(
-                'no image file paths passed or Selavy file paths!'
+                'No image and/or Selavy and/or noise file paths passed!'
             )
 
         source_finder_names = settings.SOURCE_FINDERS
@@ -105,37 +117,67 @@ class Pipeline():
                 f' Choices are {source_finder_names}'
             ))
 
-        association_methods = ['basic', 'advanced', 'deruiter']
+        association_methods = settings.DEFAULT_ASSOCIATION_METHODS
         if getattr(self.config, 'ASSOCIATION_METHOD') not in association_methods:
             raise PipelineConfigError((
                 'ASSOCIATION_METHOD is not valid!'
-                " Must be a value contained in: {}.".format(association_methods)
+                f' Must be a value contained in: {association_methods}.'
             ))
+
+        # validate config keys for each association method
+        ass_method = getattr(self.config, 'ASSOCIATION_METHOD')
+        if ass_method == 'basic' or ass_method == 'advanced':
+            if not getattr(self.config, 'ASSOCIATION_RADIUS'):
+                raise PipelineConfigError('ASSOCIATION_RADIUS missing!')
+        else:
+            # deruiter association
+            if (
+                not getattr(self.config, 'ASSOCIATION_DE_RUITER_RADIUS') or not
+                getattr(self.config, 'ASSOCIATION_BEAMWIDTH_LIMIT')
+                ):
+                raise PipelineConfigError((
+                    'ASSOCIATION_DE_RUITER_RADIUS or '
+                    'ASSOCIATION_BEAMWIDTH_LIMIT missing!'
+                ))
 
         # validate min_new_source_sigma value
         if 'NEW_SOURCE_MIN_SIGMA' not in dir(self.config):
             raise PipelineConfigError('NEW_SOURCE_MIN_SIGMA must be defined!')
 
         # validate Forced extraction settings
-        if getattr(self.config, 'MONITOR') and not(
-            getattr(self.config, 'BACKGROUND_FILES') and getattr(self.config, 'NOISE_FILES')
-            ):
-            raise PipelineConfigError(
-                'Expecting list of background MAP and RMS files!'
-            )
-        else:
-            if 'MONITOR_MIN_SIGMA' not in dir(self.config):
-                raise PipelineConfigError('MONITOR_MIN_SIGMA must be defined!')
-            if 'MONITOR_EDGE_BUFFER_SCALE' not in dir(self.config):
+        if getattr(self.config, 'MONITOR'):
+            if not getattr(self.config, 'BACKGROUND_FILES'):
                 raise PipelineConfigError(
-                    'MONITOR_EDGE_BUFFER_SCALE must be defined!'
+                    'Expecting list of background MAP files!'
                 )
-            for lst in ['BACKGROUND_FILES', 'NOISE_FILES']:
-                for file in getattr(self.config, lst):
-                    if not os.path.exists(file):
-                        raise PipelineConfigError(
-                            f'file:\n{file}\ndoes not exists!'
-                        )
+            # check for duplicated values
+            backgrd_f_list = getattr(self.config, 'BACKGROUND_FILES')
+            if len(set(backgrd_f_list)) != len(backgrd_f_list):
+                raise PipelineConfigError(
+                    'Duplicated files in: BACKGROUND_FILES list'
+                )
+            # check if provided more background files than images
+            if len(backgrd_f_list) != len(getattr(self.config, 'IMAGE_FILES')):
+                raise PipelineConfigError((
+                    'Number of BACKGROUND_FILES different from number of'
+                    ' IMAGE_FILES files'
+                ))
+            # check if all background files exist
+            for file in backgrd_f_list:
+                if not os.path.exists(file):
+                    raise PipelineConfigError(
+                        f'file:\n{file}\ndoes not exists!'
+                    )
+
+            monitor_settings = [
+                'MONITOR_MIN_SIGMA',
+                'MONITOR_EDGE_BUFFER_SCALE',
+                'MONITOR_CLUSTER_THRESHOLD',
+                'MONITOR_ALLOW_NAN',
+            ]
+            for mon_set in monitor_settings:
+                if mon_set not in dir(self.config):
+                    raise PipelineConfigError(mon_set + ' must be defined!')
 
         # validate every config from the config template
         for key in [k for k in dir(self.config) if k.isupper()]:
@@ -169,7 +211,6 @@ class Pipeline():
         sources_df = association(
             p_run,
             images,
-            meas_dj_obj,
             limit,
             dr_limit,
             bw_limit,
@@ -202,6 +243,8 @@ class Pipeline():
                 missing_sources_df,
                 self.config.MONITOR_MIN_SIGMA,
                 self.config.MONITOR_EDGE_BUFFER_SCALE,
+                self.config.MONITOR_CLUSTER_THRESHOLD,
+                self.config.MONITOR_ALLOW_NAN
             )
 
         # STEP #6: finalise the df getting unique sources, calculating

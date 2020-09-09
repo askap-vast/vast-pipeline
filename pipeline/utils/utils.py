@@ -140,50 +140,34 @@ def gal2equ(l,b):
     return ra, dec
 
 
-def ned_search(object_name):
+def parse_coord(coord_string: str, coord_frame: str = "icrs") -> SkyCoord:
+    """Parse a coordinate string and return a SkyCoord. The units may be expressed within
+    `coord_string` e.g. "21h52m03.1s -62d08m19.7s", "18.4d +43.1d". If no units are given,
+    the following assumptions are made:
+        - if both coordinate components are decimals, they are assumed to be in degrees.
+        - if a sexagesimal coordinate is given and the frame is galactic, both components
+            are assumed to be in degrees. For any other frame, the first component is
+            assumed to be in hourangles and the second in degrees.
+    Will raise a ValueError if SkyCoord is unable to parse `coord_string`.
+
+    Args:
+        coord_string (str): The coordinate string to parse.
+        coord_frame (str, optional): The frame of `coord_string`. Defaults to "icrs".
+
+    Returns:
+        SkyCoord
     """
-    Find the coordinates of an object from the NED service.
-    Returns RA and Dec. Will return None values if search
-    returns no results.
-    """
+    # if both coord components are decimals, assume they're in degrees, otherwise assume
+    # hourangles and degrees. Note that the unit parameter is ignored if the units are
+    # not ambiguous i.e. if coord_string contains the units (e.g. 18.4d, 5h35m, etc)
     try:
-        result_table = Ned.query_object(object_name)
+        _ = [float(x) for x in coord_string.split()]
+        unit = "deg"
+    except ValueError:
+        if coord_frame == "galactic":
+            unit = "deg"
+        else:
+            unit = "hourangle,deg"
 
-        ra = result_table[0]['RA']
-        dec = result_table[0]['DEC']
-
-        return ra, dec
-
-    except Exception as e:
-        logger.debug(
-            "Error in performing the NED object search!", exc_info=True
-        )
-        return None, None
-
-
-def simbad_search(object_name):
-    """
-    Find the coordinates of an object from the NED service.
-    Returns RA and Dec. Will return None values if search
-    returns no results.
-    """
-    try:
-        result_table = Simbad.query_object(object_name)
-        if result_table is None:
-            return None, None
-
-        ra = result_table[0]['RA']
-        dec = result_table[0]['DEC']
-
-        c = SkyCoord(ra + dec, unit=(u.hourangle, u.deg))
-
-        ra = c.ra.deg
-        dec = c.dec.deg
-
-        return ra, dec
-
-    except Exception as e:
-        logger.debug(
-            "Error in performing the SIMBAD object search!", exc_info=True
-        )
-        return None, None
+    coord = SkyCoord(coord_string, unit=unit, frame=coord_frame)
+    return coord

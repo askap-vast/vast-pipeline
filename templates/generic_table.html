@@ -30,7 +30,7 @@
       <p class="mb-4">{{ text.description }}</p>
     </div>
     {% if 'run' in text.title|lower %}
-    <a id="newPipeRunButton" class="btn btn-sm btn-primary btn-icon-split shadow-sm" href="#" data-toggle="modal" data-target="#newPipeRun">
+    <a id="newPipeRunButton" class="btn btn-sm btn-primary btn-icon-split shadow-sm" href="#" data-toggle="modal" data-target="#newPipeRun" rawImgApi="{% url 'pipeline:api_rawimages-list' %}">
       <span class="icon text-white-600">
         <i class="fa fa-plus fa-lg"></i>
       </span>
@@ -146,6 +146,20 @@
                 <a href="#" data-toggle="tooltip" data-placement="top" title="The monitoring can sometimes fail when sources are near the edge of the image. While a minimum distance limit from the image edge is already in place this is sometimes not enough, in these cases this buffer value can be increased to avoid errors. Hence, only worry about this parameter if you are experiencing monitoring issues."><i class="fas fa-info-circle"></i></a>
                 <input id="monitorEdgeBufferScaleSelect" type="number" class="form-control bg-light border-0 wrap-form-control-readonly" value="{{ runconfig.monitor_edge_buffer_scale }}" min="0" step="0.01" aria-label="monitorEdgeBufferScaleSearch" aria-describedby="basic-addon2" name="monitor_edge_buffer_scale" readonly>
               </div>
+              <div class="col">
+                <label class="col-form-label font-weight-bold text-gray-800" for="monitorClusterThresholdSelect">Monitor Cluster Threshold</label>
+                <a href="#" data-toggle="tooltip" data-placement="top" title="Multiple of `major_axes` to use for identifying clusters when performing forced extraction. If unsure leave as the default value."><i class="fas fa-info-circle"></i></a>
+                <input id="monitorClusterThresholdSelect" type="number" class="form-control bg-light border-0 wrap-form-control-readonly" value="{{ runconfig.monitor_cluster_threshold }}" min="0" step="0.1" aria-label="monitorClusterThresholdSearch" aria-describedby="basic-addon2" name="monitor_cluster_threshold" readonly>
+              </div>
+              <div class="col">
+                <div class="custom-control custom-switch">
+                  <input type="checkbox" class="custom-control-input" id="monitorAllowNanSwitch" {% if runconfig.monitor_allow_nan %} checked="checked" {% endif %} name="monitor_allow_nan" disabled>
+                  <label class="custom-control-label font-weight-bold text-gray-800" for="monitorAllowNanSwitch">Monitor Allow NaN</label>
+                  <a href="#" data-toggle="tooltip" data-placement="top" title=
+                      "Control whether sources that contain NaN values in the background or rms maps are attempted to be extracted during forced fitting. If selected then sources with NaNs are attempted to be fit anyway, if unselected then the source is not fit."
+                  ><i class="fas fa-info-circle"></i></a>
+                </div>
+              </div>
             </div>
             <div class="row">
               <div class="col">
@@ -220,10 +234,17 @@
               </div>
             </div>
             <div class="custom-control custom-switch">
-              <input type="checkbox" class="custom-control-input" id="condomErrorSwitch" {% if runconfig.use_condon_errors %} checked="checked" {% endif %} name="use_condon_errors">
-              <label class="custom-control-label font-weight-bold text-gray-800" for="condomErrorSwitch">Use Condon Errors</label>
+              <input type="checkbox" class="custom-control-input" id="condonErrorSwitch" {% if runconfig.use_condon_errors %} checked="checked" {% endif %} name="use_condon_errors">
+              <label class="custom-control-label font-weight-bold text-gray-800" for="condonErrorSwitch">Use Condon Errors</label>
               <a href="#" data-toggle="tooltip" data-placement="top" title=
                   "Replaces the selavy catalogue flux and positional errors with those defined by Condon '97, calculated by the pipeline."
+              ><i class="fas fa-info-circle"></i></a>
+            </div>
+            <div class="custom-control custom-switch">
+              <input type="checkbox" class="custom-control-input" id="astropyWarnSwitch" {% if runconfig.suppress_astropy_warnings %} checked="checked" {% endif %} name="suppress_astropy_warnings">
+              <label class="custom-control-label font-weight-bold text-gray-800" for="astropyWarnSwitch">Suppress Astropy Warnings</label>
+              <a href="#" data-toggle="tooltip" data-placement="top" title=
+                  "Removes the Astropy warnings from the pipeline run output."
               ><i class="fas fa-info-circle"></i></a>
             </div>
           </div>
@@ -283,4 +304,47 @@
 {{ datatable|json_script:"datatable-conf" }}
 <script src="{% static 'js/datatables-pipeline.min.js' %}"></script>
 
+<!-- delete script -->
+<script type="text/javascript">
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        // Does this cookie string begin with the name we want?
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+  function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+  }
+  function sendDelete(event){
+    event.preventDefault();
+    const csrftoken = getCookie('csrftoken');
+    $.ajax({
+      beforeSend: function(xhr, settings) {
+        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+          xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        }
+      },
+      url: event.currentTarget.getAttribute("href"),
+      type: 'DELETE',
+      success: function(result) {
+        console.log(result);
+        window.location.reload(true);
+      },
+      error: function(result) {
+        console.log(result);
+        window.location.reload(true);
+      }
+    });
+  }
+</script>
 {% endblock custom_page_scripts %}

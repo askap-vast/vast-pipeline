@@ -15,7 +15,9 @@ router.register(r'images', views.ImageViewSet, 'api_images')
 router.register(r'measurements', views.MeasurementViewSet, 'api_measurements')
 router.register(r'sources', views.SourceViewSet, 'api_sources')
 router.register(r'rawimages', views.RawImageListSet, 'api_rawimages')
-router.register(r'valruncfg', views.ValidateRunConfigSet, 'api_validateruncfg')
+router.register(r'runcfg', views.RunConfigSet, 'api_runcfg')
+router.register(r'sourcesfavs', views.SourceFavViewSet, 'api_sources_favs')
+router.register(r'utils', views.UtilitiesSet, 'api_utils')
 
 urlpatterns = [
     path('piperuns', views.RunIndex, name='run_index'),
@@ -38,6 +40,7 @@ urlpatterns = [
         views.SourceDetail,
         name='source_detail'
     ),
+    path('sources/favs', views.UserSourceFavsList, name='source_favs'),
     path('cutout/<str:measurement_name>/', views.ImageCutout.as_view(), name='cutout'),
     path('cutout/<str:measurement_name>/<str:size>', views.ImageCutout.as_view(), name='cutout'),
     path(
@@ -45,5 +48,5 @@ urlpatterns = [
         views.MeasurementQuery.as_view(),
         name="measurements_region"
     ),
-    path('api/', include(router.urls))
+    path('api/', include(router.urls)),
 ]

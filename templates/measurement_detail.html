@@ -143,9 +143,12 @@
 {{ measurement|json_script:"data-js9" }}
 <script type="text/javascript">
   $(document).on("JS9:ready", function() {
+    let baseUrl = '{{ base_url }}' || null;
+    // function to add base url to an existing url if valid
+    addBaseUrl = (url) => baseUrl == null ? url : '/' + baseUrl + url;
     var measurement = JSON.parse(document.getElementById("data-js9").textContent);
     JS9.Load(
-      "/cutout/"+measurement.name+"/large",
+      addBaseUrl('/cutout/' + measurement.name + '/large'),
       {
         scalemin: -0.001,
         scalemax: 0.004,
@@ -153,7 +156,7 @@
         invert: true,
         onload: image => {
           JS9.SetZoom(4);
-          var region_url = "/measurements/"+measurement.image_id+"/"+measurement.aladin_ra+","+measurement.aladin_dec+",20arcmin/region?selection_model=measurement&selection_id={{ measurement.id }}";
+          var region_url = addBaseUrl('/measurements/' + measurement.image_id + '/' + measurement.aladin_ra + ',' + measurement.aladin_dec + ',20arcmin/region?selection_model=measurement&selection_id={{ measurement.id }}&no_forced=True');
           var opts = Object.assign({}, JS9.Regions.opts);
           opts.tooltip = "$xreg.data.text"
           JS9.NewShapeLayer("components", opts);

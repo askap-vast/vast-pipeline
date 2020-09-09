@@ -10,6 +10,8 @@ class PipelineRunForm(forms.Form):
     monitor = forms.BooleanField(required=False)
     monitor_min_sigma = forms.FloatField()
     monitor_edge_buffer_scale = forms.FloatField()
+    monitor_cluster_threshold = forms.FloatField()
+    monitor_allow_nan = forms.BooleanField(required=False)
     association_method = forms.CharField()
     astrometric_uncertainty_ra = forms.FloatField()
     association_radius = forms.FloatField()
@@ -21,3 +23,4 @@ class PipelineRunForm(forms.Form):
     flux_perc_error = forms.FloatField()
     selavy_local_rms_zero_fill_value = forms.FloatField()
     use_condon_errors = forms.BooleanField(required=False)
+    suppress_astropy_warnings = forms.BooleanField(required=False)

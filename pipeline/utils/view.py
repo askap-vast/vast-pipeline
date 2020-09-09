@@ -106,43 +106,59 @@ FLOAT_FIELDS = {
         'precision': 2,
         'scale': 1,
     },
-    'max_snr': {
+    'min_snr': {
         'precision': 2,
         'scale': 1,
     },
-    'avg_snr': {
+    'max_snr': {
         'precision': 2,
         'scale': 1,
     },
 }
 
 
-def generate_colsfields(fields, url_prefix):
+def generate_colsfields(fields, url_prefix_dict, not_orderable_col=[]):
     """
     generate data to be included in context for datatable
     """
     colsfields = []
 
     for col in fields:
+        field2append = {}
         if col == 'name':
-            colsfields.append({
+            field2append = {
                 'data': col, 'render': {
                     'url': {
-                        'prefix': url_prefix,
+                        'prefix': url_prefix_dict[col],
                         'col': 'name'
                     }
                 }
-            })
+            }
+        elif '.name' in col:
+            # this is for nested fields to build a render with column name
+            # and id in url. The API results should look like:
+            # {... , main_col : {'name': value, 'id': value, ... }}
+            main_col = col.rsplit('.', 1)[0]
+            field2append = {
+                'data': col,
+                'render': {
+                    'url': {
+                        'prefix': url_prefix_dict[col],
+                        'col': main_col,
+                        'nested': True,
+                    }
+                }
+            }
         elif col == 'n_sibl':
-            colsfields.append({
+            field2append = {
                 'data': col, 'render': {
                     'contains_sibl': {
                         'col': col
                     }
                 }
-            })
+            }
         elif col in FLOAT_FIELDS:
-            colsfields.append({
+            field2append = {
                 'data': col,
                 'render': {
                     'float': {
@@ -151,10 +167,14 @@ def generate_colsfields(fields, url_prefix):
                         'scale': FLOAT_FIELDS[col]['scale'],
                     }
                 }
-            })
+            }
         else:
-            colsfields.append({'data': col})
+            field2append = {'data': col}
 
+        if col in not_orderable_col:
+            field2append['orderable'] = False
+
+        colsfields.append(field2append)
 
     return colsfields
 
@@ -168,7 +188,8 @@ def get_skyregions_collection():
     features = []
 
     for skr in skyregions:
-        ra = skr.centre_ra - 180.
+        ra_fix = 360. if skr.centre_ra > 180. else 0.
+        ra = skr.centre_ra - ra_fix
         dec = skr.centre_dec
         width_ra = skr.width_ra / 2.
         width_dec = skr.width_dec / 2.

@@ -144,16 +144,20 @@ def get_create_img(p_run, band_id, image):
 
 
 def get_create_p_run(name, path, comment='', user=None):
+    '''
+    get or create a pipeline run in db, return the run django object and
+    a flag True/False if has been created or already exists
+    '''
     p_run = Run.objects.filter(name__exact=name)
     if p_run:
-        return p_run.get()
+        return p_run.get(), True
 
     p_run = Run(name=name, comment=comment, path=path)
     if user:
         p_run.user = user
     p_run.save()
 
-    return p_run
+    return p_run, False
 
 
 def prep_skysrc_df(image, perc_error, ini_df=False):
@@ -267,19 +271,19 @@ def groupby_funcs(df):
         d['avg_compactness'] = df.loc[
             non_forced_sel, 'compactness'
         ].mean()
+        d['min_snr'] = df.loc[
+            non_forced_sel, 'snr'
+        ].min()
         d['max_snr'] = df.loc[
             non_forced_sel, 'snr'
         ].max()
-        d['avg_snr'] = df.loc[
-            non_forced_sel, 'snr'
-        ].mean()
 
     else:
         d['wavg_ra'] = df['interim_ew'].sum() / df['weight_ew'].sum()
         d['wavg_dec'] = df['interim_ns'].sum() / df['weight_ns'].sum()
         d['avg_compactness'] = df['compactness'].mean()
+        d['min_snr'] = df['snr'].min()
         d['max_snr'] = df['snr'].max()
-        d['avg_snr'] = df['snr'].mean()
 
     d['wavg_uncertainty_ew'] = 1. / np.sqrt(df['weight_ew'].sum())
     d['wavg_uncertainty_ns'] = 1. / np.sqrt(df['weight_ns'].sum())
@@ -318,8 +322,8 @@ def parallel_groupby(df):
         'wavg_ra': 'f',
         'wavg_dec': 'f',
         'avg_compactness': 'f',
+        'min_snr': 'f',
         'max_snr': 'f',
-        'avg_snr': 'f',
         'wavg_uncertainty_ew': 'f',
         'wavg_uncertainty_ns': 'f',
         'avg_flux_int': 'f',

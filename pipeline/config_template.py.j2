@@ -21,16 +21,16 @@ SELAVY_FILES = [
     {% for el in selavy_files %}'{{ el }}',
     {% endfor %}]
 
-# background map files
-BACKGROUND_FILES = [
-    # insert background map file path(s) here
-    {% for el in background_files %}'{{ el }}',
-    {% endfor %}]
-
 # Noise or RMS files
 NOISE_FILES = [
     # insert RMS file path(s) here
     {% for el in noise_files %}'{{ el }}',
+    {% endfor %}]
+
+# background map files
+BACKGROUND_FILES = [
+    # insert background map file path(s) here
+    {% for el in background_files %}'{{ el }}',
     {% endfor %}]
 
 ###
@@ -52,6 +52,12 @@ MONITOR_MIN_SIGMA = {{ monitor_min_sigma }}
 # MONITOR_EDGE_BUFFER_SCALE is a multiplicative scaling factor to the buffer size of the
 # forced photometry from the image edge.
 MONITOR_EDGE_BUFFER_SCALE = {{ monitor_edge_buffer_scale }}
+# MONITOR_CLUSTER_THRESHOLD represents the cluster_threshold parameter used in the forced
+# extraction. If unsure leave as default.
+MONITOR_CLUSTER_THRESHOLD = {{ monitor_cluster_threshold }}
+# MONITOR_ALLOW_NAN governs whether a source is attempted to be fit even if there are NaN's
+# present in the rms or background maps.
+MONITOR_ALLOW_NAN = {{ monitor_allow_nan }}
 
 # The position uncertainty is in reality a combination of the fitting errors and the
 # astrometric uncertainty of the image/survey/instrument.
@@ -96,3 +102,6 @@ USE_CONDON_ERRORS = {{ use_condon_errors }}
 # Sometimes the local rms for a source is reported as 0 by selavy.
 # Choose a value to use for the local rms in these cases
 SELAVY_LOCAL_RMS_ZERO_FILL_VALUE = {{ selavy_local_rms_zero_fill_value }}  # mJy
+
+# Hide astropy warnings
+SUPPRESS_ASTROPY_WARNINGS = {{ suppress_astropy_warnings }}

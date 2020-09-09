@@ -17,33 +17,33 @@ from astropy.nddata import Cutout2D
 from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
 
-from django.http import FileResponse, Http404
-from django.db.models import Count, F, Q, Case, When, Value, BooleanField
-from django.shortcuts import render, redirect
+from django.http import FileResponse, Http404, HttpResponseRedirect
+from django.db.models import F
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.conf import settings
 from django.contrib import messages
 
 from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.request import Request
+from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, ViewSet
 from rest_framework.authentication import (
     SessionAuthentication, BasicAuthentication
 )
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.contrib.auth.decorators import login_required
 
-
-from .models import Image, Measurement, Run, Source
+from .models import Image, Measurement, Run, Source, SourceFav
 from .serializers import (
     ImageSerializer, MeasurementSerializer, RunSerializer,
-    SourceSerializer, RawImageSelavyListSerializer
+    SourceSerializer, RawImageSelavyListSerializer,
+    SourceFavSerializer, SesameResultSerializer, CoordinateValidatorSerializer,
 )
-from .utils.utils import (
-    deg2dms, deg2hms, gal2equ, ned_search, simbad_search
-)
+from .utils.utils import deg2dms, deg2hms, parse_coord
 from .utils.view import generate_colsfields, get_skyregions_collection
 from .management.commands.initpiperun import initialise_run
 from .forms import PipelineRunForm
@@ -80,7 +80,8 @@ def Home(request):
     ) if (check_run_db and meas_glob) else 0
     context = {
         'totals': totals,
-        'd3_celestial_skyregions': get_skyregions_collection()
+        'd3_celestial_skyregions': get_skyregions_collection(),
+        'static_url': settings.STATIC_URL
     }
     return render(request, 'index.html', context)
 
@@ -146,7 +147,10 @@ def RunIndex(request):
         'status'
     ]
 
-    colsfields = generate_colsfields(fields, "/piperuns/")
+    colsfields = generate_colsfields(
+        fields,
+        {'name': reverse('pipeline:run_detail', args=[1])[:-2]}
+    )
 
     return render(
         request,
@@ -158,7 +162,10 @@ def RunIndex(request):
                 'breadcrumb': {'title': 'Pipeline Runs', 'url': request.path},
             },
             'datatable': {
-                'api': '/api/piperuns/?format=datatables',
+                'api': (
+                    reverse('pipeline:api_pipe_runs-list') +
+                    '?format=datatables'
+                ),
                 'colsFields': colsfields,
                 'colsNames': [
                     'Name', 'Run Datetime', 'Path', 'Comment', 'Nr Images',
@@ -184,28 +191,9 @@ def RunDetail(request, id):
     p_run_model = Run.objects.filter(id=id).prefetch_related('image_set').get()
     p_run = p_run_model.__dict__
     # build config path for POST and later
-    f_path = os.path.join(p_run['path'], 'config.py')
-    if request.method == 'POST':
-        # this post is for writing the config text (modified or not) from the
-        #  UI to a config.py file
-        config_text = request.POST.get('config_text', None)
-        if config_text:
-            try:
-                with open(f_path, 'w') as fp:
-                    fp.write(config_text)
-
-                messages.success(
-                    request,
-                    'Pipeline config written successfully'
-                )
-            except Exception as e:
-                messages.error(request, f'Error in writing config: {e}')
-        else:
-            messages.info(request, 'Config text null')
-
     p_run['user'] = p_run_model.user.username if p_run_model.user else None
     p_run['status'] = p_run_model.get_status_display()
-    if p_run_model.image_set.exists():
+    if p_run_model.image_set.exists() and p_run_model.status == 'Completed':
         images = list(p_run_model.image_set.values('name', 'datetime'))
         img_paths = list(map(
             lambda x: os.path.join(
@@ -230,7 +218,7 @@ def RunDetail(request, id):
     forced_path = glob(
         os.path.join(p_run['path'], 'forced_measurements_*.parquet')
     )
-    if forced_path:
+    if forced_path and p_run_model.status == 'Completed':
         try:
             p_run['nr_frcd'] = (
                 dd.read_parquet(forced_path, columns='id')
@@ -249,12 +237,16 @@ def RunDetail(request, id):
     else:
         p_run['nr_frcd'] = 'N.A.'
 
-    p_run['new_srcs'] = Source.objects.filter(
-        run__id=p_run['id'],
-        new=True,
-    ).count()
+    if p_run_model.status == 'Completed':
+        p_run['new_srcs'] = Source.objects.filter(
+            run__id=p_run['id'],
+            new=True,
+        ).count()
+    else:
+        p_run['new_srcs'] = 'N.A.'
 
     # read run config
+    f_path = os.path.join(p_run['path'], 'config.py')
     if os.path.exists(f_path):
         with open(f_path) as fp:
             p_run['config_txt'] = fp.read()
@@ -281,7 +273,10 @@ def ImageIndex(request):
         'rms_max'
     ]
 
-    colsfields = generate_colsfields(fields, '/images/')
+    colsfields = generate_colsfields(
+        fields,
+        {'name': reverse('pipeline:image_detail', args=[1])[:-2]}
+    )
 
     return render(
         request,
@@ -293,7 +288,10 @@ def ImageIndex(request):
                 'breadcrumb': {'title': 'Images', 'url': request.path},
             },
             'datatable': {
-                'api': '/api/images/?format=datatables',
+                'api': (
+                    reverse('pipeline:api_images-list') +
+                    '?format=datatables'
+                ),
                 'colsFields': colsfields,
                 'colsNames': [
                     'Name',
@@ -373,7 +371,10 @@ def MeasurementIndex(request):
         'forced'
     ]
 
-    colsfields = generate_colsfields(fields, '/measurements/')
+    colsfields = generate_colsfields(
+        fields,
+        {'name': reverse('pipeline:measurement_detail', args=[1])[:-2]}
+    )
 
     return render(
         request,
@@ -385,7 +386,10 @@ def MeasurementIndex(request):
                 'breadcrumb': {'title': 'Measurements', 'url': request.path},
             },
             'datatable': {
-                'api': '/api/measurements/?format=datatables',
+                'api': (
+                    reverse('pipeline:api_measurements-list') +
+                    '?format=datatables'
+                ),
                 'colsFields': colsfields,
                 'colsNames': [
                     'Name',
@@ -482,6 +486,10 @@ def MeasurementDetail(request, id, action=None):
         ))
 
     context = {'measurement': measurement}
+    # add base url for using in JS9 if assigned
+    if settings.BASE_URL and settings.BASE_URL != '':
+        context['base_url'] = settings.BASE_URL.strip('/')
+
     return render(request, 'measurement_detail.html', context)
 
 
@@ -517,8 +525,8 @@ class SourceViewSet(ModelViewSet):
             'n_rel',
             'new_high_sigma',
             'avg_compactness',
+            'min_snr',
             'max_snr',
-            'avg_snr',
             'n_neighbour_dist'
         ]
 
@@ -548,27 +556,30 @@ class SourceViewSet(ModelViewSet):
 
         radius = self.request.query_params.get('radius')
         radiusUnit = self.request.query_params.get('radiusunit')
-        objectname = self.request.query_params.get('objectname')
-        objectservice = self.request.query_params.get('objectservice')
         coordsys = self.request.query_params.get('coordsys')
-        if objectname is not None:
-            if objectservice == 'simbad':
-                wavg_ra, wavg_dec = simbad_search(objectname)
-            elif objectservice == 'ned':
-                wavg_ra, wavg_dec = ned_search(objectname)
-        else:
-            wavg_ra = self.request.query_params.get('ra')
-            wavg_dec = self.request.query_params.get('dec')
-            # galactic coordinates won't be entered if the user
-            # has entered an object query
-            if coordsys == 'galactic':
-                wavg_ra, wavg_dec = gal2equ(wavg_ra, wavg_dec)
+        coord_string = self.request.query_params.get('coord')
+        wavg_ra, wavg_dec = None, None
+        if coord_string:
+            coord = parse_coord(coord_string, coord_frame=coordsys).transform_to("icrs")
+            wavg_ra = coord.ra.deg
+            wavg_dec = coord.dec.deg
 
         if wavg_ra and wavg_dec and radius:
             radius = float(radius) / radius_conversions[radiusUnit]
             qs = qs.cone_search(wavg_ra, wavg_dec, radius)
 
         return qs
+
+    @action(detail=True, methods=['get'])
+    def related(self, request, pk=None):
+        qs = Source.objects.filter(related__in=[pk]).order_by('id')
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(qs, many=True)
+        return Response(serializer.data)
 
 
 # Sources Query
@@ -582,8 +593,8 @@ def SourceQuery(request):
         'avg_flux_int',
         'avg_flux_peak',
         'max_flux_peak',
+        'min_snr',
         'max_snr',
-        'avg_snr',
         'avg_compactness',
         'n_meas',
         'n_meas_sel',
@@ -599,7 +610,10 @@ def SourceQuery(request):
         'new_high_sigma'
     ]
 
-    colsfields = generate_colsfields(fields, '/sources/')
+    colsfields = generate_colsfields(
+        fields,
+        {'name': reverse('pipeline:source_detail', args=[1])[:-2]}
+    )
 
     # get all pipeline run names
     p_runs = list(Run.objects.values('name').all())
@@ -611,7 +625,10 @@ def SourceQuery(request):
             'breadcrumb': {'title': 'Sources', 'url': request.path},
             'runs': p_runs,
             'datatable': {
-                'api': '/api/sources/?format=datatables',
+                'api': (
+                    reverse('pipeline:api_sources-list') +
+                    '?format=datatables'
+                ),
                 'colsFields': colsfields,
                 'colsNames': [
                     'Name',
@@ -621,8 +638,8 @@ def SourceQuery(request):
                     'Avg. Int. Flux (mJy)',
                     'Avg. Peak Flux (mJy/beam)',
                     'Max Peak Flux (mJy/beam)',
+                    'Min SNR',
                     'Max SNR',
-                    'Avg. SNR',
                     'Avg. Compactness',
                     'Total Datapoints',
                     'Selavy Datapoints',
@@ -652,70 +669,52 @@ def SourceDetail(request, id, action=None):
         if action == 'next':
             src = source.filter(id__gt=id)
             if src.exists():
-                source = src.annotate(
-                    run_name=F('run__name'),
-                    relations_ids=ArrayAgg('related__id'),
-                    relations_names=ArrayAgg('related__name')
-                ).values().first()
+                source = (
+                    src.annotate(run_name=F('run__name'))
+                    .values()
+                    .first()
+                )
             else:
-                source = source.filter(id=id).annotate(
-                    run_name=F('run__name'),
-                    relations_ids=ArrayAgg('related__id'),
-                    relations_names=ArrayAgg('related__name')
-                ).values().get()
+                source = (
+                    source.filter(id=id)
+                    .annotate(run_name=F('run__name'))
+                    .values()
+                    .get()
+                )
         elif action == 'prev':
             src = source.filter(id__lt=id)
             if src.exists():
-                source = src.annotate(
-                    run_name=F('run__name'),
-                    relations_ids=ArrayAgg('related__id'),
-                    relations_names=ArrayAgg('related__name')
-                ).values().last()
+                source = (
+                    src.annotate(run_name=F('run__name'))
+                    .values()
+                    .last()
+                )
             else:
-                source = source.filter(id=id).annotate(
-                    run_name=F('run__name'),
-                    relations_ids=ArrayAgg('related__id'),
-                    relations_names=ArrayAgg('related__name')
-                ).values().get()
+                source = (
+                    source.filter(id=id)
+                    .annotate(run_name=F('run__name'))
+                    .values()
+                    .get()
+                )
     else:
-        source = source.filter(id=id).annotate(
-            run_name=F('run__name'),
-            relations_ids=ArrayAgg('related__id'),
-            relations_names=ArrayAgg('related__name')
-        ).values().get()
+        source = (
+            source.filter(id=id)
+            .annotate(run_name=F('run__name'))
+            .values()
+            .get()
+        )
     source['aladin_ra'] = source['wavg_ra']
     source['aladin_dec'] = source['wavg_dec']
     source['aladin_zoom'] = 0.36
-    if not source['relations_ids'] == [None]:
-        # this enables easy presenting in the template
-        source['relations_info'] = list(zip(
-            source['relations_ids'],
-            source['relations_names']
-        ))
     source['wavg_ra'] = deg2hms(source['wavg_ra'], hms_format=True)
     source['wavg_dec'] = deg2dms(source['wavg_dec'], dms_format=True)
-    source['datatable'] = {'colsNames': [
-        'ID',
-        'Name',
-        'Date (UTC)',
-        'Image',
-        'RA (deg)',
-        'RA Error (arcsec)',
-        'Dec (deg)',
-        'Dec Error (arcsec)',
-        'Int. Flux (mJy)',
-        'Int. Flux Error (mJy)',
-        'Peak Flux (mJy/beam)',
-        'Peak Flux Error (mJy/beam)',
-        'Has siblings',
-        'Forced Extraction',
-        'Image ID'
-    ]}
 
     # source data
     cols = [
         'id',
         'name',
+        'datetime',
+        'image_name',
         'ra',
         'ra_err',
         'dec',
@@ -726,8 +725,6 @@ def SourceDetail(request, id, action=None):
         'flux_peak_err',
         'has_siblings',
         'forced',
-        'datetime',
-        'image_name',
         'image_id'
     ]
     measurements = list(
@@ -744,29 +741,109 @@ def SourceDetail(request, id, action=None):
     # add the data for the datatable api
     measurements = {
         'table': 'source_detail',
+        'table_id': 'dataTableMeasurements',
         'dataQuery': measurements,
-        'colsFields': [
-            'id',
-            'name',
-            'datetime',
-            'image_name',
-            'ra',
-            'ra_err',
-            'dec',
-            'dec_err',
-            'flux_int',
-            'flux_int_err',
-            'flux_peak',
-            'flux_peak_err',
-            'has_siblings',
-            'forced',
-            'image_id'
-        ],
+        'colsFields': cols,
         'search': True,
-        'order': [2, 'asc']
+        'order': [2, 'asc'],
+        'colsNames': [
+            'ID',
+            'Name',
+            'Date (UTC)',
+            'Image',
+            'RA (deg)',
+            'RA Error (arcsec)',
+            'Dec (deg)',
+            'Dec Error (arcsec)',
+            'Int. Flux (mJy)',
+            'Int. Flux Error (mJy)',
+            'Peak Flux (mJy/beam)',
+            'Peak Flux Error (mJy/beam)',
+            'Has siblings',
+            'Forced Extraction',
+            'Image ID'
+        ]
     }
 
-    context = {'source': source, 'measurements': measurements}
+    # generate context for related sources datatable
+    related_fields = [
+        'name',
+        'comment',
+        'wavg_ra',
+        'wavg_dec',
+        'avg_flux_int',
+        'avg_flux_peak',
+        'max_flux_peak',
+        'min_snr',
+        'max_snr',
+        'avg_compactness',
+        'n_meas',
+        'n_meas_sel',
+        'n_meas_forced',
+        'n_neighbour_dist',
+        'n_rel',
+        'v_int',
+        'eta_int',
+        'v_peak',
+        'eta_peak',
+        'n_sibl',
+        'new',
+        'new_high_sigma'
+    ]
+    related_colsfields = generate_colsfields(
+        related_fields,
+        {'name': reverse('pipeline:source_detail', args=[1])[:-2]}
+    )
+    related_datatables = {
+        'table_id': 'dataTableRelated',
+        'api': (
+            reverse('pipeline:api_sources-related', args=[source['id']]) +
+            '?format=datatables'
+        ),
+        'colsFields': related_colsfields,
+        'colsNames': [
+            'Name',
+            'Comment',
+            'W. Avg. RA',
+            'W. Avg. Dec',
+            'Avg. Int. Flux (mJy)',
+            'Avg. Peak Flux (mJy/beam)',
+            'Max Peak Flux (mJy/beam)',
+            'Min SNR',
+            'Max SNR',
+            'Avg. Compactness',
+            'Total Datapoints',
+            'Selavy Datapoints',
+            'Forced Datapoints',
+            'Nearest Neighbour Dist. (arcmin)',
+            'Relations',
+            'V int flux',
+            '\u03B7 int flux',
+            'V peak flux',
+            '\u03B7 peak flux',
+            'Contains siblings',
+            'New Source',
+            'New High Sigma'
+        ],
+        'search': True,
+    }
+
+    context = {
+        'source': source,
+        'datatables': [measurements, related_datatables],
+        # flag to deactivate starring and render yellow star
+        'sourcefav': (
+            SourceFav.objects.filter(
+                user__id=request.user.id,
+                source__id=source['id']
+            )
+            .exists()
+        )
+    }
+    # add base url for using in JS9 if assigned
+    if settings.BASE_URL and settings.BASE_URL != '':
+        context['base_url'] = settings.BASE_URL.strip('/')
+
     return render(request, 'source_detail.html', context)
 
 
@@ -842,9 +919,13 @@ class MeasurementQuery(APIView):
         on an Image. Optionally highlight sources based on a Measurement or Source ID.
 
         Args:
-            request: Django HTTPRequest. Supports two URL GET parameters:
-                selection_model: either "measurement" or "source" (defaults to "measurement"); and
-                selection_id: the id for the given `selection_model`.
+            request: Django HTTPRequest. Supports 4 URL GET parameters:
+                - selection_model: either "measurement" or "source" (defaults to "measurement").
+                - selection_id: the id for the given `selection_model`.
+                - run_id: (optional) only return measurements for sources with the given pipeline
+                    run id (defaults to None).
+                - no_forced: (optional) If true, exclude forced-photometry measurements (defaults
+                    to False).
                 Measurement objects that match the given selection criterion will be
                 highlighted. e.g. ?selection_model=measurement&selection_id=100 will highlight
                 the Measurement object with id=100. ?selection_model=source&selection_id=5
@@ -861,6 +942,8 @@ class MeasurementQuery(APIView):
         columns = ["id", "name", "ra", "dec", "bmaj", "bmin", "pa", "forced", "source", "source__name"]
         selection_model = request.GET.get("selection_model", "measurement")
         selection_id = request.GET.get("selection_id", None)
+        run_id = request.GET.get("run_id", None)
+        no_forced = request.GET.get("forced", False)
 
         # validate selection query params
         if selection_id is not None:
@@ -882,6 +965,10 @@ class MeasurementQuery(APIView):
             .cone_search(ra_deg, dec_deg, radius_deg)
             .values(*columns, __name=F(selection_name))
         )
+        if run_id:
+            measurements = measurements.filter(source__run__id=run_id)
+        if no_forced:
+            measurements = measurements.filter(forced=False)
         measurement_region_file = io.StringIO()
         for meas in measurements:
             if selection_id is not None:
@@ -1002,31 +1089,28 @@ class RawImageListSet(ViewSet):
         return Response(serializer.data)
 
 
-class ValidateRunConfigSet(ViewSet):
+class RunConfigSet(ViewSet):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [IsAuthenticated]
-    lookup_value_regex = '[-\w]+'
-    lookup_field = 'runname'
+    queryset = Run.objects.all()
 
-    def retrieve(self, request, runname=None):
-        if not runname:
+    @action(detail=True, methods=['get'])
+    def validate(self, request, pk=None):
+        if not pk:
             return Response(
                 {
                     'message': {
                         'severity': 'danger',
                         'text': [
                             'Error in config validation:',
-                            'Run name parameter null or not passed'
+                            'Run pk parameter null or not passed'
                         ]
                     }
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
-        path = os.path.join(
-            settings.PIPELINE_WORKING_DIR,
-            runname,
-            'config.py'
-        )
+        p_run = get_object_or_404(self.queryset, pk=pk)
+        path = os.path.join(p_run.path, 'config.py')
 
         if not os.path.exists(path):
             return Response(
@@ -1043,7 +1127,7 @@ class ValidateRunConfigSet(ViewSet):
             )
 
         try:
-            pipeline = Pipeline(name=runname, config_path=path)
+            pipeline = Pipeline(name=p_run.name, config_path=path)
             pipeline.validate_cfg()
         except Exception as e:
             trace = traceback.format_exc().splitlines()
@@ -1066,3 +1150,199 @@ class ValidateRunConfigSet(ViewSet):
         }
 
         return Response(msg, status=status.HTTP_202_ACCEPTED)
+
+    @action(detail=True, methods=['post'])
+    def write(self, request, pk=None):
+        # this post is for writing the config text (modified or not)
+        # from the UI to a config.py file
+        if not pk:
+            messages.error(
+                request,
+                'Error in config write: Run pk parameter null or not passed'
+            )
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        try:
+            p_run = get_object_or_404(self.queryset, pk=pk)
+        except Exception as e:
+            messages.error(request, f'Error in config write: {e}')
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        config_text = request.POST.get('config_text', None)
+        if config_text:
+            f_path = os.path.join(p_run.path, 'config.py')
+            try:
+                with open(f_path, 'w') as fp:
+                    fp.write(config_text)
+
+                messages.success(
+                    request,
+                    'Pipeline config written successfully'
+                )
+            except Exception as e:
+                messages.error(request, f'Error in config write: {e}')
+        else:
+            messages.info(request, 'Error in config write: Config text null')
+
+        return HttpResponseRedirect(
+            reverse('pipeline:run_detail', args=[p_run.id])
+        )
+
+
+class SourceFavViewSet(ModelViewSet):
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = SourceFavSerializer
+
+    def get_queryset(self):
+        qs = SourceFav.objects.all().order_by('id')
+        user = self.request.query_params.get('user')
+        if user:
+            qs = qs.filter(user__username=user)
+
+        return qs
+
+    def create(self, request):
+        # TODO: couldn't get this below to work, so need to re-write using
+        # serializer
+        # serializer = SourceFavSerializer(data=request.data)
+        # if serializer.is_valid():
+        #     serializer.save()
+        #     return Response(serializer.data, status=status.HTTP_201_CREATED)
+        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        data = request.data.dict()
+        data.pop('csrfmiddlewaretoken')
+        data['user_id'] = request.user.id
+        try:
+            check = (
+                SourceFav.objects.filter(
+                    user__id=data['user_id'],
+                    source__id=data['source_id']
+                )
+                .exists()
+            )
+            if check:
+                messages.error(request, 'Source already added to favourites!')
+            else:
+                fav = SourceFav(**data)
+                fav.save()
+                messages.info(request, 'Added to favourites successfully')
+        except Exception as e:
+            messages.error(
+                request,
+                f'Errors in adding source to favourites: \n{e}'
+            )
+
+        return HttpResponseRedirect(reverse('pipeline:source_detail', args=[data['source_id']]))
+
+    def destroy(self, request, pk=None):
+        try:
+            qs = SourceFav.objects.filter(id=pk)
+            if qs.exists():
+                qs.delete()
+                messages.success(
+                    request,
+                    'Favourite source deleted successfully'
+                )
+                return Response({'message': 'ok'}, status=status.HTTP_200_OK)
+            else:
+                messages.info(request, 'Not found')
+                return Response(
+                    {'message': 'not found'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        except Exception as e:
+            messages.error(request, 'Error in deleting the favourite source')
+            return Response(
+                {'message': 'error in request'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+@login_required
+def UserSourceFavsList(request):
+    fields = ['source.name', 'comment', 'source.run.name', 'deletefield']
+
+    api_col_dict = {
+        'source.name': reverse('pipeline:source_detail', args=[1])[:-2],
+        'source.run.name': reverse('pipeline:run_detail', args=[1])[:-2]
+    }
+    colsfields = generate_colsfields(fields, api_col_dict, ['deletefield'])
+
+    return render(
+        request,
+        'generic_table.html',
+        {
+            'text': {
+                'title': 'Favourite Sources',
+                'description': 'List of favourite (starred) sources',
+                'breadcrumb': {'title': 'Favourite Sources', 'url': request.path},
+            },
+            'datatable': {
+                'api': (
+                    reverse('pipeline:api_sources_favs-list') +
+                    f'?format=datatables&user={request.user.username}'
+                ),
+                'colsFields': colsfields,
+                'colsNames': ['Source', 'Comment', 'Pipeline Run', 'Delete'],
+                'search': True,
+            }
+        }
+    )
+
+
+class UtilitiesSet(ViewSet):
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    @action(methods=['get'], detail=False)
+    def sesame_search(self, request: Request) -> Response:
+        """Query the Sesame name resolver service and return a coordinate.
+
+        Args:
+            request (Request): Django REST framework Request object with GET parameters:
+                - object_name (str): Object name to query.
+                - service (str, optional): Sesame service to query (all, simbad, ned, vizier).
+                    Defaults to "all".
+
+        Returns:
+            Response: a Django REST framework Response. Will return JSON with status code:
+                - 400 if the query params fail validation (i.e. if an invalid Sesame service
+                    or no object name is provided) or if the name resolution fails. Error
+                    messages are returned as an array of strings under the relevant query
+                    parameter key. e.g. {"object_name": ["This field may not be blank."]}.
+                - 200 if successful. Response data contains the passed in query parameters and
+                    the resolved coordinate as a sexagesimal string with units hourangle, deg
+                    under the key `coord`.
+        """
+        object_name = request.query_params.get("object_name", "")
+        service = request.query_params.get("service", "all")
+
+        serializer = SesameResultSerializer(data=dict(object_name=object_name, service=service))
+        serializer.is_valid(raise_exception=True)
+
+        return Response(serializer.data)
+
+    @action(methods=['get'], detail=False)
+    def coordinate_validator(self, request: Request) -> Response:
+        """Validate a coordinate string.
+
+        Args:
+            request (Request): Django REST framework Request object with GET parameters:
+                - coord (str): the coordinate string to validate.
+                - frame (str): the frame for the given coordinate string e.g. icrs, galactic.
+
+        Returns:
+            Response: a Django REST framework Response. Will return JSON with status code:
+                - 400 if the query params fail validation, i.e. if a frame unknown to Astropy
+                    is given, or the coordinate string fails to parse. Error messages are
+                    returned as an array of strings under the relevant query parameter key.
+                    e.g. {"coord": ["This field may not be blank."]}.
+                - 200 if the coordinate string successfully validates. No other data is returned.
+        """
+        coord_string = request.query_params.get("coord", "")
+        frame = request.query_params.get("frame", "")
+
+        serializer = CoordinateValidatorSerializer(data=dict(coord=coord_string, frame=frame))
+        serializer.is_valid(raise_exception=True)
+        return Response()
