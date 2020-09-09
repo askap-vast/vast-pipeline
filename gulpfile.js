@@ -8,19 +8,19 @@
 
 // Load plugins
 const gulp = require('gulp'),
-      browsersync = require('browser-sync').create(),
-      cleanCSS = require('gulp-clean-css'),
-      sourcemaps = require('gulp-sourcemaps'),
-      del = require('del'),
-      merge = require('merge-stream'),
-      rename = require('gulp-rename'),
-      uglify = require('gulp-uglify'),
-      babel = require('gulp-babel'),
-      // exec = require('child_process').exec,
-      // spawn = require('child_process').spawn,
-      run = require('gulp-run-command').default,
-      fs = require('fs'),
-      pkg = require('./package.json');
+  browsersync = require('browser-sync').create(),
+  cleanCSS = require('gulp-clean-css'),
+  sourcemaps = require('gulp-sourcemaps'),
+  del = require('del'),
+  merge = require('merge-stream'),
+  rename = require('gulp-rename'),
+  uglify = require('gulp-uglify'),
+  babel = require('gulp-babel'),
+  // exec = require('child_process').exec,
+  // spawn = require('child_process').spawn,
+  run = require('gulp-run-command').default,
+  fs = require('fs'),
+  pkg = require('./package.json');
 
 
 // Relative paths function
@@ -71,18 +71,18 @@ function js9Dir() {
 function js9MakeConfig() {
   var config = run(
     './configure --with-webdir=' + paths.js9Target,
-    {cwd: './node_modules/js9'}
+    { cwd: './node_modules/js9' }
   )
   return config();
 }
 
 function js9Make() {
-  var make = run('make', {cwd: './node_modules/js9'})
+  var make = run('make', { cwd: './node_modules/js9' })
   return make();
 }
 
 function js9MakeInst() {
-  var makeInst = run('make install', {cwd: './node_modules/js9'})
+  var makeInst = run('make install', { cwd: './node_modules/js9' })
   return makeInst();
 }
 
@@ -100,7 +100,7 @@ function js9Config(bc) {
     "wcs",
     "zoom"
   ]
-  js9Config.textColorOpts = {"info": "#000064"}
+  js9Config.textColorOpts = { "info": "#000064" }
 
   let outConfig = 'var JS9Prefs = ' + JSON.stringify(js9Config)
   // Write JS file with JSON config
@@ -124,7 +124,7 @@ function js9MoveGif() {
 }
 
 function js9FixStaticUrl(bc) {
-  const result = require('dotenv').config({'path': './webinterface/.env'})
+  const result = require('dotenv').config({ 'path': './webinterface/.env' })
   if (result.error) {
     throw result.error
   }
@@ -175,17 +175,17 @@ function modules() {
 
   // ChartJS
   var chartJS = gulp.src([
-      './node_modules/chart.js/dist/*.js',
-      './node_modules/chartjs-plugin-error-bars/build/*.js'
-    ])
+    './node_modules/chart.js/dist/*.js',
+    './node_modules/chartjs-plugin-error-bars/build/*.js'
+  ])
     .pipe(gulp.dest(paths.vendor + '/chart.js'));
 
   // dataTables
   var dataTables = gulp.src([
-      './node_modules/datatables.net/js/*.js',
-      './node_modules/datatables.net-bs4/js/*.js',
-      './node_modules/datatables.net-bs4/css/*.css'
-    ])
+    './node_modules/datatables.net/js/*.js',
+    './node_modules/datatables.net-bs4/js/*.js',
+    './node_modules/datatables.net-bs4/css/*.css'
+  ])
     .pipe(gulp.dest(paths.vendor + '/datatables'));
 
   // Font Awesome
@@ -198,16 +198,16 @@ function modules() {
 
   // jQuery
   var jquery = gulp.src([
-      './node_modules/jquery/dist/*',
-      '!./node_modules/jquery/dist/core.js'
-    ])
+    './node_modules/jquery/dist/*',
+    '!./node_modules/jquery/dist/core.js'
+  ])
     .pipe(gulp.dest(paths.vendor + '/jquery'));
 
   // d3 celestial
   var d3Celestial = gulp.src([
-      './node_modules/d3-celestial/celestial*.js',
-      './node_modules/d3-celestial/lib/d3*.js'
-    ])
+    './node_modules/d3-celestial/celestial*.js',
+    './node_modules/d3-celestial/lib/d3*.js'
+  ])
     .pipe(gulp.dest(paths.vendor + '/d3-celestial'));
   var d3CelestialData = gulp.src('./node_modules/d3-celestial/data/*.json')
     .pipe(gulp.dest(paths.vendor + '/d3-celestial/data'));
@@ -240,12 +240,12 @@ function cssTask() {
       paths.css,
       '!' + paths.cssMin,
     ])
-    // .pipe(sourcemaps.init())
+    .pipe(sourcemaps.init())
     .pipe(rename({
       suffix: '.min'
     }))
     .pipe(cleanCSS())
-    // .pipe(sourcemaps.write())
+    .pipe(sourcemaps.write('map'))
     .pipe(gulp.dest(paths.cssDir))
     .pipe(browsersync.stream());
 }
@@ -257,6 +257,7 @@ function jsTask() {
       paths.js,
       '!' + paths.jsMin,
     ])
+    .pipe(sourcemaps.init())
     .pipe(babel({
       presets: ['@babel/env']
     }))
@@ -267,6 +268,7 @@ function jsTask() {
     .pipe(rename({
       suffix: '.min'
     }))
+    .pipe(sourcemaps.write('map'))
     .pipe(gulp.dest(paths.jsDir))
     .pipe(browsersync.stream());
 }

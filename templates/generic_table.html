@@ -262,13 +262,20 @@
               </div>
               <div class="col">
                 <div class="custom-control custom-switch">
-                  <input type="checkbox" class="custom-control-input" id="condomErrorSwitch" {% if runconfig.use_condon_errors %} checked="checked" {% endif %} name="use_condon_errors">
-                  <label class="custom-control-label font-weight-bold text-gray-800" for="condomErrorSwitch">Use Condon Errors</label>
+                  <input type="checkbox" class="custom-control-input" id="condonErrorSwitch" {% if runconfig.use_condon_errors %} checked="checked" {% endif %} name="use_condon_errors">
+                  <label class="custom-control-label font-weight-bold text-gray-800" for="condonErrorSwitch">Use Condon Errors</label>
                   <a href="#" data-toggle="tooltip" data-placement="top" title=
                       "Replaces the selavy catalogue flux and positional errors with those defined by Condon '97, calculated by the pipeline."
                   ><i class="fas fa-info-circle"></i></a>
                 </div>
               </div>
+            </div>
+            <div class="custom-control custom-switch">
+              <input type="checkbox" class="custom-control-input" id="astropyWarnSwitch" {% if runconfig.suppress_astropy_warnings %} checked="checked" {% endif %} name="suppress_astropy_warnings">
+              <label class="custom-control-label font-weight-bold text-gray-800" for="astropyWarnSwitch">Suppress Astropy Warnings</label>
+              <a href="#" data-toggle="tooltip" data-placement="top" title=
+                  "Removes the Astropy warnings from the pipeline run output."
+              ><i class="fas fa-info-circle"></i></a>
             </div>
           </div>
           <div class="modal-footer">

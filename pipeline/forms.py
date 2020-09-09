@@ -25,3 +25,4 @@ class PipelineRunForm(forms.Form):
     flux_perc_error = forms.FloatField()
     selavy_local_rms_zero_fill_value = forms.FloatField()
     use_condon_errors = forms.BooleanField(required=False)
+    suppress_astropy_warnings = forms.BooleanField(required=False)
