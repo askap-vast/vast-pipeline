@@ -18,7 +18,7 @@ from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
 
 from django.http import FileResponse, Http404, HttpResponseRedirect
-from django.db.models import Count, F, Q, Case, When, Value, BooleanField
+from django.db.models import F
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.conf import settings
@@ -26,6 +26,7 @@ from django.contrib import messages
 
 from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, ViewSet
@@ -33,20 +34,16 @@ from rest_framework.authentication import (
     SessionAuthentication, BasicAuthentication
 )
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.contrib.auth.decorators import login_required
-
 
 from .models import Image, Measurement, Run, Source, SourceFav
 from .serializers import (
     ImageSerializer, MeasurementSerializer, RunSerializer,
     SourceSerializer, RawImageSelavyListSerializer,
-    SourceFavSerializer
+    SourceFavSerializer, SesameResultSerializer, CoordinateValidatorSerializer,
 )
-from .utils.utils import (
-    deg2dms, deg2hms, gal2equ, ned_search, simbad_search
-)
+from .utils.utils import deg2dms, deg2hms, parse_coord
 from .utils.view import generate_colsfields, get_skyregions_collection
 from .management.commands.initpiperun import initialise_run
 from .forms import PipelineRunForm
@@ -559,21 +556,13 @@ class SourceViewSet(ModelViewSet):
 
         radius = self.request.query_params.get('radius')
         radiusUnit = self.request.query_params.get('radiusunit')
-        objectname = self.request.query_params.get('objectname')
-        objectservice = self.request.query_params.get('objectservice')
         coordsys = self.request.query_params.get('coordsys')
-        if objectname is not None:
-            if objectservice == 'simbad':
-                wavg_ra, wavg_dec = simbad_search(objectname)
-            elif objectservice == 'ned':
-                wavg_ra, wavg_dec = ned_search(objectname)
-        else:
-            wavg_ra = self.request.query_params.get('ra')
-            wavg_dec = self.request.query_params.get('dec')
-            # galactic coordinates won't be entered if the user
-            # has entered an object query
-            if coordsys == 'galactic':
-                wavg_ra, wavg_dec = gal2equ(wavg_ra, wavg_dec)
+        coord_string = self.request.query_params.get('coord')
+        wavg_ra, wavg_dec = None, None
+        if coord_string:
+            coord = parse_coord(coord_string, coord_frame=coordsys).transform_to("icrs")
+            wavg_ra = coord.ra.deg
+            wavg_dec = coord.dec.deg
 
         if wavg_ra and wavg_dec and radius:
             radius = float(radius) / radius_conversions[radiusUnit]
@@ -1300,3 +1289,60 @@ def UserSourceFavsList(request):
             }
         }
     )
+
+
+class UtilitiesSet(ViewSet):
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    @action(methods=['get'], detail=False)
+    def sesame_search(self, request: Request) -> Response:
+        """Query the Sesame name resolver service and return a coordinate.
+
+        Args:
+            request (Request): Django REST framework Request object with GET parameters:
+                - object_name (str): Object name to query.
+                - service (str, optional): Sesame service to query (all, simbad, ned, vizier).
+                    Defaults to "all".
+
+        Returns:
+            Response: a Django REST framework Response. Will return JSON with status code:
+                - 400 if the query params fail validation (i.e. if an invalid Sesame service
+                    or no object name is provided) or if the name resolution fails. Error
+                    messages are returned as an array of strings under the relevant query
+                    parameter key. e.g. {"object_name": ["This field may not be blank."]}.
+                - 200 if successful. Response data contains the passed in query parameters and
+                    the resolved coordinate as a sexagesimal string with units hourangle, deg
+                    under the key `coord`.
+        """
+        object_name = request.query_params.get("object_name", "")
+        service = request.query_params.get("service", "all")
+
+        serializer = SesameResultSerializer(data=dict(object_name=object_name, service=service))
+        serializer.is_valid(raise_exception=True)
+
+        return Response(serializer.data)
+
+    @action(methods=['get'], detail=False)
+    def coordinate_validator(self, request: Request) -> Response:
+        """Validate a coordinate string.
+
+        Args:
+            request (Request): Django REST framework Request object with GET parameters:
+                - coord (str): the coordinate string to validate.
+                - frame (str): the frame for the given coordinate string e.g. icrs, galactic.
+
+        Returns:
+            Response: a Django REST framework Response. Will return JSON with status code:
+                - 400 if the query params fail validation, i.e. if a frame unknown to Astropy
+                    is given, or the coordinate string fails to parse. Error messages are
+                    returned as an array of strings under the relevant query parameter key.
+                    e.g. {"coord": ["This field may not be blank."]}.
+                - 200 if the coordinate string successfully validates. No other data is returned.
+        """
+        coord_string = request.query_params.get("coord", "")
+        frame = request.query_params.get("frame", "")
+
+        serializer = CoordinateValidatorSerializer(data=dict(coord=coord_string, frame=frame))
+        serializer.is_valid(raise_exception=True)
+        return Response()

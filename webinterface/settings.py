@@ -299,6 +299,7 @@ PIPE_RUN_CONFIG_DEFAULTS = {
     'flux_perc_error': 0,
     'use_condon_errors': True,
     'selavy_local_rms_zero_fill_value': 0.2,
+    'suppress_astropy_warnings': True
 }
 
 # default max concurrent pipeline runs

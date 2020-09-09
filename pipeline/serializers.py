@@ -1,10 +1,12 @@
 import os
 
+from astropy.coordinates import SkyCoord, name_resolve
+from astropy.coordinates.builtin_frames import frame_transform_graph
 from django.urls import reverse
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from .utils.utils import deg2dms, deg2hms
+from .utils.utils import deg2dms, deg2hms, parse_coord
 from .models import Image, Measurement, Run, Source, SourceFav
 
 
@@ -140,3 +142,30 @@ class RawImageSelavyObjSerializer(serializers.Serializer):
 class RawImageSelavyListSerializer(serializers.Serializer):
     fits = RawImageSelavyObjSerializer(many=True)
     selavy = RawImageSelavyObjSerializer(many=True)
+
+
+class SesameResultSerializer(serializers.Serializer):
+    object_name = serializers.CharField(required=True)
+    service = serializers.ChoiceField(choices=["all", "simbad", "ned", "vizier"], required=True)
+    coord = serializers.CharField(read_only=True)
+
+    def validate(self, data):
+        _ = name_resolve.sesame_database.set(data["service"])
+        try:
+            coord = SkyCoord.from_name(data["object_name"])
+        except name_resolve.NameResolveError as e:
+            raise serializers.ValidationError({"object_name": str(e)})
+        data["coord"] = coord.to_string(style="hmsdms", sep=":")
+        return data
+
+
+class CoordinateValidatorSerializer(serializers.Serializer):
+    coord = serializers.CharField(required=True)
+    frame = serializers.ChoiceField(choices=frame_transform_graph.get_names(), required=True)
+
+    def validate(self, data):
+        try:
+            _ = parse_coord(data["coord"], coord_frame=data["frame"])
+        except ValueError as e:
+            raise serializers.ValidationError({"coord": str(e.args[0])})
+        return data
