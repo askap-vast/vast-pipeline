@@ -1,12 +1,12 @@
 import os
 import logging
+import datetime
 import numpy as np
 import pandas as pd
 import dask.dataframe as dd
 import dask.bag as db
 from psutil import cpu_count
 from glob import glob
-from datetime import datetime
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -142,7 +142,7 @@ def extract_from_image(
 
 def finalise_forced_dfs(
     df: pd.DataFrame, prefix: str, max_id: int, beam_bmaj: float,
-    beam_bmin: float, beam_bpa: float, id: int, datetime: datetime,
+    beam_bmin: float, beam_bpa: float, id: int, datetime: datetime.datetime,
     image: str
     ) -> pd.DataFrame:
     """
@@ -166,7 +166,7 @@ def finalise_forced_dfs(
         image beam position angle
     id : int
         image id in database
-    datetime : datetime
+    datetime : datetime.datetime
         timestamp of the image file (from header)
     image : str
         string with the image name
