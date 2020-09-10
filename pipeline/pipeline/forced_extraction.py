@@ -260,10 +260,6 @@ def parallel_extraction(
         .rename(columns={'image_x': 'image'})
     )
 
-    # out = (
-    #     pd
-    # )
-
     # drop the source for which we would have no hope of detecting
     predrop_shape = out.shape[0]
     out['max_snr'] = out['flux_peak'].values / out['image_rms_min'].values
