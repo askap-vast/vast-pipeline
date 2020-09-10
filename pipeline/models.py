@@ -405,6 +405,7 @@ class Image(models.Model):
         help_text='Polarisation of the image one of I,XX,YY,Q,U,V.'
     )
     name = models.CharField(
+        unique=True,
         max_length=200,
         help_text='Name of the image.'
     )
