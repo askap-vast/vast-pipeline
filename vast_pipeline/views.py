@@ -19,6 +19,8 @@ from astropy.wcs.utils import proj_plane_pixel_scales
 from astroquery.simbad import Simbad
 from astroquery.ned import Ned
 
+from bokeh.embed import json_item
+
 from django.http import FileResponse, Http404, HttpResponseRedirect
 from django.db.models import F, Count
 from django.shortcuts import render, redirect, get_object_or_404
@@ -41,6 +43,7 @@ from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.contrib.auth.decorators import login_required
 
 from vast_pipeline.models import Image, Measurement, Run, Source, SourceFav
+from vast_pipeline.plots import plot_lightcurve
 from vast_pipeline.serializers import (
     ImageSerializer, MeasurementSerializer, RunSerializer,
     SourceSerializer, RawImageSelavyListSerializer,

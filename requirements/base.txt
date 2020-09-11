@@ -1,6 +1,7 @@
 aplpy==2.0.3
 astropy==4.0
 astroquery==0.4
+bokeh==2.2.0
 cloudpickle==1.5.0
 dask[dataframe]==2.15.0
 dill==0.3.1.1
