@@ -281,11 +281,9 @@ function watchFiles() {
 }
 
 // Define complex tasks
-// const vendor = gulp.series(clean, modules);
-// const build = gulp.series(vendor, gulp.parallel(css, js));
 const js9 = gulp.series(js9Dir, js9MakeConfig, js9Make, js9MakeInst, js9Config)
 const assets = gulp.parallel(cssTask, jsTask)
-const vendor = gulp.parallel(modules, js9)
+const vendor = gulp.series(clean, gulp.parallel(modules, js9))
 const build = gulp.series(vendor, assets);
 const watch = gulp.series(assets, gulp.parallel(watchFiles, browserSync));
 
@@ -294,7 +292,6 @@ exports.clean = clean;
 exports.js9 = js9;
 exports.css = cssTask;
 exports.js = jsTask;
-// exports.clean = clean;
 exports.vendor = vendor;
 exports.build = build;
 exports.watch = watch;
