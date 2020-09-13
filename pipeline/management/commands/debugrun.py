@@ -71,5 +71,3 @@ class Command(BaseCommand):
                 Association.objects.filter(source_id__in=sources).count()
                 )
             print(' '.join(40 * ['*']))
-
-        pass
