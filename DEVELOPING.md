@@ -52,7 +52,7 @@ In this case there are 2 situations that arise:
 
    1.3. Run `./manage.py makemigrations`. This  will generate a __NEW__ `0001_initial.py` file.
 
-   1.4. Commit the new migraton file `0001_initial.py` as well as `models.py` within a single commit, and add an appropriate message (e.g. add field X to model Y)
+   1.4. Commit the new migraton file `0001_initial.py` as well as `models.py` within a single commit, and add an appropriate message (e.g. add field X to model Y). __DO NOT__ commit the removal of `0002_q3c.py`.
 
    1.5. Get back the Q3C migration file `git checkout pipeline/migrations/0002_q3c.py`.
 
