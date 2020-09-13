@@ -169,3 +169,13 @@ class CoordinateValidatorSerializer(serializers.Serializer):
         except ValueError as e:
             raise serializers.ValidationError({"coord": str(e.args[0])})
         return data
+
+
+class SimbadSearchSerializer(serializers.Serializer):
+    main_id = serializers.CharField()
+    distance_result_arcsec = serializers.FloatField()
+    otype_short = serializers.CharField()
+    otype_long = serializers.CharField()
+    ra_hms = serializers.CharField()
+    dec_dms = serializers.CharField()
+    other_ids = serializers.ListField(child=serializers.CharField())

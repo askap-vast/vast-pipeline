@@ -16,6 +16,7 @@ from astropy.coordinates import SkyCoord, Angle
 from astropy.nddata import Cutout2D
 from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
+from astroquery.simbad import Simbad
 
 from django.http import FileResponse, Http404, HttpResponseRedirect
 from django.db.models import F
@@ -34,20 +35,22 @@ from rest_framework.authentication import (
     SessionAuthentication, BasicAuthentication
 )
 from rest_framework.permissions import IsAuthenticated
+from rest_framework import serializers
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.contrib.auth.decorators import login_required
 
-from .models import Image, Measurement, Run, Source, SourceFav
-from .serializers import (
+from pipeline.models import Image, Measurement, Run, Source, SourceFav
+from pipeline.serializers import (
     ImageSerializer, MeasurementSerializer, RunSerializer,
     SourceSerializer, RawImageSelavyListSerializer,
     SourceFavSerializer, SesameResultSerializer, CoordinateValidatorSerializer,
+    SimbadSearchSerializer,
 )
-from .utils.utils import deg2dms, deg2hms, parse_coord
-from .utils.view import generate_colsfields, get_skyregions_collection
-from .management.commands.initpiperun import initialise_run
-from .forms import PipelineRunForm
-from .pipeline.main import Pipeline
+from pipeline.utils.utils import deg2dms, deg2hms, parse_coord
+from pipeline.utils.view import generate_colsfields, get_skyregions_collection
+from pipeline.management.commands.initpiperun import initialise_run
+from pipeline.forms import PipelineRunForm
+from pipeline.pipeline.main import Pipeline
 
 
 logger = logging.getLogger(__name__)
@@ -1346,3 +1349,52 @@ class UtilitiesSet(ViewSet):
         serializer = CoordinateValidatorSerializer(data=dict(coord=coord_string, frame=frame))
         serializer.is_valid(raise_exception=True)
         return Response()
+
+    @action(methods=['get'], detail=False)
+    def simbad_search(self, request: Request) -> Response:
+        coord_string = request.query_params.get("coord", "")
+        radius_string = request.query_params.get("radius", "10arcmin")
+
+        try:
+            coord = parse_coord(coord_string)
+        except ValueError as e:
+            raise serializers.ValidationError({"coord": str(e.args[0])})
+
+        try:
+            radius = Angle(radius_string)
+        except ValueError as e:
+            raise serializers.ValidationError({"radius": str(e.args[0])})
+
+        CustomSimbad = Simbad()
+        CustomSimbad.add_votable_fields(
+            "distance_result", "otype(S)", "otype(V)", "otypes", "ids"
+        )
+        result_table = CustomSimbad.query_region(coord, radius=radius)
+        if result_table is None:
+            return Response(
+                data={"detail": "No objects found in search radius."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        results_df = result_table[
+            ["MAIN_ID", "DISTANCE_RESULT", "OTYPE_S", "OTYPE_V", "RA", "DEC", "IDS"]
+        ].to_pandas()
+        bytestring_fields = ["MAIN_ID", "OTYPE_S", "OTYPE_V", "IDS"]
+        results_df[bytestring_fields] = results_df[bytestring_fields].apply(
+            lambda col: col.str.decode("utf-8")
+        )
+        results_df["IDS"] = results_df["IDS"].str.split("|")
+        results_df = results_df.rename(
+            columns={
+                "MAIN_ID": "main_id",
+                "DISTANCE_RESULT": "distance_result_arcsec",
+                "OTYPE_S": "otype_short",
+                "OTYPE_V": "otype_long",
+                "RA": "ra_hms",
+                "DEC": "dec_dms",
+                "IDS": "other_ids",
+            }
+        )
+
+        serializer = SimbadSearchSerializer(data=results_df.to_dict(orient="records"), many=True)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)

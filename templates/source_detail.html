@@ -135,6 +135,28 @@
       </div>
     </div>
 
+  <!-- DataTable Simbad Results -->
+  <div class="card shadow mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary">Simbad Results</h6>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped table-hover" id="simbadResultsTable" width="100%" cellspacing="0" data-server-side="true" data-ajax="{% url 'pipeline:api_utils-simbad-search' %}?coord={{ source.wavg_ra }}{{ source.wavg_dec }}&format=datatables">
+          <thead>
+            <tr>
+              <th data-data="main_id">ID</th>
+              <th data-data="distance_result_arcsec">Dist (arcsec)</th>
+              <th data-data="otype_long">Type</th>
+              <th data-data="ra_hms">RA (hms)</th>
+              <th data-data="dec_dms">Dec (dms)</th>
+            </tr>
+          </thead>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- DataTable Source Measurements -->
   <div class="card shadow mb-4">
     <div class="card-header py-3">
@@ -258,9 +280,24 @@
 
 {{ datatables.0.dataQuery|json_script:"data-js9" }}
 <script type="text/javascript">
-  // $(document).ready(function() {
-    // $('[data-toggle="tooltip"]').tooltip();
-  // });
+  $(document).ready(function() {
+    $('#simbadResultsTable').DataTable({
+      "columnDefs": [
+        {
+          "targets": 0,
+          "render": function( data, type, row, meta) {
+            return '<a href="http://simbad.u-strasbg.fr/simbad/sim-id?Ident=' + row['main_id'] + '" target="_blank">' + row['main_id'] + '</a>'
+          }
+        },
+        {
+          "targets": 1,
+          "render": function ( data, type, row, meta ) {
+            return row['distance_result_arcsec'].toFixed(2);
+          }
+        }
+      ]
+    });
+  });
   let baseUrl = '{{ base_url }}' || null;
   // function to add base url to an existing url if valid
   addBaseUrl = (url) => baseUrl == null ? url : '/' + baseUrl + url;
