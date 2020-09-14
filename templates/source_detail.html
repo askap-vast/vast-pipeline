@@ -142,12 +142,12 @@
     </div>
     <div class="card-body">
       <div class="table-responsive">
-        <table class="table table-bordered table-striped table-hover" id="simbadResultsTable" width="100%" cellspacing="0" data-server-side="true" data-ajax="{% url 'pipeline:api_utils-simbad-search' %}?coord={{ source.wavg_ra }}{{ source.wavg_dec }}&format=datatables">
+        <table class="table table-bordered table-striped table-hover" id="simbadResultsTable" width="100%" cellspacing="0" data-server-side="true" data-ajax="{% url 'pipeline:api_utils-simbad-search' %}?coord={{ source.wavg_ra }}{{ source.wavg_dec }}&format=datatables&keep=otype_long">
           <thead>
             <tr>
               <th data-data="main_id">ID</th>
               <th data-data="distance_result_arcsec">Dist (arcsec)</th>
-              <th data-data="otype_long">Type</th>
+              <th data-data="otype_short">Type</th>
               <th data-data="ra_hms">RA (hms)</th>
               <th data-data="dec_dms">Dec (dms)</th>
             </tr>
@@ -293,6 +293,16 @@
           "targets": 1,
           "render": function ( data, type, row, meta ) {
             return row['distance_result_arcsec'].toFixed(2);
+          }
+        },
+        {
+          "targets": 2,
+          "render": function ( data, type, row, meta ) {
+            if (row['otype_short'] !== row['otype_long']) {
+              return '<abbr title="' + row['otype_long'] + '">' + row['otype_short'] + '</abbr>';
+            } else {
+              return row['otype_short'];
+            }
           }
         }
       ]
