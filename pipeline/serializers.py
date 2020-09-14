@@ -6,8 +6,8 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from .utils.utils import deg2dms, deg2hms, parse_coord
-from .models import Image, Measurement, Run, Source, SourceFav
+from pipeline.utils.utils import deg2dms, deg2hms, parse_coord
+from pipeline.models import Image, Measurement, Run, Source, SourceFav
 
 
 class RunSerializer(serializers.ModelSerializer):
@@ -179,3 +179,12 @@ class SimbadSearchSerializer(serializers.Serializer):
     ra_hms = serializers.CharField()
     dec_dms = serializers.CharField()
     other_ids = serializers.ListField(child=serializers.CharField())
+
+
+class NedSearchSerializer(serializers.Serializer):
+    object_name = serializers.CharField()
+    separation_arcsec = serializers.FloatField()
+    otype = serializers.CharField()
+    ra_hms = serializers.CharField()
+    dec_dms = serializers.CharField()
+    redshift = serializers.FloatField(allow_null=True)

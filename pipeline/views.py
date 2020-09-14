@@ -12,11 +12,12 @@ from glob import glob
 from itertools import tee
 
 from astropy.io import fits
-from astropy.coordinates import SkyCoord, Angle
+from astropy.coordinates import SkyCoord, Angle, Longitude, Latitude
 from astropy.nddata import Cutout2D
 from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
 from astroquery.simbad import Simbad
+from astroquery.ned import Ned
 
 from django.http import FileResponse, Http404, HttpResponseRedirect
 from django.db.models import F
@@ -44,7 +45,7 @@ from pipeline.serializers import (
     ImageSerializer, MeasurementSerializer, RunSerializer,
     SourceSerializer, RawImageSelavyListSerializer,
     SourceFavSerializer, SesameResultSerializer, CoordinateValidatorSerializer,
-    SimbadSearchSerializer,
+    SimbadSearchSerializer, NedSearchSerializer
 )
 from pipeline.utils.utils import deg2dms, deg2hms, parse_coord
 from pipeline.utils.view import generate_colsfields, get_skyregions_collection
@@ -1353,7 +1354,7 @@ class UtilitiesSet(ViewSet):
     @action(methods=['get'], detail=False)
     def simbad_search(self, request: Request) -> Response:
         coord_string = request.query_params.get("coord", "")
-        radius_string = request.query_params.get("radius", "10arcmin")
+        radius_string = request.query_params.get("radius", "1arcmin")
 
         try:
             coord = parse_coord(coord_string)
@@ -1396,5 +1397,64 @@ class UtilitiesSet(ViewSet):
         )
 
         serializer = SimbadSearchSerializer(data=results_df.to_dict(orient="records"), many=True)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
+
+    @action(methods=['get'], detail=False)
+    def ned_search(self, request: Request) -> Response:
+        def nan_to_none(d: Dict[str, Any], key: str):
+            d[key] = None if pd.isna(d[key]) else d[key]
+            return d
+
+        coord_string = request.query_params.get("coord", "")
+        radius_string = request.query_params.get("radius", "1arcmin")
+
+        try:
+            coord = parse_coord(coord_string)
+        except ValueError as e:
+            raise serializers.ValidationError({"coord": str(e.args[0])})
+
+        try:
+            radius = Angle(radius_string)
+        except ValueError as e:
+            raise serializers.ValidationError({"radius": str(e.args[0])})
+
+        result_table = Ned.query_region(coord, radius=radius)
+        if result_table is None:
+            return Response(
+                data={"detail": "No objects found in search radius."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        results_df = result_table[
+            ["Object Name", "Separation", "Type", "RA", "DEC", "Redshift"]
+        ].to_pandas()
+        bytestring_fields = ["Object Name", "Type"]
+        results_df[bytestring_fields] = results_df[bytestring_fields].apply(
+            lambda col: col.str.decode("utf-8")
+        )
+        results_df = results_df.rename(
+            columns={
+                "Object Name": "object_name",
+                "Separation": "separation_arcsec",
+                "Type": "otype",
+                "RA": "ra_hms",
+                "DEC": "dec_dms",
+                "Redshift": "redshift",
+            }
+        )
+        # convert NED result separation (arcmin) to arcsec
+        results_df["separation_arcsec"] = results_df["separation_arcsec"] * 60
+        # convert coordinates to RA (hms) Dec (dms) strings
+        results_df["ra_hms"] = Longitude(results_df["ra_hms"], unit="deg").to_string(
+            unit="hourangle"
+        )
+        results_df["dec_dms"] = Latitude(results_df["dec_dms"], unit="deg").to_string(
+            unit="deg"
+        )
+        # convert dataframe to dict and replace float NaNs with None for JSON encoding
+        results_dict = results_df.sort_values("separation_arcsec").to_dict(orient="records")
+        results_dict = [nan_to_none(d, key="redshift") for d in results_dict]
+
+        serializer = NedSearchSerializer(data=results_dict, many=True)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)

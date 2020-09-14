@@ -6,6 +6,7 @@
 
 <link rel='stylesheet' href='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css' />
 <link rel="stylesheet" href="{% static 'vendor/js9/js9-allinone.css' %}" />
+<link rel="stylesheet" href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" />
 <link rel="stylesheet" href="{% static 'css/collapse-box.min.css' %}">
 
 {% endblock head %}
@@ -37,13 +38,13 @@
           </span>
         </a>
       </span>
-      <a href="http://simbad.u-strasbg.fr/simbad/sim-coo?CooEpoch=2000&Coord={{ source.aladin_ra }}d{{ source.aladin_dec }}d&Radius.unit=arcmin&CooEqui=2000&CooFrame=FK5&Radius=10'" class="d-none d-sm-inline-block btn btn-sm btn-info btn-icon-split shadow-sm" target="_blank">
+      <a href="http://simbad.u-strasbg.fr/simbad/sim-coo?CooEpoch=2000&Coord={{ source.aladin_ra }}d{{ source.aladin_dec }}d&Radius.unit=arcmin&CooEqui=2000&CooFrame=FK5&Radius=10'" class="d-none d-sm-inline-block btn btn-sm btn-info btn-icon-split shadow-sm" target="_blank" title="SIMBAD cone search with 10 arcmin radius.">
         <span class="icon text-white-600">
           <i class="fas fa-info-circle fa-sm"></i>
         </span>
         <span class="text">SIMBAD</span>
       </a>
-      <a href="https://ned.ipac.caltech.edu/conesearch?search_type=Near%20Position%20Search&coordinates={{ source.aladin_ra }}d%20{{ source.aladin_dec }}d&radius=2.0&in_csys=Equatorial&in_equinox=J2000.0&out_csys=Equatorial&out_equinox=J2000.0&hconst=67.8&omegam=0.308&omegav=0.692&wmap=4&corr_z=1" class="d-none d-sm-inline-block btn btn-sm btn-info btn-icon-split shadow-sm" target="_blank">
+      <a href="https://ned.ipac.caltech.edu/conesearch?search_type=Near%20Position%20Search&coordinates={{ source.aladin_ra }}d%20{{ source.aladin_dec }}d&radius=2.0&in_csys=Equatorial&in_equinox=J2000.0&out_csys=Equatorial&out_equinox=J2000.0&hconst=67.8&omegam=0.308&omegav=0.692&wmap=4&corr_z=1" class="d-none d-sm-inline-block btn btn-sm btn-info btn-icon-split shadow-sm" target="_blank" title="NED cone search with 2 arcmin radius.">
         <span class="icon text-white-600">
           <i class="fas fa-info-circle fa-sm"></i>
         </span>
@@ -104,12 +105,12 @@
   <!-- Postage stamps -->
     <div class="card shadow mb-4">
       <h6 class="card-header m-0 font-weight-bold text-primary">
-        <a data-toggle="collapse" href="#collapse-example" aria-expanded="true" aria-controls="collapse-example" id="heading-example" class="d-block">
+        <a data-toggle="collapse" href="#collapse-postage-stamps" aria-expanded="true" aria-controls="collapse-postage-stamps" id="heading-example" class="d-block">
           <i class="fa fa-chevron-down pull-right"></i>
           Postage Stamps
         </a>
       </h6>
-      <div id="collapse-example" class="collapse show" aria-labelledby="heading-example">
+      <div id="collapse-postage-stamps" class="collapse show" aria-labelledby="heading-example">
         <div class="card-body">
           <div class="row">
             <button class="btn btn-info mr-1" onclick="focusOnSource(4.0);">Zoom to Source</button>
@@ -135,24 +136,60 @@
       </div>
     </div>
 
-  <!-- DataTable Simbad Results -->
+  <!-- DataTable External Search Results -->
   <div class="card shadow mb-4">
     <div class="card-header py-3">
-      <h6 class="m-0 font-weight-bold text-primary">Simbad Results</h6>
+      <h6 class="m-0 font-weight-bold text-primary">
+        <a data-toggle="collapse" href="#collapse-external-search" aria-expanded="true" aria-controls="collapse-external-search" id="heading-external-search" class="d-block collapsed">
+          <i class="fa fa-chevron-down pull-right"></i> External Search Results
+        </a>
+      </h6>
     </div>
-    <div class="card-body">
-      <div class="table-responsive">
-        <table class="table table-bordered table-striped table-hover" id="simbadResultsTable" width="100%" cellspacing="0" data-server-side="true" data-ajax="{% url 'pipeline:api_utils-simbad-search' %}?coord={{ source.wavg_ra }}{{ source.wavg_dec }}&format=datatables&keep=otype_long">
-          <thead>
-            <tr>
-              <th data-data="main_id">ID</th>
-              <th data-data="distance_result_arcsec">Dist (arcsec)</th>
-              <th data-data="otype_short">Type</th>
-              <th data-data="ra_hms">RA (hms)</th>
-              <th data-data="dec_dms">Dec (dms)</th>
-            </tr>
-          </thead>
-        </table>
+    <div id="collapse-external-search" class="collapse" aria-labelledby="heading-external-search">
+      <div class="card-body">
+        <p>Cone search with 1 arcmin radius.</p>
+        <ul class="nav nav-tabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <a class="nav-link active" id="externalSearchSimbadTab" data-toggle="tab" href="#externalSearchSimbadContent" role="tab" aria-controls="externalSearchSimbadContent" aria-selected="true">Simbad</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" id="externalSearchNEDTab" data-toggle="tab" href="#externalSearchNEDContent" role="tab" aria-controls="externalSearchNEDContent" aria-selected="false">NED</a>
+          </li>
+        </ul>
+        <div class="tab-content mt-2">
+          <div class="tab-pane active" id="externalSearchSimbadContent" role="tabpanel" aria-labelledby="externalSearchSimbadTab">
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped table-hover" id="simbadResultsTable" width="100%" cellspacing="0" data-server-side="false" data-ajax="{% url 'pipeline:api_utils-simbad-search' %}?coord={{ source.wavg_ra }}{{ source.wavg_dec }}&format=datatables&keep=otype_long">
+                <thead>
+                  <tr>
+                    <th data-data="main_id">ID</th>
+                    <th data-data="distance_result_arcsec">Dist (arcsec)</th>
+                    <th data-data="otype_short">Type</th>
+                    <th data-data="ra_hms">RA (hms)</th>
+                    <th data-data="dec_dms">Dec (dms)</th>
+                  </tr>
+                </thead>
+              </table>
+            </div>
+          </div>
+          <div class="tab-pane" id="externalSearchNEDContent" role="tabpanel" aria-labelledby="externalSearchNEDTab">
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped table-hover" id="nedResultsTable" width="100%" cellspacing="0" data-server-side="false" data-ajax="{% url 'pipeline:api_utils-ned-search' %}?coord={{ source.wavg_ra }}{{ source.wavg_dec }}&format=datatables">
+                <thead>
+                  <tr>
+                    <th data-data="object_name">ID</th>
+                    <th data-data="separation_arcsec">Dist (arcsec)</th>
+                    <th data-data="otype">Type</th>
+                    <th data-data="ra_hms">RA (hms)</th>
+                    <th data-data="dec_dms">Dec (dms)</th>
+                    <th data-data="redshift">Redshift</th>
+                  </tr>
+                </thead>
+              </table>
+            </div>
+          </div>
+        </div>
+        
       </div>
     </div>
   </div>
@@ -280,34 +317,6 @@
 
 {{ datatables.0.dataQuery|json_script:"data-js9" }}
 <script type="text/javascript">
-  $(document).ready(function() {
-    $('#simbadResultsTable').DataTable({
-      "columnDefs": [
-        {
-          "targets": 0,
-          "render": function( data, type, row, meta) {
-            return '<a href="http://simbad.u-strasbg.fr/simbad/sim-id?Ident=' + row['main_id'] + '" target="_blank">' + row['main_id'] + '</a>'
-          }
-        },
-        {
-          "targets": 1,
-          "render": function ( data, type, row, meta ) {
-            return row['distance_result_arcsec'].toFixed(2);
-          }
-        },
-        {
-          "targets": 2,
-          "render": function ( data, type, row, meta ) {
-            if (row['otype_short'] !== row['otype_long']) {
-              return '<abbr title="' + row['otype_long'] + '">' + row['otype_short'] + '</abbr>';
-            } else {
-              return row['otype_short'];
-            }
-          }
-        }
-      ]
-    });
-  });
   let baseUrl = '{{ base_url }}' || null;
   // function to add base url to an existing url if valid
   addBaseUrl = (url) => baseUrl == null ? url : '/' + baseUrl + url;
