@@ -44,7 +44,7 @@ First of all the `makemigrations` command must be run only if you modified the `
 
 In this case there are 2 situations that arise:
 
-1. You currently don't have a production environment and/or you are comfortable in dropping all the data in the database. In this case, you don't need to update the production environment with multiple migration files event though Django docs promote making as many migrations as you need to ([see Django migration guidelines](https://docs.djangoproject.com/en/3.0/topics/migrations/#squashing-migrations)). For such reasons please consider doing the following steps:
+1. You currently don't have a production environment and/or you are comfortable in dropping all the data in the database. In this case, you don't need to update the production environment with multiple migration files even though Django docs promote making as many migrations as you need to ([see Django migration guidelines](https://docs.djangoproject.com/en/3.0/topics/migrations/#squashing-migrations)). For such reasons please consider doing the following steps:
 
    1.1. Make your changes to `models.py`.
 
