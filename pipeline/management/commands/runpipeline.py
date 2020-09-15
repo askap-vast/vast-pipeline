@@ -111,13 +111,12 @@ class Command(BaseCommand):
             logger.exception('Processing error:\n%s', e)
             raise CommandError(f'Processing error:\n{e}')
 
-        # set the pipeline status as completed
-        pipeline.set_status(p_run, 'END')
-        logger.info('Pipeline completed successfully.')
-
         # Create arrow file after success if selected.
         if pipeline.config.CREATE_MEASUREMENTS_ARROW_FILE:
             create_measurements_arrow_file(p_run)
+
+        # set the pipeline status as completed
+        pipeline.set_status(p_run, 'END')
 
         logger.info(
             'Total pipeline processing time %.2f sec',
