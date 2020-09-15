@@ -104,3 +104,4 @@ celerybeat-schedule
 *run*/
 *survey*/
 **/*.env
+dask-worker-space/
