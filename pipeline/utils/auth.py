@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def create_admin_user(uid: int, response: Dict, details: Dict, user: User,
-    social: UserSocialAuth , *args: Tuple, **kwargs: Dict) -> Dict:
+    social: UserSocialAuth , *args, **kwargs) -> Dict:
     """
     Give Django admin privileges to a user who login via GitHub and belong to
     a specific team. The parameters are as per python-social-auth docs
@@ -30,15 +30,12 @@ def create_admin_user(uid: int, response: Dict, details: Dict, user: User,
         Django user model object
     social : UserSocialAuth
         Social auth user model object
-    *args : Tuple
-        other arguments
-    **kwargs : Dict
-        other keyword arguments
 
     Returns
     -------
     Dict
-        return a dictionary with the Django User object in it or nothing
+        return a dictionary with the Django User object in it or empty if
+        no action are taken
     """
     # assume github-org backend, add <if backend.name == 'github-org'>
     # if other backend are implemented
@@ -66,20 +63,20 @@ def create_admin_user(uid: int, response: Dict, details: Dict, user: User,
             return {'user': user}
         logger.info(f'GitHub request failed, reason: {resp.reason}')
 
-        pass
+        return {}
 
-    pass
+    return {}
 
 
 def debug(strategy, backend, uid, response, details, user, social, *args,
     **kwargs):
     # TODO: fix arg type and docstring as above
     print(response)
-    pass
+    return {}
 
 
-def load_github_avatar(response: Dict, social: UserSocialAuth, *args: Tuple,
-    **kwargs: Dict) -> Dict:
+def load_github_avatar(response: Dict, social: UserSocialAuth, *args,
+    **kwargs) -> Dict:
     """
     Add GitHub avatar url to the extra data stored by social_django app
 
@@ -89,15 +86,12 @@ def load_github_avatar(response: Dict, social: UserSocialAuth, *args: Tuple,
         request dictionary
     social : UserSocialAuth
         Social auth user model object
-    *args : Tuple
-        other arguments
-    **kwargs : Dict
-        other keyword arguments
 
     Returns
     -------
     Dict
-        return a dictionary with the Social auth user object in it or nothing
+        return a dictionary with the Social auth user object in it or empty if
+        no action are taken
     """
     # assume github-org backend, add <if backend.name == 'github-org'>
     # if other backend are implemented
@@ -108,4 +102,5 @@ def load_github_avatar(response: Dict, social: UserSocialAuth, *args: Tuple,
         social.extra_data['avatar_url'] = response['avatar_url']
         social.save()
         return {'social': social}
-    pass
+
+    return {}
