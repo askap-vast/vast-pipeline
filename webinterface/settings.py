@@ -369,3 +369,8 @@ PIPELINE_MAINTAINANCE_MESSAGE = env(
 
 # web server eta v plot datashader threshold
 ETA_V_DATASHADER_THRESHOLD = env("ETA_V_DATASHADER_THRESHOLD", cast=int, default=20000)
+PIPELINE_MAINTAINANCE_MESSAGE = env('PIPELINE_MAINTAINANCE_MESSAGE', cast=str, default=None)
+
+# DASK CLUSTER
+DASK_SCHEDULER_HOST = env('DASK_SCHEDULER_HOST', cast=str, default=None)
+DASK_SCHEDULER_PORT = env('DASK_SCHEDULER_PORT', cast=str, default=None)
