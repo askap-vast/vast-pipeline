@@ -43,7 +43,11 @@ class Command(BaseCommand):
             required=False,
             default=False,
             action='store_true',
-            help='Flag to keep the pipeline run(s) parquet files.'
+            help=(
+                'Flag to keep the pipeline run(s) parquet files. '
+                'Will also apply to the measurements.arrow file if'
+                ' present.'
+            )
         )
         parser.add_argument(
             '--remove-all',
@@ -89,7 +93,10 @@ class Command(BaseCommand):
             # Delete parquet or folder eventually
             if not options['keep_parquet'] and not options['remove_all']:
                 logger.info('Deleting pipeline "%s" parquets', p_run_name)
-                parquets = glob(os.path.join(p_run.path, '*.parquet'))
+                parquets = (
+                    glob(os.path.join(p_run.path, '*.parquet'))
+                    + glob(os.path.join(p_run.path, '*.arrow'))
+                )
                 for parquet in parquets:
                     try:
                         os.remove(parquet)

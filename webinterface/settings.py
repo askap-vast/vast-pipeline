@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_datatables',
     'social_django',
+    'django_extensions',
     # pipeline app and others
     'pipeline',
 ] + env('EXTRA_APPS', cast=list, default=[])
@@ -297,6 +298,7 @@ PIPE_RUN_CONFIG_DEFAULTS = {
     'flux_perc_error': 0,
     'use_condon_errors': True,
     'selavy_local_rms_zero_fill_value': 0.2,
+    'create_measurements_arrow_file': False,
     'suppress_astropy_warnings': True
 }
 

@@ -1,7 +1,10 @@
 import os
 import logging
+import glob
+import vaex
 import numpy as np
 import pandas as pd
+import dask.dataframe as dd
 from astropy.io import fits
 import dask.dataframe as dd
 from django.conf import settings
@@ -9,8 +12,11 @@ from django.conf import settings
 from psutil import cpu_count
 from itertools import chain
 
-from pipeline.utils.utils import deg2hms, deg2dms, eq_to_cart, StopWatch
-from ..models import Band, Image, Measurement, Run, Source, SkyRegion
+from pipeline.utils.utils import (
+    deg2hms, deg2dms, eq_to_cart, StopWatch,
+    optimize_ints, optimize_floats
+)
+from ..models import Band, Image, Measurement, Run, Source, SkyRegion, Run
 from pipeline.image.utils import on_sky_sep
 
 
@@ -501,3 +507,74 @@ def get_src_skyregion_merged_df(sources_df, p_run):
     ]
 
     return srcs_df
+
+
+def create_measurements_arrow_file(p_run: Run) -> None:
+    """
+    Creates a measurements.arrow file using the parquet outputs
+    of a pipeline run. Vaex is used to do the exporting to arrow to
+    ensure compatibility with Vaex.
+
+    Parameters
+    ----------
+    p_run: Run
+        Pipeline model instance.
+
+    Returns
+    -------
+    None
+    """
+    logger.info('Creating measurements.arrow for run %s.', p_run.name)
+
+    associations = pd.read_parquet(
+        os.path.join(
+            p_run.path,
+            'associations.parquet'
+        )
+    )
+    images = pd.read_parquet(
+        os.path.join(
+            p_run.path,
+            'images.parquet'
+        )
+    )
+
+    m_files = images['measurements_path'].tolist()
+
+    m_files += glob.glob(os.path.join(
+        p_run.path,
+        'forced*.parquet'
+    ))
+
+    logger.debug('Loading %i files...', len(m_files))
+    measurements = dd.read_parquet(m_files, engine='pyarrow').compute()
+
+    measurements = measurements.loc[
+        measurements['id'].isin(associations['meas_id'].values)
+    ]
+
+    measurements = (
+        associations.loc[:, ['meas_id', 'source_id']]
+        .set_index('meas_id')
+        .merge(
+            measurements,
+            left_index=True,
+            right_on='id'
+        )
+        .rename(columns={'source_id': 'source'})
+    )
+
+    logger.debug('Optimising dataframes.')
+    measurements = optimize_ints(optimize_floats(measurements))
+
+    # use vaex to export to arrow
+    logger.debug("Loading to vaex.")
+    measurements = vaex.from_pandas(measurements)
+
+    logger.debug("Exporting to arrow.")
+    outname = os.path.join(
+        p_run.path,
+        'measurements.arrow'
+    )
+
+    measurements.export_arrow(outname)

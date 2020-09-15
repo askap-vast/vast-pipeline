@@ -1,6 +1,7 @@
 import os
 import logging
 import math as m
+import pandas as pd
 from astroquery.ned import Ned
 from astroquery.simbad import Simbad
 import numpy as np
@@ -171,3 +172,49 @@ def parse_coord(coord_string: str, coord_frame: str = "icrs") -> SkyCoord:
 
     coord = SkyCoord(coord_string, unit=unit, frame=coord_frame)
     return coord
+
+def optimize_floats(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Downcast float columns in a pd.DataFrame to the smallest
+    data type without losing any information.
+
+    Credit to Robbert van der Gugten.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        input dataframe, no specific columns.
+
+    Returns
+    -------
+    df: pd.DataFrame
+        the input dataframe with the `float64` type
+        columns downcasted.
+    """
+    floats = df.select_dtypes(include=['float64']).columns.tolist()
+    df[floats] = df[floats].apply(pd.to_numeric, downcast='float')
+
+    return df
+
+def optimize_ints(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Downcast integer columns in a pd.DataFrame to the smallest
+    data type without losing any information.
+
+    Credit to Robbert van der Gugten.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        input dataframe, no specific columns.
+
+    Returns
+    -------
+    df: pd.DataFrame
+        the input dataframe with the `int64` type
+        columns downcasted.
+    """
+    ints = df.select_dtypes(include=['int64']).columns.tolist()
+    df[ints] = df[ints].apply(pd.to_numeric, downcast='integer')
+
+    return df
