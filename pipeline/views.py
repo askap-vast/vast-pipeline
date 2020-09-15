@@ -45,7 +45,7 @@ from pipeline.serializers import (
     ImageSerializer, MeasurementSerializer, RunSerializer,
     SourceSerializer, RawImageSelavyListSerializer,
     SourceFavSerializer, SesameResultSerializer, CoordinateValidatorSerializer,
-    SimbadSearchSerializer, NedSearchSerializer
+    ExternalSearchSerializer
 )
 from pipeline.utils.utils import deg2dms, deg2hms, parse_coord
 from pipeline.utils.view import generate_colsfields, get_skyregions_collection
@@ -1351,11 +1351,37 @@ class UtilitiesSet(ViewSet):
         serializer.is_valid(raise_exception=True)
         return Response()
 
-    @action(methods=['get'], detail=False)
-    def simbad_search(self, request: Request) -> Response:
+    @action(methods=["get"], detail=False)
+    def simbad_ned_search(self, request: Request) -> Response:
+        """Perform a cone search with SIMBAD and NED and return the combined results.
+
+        Args:
+            request (Request): Django REST Framework Request object get GET parameters:
+                - coord (str): the coordinate string to validate. Interpreted by
+                    `astropy.coordiantes.SkyCoord`.
+                - radius (str): the cone search radius with unit, e.g. "1arcmin".
+                    Interpreted by `astropy.coordinates.Angle`
+
+        Raises:
+            serializers.ValidationError: if either the coordinate or radius parameters
+                cannot be interpreted by `astropy.coordiantes.SkyCoord` or
+                `astropy.coordinates.Angle`, respectively.
+
+        Returns:
+            Response: a Django REST framework Response containing result records as a list
+                under the data object key. Each record contains the properties:
+                    - object_name: the name of the astronomical object.
+                    - database: the source of the result, e.g. SIMBAD or NED.
+                    - separation_arcsec: separation to the query coordinate in arcsec.
+                    - otype: object type.
+                    - otype_long: long form of the object type (only available for SIMBAD).
+                    - ra_hms: RA coordinate string in <HH>h<MM>m<SS.SSS>s format.
+                    - dec_dms: Dec coordinate string in ±<DD>d<MM>m<SS.SSS>s format.
+        """
         coord_string = request.query_params.get("coord", "")
         radius_string = request.query_params.get("radius", "1arcmin")
 
+        # validate inputs
         try:
             coord = parse_coord(coord_string)
         except ValueError as e:
@@ -1366,95 +1392,82 @@ class UtilitiesSet(ViewSet):
         except ValueError as e:
             raise serializers.ValidationError({"radius": str(e.args[0])})
 
+        # SIMBAD cone search
         CustomSimbad = Simbad()
         CustomSimbad.add_votable_fields(
-            "distance_result", "otype(S)", "otype(V)", "otypes", "ids"
+            "distance_result", "otype(S)", "otype(V)", "otypes",
         )
-        result_table = CustomSimbad.query_region(coord, radius=radius)
-        if result_table is None:
-            return Response(
-                data={"detail": "No objects found in search radius."},
-                status=status.HTTP_404_NOT_FOUND,
+        simbad_result_table = CustomSimbad.query_region(coord, radius=radius)
+        if simbad_result_table is None:
+            simbad_results_dict_list = []
+        else:
+            simbad_results_df = simbad_result_table[
+                ["MAIN_ID", "DISTANCE_RESULT", "OTYPE_S", "OTYPE_V", "RA", "DEC"]
+            ].to_pandas()
+            bytestring_fields = ["MAIN_ID", "OTYPE_S", "OTYPE_V"]
+            simbad_results_df[bytestring_fields] = simbad_results_df[
+                bytestring_fields
+            ].apply(lambda col: col.str.decode("utf-8"))
+            simbad_results_df = simbad_results_df.rename(
+                columns={
+                    "MAIN_ID": "object_name",
+                    "DISTANCE_RESULT": "separation_arcsec",
+                    "OTYPE_S": "otype",
+                    "OTYPE_V": "otype_long",
+                    "RA": "ra_hms",
+                    "DEC": "dec_dms",
+                }
             )
-        results_df = result_table[
-            ["MAIN_ID", "DISTANCE_RESULT", "OTYPE_S", "OTYPE_V", "RA", "DEC", "IDS"]
-        ].to_pandas()
-        bytestring_fields = ["MAIN_ID", "OTYPE_S", "OTYPE_V", "IDS"]
-        results_df[bytestring_fields] = results_df[bytestring_fields].apply(
-            lambda col: col.str.decode("utf-8")
-        )
-        results_df["IDS"] = results_df["IDS"].str.split("|")
-        results_df = results_df.rename(
-            columns={
-                "MAIN_ID": "main_id",
-                "DISTANCE_RESULT": "distance_result_arcsec",
-                "OTYPE_S": "otype_short",
-                "OTYPE_V": "otype_long",
-                "RA": "ra_hms",
-                "DEC": "dec_dms",
-                "IDS": "other_ids",
-            }
-        )
+            simbad_results_df["database"] = "SIMBAD"
+            # convert coordinates to RA (hms) Dec (dms) strings
+            simbad_results_df["ra_hms"] = Longitude(
+                simbad_results_df["ra_hms"], unit="hourangle"
+            ).to_string(unit="hourangle")
+            simbad_results_df["dec_dms"] = Latitude(
+                simbad_results_df["dec_dms"], unit="deg"
+            ).to_string(unit="deg")
+            simbad_results_dict_list = simbad_results_df.to_dict(orient="records")
 
-        serializer = SimbadSearchSerializer(data=results_df.to_dict(orient="records"), many=True)
-        serializer.is_valid(raise_exception=True)
-        return Response(serializer.data)
-
-    @action(methods=['get'], detail=False)
-    def ned_search(self, request: Request) -> Response:
-        def nan_to_none(d: Dict[str, Any], key: str):
-            d[key] = None if pd.isna(d[key]) else d[key]
-            return d
-
-        coord_string = request.query_params.get("coord", "")
-        radius_string = request.query_params.get("radius", "1arcmin")
-
-        try:
-            coord = parse_coord(coord_string)
-        except ValueError as e:
-            raise serializers.ValidationError({"coord": str(e.args[0])})
-
-        try:
-            radius = Angle(radius_string)
-        except ValueError as e:
-            raise serializers.ValidationError({"radius": str(e.args[0])})
-
-        result_table = Ned.query_region(coord, radius=radius)
-        if result_table is None:
-            return Response(
-                data={"detail": "No objects found in search radius."},
-                status=status.HTTP_404_NOT_FOUND,
+        # NED cone search
+        ned_result_table = Ned.query_region(coord, radius=radius)
+        if ned_result_table is None or len(ned_result_table) == 0:
+            ned_results_dict_list = []
+        else:
+            ned_results_df = ned_result_table[
+                ["Object Name", "Separation", "Type", "RA", "DEC"]
+            ].to_pandas()
+            bytestring_fields = ["Object Name", "Type"]
+            ned_results_df[bytestring_fields] = ned_results_df[bytestring_fields].apply(
+                lambda col: col.str.decode("utf-8")
             )
-        results_df = result_table[
-            ["Object Name", "Separation", "Type", "RA", "DEC", "Redshift"]
-        ].to_pandas()
-        bytestring_fields = ["Object Name", "Type"]
-        results_df[bytestring_fields] = results_df[bytestring_fields].apply(
-            lambda col: col.str.decode("utf-8")
-        )
-        results_df = results_df.rename(
-            columns={
-                "Object Name": "object_name",
-                "Separation": "separation_arcsec",
-                "Type": "otype",
-                "RA": "ra_hms",
-                "DEC": "dec_dms",
-                "Redshift": "redshift",
-            }
-        )
-        # convert NED result separation (arcmin) to arcsec
-        results_df["separation_arcsec"] = results_df["separation_arcsec"] * 60
-        # convert coordinates to RA (hms) Dec (dms) strings
-        results_df["ra_hms"] = Longitude(results_df["ra_hms"], unit="deg").to_string(
-            unit="hourangle"
-        )
-        results_df["dec_dms"] = Latitude(results_df["dec_dms"], unit="deg").to_string(
-            unit="deg"
-        )
-        # convert dataframe to dict and replace float NaNs with None for JSON encoding
-        results_dict = results_df.sort_values("separation_arcsec").to_dict(orient="records")
-        results_dict = [nan_to_none(d, key="redshift") for d in results_dict]
+            ned_results_df = ned_results_df.rename(
+                columns={
+                    "Object Name": "object_name",
+                    "Separation": "separation_arcsec",
+                    "Type": "otype",
+                    "RA": "ra_hms",
+                    "DEC": "dec_dms",
+                }
+            )
+            ned_results_df["otype_long"] = ""  # NED does not supply verbose object types
+            # convert NED result separation (arcmin) to arcsec
+            ned_results_df["separation_arcsec"] = (
+                ned_results_df["separation_arcsec"] * 60
+            )
+            # convert coordinates to RA (hms) Dec (dms) strings
+            ned_results_df["ra_hms"] = Longitude(
+                ned_results_df["ra_hms"], unit="deg"
+            ).to_string(unit="hourangle")
+            ned_results_df["dec_dms"] = Latitude(
+                ned_results_df["dec_dms"], unit="deg"
+            ).to_string(unit="deg")
+            ned_results_df["database"] = "NED"
+            # convert dataframe to dict and replace float NaNs with None for JSON encoding
+            ned_results_dict_list = ned_results_df.sort_values(
+                "separation_arcsec"
+            ).to_dict(orient="records")
 
-        serializer = NedSearchSerializer(data=results_dict, many=True)
+        results_dict_list = simbad_results_dict_list + ned_results_dict_list
+        serializer = ExternalSearchSerializer(data=results_dict_list, many=True)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
