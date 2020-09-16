@@ -100,8 +100,9 @@ WSGI_APPLICATION = 'webinterface.wsgi.application'
 #     },
 # ]
 
+# docs @ https://python-social-auth.readthedocs.io/en/latest/backends/github.html#github
 AUTHENTICATION_BACKENDS = [
-    'social_core.backends.github.GithubTeamOAuth2',
+    'social_core.backends.github.GithubOrganizationOAuth2',
     'django.contrib.auth.backends.ModelBackend',
 ]
 
@@ -129,11 +130,12 @@ SOCIAL_AUTH_PIPELINE = (
     'social_core.pipeline.user.user_details',
 )
 
-SOCIAL_AUTH_GITHUB_TEAM_KEY = env('SOCIAL_AUTH_GITHUB_KEY', cast=str, default='')
-SOCIAL_AUTH_GITHUB_TEAM_SECRET = env('SOCIAL_AUTH_GITHUB_SECRET', cast=str, default='')
-SOCIAL_AUTH_GITHUB_TEAM_ID = env('SOCIAL_AUTH_GITHUB_TEAM_ID', cast=str, default='')
-SOCIAL_AUTH_GITHUB_TEAM_ADMIN = env('SOCIAL_AUTH_GITHUB_TEAM_ADMIN', cast=str, default='')
-SOCIAL_AUTH_GITHUB_TEAM_SCOPE = ['read:org', 'user:email']
+SOCIAL_AUTH_GITHUB_ORG_KEY = env('SOCIAL_AUTH_GITHUB_KEY', cast=str, default='')
+SOCIAL_AUTH_GITHUB_ORG_SECRET = env('SOCIAL_AUTH_GITHUB_SECRET', cast=str, default=''
+    )
+SOCIAL_AUTH_GITHUB_ORG_NAME = env('SOCIAL_AUTH_GITHUB_ORG_NAME', cast=str, default='')
+SOCIAL_AUTH_GITHUB_ADMIN_TEAM = env('SOCIAL_AUTH_GITHUB_ADMIN_TEAM', cast=str, default='')
+SOCIAL_AUTH_GITHUB_SCOPE = ['read:org', 'user:email']
 
 
 # Database
