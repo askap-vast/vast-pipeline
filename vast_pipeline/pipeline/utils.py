@@ -2,8 +2,10 @@ import os
 import logging
 import numpy as np
 import pandas as pd
-from astropy.io import fits
 import dask.dataframe as dd
+
+from astropy.io import fits
+from copy import copy
 from django.conf import settings
 
 from psutil import cpu_count
@@ -14,6 +16,7 @@ from vast_pipeline.models import (
     Band, Image, Measurement, Run, Source, SkyRegion
 )
 from vast_pipeline.image.utils import on_sky_sep
+from vast_pipeline.daskmanager.manager import DaskManager
 
 
 logger = logging.getLogger(__name__)
@@ -348,28 +351,29 @@ def parallel_groupby(df):
     return out
 
 
-def calc_ave_coord(grp):
-    d = {}
-    d['img_list'] = grp['image'].values.tolist()
-    d['wavg_ra'] = grp['interim_ew'].sum() / grp['weight_ew'].sum()
-    d['wavg_dec'] = grp['interim_ns'].sum() / grp['weight_ns'].sum()
-    return pd.Series(d)
+def parallel_groupby_coord(df: dd.core.DataFrame) -> dd.core.DataFrame:
+    cols = [
+        'source', 'image', 'interim_ew', 'weight_ew', 'interim_ns', 'weight_ns'
+    ]
+    cols_to_sum = ['interim_ew', 'weight_ew', 'interim_ns', 'weight_ns']
 
+    groups = df[cols].groupby('source')
+    out = groups[cols_to_sum].agg('sum')
+    out['wavg_ra'] = out['interim_ew'] / out['weight_ew']
+    out['wavg_dec'] = out['interim_ns'] / out['weight_ns']
+    out = out.drop(cols_to_sum, axis=1)
 
-def parallel_groupby_coord(df):
-    col_dtype = {
-        'img_list': 'O',
-        'wavg_ra': 'f',
-        'wavg_dec': 'f',
-    }
-    n_cpu = cpu_count() - 1
-    out = dd.from_pandas(df, n_cpu)
-    out = (
-        out.groupby('source')
-        .apply(calc_ave_coord, meta=col_dtype)
-        .compute(num_workers=n_cpu, scheduler='processes')
+    # from https://docs.dask.org/en/latest/dataframe-groupby.html#aggregate
+    collect_list = dd.Aggregation(
+        name='collect_list',
+        chunk=lambda s: s.apply(list),
+        agg=lambda s0: s0.apply(
+            lambda chunks: list(chain.from_iterable(chunks))
+        ),
     )
-    return out
+    out['img_list'] = groups['image'].agg(collect_list)
+
+    return out.persist()
 
 
 def get_source_models(row, pipeline_run=None):
@@ -410,7 +414,9 @@ def get_rms_noise_image_values(rms_path):
 
 
 def get_image_list_diff(row):
-    out = list(filter(lambda arg: arg not in row['img_list'], row['skyreg_img_list']))
+    out = list(filter(
+        lambda arg: arg not in row['img_list'], row['skyreg_img_list']
+    ))
 
     # set empty list to -1
     if not out:
@@ -419,14 +425,12 @@ def get_image_list_diff(row):
     return out
 
 
-def get_src_skyregion_merged_df(sources_df, p_run):
+def get_src_skyregion_merged_df(sources_df: dd.core.DataFrame,
+    p_run: Run) -> dd.core.DataFrame:
     """
     check and extract expected measurements, and associated them with the
     related source(s)
     """
-
-    timer = StopWatch()
-
     # get all the skyregions and related images
     cols = [
         'id', 'name', 'measurements_path', 'path', 'noise_path',
@@ -439,30 +443,28 @@ def get_src_skyregion_merged_df(sources_df, p_run):
     ]
 
     images_df = pd.DataFrame(list(
-        Image.objects.filter(
-            run=p_run
-        ).select_related('skyreg').order_by('datetime').values(*tuple(cols))
+        Image.objects.filter(run=p_run)
+        .select_related('skyreg')
+        .order_by('datetime')
+        .values(*tuple(cols))
     )).explode('skyreg__id')
 
     skyreg_df = pd.DataFrame(list(
-        SkyRegion.objects.all().filter(run=p_run).values(*tuple(skyreg_cols))
+        SkyRegion.objects.filter(run=p_run)
+        .values(*tuple(skyreg_cols))
     ))
 
     skyreg_df = skyreg_df.join(
         pd.DataFrame(
-            images_df.groupby('skyreg__id').apply(
-                lambda x: x['name'].values.tolist()
-            )
+            images_df.groupby('skyreg__id')
+            .apply(lambda x: x['name'].values.tolist())
         ).rename(columns={0:'skyreg_img_list'}),
         on='id'
     )
 
-    sources_df = sources_df.sort_values(by='datetime')
     # calculate some metrics on sources
     # compute only some necessary metrics in the groupby
-    timer.reset()
     srcs_df = parallel_groupby_coord(sources_df)
-    logger.info('Groupby-apply time: %.2f seconds', timer.reset())
 
     # create dataframe with all skyregions and sources combinations
     src_skyrg_df = cross_join(srcs_df.reset_index(), skyreg_df)
@@ -491,15 +493,13 @@ def get_src_skyregion_merged_df(sources_df, p_run):
     srcs_df = srcs_df.merge(
         src_skyrg_df, left_index=True, right_index=True
     )
-
     del src_skyrg_df
 
     srcs_df['img_diff'] = srcs_df[['img_list', 'skyreg_img_list']].apply(
-        get_image_list_diff, axis=1
+        get_image_list_diff, axis=1, meta=object
     )
 
     srcs_df = srcs_df.loc[
         srcs_df['img_diff'] != -1
     ]
-
-    return srcs_df
+    return srcs_df.persist()
