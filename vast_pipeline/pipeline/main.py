@@ -2,6 +2,8 @@ import os
 import operator
 import logging
 
+import dask.dataframe as dd
+
 from astropy import units as u
 from astropy.coordinates import Angle
 
@@ -11,6 +13,7 @@ from django.db import transaction
 from importlib.util import spec_from_file_location, module_from_spec
 
 from vast_pipeline.models import Run, SurveySource
+from vast_pipeline.daskmanager.manager import DaskManager
 from .association import association
 from .new_sources import new_sources
 from .forced_extraction import forced_extraction
@@ -216,6 +219,13 @@ class Pipeline():
             bw_limit,
             self.config,
         )
+
+        dm = DaskManager()
+        sources_df = dd.from_pandas(
+            sources_df,
+            npartitions=dm.get_nr_workers()
+        )
+        sources_df = dm.persist(sources_df)
 
         # STEP #3: Merge sky regions and sources ready for
         # steps 4 and 5 below.
