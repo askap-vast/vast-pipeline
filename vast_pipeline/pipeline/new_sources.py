@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 def check_primary_image(row):
     return row['primary'] in row['img_list']
 
+
 def get_image_rms_measurements(group):
     """
     Take the coordinates provided from the group
@@ -77,6 +78,7 @@ def get_image_rms_measurements(group):
 
     return group
 
+
 def parallel_get_rms_measurements(df):
     """
     Wrapper function to use 'get_image_rms_measurements'
@@ -114,6 +116,7 @@ def parallel_get_rms_measurements(df):
     )
 
     return df
+
 
 def new_sources(sources_df, missing_sources_df, min_sigma, p_run):
     """
