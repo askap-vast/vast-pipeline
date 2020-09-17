@@ -236,7 +236,7 @@ class Pipeline():
 
         # STEP #4 New source analysis
         new_sources_df = new_sources(
-            sources_df,
+            sources_df[['source', 'image', 'flux_peak']],
             missing_sources_df,
             self.config.NEW_SOURCE_MIN_SIGMA,
             p_run
