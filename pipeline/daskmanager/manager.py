@@ -2,8 +2,9 @@
 
 import logging
 
-from dask.distributed import Client, LocalCluster
+from dask.distributed import Client
 from django.conf import settings as s
+from . import config
 
 
 logger = logging.getLogger(__name__)
@@ -25,7 +26,6 @@ class DaskManager(metaclass=Singleton):
         if not s.DASK_SCHEDULER_HOST and not s.DASK_SCHEDULER_PORT:
             # assume a local cluster
             logger.info('Starting local Dask Cluster')
-            self.cluster = LocalCluster()
             self.client = Client()
             logger.info('Connected to local Dask Cluster')
         else:
@@ -35,6 +35,11 @@ class DaskManager(metaclass=Singleton):
             self.cluster = self.client.cluster
             logger.info('Connected to Dask Cluster')
 
-    @classmethod
     def persist(self, collection):
         return self.client.persist(collection)
+
+    def compute(self, collection):
+        return self.client.compute(collection)
+
+    def get_nr_workers(self):
+        return len(self.client.scheduler_info()['workers'].keys())
