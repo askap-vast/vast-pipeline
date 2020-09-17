@@ -472,7 +472,7 @@ def MeasurementDetail(request, id, action=None):
 
     measurement['aladin_ra'] = measurement['ra']
     measurement['aladin_dec'] = measurement['dec']
-    measurement['aladin_zoom'] = 0.36
+    measurement['aladin_zoom'] = 0.15
     measurement['ra'] = deg2hms(measurement['ra'], hms_format=True)
     measurement['dec'] = deg2dms(measurement['dec'], dms_format=True)
 
@@ -705,7 +705,7 @@ def SourceDetail(request, id, action=None):
         )
     source['aladin_ra'] = source['wavg_ra']
     source['aladin_dec'] = source['wavg_dec']
-    source['aladin_zoom'] = 0.36
+    source['aladin_zoom'] = 0.15
     source['wavg_ra'] = deg2hms(source['wavg_ra'], hms_format=True)
     source['wavg_dec'] = deg2dms(source['wavg_dec'], dms_format=True)
 
