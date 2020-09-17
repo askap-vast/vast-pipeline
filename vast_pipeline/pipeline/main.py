@@ -8,6 +8,8 @@ import operator
 import logging
 from typing import Dict
 
+import dask.dataframe as dd
+
 from astropy import units as u
 from astropy.coordinates import Angle
 
@@ -228,6 +230,13 @@ class Pipeline:
         # Obtain the number of selavy measurements for the run
         # n_selavy_measurements = sources_df.
         nr_selavy_measurements = sources_df["id"].unique().shape[0]
+
+        dm = DaskManager()
+        sources_df = dd.from_pandas(
+            sources_df,
+            npartitions=dm.get_nr_workers()
+        )
+        sources_df = dm.persist(sources_df)
 
         # STEP #3: Merge sky regions and sources ready for
         # steps 4 and 5 below.
