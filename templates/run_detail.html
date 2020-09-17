@@ -139,8 +139,11 @@
               <div class="dropdown-header">Actions:</div>
               <a id="editConfig" class="dropdown-item" href="#">Toggle on/off Config Edit</a>
               <a class="dropdown-item" href="#" data-toggle="modal" data-target="#feedbackModal">Validate Config</a>
-              {% csrf_token %}
-              <a id="writeConfig"  class="dropdown-item" href="#">Write Current Config</a>
+              <form id="runConfigForm" action="{% url 'pipeline:api_runcfg-write' p_run.id %}" method="post" novalidate>
+                {% csrf_token %}
+                <input id="configTextInput" type="hidden" name="config_text"></input>
+                <button id="writeConfig" class="dropdown-item">Write Current Config</button>
+              </form>
             </div>
           </div>
         </div>
@@ -196,6 +199,6 @@
 <script src="{% static 'vendor/prismjs/prism-python.min.js' %}"></script>
 <script src="{% static 'vendor/prismjs/line-numbers/prism-line-numbers.min.js' %}"></script>
 
-<script id="runDetailScript" src="{% static 'js/run-detail.min.js' %}" apiValidateUrl="{% url 'pipeline:api_validateruncfg-detail' p_run.name %}" apiWriteCfgUrl="{% url 'pipeline:run_detail' p_run.id %}"></script>
+<script id="runDetailScript" src="{% static 'js/run-detail.min.js' %}" apiValidateUrl="{% url 'pipeline:api_runcfg-validate' p_run.id %}" apiWriteCfgUrl="{% url 'pipeline:run_detail' p_run.id %}"></script>
 
 {% endblock custom_page_scripts %}

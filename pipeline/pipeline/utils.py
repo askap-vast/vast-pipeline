@@ -105,10 +105,7 @@ def get_create_img(p_run, band_id, image):
 
     # at this stage, measurement parquet file is not created but
     # assume location
-    img_folder_name = '_'.join([
-        image.name.replace('.', '_'),
-        image.datetime.strftime('%Y-%m-%dT%H_%M_%S%z')
-    ])
+    img_folder_name = image.name.replace('.', '_')
     measurements_path = os.path.join(
         settings.PIPELINE_WORKING_DIR,
         'images',
@@ -144,16 +141,20 @@ def get_create_img(p_run, band_id, image):
 
 
 def get_create_p_run(name, path, comment='', user=None):
+    '''
+    get or create a pipeline run in db, return the run django object and
+    a flag True/False if has been created or already exists
+    '''
     p_run = Run.objects.filter(name__exact=name)
     if p_run:
-        return p_run.get()
+        return p_run.get(), True
 
     p_run = Run(name=name, comment=comment, path=path)
     if user:
         p_run.user = user
     p_run.save()
 
-    return p_run
+    return p_run, False
 
 
 def prep_skysrc_df(image, perc_error, ini_df=False):

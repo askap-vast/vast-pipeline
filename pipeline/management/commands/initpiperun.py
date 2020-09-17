@@ -3,7 +3,7 @@ import logging
 from shutil import copyfile
 
 from django.core.management.base import BaseCommand, CommandError
-from django.conf import settings as cfg
+from django.conf import settings as sett
 from jinja2 import Template
 
 from pipeline.models import Run
@@ -22,7 +22,7 @@ def initialise_run(run_name, run_comment='', user=None, config=None):
         raise PipelineInitError(msg)
 
     # create the pipeline run folder
-    run_path = os.path.join(cfg.PIPELINE_WORKING_DIR, run_name)
+    run_path = os.path.join(sett.PIPELINE_WORKING_DIR, run_name)
 
     if os.path.exists(run_path):
         msg = 'pipeline run path already present!'
@@ -34,7 +34,7 @@ def initialise_run(run_name, run_comment='', user=None, config=None):
     # copy default config into the pipeline run folder
     logger.info('copying default config in pipeline run folder')
     template_f = os.path.join(
-        cfg.BASE_DIR,
+        sett.BASE_DIR,
         'pipeline',
         'config_template.py.j2'
     )
@@ -46,10 +46,10 @@ def initialise_run(run_name, run_comment='', user=None, config=None):
         if config:
             fp.write(tm.render(**config))
         else:
-            fp.write(tm.render(**cfg.PIPE_RUN_CONFIG_DEFAULTS))
+            fp.write(tm.render(**sett.PIPE_RUN_CONFIG_DEFAULTS))
 
     # create entry in db
-    p_run = get_create_p_run(run_name, run_path, run_comment, user)
+    p_run, _ = get_create_p_run(run_name, run_path, run_comment, user)
 
     return p_run
 
@@ -67,10 +67,9 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         # positional arguments
         parser.add_argument(
-            'run_folder_path',
-            nargs=1,
+            'runname',
             type=str,
-            help='path to the pipeline run folder'
+            help='Name of the pipeline run.'
         )
 
     def handle(self, *args, **options):
@@ -82,10 +81,8 @@ class Command(BaseCommand):
             # set the traceback on
             options['traceback'] = True
 
-        name = options['run_folder_path'][0]
-
         try:
-            p_run = initialise_run(name)
+            p_run = initialise_run(options['runname'])
         except Exception as e:
             raise CommandError(e)
 

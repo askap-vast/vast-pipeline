@@ -34,7 +34,7 @@ var config = {
                       // de: german, es: spanish. Default:en or empty string for english
   culture: "",        // Source of constellations and star names, default "iau", other: "cn" Traditional Chinese
   container: "celestial-map",   // ID of parent element, e.g. div, null = html-body
-  datapath: "/static/vendor/d3-celestial/data/",  // Path/URL to data files, empty = subfolder 'data'
+  datapath: document.getElementById('d3CelestialScript').getAttribute('staticUrl') + 'vendor/d3-celestial/data/',  // Path/URL to data files, empty = subfolder 'data'
   stars: {
     show: false,    // Show stars
     limit: 6,      // Show only stars brighter than limit magnitude

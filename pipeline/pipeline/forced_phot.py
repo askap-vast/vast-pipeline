@@ -203,6 +203,11 @@ class ForcedPhot:
         self.data = (self.fi[0].data - self.fb[0].data).squeeze()
         self.bgdata = self.fb[0].data.squeeze()
         self.noisedata = self.fn[0].data.squeeze()
+        # do this so that 0-regions in the background
+        # or noise maps are set to NaN, and then
+        # will be handled through other means
+        self.bgdata[self.bgdata == 0] = np.nan
+        self.noisedata[self.noisedata == 0] = np.nan
         self.twod = True  # TODO remove
 
         self.w = WCS(self.fi[0].header).celestial
@@ -792,7 +797,9 @@ class ForcedPhot:
         flux = np.zeros(len(X0))
         flux_err = np.zeros(len(X0))
 
-        if (not allow_nan) or (good.sum() == 0):
+        if (np.any(~good) and (not allow_nan)) or (good.sum() == 0):
+            # either >=1 bad point and no bad points allowed
+            # OR
             # no good points left
             if stamps:
                 return (
@@ -811,7 +818,26 @@ class ForcedPhot:
                     flux,
                 )
 
-        out = fitter(g, xx[good], yy[good], d[good], weights=1.0 / n[good])
+        try:
+            out = fitter(g, xx[good], yy[good], d[good], weights=1.0 / n[good])
+        except TypeError as err:
+            logger.debug("Unable to fit cluster: {0}".format(err))
+            if stamps:
+                return (
+                    flux * np.nan,
+                    flux_err * np.nan,
+                    flux * np.nan,
+                    flux,
+                    d,
+                    d * np.nan,
+                )
+            else:
+                return (
+                    flux * np.nan,
+                    flux_err * np.nan,
+                    flux * np.nan,
+                    flux,
+                )
         model = out(xx, yy)
         chisq = np.zeros(len(X0)) + (((d[good] - model[good]) / n[good])**2).sum()
         dof = (

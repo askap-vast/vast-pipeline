@@ -197,22 +197,6 @@ class Run(models.Model):
         self.full_clean()
         super(Run, self).save(*args, **kwargs)
 
-    def delete(self, *args, **kwargs):
-        """
-        Override default delete method to also delete related image
-        objects only if no other pipeline runs are related to the image.
-        """
-        logger = logging.getLogger(__name__)
-        for image in self.image_set.all():
-            if image.run.count() == 1:
-                logger.info("Deleting image: %s", image.name)
-                deleted_num, deleted_detail = image.delete()
-                for instance_type, count in deleted_detail.items():
-                    logger.info(
-                        "Deleted %d instances of %s", count, instance_type
-                    )
-        super(Run, self).delete(*args, **kwargs)
-
 
 class Band(models.Model):
     """
@@ -421,6 +405,7 @@ class Image(models.Model):
         help_text='Polarisation of the image one of I,XX,YY,Q,U,V.'
     )
     name = models.CharField(
+        unique=True,
         max_length=200,
         help_text='Name of the image.'
     )

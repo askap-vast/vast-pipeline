@@ -8,6 +8,7 @@ __pycache__/
 
 # static files for production
 staticfiles/
+static*/
 
 # Distribution / packaging
 .Python
