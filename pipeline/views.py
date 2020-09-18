@@ -201,7 +201,6 @@ def RunDetail(request, id):
                 'images',
                 '_'.join([
                     x['name'].replace('.','_'),
-                    x['datetime'].strftime('%Y-%m-%dT%H_%M_%S%z')
                 ]),
                 'measurements.parquet'
             ),
