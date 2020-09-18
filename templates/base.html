@@ -178,7 +178,7 @@
                   {% endif %}
                 </span>
                 {% for ass in backends.associated %}
-                  {% if ass.provider == 'github-team' %}
+                  {% if ass.provider == 'github-org' %}
                     {% if 'avatar_url' in ass.extra_data %}
                     <img class="img-profile rounded-circle" src="{{ ass.extra_data.avatar_url }}" alt="">
                     {% else %}
