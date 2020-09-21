@@ -6,8 +6,8 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from .utils.utils import deg2dms, deg2hms, parse_coord
-from .models import Image, Measurement, Run, Source, SourceFav
+from pipeline.utils.utils import deg2dms, deg2hms, parse_coord
+from pipeline.models import Image, Measurement, Run, Source, SourceFav
 
 
 class RunSerializer(serializers.ModelSerializer):
@@ -169,3 +169,20 @@ class CoordinateValidatorSerializer(serializers.Serializer):
         except ValueError as e:
             raise serializers.ValidationError({"coord": str(e.args[0])})
         return data
+
+
+class ExternalSearchSerializer(serializers.Serializer):
+    """Serializer for external database cone search results, i.e. SIMBAD and NED.
+    """
+    object_name = serializers.CharField()
+    database = serializers.CharField(
+        help_text="Result origin database, e.g. SIMBAD or NED."
+    )
+    separation_arcsec = serializers.FloatField()
+    otype = serializers.CharField(help_text="Object type, e.g. QSO.")
+    otype_long = serializers.CharField(
+        allow_blank=True,
+        help_text="Longer form of object type, e.g. quasar. Only supplied for SIMBAD results.",
+    )
+    ra_hms = serializers.CharField()
+    dec_dms = serializers.CharField()

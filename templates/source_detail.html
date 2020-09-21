@@ -6,6 +6,7 @@
 
 <link rel='stylesheet' href='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css' />
 <link rel="stylesheet" href="{% static 'vendor/js9/js9-allinone.css' %}" />
+<link rel="stylesheet" href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" />
 <link rel="stylesheet" href="{% static 'css/collapse-box.min.css' %}">
 
 {% endblock head %}
@@ -37,13 +38,13 @@
           </span>
         </a>
       </span>
-      <a href="http://simbad.u-strasbg.fr/simbad/sim-coo?CooEpoch=2000&Coord={{ source.aladin_ra }}d{{ source.aladin_dec }}d&Radius.unit=arcmin&CooEqui=2000&CooFrame=FK5&Radius=10'" class="d-none d-sm-inline-block btn btn-sm btn-info btn-icon-split shadow-sm" target="_blank">
+      <a href="http://simbad.u-strasbg.fr/simbad/sim-coo?CooEpoch=2000&Coord={{ source.aladin_ra }}d{{ source.aladin_dec }}d&Radius.unit=arcmin&CooEqui=2000&CooFrame=FK5&Radius=2'" class="d-none d-sm-inline-block btn btn-sm btn-info btn-icon-split shadow-sm" target="_blank" title="SIMBAD cone search with 2 arcmin radius.">
         <span class="icon text-white-600">
           <i class="fas fa-info-circle fa-sm"></i>
         </span>
         <span class="text">SIMBAD</span>
       </a>
-      <a href="https://ned.ipac.caltech.edu/conesearch?search_type=Near%20Position%20Search&coordinates={{ source.aladin_ra }}d%20{{ source.aladin_dec }}d&radius=2.0&in_csys=Equatorial&in_equinox=J2000.0&out_csys=Equatorial&out_equinox=J2000.0&hconst=67.8&omegam=0.308&omegav=0.692&wmap=4&corr_z=1" class="d-none d-sm-inline-block btn btn-sm btn-info btn-icon-split shadow-sm" target="_blank">
+      <a href="https://ned.ipac.caltech.edu/conesearch?search_type=Near%20Position%20Search&coordinates={{ source.aladin_ra }}d%20{{ source.aladin_dec }}d&radius=2.0&in_csys=Equatorial&in_equinox=J2000.0&out_csys=Equatorial&out_equinox=J2000.0&hconst=67.8&omegam=0.308&omegav=0.692&wmap=4&corr_z=1" class="d-none d-sm-inline-block btn btn-sm btn-info btn-icon-split shadow-sm" target="_blank" title="NED cone search with 2 arcmin radius.">
         <span class="icon text-white-600">
           <i class="fas fa-info-circle fa-sm"></i>
         </span>
@@ -65,9 +66,9 @@
 	</div>
 
   <div class="row">
-    <div class="col-lg-6">
+    <div class="col-xl-3 col-lg-6 mb-4">
       <!-- Basic Card Example -->
-      <div class="card shadow mb-4">
+      <div class="card shadow mb-4 h-100">
         <div class="card-header py-3">
           <h6 class="m-0 font-weight-bold text-primary">Details</h6>
         </div>
@@ -81,10 +82,33 @@
         </div>
       </div>
     </div>
+    <div class="col-xl-5 col-lg-6 mb-4">
+      <!-- DataTable External Search Results -->
+      <div class="card shadow mb-4 h-100">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">External Search Results (1 arcmin)</h6>
+        </div>
+        <div class="card-body small">
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered table-striped table-hover" id="externalResultsTable" width="100%" cellspacing="0" data-server-side="false" data-ajax="{% url 'pipeline:api_utils-simbad-ned-search' %}?coord={{ source.wavg_ra }}{{ source.wavg_dec }}&format=datatables&keep=otype_long,database">
+              <thead>
+                <tr>
+                  <th data-data="object_name">ID</th>
+                  <th data-data="separation_arcsec">Dist (arcsec)</th>
+                  <th data-data="otype">Type</th>
+                  <th data-data="ra_hms">RA (hms)</th>
+                  <th data-data="dec_dms">Dec (dms)</th>
+                </tr>
+              </thead>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
     <!-- Aladin viz tile -->
-  	<div class="col-lg-6">
-      <div class="card shadow mb-4">
-        <div id="aladinViz" style="height:23.3rem;"></div>
+  	<div class="col-xl-4 mb-4">
+      <div class="card shadow mb-4 h-100" style="min-height: 16em;">
+        <div id="aladinViz"></div>
       </div>
   	</div>
 	</div>
@@ -104,12 +128,12 @@
   <!-- Postage stamps -->
     <div class="card shadow mb-4">
       <h6 class="card-header m-0 font-weight-bold text-primary">
-        <a data-toggle="collapse" href="#collapse-example" aria-expanded="true" aria-controls="collapse-example" id="heading-example" class="d-block">
+        <a data-toggle="collapse" href="#collapse-postage-stamps" aria-expanded="true" aria-controls="collapse-postage-stamps" id="heading-example" class="d-block">
           <i class="fa fa-chevron-down pull-right"></i>
           Postage Stamps
         </a>
       </h6>
-      <div id="collapse-example" class="collapse show" aria-labelledby="heading-example">
+      <div id="collapse-postage-stamps" class="collapse show" aria-labelledby="heading-example">
         <div class="card-body">
           <div class="row">
             <button class="btn btn-info mr-1" onclick="focusOnSource(4.0);">Zoom to Source</button>
@@ -258,9 +282,6 @@
 
 {{ datatables.0.dataQuery|json_script:"data-js9" }}
 <script type="text/javascript">
-  // $(document).ready(function() {
-    // $('[data-toggle="tooltip"]').tooltip();
-  // });
   let baseUrl = '{{ base_url }}' || null;
   // function to add base url to an existing url if valid
   addBaseUrl = (url) => baseUrl == null ? url : '/' + baseUrl + url;
