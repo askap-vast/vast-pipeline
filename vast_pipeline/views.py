@@ -40,18 +40,18 @@ from rest_framework import serializers
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.contrib.auth.decorators import login_required
 
-from pipeline.models import Image, Measurement, Run, Source, SourceFav
-from pipeline.serializers import (
+from vast_pipeline.models import Image, Measurement, Run, Source, SourceFav
+from vast_pipeline.serializers import (
     ImageSerializer, MeasurementSerializer, RunSerializer,
     SourceSerializer, RawImageSelavyListSerializer,
     SourceFavSerializer, SesameResultSerializer, CoordinateValidatorSerializer,
     ExternalSearchSerializer
 )
-from pipeline.utils.utils import deg2dms, deg2hms, parse_coord
-from pipeline.utils.view import generate_colsfields, get_skyregions_collection
-from pipeline.management.commands.initpiperun import initialise_run
-from pipeline.forms import PipelineRunForm
-from pipeline.pipeline.main import Pipeline
+from vast_pipeline.utils.utils import deg2dms, deg2hms, parse_coord
+from vast_pipeline.utils.view import generate_colsfields, get_skyregions_collection
+from vast_pipeline.management.commands.initpiperun import initialise_run
+from vast_pipeline.forms import PipelineRunForm
+from vast_pipeline.pipeline.main import Pipeline
 
 
 logger = logging.getLogger(__name__)
@@ -127,19 +127,19 @@ def RunIndex(request):
                     request,
                     f'Pipeline run {p_run.name} initilialised successfully!'
                 )
-                return redirect('pipeline:run_detail', id=p_run.id)
+                return redirect('vast_pipeline:run_detail', id=p_run.id)
             except Exception as e:
                 messages.error(
                     request,
                     f'Issue in pipeline run initilisation: {e}'
                 )
-                return redirect('pipeline:run_index')
+                return redirect('vast_pipeline:run_index')
         else:
             messages.error(
                 request,
                 f'Form not valid: {form.errors}'
             )
-            return redirect('pipeline:run_index')
+            return redirect('vast_pipeline:run_index')
 
     fields = [
         'name',
@@ -153,7 +153,7 @@ def RunIndex(request):
 
     colsfields = generate_colsfields(
         fields,
-        {'name': reverse('pipeline:run_detail', args=[1])[:-2]}
+        {'name': reverse('vast_pipeline:run_detail', args=[1])[:-2]}
     )
 
     return render(
@@ -167,7 +167,7 @@ def RunIndex(request):
             },
             'datatable': {
                 'api': (
-                    reverse('pipeline:api_pipe_runs-list') +
+                    reverse('vast_pipeline:api_pipe_runs-list') +
                     '?format=datatables'
                 ),
                 'colsFields': colsfields,
@@ -276,7 +276,7 @@ def ImageIndex(request):
 
     colsfields = generate_colsfields(
         fields,
-        {'name': reverse('pipeline:image_detail', args=[1])[:-2]}
+        {'name': reverse('vast_pipeline:image_detail', args=[1])[:-2]}
     )
 
     return render(
@@ -290,7 +290,7 @@ def ImageIndex(request):
             },
             'datatable': {
                 'api': (
-                    reverse('pipeline:api_images-list') +
+                    reverse('vast_pipeline:api_images-list') +
                     '?format=datatables'
                 ),
                 'colsFields': colsfields,
@@ -374,7 +374,7 @@ def MeasurementIndex(request):
 
     colsfields = generate_colsfields(
         fields,
-        {'name': reverse('pipeline:measurement_detail', args=[1])[:-2]}
+        {'name': reverse('vast_pipeline:measurement_detail', args=[1])[:-2]}
     )
 
     return render(
@@ -388,7 +388,7 @@ def MeasurementIndex(request):
             },
             'datatable': {
                 'api': (
-                    reverse('pipeline:api_measurements-list') +
+                    reverse('vast_pipeline:api_measurements-list') +
                     '?format=datatables'
                 ),
                 'colsFields': colsfields,
@@ -613,7 +613,7 @@ def SourceQuery(request):
 
     colsfields = generate_colsfields(
         fields,
-        {'name': reverse('pipeline:source_detail', args=[1])[:-2]}
+        {'name': reverse('vast_pipeline:source_detail', args=[1])[:-2]}
     )
 
     # get all pipeline run names
@@ -627,7 +627,7 @@ def SourceQuery(request):
             'runs': p_runs,
             'datatable': {
                 'api': (
-                    reverse('pipeline:api_sources-list') +
+                    reverse('vast_pipeline:api_sources-list') +
                     '?format=datatables'
                 ),
                 'colsFields': colsfields,
@@ -793,12 +793,12 @@ def SourceDetail(request, id, action=None):
     ]
     related_colsfields = generate_colsfields(
         related_fields,
-        {'name': reverse('pipeline:source_detail', args=[1])[:-2]}
+        {'name': reverse('vast_pipeline:source_detail', args=[1])[:-2]}
     )
     related_datatables = {
         'table_id': 'dataTableRelated',
         'api': (
-            reverse('pipeline:api_sources-related', args=[source['id']]) +
+            reverse('vast_pipeline:api_sources-related', args=[source['id']]) +
             '?format=datatables'
         ),
         'colsFields': related_colsfields,
@@ -982,7 +982,7 @@ class MeasurementQuery(APIView):
                 "color": color,
                 "data": {
                     "text": f"{selection_model} ID: {meas[selection_attr]}",
-                    "link": reverse(f"pipeline:{selection_model}_detail", args=[selection_id]),
+                    "link": reverse(f"vast_pipeline:{selection_model}_detail", args=[selection_id]),
                 }
             }
             if meas["forced"]:
@@ -1186,7 +1186,7 @@ class RunConfigSet(ViewSet):
             messages.info(request, 'Error in config write: Config text null')
 
         return HttpResponseRedirect(
-            reverse('pipeline:run_detail', args=[p_run.id])
+            reverse('vast_pipeline:run_detail', args=[p_run.id])
         )
 
 
@@ -1234,7 +1234,7 @@ class SourceFavViewSet(ModelViewSet):
                 f'Errors in adding source to favourites: \n{e}'
             )
 
-        return HttpResponseRedirect(reverse('pipeline:source_detail', args=[data['source_id']]))
+        return HttpResponseRedirect(reverse('vast_pipeline:source_detail', args=[data['source_id']]))
 
     def destroy(self, request, pk=None):
         try:
@@ -1265,8 +1265,8 @@ def UserSourceFavsList(request):
     fields = ['source.name', 'comment', 'source.run.name', 'deletefield']
 
     api_col_dict = {
-        'source.name': reverse('pipeline:source_detail', args=[1])[:-2],
-        'source.run.name': reverse('pipeline:run_detail', args=[1])[:-2]
+        'source.name': reverse('vast_pipeline:source_detail', args=[1])[:-2],
+        'source.run.name': reverse('vast_pipeline:run_detail', args=[1])[:-2]
     }
     colsfields = generate_colsfields(fields, api_col_dict, ['deletefield'])
 
@@ -1281,7 +1281,7 @@ def UserSourceFavsList(request):
             },
             'datatable': {
                 'api': (
-                    reverse('pipeline:api_sources_favs-list') +
+                    reverse('vast_pipeline:api_sources_favs-list') +
                     f'?format=datatables&user={request.user.username}'
                 ),
                 'colsFields': colsfields,

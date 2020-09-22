@@ -4,12 +4,12 @@ import pandas as pd
 
 from django.db import transaction
 
-from ..image.main import SelavyImage
-from ..models import Association, Measurement, Source, RelatedSource
+from vast_pipeline.image.main import SelavyImage
+from vast_pipeline.models import Association, Measurement, Source, RelatedSource
 from .utils import (
     get_create_img, get_create_img_band, get_measurement_models
 )
-from ..utils.utils import StopWatch
+from vast_pipeline.utils.utils import StopWatch
 
 
 logger = logging.getLogger(__name__)

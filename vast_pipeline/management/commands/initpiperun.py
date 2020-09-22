@@ -6,9 +6,9 @@ from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings as sett
 from jinja2 import Template
 
-from pipeline.models import Run
-from pipeline.pipeline.errors import PipelineInitError
-from pipeline.pipeline.utils import get_create_p_run
+from vast_pipeline.models import Run
+from vast_pipeline.pipeline.errors import PipelineInitError
+from vast_pipeline.pipeline.utils import get_create_p_run
 
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ def initialise_run(run_name, run_comment='', user=None, config=None):
     logger.info('copying default config in pipeline run folder')
     template_f = os.path.join(
         sett.BASE_DIR,
-        'pipeline',
+        'vast_pipeline',
         'config_template.py.j2'
     )
     with open(template_f, 'r') as fp:

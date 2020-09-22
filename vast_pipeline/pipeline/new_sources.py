@@ -1,11 +1,9 @@
 import os
 import logging
-
-from pipeline.models import Image
-
 import pandas as pd
 import numpy as np
 import dask.dataframe as dd
+
 from psutil import cpu_count
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -13,7 +11,8 @@ from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.wcs.utils import skycoord_to_pixel
 
-from pipeline.utils.utils import StopWatch
+from vast_pipeline.models import Image
+from vast_pipeline.utils.utils import StopWatch
 
 
 logger = logging.getLogger(__name__)

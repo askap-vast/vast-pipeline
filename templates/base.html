@@ -73,7 +73,7 @@
         </a>
         <div id="collapsePipeRun" class="collapse" aria-labelledby="headingDataset" data-parent="#accordionSidebar">
           <div class="bg-white py-2 collapse-inner rounded">
-            <a class="collapse-item" href="{% url 'pipeline:run_index' %}">Overview</a>
+            <a class="collapse-item" href="{% url 'vast_pipeline:run_index' %}">Overview</a>
           </div>
         </div>
       </li>
@@ -86,7 +86,7 @@
         </a>
         <div id="collapseSource" class="collapse" aria-labelledby="headingCatalog" data-parent="#accordionSidebar">
           <div class="bg-white py-2 collapse-inner rounded">
-            <a class="collapse-item" href="{% url 'pipeline:source_query' %}">View all sources</a>
+            <a class="collapse-item" href="{% url 'vast_pipeline:source_query' %}">View all sources</a>
           </div>
         </div>
       </li>
@@ -99,7 +99,7 @@
         </a>
         <div id="collapseSourceMeas" class="collapse" aria-labelledby="headingSource" data-parent="#accordionSidebar">
           <div class="bg-white py-2 collapse-inner rounded">
-            <a class="collapse-item" href="{% url 'pipeline:measurement_index' %}">View all measurements</a>
+            <a class="collapse-item" href="{% url 'vast_pipeline:measurement_index' %}">View all measurements</a>
           </div>
         </div>
       </li>
@@ -112,7 +112,7 @@
         </a>
         <div id="collapseImage" class="collapse" aria-labelledby="headingImage" data-parent="#accordionSidebar">
           <div class="bg-white py-2 collapse-inner rounded">
-            <a class="collapse-item" href="{% url 'pipeline:image_index' %}">View all images</a>
+            <a class="collapse-item" href="{% url 'vast_pipeline:image_index' %}">View all images</a>
           </div>
         </div>
       </li>
@@ -190,7 +190,7 @@
               </a>
               <!-- Dropdown - User Information -->
               <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
-                <a class="dropdown-item" href="{% url 'pipeline:source_favs' %}">
+                <a class="dropdown-item" href="{% url 'vast_pipeline:source_favs' %}">
                   <i class="fas fa-star fa-sm fa-fw mr-2 text-gray-400"></i>
                   Favourite Sources
                 </a>

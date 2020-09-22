@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 
-from pipeline.models import (
+from vast_pipeline.models import (
     Run, Measurement, Image, Source, Association
 )
 from ..helpers import get_p_run_name

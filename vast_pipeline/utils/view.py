@@ -1,7 +1,7 @@
 # Functions and variables used in pipeline/views.py
 
 import logging
-from pipeline.models import SkyRegion
+from vast_pipeline.models import SkyRegion
 
 # Defines the float format and scaling for all
 # parameters presented in DATATABLES via AJAX call

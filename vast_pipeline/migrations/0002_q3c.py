@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
     initial = False
 
     dependencies = [
-        ('pipeline', '0001_initial')
+        ('vast_pipeline', '0001_initial')
     ]
 
     operations = [
@@ -17,27 +17,27 @@ class Migration(migrations.Migration):
             ["DROP EXTENSION IF EXISTS q3c;"],#downgrade
         ),
         migrations.RunSQL(
-            ["CREATE INDEX ON pipeline_measurement (q3c_ang2ipix(ra, dec));"],
-            ["DROP INDEX pipeline_measurement_q3c_ang2ipix_idx;"],
+            ["CREATE INDEX ON vast_pipeline_measurement (q3c_ang2ipix(ra, dec));"],
+            ["DROP INDEX vast_pipeline_measurement_q3c_ang2ipix_idx;"],
         ),
         migrations.RunSQL(
-            ["CLUSTER pipeline_measurement_q3c_ang2ipix_idx ON pipeline_measurement;"],
+            ["CLUSTER vast_pipeline_measurement_q3c_ang2ipix_idx ON vast_pipeline_measurement;"],
             [],
         ),
         migrations.RunSQL(
-            ["ANALYZE pipeline_measurement;"],
+            ["ANALYZE vast_pipeline_measurement;"],
             [],
         ),
         migrations.RunSQL(
-            ["CREATE INDEX ON pipeline_source (q3c_ang2ipix(wavg_ra, wavg_dec));"],
-            ["DROP INDEX pipeline_source_q3c_ang2ipix_idx;"],
+            ["CREATE INDEX ON vast_pipeline_source (q3c_ang2ipix(wavg_ra, wavg_dec));"],
+            ["DROP INDEX vast_pipeline_source_q3c_ang2ipix_idx;"],
         ),
         migrations.RunSQL(
-            ["CLUSTER pipeline_source_q3c_ang2ipix_idx ON pipeline_source;"],
+            ["CLUSTER vast_pipeline_source_q3c_ang2ipix_idx ON vast_pipeline_source;"],
             [],
         ),
         migrations.RunSQL(
-            ["ANALYZE pipeline_source;"],
+            ["ANALYZE vast_pipeline_source;"],
             [],
         ),
     ]

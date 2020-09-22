@@ -10,8 +10,8 @@ from .loading import upload_associations, upload_sources
 from .utils import (
     get_or_append_list, get_source_models, prep_skysrc_df
 )
-from ..models import Association
-from ..utils.utils import StopWatch
+from vast_pipeline.models import Association
+from vast_pipeline.utils.utils import StopWatch
 
 
 logger = logging.getLogger(__name__)

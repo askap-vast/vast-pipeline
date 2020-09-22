@@ -5,8 +5,8 @@ import shutil
 from glob import glob
 from django.core.management.base import BaseCommand, CommandError
 
-from pipeline.models import Run
-from pipeline.pipeline.forced_extraction import remove_forced_meas
+from vast_pipeline.models import Run
+from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
 from ..helpers import get_p_run_name
 
 

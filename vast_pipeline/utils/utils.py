@@ -1,12 +1,12 @@
 import os
 import logging
 import math as m
+import numpy as np
+
 from astroquery.ned import Ned
 from astroquery.simbad import Simbad
-import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-
 from datetime import datetime
 
 

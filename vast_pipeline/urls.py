@@ -4,7 +4,7 @@ from rest_framework.routers import DefaultRouter
 from . import views, converters
 
 
-app_name = 'pipeline'
+app_name = 'vast_pipeline'
 register_converter(converters.RightAscensionConverter, "ra")
 register_converter(converters.DeclinationConverter, "dec")
 register_converter(converters.AngleConverter, "angle")

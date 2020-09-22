@@ -15,10 +15,10 @@
 {% block breadcrumb %}
 
 <li class="breadcrumb-item">
-  <a href="{% url 'pipeline:source_query' %}">Sources</a>
+  <a href="{% url 'vast_pipeline:source_query' %}">Sources</a>
 </li>
 <li class="breadcrumb-item">
-  <a href="{% url 'pipeline:source_detail' source.id %}">{{ source.name }}</a>
+  <a href="{% url 'vast_pipeline:source_detail' source.id %}">{{ source.name }}</a>
 </li>
 
 {% endblock breadcrumb %}
@@ -50,13 +50,13 @@
         </span>
         <span class="text">NED</span>
       </a>
-      <a href="{% url 'pipeline:source_detail' source.id %}prev" class="d-none d-sm-inline-block btn btn-sm btn-light btn-icon-split shadow-sm">
+      <a href="{% url 'vast_pipeline:source_detail' source.id %}prev" class="d-none d-sm-inline-block btn btn-sm btn-light btn-icon-split shadow-sm">
         <span class="icon text-gray-600">
           <i class="fas fa-arrow-left fa-sm"></i>
         </span>
         <span class="text">Previous</span>
       </a>
-      <a href="{% url 'pipeline:source_detail' source.id %}next" class="d-none d-sm-inline-block btn btn-sm btn-light btn-icon-split shadow-sm">
+      <a href="{% url 'vast_pipeline:source_detail' source.id %}next" class="d-none d-sm-inline-block btn btn-sm btn-light btn-icon-split shadow-sm">
         <span class="text">Next</span>
         <span class="icon text-gray-600">
           <i class="fas fa-arrow-right fa-sm"></i>
@@ -77,7 +77,7 @@
           <p><strong>DEC: </strong> {{ source.wavg_dec }}</p>
           <p><strong>New Source: </strong> {{ source.new }}</p>
           <p><strong>Nr Datapoints: </strong> {{ source.measurements }}</p>
-          <p><strong>Pipeline Run: </strong> <a href="{% url 'pipeline:run_detail' source.run_id %}">{{ source.run_name }}</a></p>
+          <p><strong>Pipeline Run: </strong> <a href="{% url 'vast_pipeline:run_detail' source.run_id %}">{{ source.run_name }}</a></p>
           <p><strong>Comment: </strong> {{ source.comment }}</p>
         </div>
       </div>
@@ -90,7 +90,7 @@
         </div>
         <div class="card-body small">
           <div class="table-responsive">
-            <table class="table table-sm table-bordered table-striped table-hover" id="externalResultsTable" width="100%" cellspacing="0" data-server-side="false" data-ajax="{% url 'pipeline:api_utils-simbad-ned-search' %}?coord={{ source.wavg_ra }}{{ source.wavg_dec }}&format=datatables&keep=otype_long,database">
+            <table class="table table-sm table-bordered table-striped table-hover" id="externalResultsTable" width="100%" cellspacing="0" data-server-side="false" data-ajax="{% url 'vast_pipeline:api_utils-simbad-ned-search' %}?coord={{ source.wavg_ra }}{{ source.wavg_dec }}&format=datatables&keep=otype_long,database">
               <thead>
                 <tr>
                   <th data-data="object_name">ID</th>
@@ -146,8 +146,8 @@
             {% for measurement in datatables.0.dataQuery %}
               <div class="card">
                 <div class="card-header">
-                  <p class="mb-0"><a href="{% url 'pipeline:image_detail' measurement.image_id %}" target="_blank">{{ measurement.image_name }}</a></p>
-                  <p class="mb-0"><a href="{% url 'pipeline:measurement_detail' measurement.id %}" target="_blank">{{ measurement.name }}</a></p>
+                  <p class="mb-0"><a href="{% url 'vast_pipeline:image_detail' measurement.image_id %}" target="_blank">{{ measurement.image_name }}</a></p>
+                  <p class="mb-0"><a href="{% url 'vast_pipeline:measurement_detail' measurement.id %}" target="_blank">{{ measurement.name }}</a></p>
                 </div>
                 <div class="card-body">
                   <div class="JS9" id="JS9_{{ forloop.counter }}" data-width="350px" data-height="350px"></div>
@@ -166,7 +166,7 @@
     </div>
     <div class="card-body">
       <div class="table-responsive">
-        <table class="table table-bordered table-striped table-hover" id="{{ datatables.0.table_id }}" width="100%" cellspacing="0" MeasApi="{% url 'pipeline:api_measurements-list' %}" ImgApi="{% url 'pipeline:api_images-list' %}">
+        <table class="table table-bordered table-striped table-hover" id="{{ datatables.0.table_id }}" width="100%" cellspacing="0" MeasApi="{% url 'vast_pipeline:api_measurements-list' %}" ImgApi="{% url 'vast_pipeline:api_images-list' %}">
           <thead>
             <tr>
               {% for name in datatables.0.colsNames %}
@@ -235,7 +235,7 @@
         </button>
       </div>
       <div class="modal-body">
-        <form action="{% url 'pipeline:api_sources_favs-list' %}" method="post" id="commentStarForm">
+        <form action="{% url 'vast_pipeline:api_sources_favs-list' %}" method="post" id="commentStarForm">
           {% csrf_token %}
           <div class="form-group">
             <textarea class="form-control" name="comment" placeholder="Insert comment here (optional)" form="commentStarForm"></textarea>

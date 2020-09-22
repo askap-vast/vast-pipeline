@@ -5,8 +5,8 @@ from django.conf import settings as s
 from django.test import SimpleTestCase, TestCase, override_settings
 from django.core.management import call_command
 
-from pipeline.pipeline.main import Pipeline
-from pipeline.pipeline.errors import PipelineConfigError
+from vast_pipeline.pipeline.main import Pipeline
+from vast_pipeline.pipeline.errors import PipelineConfigError
 
 
 TEST_ROOT = os.path.join(s.BASE_DIR, 'pipeline', 'tests')

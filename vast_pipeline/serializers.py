@@ -6,8 +6,8 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from pipeline.utils.utils import deg2dms, deg2hms, parse_coord
-from pipeline.models import Image, Measurement, Run, Source, SourceFav
+from vast_pipeline.utils.utils import deg2dms, deg2hms, parse_coord
+from vast_pipeline.models import Image, Measurement, Run, Source, SourceFav
 
 
 class RunSerializer(serializers.ModelSerializer):

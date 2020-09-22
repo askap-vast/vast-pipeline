@@ -5,8 +5,8 @@ import pandas as pd
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from pipeline.models import Association, RelatedSource
-from pipeline.utils.utils import StopWatch
+from vast_pipeline.models import Association, RelatedSource
+from vast_pipeline.utils.utils import StopWatch
 
 from .loading import (
     upload_associations, upload_sources, upload_related_sources

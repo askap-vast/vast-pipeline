@@ -11,7 +11,7 @@ from astropy.wcs.utils import proj_plane_pixel_scales
 from .utils import calc_error_radius
 from .utils import calc_condon_flux_errors
 
-from pipeline.survey.translators import tr_selavy
+from vast_pipeline.survey.translators import tr_selavy
 
 
 logger = logging.getLogger(__name__)

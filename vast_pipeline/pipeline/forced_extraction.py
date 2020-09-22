@@ -14,8 +14,8 @@ from django.conf import settings
 from django.db import transaction
 from pyarrow.parquet import read_schema
 
-from pipeline.models import Image, Measurement
-from pipeline.image.utils import on_sky_sep
+from vast_pipeline.models import Image, Measurement
+from vast_pipeline.image.utils import on_sky_sep
 
 from .loading import bulk_upload_model
 from .forced_phot import ForcedPhot

@@ -8,7 +8,7 @@ import pandas as pd
 from astropy.table import Table
 from astropy.io.votable import parse_single_table
 
-from pipeline.utils.utils import StopWatch
+from vast_pipeline.utils.utils import StopWatch
 from .translators import translators
 
 

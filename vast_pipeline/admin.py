@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import *
+from vast_pipeline.models import *
 
 
 # set the site title, header

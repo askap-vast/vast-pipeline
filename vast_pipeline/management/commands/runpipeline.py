@@ -5,10 +5,10 @@ import warnings
 
 from django.core.management.base import BaseCommand, CommandError
 
-from pipeline.pipeline.forced_extraction import remove_forced_meas
-from pipeline.pipeline.main import Pipeline
-from pipeline.pipeline.utils import get_create_p_run
-from pipeline.utils.utils import StopWatch
+from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
+from vast_pipeline.pipeline.main import Pipeline
+from vast_pipeline.pipeline.utils import get_create_p_run
+from vast_pipeline.utils.utils import StopWatch
 from ..helpers import get_p_run_name
 from astropy.utils.exceptions import AstropyWarning
 

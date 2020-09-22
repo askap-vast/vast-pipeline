@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'rest_framework_datatables',
     'social_django',
     # pipeline app and others
-    'pipeline',
+    'vast_pipeline',
 ] + env('EXTRA_APPS', cast=list, default=[])
 
 MIDDLEWARE = [
@@ -69,10 +69,10 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'social_django.context_processors.backends',
                 'social_django.context_processors.login_redirect',
-                'pipeline.context_processors.maintainance_banner',
+                'vast_pipeline.context_processors.maintainance_banner',
             ],
             'libraries': {
-                'unit_tags': 'pipeline.utils.unit_tags'
+                'unit_tags': 'vast_pipeline.utils.unit_tags'
             }
         },
     },
@@ -123,10 +123,10 @@ SOCIAL_AUTH_PIPELINE = (
     'social_core.pipeline.social_auth.social_user',
     'social_core.pipeline.user.get_username',
     'social_core.pipeline.user.create_user',
-    'pipeline.utils.auth.create_admin_user',
+    'vast_pipeline.utils.auth.create_admin_user',
     'social_core.pipeline.social_auth.associate_user',
     'social_core.pipeline.social_auth.load_extra_data',
-    'pipeline.utils.auth.load_github_avatar',
+    'vast_pipeline.utils.auth.load_github_avatar',
     'social_core.pipeline.user.user_details',
 )
 

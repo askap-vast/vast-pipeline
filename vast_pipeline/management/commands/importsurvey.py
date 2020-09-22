@@ -12,10 +12,10 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from sqlalchemy import create_engine
 
-from pipeline.models import Survey, SurveySource
-from pipeline.survey.catalogue import get_survey
-from pipeline.survey.translators import translators
-from pipeline.utils.utils import StopWatch
+from vast_pipeline.models import Survey, SurveySource
+from vast_pipeline.survey.catalogue import get_survey
+from vast_pipeline.survey.translators import translators
+from vast_pipeline.utils.utils import StopWatch
 
 
 logger = logging.getLogger(__name__)

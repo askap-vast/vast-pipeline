@@ -10,7 +10,7 @@ from django.db import transaction
 
 from importlib.util import spec_from_file_location, module_from_spec
 
-from ..models import Run, SurveySource
+from vast_pipeline.models import Run, SurveySource
 from .association import association
 from .new_sources import new_sources
 from .forced_extraction import forced_extraction
