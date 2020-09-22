@@ -179,11 +179,13 @@ def generate_colsfields(fields, url_prefix_dict, not_orderable_col=[]):
     return colsfields
 
 
-def get_skyregions_collection():
+def get_skyregions_collection(run_id: int=None):
     """
     Produce Sky region geometry shapes for d3-celestial.
     """
     skyregions = SkyRegion.objects.all()
+    if run_id is not None:
+        skyregions = skyregions.filter(run=run_id)
 
     features = []
 

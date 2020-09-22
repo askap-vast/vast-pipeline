@@ -67,54 +67,56 @@
 
       <!-- Nav Item - Pipeline Runs -->
       <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapsePipeRun" aria-expanded="true" aria-controls="collapsePipeRun">
+        <a class="nav-link collapsed" href="{% url 'pipeline:run_index' %}">
           <i class="fas fa-fw fa-table"></i>
           <span>Pipeline Runs</span>
         </a>
-        <div id="collapsePipeRun" class="collapse" aria-labelledby="headingDataset" data-parent="#accordionSidebar">
-          <div class="bg-white py-2 collapse-inner rounded">
-            <a class="collapse-item" href="{% url 'pipeline:run_index' %}">Overview</a>
-          </div>
-        </div>
       </li>
 
       <!-- Nav Item - Sources -->
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseSource" aria-expanded="true" aria-controls="collapseSource">
+      <li class="nav-item" id="sourcesLink">
+        <a class="nav-link collapsed" href="{% url 'pipeline:source_query' %}">
           <i class="fas fa-fw fa-share-alt"></i>
           <span>Sources</span>
         </a>
-        <div id="collapseSource" class="collapse" aria-labelledby="headingCatalog" data-parent="#accordionSidebar">
-          <div class="bg-white py-2 collapse-inner rounded">
-            <a class="collapse-item" href="{% url 'pipeline:source_query' %}">View all sources</a>
-          </div>
-        </div>
       </li>
 
       <!-- Nav Item - Measurements -->
       <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseSourceMeas" aria-expanded="true" aria-controls="collapseSourceMeas">
+        <a class="nav-link collapsed" href="{% url 'pipeline:measurement_index' %}">
           <i class="fas fa-fw fa-bolt"></i>
           <span>Measurements</span>
         </a>
-        <div id="collapseSourceMeas" class="collapse" aria-labelledby="headingSource" data-parent="#accordionSidebar">
-          <div class="bg-white py-2 collapse-inner rounded">
-            <a class="collapse-item" href="{% url 'pipeline:measurement_index' %}">View all measurements</a>
-          </div>
-        </div>
       </li>
 
       <!-- Nav Item - Images -->
       <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseImage" aria-expanded="true" aria-controls="collapseImage">
+        <a class="nav-link collapsed" href="{% url 'pipeline:image_index' %}">
           <i class="fas fa-fw fa-images"></i>
           <span>Images</span>
         </a>
-        <div id="collapseImage" class="collapse" aria-labelledby="headingImage" data-parent="#accordionSidebar">
+      </li>
+      
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseLinks" aria-expanded="true" aria-controls="collapseLinks">
+          <i class="fas fa-fw fa-link"></i>
+          <span>VAST Links</span>
+        </a>
+        <div id="collapseLinks" class="collapse" aria-labelledby="headingDataset" data-parent="#accordionSidebar">
           <div class="bg-white py-2 collapse-inner rounded">
-            <a class="collapse-item" href="{% url 'pipeline:image_index' %}">View all images</a>
+            <a class="collapse-item" target="_blank" href="https://github.com/askap-vast">GitHub</a>
+            <a class="collapse-item" target="_blank" href="https://data.vast-survey.org">JupyterHub</a>
+            <a class="collapse-item" target="_blank" href="https://vast-survey.org">Website</a>
+            <a class="collapse-item" target="_blank" href="https://github.com/askap-vast/vast-project/wiki">Wiki</a>
           </div>
         </div>
+      </li>
+      
+      <li class="nav-item">
+        <a class="nav-link collapsed" target="_blank" href="https://github.com/askap-vast/vast-pipeline/issues/new">
+          <i class="fas fa-fw fa-exclamation"></i>
+          <span>Raise Issue</span>
+        </a>
       </li>
 
     </ul>
@@ -177,7 +179,7 @@
               </a>
               <!-- Dropdown - User Information -->
               <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
-                <a class="dropdown-item" href="{% url 'pipeline:source_favs' %}">
+                <a class="dropdown-item" href="{% url 'pipeline:source_favs' %}" id="favsLink">
                   <i class="fas fa-star fa-sm fa-fw mr-2 text-gray-400"></i>
                   Favourite Sources
                 </a>

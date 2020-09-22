@@ -201,7 +201,7 @@ def RunDetail(request, id):
                 'images',
                 '_'.join([
                     x['name'].replace('.','_'),
-                    x['datetime'].strftime('%Y-%m-%dT%H_%M_%S%z')
+                    # x['datetime'].strftime('%Y-%m-%dT%H_%M_%S%z')
                 ]),
                 'measurements.parquet'
             ),
@@ -257,7 +257,14 @@ def RunDetail(request, id):
         with open(f_path) as fp:
             p_run['log_txt'] = fp.read()
 
-    return render(request, 'run_detail.html', {'p_run': p_run})
+    return render(
+        request, 'run_detail.html',
+        {
+            'p_run': p_run,
+            'd3_celestial_skyregions': get_skyregions_collection(run_id=id),
+            'static_url': settings.STATIC_URL
+        }
+    )
 
 
 # Images table
