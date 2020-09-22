@@ -199,12 +199,10 @@ def RunDetail(request, id):
             lambda x: os.path.join(
                 settings.PIPELINE_WORKING_DIR,
                 'images',
-                '_'.join([
-                    x['name'].replace('.','_'),
-                ]),
+                x.replace('.','_'),
                 'measurements.parquet'
             ),
-            p_run_model.image_set.values('name', 'datetime')
+            p_run_model.image_set.values_list('name', flat=True)
         ))
         p_run['nr_meas'] = (
             dd.read_parquet(img_paths, columns='id')
