@@ -139,6 +139,11 @@
 {{ measurement|json_script:"data-aladin" }}
 <script type='text/javascript' src='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js' charset='utf-8'></script>
 <script src="{% static 'js/aladin-script.min.js' %}"></script>
+<script type="text/javascript">
+  let aladin = A.aladin('#aladinViz', {fov: 1});
+  let aladinConf = JSON.parse(document.getElementById('data-aladin').textContent);
+  configureAladin(aladin, aladinConf);
+</script>
 
 {{ measurement|json_script:"data-js9" }}
 <script type="text/javascript">
