@@ -104,7 +104,7 @@
 	</div>
 
   <div class="row">
-  	<div class="col-lg-3">
+  	<div class="col-lg-5">
       <div class="card shadow mb-4">
         <div class="card-header py-3">
           <h6 class="m-0 font-weight-bold text-primary">Details</h6>
@@ -117,7 +117,10 @@
           {% endif %}</p>
           <p><strong>Processing Datetime: </strong> {{ p_run.time }}</p>
           <p><strong>Run Status: </strong> {{ p_run.status }}</p>
+          <p><strong>Path: </strong> {{ p_run.path }}</p>
           <p><strong>Comment: </strong> {{ p_run.comment }}</p>
+          <a href="#configFile"><p><strong>Config File.</strong></p></a>
+          <a href="#logFile"><p><strong>Log File.</strong></p></a>
         </div>
       </div>
       <div class="card shadow mb-4">
@@ -128,12 +131,36 @@
           TBC
         </div>
       </div>
-  	</div>
-    <div class="col-lg-9">
+      </div>
+    <div class="col-lg-7">
+        <!-- sky regions -->
+         <div class="card shadow mb-4">
+           <h6 class="card-header m-0 font-weight-bold text-primary">
+             <a data-toggle="collapse" href="#collapseRegionCard" aria-expanded="true" aria-controls="collapseRegionCard" id="regionHeader" class="d-block">
+               <i class="fa fa-chevron-down pull-right"></i>
+                 {% if p_run.status != 'END' %}
+                   Run Sky Regions
+                 {% else %}
+                   Run Sky Regions (not completed so no sky regions are shown!)
+                 {% endif %}
+             </a>
+           </h6>
+             <div id="collapseRegionCard" class="collapse show" aria-labelledby="regionHeader">
+                 <div class="card-body">
+                   <div id="celestial-map"></div>
+                 </div>
+             </div>
+         </div>
+
+    </div>
+  </div>
+
       <!-- config file card -->
+    <div class="row">
+          	<div class="col-lg-12">
       <div class="card shadow mb-4">
         <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-          <h6 class="m-0 font-weight-bold text-primary">Config File</h6>
+          <h6 class="m-0 font-weight-bold text-primary" id='configFile'>Config File</h6>
           <h6 id="editModeTitle" class="m-0 font-weight-bold text-warning" hidden><i>- - - Edit mode - - -</i></h6>
           <div class="dropdown no-arrow">
             <a class="dropdown-toggle" href="#" role="button" id="dropdownRunConfig" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -155,9 +182,14 @@
           <pre id="runConfigText" class="pre-scrollable" contenteditable="false"><code id="runConfigTextCode" class="language-python line-numbers" style="white-space: pre">{{ p_run.config_txt }}</code></pre>
         </div>
       </div>
+      </div>
+  </div>
+  
+  <div class="row">
+        	<div class="col-lg-12">
       <!-- log file card -->
        <div class="card shadow mb-4">
-         <h6 class="card-header m-0 font-weight-bold text-primary">
+         <h6 class="card-header m-0 font-weight-bold text-primary" id="logFile">
            <a data-toggle="collapse" href="#collapseLogCard" aria-expanded="true" aria-controls="collapseLogCard" id="logHeader" class="collapsed d-block">
              <i class="fa fa-chevron-down pull-right"></i>
                Log File
@@ -169,22 +201,8 @@
           </div>
         </div>
       </div>
-      <!-- sky regions -->
-       <div class="card shadow mb-4">
-         <h6 class="card-header m-0 font-weight-bold text-primary">
-           <a data-toggle="collapse" href="#collapseRegionCard" aria-expanded="true" aria-controls="collapseRegionCard" id="regionHeader" class="d-block">
-             <i class="fa fa-chevron-down pull-right"></i>
-               Run Sky Regions
-           </a>
-         </h6>
-           <div id="collapseRegionCard" class="collapse show" aria-labelledby="regionHeader">
-               <div class="card-body">
-                 <div id="celestial-map"></div>
-               </div>
-           </div>
-       </div>
-    </div>
-  </div>
+      </div>
+     </div>
 
 </div>
 <!-- /.container-fluid -->
