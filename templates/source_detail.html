@@ -279,6 +279,24 @@
 {{ source|json_script:"data-aladin" }}
 <script type='text/javascript' src='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js' charset='utf-8'></script>
 <script src="{% static 'js/aladin-script.min.js' %}"></script>
+<script type="text/javascript">
+  let aladin;  // cannot init aladin here or it will overflow the parent element
+  $('#externalResultsTable')
+    // wait until the external search results table has fully loaded to ensure Aladin Lite
+    // occupies the full height of the parent element
+    .on("init.dt", function() {
+      aladin = A.aladin('#aladinViz', {fov: 1});
+      let aladinConf = JSON.parse(document.getElementById('data-aladin').textContent);
+      configureAladin(aladin, aladinConf);
+    })
+    // force Aladin to resize the canvas elements whenever the table is redrawn and potentially
+    // changes height
+    .on("draw.dt", function() {
+        if (aladin !== undefined) {
+            aladin.view.fixLayoutDimensions();
+        }
+    })
+</script>
 
 {{ datatables.0.dataQuery|json_script:"data-js9" }}
 <script type="text/javascript">
