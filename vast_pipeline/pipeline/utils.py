@@ -5,7 +5,6 @@ import pandas as pd
 import dask.dataframe as dd
 
 from astropy.io import fits
-from copy import copy
 from django.conf import settings
 
 from psutil import cpu_count
