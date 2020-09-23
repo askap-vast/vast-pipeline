@@ -25,9 +25,6 @@
   <!-- Custom styles on top of the SB admin template-->
   <link href="{% static 'css/pipeline.min.css' %}" rel="stylesheet">
 
-  <!-- Custom styles on top of the SB admin template-->
-  <link href="{% static 'css/pipeline.min.css' %}" rel="stylesheet">
-
   {% block head %}
 
   {% endblock head %}
@@ -42,8 +39,8 @@
     <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
       <!-- Sidebar - Brand -->
-      <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{% url 'index' %}">
-        <img src="{% static 'img/vast.png' %}" width="50%">
+      <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{% url 'index' %}" id='homeLogo'>
+        <!-- <img src="{% static 'img/vast.png' %}" width="50%" > -->
         <!-- <div class="sidebar-brand-text mx-1">VAST Pipeline</div> -->
       </a>
 
@@ -98,6 +95,20 @@
       </li>
       
       <li class="nav-item">
+        <a class="nav-link collapsed" target="_blank" href="https://github.com/askap-vast/vast-pipeline/issues/new">
+          <i class="fab fa-fw fa-github"></i>
+          <span>Pipeline Repository</span>
+        </a>
+      </li>
+      
+      <li class="nav-item">
+        <a class="nav-link collapsed" target="_blank" href="https://github.com/askap-vast/vast-pipeline/issues/new">
+          <i class="fas fa-fw fa-exclamation"></i>
+          <span>Raise Issue</span>
+        </a>
+      </li>
+      
+      <li class="nav-item">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseLinks" aria-expanded="true" aria-controls="collapseLinks">
           <i class="fas fa-fw fa-link"></i>
           <span>VAST Links</span>
@@ -110,13 +121,6 @@
             <a class="collapse-item" target="_blank" href="https://github.com/askap-vast/vast-project/wiki">Wiki</a>
           </div>
         </div>
-      </li>
-      
-      <li class="nav-item">
-        <a class="nav-link collapsed" target="_blank" href="https://github.com/askap-vast/vast-pipeline/issues/new">
-          <i class="fas fa-fw fa-exclamation"></i>
-          <span>Raise Issue</span>
-        </a>
       </li>
 
     </ul>

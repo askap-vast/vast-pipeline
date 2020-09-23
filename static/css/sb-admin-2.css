@@ -10237,7 +10237,7 @@ a:focus {
   font-size: 0.65rem;
 }
 
-@media (min-width: 2000px) {
+@media (min-width: 3840px) {
   .sidebar {
     width: 13rem !important;
   }

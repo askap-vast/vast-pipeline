@@ -28,3 +28,19 @@
 #feedbackModalDialog {
   max-width: 75%;
 }
+
+#homeLogo {
+   background-image: url('/static/img/vast.png');
+   background-size: 60% auto;
+   background-repeat: no-repeat;
+   vertical-align: middle;
+   background-position: center;
+}
+
+#homeLogo:hover {
+   background-image: url('/static/img/home-solid.png');
+   background-size: auto 40%;
+   background-repeat: no-repeat;
+   vertical-align: middle;
+   background-position: center;
+}

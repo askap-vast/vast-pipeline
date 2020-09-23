@@ -47,6 +47,7 @@ function obj_formatter(obj) {
 // Call the dataTables jQuery plugin
 $(document).ready(function() {
 
+  $('[data-toggle="tooltip"]').tooltip();
   let dataConfParsed = JSON.parse(document.getElementById('datatable-conf').textContent);
   let dataConfList = (Array.isArray(dataConfParsed)) ? dataConfParsed : [dataConfParsed];
   for (let dataConf of dataConfList){
