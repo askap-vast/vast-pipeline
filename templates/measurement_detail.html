@@ -75,7 +75,7 @@
               <strong>Image: </strong> <a href="/images/{{ measurement.image_id }}" target="_blank">{{ measurement.image_name }}</a><p></p>
               <div class="row">
                 <div class="col">
-                  <strong>Num sources: </strong> {{ measurement.nr_sources }} 
+                  <strong>Num sources: </strong> {{ measurement.nr_sources }}
                 </div>
                 <div class="col">
                   <a href="#sourceTable">Source Table</a><p></p>
@@ -116,10 +116,10 @@
             <div class="col">
               <strong>Peak Flux: </strong> {{ measurement.flux_peak|floatformat:3 }} &#177; {{ measurement.flux_peak_err|floatformat:3 }}<br>
               <strong>Int. Flux: </strong> {{ measurement.flux_int|floatformat:3 }} &#177; {{ measurement.flux_int_err|floatformat:3 }}<p></p>
-              
+
               <strong>SNR: </strong> {{ measurement.snr|floatformat:2 }}<br>
               <strong>Local RMS: </strong> {{ measurement.local_rms|floatformat:3 }} mJy<br>
-              <strong>Spectral Index: </strong> 
+              <strong>Spectral Index: </strong>
               {% if measurement.forced %}
                 N/A
               {% else %}
@@ -149,13 +149,8 @@
 
     <!-- Aladin viz tile -->
     <div class="col-lg-4">
-      <div class="card shadow mb-4">
-        <div class="card-header py-3">
-          <h6 class="m-0 font-weight-bold text-primary">Aladin</h6>
-        </div>
-        <div class="card-body">
-          <div id="aladinViz"></div>
-        </div>
+      <div class="card shadow mb-4" style="height: 96%">
+        <div id="aladinViz"></div>
       </div>
     </div>
 
@@ -206,7 +201,7 @@
         </div>
       </div>
   </div>
-  
+
   <div class="row">
     <div class="col">
       <div class="card shadow mb-4">
@@ -241,7 +236,7 @@
       </div>
     </div>
   </div>
-  
+
 <div style="position: fixed; top: 0; right: 0; z-index: 99">
 <div id="alert_placeholder">
 </div>
