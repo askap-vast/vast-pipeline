@@ -394,7 +394,7 @@ def MeasurementIndex(request):
         fields,
         {'name': reverse('vast_pipeline:measurement_detail', args=[1])[:-2]}
     )
-
+    print(reverse('vast_pipeline:measurement_detail', args=[1])[:-2])
     return render(
         request,
         'generic_table.html',
@@ -436,7 +436,7 @@ def MeasurementIndex(request):
 class MeasurementViewSet(ModelViewSet):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [IsAuthenticated]
-    queryset = Measurement.objects.all()
+    queryset = Measurement.objects.all().order_by('id')
     serializer_class = MeasurementSerializer
 
     def get_queryset(self):
@@ -458,6 +458,19 @@ class MeasurementViewSet(ModelViewSet):
 
         serializer = self.get_serializer(qs, many=True)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def sources(self, request, pk=None):
+        measurement = self.queryset.get(pk=pk)
+        qs = measurement.source.all()
+        # qs = Source.objects.all().filter(pk__in=sources)
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            serializer = SourceSerializer(qs, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = SourceSerializer(qs, many=True)
+        return Response(SourceSerializer.data)
 
 
 @login_required
@@ -533,7 +546,7 @@ def MeasurementDetail(request, id, action=None):
     )
 
     sibling_datatable = {
-        'table_id': 'dataTableSiblings',
+        'table_id': 'siblingTable',
         'api': (
             reverse('vast_pipeline:api_measurements-siblings', args=[measurement['id']]) +
             '?format=datatables'
@@ -547,10 +560,73 @@ def MeasurementDetail(request, id, action=None):
         'search': True,
     }
 
-    print(sibling_datatable)
+    source_fields = [
+        'name',
+        'comment',
+        'wavg_ra',
+        'wavg_dec',
+        'avg_flux_int',
+        'avg_flux_peak',
+        'max_flux_peak',
+        'min_snr',
+        'max_snr',
+        'avg_compactness',
+        'n_meas',
+        'n_meas_sel',
+        'n_meas_forced',
+        'n_neighbour_dist',
+        'n_rel',
+        'v_int',
+        'eta_int',
+        'v_peak',
+        'eta_peak',
+        'n_sibl',
+        'new',
+        'new_high_sigma'
+    ]
+
+    source_colsfields = generate_colsfields(
+        source_fields,
+        {'name': reverse('vast_pipeline:source_detail', args=[1])[:-2]}
+    )
+
+    source_datatable = {
+        'table_id': 'measSourcesTable',
+        'api': (
+            reverse('vast_pipeline:api_measurements-sources', args=[measurement['id']]) +
+            '?format=datatables'
+        ),
+        'colsFields': source_colsfields,
+        'colsNames': [
+            'Name',
+            'Comment',
+            'W. Avg. RA',
+            'W. Avg. Dec',
+            'Avg. Int. Flux (mJy)',
+            'Avg. Peak Flux (mJy/beam)',
+            'Max Peak Flux (mJy/beam)',
+            'Min SNR',
+            'Max SNR',
+            'Avg. Compactness',
+            'Total Datapoints',
+            'Selavy Datapoints',
+            'Forced Datapoints',
+            'Nearest Neighbour Dist. (arcmin)',
+            'Relations',
+            'V int flux',
+            '\u03B7 int flux',
+            'V peak flux',
+            '\u03B7 peak flux',
+            'Contains siblings',
+            'New Source',
+            'New High Sigma'
+        ],
+        'search': True,
+    }
+
     context = {
         'measurement': measurement,
-        'datatable': sibling_datatable
+        'datatables': [source_datatable, sibling_datatable]
     }
     # add base url for using in JS9 if assigned
     if settings.BASE_URL and settings.BASE_URL != '':
@@ -1119,7 +1195,6 @@ class RawImageListSet(ViewSet):
         # add home directory for user and jupyter-user (user = github name)
         req_user = request.user.username
         for user in [f'~{req_user}', f'~jupyter-{req_user}']:
-            print(user)
             user_home = os.path.expanduser(user)
             if os.path.exists(user_home):
                 img_regex_list.append(os.path.join(user_home, '**' + os.sep + '*.fits'))

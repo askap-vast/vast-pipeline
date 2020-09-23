@@ -6,8 +6,8 @@
 
 {% block head %}
 
-<link rel='stylesheet' href='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css' />
 <link rel="stylesheet" href="{% static 'vendor/js9/js9-allinone.css' %}" />
+<link rel='stylesheet' href='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css' />
 <link rel="stylesheet" href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" />
 <link rel="stylesheet" href="{% static 'css/collapse-box.min.css' %}">
 
@@ -68,86 +68,129 @@
           <h6 class="m-0 font-weight-bold text-primary">Details</h6>
         </div>
         <div class="card-body">
-            <div class="row">
-        <div class="col">
-          <p><strong>Image: </strong> <a href="/images/{{ measurement.image_id }}" target="_blank">{{ measurement.image_name }}</a></p>
-          <p><strong>Forced Extraction: </strong> {{ measurement.forced }}</p>
-          <p><strong>Sources:</strong>
-          {% if measurement.sources_info %}
-            {% for a,b in measurement.sources_info %}
+          <div class="row">
+            <div class="col">
+              <p><strong>Image: </strong> <a href="/images/{{ measurement.image_id }}" target="_blank">{{ measurement.image_name }}</a></p>
+              <p><strong>Forced Extraction: </strong> {{ measurement.forced }}</p>
+              <p><strong>Sources:</strong>
+              {% if measurement.sources_info %}
+                {% for a,b in measurement.sources_info %}
               <!-- if the comma is only in the if statement then there is an ugly space -->
-              {% if not forloop.last %}
-                <a href="{% url 'vast_pipeline:source_detail' a %}" target="_blank">{{ b }}</a>,
+                  {% if not forloop.last %}
+                    <a href="{% url 'vast_pipeline:source_detail' a %}" target="_blank">{{ b }}</a>,
+                  {% else %}
+                    <a href="{% url 'vast_pipeline:source_detail' a %}" target="_blank">{{ b }}</a>
+                  {% endif %}
+                {% endfor %}
               {% else %}
-                <a href="{% url 'vast_pipeline:source_detail' a %}" target="_blank">{{ b }}</a>
-              {% endif %}
-            {% endfor %}
-          {% else %}
-            None.
-          {% endif %}</p>
-          <p><strong>Position: </strong> {{ measurement.ra }} {{ measurement.dec }}</p>
-          <p><strong>Uncertainty RA: </strong> {{ measurement.uncertainty_ew|deg_to_arcsec|floatformat:3 }}''</p>
-          <p><strong>Uncertainty Dec: </strong> {{ measurement.uncertainty_ns|deg_to_arcsec|floatformat:3 }}''</p>
-          <p><strong>BMAJ: </strong> {{ measurement.bmaj }}''</p>
-          <p><strong>BMIN: </strong> {{ measurement.bmin }}''</p>
-          <p><strong>BPA: </strong> {{ measurement.pa }}&deg;</p>
-          <p><strong>Has siblings: </strong> {{ measurement.has_siblings }}</p>
-          <p><strong>Island ID: </strong> {{ measurement.island_id }}</p>
-          <p><strong>flag_c4: </strong> {{ measurement.flag_c4 }}</p>
-          <p><strong>Comment: </strong> {{ measurement.comment }}</p>
+                None.
+              {% endif %}</p>
+              <p><strong>Position: </strong> {{ measurement.ra }} {{ measurement.dec }}</p>
+              <p><strong>Uncertainty RA: </strong> {{ measurement.uncertainty_ew|deg_to_arcsec|floatformat:3 }}''</p>
+              <p><strong>Uncertainty Dec: </strong> {{ measurement.uncertainty_ns|deg_to_arcsec|floatformat:3 }}''</p>
+              <strong>Major Axis: </strong> {{ measurement.bmaj }}''<br>
+              <strong>Minor Axis: </strong> {{ measurement.bmin }}''<br>
+              <strong>Position Angle: </strong> {{ measurement.pa }}&deg;<br>
+            </div>
+            <div class="col">
+              <p><strong>Has siblings: </strong> {{ measurement.has_siblings }}</p>
+              <p><strong>Island ID: </strong> {{ measurement.island_id }}</p>
+              <p><strong>flag_c4: </strong> {{ measurement.flag_c4 }}</p>
+              <p><strong>Comment: </strong> {{ measurement.comment }}</p>
+            </div>
+          </div>
         </div>
-        <div class="col">
-            Test
-        </div>
-        </div>
+      </div>
+      
+      <div class="card shadow mb-4">
+             <h6 class="card-header m-0 font-weight-bold text-primary" id="logFile">
+               <a data-toggle="collapse" href="#collapseSiblings" aria-expanded="true" aria-controls="collapseSiblings" id="logHeader" class="d-block">
+                 <i class="fa fa-chevron-down pull-right"></i>
+                   Siblings
+               </a>
+             </h6>
+        <!-- Card Content - Collapse -->
+        <div class="collapse show" id="collapseSiblings">
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped table-hover" id="{{ datatables.1.table_id }}" width="100%" cellspacing="0">
+                <thead>
+                  <tr>
+                    {% for name in datatables.1.colsNames %}
+                    <th>{{ name }}</th>
+                    {% endfor %}
+                  </tr>
+                </thead>
+                <tfoot>
+                  <tr>
+                    {% for name in datatables.1.colsNames %}
+                    <th>{{ name }}</th>
+                    {% endfor %}
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>
+    
     <!-- Aladin viz tile -->
     <div class="col-lg-6">
-      <div class="card shadow mb-4">
-        <div class="card-header py-3">
-          <h6 class="m-0 font-weight-bold text-primary">Postage Stamp</h6>
-        </div>
-        <div class="card-body">
-          <div class="JS9Menubar" data-width="700px"></div>
-          <div class="JS9" data-width="700px"></div>
+      <div class="row">
+        <div class="col">
+          <div class="card shadow mb-4">
+            <div class="card-header py-3">
+              <h6 class="m-0 font-weight-bold text-primary">Aladin</h6>
+            </div>
+            <div class="card-body">
+              <div id="aladinViz"></div>
+            </div>
+          </div>
         </div>
       </div>
-
-      <div class="card shadow mb-4">
-        <div class="card-header py-3">
-          <h6 class="m-0 font-weight-bold text-primary">Aladin</h6>
-        </div>
-        <div class="card-body">
-          <div id="aladinViz"></div>
+        
+      <div class="row"> 
+        <div class="col">   
+          <div class="card shadow mb-4">
+            <div class="card-header py-3">
+              <h6 class="m-0 font-weight-bold text-primary">Postage Stamp</h6>
+            </div>
+            <div class="card-body">
+              <div class="JS9Menubar" data-width="400px"></div>
+              <div class="JS9" data-width="400px" data-height="400px"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
   
-    <div class="row">
+  <div class="row">
             <div class="col">
   <!-- Datatable Related Sources -->
   <div class="card shadow mb-4">
-    <a href="#collapseSiblings" class="d-block card-header py-3" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="collapseSiblings">
-      <h6 class="m-0 font-weight-bold text-primary">Siblings</h6>
-    </a>
+         <h6 class="card-header m-0 font-weight-bold text-primary" id="logFile">
+           <a data-toggle="collapse" href="#collapseSources" aria-expanded="true" aria-controls="collapseSources" id="logHeader" class="d-block">
+             <i class="fa fa-chevron-down pull-right"></i>
+               Sources
+           </a>
+         </h6>
     <!-- Card Content - Collapse -->
-    <div class="collapse show" id="collapseSiblings">
+    <div class="collapse show" id="collapseSources">
       <div class="card-body">
         <div class="table-responsive">
-          <table class="table table-bordered table-striped table-hover" id="{{ datatables.table_id }}" width="100%" cellspacing="0">
+          <table class="table table-bordered table-striped table-hover" id="{{ datatables.0.table_id }}" width="100%" cellspacing="0">
             <thead>
               <tr>
-                {% for name in datatable.colsNames %}
+                {% for name in datatables.0.colsNames %}
                 <th>{{ name }}</th>
                 {% endfor %}
               </tr>
             </thead>
             <tfoot>
               <tr>
-                {% for name in datatable.colsNames %}
+                {% for name in datatables.0.colsNames %}
                 <th>{{ name }}</th>
                 {% endfor %}
               </tr>
@@ -156,8 +199,6 @@
         </div>
       </div>
     </div>
-  </div>
-  </div>
   </div>
 
 </div>
@@ -178,7 +219,7 @@
 <script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
 
 <!-- Datatable scripts -->
-{{ datatable|json_script:"datatable-conf" }}
+{{ datatables|json_script:"datatable-conf" }}
 <script src="{% static 'js/datatables-pipeline.min.js' %}"></script>
 
 <!-- Aladin -->
