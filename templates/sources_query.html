@@ -80,20 +80,20 @@
               <div class="form-check form-check-inline">
                 <input class="form-check-input" type="radio" name="sesameService" id="sesameServiceNED" value="ned">
                 <label class="form-check-label" for="sesameServiceNED">NED</label>
-              </div> 
+              </div>
               <div class="form-check form-check-inline">
                 <input class="form-check-input" type="radio" name="sesameService" id="sesameServiceVizier" value="vizier">
                 <label class="form-check-label" for="sesameServiceVizier">VizieR</label>
               </div>
             </div>
             <div class="form-group col-lg-2">
-                <button id="objectResolveButton" type="button" class="btn btn-primary btn-block" data-sesame-url="{% url 'pipeline:api_utils-sesame-search' %}">Resolve</button>
+                <button id="objectResolveButton" type="button" class="btn btn-primary btn-block" data-sesame-url="{% url 'vast_pipeline:api_utils-sesame-search' %}">Resolve</button>
             </div>
           </div>
           <div class="form-row">
             <div class="form-group col-lg">
               <div class="input-group">
-                  <input id="coordInput" type="text" class="form-control" placeholder="Coordinate" aria-label="Coordinate" data-validator-url="{% url 'pipeline:api_utils-coordinate-validator' %}">
+                  <input id="coordInput" type="text" class="form-control" placeholder="Coordinate" aria-label="Coordinate" data-validator-url="{% url 'vast_pipeline:api_utils-coordinate-validator' %}">
                 <div class="input-group-append">
                   <span class="input-group-text bg-transparent">
                     <select id="coordFrameSelect" class="border-0" aria-label="Coordinate frame">
