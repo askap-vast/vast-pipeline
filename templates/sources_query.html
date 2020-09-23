@@ -50,7 +50,7 @@
           <legend>Data Source</legend>
           <div class="form-group row">
               <label for="runSelect" class="col-auto col-form-label font-weight-bold text-gray-800">Pipeline Run <a href="#" data-toggle="tooltip" data-placement="top" title=
-                  "The selavy component '.txt' files for the selected images. The order must match."
+                  "Select a specific pipeline run to query. 'All' will query all pipeline runs together." 
               ><i class="fas fa-info-circle"></i></a></label>
 
               <div class="col">
@@ -65,7 +65,9 @@
         </fieldset>
 
         <fieldset>
-          <legend>Cone Search</legend>
+          <legend>Cone Search <small><a href="#" data-toggle="tooltip" data-placement="top" title=
+                  "Perform a cone search by either fetching an objects coordinates from the listed services or manually entering the position. Standard input formats recongised by astropy should be accpeted, e.g. '01h02m03s -04d05m05s'. A green tick will appear when the coordiantes are accepted." 
+              ><i class="fas fa-info-circle"></i></a></small></legend>
           <div class="form-row align-items-center">
             <div class="form-group col-lg">
               <input id="objectNameInput" type="text" class="form-control" placeholder="Object Name" aria-label="Object Name" aria-describedby="objectNameInputValidation">
@@ -126,7 +128,9 @@
           <div class="row align-items-center">
             <div class="col-lg-6">
               <div class="form-group form-row align-items-center">
-                <label for="fluxMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Avg. Flux</label>
+                <label for="fluxMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Avg. Flux <a href="#" data-toggle="tooltip" data-placement="top" title=
+                  "The average flux of a source. Peak or integrated flux can be selected. Forced fits are included." 
+              ><i class="fas fa-info-circle"></i></a></label>
                 <div class="col">
                   <input id="fluxMinSelect" type="number" class="form-control" placeholder="Min (mJy)" step="0.01" aria-label="Average flux minimum">
                 </div>
@@ -143,7 +147,9 @@
             </div>
             <div class="col-lg-6">
               <div class="form-group form-row align-items-center">
-                <label for="NeighbourMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Nearest Neighbour Dist.</label>
+                <label for="NeighbourMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Nearest Neighbour Dist. <a href="#" data-toggle="tooltip" data-placement="top" title=
+                  "The distance between a source and its nearest neighbour within the same pipeline run." 
+              ><i class="fas fa-info-circle"></i></a></label>
                 <div class="col">
                   <input id="NeighbourMinSelect" type="number" class="form-control" placeholder="Min" min="0" step="1" aria-label="Distance to nearest neighbour minimum">
                 </div>
@@ -164,7 +170,9 @@
           <div class="row align-items-center">
             <div class="col-lg-6">
               <div class="form-group form-row align-items-center">
-                <label for="varVMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">V Metric</label>
+                <label for="varVMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">V Metric <a href="#" data-toggle="tooltip" data-placement="top" title=
+                  "The variability index, equivalent to fractional variability. Peak or integrated flux can be selected." 
+              ><i class="fas fa-info-circle"></i></a></label>
                 <div class="col">
                   <input id="varVMinSelect" type="number" class="form-control" placeholder="Min" step="0.01" aria-label="V metric minimum">
                 </div>
@@ -181,7 +189,9 @@
             </div>
             <div class="col-lg-6">
               <div class="form-group form-row align-items-center">
-                <label for="varEtaMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">&eta; Metric</label>
+                <label for="varEtaMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">&eta; Metric <a href="#" data-toggle="tooltip" data-placement="top" title=
+                  "The weighted reduced chi squared variability metric. Peak or integrated flux can be selected." 
+              ><i class="fas fa-info-circle"></i></a></label>
                 <div class="col">
                   <input id="varEtaMinSelect" type="number" class="form-control" placeholder="Min" step="0.01" aria-label="Eta metric minimum">
                 </div>
@@ -201,7 +211,9 @@
           <div class="row align-items-center">
             <div class="col-lg-6">
               <div class="form-group form-row align-items-center">
-                <label for="varMaxVsMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Max Vs Metric</label>
+                <label for="varMaxVsMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Max Vs Metric <a href="#" data-toggle="tooltip" data-placement="top" title=
+                  "The maximum two-epoch variability t-statistic value derived from the source. Peak or integrated flux can be selected." 
+              ><i class="fas fa-info-circle"></i></a></label>
                 <div class="col">
                   <input id="varMaxVsMinSelect" type="number" class="form-control" placeholder="Min" step="0.01" aria-label="Maximum Vs metric minimum" disabled>
                 </div>
@@ -218,7 +230,9 @@
             </div>
             <div class="col-lg-6">
               <div class="form-group form-row align-items-center">
-                <label for="varMaxAbsMMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Max |m| Metric</label>
+                <label for="varMaxAbsMMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Max |m| Metric <a href="#" data-toggle="tooltip" data-placement="top" title=
+                  "The maximum two-epoch modulation index derived from the source (measure of variability). Peak or integrated flux can be selected." 
+              ><i class="fas fa-info-circle"></i></a></label>
                 <div class="col">
                   <input id="varMaxAbsMMinSelect" type="number" class="form-control" placeholder="Min" step="0.01" aria-label="Maximum absolute m metric minimum" disabled>
                 </div>
@@ -238,7 +252,9 @@
           <div class="row align-items-center">
             <div class="col-lg-6">
               <div class="form-group form-row align-items-center">
-                <label for="MinSnrMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Min SNR</label>
+                <label for="MinSnrMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Min SNR <a href="#" data-toggle="tooltip" data-placement="top" title=
+                  "The minimum signal-to-noise value of the measurements that make up the source. Forced fits are excluded." 
+              ><i class="fas fa-info-circle"></i></a></label>
                 <div class="col">
                   <input id="MinSnrMinSelect" type="number" class="form-control" placeholder="Min" min="0" step="1" aria-label="Minimum SNR minimum">
                 </div>
@@ -249,7 +265,9 @@
             </div>
             <div class="col-lg-6">
               <div class="form-group form-row align-items-center">
-                <label for="MaxSnrMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Max SNR</label>
+                <label for="MaxSnrMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Max SNR <a href="#" data-toggle="tooltip" data-placement="top" title=
+                  "The maximum signal-to-noise value of the measurements that make up the source. Forced fits are excluded." 
+              ><i class="fas fa-info-circle"></i></a></label>
                 <div class="col">
                   <input id="MaxSnrMinSelect" type="number" class="form-control" placeholder="Min" min="0" step="1" aria-label="Maximum SNR minimum">
                 </div>
@@ -263,7 +281,9 @@
           <div class="row align-items-center">
             <div class="col-lg-6">
               <div class="form-group form-row align-items-center">
-                <label for="datapointMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Datapoints</label>
+                <label for="datapointMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Datapoints <a href="#" data-toggle="tooltip" data-placement="top" title=
+                  "The total number of datapoints the source contains (selavy extractions and forced fits)." 
+              ><i class="fas fa-info-circle"></i></a></label>
                 <div class="col">
                   <input id="datapointMinSelect" type="number" class="form-control" placeholder="Min" min="1" step="1" aria-label="Datapoint count minimum">
                 </div>
@@ -274,7 +294,9 @@
             </div>
             <div class="col-lg-6">
               <div class="form-group form-row align-items-center">
-                <label for="SelavyMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Selavy</label>
+                <label for="SelavyMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Selavy <a href="#" data-toggle="tooltip" data-placement="top" title=
+                  "The total number of selavy extracted measurements the source contains." 
+              ><i class="fas fa-info-circle"></i></a></label>
                 <div class="col">
                   <input id="SelavyMinSelect" type="number" class="form-control" placeholder="Min" min="1" step="1" aria-label="Selavy datapoint count minimum">
                 </div>
@@ -288,7 +310,9 @@
           <div class="row align-items-center">
             <div class="col-lg-6">
               <div class="form-group form-row align-items-center">
-                <label for="ForcedMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Forced</label>
+                <label for="ForcedMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Forced <a href="#" data-toggle="tooltip" data-placement="top" title=
+                  "The total number of forced fit measurements the source contains." 
+              ><i class="fas fa-info-circle"></i></a></label>
                 <div class="col">
                   <input id="ForcedMinSelect" type="number" class="form-control" placeholder="Min" min="0" step="1" aria-label="Forced photometry datapoint count minimum">
                 </div>
@@ -299,7 +323,9 @@
             </div>
             <div class="col-lg-6">
               <div class="form-group form-row align-items-center">
-                <label for="RelationsMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Relations</label>
+                <label for="RelationsMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Relations <a href="#" data-toggle="tooltip" data-placement="top" title=
+                  "The number of relations the source has. A relation is a source which is also seen as 'associated' with source in question." 
+              ><i class="fas fa-info-circle"></i></a></label>
                 <div class="col">
                   <input id="RelationsMinSelect" type="number" class="form-control" placeholder="Min" min="0" step="1" aria-label="Related sources count minimum">
                 </div>
@@ -313,7 +339,9 @@
           <div class="row align-items-center">
             <div class="col-lg-6">
               <div class="form-group form-row align-items-center">
-                <label for="compactnessMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Avg. Compactness</label>
+                <label for="compactnessMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Avg. Compactness <a href="#" data-toggle="tooltip" data-placement="top" title=
+                  "The average compactness value of the source. Compactness is calculated by 'integrated flux / peak flux'." 
+              ><i class="fas fa-info-circle"></i></a></label>
                 <div class="col">
                   <input id="compactnessMinSelect" type="number" class="form-control" placeholder="Min" min="0" step="1" aria-label="Average compactness minimum">
                 </div>
@@ -325,7 +353,7 @@
             <div class="col-lg-6">
               <div class="form-group form-row align-items-center">
                 <label for="NewSigmaMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">New Source High Sigma <a href="#" data-toggle="tooltip" data-placement="top" title=
-                  "The selavy component '.txt' files for the selected images. The order must match."
+                  "The highest signal-to-noise value the new source would have if placed in previous images in time where the source should have been seen."
               ><i class="fas fa-info-circle"></i></a></label>
                 <div class="col">
                   <input id="NewSigmaMinSelect" type="number" class="form-control" placeholder="Min" min="0" step="1" aria-label="New source high sigma minimum">
@@ -344,11 +372,13 @@
                 <div class="col">
                   <div class="form-check form-check-inline">
                     <input class="form-check-input" id="newSourceSelect" type="checkbox">
-                    <label class="form-check-label" for="newSourceSelect">New source</label>
+                    <label class="form-check-label" for="newSourceSelect">New source <a href="#" data-toggle="tooltip" data-placement="top" title="A 'new source' is a source that has appeared and was not detected in the first image where it should have been seen in the pipeline run." 
+              ><i class="fas fa-info-circle"></i></a></label>
                   </div>
                   <div class="form-check form-check-inline">
                     <input class="form-check-input" id="containsSiblingsSelect" type="checkbox">
-                    <label class="form-check-label" for="containsSiblingsSelect">No siblings</label>
+                    <label class="form-check-label" for="containsSiblingsSelect">No siblings <a href="#" data-toggle="tooltip" data-placement="top" title="The source contains no measurements which have 'siblings'. If a measurement has siblings it means the measurement is one component of a multi-component island." 
+              ><i class="fas fa-info-circle"></i></a></label>
                   </div>
                 </div>
               </div>
