@@ -8,6 +8,8 @@
 
 <link rel='stylesheet' href='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css' />
 <link rel="stylesheet" href="{% static 'vendor/js9/js9-allinone.css' %}" />
+<link rel="stylesheet" href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" />
+<link rel="stylesheet" href="{% static 'css/collapse-box.min.css' %}">
 
 {% endblock head %}
 
@@ -66,6 +68,8 @@
           <h6 class="m-0 font-weight-bold text-primary">Details</h6>
         </div>
         <div class="card-body">
+            <div class="row">
+        <div class="col">
           <p><strong>Image: </strong> <a href="/images/{{ measurement.image_id }}" target="_blank">{{ measurement.image_name }}</a></p>
           <p><strong>Forced Extraction: </strong> {{ measurement.forced }}</p>
           <p><strong>Sources:</strong>
@@ -81,10 +85,9 @@
           {% else %}
             None.
           {% endif %}</p>
-          <p><strong>RA: </strong> {{ measurement.ra }}</p>
-          <p><strong>DEC: </strong> {{ measurement.dec }}</p>
-          <p><strong>Uncertainty EW: </strong> {{ measurement.uncertainty_ew|deg_to_arcsec|floatformat:3 }}''</p>
-          <p><strong>Uncertainty NS: </strong> {{ measurement.uncertainty_ns|deg_to_arcsec|floatformat:3 }}''</p>
+          <p><strong>Position: </strong> {{ measurement.ra }} {{ measurement.dec }}</p>
+          <p><strong>Uncertainty RA: </strong> {{ measurement.uncertainty_ew|deg_to_arcsec|floatformat:3 }}''</p>
+          <p><strong>Uncertainty Dec: </strong> {{ measurement.uncertainty_ns|deg_to_arcsec|floatformat:3 }}''</p>
           <p><strong>BMAJ: </strong> {{ measurement.bmaj }}''</p>
           <p><strong>BMIN: </strong> {{ measurement.bmin }}''</p>
           <p><strong>BPA: </strong> {{ measurement.pa }}&deg;</p>
@@ -92,6 +95,11 @@
           <p><strong>Island ID: </strong> {{ measurement.island_id }}</p>
           <p><strong>flag_c4: </strong> {{ measurement.flag_c4 }}</p>
           <p><strong>Comment: </strong> {{ measurement.comment }}</p>
+        </div>
+        <div class="col">
+            Test
+        </div>
+        </div>
         </div>
       </div>
     </div>
@@ -102,8 +110,8 @@
           <h6 class="m-0 font-weight-bold text-primary">Postage Stamp</h6>
         </div>
         <div class="card-body">
-          <div class="JS9Menubar" data-width="750px"></div>
-          <div class="JS9" data-width="750px"></div>
+          <div class="JS9Menubar" data-width="700px"></div>
+          <div class="JS9" data-width="700px"></div>
         </div>
       </div>
 
@@ -112,10 +120,44 @@
           <h6 class="m-0 font-weight-bold text-primary">Aladin</h6>
         </div>
         <div class="card-body">
-          <div id="aladinViz" style="height:23.3rem;"></div>
+          <div id="aladinViz"></div>
         </div>
       </div>
     </div>
+  </div>
+  
+    <div class="row">
+            <div class="col">
+  <!-- Datatable Related Sources -->
+  <div class="card shadow mb-4">
+    <a href="#collapseSiblings" class="d-block card-header py-3" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="collapseSiblings">
+      <h6 class="m-0 font-weight-bold text-primary">Siblings</h6>
+    </a>
+    <!-- Card Content - Collapse -->
+    <div class="collapse show" id="collapseSiblings">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-bordered table-striped table-hover" id="{{ datatables.table_id }}" width="100%" cellspacing="0">
+            <thead>
+              <tr>
+                {% for name in datatable.colsNames %}
+                <th>{{ name }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tfoot>
+              <tr>
+                {% for name in datatable.colsNames %}
+                <th>{{ name }}</th>
+                {% endfor %}
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
   </div>
 
 </div>
@@ -134,6 +176,10 @@
 <!-- Page level plugins -->
 <script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
 <script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+
+<!-- Datatable scripts -->
+{{ datatable|json_script:"datatable-conf" }}
+<script src="{% static 'js/datatables-pipeline.min.js' %}"></script>
 
 <!-- Aladin -->
 {{ measurement|json_script:"data-aladin" }}

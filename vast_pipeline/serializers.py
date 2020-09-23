@@ -66,6 +66,7 @@ class MeasurementSerializer(serializers.ModelSerializer):
             'snr',
             'has_siblings',
             'forced',
+            'island_id'
         ]
         datatables_always_serialize = ('id',)
 

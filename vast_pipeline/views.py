@@ -82,6 +82,17 @@ def Home(request):
         .count()
         .compute()
     ) if (check_run_db and meas_glob) else 0
+
+    f_meas_glob = glob(os.path.join(
+        settings.PIPELINE_WORKING_DIR,
+        '*/forced_meas*.parquet',
+    ))
+    totals['nr_f_meas'] = (
+        dd.read_parquet(f_meas_glob, columns='id')
+        .count()
+        .compute()
+    ) if (check_run_db and f_meas_glob) else 0
+
     context = {
         'totals': totals,
         'd3_celestial_skyregions': get_skyregions_collection(),
@@ -432,6 +443,22 @@ class MeasurementViewSet(ModelViewSet):
         run_id = self.request.query_params.get('run_id', None)
         return self.queryset.filter(source__id=run_id) if run_id else self.queryset
 
+    @action(detail=True, methods=['get'])
+    def siblings(self, request, pk=None):
+        measurement = self.queryset.get(pk=pk)
+        image_id = measurement.image_id
+        island_id = measurement.island_id
+        qs = self.queryset.filter(
+            image__id=image_id, island_id=island_id
+        ).exclude(pk=pk)
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(qs, many=True)
+        return Response(serializer.data)
+
 
 @login_required
 def MeasurementDetail(request, id, action=None):
@@ -493,7 +520,38 @@ def MeasurementDetail(request, id, action=None):
             measurement['source_names']
         ))
 
-    context = {'measurement': measurement}
+    # generate context for related sources datatable
+    sibling_fields = [
+        'name',
+        'flux_peak',
+        'island_id',
+    ]
+
+    sibling_colsfields = generate_colsfields(
+        sibling_fields,
+        {'name': reverse('vast_pipeline:measurement_detail', args=[1])[:-2]}
+    )
+
+    sibling_datatable = {
+        'table_id': 'dataTableSiblings',
+        'api': (
+            reverse('vast_pipeline:api_measurements-siblings', args=[measurement['id']]) +
+            '?format=datatables'
+        ),
+        'colsFields': sibling_colsfields,
+        'colsNames': [
+            'Name',
+            'Peak Flux (mJy/beam)',
+            'Island_ID'
+        ],
+        'search': True,
+    }
+
+    print(sibling_datatable)
+    context = {
+        'measurement': measurement,
+        'datatable': sibling_datatable
+    }
     # add base url for using in JS9 if assigned
     if settings.BASE_URL and settings.BASE_URL != '':
         context['base_url'] = settings.BASE_URL.strip('/')
