@@ -1,6 +1,10 @@
 import os
 import sys
 import django
+import warnings
+
+from astropy.utils.exceptions import AstropyWarning
+warnings.simplefilter("ignore", category=AstropyWarning)
 
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'webinterface.settings')
