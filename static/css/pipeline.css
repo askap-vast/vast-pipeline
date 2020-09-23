@@ -44,3 +44,7 @@
    vertical-align: middle;
    background-position: center;
 }
+
+.copy-coords{
+  display: none !important;
+}

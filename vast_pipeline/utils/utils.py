@@ -128,7 +128,19 @@ def eq_to_cart(ra, dec):
     )
 
 
-def gal2equ(l,b):
+def equ2gal(ra, dec):
+    """
+    Convert equatorial coordinates to galactic
+    """
+    c = SkyCoord(np.float(ra) * u.deg, np.float(dec) * u.deg, frame='icrs')
+    galactic = c.galactic
+    l = galactic.l.deg
+    b = galactic.b.deg
+
+    return l, b
+
+
+def gal2equ(l, b):
     """
     Convert galactic coordinates to equatorial.
     """

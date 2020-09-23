@@ -47,7 +47,7 @@ from vast_pipeline.serializers import (
     SourceFavSerializer, SesameResultSerializer, CoordinateValidatorSerializer,
     ExternalSearchSerializer
 )
-from vast_pipeline.utils.utils import deg2dms, deg2hms, parse_coord
+from vast_pipeline.utils.utils import deg2dms, deg2hms, parse_coord, equ2gal
 from vast_pipeline.utils.view import generate_colsfields, get_skyregions_collection
 from vast_pipeline.management.commands.initpiperun import initialise_run
 from vast_pipeline.forms import PipelineRunForm
@@ -485,7 +485,6 @@ def MeasurementDetail(request, id, action=None):
                     datetime=F('image__datetime'),
                     image_name=F('image__name'),
                     source_ids=ArrayAgg('source__id'),
-                    source_names=ArrayAgg('source__name'),
                 ).values().first()
             else:
                 measurement = measurement.filter(id=id).annotate(
@@ -501,37 +500,30 @@ def MeasurementDetail(request, id, action=None):
                     datetime=F('image__datetime'),
                     image_name=F('image__name'),
                     source_ids=ArrayAgg('source__id'),
-                    source_names=ArrayAgg('source__name'),
                 ).values().last()
             else:
                 measurement = measurement.filter(id=id).annotate(
                     datetime=F('image__datetime'),
                     image_name=F('image__name'),
                     source_ids=ArrayAgg('source__id'),
-                    source_names=ArrayAgg('source__name'),
                 ).values().get()
     else:
         measurement = measurement.filter(id=id).annotate(
             datetime=F('image__datetime'),
             image_name=F('image__name'),
             source_ids=ArrayAgg('source__id'),
-            source_names=ArrayAgg('source__name'),
         ).values().get()
 
     measurement['aladin_ra'] = measurement['ra']
     measurement['aladin_dec'] = measurement['dec']
     measurement['aladin_zoom'] = 0.15
-    measurement['ra'] = deg2hms(measurement['ra'], hms_format=True)
-    measurement['dec'] = deg2dms(measurement['dec'], dms_format=True)
+    measurement['ra_hms'] = deg2hms(measurement['ra'], hms_format=True)
+    measurement['dec_dms'] = deg2dms(measurement['dec'], dms_format=True)
+    measurement['l'], measurement['b'] = equ2gal(measurement['ra'], measurement['dec'])
 
     measurement['datetime'] = measurement['datetime'].isoformat()
 
-    if not measurement['source_ids'] == [None]:
-        # this enables easy presenting in the template
-        measurement['sources_info'] = list(zip(
-            measurement['source_ids'],
-            measurement['source_names']
-        ))
+    measurement['nr_sources'] = 0 if measurement['source_ids'] == [None] else len(measurement['source_ids'])
 
     # generate context for related sources datatable
     sibling_fields = [

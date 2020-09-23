@@ -61,7 +61,7 @@
 	</div>
 
   <div class="row">
-    <div class="col-lg-6">
+    <div class="col-lg-4">
       <!-- Basic Card Example -->
       <div class="card shadow mb-4">
         <div class="card-header py-3">
@@ -70,137 +70,182 @@
         <div class="card-body">
           <div class="row">
             <div class="col">
-              <p><strong>Image: </strong> <a href="/images/{{ measurement.image_id }}" target="_blank">{{ measurement.image_name }}</a></p>
-              <p><strong>Forced Extraction: </strong> {{ measurement.forced }}</p>
-              <p><strong>Sources:</strong>
-              {% if measurement.sources_info %}
-                {% for a,b in measurement.sources_info %}
-              <!-- if the comma is only in the if statement then there is an ugly space -->
-                  {% if not forloop.last %}
-                    <a href="{% url 'vast_pipeline:source_detail' a %}" target="_blank">{{ b }}</a>,
-                  {% else %}
-                    <a href="{% url 'vast_pipeline:source_detail' a %}" target="_blank">{{ b }}</a>
-                  {% endif %}
-                {% endfor %}
-              {% else %}
-                None.
-              {% endif %}</p>
-              <p><strong>Position: </strong> {{ measurement.ra }} {{ measurement.dec }}</p>
-              <p><strong>Uncertainty RA: </strong> {{ measurement.uncertainty_ew|deg_to_arcsec|floatformat:3 }}''</p>
-              <p><strong>Uncertainty Dec: </strong> {{ measurement.uncertainty_ns|deg_to_arcsec|floatformat:3 }}''</p>
-              <strong>Major Axis: </strong> {{ measurement.bmaj }}''<br>
-              <strong>Minor Axis: </strong> {{ measurement.bmin }}''<br>
-              <strong>Position Angle: </strong> {{ measurement.pa }}&deg;<br>
+              <strong>Name: </strong>{{ measurement.name }}<br>
+              <strong>Island ID: </strong> {{ measurement.island_id }}<br>
+              <strong>Image: </strong> <a href="/images/{{ measurement.image_id }}" target="_blank">{{ measurement.image_name }}</a><p></p>
+              <div class="row">
+                <div class="col">
+                  <strong>Num sources: </strong> {{ measurement.nr_sources }} 
+                </div>
+                <div class="col">
+                  <a href="#sourceTable">Source Table</a><p></p>
+                </div>
+              </div>
+              <div id='secretInfo' class='copy-coords'>{{ measurement.ra_hms }} {{ measurement.dec_dms }}</div>
+              <div id='secretDegInfo' class='copy-coords'>{{ measurement.ra }} {{ measurement.dec }}</div>
+              <div id='secretGalInfo' class='copy-coords'>{{ measurement.l }} {{ measurement.b }}</div>
+              <strong>Position: </strong>{{ measurement.ra_hms }} {{ measurement.dec_dms }}
+              <button type="button" id="btnCopy" class="btn btn-link btn-circle btn-sm" title="Copy">
+                <i class="far fa-copy"></i>
+              </button><br>
+              <strong>Position (Decimal): </strong>{{ measurement.ra }} {{ measurement.dec }}
+              <button type="button" id="btnDegCopy" class="btn btn-link btn-circle btn-sm" title="Copy">
+                <i class="far fa-copy"></i>
+              </button><br>
+              <strong>Position (Galactic): </strong>{{ measurement.l|floatformat:6 }} {{ measurement.b|floatformat:6 }}
+              <button type="button" id="btnGalCopy" class="btn btn-link btn-circle btn-sm" title="Copy">
+                <i class="far fa-copy"></i>
+              </button><p></p>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <strong>Uncertainty RA: </strong> {{ measurement.uncertainty_ew|deg_to_arcsec|floatformat:3 }}''<br>
+              <strong>Uncertainty Dec: </strong> {{ measurement.uncertainty_ns|deg_to_arcsec|floatformat:3 }}''<p></p>
+              <strong>Major Axis: </strong> {{ measurement.bmaj|floatformat:2 }}''<br>
+              <strong>Minor Axis: </strong> {{ measurement.bmin|floatformat:2 }}''<br>
+              <strong>Position Angle: </strong> {{ measurement.pa|floatformat:2 }}&deg;<br>
+              <strong>Chi squared fit: </strong> {{ measurement.chi_squared_fit|floatformat:2 }}<p></p>
+
+              <strong>Forced Extraction: </strong> {{ measurement.forced }}<br>
+              <strong>Has siblings: </strong> {{ measurement.has_siblings }}
+              {% if measurement.has_siblings %}
+                (<a href="#siblingTable">Table</a>)
+              {% endif %}
             </div>
             <div class="col">
-              <p><strong>Has siblings: </strong> {{ measurement.has_siblings }}</p>
-              <p><strong>Island ID: </strong> {{ measurement.island_id }}</p>
-              <p><strong>flag_c4: </strong> {{ measurement.flag_c4 }}</p>
-              <p><strong>Comment: </strong> {{ measurement.comment }}</p>
+              <strong>Peak Flux: </strong> {{ measurement.flux_peak|floatformat:3 }} &#177; {{ measurement.flux_peak_err|floatformat:3 }}<br>
+              <strong>Int. Flux: </strong> {{ measurement.flux_int|floatformat:3 }} &#177; {{ measurement.flux_int_err|floatformat:3 }}<p></p>
+              
+              <strong>SNR: </strong> {{ measurement.snr|floatformat:2 }}<br>
+              <strong>Local RMS: </strong> {{ measurement.local_rms|floatformat:3 }} mJy<br>
+              <strong>Spectral Index: </strong> 
+              {% if measurement.forced %}
+                N/A
+              {% else %}
+                {{ measurement.spectral_index|floatformat:2 }}
+              {% endif %}<br>
+              <strong>Spectral Index from TT: </strong>
+              {% if measurement.forced %}
+                N/A
+              {% else %}
+                {{ measurement.spectral_index_from_TT }}
+              {% endif %}<p></p>
+
+              <strong>flag_c4: </strong> {{ measurement.flag_c4 }}<br>
+              <strong>Compactness: </strong> {{ measurement.compactness|floatformat:2 }}
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <p></p><strong>Comment: </strong> {{ measurement.comment }}
             </div>
           </div>
         </div>
       </div>
-      
+
+
+    </div>
+
+    <!-- Aladin viz tile -->
+    <div class="col-lg-4">
       <div class="card shadow mb-4">
-             <h6 class="card-header m-0 font-weight-bold text-primary" id="logFile">
-               <a data-toggle="collapse" href="#collapseSiblings" aria-expanded="true" aria-controls="collapseSiblings" id="logHeader" class="d-block">
-                 <i class="fa fa-chevron-down pull-right"></i>
-                   Siblings
-               </a>
-             </h6>
-        <!-- Card Content - Collapse -->
-        <div class="collapse show" id="collapseSiblings">
-          <div class="card-body">
-            <div class="table-responsive">
-              <table class="table table-bordered table-striped table-hover" id="{{ datatables.1.table_id }}" width="100%" cellspacing="0">
-                <thead>
-                  <tr>
-                    {% for name in datatables.1.colsNames %}
-                    <th>{{ name }}</th>
-                    {% endfor %}
-                  </tr>
-                </thead>
-                <tfoot>
-                  <tr>
-                    {% for name in datatables.1.colsNames %}
-                    <th>{{ name }}</th>
-                    {% endfor %}
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          </div>
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">Aladin</h6>
+        </div>
+        <div class="card-body">
+          <div id="aladinViz"></div>
         </div>
       </div>
     </div>
-    
-    <!-- Aladin viz tile -->
-    <div class="col-lg-6">
-      <div class="row">
-        <div class="col">
-          <div class="card shadow mb-4">
-            <div class="card-header py-3">
-              <h6 class="m-0 font-weight-bold text-primary">Aladin</h6>
-            </div>
-            <div class="card-body">
-              <div id="aladinViz"></div>
-            </div>
+
+    <div class="col-lg-4">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">Postage Stamp</h6>
+        </div>
+        <div class="card-body">
+          <div class="JS9Menubar" data-width="450px"></div>
+          <div class="JS9" data-width="450px" data-height="450px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col">
+    <!-- Datatable Related Sources -->
+    <div class="card shadow mb-4">
+      <h6 class="card-header m-0 font-weight-bold text-primary" id="sourceTable">
+        <a data-toggle="collapse" href="#collapseSources" aria-expanded="true" aria-controls="collapseSources" id="sourcesHeader" class="d-block">
+          <i class="fa fa-chevron-down pull-right"></i>
+          Sources
+        </a>
+      </h6>
+      <!-- Card Content - Collapse -->
+      <div class="collapse show" id="collapseSources">
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-bordered table-striped table-hover" id="{{ datatables.0.table_id }}" width="100%" cellspacing="0">
+              <thead>
+                <tr>
+                  {% for name in datatables.0.colsNames %}
+                  <th>{{ name }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tfoot>
+                <tr>
+                  {% for name in datatables.0.colsNames %}
+                  <th>{{ name }}</th>
+                  {% endfor %}
+                </tr>
+              </tfoot>
+            </table>
           </div>
         </div>
       </div>
-        
-      <div class="row"> 
-        <div class="col">   
-          <div class="card shadow mb-4">
-            <div class="card-header py-3">
-              <h6 class="m-0 font-weight-bold text-primary">Postage Stamp</h6>
-            </div>
-            <div class="card-body">
-              <div class="JS9Menubar" data-width="400px"></div>
-              <div class="JS9" data-width="400px" data-height="400px"></div>
-            </div>
+  </div>
+  
+  <div class="row">
+    <div class="col">
+      <div class="card shadow mb-4">
+        <h6 class="card-header m-0 font-weight-bold text-primary">
+          <a data-toggle="collapse" href="#collapseSiblings" aria-expanded="true" aria-controls="collapseSiblings" id="siblingHeader" class="d-block">
+            <i class="fa fa-chevron-down pull-right"></i>
+            Siblings
+          </a>
+        </h6>
+        <!-- Card Content - Collapse -->
+        <div class="collapse show" id="collapseSiblings">
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-bordered table-striped table-hover" id="{{ datatables.1.table_id }}" width="100%" cellspacing="0">
+              <thead>
+                <tr>
+                  {% for name in datatables.1.colsNames %}
+                  <th>{{ name }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tfoot>
+                <tr>
+                  {% for name in datatables.1.colsNames %}
+                  <th>{{ name }}</th>
+                  {% endfor %}
+                </tr>
+              </tfoot>
+            </table>
           </div>
         </div>
       </div>
     </div>
   </div>
   
-  <div class="row">
-            <div class="col">
-  <!-- Datatable Related Sources -->
-  <div class="card shadow mb-4">
-         <h6 class="card-header m-0 font-weight-bold text-primary" id="logFile">
-           <a data-toggle="collapse" href="#collapseSources" aria-expanded="true" aria-controls="collapseSources" id="logHeader" class="d-block">
-             <i class="fa fa-chevron-down pull-right"></i>
-               Sources
-           </a>
-         </h6>
-    <!-- Card Content - Collapse -->
-    <div class="collapse show" id="collapseSources">
-      <div class="card-body">
-        <div class="table-responsive">
-          <table class="table table-bordered table-striped table-hover" id="{{ datatables.0.table_id }}" width="100%" cellspacing="0">
-            <thead>
-              <tr>
-                {% for name in datatables.0.colsNames %}
-                <th>{{ name }}</th>
-                {% endfor %}
-              </tr>
-            </thead>
-            <tfoot>
-              <tr>
-                {% for name in datatables.0.colsNames %}
-                <th>{{ name }}</th>
-                {% endfor %}
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
+<div style="position: fixed; top: 0; right: 0; z-index: 99">
+<div id="alert_placeholder">
+</div>
+</div>
 </div>
 <!-- /.container-fluid -->
 
@@ -253,6 +298,49 @@
         }
       }
     );
+  });
+</script>
+
+<script type="text/javascript">
+  bootstrap_alert = function() {}
+  bootstrap_alert.success = function(message) {
+      $('#alert_placeholder').html('<div id="copyalert" class="alert alert-success alert-dismissible fade show" role="alert">'+message+'<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+      setTimeout(function () {
+          $("#copyalert").fadeTo(500, 0).slideUp(600, function () {
+              $(this).remove();
+          });
+      }, 2000);
+          }
+  var $body = document.getElementsByTagName('body')[0];
+  var $btnCopy = document.getElementById('btnCopy');
+  var $btnDegCopy = document.getElementById('btnDegCopy');
+  var $btnGalCopy = document.getElementById('btnGalCopy');
+  var secretInfo = document.getElementById('secretInfo').innerHTML;
+  var secretDegInfo = document.getElementById('secretDegInfo').innerHTML;
+  var secretGalInfo = document.getElementById('secretGalInfo').innerHTML;
+
+  var copyToClipboard = function(secretInfo) {
+    var $tempInput = document.createElement('INPUT');
+    $body.appendChild($tempInput);
+    $tempInput.setAttribute('value', secretInfo)
+    $tempInput.select();
+    document.execCommand('copy');
+    $body.removeChild($tempInput);
+  }
+
+  $btnCopy.addEventListener('click', function(ev) {
+    copyToClipboard(secretInfo);
+    bootstrap_alert.success("{{ measurement.ra_hms }} {{ measurement.dec_dms }} copied!");
+  });
+
+  $btnDegCopy.addEventListener('click', function(ev) {
+    copyToClipboard(secretDegInfo);
+    bootstrap_alert.success("{{ measurement.ra }} {{ measurement.dec }} copied!");
+  });
+
+  $btnGalCopy.addEventListener('click', function(ev) {
+    copyToClipboard(secretGalInfo);
+    bootstrap_alert.success("{{ measurement.l|floatformat:6 }} {{ measurement.b|floatformat:6 }} copied!");
   });
 </script>
 
