@@ -152,8 +152,11 @@
     let js9Menu = $(".JS9Menubar");
     let width = js9Container.width();
     let height = js9Container.height();
-    // I don't know why the extra 5 is needed, but it is!
-    JS9.ResizeDisplay(width, height - js9Menu.height() - 5);
+    let resizeFudge = 0;
+    if (JS9.bugs.webkit_resize) {
+      resizeFudge = JS9.RESIZEFUDGE;
+    }
+    JS9.ResizeDisplay(width, height - js9Menu.height() - resizeFudge);
   }
   $(document).on("JS9:ready", function() {
     let baseUrl = '{{ base_url }}' || null;
