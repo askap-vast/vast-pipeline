@@ -633,7 +633,7 @@ class SourceViewSet(ModelViewSet):
     serializer_class = SourceSerializer
 
     def get_queryset(self):
-        qs = Source.objects.all()
+        qs = Source.objects.all().filter(run__status='END')
 
         radius_conversions = {
             "arcsec": 3600.,
@@ -750,7 +750,7 @@ def SourceQuery(request):
     )
 
     # get all pipeline run names
-    p_runs = list(Run.objects.values('name').all())
+    p_runs = list(Run.objects.filter(status='END').values('name').all())
 
     return render(
         request,
