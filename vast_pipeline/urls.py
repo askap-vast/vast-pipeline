@@ -34,7 +34,7 @@ urlpatterns = [
         views.MeasurementDetail,
         name='measurement_detail'
     ),
-    path('sources/query', views.SourceQuery, name='source_query'),
+    path('sources/query/', views.SourceQuery, name='source_query'),
     re_path(
         r'^sources/(?P<id>\d+)(?:/(?P<action>[\w]+))?/$',
         views.SourceDetail,

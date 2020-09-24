@@ -114,6 +114,18 @@ FLOAT_FIELDS = {
         'precision': 2,
         'scale': 1,
     },
+    'beam_bmaj': {
+        'precision': 2,
+        'scale': 3600.,
+    },
+    'beam_bmin': {
+        'precision': 2,
+        'scale': 3600.,
+    },
+    'beam_bpa': {
+        'precision': 2,
+        'scale': 1,
+    },
 }
 
 

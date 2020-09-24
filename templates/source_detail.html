@@ -2,6 +2,8 @@
 
 {% load static %}
 
+{% load unit_tags %}
+
 {% block head %}
 
 <link rel='stylesheet' href='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css' />
@@ -66,23 +68,70 @@
 	</div>
 
   <div class="row">
-    <div class="col-xl-3 col-lg-6 mb-4">
+    <div class="col-xl-4 col-lg-6 mb-4">
       <!-- Basic Card Example -->
       <div class="card shadow mb-4 h-100">
         <div class="card-header py-3">
           <h6 class="m-0 font-weight-bold text-primary">Details</h6>
         </div>
         <div class="card-body">
-          <p><strong>RA: </strong> {{ source.wavg_ra }}</p>
-          <p><strong>DEC: </strong> {{ source.wavg_dec }}</p>
-          <p><strong>New Source: </strong> {{ source.new }}</p>
-          <p><strong>Nr Datapoints: </strong> {{ source.measurements }}</p>
-          <p><strong>Pipeline Run: </strong> <a href="{% url 'vast_pipeline:run_detail' source.run_id %}">{{ source.run_name }}</a></p>
+          <strong>Name: </strong>{{ source.name }}<br>
+          <strong>Pipeline Run: </strong> <a href="{% url 'vast_pipeline:run_detail' source.run_id %}" target="_blank">{{ source.run_name }}</a><p></p>
+          <div id='secretInfo' class='copy-coords'>{{ source.wavg_ra_hms }} {{ source.wavg_dec_dms }}</div>
+          <div id='secretDegInfo' class='copy-coords'>{{ source.wavg_ra }} {{ source.wavg_dec }}</div>
+          <div id='secretGalInfo' class='copy-coords'>{{ source.wavg_l }} {{ source.wavg_b }}</div>
+          <strong>Position: </strong>{{ source.wavg_ra_hms }} {{ source.wavg_dec_dms }}
+          <button type="button" id="btnCopy" class="btn btn-link btn-circle btn-sm" title="Copy">
+            <i class="far fa-copy"></i>
+          </button><br>
+          <strong>Position (Decimal): </strong>{{ source.wavg_ra }} {{ source.wavg_dec }}
+          <button type="button" id="btnDegCopy" class="btn btn-link btn-circle btn-sm" title="Copy">
+            <i class="far fa-copy"></i>
+          </button><br>
+          <strong>Position (Galactic): </strong>{{ source.wavg_l|floatformat:6 }} {{ source.wavg_b|floatformat:6 }}
+          <button type="button" id="btnGalCopy" class="btn btn-link btn-circle btn-sm" title="Copy">
+            <i class="far fa-copy"></i>
+          </button><p></p>
+          <strong>Avg. Int. Flux: </strong> {{ source.avg_flux_int|floatformat:3 }} mJy<br>
+          <strong>Avg. Peak Flux: </strong> {{ source.avg_flux_peak|floatformat:3 }} mJy/beam<br>
+          <strong>Max Peak Flux: </strong> {{ source.max_flux_peak|floatformat:3 }} mJy/beam<p></p>
+          <div class="row">
+            <div class="col">
+              <strong>W. Avg RA Err: </strong> {{ source.wavg_uncertainty_ew|deg_to_arcsec|floatformat:3 }}''<br>
+              <strong>W. Avg Dec Err: </strong> {{ source.wavg_uncertainty_ns|deg_to_arcsec|floatformat:3 }}''<br>
+              <strong>Avg. Compactness: </strong> {{ source.avg_compactness|floatformat:3 }}<br>
+              <strong>Neighbour Dist: </strong> {{ source.n_neighbour_dist|deg_to_arcmin|floatformat:2 }}'<p></p>
+              
+              <strong>Max SNR: </strong> {{ source.max_snr|floatformat:2 }}<br>
+              <strong>Min SNR: </strong> {{ source.min_snr|floatformat:2 }}<p></p>
+              
+              <strong>Nr Datapoints: </strong> {{ source.n_meas }}<br>
+              <strong>Nr Selavy: </strong> {{ source.n_meas_sel }}<br>
+              <strong>Nr Forced: </strong> {{ source.n_meas_forced }}<p></p>
+
+            </div>
+            <div class='col'>
+              <strong>V (Int. Flux): </strong> {{ source.v_int|floatformat:2 }}<br>
+              <strong>V (Peak Flux): </strong> {{ source.v_peak|floatformat:2 }}<br>
+              <strong>&eta; (Int. Flux): </strong> {{ source.eta_int|floatformat:2 }}<br>
+              <strong>&eta; (Peak Flux): </strong> {{ source.eta_peak|floatformat:2 }}<p></p>
+              
+              <strong>New Source: </strong> {{ source.new }}<br>
+              {% if source.new %}
+                <strong>New High Sigma: </strong>{{ source.new_high_sigma|floatformat:2 }}
+              {% else %}
+                <strong>New High Sigma: </strong>N/A
+              {% endif %}<p></p>
+              
+              <strong>Nr Relations: </strong> {{ source.n_rel }}<br>
+              <strong>Nr Siblings: </strong> {{ source.n_sibl }}<p></p>
+            </div>
+          </div>
           <p><strong>Comment: </strong> {{ source.comment }}</p>
         </div>
       </div>
     </div>
-    <div class="col-xl-5 col-lg-6 mb-4">
+    <div class="col-xl-4 col-lg-6 mb-4">
       <!-- DataTable External Search Results -->
       <div class="card shadow mb-4 h-100">
         <div class="card-header py-3">
@@ -215,6 +264,8 @@
       </div>
     </div>
   </div>
+  <div style="position: fixed; top: 0; right: 0; z-index: 99">
+  <div id="alert_placeholder">
 
 </div>
 <!-- /.container-fluid -->
@@ -341,6 +392,49 @@
         JS9.AddShapes("components", regions, {changeable: false, strokeWidth: 1}, {display: displayId});
       })
     });
+  });
+</script>
+
+<script type="text/javascript">
+  bootstrap_alert = function() {}
+  bootstrap_alert.success = function(message) {
+      $('#alert_placeholder').html('<div id="copyalert" class="alert alert-success alert-dismissible fade show" role="alert">'+message+'<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+      setTimeout(function () {
+          $("#copyalert").fadeTo(500, 0).slideUp(600, function () {
+              $(this).remove();
+          });
+      }, 2000);
+          }
+  var $body = document.getElementsByTagName('body')[0];
+  var $btnCopy = document.getElementById('btnCopy');
+  var $btnDegCopy = document.getElementById('btnDegCopy');
+  var $btnGalCopy = document.getElementById('btnGalCopy');
+  var secretInfo = document.getElementById('secretInfo').innerHTML;
+  var secretDegInfo = document.getElementById('secretDegInfo').innerHTML;
+  var secretGalInfo = document.getElementById('secretGalInfo').innerHTML;
+
+  var copyToClipboard = function(secretInfo) {
+    var $tempInput = document.createElement('INPUT');
+    $body.appendChild($tempInput);
+    $tempInput.setAttribute('value', secretInfo)
+    $tempInput.select();
+    document.execCommand('copy');
+    $body.removeChild($tempInput);
+  }
+
+  $btnCopy.addEventListener('click', function(ev) {
+    copyToClipboard(secretInfo);
+    bootstrap_alert.success("{{ source.wavg_ra_hms }} {{ source.wavg_dec_dms }} copied!");
+  });
+
+  $btnDegCopy.addEventListener('click', function(ev) {
+    copyToClipboard(secretDegInfo);
+    bootstrap_alert.success("{{ source.wavg_ra|floatformat:6 }} {{ source.wavg_dec|floatformat:6 }} copied!");
+  });
+
+  $btnGalCopy.addEventListener('click', function(ev) {
+    copyToClipboard(secretGalInfo);
+    bootstrap_alert.success("{{ source.wavg_l|floatformat:6 }} {{ source.wavg_b|floatformat:6 }} copied!");
   });
 </script>
 {% endblock custom_page_scripts %}

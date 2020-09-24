@@ -1,12 +1,14 @@
 {% extends "base.html" %}
 
 {% load static %}
-
+{% load humanize %}
 {% load unit_tags %}
 
 {% block head %}
 
+<link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
 <link rel='stylesheet' href='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css' />
+<link rel="stylesheet" href="{% static 'css/collapse-box.min.css' %}">
 
 {% endblock head %}
 
@@ -46,32 +48,134 @@
 	</div>
 
   <div class="row">
-    <div class="col-lg-6">
+    <div class="col-lg-4">
       <!-- Basic Card Example -->
       <div class="card shadow mb-4" style="min-height: 40.3rem;">
         <div class="card-header py-3">
           <h6 class="m-0 font-weight-bold text-primary">Details</h6>
         </div>
         <div class="card-body">
-          <p><strong>RA: </strong> {{ image.ra }}</p>
-          <p><strong>DEC: </strong> {{ image.dec }}</p>
-          <p><strong>Beam BMAJ: </strong> {{ image.beam_bmaj|deg_to_arcsec|floatformat:3 }}''</p>
-          <p><strong>Beam BMIN: </strong> {{ image.beam_bmin|deg_to_arcsec|floatformat:3 }}''</p>
-          <p><strong>Beam BPA: </strong> {{ image.beam_bpa|floatformat:2 }}&deg;</p>
-          <p><strong>Median RMS: </strong> {{ image.rms_median|floatformat:3 }} mJy</p>
-          <p><strong>Min RMS: </strong> {{ image.rms_min|floatformat:3 }} mJy</p>
-          <p><strong>Max RMS: </strong> {{ image.rms_max|floatformat:3 }} mJy</p>
-          <p><strong>Comment: </strong> {{ image.comment }}</p>
+          <strong>Name: </strong>{{ image.name }}<p></p>
+          <div id='secretInfo' class='copy-coords'>{{ image.ra_hms }} {{ image.dec_dms }}</div>
+          <div id='secretDegInfo' class='copy-coords'>{{ image.ra }} {{ image.dec }}</div>
+          <div id='secretGalInfo' class='copy-coords'>{{ image.l }} {{ image.b }}</div>
+          <strong>Position: </strong>{{ image.ra_hms }} {{ image.dec_dms }}
+          <button type="button" id="btnCopy" class="btn btn-link btn-circle btn-sm" title="Copy">
+            <i class="far fa-copy"></i>
+          </button><br>
+          <strong>Position (Decimal): </strong>{{ image.ra|floatformat:6 }} {{ image.dec|floatformat:6 }}
+          <button type="button" id="btnDegCopy" class="btn btn-link btn-circle btn-sm" title="Copy">
+            <i class="far fa-copy"></i>
+          </button><br>
+          <strong>Position (Galactic): </strong>{{ image.l|floatformat:6 }} {{ image.b|floatformat:6 }}
+          <button type="button" id="btnGalCopy" class="btn btn-link btn-circle btn-sm" title="Copy">
+            <i class="far fa-copy"></i>
+          </button><p></p>
+          <div class="row">
+            <div class="col">
+              <strong>Beam BMAJ: </strong> {{ image.beam_bmaj|deg_to_arcsec|floatformat:3 }}''<br>
+              <strong>Beam BMIN: </strong> {{ image.beam_bmin|deg_to_arcsec|floatformat:3 }}''<br>
+              <strong>Beam BPA: </strong> {{ image.beam_bpa|floatformat:2 }}&deg;<p></p>
+            </div>
+            <div class="col">
+              <strong>Median RMS: </strong> {{ image.rms_median|floatformat:3 }} mJy<br>
+              <strong>Min RMS: </strong> {{ image.rms_min|floatformat:3 }} mJy<br>
+              <strong>Max RMS: </strong> {{ image.rms_max|floatformat:3 }} mJy<p></p>
+            </div>
+          </div>
+          <strong>Frequency: </strong> {{ image.frequency|floatformat:1 }} MHz<br>
+          <strong>Bandwidth: </strong> {{ image.bandwidth|floatformat:1 }} MHz<p></p>
+          
+          <strong>Number of measurements: </strong>{{ image.n_meas|intcomma }} (<a href="#measHeader">Table</a>)<br>
+          <strong>Number of runs included in: </strong>{{ image.n_runs|intcomma }} (<a href="#runHeader">Table</a>)<p></p>
+          
+          <strong>Comment: </strong> {{ image.comment }}<p></p>
         </div>
       </div>
     </div>
     <!-- Aladin viz tile -->
-  	<div class="col-lg-6">
+  	<div class="col-lg-8">
       <div class="card shadow mb-4">
         <div id="aladinViz" style="height:40.3rem;"></div>
       </div>
   	</div>
 	</div>
+
+  <div class="row">
+    <div class="col">
+      <div class="card shadow mb-4">
+        <h6 class="card-header m-0 font-weight-bold text-primary">
+          <a data-toggle="collapse" href="#collapseMeas" aria-expanded="true" aria-controls="collapseMeas" id="measHeader" class="d-block">
+            <i class="fa fa-chevron-down pull-right"></i>
+            Measurements
+          </a>
+        </h6>
+        <!-- Card Content - Collapse -->
+        <div class="collapse show" id="collapseMeas">
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped table-hover" id="{{ datatables.0.table_id }}" width="100%" cellspacing="0">
+                <thead>
+                  <tr>
+                    {% for name in datatables.0.colsNames %}
+                      <th>{{ name }}</th>
+                    {% endfor %}
+                  </tr>
+                </thead>
+                <tfoot>
+                  <tr>
+                    {% for name in datatables.0.colsNames %}
+                    <th>{{ name }}</th>
+                    {% endfor %}
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="row">
+    <div class="col">
+      <div class="card shadow mb-4">
+        <h6 class="card-header m-0 font-weight-bold text-primary">
+          <a data-toggle="collapse" href="#collapseRuns" aria-expanded="true" aria-controls="collapseMeas" id="runHeader" class="d-block">
+            <i class="fa fa-chevron-down pull-right"></i>
+            Runs
+          </a>
+        </h6>
+        <!-- Card Content - Collapse -->
+        <div class="collapse show" id="collapseRuns">
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped table-hover" id="{{ datatables.1.table_id }}" width="100%" cellspacing="0">
+                <thead>
+                  <tr>
+                    {% for name in datatables.1.colsNames %}
+                    <th>{{ name }}</th>
+                    {% endfor %}
+                  </tr>
+                </thead>
+                <tfoot>
+                  <tr>
+                    {% for name in datatables.1.colsNames %}
+                    <th>{{ name }}</th>
+                    {% endfor %}
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div style="position: fixed; top: 0; right: 0; z-index: 99">
+    <div id="alert_placeholder"></div>
+  </div>
 
 </div>
 <!-- /.container-fluid -->
@@ -85,6 +189,10 @@
 <script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
 <script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
 
+<!-- Datatable scripts -->
+{{ datatables|json_script:"datatable-conf" }}
+<script src="{% static 'js/datatables-pipeline.min.js' %}"></script>
+
 <!-- Aladin -->
 {{ image|json_script:"data-aladin" }}
 <script type='text/javascript' src='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js' charset='utf-8'></script>
@@ -93,6 +201,49 @@
   let aladin = A.aladin('#aladinViz', {fov: 1});
   let aladinConf = JSON.parse(document.getElementById('data-aladin').textContent);
   configureAladin(aladin, aladinConf);
+</script>
+
+<script type="text/javascript">
+  bootstrap_alert = function() {}
+  bootstrap_alert.success = function(message) {
+      $('#alert_placeholder').html('<div id="copyalert" class="alert alert-success alert-dismissible fade show" role="alert">'+message+'<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>');
+      setTimeout(function () {
+          $("#copyalert").fadeTo(500, 0).slideUp(600, function () {
+              $(this).remove();
+          });
+      }, 2000);
+          }
+  var $body = document.getElementsByTagName('body')[0];
+  var $btnCopy = document.getElementById('btnCopy');
+  var $btnDegCopy = document.getElementById('btnDegCopy');
+  var $btnGalCopy = document.getElementById('btnGalCopy');
+  var secretInfo = document.getElementById('secretInfo').innerHTML;
+  var secretDegInfo = document.getElementById('secretDegInfo').innerHTML;
+  var secretGalInfo = document.getElementById('secretGalInfo').innerHTML;
+
+  var copyToClipboard = function(secretInfo) {
+    var $tempInput = document.createElement('INPUT');
+    $body.appendChild($tempInput);
+    $tempInput.setAttribute('value', secretInfo)
+    $tempInput.select();
+    document.execCommand('copy');
+    $body.removeChild($tempInput);
+  }
+
+  $btnCopy.addEventListener('click', function(ev) {
+    copyToClipboard(secretInfo);
+    bootstrap_alert.success("{{ image.ra_hms }} {{ image.dec_dms }} copied!");
+  });
+
+  $btnDegCopy.addEventListener('click', function(ev) {
+    copyToClipboard(secretDegInfo);
+    bootstrap_alert.success("{{ image.ra|floatformat:6 }} {{ image.dec|floatformat:6 }} copied!");
+  });
+
+  $btnGalCopy.addEventListener('click', function(ev) {
+    copyToClipboard(secretGalInfo);
+    bootstrap_alert.success("{{ image.l|floatformat:6 }} {{ image.b|floatformat:6 }} copied!");
+  });
 </script>
 
 {% endblock custom_page_scripts %}

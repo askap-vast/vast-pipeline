@@ -113,67 +113,74 @@ $(document).ready(function() {
             "targets": 3,
             "data": "image",
             "render": function ( data, type, row, meta ) {
-              return '<a href="' + img_url + row[14] + '"target="_blank">' + row[3] + '</a>';
+              return '<a href="' + img_url + row[15] + '"target="_blank">' + row[3] + '</a>';
             }
           },
           {
             "targets": 4,
-            "data": "ra",
+            "data": "frequency",
             "render": function ( data, type, row, meta ) {
-              return row[4].toFixed(4);
+              return row[4];
             }
           },
           {
             "targets": 5,
-            "data": "ra_err",
+            "data": "ra",
             "render": function ( data, type, row, meta ) {
-                return (row[5] * 3600.).toFixed(4);
+              return row[5].toFixed(4);
             }
           },
           {
             "targets": 6,
-            "data": "dec",
+            "data": "ra_err",
             "render": function ( data, type, row, meta ) {
-                return row[6].toFixed(4);
+                return (row[6] * 3600.).toFixed(4);
             }
           },
           {
             "targets": 7,
-            "data": "dec_err",
+            "data": "dec",
             "render": function ( data, type, row, meta ) {
-                return (row[7] * 3600.).toFixed(4);
+                return row[7].toFixed(4);
             }
           },
           {
             "targets": 8,
-            "data": "flux_int",
+            "data": "dec_err",
             "render": function ( data, type, row, meta ) {
-                return (row[8]).toFixed(3);
+                return (row[8] * 3600.).toFixed(4);
             }
           },
           {
             "targets": 9,
-            "data": "flux_int_err",
+            "data": "flux_int",
             "render": function ( data, type, row, meta ) {
                 return (row[9]).toFixed(3);
             }
           },
           {
             "targets": 10,
-            "data": "flux_peak",
+            "data": "flux_int_err",
             "render": function ( data, type, row, meta ) {
                 return (row[10]).toFixed(3);
             }
           },
           {
             "targets": 11,
-            "data": "flux_peak_err",
+            "data": "flux_peak",
             "render": function ( data, type, row, meta ) {
                 return (row[11]).toFixed(3);
             }
           },
           {
-            "targets": 14,
+            "targets": 12,
+            "data": "flux_peak_err",
+            "render": function ( data, type, row, meta ) {
+                return (row[12]).toFixed(3);
+            }
+          },
+          {
+            "targets": 15,
             "searchable": false,
             "visible": false
           }

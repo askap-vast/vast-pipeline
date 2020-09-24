@@ -73,14 +73,7 @@
               <strong>Name: </strong>{{ measurement.name }}<br>
               <strong>Island ID: </strong> {{ measurement.island_id }}<br>
               <strong>Image: </strong> <a href="/images/{{ measurement.image_id }}" target="_blank">{{ measurement.image_name }}</a><p></p>
-              <div class="row">
-                <div class="col">
-                  <strong>Num sources: </strong> {{ measurement.nr_sources }}
-                </div>
-                <div class="col">
-                  <a href="#sourceTable">Source Table</a><p></p>
-                </div>
-              </div>
+              <strong>Number of sources: </strong> {{ measurement.nr_sources }} (<a href="#sourcesHeader">Source Table</a>)<p></p>
               <div id='secretInfo' class='copy-coords'>{{ measurement.ra_hms }} {{ measurement.dec_dms }}</div>
               <div id='secretDegInfo' class='copy-coords'>{{ measurement.ra }} {{ measurement.dec }}</div>
               <div id='secretGalInfo' class='copy-coords'>{{ measurement.l }} {{ measurement.b }}</div>
@@ -105,17 +98,18 @@
               <strong>Major Axis: </strong> {{ measurement.bmaj|floatformat:2 }}''<br>
               <strong>Minor Axis: </strong> {{ measurement.bmin|floatformat:2 }}''<br>
               <strong>Position Angle: </strong> {{ measurement.pa|floatformat:2 }}&deg;<br>
-              <strong>Chi squared fit: </strong> {{ measurement.chi_squared_fit|floatformat:2 }}<p></p>
+              <strong>Chi squared fit: </strong> {{ measurement.chi_squared_fit|floatformat:2 }}<br>
+              <strong>Frequency: </strong> {{ measurement.frequency|floatformat:2 }} MHz<p></p>
 
               <strong>Forced Extraction: </strong> {{ measurement.forced }}<br>
               <strong>Has siblings: </strong> {{ measurement.has_siblings }}
               {% if measurement.has_siblings %}
-                (<a href="#siblingTable">Table</a>)
+                (<a href="#siblingHeader">Table</a>)
               {% endif %}
             </div>
             <div class="col">
-              <strong>Peak Flux: </strong> {{ measurement.flux_peak|floatformat:3 }} &#177; {{ measurement.flux_peak_err|floatformat:3 }}<br>
-              <strong>Int. Flux: </strong> {{ measurement.flux_int|floatformat:3 }} &#177; {{ measurement.flux_int_err|floatformat:3 }}<p></p>
+              <strong>Peak Flux: </strong> {{ measurement.flux_peak|floatformat:3 }} &#177; {{ measurement.flux_peak_err|floatformat:3 }} mJy/beam<br>
+              <strong>Int. Flux: </strong> {{ measurement.flux_int|floatformat:3 }} &#177; {{ measurement.flux_int_err|floatformat:3 }} mJy<p></p>
 
               <strong>SNR: </strong> {{ measurement.snr|floatformat:2 }}<br>
               <strong>Local RMS: </strong> {{ measurement.local_rms|floatformat:3 }} mJy<br>

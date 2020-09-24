@@ -20,7 +20,7 @@ from astroquery.simbad import Simbad
 from astroquery.ned import Ned
 
 from django.http import FileResponse, Http404, HttpResponseRedirect
-from django.db.models import F
+from django.db.models import F, Count
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.conf import settings
@@ -199,6 +199,28 @@ class RunViewSet(ModelViewSet):
     queryset = Run.objects.all()
     serializer_class = RunSerializer
 
+    @action(detail=True, methods=['get'])
+    def images(self, request, pk=None):
+        qs = Image.objects.filter(run__in=[pk]).order_by('id')
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            serializer = ImageSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = ImageSerializer(qs, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def measurements(self, request, pk=None):
+        qs = Measurement.objects.filter(image__run__in=[pk]).order_by('id')
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            serializer = MeasurementSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = MeasurementSerializer(qs, many=True)
+        return Response(serializer.data)
+
 
 # Run detail
 @login_required
@@ -269,10 +291,105 @@ def RunDetail(request, id):
         with open(f_path) as fp:
             p_run['log_txt'] = fp.read()
 
+    image_fields = [
+        'name',
+        'datetime',
+        'frequency',
+        'ra',
+        'dec',
+        'rms_median',
+        'rms_min',
+        'rms_max',
+        'beam_bmaj',
+        'beam_bmin',
+        'beam_bpa',
+    ]
+
+    image_colsfields = generate_colsfields(
+        image_fields,
+        {'name': reverse('vast_pipeline:image_detail', args=[1])[:-2]}
+    )
+
+    image_datatable = {
+        'table_id': 'imageTable',
+        'api': (
+            reverse('vast_pipeline:api_pipe_runs-images', args=[p_run['id']]) +
+            '?format=datatables'
+        ),
+        'colsFields': image_colsfields,
+        'colsNames': [
+            'Name',
+            'Time (UTC)',
+            'Frequency (MHz)',
+            'RA (deg)',
+            'Dec (deg)',
+            'Median RMS (mJy)',
+            'Min RMS (mJy)',
+            'Max RMS (mJy)',
+            'Beam Major (arcsec)',
+            'Beam Minor (arcsec)',
+            'Beam PA (deg)'
+        ],
+        'search': True,
+    }
+
+    meas_fields = [
+        'name',
+        'ra',
+        'ra_err',
+        'uncertainty_ew',
+        'dec',
+        'dec_err',
+        'uncertainty_ns',
+        'flux_int',
+        'flux_int_err',
+        'flux_peak',
+        'flux_peak_err',
+        'frequency',
+        'compactness',
+        'snr',
+        'has_siblings',
+        'forced'
+    ]
+
+    meas_colsfields = generate_colsfields(
+        meas_fields,
+        {'name': reverse('vast_pipeline:measurement_detail', args=[1])[:-2]}
+    )
+
+    meas_datatable = {
+        'table_id': 'measTable',
+        'api': (
+            reverse('vast_pipeline:api_pipe_runs-measurements', args=[p_run['id']]) +
+            '?format=datatables'
+        ),
+        'colsFields': meas_colsfields,
+        'colsNames': [
+            'Name',
+            'RA (deg)',
+            'RA Error (arcsec)',
+            'Uncertainty EW (arcsec)',
+            'Dec (deg)',
+            'Dec Error (arcsec)',
+            'Uncertainty NS (arcsec)',
+            'Int. Flux (mJy)',
+            'Int. Flux Error (mJy)',
+            'Peak Flux (mJy/beam)',
+            'Peak Flux Error (mJy/beam)',
+            'Frequency (MHz)',
+            'Compactness',
+            'SNR',
+            'Has siblings',
+            'Forced Extraction'
+        ],
+        'search': True,
+    }
+
     return render(
         request, 'run_detail.html',
         {
             'p_run': p_run,
+            'datatables': [image_datatable, meas_datatable],
             'd3_celestial_skyregions': get_skyregions_collection(run_id=id),
             'static_url': settings.STATIC_URL
         }
@@ -285,11 +402,15 @@ def ImageIndex(request):
     fields = [
         'name',
         'datetime',
+        'frequency',
         'ra',
         'dec',
         'rms_median',
         'rms_min',
-        'rms_max'
+        'rms_max',
+        'beam_bmaj',
+        'beam_bmin',
+        'beam_bpa'
     ]
 
     colsfields = generate_colsfields(
@@ -315,11 +436,15 @@ def ImageIndex(request):
                 'colsNames': [
                     'Name',
                     'Time (UTC)',
+                    'Frequency (MHz)',
                     'RA (deg)',
                     'Dec (deg)',
                     'Median RMS (mJy)',
                     'Min RMS (mJy)',
                     'Max RMS (mJy)',
+                    'Beam Major (arcsec)',
+                    'Beam Minor (arcsec)',
+                    'Beam PA (deg)'
                 ],
                 'search': True,
                 'order': [1, 'asc']
@@ -334,6 +459,29 @@ class ImageViewSet(ModelViewSet):
     queryset = Image.objects.all()
     serializer_class = ImageSerializer
 
+    @action(detail=True, methods=['get'])
+    def measurements(self, request, pk=None):
+        qs = Measurement.objects.filter(image__in=[pk], forced=False).order_by('id')
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            serializer = MeasurementSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = MeasurementSerializer(qs, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def runs(self, request, pk=None):
+        image = self.queryset.get(pk=pk)
+        qs = image.run.all().order_by('id')
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            serializer = RunSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = RunSerializer(qs, many=True)
+        return Response(serializer.data)
+
 
 @login_required
 def ImageDetail(request, id, action=None):
@@ -343,36 +491,54 @@ def ImageDetail(request, id, action=None):
         if action == 'next':
             img = image.filter(id__gt=id)
             if img.exists():
-                image = img.values().first()
+                image = img.annotate(
+                    frequency=F('band__frequency'),
+                    bandwidth=F('band__bandwidth'),
+                    n_runs=Count('run')
+                ).values().first()
             else:
-                image = image.filter(id=id).values().get()
+                image = image.filter(id=id).annotate(
+                    frequency=F('band__frequency'),
+                    bandwidth=F('band__bandwidth'),
+                    n_runs=Count('run')
+                ).values().get()
         elif action == 'prev':
             img = image.filter(id__lt=id)
             if img.exists():
-                image = img.values().last()
+                image = img.annotate(
+                    frequency=F('band__frequency'),
+                    bandwidth=F('band__bandwidth'),
+                    n_runs=Count('run')
+                ).values().last()
             else:
-                image = image.filter(id=id).values().get()
+                image = image.filter(id=id).annotate(
+                    frequency=F('band__frequency'),
+                    bandwidth=F('band__bandwidth'),
+                    n_runs=Count('run')
+                ).values().get()
     else:
-        image = image.filter(id=id).values().get()
+        image = image.filter(id=id).annotate(
+            frequency=F('band__frequency'),
+            bandwidth=F('band__bandwidth'),
+            n_runs=Count('run')
+        ).values().get()
 
     image['aladin_ra'] = image['ra']
     image['aladin_dec'] = image['dec']
-    image['aladin_zoom'] = 15.0
+    image['aladin_zoom'] = 17.0
     image['aladin_box_ra'] = image['physical_bmaj']
     image['aladin_box_dec'] = image['physical_bmin']
-    image['ra'] = deg2hms(image['ra'], hms_format=True)
-    image['dec'] = deg2dms(image['dec'], dms_format=True)
+    image['ra_hms'] = deg2hms(image['ra'], hms_format=True)
+    image['dec_dms'] = deg2dms(image['dec'], dms_format=True)
+    image['l'], image['b'] = equ2gal(image['ra'], image['dec'])
 
     image['datetime'] = image['datetime'].isoformat()
+    image['n_meas'] = (
+        pd.read_parquet(image['measurements_path'], columns=['id'])
+        .shape[0]
+    )
 
-    context = {'image': image}
-    return render(request, 'image_detail.html', context)
-
-
-# Measurements table
-@login_required
-def MeasurementIndex(request):
-    fields = [
+    meas_fields = [
         'name',
         'ra',
         'ra_err',
@@ -384,6 +550,98 @@ def MeasurementIndex(request):
         'flux_int_err',
         'flux_peak',
         'flux_peak_err',
+        'frequency',
+        'compactness',
+        'snr',
+        'has_siblings',
+        'forced'
+    ]
+
+    meas_colsfields = generate_colsfields(
+        meas_fields,
+        {'name': reverse('vast_pipeline:measurement_detail', args=[1])[:-2]}
+    )
+
+    meas_datatable = {
+        'table_id': 'measDataTable',
+        'api': (
+            reverse('vast_pipeline:api_images-measurements', args=[image['id']]) +
+            '?format=datatables'
+        ),
+        'colsFields': meas_colsfields,
+        'colsNames': [
+            'Name',
+            'RA (deg)',
+            'RA Error (arcsec)',
+            'Uncertainty EW (arcsec)',
+            'Dec (deg)',
+            'Dec Error (arcsec)',
+            'Uncertainty NS (arcsec)',
+            'Int. Flux (mJy)',
+            'Int. Flux Error (mJy)',
+            'Peak Flux (mJy/beam)',
+            'Peak Flux Error (mJy/beam)',
+            'Frequency (MHz)',
+            'Compactness',
+            'SNR',
+            'Has siblings',
+            'Forced Extraction'
+        ],
+        'search': True,
+    }
+
+    run_fields = [
+        'name',
+        'time',
+        'path',
+        'comment',
+        'n_images',
+        'n_sources',
+        'status'
+    ]
+
+    run_colsfields = generate_colsfields(
+        run_fields,
+        {'name': reverse('vast_pipeline:run_detail', args=[1])[:-2]}
+    )
+
+    run_datatable = {
+        'table_id': 'runDataTable',
+        'api': (
+            reverse('vast_pipeline:api_images-runs', args=[image['id']]) +
+            '?format=datatables'
+        ),
+        'colsFields': run_colsfields,
+        'colsNames': [
+            'Name',
+            'Run Datetime',
+            'Path',
+            'Comment',
+            'Nr Images',
+            'Nr Sources',
+            'Run Status'
+        ],
+        'search': True,
+    }
+
+    context = {'image': image, 'datatables': [meas_datatable, run_datatable]}
+    return render(request, 'image_detail.html', context)
+
+
+# Measurements table
+@login_required
+def MeasurementIndex(request):
+    fields = [
+        'name',
+        'ra',
+        'uncertainty_ew',
+        'dec',
+        'uncertainty_ns',
+        'flux_int',
+        'flux_int_err',
+        'flux_peak',
+        'flux_peak_err',
+        'frequency',
         'compactness',
         'snr',
         'has_siblings',
@@ -394,7 +652,7 @@ def MeasurementIndex(request):
         fields,
         {'name': reverse('vast_pipeline:measurement_detail', args=[1])[:-2]}
     )
-    print(reverse('vast_pipeline:measurement_detail', args=[1])[:-2])
+
     return render(
         request,
         'generic_table.html',
@@ -414,14 +672,13 @@ def MeasurementIndex(request):
                     'Name',
                     'RA (deg)',
                     'RA Error (arcsec)',
-                    'Uncertainty EW (arcsec)',
                     'Dec (deg)',
                     'Dec Error (arcsec)',
-                    'Uncertainty NS (arcsec)',
                     'Int. Flux (mJy)',
                     'Int. Flux Error (mJy)',
                     'Peak Flux (mJy/beam)',
                     'Peak Flux Error (mJy/beam)',
+                    'Frequency (MHz)',
                     'Compactness',
                     'SNR',
                     'Has siblings',
@@ -463,10 +720,9 @@ class MeasurementViewSet(ModelViewSet):
     def sources(self, request, pk=None):
         measurement = self.queryset.get(pk=pk)
         qs = measurement.source.all()
-        # qs = Source.objects.all().filter(pk__in=sources)
         page = self.paginate_queryset(qs)
         if page is not None:
-            serializer = SourceSerializer(qs, many=True)
+            serializer = SourceSerializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
         serializer = SourceSerializer(qs, many=True)
@@ -485,6 +741,7 @@ def MeasurementDetail(request, id, action=None):
                     datetime=F('image__datetime'),
                     image_name=F('image__name'),
                     source_ids=ArrayAgg('source__id'),
+                    frequency=F('image__band__frequency')
                 ).values().first()
             else:
                 measurement = measurement.filter(id=id).annotate(
@@ -492,6 +749,7 @@ def MeasurementDetail(request, id, action=None):
                     image_name=F('image__name'),
                     source_ids=ArrayAgg('source__id'),
                     source_names=ArrayAgg('source__name'),
+                    frequency=F('image__band__frequency')
                 ).values().get()
         elif action == 'prev':
             msr = measurement.filter(id__lt=id)
@@ -500,18 +758,21 @@ def MeasurementDetail(request, id, action=None):
                     datetime=F('image__datetime'),
                     image_name=F('image__name'),
                     source_ids=ArrayAgg('source__id'),
+                    frequency=F('image__band__frequency')
                 ).values().last()
             else:
                 measurement = measurement.filter(id=id).annotate(
                     datetime=F('image__datetime'),
                     image_name=F('image__name'),
                     source_ids=ArrayAgg('source__id'),
+                    frequency=F('image__band__frequency')
                 ).values().get()
     else:
         measurement = measurement.filter(id=id).annotate(
             datetime=F('image__datetime'),
             image_name=F('image__name'),
             source_ids=ArrayAgg('source__id'),
+            frequency=F('image__band__frequency')
         ).values().get()
 
     measurement['aladin_ra'] = measurement['ra']
@@ -525,7 +786,6 @@ def MeasurementDetail(request, id, action=None):
 
     measurement['nr_sources'] = 0 if measurement['source_ids'] == [None] else len(measurement['source_ids'])
 
-    # generate context for related sources datatable
     sibling_fields = [
         'name',
         'flux_peak',
@@ -547,7 +807,7 @@ def MeasurementDetail(request, id, action=None):
         'colsNames': [
             'Name',
             'Peak Flux (mJy/beam)',
-            'Island_ID'
+            'Island ID'
         ],
         'search': True,
     }
@@ -840,8 +1100,9 @@ def SourceDetail(request, id, action=None):
     source['aladin_ra'] = source['wavg_ra']
     source['aladin_dec'] = source['wavg_dec']
     source['aladin_zoom'] = 0.15
-    source['wavg_ra'] = deg2hms(source['wavg_ra'], hms_format=True)
-    source['wavg_dec'] = deg2dms(source['wavg_dec'], dms_format=True)
+    source['wavg_ra_hms'] = deg2hms(source['wavg_ra'], hms_format=True)
+    source['wavg_dec_dms'] = deg2dms(source['wavg_dec'], dms_format=True)
+    source['wavg_l'], source['wavg_b'] = equ2gal(source['wavg_ra'], source['wavg_dec'])
 
     # source data
     cols = [
@@ -849,6 +1110,7 @@ def SourceDetail(request, id, action=None):
         'name',
         'datetime',
         'image_name',
+        'frequency',
         'ra',
         'ra_err',
         'dec',
@@ -865,13 +1127,12 @@ def SourceDetail(request, id, action=None):
         Measurement.objects.filter(source__id=id).annotate(
             datetime=F('image__datetime'),
             image_name=F('image__name'),
+            frequency=F('image__band__frequency'),
         ).order_by('datetime').values(*tuple(cols))
     )
     for one_m in measurements:
         one_m['datetime'] = one_m['datetime'].isoformat()
 
-    # add source count
-    source['measurements'] = len(measurements)
     # add the data for the datatable api
     measurements = {
         'table': 'source_detail',
@@ -885,6 +1146,7 @@ def SourceDetail(request, id, action=None):
             'Name',
             'Date (UTC)',
             'Image',
+            'Frequency (MHz)',
             'RA (deg)',
             'RA Error (arcsec)',
             'Dec (deg)',

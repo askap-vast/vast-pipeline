@@ -28,6 +28,10 @@ class RunSerializer(serializers.ModelSerializer):
 
 class ImageSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
+    frequency = serializers.SerializerMethodField(read_only=True)
+
+    def get_frequency(self, obj):
+        return obj.band.frequency
 
     class Meta:
         model = Image
@@ -35,17 +39,25 @@ class ImageSerializer(serializers.ModelSerializer):
             'id',
             'name',
             'datetime',
+            'frequency',
             'ra',
             'dec',
             'rms_median',
             'rms_min',
-            'rms_max'
+            'rms_max',
+            'beam_bmaj',
+            'beam_bmin',
+            'beam_bpa'
         ]
         datatables_always_serialize = ('id',)
 
 
 class MeasurementSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
+    frequency = serializers.SerializerMethodField(read_only=True)
+
+    def get_frequency(self, obj):
+        return obj.image.band.frequency
 
     class Meta:
         model = Measurement
@@ -66,19 +78,14 @@ class MeasurementSerializer(serializers.ModelSerializer):
             'snr',
             'has_siblings',
             'forced',
-            'island_id'
+            'island_id',
+            'frequency'
         ]
         datatables_always_serialize = ('id',)
 
 
 class SourceSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
-    measurements = serializers.IntegerField(read_only=True)
-    selavy_measurements = serializers.IntegerField(read_only=True)
-    forced_measurements = serializers.IntegerField(read_only=True)
-    relations = serializers.IntegerField(read_only=True)
-    siblings_count = serializers.IntegerField(read_only=True)
-    contains_siblings = serializers.BooleanField(read_only=True)
     wavg_ra = serializers.SerializerMethodField()
     wavg_dec = serializers.SerializerMethodField()
 
@@ -126,7 +133,7 @@ class SourceFavSerializer(serializers.ModelSerializer):
         datatables_always_serialize = ('id', 'source', 'user')
 
     def get_deletefield(self, obj):
-        redirect = reverse('pipeline:api_sources_favs-detail', args=[obj.id])
+        redirect = reverse('vast_pipeline:api_sources_favs-detail', args=[obj.id])
         string = (
             f'<a href="{redirect}" class="text-danger" onclick="sendDelete(event)">'
             '<i class="fas fa-trash"></i></a>'
