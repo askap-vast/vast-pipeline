@@ -202,6 +202,7 @@ class RunViewSet(ModelViewSet):
     @action(detail=True, methods=['get'])
     def images(self, request, pk=None):
         qs = Image.objects.filter(run__in=[pk]).order_by('id')
+        qs = self.filter_queryset(qs)
         page = self.paginate_queryset(qs)
         if page is not None:
             serializer = ImageSerializer(page, many=True)
@@ -213,6 +214,7 @@ class RunViewSet(ModelViewSet):
     @action(detail=True, methods=['get'])
     def measurements(self, request, pk=None):
         qs = Measurement.objects.filter(image__run__in=[pk]).order_by('id')
+        qs = self.filter_queryset(qs)
         page = self.paginate_queryset(qs)
         if page is not None:
             serializer = MeasurementSerializer(page, many=True)
@@ -462,6 +464,7 @@ class ImageViewSet(ModelViewSet):
     @action(detail=True, methods=['get'])
     def measurements(self, request, pk=None):
         qs = Measurement.objects.filter(image__in=[pk], forced=False).order_by('id')
+        qs = self.filter_queryset(qs)
         page = self.paginate_queryset(qs)
         if page is not None:
             serializer = MeasurementSerializer(page, many=True)
@@ -474,6 +477,7 @@ class ImageViewSet(ModelViewSet):
     def runs(self, request, pk=None):
         image = self.queryset.get(pk=pk)
         qs = image.run.all().order_by('id')
+        qs = self.filter_queryset(qs)
         page = self.paginate_queryset(qs)
         if page is not None:
             serializer = RunSerializer(page, many=True)
@@ -708,6 +712,7 @@ class MeasurementViewSet(ModelViewSet):
         qs = self.queryset.filter(
             image__id=image_id, island_id=island_id
         ).exclude(pk=pk)
+        qs = self.filter_queryset(qs)
         page = self.paginate_queryset(qs)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -720,6 +725,7 @@ class MeasurementViewSet(ModelViewSet):
     def sources(self, request, pk=None):
         measurement = self.queryset.get(pk=pk)
         qs = measurement.source.all()
+        qs = self.filter_queryset(qs)
         page = self.paginate_queryset(qs)
         if page is not None:
             serializer = SourceSerializer(page, many=True)
