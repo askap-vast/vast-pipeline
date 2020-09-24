@@ -31,8 +31,10 @@ So we can separe problems from solutions.
 1. Open an issue (e.g. `My issue blah`, GitHub will assign a id e.g. `#123`).
 2. Branch off `master` by naming your branch `fix-#123-my-issue-blah` (keep it short please).
 3. Do your changes.
-4. Run test locally with `./manage.py test pipeline`
-5. Commit and issue the PR.
+4. Run one or more pipeline run on full images to test functionality.
+5. Run test locally with `./manage.py test pipeline` (there are few tests, mostly not working)
+6. Run the webserver and check the functionality.
+7. Commit and issue the PR.
 
 PRs not branched off master will be __rejected__!.
 
