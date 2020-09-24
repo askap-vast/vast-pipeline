@@ -3,7 +3,7 @@ This repository holds the code of the Radio Transient detection pipeline for the
 
 Installation instructions are described in [`INSTALL.md`](./INSTALL.md).
 
-If you intend to contribute to the code base please read and follow the guidelines in [`DEVELOPING.md`](./DEVELOPING.md).
+If you intend to contribute to/develop the code base please read and follow the guidelines in [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
 ## Table of Contents
 
@@ -94,7 +94,7 @@ vast-pipeline/
 ├── static
 ├── templates
 ├── webinterface
-├── DEVELOPING.md
+├── CONTRIBUTING.md
 ├── INSTALL.md
 ├── manage.py
 └── README.md
@@ -236,7 +236,7 @@ General usage:
 
 ### Resetting a Pipeline Run
 
-Detailed commands for resetting the database can be found in [`DEVELOPING.md`](./DEVELOPING.md).
+Detailed commands for resetting the database can be found in [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
 Resetting a pipeline run can be done using the `clearpiperun` command: it will delete all images (and related objects such as sources) associated with that pipeline run, if that images does not belong to another pipeline run. It will deleted all the sources associated with that pipeline run.
 ```bash
@@ -245,7 +245,7 @@ Resetting a pipeline run can be done using the `clearpiperun` command: it will d
 (pipeline_env)$ ./manage.py clearpiperun my_pipe_run
 ```
 
-More details on the `clearpiperun` command can be found in the [Developing guidelines](./DEVELOPING.md#clearing-run-data).
+More details on the `clearpiperun` command can be found in the [Contributing guidelines](./CONTRIBUTING.md#clearing-run-data).
 
 ### Import survey data
 
