@@ -676,6 +676,9 @@ def association(p_run, images, limit, dr_limit, bw_limit,
         sources_df.drop(['ra', 'dec'], axis=1)
         .rename(columns={'ra_source':'ra', 'dec_source':'dec'})
     )
+    # sort by the datetime of the image as this make sure that we do things
+    # correctly when computing missing_sources_df
+    sources_df = sources_df.sort_values(by='datetime')
 
     logger.info(
         'Total association time: %.2f seconds', timer.reset_init()
