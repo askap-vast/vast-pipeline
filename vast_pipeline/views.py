@@ -967,6 +967,7 @@ class SourceViewSet(ModelViewSet):
     @action(detail=True, methods=['get'])
     def related(self, request, pk=None):
         qs = Source.objects.filter(related__in=[pk]).order_by('id')
+        qs = self.filter_queryset(qs)
         page = self.paginate_queryset(qs)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
