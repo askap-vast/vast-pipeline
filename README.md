@@ -84,21 +84,25 @@ cd BASE_DIR && mkdir pipeline-runs && mkdir reference-surveys
 
 After creating the folders with the defaults values your directory tree should look like this:
 
-```bash
-vast-pipeline/
-├── init-tools
-├── pipeline
-├── pipeline-runs
-├── reference-surveys
-├── requirements
-├── static
-├── templates
-├── webinterface
+<pre><code>
+├── CHANGELOG.md
+├── CODE_OF_CONDUCT.md
 ├── CONTRIBUTING.md
+├── gulpfile.js
+├── <b>init-tools</b>
 ├── INSTALL.md
 ├── manage.py
-└── README.md
-```
+├── <b>node_modules</b>
+├── package.json
+├── package-lock.json
+├── README.md
+├── <b>requirements</b>
+├── <b>static</b>
+├── <b>templates</b>
+├── <b>pipeline-runs</b>
+├── <b>vast_pipeline</b>
+└── <b>webinterface</b>
+</code></pre>
 
 ## Pipeline Login
 Currently the pipeline support only login via GitHub Team and/or as Django administrator.
