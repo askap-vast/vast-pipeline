@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 import dask.dataframe as dd
 from astropy.io import fits
-import dask.dataframe as dd
 from django.conf import settings
 
 from psutil import cpu_count
@@ -552,7 +551,7 @@ def create_measurements_arrow_file(p_run: Run) -> None:
     measurements = dd.read_parquet(m_files, engine='pyarrow').compute()
 
     measurements = measurements.loc[
-        measurements['id'].isin(associations['meas_id'].values)
+        measurements['id'].isin(associations['meas_id'])
     ]
 
     measurements = (
@@ -574,9 +573,6 @@ def create_measurements_arrow_file(p_run: Run) -> None:
     measurements = vaex.from_pandas(measurements)
 
     logger.debug("Exporting to arrow.")
-    outname = os.path.join(
-        p_run.path,
-        'measurements.arrow'
-    )
+    outname = os.path.join(p_run.path, 'measurements.arrow')
 
     measurements.export_arrow(outname)

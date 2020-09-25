@@ -171,7 +171,9 @@ def parse_coord(coord_string: str, coord_frame: str = "icrs") -> SkyCoord:
             unit = "hourangle,deg"
 
     coord = SkyCoord(coord_string, unit=unit, frame=coord_frame)
+
     return coord
+
 
 def optimize_floats(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -195,6 +197,7 @@ def optimize_floats(df: pd.DataFrame) -> pd.DataFrame:
     df[floats] = df[floats].apply(pd.to_numeric, downcast='float')
 
     return df
+
 
 def optimize_ints(df: pd.DataFrame) -> pd.DataFrame:
     """
