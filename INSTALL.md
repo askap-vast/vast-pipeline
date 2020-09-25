@@ -152,4 +152,4 @@ __NOTE__: make sure you are in the root of the repo, as shown above. That comman
 
 ---
 
-Done! Now open the [`README.md`](./README.md) file to see how to initialize and run the pipeline. Otherwise if you intend developing the repo open the [`CONTRIBUTING.md`](./CONTRIBUTING.md) file for instructions on how to contribute to the repo.
+Done! Now open the [`README.md`](./README.md) file to see how to initialize and run the pipeline. Otherwise if you intend on developing the repo open the [`CONTRIBUTING.md`](./CONTRIBUTING.md) file for instructions on how to contribute to the repo.
