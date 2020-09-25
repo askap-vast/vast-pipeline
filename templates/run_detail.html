@@ -15,10 +15,10 @@
 {% block breadcrumb %}
 
 <li class="breadcrumb-item">
-  <a href="{% url 'pipeline:run_index' %}">Pipeline Runs</a>
+  <a href="{% url 'vast_pipeline:run_index' %}">Pipeline Runs</a>
 </li>
 <li class="breadcrumb-item">
-  <a href="{% url 'pipeline:run_detail' p_run.id %}">{{ p_run.name }}</a>
+  <a href="{% url 'vast_pipeline:run_detail' p_run.id %}">{{ p_run.name }}</a>
 </li>
 
 {% endblock breadcrumb %}
@@ -139,7 +139,7 @@
               <div class="dropdown-header">Actions:</div>
               <a id="editConfig" class="dropdown-item" href="#">Toggle on/off Config Edit</a>
               <a class="dropdown-item" href="#" data-toggle="modal" data-target="#feedbackModal">Validate Config</a>
-              <form id="runConfigForm" action="{% url 'pipeline:api_runcfg-write' p_run.id %}" method="post" novalidate>
+              <form id="runConfigForm" action="{% url 'vast_pipeline:api_runcfg-write' p_run.id %}" method="post" novalidate>
                 {% csrf_token %}
                 <input id="configTextInput" type="hidden" name="config_text"></input>
                 <button id="writeConfig" class="dropdown-item">Write Current Config</button>
@@ -199,6 +199,6 @@
 <script src="{% static 'vendor/prismjs/prism-python.min.js' %}"></script>
 <script src="{% static 'vendor/prismjs/line-numbers/prism-line-numbers.min.js' %}"></script>
 
-<script id="runDetailScript" src="{% static 'js/run-detail.min.js' %}" apiValidateUrl="{% url 'pipeline:api_runcfg-validate' p_run.id %}" apiWriteCfgUrl="{% url 'pipeline:run_detail' p_run.id %}"></script>
+<script id="runDetailScript" src="{% static 'js/run-detail.min.js' %}" apiValidateUrl="{% url 'vast_pipeline:api_runcfg-validate' p_run.id %}" apiWriteCfgUrl="{% url 'vast_pipeline:run_detail' p_run.id %}"></script>
 
 {% endblock custom_page_scripts %}
