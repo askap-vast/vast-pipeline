@@ -4,8 +4,8 @@ import traceback
 import warnings
 
 from django.core.management.base import BaseCommand, CommandError
-from pipeline.pipeline.utils import create_measurements_arrow_file
-from pipeline.models import Run
+from vast_pipeline.pipeline.utils import create_measurements_arrow_file
+from vast_pipeline.models import Run
 from ..helpers import get_p_run_name
 
 
