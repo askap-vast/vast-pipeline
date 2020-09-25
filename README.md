@@ -1,4 +1,7 @@
 # VAST Pipeline
+
+[![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/)
+
 This repository holds the code of the Radio Transient detection pipeline for the VAST project.
 
 Installation instructions are described in [`INSTALL.md`](./INSTALL.md).
