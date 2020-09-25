@@ -551,7 +551,7 @@ def create_measurements_arrow_file(p_run: Run) -> None:
     measurements = dd.read_parquet(m_files, engine='pyarrow').compute()
 
     measurements = measurements.loc[
-        measurements['id'].isin(associations['meas_id'])
+        measurements['id'].isin(associations['meas_id'].values)
     ]
 
     measurements = (
