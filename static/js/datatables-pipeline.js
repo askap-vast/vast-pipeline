@@ -182,6 +182,53 @@ $(document).ready(function() {
     var table = $(table_id).DataTable(dataTableConf);
   }
 
+  // Simbad and NED search results tables
+  $('#externalResultsTable')
+  /*
+    .on("xhr.dt", function(e, settings, json, xhr) {
+      console.log(json);
+      if (json === null) {
+        return true;
+      }
+    })
+    */
+    .DataTable({
+      "searching": false,
+      "pageLength": 5,
+      "lengthChange": false,
+      "order": [[1, "asc"]],
+      "columnDefs": [
+        {
+          "targets": 0,
+          "render": function( data, type, row, meta) {
+            if (row["database"] === "SIMBAD") {
+              return '<a href="http://simbad.u-strasbg.fr/simbad/sim-id?Ident=' + row['object_name'] + '" target="_blank">' + row['object_name'] + '</a> (' + row['database'] + ')'
+            } else if (row["database"] == "NED") {
+              return '<a href="https://ned.ipac.caltech.edu/byname?objname=' + row['object_name'] + '" target="_blank">' + row['object_name'] + '</a> (' + row['database'] + ')'
+            } else {
+              return row['object_name'] + ' (' + row['database'] + ')'
+            }
+          }
+        },
+        {
+          "targets": 1,
+          "render": function ( data, type, row, meta ) {
+            return row['separation_arcsec'].toFixed(2);
+          }
+        },
+        {
+          "targets": 2,
+          "render": function ( data, type, row, meta ) {
+            if (row['otype_long'] !== "" && row['otype'] !== row['otype_long']) {
+              return '<abbr title="' + row['otype_long'] + '">' + row['otype'] + '</abbr>';
+            } else {
+              return row['otype'];
+            }
+          }
+        }
+      ]
+    });
+
   // Trigger the update search on the datatable
   $("#catalogSearch").on('click', function(e) {
     let PipeRun = document.getElementById("runSelect");
