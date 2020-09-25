@@ -204,10 +204,10 @@ class Band(models.Model):
     associated with one band.
     """
     name = models.CharField(max_length=12, unique=True)
-    frequency = models.IntegerField(
+    frequency = models.FloatField(
         help_text='central frequency of band (integer MHz)'
     )
-    bandwidth = models.IntegerField(
+    bandwidth = models.FloatField(
         help_text='bandwidth (MHz)'
     )
 
