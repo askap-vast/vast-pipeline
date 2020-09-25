@@ -91,6 +91,7 @@ After creating the folders with the defaults values your directory tree should l
 ├── gulpfile.js
 ├── <b>init-tools</b>
 ├── INSTALL.md
+├── LICENSE.txt
 ├── manage.py
 ├── <b>node_modules</b>
 ├── package.json
