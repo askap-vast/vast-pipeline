@@ -1,6 +1,6 @@
 {
   "name": "vast-pipeline",
-  "version": "99.99.99dev",
+  "version": "0.1.0",
   "description": "Vast Pipeline code base for processing and analysing telescope images from the Square Kilometre Pathfinder",
   "main": "gulpfile.js",
   "scripts": {
