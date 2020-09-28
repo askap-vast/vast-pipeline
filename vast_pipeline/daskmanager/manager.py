@@ -2,7 +2,7 @@
 
 import logging
 
-from dask.distributed import Client
+from dask.distributed import Client, LocalCluster
 from django.conf import settings as s
 from . import config
 
@@ -23,17 +23,21 @@ class Singleton(type):
 
 class DaskManager(metaclass=Singleton):
     def __init__(self):
-        if not s.DASK_SCHEDULER_HOST and not s.DASK_SCHEDULER_PORT:
-            # assume a local cluster
-            logger.info('Starting local Dask Cluster')
-            self.client = Client()
-            logger.info('Connected to local Dask Cluster')
-        else:
+        try:
+            logger.info('Trying connecting to Dask Cluster')
             self.client = Client(
                 f'{s.DASK_SCHEDULER_HOST}:{s.DASK_SCHEDULER_PORT}'
             )
-            self.cluster = self.client.cluster
             logger.info('Connected to Dask Cluster')
+        except Exception:
+            # assume a local cluster
+            logger.info('Starting local Dask Cluster')
+            cluster = LocalCluster(
+                host=s.DASK_SCHEDULER_HOST,
+                scheduler_port=int(s.DASK_SCHEDULER_PORT)
+            )
+            self.client = Client(cluster)
+            logger.info('Connected to local Dask Cluster')
 
     def persist(self, collection):
         return self.client.persist(collection)
