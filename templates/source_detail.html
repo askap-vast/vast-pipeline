@@ -84,7 +84,7 @@
             <button type="button" id="btnCopy" class="btn btn-link btn-circle btn-sm" title="Copy">
               <i class="far fa-copy"></i>
             </button><br>
-            <strong>Position (Decimal): </strong>{{ source.wavg_ra }} {{ source.wavg_dec }}
+            <strong>Position (Decimal): </strong>{{ source.wavg_ra|floatformat:6 }} {{ source.wavg_dec|floatformat:6 }}
             <button type="button" id="btnDegCopy" class="btn btn-link btn-circle btn-sm" title="Copy">
               <i class="far fa-copy"></i>
             </button><br>
