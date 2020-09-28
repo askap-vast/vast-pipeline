@@ -192,7 +192,7 @@ def parse_coord(coord_string: str, coord_frame: str = "icrs") -> SkyCoord:
         if coord_frame == "galactic":
             unit = "deg"
         else:
-            unit = "hourangle,deg"
+            unit = "deg,deg"
 
     coord = SkyCoord(coord_string, unit=unit, frame=coord_frame)
     return coord
