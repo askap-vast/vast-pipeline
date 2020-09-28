@@ -85,7 +85,6 @@ def Home(request):
 
     f_meas_glob = glob(os.path.join(
         settings.PIPELINE_WORKING_DIR,
-        'images',
         '*/forced_meas*.parquet',
     ))
     totals['nr_f_meas'] = (
