@@ -114,7 +114,7 @@ $(document).ready(function() {
             "targets": 3,
             "data": "image",
             "render": function ( data, type, row, meta ) {
-              return '<a href="' + img_url + row[15] + '"target="_blank">' + row[3] + '</a>';
+              return '<a href="' + img_url + row[16] + '"target="_blank">' + row[3] + '</a>';
             }
           },
           {
@@ -181,7 +181,14 @@ $(document).ready(function() {
             }
           },
           {
-            "targets": 15,
+            "targets": 13,
+            "data": "snr",
+            "render": function ( data, type, row, meta ) {
+                return (row[13]).toFixed(2);
+            }
+          },
+          {
+            "targets": 16,
             "searchable": false,
             "visible": false
           }

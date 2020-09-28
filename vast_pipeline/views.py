@@ -1134,6 +1134,7 @@ def SourceDetail(request, id, action=None):
         'flux_int_err',
         'flux_peak',
         'flux_peak_err',
+        'snr',
         'has_siblings',
         'forced',
         'image_id'
@@ -1170,6 +1171,7 @@ def SourceDetail(request, id, action=None):
             'Int. Flux Error (mJy)',
             'Peak Flux (mJy/beam)',
             'Peak Flux Error (mJy/beam)',
+            'SNR',
             'Has siblings',
             'Forced Extraction',
             'Image ID'
