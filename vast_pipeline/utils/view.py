@@ -2,6 +2,7 @@
 
 import logging
 from vast_pipeline.models import SkyRegion
+from typing import List, Dict, Optional
 
 # Defines the float format and scaling for all
 # parameters presented in DATATABLES via AJAX call
@@ -130,8 +131,8 @@ FLOAT_FIELDS = {
 
 
 def generate_colsfields(
-    fields: list, url_prefix_dict: dict, not_orderable_col=[]
-) -> list:
+    fields: List[str], url_prefix_dict: Dict[str, str], not_orderable_col=Optional[List[str]]
+) -> List[Dict]:
     """
     Generate data to be included in context for datatables.
 
@@ -149,7 +150,7 @@ def generate_colsfields(
             be not orderable in the final table.
 
     Returns:
-        colsfields (float): List containing JSON object.
+        colsfields (list): List containing JSON object.
     """
     colsfields = []
 
@@ -209,7 +210,7 @@ def generate_colsfields(
     return colsfields
 
 
-def get_skyregions_collection(run_id: int=None) -> dict:
+def get_skyregions_collection(run_id: int=None) -> Dict:
     """
     Produce Sky region geometry shapes JSON object for d3-celestial.
 
