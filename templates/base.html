@@ -259,9 +259,9 @@
   </a>
 
   {% block modal %}
-
   {% endblock modal %}
 
+  {% block scripts %}
   <!-- Bootstrap core JavaScript-->
   <script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>
   <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
@@ -274,11 +274,9 @@
 
   <!-- Alerts script for all pages-->
   <script src="{% static 'js/alerts.min.js' %}"></script>
+  {% endblock scripts %}
 
   {% block custom_page_scripts %}
-
   {% endblock custom_page_scripts %}
-
 </body>
-
 </html>

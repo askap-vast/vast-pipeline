@@ -45,8 +45,8 @@
    background-position: center;
 }
 
-.copy-coords{
-  display: none !important;
+.dl-small dd {
+  margin-bottom: 0rem;
 }
 
 .card-header .fa {
