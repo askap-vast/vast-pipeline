@@ -85,6 +85,7 @@ def Home(request):
 
     f_meas_glob = glob(os.path.join(
         settings.PIPELINE_WORKING_DIR,
+        'images',
         '*/forced_meas*.parquet',
     ))
     totals['nr_f_meas'] = (
@@ -201,7 +202,7 @@ class RunViewSet(ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def images(self, request, pk=None):
-        qs = Image.objects.filter(run__in=[pk]).order_by('id')
+        qs = Image.objects.filter(run_id=pk).order_by('id')
         qs = self.filter_queryset(qs)
         page = self.paginate_queryset(qs)
         if page is not None:

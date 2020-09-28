@@ -129,9 +129,27 @@ FLOAT_FIELDS = {
 }
 
 
-def generate_colsfields(fields, url_prefix_dict, not_orderable_col=[]):
+def generate_colsfields(
+    fields: list, url_prefix_dict: dict, not_orderable_col=[]
+) -> list:
     """
-    generate data to be included in context for datatable
+    Generate data to be included in context for datatables.
+
+    Example of url_prefix_dict format:
+    api_col_dict = {
+        'source.name': reverse('vast_pipeline:source_detail', args=[1])[:-2],
+        'source.run.name': reverse('vast_pipeline:run_detail', args=[1])[:-2]
+    }
+
+    Args:
+        fields (list): List of fields to include as columns.
+        url_prefix_dict (dict): Dict containing the url prefix to form
+            href links in the datatables.
+        not_orderable_col (list): List of columns that should be set to
+            be not orderable in the final table.
+
+    Returns:
+        colsfields (float): List containing JSON object.
     """
     colsfields = []
 
@@ -191,9 +209,16 @@ def generate_colsfields(fields, url_prefix_dict, not_orderable_col=[]):
     return colsfields
 
 
-def get_skyregions_collection(run_id: int=None):
+def get_skyregions_collection(run_id: int=None) -> dict:
     """
-    Produce Sky region geometry shapes for d3-celestial.
+    Produce Sky region geometry shapes JSON object for d3-celestial.
+
+    Args:
+        run_id (int, optional): Run ID to filter on if not None.
+
+    Returns:
+        skyregions_collection (dict): Dictionary representing a JSON obejct
+        containing the sky regions.
     """
     skyregions = SkyRegion.objects.all()
     if run_id is not None:

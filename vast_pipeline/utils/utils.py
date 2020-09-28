@@ -128,26 +128,40 @@ def eq_to_cart(ra, dec):
     )
 
 
-def equ2gal(ra, dec):
+def equ2gal(ra: float, dec: float) -> (float, float):
     """
     Convert equatorial coordinates to galactic
+
+    Args:
+        ra (float): Right ascension in units of degrees.
+        dec (float): Declination in units of degrees.
+
+    Returns:
+        l (float): Galactic longitude in degrees.
+        b (float): Galactic latitude in degrees.
     """
-    c = SkyCoord(np.float(ra) * u.deg, np.float(dec) * u.deg, frame='icrs')
-    galactic = c.galactic
-    l = galactic.l.deg
-    b = galactic.b.deg
+    c = SkyCoord(np.float(ra), np.float(dec), unit=(u.deg, u.deg), frame='icrs')
+    l = c.galactic.l.deg
+    b = c.galactic.b.deg
 
     return l, b
 
 
-def gal2equ(l, b):
+def gal2equ(l: float, b: float) -> (float, float):
     """
     Convert galactic coordinates to equatorial.
+
+    Args:
+        l (float): Galactic longitude in degrees.
+        b (float): Galactic latitude in degrees.
+
+    Returns:
+        ra (float): Right ascension in units of degrees.
+        dec (float): Declination in units of degrees.
     """
     c = SkyCoord(l=np.float(l) * u.deg, b=np.float(b) * u.deg, frame='galactic')
-    icrs = c.icrs
-    ra = icrs.ra.deg
-    dec = icrs.dec.deg
+    ra = c.icrs.ra.deg
+    dec = c.icrs.dec.deg
 
     return ra, dec
 
