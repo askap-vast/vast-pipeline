@@ -38,11 +38,17 @@
 }
 
 #homeLogo:hover {
-   background-image: url('../img/home-solid.png');
-   background-size: auto 40%;
-   background-repeat: no-repeat;
-   vertical-align: middle;
-   background-position: center;
+  background-image: none;
+}
+
+#homeLogo:hover:before {
+   font-style: normal;
+   font-variant: normal;
+   text-rendering: auto;
+   -webkit-font-smoothing: antialiased;
+   font-family: "Font Awesome 5 Free";
+   font-weight: 900;
+   content: '\f015';
 }
 
 .dl-small dd {
