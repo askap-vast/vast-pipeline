@@ -30,7 +30,7 @@
 }
 
 #homeLogo {
-   background-image: url('/static/img/vast.png');
+   background-image: url('../img/vast.png');
    background-size: 60% auto;
    background-repeat: no-repeat;
    vertical-align: middle;
@@ -38,7 +38,7 @@
 }
 
 #homeLogo:hover {
-   background-image: url('/static/img/home-solid.png');
+   background-image: url('../img/home-solid.png');
    background-size: auto 40%;
    background-repeat: no-repeat;
    vertical-align: middle;

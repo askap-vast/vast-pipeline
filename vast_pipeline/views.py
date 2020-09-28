@@ -201,7 +201,7 @@ class RunViewSet(ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def images(self, request, pk=None):
-        qs = Image.objects.filter(run_id=pk).order_by('id')
+        qs = Image.objects.filter(run__id=pk).order_by('id')
         qs = self.filter_queryset(qs)
         page = self.paginate_queryset(qs)
         if page is not None:
