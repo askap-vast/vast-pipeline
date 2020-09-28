@@ -791,8 +791,7 @@ def MeasurementDetail(request, id, action=None):
     measurement['datetime'] = measurement['datetime'].isoformat()
 
     measurement['nr_sources'] = (
-        0 if measurement['source_ids'] == [None]
-        else len(measurement['source_ids']
+        0 if measurement['source_ids'] == [None] else len(measurement['source_ids'])
     )
 
     sibling_fields = [
