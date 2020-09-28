@@ -1,9 +1,12 @@
 # VAST Pipeline
+
+[![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/)
+
 This repository holds the code of the Radio Transient detection pipeline for the VAST project.
 
 Installation instructions are described in [`INSTALL.md`](./INSTALL.md).
 
-If you intend to contribute to the code base please read and follow the guidelines in [`DEVELOPING.md`](./DEVELOPING.md).
+If you intend to contribute to/develop the code base please read and follow the guidelines in [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
 ## Table of Contents
 
@@ -84,21 +87,26 @@ cd BASE_DIR && mkdir pipeline-runs && mkdir reference-surveys
 
 After creating the folders with the defaults values your directory tree should look like this:
 
-```bash
-vast-pipeline/
-├── init-tools
-├── pipeline
-├── pipeline-runs
-├── reference-surveys
-├── requirements
-├── static
-├── templates
-├── webinterface
-├── DEVELOPING.md
+<pre><code>
+├── CHANGELOG.md
+├── CODE_OF_CONDUCT.md
+├── CONTRIBUTING.md
+├── gulpfile.js
+├── <b>init-tools</b>
 ├── INSTALL.md
+├── LICENSE.txt
 ├── manage.py
-└── README.md
-```
+├── <b>node_modules</b>
+├── package.json
+├── package-lock.json
+├── README.md
+├── <b>requirements</b>
+├── <b>static</b>
+├── <b>templates</b>
+├── <b>pipeline-runs</b>
+├── <b>vast_pipeline</b>
+└── <b>webinterface</b>
+</code></pre>
 
 ## Pipeline Login
 Currently the pipeline support only login via GitHub Team and/or as Django administrator.
@@ -236,7 +244,7 @@ General usage:
 
 ### Resetting a Pipeline Run
 
-Detailed commands for resetting the database can be found in [`DEVELOPING.md`](./DEVELOPING.md).
+Detailed commands for resetting the database can be found in [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
 Resetting a pipeline run can be done using the `clearpiperun` command: it will delete all images (and related objects such as sources) associated with that pipeline run, if that images does not belong to another pipeline run. It will deleted all the sources associated with that pipeline run.
 ```bash
@@ -245,7 +253,7 @@ Resetting a pipeline run can be done using the `clearpiperun` command: it will d
 (pipeline_env)$ ./manage.py clearpiperun my_pipe_run
 ```
 
-More details on the `clearpiperun` command can be found in the [Developing guidelines](./DEVELOPING.md#clearing-run-data).
+More details on the `clearpiperun` command can be found in the [Contributing guidelines](./CONTRIBUTING.md#clearing-run-data).
 
 ### Import survey data
 

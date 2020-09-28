@@ -1,6 +1,6 @@
 {
   "name": "vast-pipeline",
-  "version": "0.0.0dev",
+  "version": "99.99.99dev",
   "description": "Vast Pipeline code base for processing and analysing telescope images from the Square Kilometre Pathfinder",
   "main": "gulpfile.js",
   "scripts": {
@@ -21,6 +21,9 @@
   },
   "keywords": [
     "astronomy",
+    "astrophysics",
+    "radio-astronomy",
+    "transient-astronomy",
     "transients"
   ],
   "author": "VAST Development Team",

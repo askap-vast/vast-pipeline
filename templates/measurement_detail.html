@@ -59,9 +59,9 @@
 	</div>
 
   <div class="row">
-    <div class="col-lg-6">
+    <div class="col-lg-6 d-flex align-items-stretch">
       <!-- Basic Card Example -->
-      <div class="card shadow mb-4">
+      <div class="card shadow mb-4 w-100">
         <div class="card-header py-3">
           <h6 class="m-0 font-weight-bold text-primary">Details</h6>
         </div>
@@ -102,8 +102,8 @@
           <h6 class="m-0 font-weight-bold text-primary">Postage Stamp</h6>
         </div>
         <div class="card-body">
-          <div class="JS9Menubar" data-width="750px"></div>
-          <div class="JS9" data-width="750px"></div>
+          <div class="JS9Menubar" data-width="500px"></div>
+          <div class="JS9" data-width="500px" data-height="400px"></div>
         </div>
       </div>
 
@@ -147,6 +147,17 @@
 
 {{ measurement|json_script:"data-js9" }}
 <script type="text/javascript">
+  function resizeJS9() {
+    let js9Container = $(".JS9").parent();
+    let js9Menu = $(".JS9Menubar");
+    let width = js9Container.width();
+    let height = js9Container.height();
+    let resizeFudge = 0;
+    if (JS9.bugs.webkit_resize) {
+      resizeFudge = JS9.RESIZEFUDGE;
+    }
+    JS9.ResizeDisplay(width, height - js9Menu.height() - resizeFudge);
+  }
   $(document).on("JS9:ready", function() {
     let baseUrl = '{{ base_url }}' || null;
     // function to add base url to an existing url if valid
@@ -171,6 +182,10 @@
         }
       }
     );
+    resizeJS9();
+    $(window).resize(function() {
+      resizeJS9();
+    });
   });
 </script>
 
