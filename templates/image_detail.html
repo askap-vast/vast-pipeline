@@ -30,7 +30,7 @@
 
   <!-- Page Heading -->
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
-	  <h1 class="h3 mb-2 text-gray-800">Image: {{ image.name }}</h1>
+    <h1 class="h3 mb-2 text-gray-800">Image: {{ image.name }}</h1>
     <div class="">
       <a href="{% url 'vast_pipeline:image_detail' image.id %}prev" class="d-none d-sm-inline-block btn btn-sm btn-light btn-icon-split shadow-sm">
         <span class="icon text-gray-600">
@@ -45,7 +45,7 @@
         </span>
       </a>
     </div>
-	</div>
+  </div>
 
   <div class="row">
     <div class="col-lg-4">
@@ -55,51 +55,53 @@
           <h6 class="m-0 font-weight-bold text-primary">Details</h6>
         </div>
         <div class="card-body">
-          <strong>Name: </strong>{{ image.name }}<p></p>
-          <div id='secretInfo' class='copy-coords'>{{ image.ra_hms }} {{ image.dec_dms }}</div>
-          <div id='secretDegInfo' class='copy-coords'>{{ image.ra }} {{ image.dec }}</div>
-          <div id='secretGalInfo' class='copy-coords'>{{ image.l }} {{ image.b }}</div>
-          <strong>Position: </strong>{{ image.ra_hms }} {{ image.dec_dms }}
-          <button type="button" id="btnCopy" class="btn btn-link btn-circle btn-sm" title="Copy">
-            <i class="far fa-copy"></i>
-          </button><br>
-          <strong>Position (Decimal): </strong>{{ image.ra|floatformat:6 }} {{ image.dec|floatformat:6 }}
-          <button type="button" id="btnDegCopy" class="btn btn-link btn-circle btn-sm" title="Copy">
-            <i class="far fa-copy"></i>
-          </button><br>
-          <strong>Position (Galactic): </strong>{{ image.l|floatformat:6 }} {{ image.b|floatformat:6 }}
-          <button type="button" id="btnGalCopy" class="btn btn-link btn-circle btn-sm" title="Copy">
-            <i class="far fa-copy"></i>
-          </button><p></p>
-          <div class="row">
-            <div class="col">
-              <strong>Beam BMAJ: </strong> {{ image.beam_bmaj|deg_to_arcsec|floatformat:3 }}''<br>
-              <strong>Beam BMIN: </strong> {{ image.beam_bmin|deg_to_arcsec|floatformat:3 }}''<br>
-              <strong>Beam BPA: </strong> {{ image.beam_bpa|floatformat:2 }}&deg;<p></p>
+          <small>
+            <strong>Name: </strong>{{ image.name }}<p></p>
+            <div id='secretInfo' class='copy-coords'>{{ image.ra_hms }} {{ image.dec_dms }}</div>
+            <div id='secretDegInfo' class='copy-coords'>{{ image.ra }} {{ image.dec }}</div>
+            <div id='secretGalInfo' class='copy-coords'>{{ image.l }} {{ image.b }}</div>
+            <strong>Position: </strong>{{ image.ra_hms }} {{ image.dec_dms }}
+            <button type="button" id="btnCopy" class="btn btn-link btn-circle btn-sm" title="Copy">
+              <i class="far fa-copy"></i>
+            </button><br>
+            <strong>Position (Decimal): </strong>{{ image.ra|floatformat:6 }} {{ image.dec|floatformat:6 }}
+            <button type="button" id="btnDegCopy" class="btn btn-link btn-circle btn-sm" title="Copy">
+              <i class="far fa-copy"></i>
+            </button><br>
+            <strong>Position (Galactic): </strong>{{ image.l|floatformat:6 }} {{ image.b|floatformat:6 }}
+            <button type="button" id="btnGalCopy" class="btn btn-link btn-circle btn-sm" title="Copy">
+              <i class="far fa-copy"></i>
+            </button><p></p>
+            <div class="row">
+              <div class="col">
+                <strong>Beam BMAJ: </strong> {{ image.beam_bmaj|deg_to_arcsec|floatformat:3 }}''<br>
+                <strong>Beam BMIN: </strong> {{ image.beam_bmin|deg_to_arcsec|floatformat:3 }}''<br>
+                <strong>Beam BPA: </strong> {{ image.beam_bpa|floatformat:2 }}&deg;<p></p>
+              </div>
+              <div class="col">
+                <strong>Median RMS: </strong> {{ image.rms_median|floatformat:3 }} mJy<br>
+                <strong>Min RMS: </strong> {{ image.rms_min|floatformat:3 }} mJy<br>
+                <strong>Max RMS: </strong> {{ image.rms_max|floatformat:3 }} mJy<p></p>
+              </div>
             </div>
-            <div class="col">
-              <strong>Median RMS: </strong> {{ image.rms_median|floatformat:3 }} mJy<br>
-              <strong>Min RMS: </strong> {{ image.rms_min|floatformat:3 }} mJy<br>
-              <strong>Max RMS: </strong> {{ image.rms_max|floatformat:3 }} mJy<p></p>
-            </div>
-          </div>
-          <strong>Frequency: </strong> {{ image.frequency|floatformat:1 }} MHz<br>
-          <strong>Bandwidth: </strong> {{ image.bandwidth|floatformat:1 }} MHz<p></p>
+            <strong>Frequency: </strong> {{ image.frequency|floatformat:1 }} MHz<br>
+            <strong>Bandwidth: </strong> {{ image.bandwidth|floatformat:1 }} MHz<p></p>
           
-          <strong>Number of measurements: </strong>{{ image.n_meas|intcomma }} (<a href="#measHeader">Table</a>)<br>
-          <strong>Number of runs included in: </strong>{{ image.n_runs|intcomma }} (<a href="#runHeader">Table</a>)<p></p>
+            <strong>Number of measurements: </strong>{{ image.n_meas|intcomma }} (<a href="#measHeader">Table</a>)<br>
+            <strong>Number of runs included in: </strong>{{ image.n_runs|intcomma }} (<a href="#runHeader">Table</a>)<p></p>
           
-          <strong>Comment: </strong> {{ image.comment }}<p></p>
+            <strong>Comment: </strong> {{ image.comment }}<p></p>
+          </small>
         </div>
       </div>
     </div>
     <!-- Aladin viz tile -->
-  	<div class="col-lg-8">
+    <div class="col-lg-8">
       <div class="card shadow mb-4">
         <div id="aladinViz" style="height:40.3rem;"></div>
       </div>
-  	</div>
-	</div>
+    </div>
+  </div>
 
   <div class="row">
     <div class="col">

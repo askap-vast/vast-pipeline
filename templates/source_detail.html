@@ -75,62 +75,65 @@
           <h6 class="m-0 font-weight-bold text-primary">Details</h6>
         </div>
         <div class="card-body">
-          <strong>Name: </strong>{{ source.name }}<br>
-          <strong>Pipeline Run: </strong> <a href="{% url 'vast_pipeline:run_detail' source.run_id %}" target="_blank">{{ source.run_name }}</a><p></p>
-          <div id='secretInfo' class='copy-coords'>{{ source.wavg_ra_hms }} {{ source.wavg_dec_dms }}</div>
-          <div id='secretDegInfo' class='copy-coords'>{{ source.wavg_ra }} {{ source.wavg_dec }}</div>
-          <div id='secretGalInfo' class='copy-coords'>{{ source.wavg_l }} {{ source.wavg_b }}</div>
-          <strong>Position: </strong>{{ source.wavg_ra_hms }} {{ source.wavg_dec_dms }}
-          <button type="button" id="btnCopy" class="btn btn-link btn-circle btn-sm" title="Copy">
-            <i class="far fa-copy"></i>
-          </button><br>
-          <strong>Position (Decimal): </strong>{{ source.wavg_ra }} {{ source.wavg_dec }}
-          <button type="button" id="btnDegCopy" class="btn btn-link btn-circle btn-sm" title="Copy">
-            <i class="far fa-copy"></i>
-          </button><br>
-          <strong>Position (Galactic): </strong>{{ source.wavg_l|floatformat:6 }} {{ source.wavg_b|floatformat:6 }}
-          <button type="button" id="btnGalCopy" class="btn btn-link btn-circle btn-sm" title="Copy">
-            <i class="far fa-copy"></i>
-          </button><p></p>
-          <strong>Avg. Int. Flux: </strong> {{ source.avg_flux_int|floatformat:3 }} mJy<br>
-          <strong>Avg. Peak Flux: </strong> {{ source.avg_flux_peak|floatformat:3 }} mJy/beam<br>
-          <strong>Max Peak Flux: </strong> {{ source.max_flux_peak|floatformat:3 }} mJy/beam<p></p>
-          <div class="row">
-            <div class="col">
-              <strong>W. Avg RA Err: </strong> {{ source.wavg_uncertainty_ew|deg_to_arcsec|floatformat:3 }}''<br>
-              <strong>W. Avg Dec Err: </strong> {{ source.wavg_uncertainty_ns|deg_to_arcsec|floatformat:3 }}''<br>
-              <strong>Avg. Compactness: </strong> {{ source.avg_compactness|floatformat:3 }}<br>
-              <strong>Neighbour Dist: </strong> {{ source.n_neighbour_dist|deg_to_arcmin|floatformat:2 }}'<p></p>
+          <small>
+            <strong>Name: </strong>{{ source.name }}<br>
+            <strong>Pipeline Run: </strong> <a href="{% url 'vast_pipeline:run_detail' source.run_id %}" target="_blank">{{ source.run_name }}</a><p></p>
+            <div id='secretInfo' class='copy-coords'>{{ source.wavg_ra_hms }} {{ source.wavg_dec_dms }}</div>
+            <div id='secretDegInfo' class='copy-coords'>{{ source.wavg_ra }} {{ source.wavg_dec }}</div>
+            <div id='secretGalInfo' class='copy-coords'>{{ source.wavg_l }} {{ source.wavg_b }}</div>
+            <strong>Position: </strong>{{ source.wavg_ra_hms }} {{ source.wavg_dec_dms }}
+            <button type="button" id="btnCopy" class="btn btn-link btn-circle btn-sm" title="Copy">
+              <i class="far fa-copy"></i>
+            </button><br>
+            <strong>Position (Decimal): </strong>{{ source.wavg_ra }} {{ source.wavg_dec }}
+            <button type="button" id="btnDegCopy" class="btn btn-link btn-circle btn-sm" title="Copy">
+              <i class="far fa-copy"></i>
+            </button><br>
+            <strong>Position (Galactic): </strong>{{ source.wavg_l|floatformat:6 }} {{ source.wavg_b|floatformat:6 }}
+            <button type="button" id="btnGalCopy" class="btn btn-link btn-circle btn-sm" title="Copy">
+              <i class="far fa-copy"></i>
+            </button><p></p>
+            <strong>Avg. Int. Flux: </strong> {{ source.avg_flux_int|floatformat:3 }} mJy<br>
+            <strong>Avg. Peak Flux: </strong> {{ source.avg_flux_peak|floatformat:3 }} mJy/beam<br>
+            <strong>Max Peak Flux: </strong> {{ source.max_flux_peak|floatformat:3 }} mJy/beam<p></p>
+            <div class="row">
+              <div class="col">
+                <strong>W. Avg RA Err: </strong> {{ source.wavg_uncertainty_ew|deg_to_arcsec|floatformat:3 }}''<br>
+                <strong>W. Avg Dec Err: </strong> {{ source.wavg_uncertainty_ns|deg_to_arcsec|floatformat:3 }}''<br>
+                <strong>Avg. Compactness: </strong> {{ source.avg_compactness|floatformat:3 }}<br>
+                <strong>Neighbour Dist: </strong> {{ source.n_neighbour_dist|deg_to_arcmin|floatformat:2 }}'<p></p>
               
-              <strong>Max SNR: </strong> {{ source.max_snr|floatformat:2 }}<br>
-              <strong>Min SNR: </strong> {{ source.min_snr|floatformat:2 }}<p></p>
+                <strong>Max SNR: </strong> {{ source.max_snr|floatformat:2 }}<br>
+                <strong>Min SNR: </strong> {{ source.min_snr|floatformat:2 }}<p></p>
               
-              <strong>Nr Datapoints: </strong> {{ source.n_meas }}<br>
-              <strong>Nr Selavy: </strong> {{ source.n_meas_sel }}<br>
-              <strong>Nr Forced: </strong> {{ source.n_meas_forced }}<p></p>
+                <strong>Nr Datapoints: </strong> {{ source.n_meas }}<br>
+                <strong>Nr Selavy: </strong> {{ source.n_meas_sel }}<br>
+                <strong>Nr Forced: </strong> {{ source.n_meas_forced }}<p></p>
 
-            </div>
-            <div class='col'>
-              <strong>V (Int. Flux): </strong> {{ source.v_int|floatformat:2 }}<br>
-              <strong>V (Peak Flux): </strong> {{ source.v_peak|floatformat:2 }}<br>
-              <strong>&eta; (Int. Flux): </strong> {{ source.eta_int|floatformat:2 }}<br>
-              <strong>&eta; (Peak Flux): </strong> {{ source.eta_peak|floatformat:2 }}<p></p>
+              </div>
+              <div class='col'>
+                <strong>V (Int. Flux): </strong> {{ source.v_int|floatformat:2 }}<br>
+                <strong>V (Peak Flux): </strong> {{ source.v_peak|floatformat:2 }}<br>
+                <strong>&eta; (Int. Flux): </strong> {{ source.eta_int|floatformat:2 }}<br>
+                <strong>&eta; (Peak Flux): </strong> {{ source.eta_peak|floatformat:2 }}<p></p>
               
-              <strong>New Source: </strong> {{ source.new }}<br>
-              {% if source.new %}
-                <strong>New High Sigma: </strong>{{ source.new_high_sigma|floatformat:2 }}
-              {% else %}
-                <strong>New High Sigma: </strong>N/A
-              {% endif %}<p></p>
+                <strong>New Source: </strong> {{ source.new }}<br>
+                {% if source.new %}
+                  <strong>New High Sigma: </strong>{{ source.new_high_sigma|floatformat:2 }}
+                {% else %}
+                  <strong>New High Sigma: </strong>N/A
+                {% endif %}<p></p>
               
-              <strong>Nr Relations: </strong> {{ source.n_rel }}<br>
-              <strong>Nr Siblings: </strong> {{ source.n_sibl }}<p></p>
+                <strong>Nr Relations: </strong> {{ source.n_rel }}<br>
+                <strong>Nr Siblings: </strong> {{ source.n_sibl }}<p></p>
+              </div>
             </div>
-          </div>
-          <p><strong>Comment: </strong> {{ source.comment }}</p>
+            <p><strong>Comment: </strong> {{ source.comment }}</p>
+          </small>
         </div>
       </div>
     </div>
+    
     <div class="col-xl-4 col-lg-6 mb-4">
       <!-- DataTable External Search Results -->
       <div class="card shadow mb-4 h-100">
@@ -154,15 +157,16 @@
         </div>
       </div>
     </div>
+    
     <!-- Aladin viz tile -->
-  	<div class="col-xl-4 mb-4">
+    <div class="col-xl-4 mb-4">
       <div class="card shadow mb-4 h-100" style="min-height: 16em;">
         <div id="aladinViz"></div>
       </div>
-  	</div>
-	</div>
-
-  <!-- Area Chart -->
+    </div>
+  </div>
+  
+  <!-- Light curve -->
   <div class="card shadow mb-4">
     <div class="card-header py-3">
       <h6 class="m-0 font-weight-bold text-primary">Light Curve</h6>
@@ -175,38 +179,38 @@
   </div>
 
   <!-- Postage stamps -->
-    <div class="card shadow mb-4">
-      <h6 class="card-header m-0 font-weight-bold text-primary">
-        <a data-toggle="collapse" href="#collapse-postage-stamps" aria-expanded="true" aria-controls="collapse-postage-stamps" id="heading-example" class="d-block">
-          <i class="fa fa-chevron-down pull-right"></i>
-          Postage Stamps
-        </a>
-      </h6>
-      <div id="collapse-postage-stamps" class="collapse show" aria-labelledby="heading-example">
-        <div class="card-body">
-          <div class="row">
-            <button class="btn btn-info mr-1" onclick="focusOnSource(4.0);">Zoom to Source</button>
-            <button class="btn btn-info mr-1" onclick="focusOnSource('toFit');">Zoom to Field</button>
+  <div class="card shadow mb-4">
+    <h6 class="card-header m-0 font-weight-bold text-primary">
+      <a data-toggle="collapse" href="#collapse-postage-stamps" aria-expanded="true" aria-controls="collapse-postage-stamps" id="heading-example" class="d-block">
+        <i class="fa fa-chevron-down pull-right"></i>
+        Postage Stamps
+      </a>
+    </h6>
+    <div id="collapse-postage-stamps" class="collapse show" aria-labelledby="heading-example">
+      <div class="card-body">
+        <div class="row">
+          <button class="btn btn-info mr-1" onclick="focusOnSource(4.0);">Zoom to Source</button>
+          <button class="btn btn-info mr-1" onclick="focusOnSource('toFit');">Zoom to Field</button>
+        </div>
+        <div class="row">
+          <div class="JS9Menubar" id="SUPERMENU_" data-displays="*"></div>
+        </div>
+        <div class="row">
+          {% for measurement in datatables.0.dataQuery %}
+          <div class="card">
+            <div class="card-header">
+              <p class="mb-0"><a href="{% url 'vast_pipeline:image_detail' measurement.image_id %}" target="_blank">{{ measurement.image_name }}</a></p>
+              <p class="mb-0"><a href="{% url 'vast_pipeline:measurement_detail' measurement.id %}" target="_blank">{{ measurement.name }}</a></p>
+            </div>
+            <div class="card-body">
+              <div class="JS9" id="JS9_{{ forloop.counter }}" data-width="350px" data-height="350px"></div>
+            </div>
           </div>
-          <div class="row">
-            <div class="JS9Menubar" id="SUPERMENU_" data-displays="*"></div>
-          </div>
-          <div class="row">
-            {% for measurement in datatables.0.dataQuery %}
-              <div class="card">
-                <div class="card-header">
-                  <p class="mb-0"><a href="{% url 'vast_pipeline:image_detail' measurement.image_id %}" target="_blank">{{ measurement.image_name }}</a></p>
-                  <p class="mb-0"><a href="{% url 'vast_pipeline:measurement_detail' measurement.id %}" target="_blank">{{ measurement.name }}</a></p>
-                </div>
-                <div class="card-body">
-                  <div class="JS9" id="JS9_{{ forloop.counter }}" data-width="350px" data-height="350px"></div>
-                </div>
-              </div>
-            {% endfor %}
-          </div>
+          {% endfor %}
         </div>
       </div>
     </div>
+  </div>
 
   <!-- DataTable Source Measurements -->
   <div class="card shadow mb-4">
@@ -219,14 +223,14 @@
           <thead>
             <tr>
               {% for name in datatables.0.colsNames %}
-              <th>{{ name }}</th>
+                <th>{{ name }}</th>
               {% endfor %}
             </tr>
           </thead>
           <tfoot>
             <tr>
               {% for name in datatables.0.colsNames %}
-              <th>{{ name }}</th>
+                <th>{{ name }}</th>
               {% endfor %}
             </tr>
           </tfoot>
@@ -248,14 +252,14 @@
             <thead>
               <tr>
                 {% for name in datatables.1.colsNames %}
-                <th>{{ name }}</th>
+                  <th>{{ name }}</th>
                 {% endfor %}
               </tr>
             </thead>
             <tfoot>
               <tr>
                 {% for name in datatables.1.colsNames %}
-                <th>{{ name }}</th>
+                  <th>{{ name }}</th>
                 {% endfor %}
               </tr>
             </tfoot>
@@ -264,8 +268,10 @@
       </div>
     </div>
   </div>
+  
   <div style="position: fixed; top: 0; right: 0; z-index: 99">
-  <div id="alert_placeholder">
+    <div id="alert_placeholder"></div>
+  </div>
 
 </div>
 <!-- /.container-fluid -->

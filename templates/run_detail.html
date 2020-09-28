@@ -34,91 +34,95 @@
 
   <!-- Page Heading -->
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
-	  <h1 class="h3 mb-2 text-gray-800">Pipeline Run: {{ p_run.name }}</h1>
-	</div>
+    <h1 class="h3 mb-2 text-gray-800">Pipeline Run: {{ p_run.name }}</h1>
+  </div>
 
   <div class="row">
-		<!-- Nr Images -->
-      <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-primary shadow h-100 py-2">
-          <div class="card-body">
-            <div class="row no-gutters align-items-center">
-              <div class="col mr-2">
-                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Nr Images</div>
-                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ p_run.n_images|intcomma }}</div>
-              </div>
-              <div class="col-auto">
-                <i class="fas fa-images fa-2x text-gray-300"></i>
-              </div>
+    <!-- Nr Images -->
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-primary shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Nr Images</div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">{{ p_run.n_images|intcomma }}</div>
             </div>
-            <a href="#imagesHeader" class="stretched-link"></a>
+            <div class="col-auto">
+              <i class="fas fa-images fa-2x text-gray-300"></i>
+            </div>
           </div>
+          <a href="#imagesHeader" class="stretched-link"></a>
         </div>
       </div>
-			<!-- Extracted Sources -->
-      <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-info shadow h-100 py-2">
-          <div class="card-body">
-            <div class="row no-gutters align-items-center">
-              <div class="col mr-2">
-                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Nr Selavy Measurements</div>
-                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ p_run.nr_meas|intcomma }} (+{{ p_run.nr_frcd|intcomma }} forced)</div>
-              </div>
-              <div class="col-auto">
-                <i class="fas fa-bolt fa-2x text-gray-300"></i>
-              </div>
+    </div>
+    
+    <!-- Extracted Sources -->
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-info shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Nr Selavy Measurements</div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">{{ p_run.nr_meas|intcomma }} (+{{ p_run.nr_frcd|intcomma }} forced)</div>
             </div>
-            <a href="#measHeader" class="stretched-link"></a>
+            <div class="col-auto">
+              <i class="fas fa-bolt fa-2x text-gray-300"></i>
+            </div>
           </div>
+          <a href="#measHeader" class="stretched-link"></a>
         </div>
       </div>
-			<!-- Nr sources -->
-      <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-warning shadow h-100 py-2">
-          <div class="card-body">
-            <div class="row no-gutters align-items-center">
-              <div class="col mr-2">
-                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Total Nr Sources</div>
-                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ p_run.n_sources|intcomma }}</div>
-              </div>
-              <div class="col-auto">
-                <i class="fas fa-share-alt fa-2x text-gray-300"></i>
-              </div>
+    </div>
+    
+    <!-- Nr sources -->
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-warning shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Total Nr Sources</div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">{{ p_run.n_sources|intcomma }}</div>
             </div>
-            <a href="{% url 'vast_pipeline:source_query' %}#run_name={{ p_run.name }}" target="_blank" class="stretched-link"></a>
+            <div class="col-auto">
+              <i class="fas fa-share-alt fa-2x text-gray-300"></i>
+            </div>
           </div>
+          <a href="{% url 'vast_pipeline:source_query' %}#run_name={{ p_run.name }}" target="_blank" class="stretched-link"></a>
         </div>
       </div>
-			<!-- New Sources -->
-      <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-success shadow h-100 py-2">
-          <div class="card-body">
-            <div class="row no-gutters align-items-center">
-              <div class="col mr-2">
-                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">New Sources</div>
-                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ p_run.new_srcs|intcomma }}</div>
-              </div>
-              <div class="col-auto">
-                <i class="fas fa-star fa-2x text-gray-300"></i>
-              </div>
+    </div>
+
+    <!-- New Sources -->
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-success shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text-xs font-weight-bold text-success text-uppercase mb-1">New Sources</div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">{{ p_run.new_srcs|intcomma }}</div>
             </div>
-            <a href="{% url 'vast_pipeline:source_query' %}#run_name={{ p_run.name }}&new_source=true" target="_blank" class="stretched-link"></a>
+            <div class="col-auto">
+              <i class="fas fa-star fa-2x text-gray-300"></i>
+            </div>
           </div>
+          <a href="{% url 'vast_pipeline:source_query' %}#run_name={{ p_run.name }}&new_source=true" target="_blank" class="stretched-link"></a>
         </div>
       </div>
-	</div>
+    </div>
+  </div>
 
   <div class="row">
-  	<div class="col-lg-5">
+    <div class="col-lg-5">
       <div class="card shadow mb-4">
         <div class="card-header py-3">
           <h6 class="m-0 font-weight-bold text-primary">Details</h6>
         </div>
         <div class="card-body">
-          <p><strong>User: </strong>{% if p_run.user %}
-          {{ p_run.user }}
+          <p><strong>User: </strong>
+          {% if p_run.user %}
+            {{ p_run.user }}
           {% else %}
-          None (executed from command line)
+            None (executed from command line)
           {% endif %}</p>
           <p><strong>Processing Datetime: </strong> {{ p_run.time }}</p>
           <p><strong>Run Status: </strong> {{ p_run.status }}</p>
@@ -136,33 +140,33 @@
           TBC
         </div>
       </div>
-      </div>
+    </div>
+    
     <div class="col-lg-7">
-        <!-- sky regions -->
-         <div class="card shadow mb-4">
-           <h6 class="card-header m-0 font-weight-bold text-primary">
-             <a data-toggle="collapse" href="#collapseRegionCard" aria-expanded="true" aria-controls="collapseRegionCard" id="regionHeader" class="d-block">
-               <i class="fa fa-chevron-down pull-right"></i>
-                 {% if p_run.status == 'Completed' %}
-                   Run Sky Regions
-                 {% else %}
-                   Run Sky Regions (not completed so no sky regions are shown!)
-                 {% endif %}
-             </a>
-           </h6>
-             <div id="collapseRegionCard" class="collapse show" aria-labelledby="regionHeader">
-                 <div class="card-body">
-                   <div id="celestial-map"></div>
-                 </div>
-             </div>
+      <!-- sky regions -->
+       <div class="card shadow mb-4">
+         <h6 class="card-header m-0 font-weight-bold text-primary">
+           <a data-toggle="collapse" href="#collapseRegionCard" aria-expanded="true" aria-controls="collapseRegionCard" id="regionHeader" class="d-block">
+             <i class="fa fa-chevron-down pull-right"></i>
+               {% if p_run.status == 'Completed' %}
+                 Run Sky Regions
+               {% else %}
+                 Run Sky Regions (not completed so no sky regions are shown!)
+               {% endif %}
+           </a>
+         </h6>
+         <div id="collapseRegionCard" class="collapse show" aria-labelledby="regionHeader">
+           <div class="card-body">
+             <div id="celestial-map"></div>
+           </div>
          </div>
-
+       </div>
     </div>
   </div>
 
-      <!-- config file card -->
-    <div class="row">
-          	<div class="col-lg-12">
+  <!-- config file card -->
+  <div class="row">
+    <div class="col-lg-12">
       <div class="card shadow mb-4">
         <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
           <h6 class="m-0 font-weight-bold text-primary" id='configFile'>Config File</h6>
@@ -187,38 +191,38 @@
           <pre id="runConfigText" class="pre-scrollable" contenteditable="false"><code id="runConfigTextCode" class="language-python line-numbers" style="white-space: pre">{{ p_run.config_txt }}</code></pre>
         </div>
       </div>
-      </div>
+    </div>
   </div>
   
   <div class="row">
-        	<div class="col-lg-12">
+    <div class="col-lg-12">
       <!-- log file card -->
-       <div class="card shadow mb-4">
-         <h6 class="card-header m-0 font-weight-bold text-primary" id="logFile">
-           <a data-toggle="collapse" href="#collapseLogCard" aria-expanded="true" aria-controls="collapseLogCard" id="logHeader" class="collapsed d-block">
-             <i class="fa fa-chevron-down pull-right"></i>
-               Log File
-           </a>
-         </h6>
+      <div class="card shadow mb-4">
+        <h6 class="card-header m-0 font-weight-bold text-primary" id="logFile">
+          <a data-toggle="collapse" href="#collapseLogCard" aria-expanded="true" aria-controls="collapseLogCard" id="logHeader" class="collapsed d-block">
+            <i class="fa fa-chevron-down pull-right"></i>
+            Log File
+          </a>
+        </h6>
         <div class="collapse" id="collapseLogCard">
           <div class="card-body">
             <pre class="pre-scrollable"><code>{% if p_run.log_txt %}{{ p_run.log_txt }}{% else %}N.A.{% endif %}</code></pre>
           </div>
         </div>
       </div>
-      </div>
-     </div>
-     
+    </div>
+  </div>
+  
+  <!-- image table -->
   <div class="row">
     <div class="col">
-    <!-- Datatable Related Sources -->
-    <div class="card shadow mb-4">
-      <h6 class="card-header m-0 font-weight-bold text-primary">
-        <a data-toggle="collapse" href="#collapseImages" aria-expanded="true" aria-controls="collapseImages" id="imagesHeader" class="d-block">
-          <i class="fa fa-chevron-down pull-right"></i>
-          Images
-        </a>
-      </h6>
+      <div class="card shadow mb-4">
+        <h6 class="card-header m-0 font-weight-bold text-primary">
+          <a data-toggle="collapse" href="#collapseImages" aria-expanded="true" aria-controls="collapseImages" id="imagesHeader" class="d-block">
+            <i class="fa fa-chevron-down pull-right"></i>
+            Images
+          </a>
+        </h6>
       <!-- Card Content - Collapse -->
       <div class="collapse show" id="collapseImages">
         <div class="card-body">
@@ -227,14 +231,14 @@
               <thead>
                 <tr>
                   {% for name in datatables.0.colsNames %}
-                  <th>{{ name }}</th>
+                    <th>{{ name }}</th>
                   {% endfor %}
                 </tr>
               </thead>
               <tfoot>
                 <tr>
                   {% for name in datatables.0.colsNames %}
-                  <th>{{ name }}</th>
+                    <th>{{ name }}</th>
                   {% endfor %}
                 </tr>
               </tfoot>
@@ -242,8 +246,10 @@
           </div>
         </div>
       </div>
+    </div>
   </div>
-
+  
+  <!-- Measurements table -->
   <div class="row">
     <div class="col">
       <div class="card shadow mb-4">
@@ -255,24 +261,25 @@
         </h6>
         <!-- Card Content - Collapse -->
         <div class="collapse show" id="collapseMeas">
-        <div class="card-body">
-          <div class="table-responsive">
-            <table class="table table-bordered table-striped table-hover" id="{{ datatables.1.table_id }}" width="100%" cellspacing="0">
-              <thead>
-                <tr>
-                  {% for name in datatables.1.colsNames %}
-                  <th>{{ name }}</th>
-                  {% endfor %}
-                </tr>
-              </thead>
-              <tfoot>
-                <tr>
-                  {% for name in datatables.1.colsNames %}
-                  <th>{{ name }}</th>
-                  {% endfor %}
-                </tr>
-              </tfoot>
-            </table>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped table-hover" id="{{ datatables.1.table_id }}" width="100%" cellspacing="0">
+                <thead>
+                  <tr>
+                    {% for name in datatables.1.colsNames %}
+                      <th>{{ name }}</th>
+                    {% endfor %}
+                  </tr>
+                </thead>
+                <tfoot>
+                  <tr>
+                    {% for name in datatables.1.colsNames %}
+                      <th>{{ name }}</th>
+                    {% endfor %}
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
           </div>
         </div>
       </div>
