@@ -127,12 +127,17 @@ FLOAT_FIELDS = {
         'precision': 2,
         'scale': 1,
     },
+    'frequency': {
+        'precision': 2,
+        'scale': 1,
+    }
 }
 
 
 def generate_colsfields(
     fields: List[str], url_prefix_dict: Dict[str, str],
-    not_orderable_col: Optional[List[str]]=[]
+    not_orderable_col: Optional[List[str]]=[],
+    not_searchable_col: Optional[List[str]]=[],
 ) -> List[Dict[str, Any]]:
     """
     Generate data to be included in context for datatables.
@@ -149,6 +154,8 @@ def generate_colsfields(
             href links in the datatables.
         not_orderable_col (list): List of columns that should be set to
             be not orderable in the final table.
+        not_searchable_col (list): List of columns that should be set to
+            be not searchable in the final table.
 
     Returns:
         colsfields (list): List containing JSON object.
@@ -205,6 +212,9 @@ def generate_colsfields(
 
         if col in not_orderable_col:
             field2append['orderable'] = False
+
+        if col in not_searchable_col:
+            field2append['searchable'] = False
 
         colsfields.append(field2append)
 

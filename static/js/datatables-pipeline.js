@@ -67,6 +67,7 @@ $(document).ready(function() {
         ajax: dataConf.api,
         columns: dataConf.colsFields,
         order: dataConf.order,
+        searchDelay: 2000,
       };
     } else {
       // expect that there is a 'data' attribute with the data

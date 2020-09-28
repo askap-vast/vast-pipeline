@@ -76,10 +76,11 @@ def Home(request):
         settings.PIPELINE_WORKING_DIR,
         'images/**/measurements.parquet',
     ))
+    bob=False
     check_run_db = Run.objects.exists()
     totals['nr_meas'] = (
         dd.read_parquet(meas_glob, columns='id')
-        .count()
+        .shape[0]
         .compute()
     ) if (check_run_db and meas_glob) else 0
 
@@ -89,7 +90,7 @@ def Home(request):
     ))
     totals['nr_f_meas'] = (
         dd.read_parquet(f_meas_glob, columns='id')
-        .count()
+        .shape[0]
         .compute()
     ) if (check_run_db and f_meas_glob) else 0
 
@@ -245,7 +246,7 @@ def RunDetail(request, id):
         ))
         p_run['nr_meas'] = (
             dd.read_parquet(img_paths, columns='id')
-            .count()
+            .shape[0]
             .compute()
         )
     else:
@@ -258,7 +259,7 @@ def RunDetail(request, id):
         try:
             p_run['nr_frcd'] = (
                 dd.read_parquet(forced_path, columns='id')
-                .count()
+                .shape[0]
                 .compute()
             )
         except Exception as e:
@@ -309,7 +310,8 @@ def RunDetail(request, id):
 
     image_colsfields = generate_colsfields(
         image_fields,
-        {'name': reverse('vast_pipeline:image_detail', args=[1])[:-2]}
+        {'name': reverse('vast_pipeline:image_detail', args=[1])[:-2]},
+        not_searchable_col=['frequency']
     )
 
     image_datatable = {
@@ -356,7 +358,8 @@ def RunDetail(request, id):
 
     meas_colsfields = generate_colsfields(
         meas_fields,
-        {'name': reverse('vast_pipeline:measurement_detail', args=[1])[:-2]}
+        {'name': reverse('vast_pipeline:measurement_detail', args=[1])[:-2]},
+        not_searchable_col=['frequency']
     )
 
     meas_datatable = {
@@ -417,7 +420,8 @@ def ImageIndex(request):
 
     colsfields = generate_colsfields(
         fields,
-        {'name': reverse('vast_pipeline:image_detail', args=[1])[:-2]}
+        {'name': reverse('vast_pipeline:image_detail', args=[1])[:-2]},
+        not_searchable_col=['frequency']
     )
 
     return render(
@@ -563,7 +567,8 @@ def ImageDetail(request, id, action=None):
 
     meas_colsfields = generate_colsfields(
         meas_fields,
-        {'name': reverse('vast_pipeline:measurement_detail', args=[1])[:-2]}
+        {'name': reverse('vast_pipeline:measurement_detail', args=[1])[:-2]},
+        not_searchable_col=['frequency']
     )
 
     meas_datatable = {
@@ -654,7 +659,8 @@ def MeasurementIndex(request):
 
     colsfields = generate_colsfields(
         fields,
-        {'name': reverse('vast_pipeline:measurement_detail', args=[1])[:-2]}
+        {'name': reverse('vast_pipeline:measurement_detail', args=[1])[:-2]},
+        not_searchable_col=['frequency']
     )
 
     return render(
