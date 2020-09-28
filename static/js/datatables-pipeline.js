@@ -121,7 +121,7 @@ $(document).ready(function() {
             "targets": 4,
             "data": "frequency",
             "render": function ( data, type, row, meta ) {
-              return row[4];
+              return row[4].toFixed(2);
             }
           },
           {
