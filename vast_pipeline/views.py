@@ -1478,13 +1478,13 @@ class RawImageListSet(ViewSet):
             lambda x: os.path.join(img_root, x, '**' + os.sep + '*.txt'),
             img_subfolders2
         ))
-        # add home directory for user and jupyter-user (user = github name)
+        # add home directory user data for user and jupyter-user (user = github name)
         req_user = request.user.username
         for user in [f'~{req_user}', f'~jupyter-{req_user}']:
-            user_home = os.path.expanduser(user)
-            if os.path.exists(user_home):
-                img_regex_list.append(os.path.join(user_home, '**' + os.sep + '*.fits'))
-                selavy_regex_list.append(os.path.join(user_home, '**' + os.sep + '*.txt'))
+            user_home_data = os.path.join(os.path.expanduser(user), settings.HOME_DATA_DIR)
+            if settings.HOME_DATA_DIR and os.path.exists(user_home_data):
+                img_regex_list.append(os.path.join(user_home_data, '**' + os.sep + '*.fits'))
+                selavy_regex_list.append(os.path.join(user_home_data, '**' + os.sep + '*.txt'))
 
         # generate raw image list in parallel
         dask_list = db.from_sequence(img_regex_list)
