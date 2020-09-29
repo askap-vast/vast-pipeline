@@ -241,6 +241,13 @@
               ><i class="fas fa-info-circle"></i></a>
             </div>
             <div class="custom-control custom-switch">
+              <input type="checkbox" class="custom-control-input" id="measurementsArrowSwitch" {% if runconfig.create_measurements_arrow_file %} checked="checked" {% endif %} name="create_measurements_arrow_file">
+              <label class="custom-control-label font-weight-bold text-gray-800" for="measurementsArrowSwitch">Create Measurements Arrow File</label>
+              <a href="#" data-toggle="tooltip" data-placement="top" title=
+                  "The pipeline will create a `measurements.arrow` file alongside the parquet files in the run directory to allow easier exploration post analysis. Recommended for very large runs (millions of measurements)."
+              ><i class="fas fa-info-circle"></i></a>
+            </div>
+            <div class="custom-control custom-switch">
               <input type="checkbox" class="custom-control-input" id="astropyWarnSwitch" {% if runconfig.suppress_astropy_warnings %} checked="checked" {% endif %} name="suppress_astropy_warnings">
               <label class="custom-control-label font-weight-bold text-gray-800" for="astropyWarnSwitch">Suppress Astropy Warnings</label>
               <a href="#" data-toggle="tooltip" data-placement="top" title=
