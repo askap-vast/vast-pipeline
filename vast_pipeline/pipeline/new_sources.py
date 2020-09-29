@@ -279,8 +279,8 @@ def new_sources(sources_df: dd.core.DataFrame,
         new_sources_df.set_index('true_sigma')
         .map_partitions(lambda x: x.sort_index())
         .drop_duplicates('source')
-        .rename(columns={'true_sigma':'new_high_sigma'})
         .reset_index()
+        .rename(columns={'true_sigma': 'new_high_sigma'})
         .set_index('source')
     )
 

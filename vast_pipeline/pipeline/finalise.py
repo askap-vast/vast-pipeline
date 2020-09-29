@@ -1,11 +1,15 @@
 import os
 import logging
 import pandas as pd
+import dask.array as da
+import dask.bag as db
+import dask.dataframe as dd
 
+from typing import List
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from vast_pipeline.models import Association, RelatedSource
+from vast_pipeline.models import Association, RelatedSource, Run
 from vast_pipeline.utils.utils import StopWatch
 
 from .loading import (
@@ -18,58 +22,67 @@ logger = logging.getLogger(__name__)
 
 
 def final_operations(
-    sources_df, first_img, p_run, meas_dj_obj, new_sources_df):
+    sources_df: dd.DataFrame, first_img: str, p_run: Run, meas_dj_obj: List,
+    new_sources_df: dd.DataFrame) -> int:
     timer = StopWatch()
 
     # calculate source fields
     logger.info(
-        'Calculating statistics for %i sources...',
-        sources_df.source.unique().shape[0]
+        'Calculating statistics for sources...'
+        # 'Calculating statistics for %i sources...',
+        # sources_df.source.unique().shape[0]
     )
 
     timer.reset()
     srcs_df = parallel_groupby(sources_df)
-    logger.info('Groupby-apply time: %.2f seconds', timer.reset())
+    # logger.info('Groupby-apply time: %.2f seconds', timer.reset())
     # fill NaNs as resulted from calculated metrics with 0
     srcs_df = srcs_df.fillna(0.)
 
     # add new sources
-    srcs_df['new'] = srcs_df.index.isin(new_sources_df.index)
+    srcs_df['new'] = srcs_df.index.isin(
+        new_sources_df.index.values.compute()
+    )
 
-    srcs_df = pd.merge(
-        srcs_df,
-        new_sources_df['new_high_sigma'],
-        left_on='source', right_index=True, how='left'
+    srcs_df = srcs_df.merge(
+        new_sources_df[['new_high_sigma']],
+        left_index=True, right_index=True, how='left'
     )
 
     srcs_df['new_high_sigma'] = srcs_df['new_high_sigma'].fillna(0.)
 
     # calculate nearest neighbour
-    srcs_skycoord = SkyCoord(
-        srcs_df['wavg_ra'],
-        srcs_df['wavg_dec'],
-        unit=(u.deg, u.deg)
-    )
+    ra, dec = dd.compute(srcs_df['wavg_ra'], srcs_df['wavg_dec'])
+    srcs_skycoord = SkyCoord(ra, dec, unit=(u.deg, u.deg))
+    del ra, dec
 
     idx, d2d, _ = srcs_skycoord.match_to_catalog_sky(
         srcs_skycoord,
         nthneighbor=2
     )
-
-    srcs_df['n_neighbour_dist'] = d2d.deg
+    # Dask doen't like assignment of a column from an array, need to be
+    # a Dask array with partitions, chuncks in this case
+    # TODO: checks if using shape will be faster than len (FYI each partition is
+    # a pandas dataframe)
+    arr_chuncks = tuple(srcs_df.map_partitions(len).compute())
+    srcs_df['n_neighbour_dist'] = da.from_array(d2d.deg, chunks=arr_chuncks)
+    del arr_chuncks, idx, d2d, srcs_skycoord
 
     # generate the source models
     srcs_df['src_dj'] = srcs_df.apply(
         get_source_models,
         pipeline_run=p_run,
-        axis=1
+        axis=1,
+        meta=object
     )
+    import ipdb; ipdb.set_trace()  # breakpoint 0eaeae7c //
     # upload sources and related to DB
     upload_sources(p_run, srcs_df)
 
     # get db ids for sources
-    srcs_df['id'] = srcs_df['src_dj'].apply(lambda x: x.id)
+    srcs_df['id'] = srcs_df['src_dj'].apply(lambda x: x.id, meta=int)
 
+    import ipdb; ipdb.set_trace()  # breakpoint bcf8f142 //
     # gather the related df, upload to db and save to parquet file
     # the df will look like
     #
