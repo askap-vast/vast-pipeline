@@ -73,12 +73,12 @@
         <div class="card-body">
           <p>
             <strong>Name: </strong>{{ measurement.name }}<br>
-            <strong>Island ID: </strong> {{ measurement.island_id }}<br>
-            <strong>Image: </strong> <a href="/images/{{ measurement.image_id }}"
+            <strong>Island ID: </strong>{{ measurement.island_id }}<br>
+            <strong>Image: </strong><a href="/images/{{ measurement.image_id }}"
               target="_blank">{{ measurement.image_name }}</a>
           </p>
           <p>
-            <strong>Number of sources: </strong> {{ measurement.nr_sources }} (<a href="#sourcesHeader">Source
+            <strong>Number of sources: </strong>{{ measurement.nr_sources }} (<a href="#sourcesHeader">Source
               Table</a>)
           </p>
           <p>
@@ -94,18 +94,18 @@
               <p>
                 <strong>Uncertainty RA: </strong>
                 {{ measurement.uncertainty_ew|deg_to_arcsec|floatformat:3 }}&Prime;<br>
-                <strong>Uncertainty Dec: </strong> {{ measurement.uncertainty_ns|deg_to_arcsec|floatformat:3 }}&Prime;
+                <strong>Uncertainty Dec: </strong>{{ measurement.uncertainty_ns|deg_to_arcsec|floatformat:3 }}&Prime;
               </p>
               <p>
-                <strong>Major Axis: </strong> {{ measurement.bmaj|floatformat:2 }}&Prime;<br>
-                <strong>Minor Axis: </strong> {{ measurement.bmin|floatformat:2 }}&Prime;<br>
-                <strong>Position Angle: </strong> {{ measurement.pa|floatformat:2 }}&deg;<br>
-                <strong>Chi squared fit: </strong> {{ measurement.chi_squared_fit|floatformat:2 }}<br>
-                <strong>Frequency: </strong> {{ measurement.frequency|floatformat:2 }} MHz
+                <strong>Major Axis: </strong>{{ measurement.bmaj|floatformat:2 }}&Prime;<br>
+                <strong>Minor Axis: </strong>{{ measurement.bmin|floatformat:2 }}&Prime;<br>
+                <strong>Position Angle: </strong>{{ measurement.pa|floatformat:2 }}&deg;<br>
+                <strong>Chi squared fit: </strong>{{ measurement.chi_squared_fit|floatformat:2 }}<br>
+                <strong>Frequency: </strong>{{ measurement.frequency|floatformat:2 }} MHz
               </p>
               <p>
-                <strong>Forced Extraction: </strong> {{ measurement.forced }}<br>
-                <strong>Has siblings: </strong> {{ measurement.has_siblings }}
+                <strong>Forced Extraction: </strong>{{ measurement.forced }}<br>
+                <strong>Has siblings: </strong>{{ measurement.has_siblings }}
                 {% if measurement.has_siblings %}
                 (<a href="#siblingHeader">Table</a>)
                 {% endif %}
@@ -113,22 +113,22 @@
             </div>
             <div class="col-md">
               <p>
-                <strong>Peak Flux: </strong> {{ measurement.flux_peak|floatformat:3 }} &#177;
+                <strong>Peak Flux: </strong>{{ measurement.flux_peak|floatformat:3 }} &plusmn;
                 {{ measurement.flux_peak_err|floatformat:3 }} mJy/beam<br>
-                <strong>Int. Flux: </strong> {{ measurement.flux_int|floatformat:3 }} &#177;
+                <strong>Int. Flux: </strong>{{ measurement.flux_int|floatformat:3 }} &plusmn;
                 {{ measurement.flux_int_err|floatformat:3 }} mJy
               </p>
               <p>
-                <strong>SNR: </strong> {{ measurement.snr|floatformat:2 }}<br>
-                <strong>Local RMS: </strong> {{ measurement.local_rms|floatformat:3 }} mJy<br>
+                <strong>SNR: </strong>{{ measurement.snr|floatformat:2 }}<br>
+                <strong>Local RMS: </strong>{{ measurement.local_rms|floatformat:3 }} mJy<br>
                 <strong>Spectral Index:
                 </strong>{% if measurement.forced %}N/A{% else %}{{ measurement.spectral_index|floatformat:2 }}{% endif %}<br>
                 <strong>Spectral Index from TT:
                 </strong>{% if measurement.forced %}N/A{% else %}{{ measurement.spectral_index_from_TT }}{% endif %}
               </p>
               <p>
-                <strong>flag_c4: </strong> {{ measurement.flag_c4 }}<br>
-                <strong>Compactness: </strong> {{ measurement.compactness|floatformat:2 }}
+                <strong>flag_c4: </strong>{{ measurement.flag_c4 }}<br>
+                <strong>Compactness: </strong>{{ measurement.compactness|floatformat:2 }}
               </p>
             </div>
           </div>

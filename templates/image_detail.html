@@ -69,22 +69,22 @@
           <div class="row">
             <div class="col-xl">
               <p>
-                <strong>Beam BMAJ: </strong> {{ image.beam_bmaj|deg_to_arcsec|floatformat:3 }}&Prime;<br>
-                <strong>Beam BMIN: </strong> {{ image.beam_bmin|deg_to_arcsec|floatformat:3 }}&Prime;<br>
-                <strong>Beam BPA: </strong> {{ image.beam_bpa|floatformat:2 }}&deg;
+                <strong>Beam BMAJ: </strong>{{ image.beam_bmaj|deg_to_arcsec|floatformat:3 }}&Prime;<br>
+                <strong>Beam BMIN: </strong>{{ image.beam_bmin|deg_to_arcsec|floatformat:3 }}&Prime;<br>
+                <strong>Beam BPA: </strong>{{ image.beam_bpa|floatformat:2 }}&deg;
               </p>
             </div>
             <div class="col-xl">
               <p>
-                <strong>Median RMS: </strong> {{ image.rms_median|floatformat:3 }} mJy<br>
-                <strong>Min RMS: </strong> {{ image.rms_min|floatformat:3 }} mJy<br>
-                <strong>Max RMS: </strong> {{ image.rms_max|floatformat:3 }} mJy
+                <strong>Median RMS: </strong>{{ image.rms_median|floatformat:3 }} mJy<br>
+                <strong>Min RMS: </strong>{{ image.rms_min|floatformat:3 }} mJy<br>
+                <strong>Max RMS: </strong>{{ image.rms_max|floatformat:3 }} mJy
               </p>
             </div>
           </div>
           <p>
-            <strong>Frequency: </strong> {{ image.frequency|floatformat:1 }} MHz<br>
-            <strong>Bandwidth: </strong> {{ image.bandwidth|floatformat:1 }} MHz
+            <strong>Frequency: </strong>{{ image.frequency|floatformat:1 }} MHz<br>
+            <strong>Bandwidth: </strong>{{ image.bandwidth|floatformat:1 }} MHz
           </p>
           <p>
             <strong>Number of measurements: </strong>{{ image.n_meas|intcomma }} (<a href="#measHeader">Table</a>)<br>
