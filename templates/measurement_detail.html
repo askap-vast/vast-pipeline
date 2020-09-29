@@ -64,9 +64,9 @@
   </div>
 
   <div class="row">
-    <div class="col-lg-6 d-flex align-items-stretch">
+    <div class="col-xl-4 d-flex">
       <!-- Basic Card Example -->
-      <div class="card shadow mb-4 w-100">
+      <div class="card shadow mb-4 w-100 flex-fill">
         <div class="card-header py-3">
           <h6 class="m-0 font-weight-bold text-primary">Details</h6>
         </div>
@@ -90,7 +90,7 @@
               {{ measurement.b|floatformat:6 }}</span>
           </p>
           <div class="row">
-            <div class="col-xl">
+            <div class="col-md">
               <p>
                 <strong>Uncertainty RA: </strong>
                 {{ measurement.uncertainty_ew|deg_to_arcsec|floatformat:3 }}&Prime;<br>
@@ -111,7 +111,7 @@
                 {% endif %}
               </p>
             </div>
-            <div class="col-xl">
+            <div class="col-md">
               <p>
                 <strong>Peak Flux: </strong> {{ measurement.flux_peak|floatformat:3 }} &#177;
                 {{ measurement.flux_peak_err|floatformat:3 }} mJy/beam<br>
@@ -135,20 +135,19 @@
           <p>
             <strong>Comment: </strong>{{ measurement.comment }}
           </p>
-
         </div>
       </div>
     </div>
 
     <!-- Aladin viz tile -->
-    <div class="col-lg-6">
-      <div class="card shadow mb-4" style="height: 96%">
+    <div class="col-xl-4 d-flex">
+      <div class="card shadow mb-4 flex-fill" style="min-height: 33vh;">
         <div id="aladinViz"></div>
       </div>
     </div>
 
-    <div class="offset-lg-6 col-lg-6">
-      <div class="card shadow mb-4">
+    <div class="col-xl-4 d-flex">
+      <div class="card shadow mb-4 flex-fill">
         <div class="card-header py-3">
           <h6 class="m-0 font-weight-bold text-primary">Postage Stamp</h6>
         </div>
