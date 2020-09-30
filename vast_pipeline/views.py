@@ -828,6 +828,7 @@ def MeasurementDetail(request, id, action=None):
     source_fields = [
         'name',
         'comment',
+        'run.name',
         'wavg_ra',
         'wavg_dec',
         'avg_flux_int',
@@ -850,9 +851,14 @@ def MeasurementDetail(request, id, action=None):
         'new_high_sigma'
     ]
 
+    api_col_dict = {
+        'name': reverse('vast_pipeline:source_detail', args=[1])[:-2],
+        'run.name': reverse('vast_pipeline:run_detail', args=[1])[:-2]
+    }
+
     source_colsfields = generate_colsfields(
         source_fields,
-        {'name': reverse('vast_pipeline:source_detail', args=[1])[:-2]}
+        api_col_dict
     )
 
     source_datatable = {
@@ -865,6 +871,7 @@ def MeasurementDetail(request, id, action=None):
         'colsNames': [
             'Name',
             'Comment',
+            'Run',
             'W. Avg. RA',
             'W. Avg. Dec',
             'Avg. Int. Flux (mJy)',
@@ -996,6 +1003,7 @@ def SourceQuery(request):
     fields = [
         'name',
         'comment',
+        'run.name',
         'wavg_ra',
         'wavg_dec',
         'avg_flux_int',
@@ -1018,9 +1026,14 @@ def SourceQuery(request):
         'new_high_sigma'
     ]
 
+    api_col_dict = {
+        'name': reverse('vast_pipeline:source_detail', args=[1])[:-2],
+        'run.name': reverse('vast_pipeline:run_detail', args=[1])[:-2]
+    }
+
     colsfields = generate_colsfields(
         fields,
-        {'name': reverse('vast_pipeline:source_detail', args=[1])[:-2]}
+        api_col_dict
     )
 
     # get all pipeline run names
@@ -1041,6 +1054,7 @@ def SourceQuery(request):
                 'colsNames': [
                     'Name',
                     'Comment',
+                    'Run',
                     'W. Avg. RA',
                     'W. Avg. Dec',
                     'Avg. Int. Flux (mJy)',

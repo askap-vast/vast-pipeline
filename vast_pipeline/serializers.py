@@ -84,23 +84,6 @@ class MeasurementSerializer(serializers.ModelSerializer):
         datatables_always_serialize = ('id',)
 
 
-class SourceSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(read_only=True)
-    wavg_ra = serializers.SerializerMethodField()
-    wavg_dec = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Source
-        exclude = ['run', 'cross_match_sources']
-        datatables_always_serialize = ('id',)
-
-    def get_wavg_ra(self, source):
-        return deg2hms(source.wavg_ra, hms_format=True)
-
-    def get_wavg_dec(self, source):
-        return deg2dms(source.wavg_dec, dms_format=True)
-
-
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -120,6 +103,24 @@ class SourceNameSerializer(serializers.ModelSerializer):
         model = Source
         fields= ['id', 'name', 'run']
         datatables_always_serialize = ('id',)
+
+
+class SourceSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+    run = RunNameSerializer()
+    wavg_ra = serializers.SerializerMethodField()
+    wavg_dec = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Source
+        exclude = ['cross_match_sources']
+        datatables_always_serialize = ('id',)
+
+    def get_wavg_ra(self, source):
+        return deg2hms(source.wavg_ra, hms_format=True)
+
+    def get_wavg_dec(self, source):
+        return deg2dms(source.wavg_dec, dms_format=True)
 
 
 class SourceFavSerializer(serializers.ModelSerializer):
