@@ -136,8 +136,8 @@ FLOAT_FIELDS = {
 
 def generate_colsfields(
     fields: List[str], url_prefix_dict: Dict[str, str],
-    not_orderable_col: Optional[List[str]]=[],
-    not_searchable_col: Optional[List[str]]=[],
+    not_orderable_col: Optional[List[str]]=None,
+    not_searchable_col: Optional[List[str]]=None,
 ) -> List[Dict[str, Any]]:
     """
     Generate data to be included in context for datatables.
