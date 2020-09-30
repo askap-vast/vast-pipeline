@@ -249,7 +249,7 @@ def RunDetail(request, id):
             .compute()
         )
     else:
-        p_run['nr_meas'] = 'N.A.'
+        p_run['nr_meas'] = 'N/A'
 
     forced_path = glob(
         os.path.join(p_run['path'], 'forced_measurements_*.parquet')
@@ -271,7 +271,7 @@ def RunDetail(request, id):
             )
             pass
     else:
-        p_run['nr_frcd'] = 'N.A.'
+        p_run['nr_frcd'] = 'N/A'
 
     if p_run_model.status == 'Completed':
         p_run['new_srcs'] = Source.objects.filter(
@@ -279,7 +279,7 @@ def RunDetail(request, id):
             new=True,
         ).count()
     else:
-        p_run['new_srcs'] = 'N.A.'
+        p_run['new_srcs'] = 'N/A'
 
     # read run config
     f_path = os.path.join(p_run['path'], 'config.py')
