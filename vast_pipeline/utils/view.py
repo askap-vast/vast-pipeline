@@ -162,6 +162,10 @@ def generate_colsfields(
     """
     colsfields = []
 
+    if not_orderable_col is None:
+        not_orderable_col = []
+    if not_searchable_col is None:
+        not_searchable_col = []
     for col in fields:
         field2append = {}
         if col == 'name':
