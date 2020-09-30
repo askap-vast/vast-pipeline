@@ -129,7 +129,7 @@ def eq_to_cart(ra, dec):
     )
 
 
-def equ2gal(ra: float, dec: float) -> Tuple[float]:
+def equ2gal(ra: float, dec: float) -> Tuple[float, float]:
     """
     Convert equatorial coordinates to galactic
 
