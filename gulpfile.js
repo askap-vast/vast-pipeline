@@ -188,6 +188,14 @@ function modules() {
   ])
     .pipe(gulp.dest(paths.vendor + '/datatables'));
 
+  // dataTables
+  var dataTablesButtons = gulp.src([
+    './node_modules/datatables.net-buttons/js/*.js',
+    './node_modules/datatables.net-buttons-bs4/js/*.js',
+    './node_modules/datatables.net-buttons-bs4/css/*.css'
+  ])
+    .pipe(gulp.dest(paths.vendor + '/datatables-buttons'));
+
   // Font Awesome
   var fontAwesome = gulp.src('./node_modules/@fortawesome/**/*')
     .pipe(gulp.dest(paths.vendor + ''));
@@ -202,6 +210,11 @@ function modules() {
     '!./node_modules/jquery/dist/core.js'
   ])
     .pipe(gulp.dest(paths.vendor + '/jquery'));
+
+  var jszip = gulp.src([
+    './node_modules/jszip/dist/*.js',
+  ])
+    .pipe(gulp.dest(paths.vendor + '/jszip'));
 
   // d3 celestial
   var d3Celestial = gulp.src([
