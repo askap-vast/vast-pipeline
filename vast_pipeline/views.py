@@ -76,7 +76,6 @@ def Home(request):
         settings.PIPELINE_WORKING_DIR,
         'images/**/measurements.parquet',
     ))
-    bob=False
     check_run_db = Run.objects.exists()
     totals['nr_meas'] = (
         dd.read_parquet(meas_glob, columns='id')
@@ -980,7 +979,7 @@ class SourceViewSet(ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def related(self, request, pk=None):
-        qs = Source.objects.filter(related__in=[pk]).order_by('id')
+        qs = Source.objects.filter(related__id=pk).order_by('id')
         qs = self.filter_queryset(qs)
         page = self.paginate_queryset(qs)
         if page is not None:
