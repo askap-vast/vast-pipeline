@@ -147,7 +147,7 @@ def equ2gal(ra: float, dec: float) -> Tuple[float]:
     return l, b
 
 
-def gal2equ(l: float, b: float) -> Tuple[float]:
+def gal2equ(l: float, b: float) -> Tuple[float, float]:
     """
     Convert galactic coordinates to equatorial.
 
