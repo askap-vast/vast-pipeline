@@ -257,9 +257,9 @@ class Pipeline():
         # If the user has given lists we need to reorder the
         # image epochs such that they are in date order.
         if self._reorder_images:
-            self.image_epochs = {}
+            self.img_epochs = {}
             for i, img in enumerate(images):
-                self.image_epochs[img.name] = i + 1
+                self.img_epochs[img.name] = i + 1
 
         image_epochs = [
             self.img_epochs[img.name] for img in images
