@@ -29,21 +29,14 @@
   max-width: 75%;
 }
 
-#homeLogo {
-   background-image: url('../img/vast.png');
-   background-size: 60% auto;
-   background-repeat: no-repeat;
-   vertical-align: middle;
-   background-position: center;
-}
-
-#homeLogo:hover {
-  background-image: none;
+#homeLogo:hover img{
+  display: none;
 }
 
 #homeLogo:hover:before {
    font-style: normal;
    font-variant: normal;
+   font-size: 2em;
    text-rendering: auto;
    -webkit-font-smoothing: antialiased;
    font-family: "Font Awesome 5 Free";
