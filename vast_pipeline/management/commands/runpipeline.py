@@ -7,7 +7,9 @@ from django.core.management.base import BaseCommand, CommandError
 
 from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
 from vast_pipeline.pipeline.main import Pipeline
-from vast_pipeline.pipeline.utils import get_create_p_run
+from vast_pipeline.pipeline.utils import (
+    get_create_p_run, create_measurements_arrow_file
+)
 from vast_pipeline.utils.utils import StopWatch
 from ..helpers import get_p_run_name
 from astropy.utils.exceptions import AstropyWarning
@@ -109,10 +111,14 @@ class Command(BaseCommand):
             logger.exception('Processing error:\n%s', e)
             raise CommandError(f'Processing error:\n{e}')
 
+        # Create arrow file after success if selected.
+        if pipeline.config.CREATE_MEASUREMENTS_ARROW_FILE:
+            create_measurements_arrow_file(p_run)
+
         # set the pipeline status as completed
         pipeline.set_status(p_run, 'END')
 
         logger.info(
-            'total pipeline processing time %.2f sec',
+            'Total pipeline processing time %.2f sec',
             stopwatch.reset()
         )
