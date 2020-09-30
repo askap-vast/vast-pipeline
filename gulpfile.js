@@ -188,7 +188,7 @@ function modules() {
   ])
     .pipe(gulp.dest(paths.vendor + '/datatables'));
 
-  // dataTables
+  // dataTables-buttons
   var dataTablesButtons = gulp.src([
     './node_modules/datatables.net-buttons/js/*.js',
     './node_modules/datatables.net-buttons-bs4/js/*.js',
@@ -211,6 +211,7 @@ function modules() {
   ])
     .pipe(gulp.dest(paths.vendor + '/jquery'));
 
+  // jszip
   var jszip = gulp.src([
     './node_modules/jszip/dist/*.js',
   ])

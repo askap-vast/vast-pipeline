@@ -48,6 +48,16 @@ function obj_formatter(obj) {
 $(document).ready(function() {
 
   $('[data-toggle="tooltip"]').tooltip();
+  let buttons = [
+    {extend: 'colvis', className: 'btn-info btn-sm'},
+    {extend: 'csv', className: 'btn-info btn-sm'},
+    {extend: 'excel', className: 'btn-info btn-sm'}
+  ]
+  let dom = (
+    "<'row'<'col-sm-3'l><'col-sm-6 text-center'B><'col-sm-3'f>>" +
+    "<'row'<'col-sm-12'tr>>" +
+    "<'row'<'col-sm-5'i><'col-sm-7'p>>"
+  )
   let dataConfParsed = JSON.parse(document.getElementById('datatable-conf').textContent);
   let dataConfList = (Array.isArray(dataConfParsed)) ? dataConfParsed : [dataConfParsed];
   for (let dataConf of dataConfList){
@@ -68,16 +78,8 @@ $(document).ready(function() {
         columns: dataConf.colsFields,
         order: dataConf.order,
         searchDelay: 2000,
-        dom : (
-          "<'row'<'col-sm-3'l><'col-sm-6 text-center'B><'col-sm-3'f>>" +
-          "<'row'<'col-sm-12'tr>>" +
-          "<'row'<'col-sm-5'i><'col-sm-7'p>>"
-        ),
-        buttons: [
-          {extend: 'colvis', className: 'btn-info btn-sm'},
-          {extend: 'csv', className: 'btn-info btn-sm'},
-          {extend: 'excel', className: 'btn-info btn-sm'}
-        ]
+        dom : dom,
+        buttons: buttons
       };
     } else {
       // expect that there is a 'data' attribute with the data
@@ -102,16 +104,8 @@ $(document).ready(function() {
         serverSide: false,
         data: dataSet,
         order: dataConf.order,
-        dom: (
-          "<'row'<'col-sm-3'l><'col-sm-6 text-center'B><'col-sm-3'f>>" +
-          "<'row'<'col-sm-12'tr>>" +
-          "<'row'<'col-sm-5'i><'col-sm-7'p>>"
-        ),
-        buttons: [
-          {extend: 'colvis', className: 'btn-info btn-sm'},
-          {extend: 'csv', className: 'btn-info btn-sm'},
-          {extend: 'excel', className: 'btn-info btn-sm'},
-        ]
+        dom: dom,
+        buttons: buttons
       };
       if (dataConf.table == 'source_detail') {
         let tableElement = document.getElementById(table_id.replace('#', '')),
@@ -239,16 +233,13 @@ $(document).ready(function() {
       "searching": false,
       "pageLength": 5,
       "lengthChange": false,
+      // need a different dom for external results table
       "dom": (
         "<'row'<'col-sm-2'l><'col-sm-8 text-center'B><'col-sm-2'f>>" +
         "<'row'<'col-sm-12'tr>>" +
         "<'row'<'col-sm-5'i><'col-sm-7'p>>"
       ),
-      "buttons": [
-        {extend: 'colvis', className: 'btn-info btn-sm'},
-        {extend: 'csv', className: 'btn-info btn-sm'},
-        {extend: 'excel', className: 'btn-info btn-sm'},
-      ],
+      "buttons": buttons,
       "order": [[1, "asc"]],
       "columnDefs": [
         {
