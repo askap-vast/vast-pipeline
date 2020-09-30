@@ -20,15 +20,15 @@ router.register(r'sourcesfavs', views.SourceFavViewSet, 'api_sources_favs')
 router.register(r'utils', views.UtilitiesSet, 'api_utils')
 
 urlpatterns = [
-    path('piperuns', views.RunIndex, name='run_index'),
+    path('piperuns/', views.RunIndex, name='run_index'),
     path('piperuns/<int:id>/', views.RunDetail, name='run_detail'),
-    path('images', views.ImageIndex, name='image_index'),
+    path('images/', views.ImageIndex, name='image_index'),
     re_path(
         r'^images/(?P<id>\d+)(?:/(?P<action>[\w]+))?/$',
         views.ImageDetail,
         name='image_detail'
     ),
-    path('measurements', views.MeasurementIndex, name='measurement_index'),
+    path('measurements/', views.MeasurementIndex, name='measurement_index'),
     re_path(
         r'^measurements/(?P<id>\d+)(?:/(?P<action>[\w]+))?/$',
         views.MeasurementDetail,
@@ -40,11 +40,11 @@ urlpatterns = [
         views.SourceDetail,
         name='source_detail'
     ),
-    path('sources/favs', views.UserSourceFavsList, name='source_favs'),
+    path('sources/favs/', views.UserSourceFavsList, name='source_favs'),
     path('cutout/<str:measurement_name>/', views.ImageCutout.as_view(), name='cutout'),
-    path('cutout/<str:measurement_name>/<str:size>', views.ImageCutout.as_view(), name='cutout'),
+    path('cutout/<str:measurement_name>/<str:size>/', views.ImageCutout.as_view(), name='cutout'),
     path(
-        'measurements/<int:image_id>/<ra:ra_deg>,<dec:dec_deg>,<angle:radius_deg>/region',
+        'measurements/<int:image_id>/<ra:ra_deg>,<dec:dec_deg>,<angle:radius_deg>/region/',
         views.MeasurementQuery.as_view(),
         name="measurements_region"
     ),
