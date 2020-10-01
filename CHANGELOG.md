@@ -1,6 +1,3 @@
-<!--
-follow https://github.com/apache/incubator-superset/blob/master/CHANGELOG.md
--->
 # Change Log
 All notable changes to this project will be documented in this file.
 
