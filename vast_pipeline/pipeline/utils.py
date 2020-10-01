@@ -7,7 +7,7 @@ import pandas as pd
 import astropy.units as u
 import dask.dataframe as dd
 
-from typing import List
+from typing import List, Optional
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
@@ -169,15 +169,42 @@ def get_create_p_run(name, path, comment='', user=None):
 
 
 def remove_duplicate_measurements(
-    sources_df, dup_lim=Angle(2.5 * u.arcsec), ini_df=False
-):
+    sources_df: pd.DataFrame,
+    dup_lim: Optional[Angle] = None,
+    ini_df: bool = False
+) -> pd.DataFrame:
     """
-    Remove duplicate sources from dataframe
+    Remove perceived duplicate sources from a dataframe of loaded
+    measurements. Duplicates are determined by their separation and whether
+    this distances is within the 'dup_lim'.
+
+    Parameters
+    ----------
+    source_df : pd.DataFrame
+        The loaded measurements from two or more images.
+    dup_lim : Angle, optional
+        The separation limit of when a source is considered a duplicate.
+        Defaults to None in which case 2.5 arcsec is used (usual ASKAP
+        pixel size).
+    ini_df : bool, optional
+        Boolean to indicate whether these sources are part of the initial
+        source list creation for association. If 'True' the source ids are
+        reset ready for the first iteration. Defaults to 'False'.
+
+    Returns
+    -------
+    sources_df : pd.DataFrame
+        The input sources_df with duplicate sources removed.
     """
     logger.debug('Cleaning duplicate sources from epoch...')
+
+    if dup_lim is None:
+        dup_lim = Angle(2.5 * u.arcsec)
+
     logger.debug(
         'Using duplicate crossmatch radius of %.2f arcsec.', dup_lim.arcsec
     )
+
     min_source = sources_df['source'].min()
 
     # sort by the distance from the image centre so we know
@@ -248,7 +275,35 @@ def remove_duplicate_measurements(
     return sources_df
 
 
-def _load_measurements(image, cols, start_id=0, ini_df=False):
+def _load_measurements(
+    image: Image,
+    cols: List[str],
+    start_id: int = 0,
+    ini_df: bool = False
+) -> pd.DataFrame:
+    """
+    Load the measurements for an image from the parquet file.
+
+    Parameters
+    ----------
+    image : Image
+        The object representing the image for which to load the measurements.
+    cols : List[str]
+        The columns to load.
+    start_id : int, optional
+        The number to start from when setting the source ids (when 'ini_df' is
+        'True'). Defaults to 0.
+    ini_df : bool, optional
+        Boolean to indicate whether these sources are part of the initial
+        source list creation for association. If 'True' the source ids are
+        reset ready for the first iteration. Defaults to 'False'.
+
+    Returns
+    -------
+    df : pd.DataFrame
+        The measurements of the image with some extra values set ready for
+        assoication.
+    """
     image_centre = SkyCoord(
         image.ra,
         image.dec,
@@ -258,7 +313,7 @@ def _load_measurements(image, cols, start_id=0, ini_df=False):
     df = pd.read_parquet(image.measurements_path, columns=cols)
     df['image'] = image.name
     df['datetime'] = image.datetime
-    # these are the first 'sources'
+    # these are the first 'sources' if ini_df is True.
     df['source'] = df.index + start_id + 1 if ini_df else -1
     df['ra_source'] = df['ra']
     df['dec_source'] = df['dec']
@@ -281,13 +336,39 @@ def _load_measurements(image, cols, start_id=0, ini_df=False):
     return df
 
 
-def prep_skysrc_df(images, perc_error, duplicate_limit, ini_df=False):
+def prep_skysrc_df(
+    images: List[Image],
+    perc_error: float = 0.,
+    duplicate_limit: Optional[Angle] = None,
+    ini_df: bool = False
+):
     '''
-    initiliase the source dataframe to use in association logic by
-    reading the measurement parquet file and creating columns
-    inputs
-    image: django image model
-    ini_df: flag to initialise source id depending if inital df or not
+    Initiliase the source dataframe to use in association logic by
+    reading the measurement parquet file and creating columns. When epoch
+    based assoication is used it will also remove duplicate measurements from
+    the list of sources.
+
+    Parameters
+    ----------
+    images : List[Image]
+        A list holding the Image objects of the images to load measurements for.
+    perc_error : float, optional
+        A percentage flux error to apply to the flux errors of the
+        measurements. Defaults to 0.
+    duplicate_limit : Angle, optional
+        The separation limit of when a source is considered a duplicate.
+        Defaults to None in which case 2.5 arcsec is used in the
+        'remove_duplicate_measurements' function (usual ASKAP pixel size).
+    ini_df : bool, optional
+        Boolean to indicate whether these sources are part of the initial
+        source list creation for association. If 'True' the source ids are
+        reset ready for the first iteration. Defaults to 'False'.
+
+    Returns
+    -------
+    df : pd.DataFrame
+        The measurements of the image(s) with some extra values set ready for
+        assoication and duplicates removed if necessary.
     '''
     cols = [
         'id',
@@ -876,23 +957,38 @@ def group_skyregions(df: pd.DataFrame) -> pd.DataFrame:
     )
 
     skyreg_groups = {}
-    # keep track of all checked ids
-    master_done = []
+
+    master_done = []  # keep track of all checked ids in master done
 
     for skyreg_id, neighbours in results.iteritems():
 
         if skyreg_id not in master_done:
-            # define a local done list for the sky region group
-            sr_done = []
+            local_done = []   # a local done list for the sky region group.
+            # add the current skyreg_id to both master and local done.
             master_done.append(skyreg_id)
-            sr_done.append(skyreg_id)
+            local_done.append(skyreg_id)
+            # Define the new group number based on the existing ones.
             skyreg_group = len(skyreg_groups) + 1
+            # Add all the ones that we know are neighbours that were obtained
+            # from _get_skyregion_relations.
             skyreg_groups[skyreg_group] = list(neighbours)
 
-            while sorted(sr_done) != sorted(skyreg_groups[skyreg_group]):
+            # Now the sky region group is extended out to include all those sky
+            # regions that overlap with the neighbours.
+            # Each neighbour is checked and added to the local done list.
+            # Checked means that for each neighbour, it's own neighbours are
+            # added to the current group if not in already.
+            # When the local done is equal to the skyreg group we know that
+            # we have exhausted all possible neighbours and that results in a
+            # sky region group.
+            while sorted(local_done) != sorted(skyreg_groups[skyreg_group]):
+                # Loop over each neighbour
                 for other_skyreg_id in skyreg_groups[skyreg_group]:
-                    if other_skyreg_id not in sr_done:
-                        sr_done.append(other_skyreg_id)
+                    # If we haven't checked this neighbour locally proceed.
+                    if other_skyreg_id not in local_done:
+                        # Add it to the local checked.
+                        local_done.append(other_skyreg_id)
+                        # Get the neighbours neighbour and add these.
                         new_vals = results.loc[other_skyreg_id]
                         for k in new_vals:
                             if k not in skyreg_groups[skyreg_group]:
