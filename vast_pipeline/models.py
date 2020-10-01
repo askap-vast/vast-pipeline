@@ -183,6 +183,14 @@ class Run(models.Model):
         default=0,
         help_text='number of sources extracted in this run'
     )
+    epoch_based = models.BooleanField(
+        default=False,
+        help_text=(
+            'Whether the run was processed using epoch based association'
+            ', i.e. the user passed in groups of images defining epochs'
+            ' rather than every image being treated individually.'
+        )
+    )
 
     objects = RunQuerySet.as_manager()
 

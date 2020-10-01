@@ -44,7 +44,14 @@ class Pipeline():
         '''
         self.name = name
         self.config = self.load_cfg(config_path)
-        self._reorder_images = False
+        # The epoch_based parameter below is for
+        # if the user has entered just lists we don't have
+        # access to the dates until the Image instances are
+        # created. So we flag this as true so that we can
+        # reorder the epochs once the date information is available.
+        # It is also recorded in the database such that there is a record
+        # of the fact that the run was processed in an epoch based mode.
+        self.epoch_based = False
 
         # Check if provided files are lists and convert to
         # dictionaries if so
@@ -60,12 +67,14 @@ class Pipeline():
                         getattr(self.config, cfg_key)
                     )
                 )
-                # The _reorder_images parameter below is for
-                # if the user has entered just lists we don't have
-                # access to the dates until the Image instances are
-                # created. So we flag this as true so that we can
-                # reorder the epochs once the date information is available.
-                self._reorder_images = True
+            elif isinstance(getattr(self.config, cfg_key), dict):
+                # Set to True if dictionaries are passed.
+                self.epoch_based = True
+            else:
+                raise PipelineConfigError((
+                    'Unknown images entry format!'
+                    f' Must be a list or dictionary.'
+                ))
 
         # A dictionary of path to Fits images, eg
         # "/data/images/I1233234.FITS" and selavy catalogues
@@ -241,6 +250,7 @@ class Pipeline():
         pass
 
     def process_pipeline(self, p_run):
+        logger.info(f'Epoch based association: {self.epoch_based}')
         # upload/retrieve image data
         images, meas_dj_obj, skyregs_df = upload_images(
             self.img_paths,
@@ -254,7 +264,7 @@ class Pipeline():
 
         # If the user has given lists we need to reorder the
         # image epochs such that they are in date order.
-        if self._reorder_images:
+        if self.epoch_based is False:
             self.img_epochs = {}
             for i, img in enumerate(images):
                 self.img_epochs[img.name] = i + 1
@@ -371,6 +381,7 @@ class Pipeline():
         with transaction.atomic():
             p_run.n_images = nr_img_processed
             p_run.n_sources = nr_sources
+            p_run.epoch_based = self.epoch_based
             p_run.save()
 
         pass
