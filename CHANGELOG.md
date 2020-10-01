@@ -73,6 +73,3 @@ First release of the Vast Pipeline. This was able to process 707 images (EPOCH01
 - [#287](https://github.com/askap-vast/vast-pipeline/pull/287) fix: Fix forced measurement parquet files write
 - [#286](https://github.com/askap-vast/vast-pipeline/pull/286) fix: compile JS9 without helper option
 - [#285](https://github.com/askap-vast/vast-pipeline/pull/285) fix: Fix removing forced parquet and clear images from piperun
-
-[unreleased]: https://github.com/askap-vast/vast-pipeline/compare/0.1.0...HEAD
-[0.1.0]: https://github.com/askap-vast/vast-pipeline/releases/0.1.0
