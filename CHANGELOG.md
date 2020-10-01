@@ -18,7 +18,7 @@ follow https://github.com/apache/incubator-superset/blob/master/CHANGELOG.md
 
 ### Changed
 - Multiple changes to webinterface page layouts [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
-- Changes source names to the format ASKAP_hhmmss.ss(+/-)ddmmss.ss [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Changes source names to the format `ASKAP_hhmmss.ss(+/-)ddmmss.ss` [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 - Simplified webinterface navbar [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 - Excludes sources and pipeline runs from being listed in the source query page that are not complete on the webinterface [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 - Clarifies number of measurements on webinterface detail pages [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
