@@ -1,12 +1,33 @@
-<!--
-follow https://github.com/apache/incubator-superset/blob/master/CHANGELOG.md
--->
-## Change Log
+# Change Log
+All notable changes to this project will be documented in this file.
 
-### 0.1.0 (2020/09/27)
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), with an added `List of PRs` section and links to the relevant PRs on the individal updates. This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+#### Added
+- Added the ability for the pipeline to read in groups of images which are defined as a single `epoch` [#277](https://github.com/askap-vast/vast-pipeline/pull/277).
+- Added the ability of the pipeline to remove duplicated measurements from an epoch [#277](https://github.com/askap-vast/vast-pipeline/pull/277).
+- Added option to control separation measurements which are defined as a duplicate [#277](https://github.com/askap-vast/vast-pipeline/pull/277).
+- Added the ability of the pipeline to separate images to associate into unique sky region groups [#277](https://github.com/askap-vast/vast-pipeline/pull/277).
+- Added option to perform assocication of separate sky region groups in parallel [#277](https://github.com/askap-vast/vast-pipeline/pull/277).
+- Added new options to webinterface pipeline run creation [#277](https://github.com/askap-vast/vast-pipeline/pull/277).
+
+#### Changed
+- Updated the `get_src_skyregion_merged_df` logic to account for epochs [#277](https://github.com/askap-vast/vast-pipeline/pull/277).
+
+#### Fixed 
+
+#### Removed
+
+#### List of PRs
+- [#277](https://github.com/askap-vast/vast-pipeline/pull/277) feat: Parallel and epoch based association.
+
+## [0.1.0] (2020/09/27)
 
 First release of the Vast Pipeline. This was able to process 707 images (EPOCH01 to EPOCH11x) on a machine with 64 GB of RAM.
 
+#### List of PRs
 - [#347](https://github.com/askap-vast/vast-pipeline/pull/347) feat: Towards first release
 - [#354](https://github.com/askap-vast/vast-pipeline/pull/354) fix, model: Updated Band model fields to floats
 - [#346](https://github.com/askap-vast/vast-pipeline/pull/346) fix: fix JS9 overflow in measurement detail view
@@ -39,5 +60,8 @@ First release of the Vast Pipeline. This was able to process 707 images (EPOCH01
 - [#291](https://github.com/askap-vast/vast-pipeline/pull/291) fix: Bug fix for forced_photom cluster allow_nan
 - [#289](https://github.com/askap-vast/vast-pipeline/pull/289) fix: Fix broken UI run creation
 - [#287](https://github.com/askap-vast/vast-pipeline/pull/287) fix: Fix forced measurement parquet files write
-- [#286](https://github.com/askap-vast/vast-pipeline/pull/285) fix: compile JS9 without helper option
+- [#286](https://github.com/askap-vast/vast-pipeline/pull/286) fix: compile JS9 without helper option
 - [#285](https://github.com/askap-vast/vast-pipeline/pull/285) fix: Fix removing forced parquet and clear images from piperun
+
+[unreleased]: https://github.com/askap-vast/vast-pipeline/compare/0.1.0...HEAD
+[0.1.0]: https://github.com/askap-vast/vast-pipeline/releases/0.1.0
