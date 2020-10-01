@@ -100,6 +100,7 @@
             </div>
           </div>
           <div id="pipeRunConfigForm" class="form-group">
+            <h6 class="font-weight-bold text-primary">Images and Catalogue Selection</h6>
             <label for="imagesFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select images files</label>
             <a href="#" data-toggle="tooltip" data-placement="top" title=
                 "The primary ASKAP FITS files to process."
@@ -118,49 +119,7 @@
             ><i class="fas fa-info-circle"></i></a>
             <select id="noiseFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-header="Choose noise or rms files" data-actions-box="true" name="noise_files" data-selected-text-format="count > 5">
             </select>
-            <div class="custom-control custom-switch">
-              <input type="checkbox" class="custom-control-input" id="monitorSwitch" {% if runconfig.monitor %} checked="checked" {% endif %} name="monitor">
-              <label class="custom-control-label font-weight-bold text-gray-800" for="monitorSwitch">Monitor: Turn on force extraction for sources backward and forward in time</label>
-              <a href="#" data-toggle="tooltip" data-placement="top" title=
-                  "Forced extractions will be peformed both forwards and backwards in time to fill in 'gaps' in the lightcurves. Be aware that this will                        increase processing time."
-              ><i class="fas fa-info-circle"></i></a>
-            </div>
-            <label for="bkgFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select background files for use in monitoring</label>
-            <a href="#" data-toggle="tooltip" data-placement="top" title=
-                "Only required if you are using the monitoring feature. The background maps for the selected images to process.
-                The order must match."
-            ><i class="fas fa-info-circle"></i></a>
-            <select id="bkgFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-header="Choose background files" data-actions-box="true" name="background_files" data-selected-text-format="count > 5" disabled>
-            </select>
-            <div class="row align-items-center">
-              <div class="col">
-                <label class="col-form-label font-weight-bold text-gray-800" for="monitorMinSigmaSelect">Monitor Min Sigma</label>
-                <a href="#" data-toggle="tooltip" data-placement="top" title=
-                    "Defines the minimum signal-to-noise ratio a source has to be if it was placed in the area of minimum noise
-                    in the image from which it is to be extracted from. If lower than this value then no forced extraction occurs."
-                ><i class="fas fa-info-circle"></i></a>
-                <input id="monitorMinSigmaSelect" type="number" class="form-control bg-light border-0 wrap-form-control-readonly" value="{{ runconfig.monitor_min_sigma }}" min="0" step="0.01" aria-label="monitorMinSigmaSearch" aria-describedby="basic-addon2" name="monitor_min_sigma" readonly>
-              </div>
-              <div class="col">
-                <label class="col-form-label font-weight-bold text-gray-800" for="monitorEdgeBufferScaleSelect">Monitor Edge Buffer Scale</label>
-                <a href="#" data-toggle="tooltip" data-placement="top" title="The monitoring can sometimes fail when sources are near the edge of the image. While a minimum distance limit from the image edge is already in place this is sometimes not enough, in these cases this buffer value can be increased to avoid errors. Hence, only worry about this parameter if you are experiencing monitoring issues."><i class="fas fa-info-circle"></i></a>
-                <input id="monitorEdgeBufferScaleSelect" type="number" class="form-control bg-light border-0 wrap-form-control-readonly" value="{{ runconfig.monitor_edge_buffer_scale }}" min="0" step="0.01" aria-label="monitorEdgeBufferScaleSearch" aria-describedby="basic-addon2" name="monitor_edge_buffer_scale" readonly>
-              </div>
-              <div class="col">
-                <label class="col-form-label font-weight-bold text-gray-800" for="monitorClusterThresholdSelect">Monitor Cluster Threshold</label>
-                <a href="#" data-toggle="tooltip" data-placement="top" title="Multiple of `major_axes` to use for identifying clusters when performing forced extraction. If unsure leave as the default value."><i class="fas fa-info-circle"></i></a>
-                <input id="monitorClusterThresholdSelect" type="number" class="form-control bg-light border-0 wrap-form-control-readonly" value="{{ runconfig.monitor_cluster_threshold }}" min="0" step="0.1" aria-label="monitorClusterThresholdSearch" aria-describedby="basic-addon2" name="monitor_cluster_threshold" readonly>
-              </div>
-              <div class="col">
-                <div class="custom-control custom-switch">
-                  <input type="checkbox" class="custom-control-input" id="monitorAllowNanSwitch" {% if runconfig.monitor_allow_nan %} checked="checked" {% endif %} name="monitor_allow_nan" disabled>
-                  <label class="custom-control-label font-weight-bold text-gray-800" for="monitorAllowNanSwitch">Monitor Allow NaN</label>
-                  <a href="#" data-toggle="tooltip" data-placement="top" title=
-                      "Control whether sources that contain NaN values in the background or rms maps are attempted to be extracted during forced fitting. If selected then sources with NaNs are attempted to be fit anyway, if unselected then the source is not fit."
-                  ><i class="fas fa-info-circle"></i></a>
-                </div>
-              </div>
-            </div>
+            <h6 class="font-weight-bold text-primary" style="margin-top: 1rem; margin-bottom: 1rem;">Association Options</h6>
             <div class="row">
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="associationTypeSelect">Association Method</label>
@@ -212,6 +171,55 @@
               <input id="astroUncertRaSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.association_epoch_duplicate_radius }}" min="0" step="0.01" aria-label="assocDuplicateRadiusSelect" aria-describedby="basic-addon2" name="association_epoch_duplicate_radius">
               </div>
             </div>
+            <h6 class="font-weight-bold text-primary" style="margin-top: 1rem; margin-bottom: 1rem;">Monitoring Options</h6>
+            <div class="row" style="margin-bottom: 1rem;">
+              <div class="col">
+                <div class="custom-control custom-switch">
+                  <input type="checkbox" class="custom-control-input" id="monitorSwitch" {% if runconfig.monitor %} checked="checked" {% endif %} name="monitor">
+                  <label class="custom-control-label font-weight-bold text-gray-800" for="monitorSwitch">Monitor: Turn on force extraction for sources backward and forward in time</label>
+                  <a href="#" data-toggle="tooltip" data-placement="top" title=
+                      "Forced extractions will be peformed both forwards and backwards in time to fill in 'gaps' in the lightcurves. Be aware that this will                        increase processing time."
+                  ><i class="fas fa-info-circle"></i></a>
+                </div>
+              </div>
+            </div>
+            <label for="bkgFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select background files for use in monitoring</label>
+            <a href="#" data-toggle="tooltip" data-placement="top" title=
+                "Only required if you are using the monitoring feature. The background maps for the selected images to process.
+                The order must match."
+            ><i class="fas fa-info-circle"></i></a>
+            <select id="bkgFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-header="Choose background files" data-actions-box="true" name="background_files" data-selected-text-format="count > 5" disabled>
+            </select>
+            <div class="row align-items-center">
+              <div class="col">
+                <label class="col-form-label font-weight-bold text-gray-800" for="monitorMinSigmaSelect">Monitor Min Sigma</label>
+                <a href="#" data-toggle="tooltip" data-placement="top" title=
+                    "Defines the minimum signal-to-noise ratio a source has to be if it was placed in the area of minimum noise
+                    in the image from which it is to be extracted from. If lower than this value then no forced extraction occurs."
+                ><i class="fas fa-info-circle"></i></a>
+                <input id="monitorMinSigmaSelect" type="number" class="form-control bg-light border-0 wrap-form-control-readonly" value="{{ runconfig.monitor_min_sigma }}" min="0" step="0.01" aria-label="monitorMinSigmaSearch" aria-describedby="basic-addon2" name="monitor_min_sigma" readonly>
+              </div>
+              <div class="col">
+                <label class="col-form-label font-weight-bold text-gray-800" for="monitorEdgeBufferScaleSelect">Monitor Edge Buffer Scale</label>
+                <a href="#" data-toggle="tooltip" data-placement="top" title="The monitoring can sometimes fail when sources are near the edge of the image. While a minimum distance limit from the image edge is already in place this is sometimes not enough, in these cases this buffer value can be increased to avoid errors. Hence, only worry about this parameter if you are experiencing monitoring issues."><i class="fas fa-info-circle"></i></a>
+                <input id="monitorEdgeBufferScaleSelect" type="number" class="form-control bg-light border-0 wrap-form-control-readonly" value="{{ runconfig.monitor_edge_buffer_scale }}" min="0" step="0.01" aria-label="monitorEdgeBufferScaleSearch" aria-describedby="basic-addon2" name="monitor_edge_buffer_scale" readonly>
+              </div>
+              <div class="col">
+                <label class="col-form-label font-weight-bold text-gray-800" for="monitorClusterThresholdSelect">Monitor Cluster Threshold</label>
+                <a href="#" data-toggle="tooltip" data-placement="top" title="Multiple of `major_axes` to use for identifying clusters when performing forced extraction. If unsure leave as the default value."><i class="fas fa-info-circle"></i></a>
+                <input id="monitorClusterThresholdSelect" type="number" class="form-control bg-light border-0 wrap-form-control-readonly" value="{{ runconfig.monitor_cluster_threshold }}" min="0" step="0.1" aria-label="monitorClusterThresholdSearch" aria-describedby="basic-addon2" name="monitor_cluster_threshold" readonly>
+              </div>
+              <div class="col">
+                <div class="custom-control custom-switch">
+                  <input type="checkbox" class="custom-control-input" id="monitorAllowNanSwitch" {% if runconfig.monitor_allow_nan %} checked="checked" {% endif %} name="monitor_allow_nan" disabled>
+                  <label class="custom-control-label font-weight-bold text-gray-800" for="monitorAllowNanSwitch">Monitor Allow NaN</label>
+                  <a href="#" data-toggle="tooltip" data-placement="top" title=
+                      "Control whether sources that contain NaN values in the background or rms maps are attempted to be extracted during forced fitting. If selected then sources with NaNs are attempted to be fit anyway, if unselected then the source is not fit."
+                  ><i class="fas fa-info-circle"></i></a>
+                </div>
+              </div>
+            </div>
+            <h6 class="font-weight-bold text-primary" style="margin-top: 1rem; margin-bottom: 1rem;">Misc. Options</h6>
             <div class="row">
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="astroUncertRaSelect">Astrometric Uncertainty RA (arcsec)</label>
@@ -235,15 +243,6 @@
                 ><i class="fas fa-info-circle"></i></a>
                 <input id="newSourceMinSigSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.new_source_min_sigma }}" min="0" step="0.01" aria-label="newSourceMinSigSearch" aria-describedby="basic-addon2" name="new_source_min_sigma">
               </div>
-              <div class="col">
-                <label class="col-form-label font-weight-bold text-gray-800" for="surveySelect">Default Survey (TBC)</label>
-                <a href="#" data-toggle="tooltip" data-placement="top" title=
-                    "Feature coming soon."
-                ><i class="fas fa-info-circle"></i></a>
-                <select id="surveySelect" class="form-control bg-light border-0" aria-label="surveySearch" aria-describedby="basic-addon2" name="default_survey" readonly>
-                  <option value="{{ runconfig.default_survey }}" selected>None</option>
-                </select>
-              </div>
             </div>
             <div class="row align-items-center">
               <div class="col">
@@ -261,6 +260,17 @@
                 <input id="localRmsZeroFillSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.selavy_local_rms_zero_fill_value }}" min="0" step="0.01" aria-label="localRmsZeroFillSearch" aria-describedby="basic-addon2" name="selavy_local_rms_zero_fill_value">
               </div>
               <div class="col">
+                <label class="col-form-label font-weight-bold text-gray-800" for="surveySelect">Default Survey (TBC)</label>
+                <a href="#" data-toggle="tooltip" data-placement="top" title=
+                    "Feature coming soon."
+                ><i class="fas fa-info-circle"></i></a>
+                <select id="surveySelect" class="form-control bg-light border-0" aria-label="surveySearch" aria-describedby="basic-addon2" name="default_survey" readonly>
+                  <option value="{{ runconfig.default_survey }}" selected>None</option>
+                </select>
+              </div>
+            </div>
+            <div class="row align-items-center" style="margin-top: 1rem;">
+              <div class="col">
                 <div class="custom-control custom-switch">
                   <input type="checkbox" class="custom-control-input" id="condonErrorSwitch" {% if runconfig.use_condon_errors %} checked="checked" {% endif %} name="use_condon_errors">
                   <label class="custom-control-label font-weight-bold text-gray-800" for="condonErrorSwitch">Use Condon Errors</label>
@@ -269,20 +279,24 @@
                   ><i class="fas fa-info-circle"></i></a>
                 </div>
               </div>
-            </div>
-            <div class="custom-control custom-switch">
-              <input type="checkbox" class="custom-control-input" id="measurementsArrowSwitch" {% if runconfig.create_measurements_arrow_file %} checked="checked" {% endif %} name="create_measurements_arrow_file">
-              <label class="custom-control-label font-weight-bold text-gray-800" for="measurementsArrowSwitch">Create Measurements Arrow File</label>
-              <a href="#" data-toggle="tooltip" data-placement="top" title=
-                  "The pipeline will create a `measurements.arrow` file alongside the parquet files in the run directory to allow easier exploration post analysis. Recommended for very large runs (millions of measurements)."
-              ><i class="fas fa-info-circle"></i></a>
-            </div>
-            <div class="custom-control custom-switch">
-              <input type="checkbox" class="custom-control-input" id="astropyWarnSwitch" {% if runconfig.suppress_astropy_warnings %} checked="checked" {% endif %} name="suppress_astropy_warnings">
-              <label class="custom-control-label font-weight-bold text-gray-800" for="astropyWarnSwitch">Suppress Astropy Warnings</label>
-              <a href="#" data-toggle="tooltip" data-placement="top" title=
-                  "Removes the Astropy warnings from the pipeline run output."
-              ><i class="fas fa-info-circle"></i></a>
+              <div class="col">
+                <div class="custom-control custom-switch">
+                  <input type="checkbox" class="custom-control-input" id="measurementsArrowSwitch" {% if runconfig.create_measurements_arrow_file %} checked="checked" {% endif %} name="create_measurements_arrow_file">
+                  <label class="custom-control-label font-weight-bold text-gray-800" for="measurementsArrowSwitch">Create Measurements Arrow File</label>
+                  <a href="#" data-toggle="tooltip" data-placement="top" title=
+                      "The pipeline will create a `measurements.arrow` file alongside the parquet files in the run directory to allow easier exploration post analysis. Recommended for very large runs (millions of measurements)."
+                  ><i class="fas fa-info-circle"></i></a>
+                </div>
+              </div>
+              <div class="col">
+                <div class="custom-control custom-switch">
+                  <input type="checkbox" class="custom-control-input" id="astropyWarnSwitch" {% if runconfig.suppress_astropy_warnings %} checked="checked" {% endif %} name="suppress_astropy_warnings">
+                  <label class="custom-control-label font-weight-bold text-gray-800" for="astropyWarnSwitch">Suppress Astropy Warnings</label>
+                  <a href="#" data-toggle="tooltip" data-placement="top" title=
+                      "Removes the Astropy warnings from the pipeline run output."
+                  ><i class="fas fa-info-circle"></i></a>
+                </div>
+              </div>
             </div>
           </div>
           <div class="modal-footer">
