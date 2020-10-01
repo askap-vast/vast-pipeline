@@ -232,8 +232,8 @@
     <div class="card-body">
       <div class="table-responsive">
         <table class="table table-bordered table-striped table-hover" id="{{ datatables.0.table_id }}" width="100%"
-          cellspacing="0" MeasApi="{% url 'vast_pipeline:measurement_index' %}/"
-          ImgApi="{% url 'vast_pipeline:image_index' %}/">
+          cellspacing="0" MeasApi="{% url 'vast_pipeline:measurement_index' %}"
+          ImgApi="{% url 'vast_pipeline:image_index' %}">
           <thead>
             <tr>
               {% for name in datatables.0.colsNames %}
