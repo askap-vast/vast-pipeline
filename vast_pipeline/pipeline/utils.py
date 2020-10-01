@@ -540,7 +540,9 @@ def get_rms_noise_image_values(rms_path):
 
 
 def get_image_list_diff(row):
-    out = list(filter(lambda arg: arg not in row['img_list'], row['skyreg_img_list']))
+    out = list(
+        filter(lambda arg: arg not in row['img_list'], row['skyreg_img_list'])
+    )
 
     # set empty list to -1
     if not out:
@@ -576,10 +578,85 @@ def get_names_and_epochs(grp):
     return pd.Series(d)
 
 
-def get_src_skyregion_merged_df(sources_df, images_df, skyreg_df, p_run):
+def check_primary_image(row: pd.Series) -> bool:
     """
-    check and extract expected measurements, and associated them with the
-    related source(s)
+    Checks whether the primary image of the ideal source
+    dataframe is in the image list for the source.
+
+    Parameters
+    ----------
+    row : pd.Series
+        input dataframe row, with columns ['primary']
+        and ['img_list'].
+
+    Returns
+    -------
+    bool : bool
+        True if primary in image list else False.
+    """
+    return row['primary'] in row['img_list']
+
+
+def get_src_skyregion_merged_df(
+    sources_df: pd.DataFrame, images_df: pd.DataFrame, skyreg_df: pd.DataFrame
+) -> pd.DataFrame:
+    """
+    Analyses the current sources_df to determine what the 'ideal coverage'
+    for each source should be. In other words, what images is the source
+    missing in when it should have been seen.
+
+    Parameters
+    ----------
+    sources_df : pd.DataFrame
+        The output of the assoication step containing the
+        measurements assoicated into sources.
+    images_df : pd.DataFrame
+        Contains the images of the pipeline run. I.e. all image
+        objects for the run loaded into a dataframe.
+    skyreg_df : pd.DataFrame
+        Contains the sky regions of the pipeline run. I.e. all
+        sky region objects for the run loaded into a dataframe.
+
+    Returns
+    -------
+    srcs_df : pd.DataFrame
+        DataFrame containing missing image information. Output format:
+        +----------+----------------------------------+-----------+------------+
+        |   source | img_list                         |   wavg_ra |   wavg_dec |
+        |----------+----------------------------------+-----------+------------+
+        |      278 | ['VAST_0127-73A.EPOCH01.I.fits'] |  22.2929  |   -71.8717 |
+        |      702 | ['VAST_0127-73A.EPOCH01.I.fits'] |  28.8125  |   -69.3547 |
+        |      844 | ['VAST_0127-73A.EPOCH01.I.fits'] |  17.3152  |   -72.346  |
+        |      934 | ['VAST_0127-73A.EPOCH01.I.fits'] |   9.75754 |   -72.9629 |
+        |     1290 | ['VAST_0127-73A.EPOCH01.I.fits'] |  20.8455  |   -76.8269 |
+        +----------+----------------------------------+-----------+------------+
+        ------------------------------------------------------------------+
+         skyreg_img_list                                                  |
+        ------------------------------------------------------------------+
+         ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+         ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+         ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+         ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+         ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+        ------------------------------------------------------------------+
+        ----------------------------------+------------------------------+
+         img_diff                         | primary                      |
+        ----------------------------------+------------------------------+
+         ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
+         ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
+         ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
+         ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
+         ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
+        ----------------------------------+------------------------------+
+        ------------------------------+--------------+
+         detection                    | in_primary   |
+        ------------------------------+--------------|
+         VAST_0127-73A.EPOCH01.I.fits | True         |
+         VAST_0127-73A.EPOCH01.I.fits | True         |
+         VAST_0127-73A.EPOCH01.I.fits | True         |
+         VAST_0127-73A.EPOCH01.I.fits | True         |
+         VAST_0127-73A.EPOCH01.I.fits | True         |
+        ------------------------------+--------------+
     """
     logger.info("Creating ideal source coverage df...")
 
@@ -684,6 +761,21 @@ def get_src_skyregion_merged_df(sources_df, images_df, skyreg_df, p_run):
 
     srcs_df = srcs_df.drop(
         ['epoch_list', 'skyreg_epoch'],
+        axis=1
+    )
+
+    srcs_df['primary'] = srcs_df[
+        'skyreg_img_list'
+    ].apply(lambda x: x[0])
+
+    srcs_df['detection'] = srcs_df[
+        'img_list'
+    ].apply(lambda x: x[0])
+
+    srcs_df['in_primary'] = srcs_df[
+        ['primary', 'img_list']
+    ].apply(
+        check_primary_image,
         axis=1
     )
 

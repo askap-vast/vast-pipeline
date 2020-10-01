@@ -23,6 +23,8 @@ from .utils import (
     group_skyregions,
     get_parallel_assoc_image_df
 )
+from vast_pipeline.utils.utils import convert_list_to_dict
+
 from .errors import MaxPipelineRunsError, PipelineConfigError
 
 
@@ -46,24 +48,24 @@ class Pipeline():
 
         # Check if provided files are lists and convert to
         # dictionaries if so
-        for lst in [
+        for cfg_key in [
             'IMAGE_FILES', 'SELAVY_FILES',
             'BACKGROUND_FILES', 'NOISE_FILES'
         ]:
-            if isinstance(getattr(self.config, lst), list):
+            if isinstance(getattr(self.config, cfg_key), list):
                 setattr(
                     self.config,
-                    lst,
-                    self._convert_list_to_dict(
-                        getattr(self.config, lst)
+                    cfg_key,
+                    convert_list_to_dict(
+                        getattr(self.config, cfg_key)
                     )
                 )
-                # If the user has entered just lists we don't have
+                # The _reorder_images parameter below is for
+                # if the user has entered just lists we don't have
                 # access to the dates until the Image instances are
                 # created. So we flag this as true so that we can
-                # reorder the epochs.
+                # reorder the epochs once the date information is available.
                 self._reorder_images = True
-
 
         # A dictionary of path to Fits images, eg
         # "/data/images/I1233234.FITS" and selavy catalogues
@@ -115,16 +117,6 @@ class Pipeline():
 
         return mod
 
-
-    def _convert_list_to_dict(self, l):
-        """
-        Convert users list entry to a dictionary for pipeline processing.
-        """
-        conversion = {i + 1: [val,] for i, val in enumerate(l)}
-
-        return conversion
-
-
     def validate_cfg(self):
         """
         validate a pipeline run configuration against default parameters and
@@ -135,10 +127,14 @@ class Pipeline():
             getattr(self.config, 'SELAVY_FILES') and
             getattr(self.config, 'NOISE_FILES')):
             img_f_list = getattr(self.config, 'IMAGE_FILES')
-            img_f_list = sum([*img_f_list.values()], [])
+            img_f_list = [
+                item for sublist in img_f_list.values() for item in sublist
+            ] # creates a flat list of all the dictionary value lists
             for lst in ['IMAGE_FILES', 'SELAVY_FILES', 'NOISE_FILES']:
                 cfg_list = getattr(self.config, lst)
-                cfg_list = sum([*cfg_list.values()], [])
+                cfg_list = [
+                    item for sublist in cfg_list.values() for item in sublist
+                ]
 
                 # checks for duplicates in each list
                 if len(set(cfg_list)) != len(cfg_list):
@@ -204,7 +200,9 @@ class Pipeline():
 
             # check for duplicated values
             backgrd_f_list = getattr(self.config, 'BACKGROUND_FILES')
-            backgrd_f_list = sum([*backgrd_f_list.values()], [])
+            backgrd_f_list = [
+                item for sublist in backgrd_f_list.values() for item in sublist
+            ]
             if len(set(backgrd_f_list)) != len(backgrd_f_list):
                 raise PipelineConfigError(
                     'Duplicated files in: BACKGROUND_FILES list'
@@ -331,11 +329,10 @@ class Pipeline():
             sources_df[missing_source_cols],
             images_df,
             skyregs_df,
-            p_run
         )
 
         # STEP #4 New source analysis
-        new_sources_df, missing_sources_df = new_sources(
+        new_sources_df = new_sources(
             sources_df,
             missing_sources_df,
             self.config.NEW_SOURCE_MIN_SIGMA,
