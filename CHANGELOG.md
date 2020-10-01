@@ -1,12 +1,29 @@
-<!--
-follow https://github.com/apache/incubator-superset/blob/master/CHANGELOG.md
--->
-## Change Log
+# Change Log
+All notable changes to this project will be documented in this file.
 
-### 0.1.0 (2020/09/27)
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), with an added `List of PRs` section and links to the relevant PRs on the individal updates. This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+#### Added
+- Adds `n_selavy_measurements` and `n_forced_measurements` to run model [#362](https://github.com/askap-vast/vast-pipeline/pull/362).
+- Adds steps to populate new measurement count fields in pipeline run [#362](https://github.com/askap-vast/vast-pipeline/pull/362).
+
+#### Changed
+- Changes measurement counts view on website to use new model parameters [#362](https://github.com/askap-vast/vast-pipeline/pull/362).
+
+#### Fixed 
+
+#### Removed
+
+#### List of PRs
+- [#362](https://github.com/askap-vast/vast-pipeline/pull/362) feat, model: Added number of measurements to Run DB model.
+
+## [0.1.0] (2020/09/27)
 
 First release of the Vast Pipeline. This was able to process 707 images (EPOCH01 to EPOCH11x) on a machine with 64 GB of RAM.
 
+#### List of PRs
 - [#347](https://github.com/askap-vast/vast-pipeline/pull/347) feat: Towards first release
 - [#354](https://github.com/askap-vast/vast-pipeline/pull/354) fix, model: Updated Band model fields to floats
 - [#346](https://github.com/askap-vast/vast-pipeline/pull/346) fix: fix JS9 overflow in measurement detail view
@@ -39,5 +56,8 @@ First release of the Vast Pipeline. This was able to process 707 images (EPOCH01
 - [#291](https://github.com/askap-vast/vast-pipeline/pull/291) fix: Bug fix for forced_photom cluster allow_nan
 - [#289](https://github.com/askap-vast/vast-pipeline/pull/289) fix: Fix broken UI run creation
 - [#287](https://github.com/askap-vast/vast-pipeline/pull/287) fix: Fix forced measurement parquet files write
-- [#286](https://github.com/askap-vast/vast-pipeline/pull/285) fix: compile JS9 without helper option
+- [#286](https://github.com/askap-vast/vast-pipeline/pull/286) fix: compile JS9 without helper option
 - [#285](https://github.com/askap-vast/vast-pipeline/pull/285) fix: Fix removing forced parquet and clear images from piperun
+
+[unreleased]: https://github.com/askap-vast/vast-pipeline/compare/0.1.0...HEAD
+[0.1.0]: https://github.com/askap-vast/vast-pipeline/releases/0.1.0
