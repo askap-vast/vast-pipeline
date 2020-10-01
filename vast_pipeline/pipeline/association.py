@@ -887,8 +887,27 @@ def association(images_df, limit, dr_limit, bw_limit,
     return sources_df
 
 
-def _correct_parallel_source_ids(df, correction):
+def _correct_parallel_source_ids(
+    df: pd.DataFrame, correction: int
+) -> pd.DataFrame:
+    """
+    This function is to correct the source ids after the combination of
+    the associaiton dataframes produced by parallel association - as source
+    ids will be duplicated if left.
 
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Holds the measurements associated into sources. The output of of the
+        association step (sources_df).
+    correction : int
+        The value to add to the source ids.
+
+    Returns
+    -------
+    df : pd.DataFrame
+        The input df with correct source ids.
+    """
     df.loc[:, 'source'] = df['source'].values + correction
     related_mask = ~(df['related'].isna())
 
@@ -906,9 +925,41 @@ def _correct_parallel_source_ids(df, correction):
 
 
 def parallel_association(
-    images_df, limit, dr_limit, bw_limit, duplicate_limit,
-    config, n_skyregion_groups
-):
+    images_df: pd.DataFrame,
+    limit: Angle,
+    dr_limit: float,
+    bw_limit: float,
+    duplicate_limit: Angle,
+    config,
+    n_skyregion_groups: int
+) -> pd.DataFrame:
+    """
+    Launches association on different sky region groups in parallel using Dask.
+
+    Parameters
+    ----------
+    images_df : pd.DataFrame
+        Holds the images that are being processed. Also contains what sky
+        region group the image belongs to.
+    limit: Angle
+        The association radius limit.
+    dr_limit : float
+        The de Ruiter radius limit.
+    bw_limit : float
+        The beamwidth limit.
+    duplicate_limit: Angle
+        The duplicate radius detection limit.
+    config : module
+        The pipeline config settings.
+    n_skyregion_groups: int
+        The number of sky region groups.
+
+    Returns
+    -------
+    results : pd.DataFrame
+        The combined association results of the parallel association with
+        corrected source ids.
+    """
     logger.info(
         "Running parallel association for %i sky region groups.",
         n_skyregion_groups

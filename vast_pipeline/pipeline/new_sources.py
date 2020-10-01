@@ -18,9 +18,6 @@ from vast_pipeline.utils.utils import StopWatch
 logger = logging.getLogger(__name__)
 
 
-def check_primary_image(row):
-    return row['primary'] in row['img_list']
-
 def get_image_rms_measurements(group):
     """
     Take the coordinates provided from the group
@@ -77,6 +74,7 @@ def get_image_rms_measurements(group):
 
     return group
 
+
 def parallel_get_rms_measurements(df):
     """
     Wrapper function to use 'get_image_rms_measurements'
@@ -115,6 +113,7 @@ def parallel_get_rms_measurements(df):
 
     return df
 
+
 def new_sources(
     sources_df, missing_sources_df, min_sigma, p_run
 ):
@@ -140,22 +139,6 @@ def new_sources(
 
     # Get rid of sources that are not 'new', i.e. sources which the
     # first sky region image is not in the image list
-
-    missing_sources_df['primary'] = missing_sources_df[
-        'skyreg_img_list'
-    ].apply(lambda x: x[0])
-
-    missing_sources_df['detection'] = missing_sources_df[
-        'img_list'
-    ].apply(lambda x: x[0])
-
-    missing_sources_df['in_primary'] = missing_sources_df[
-        ['primary', 'img_list']
-    ].apply(
-        check_primary_image,
-        axis=1
-    )
-
     new_sources_df = missing_sources_df[
         missing_sources_df['in_primary'] == False
     ].drop(
@@ -265,4 +248,4 @@ def new_sources(
         'Total new source analysis time: %.2f seconds', timer.reset_init()
     )
 
-    return new_sources_df.set_index('source'), missing_sources_df
+    return new_sources_df.set_index('source')

@@ -4,6 +4,7 @@ import math as m
 import pandas as pd
 import numpy as np
 
+from typing import Dict, Any, List
 from astroquery.ned import Ned
 from astroquery.simbad import Simbad
 from astropy import units as u
@@ -189,7 +190,7 @@ def optimize_floats(df: pd.DataFrame) -> pd.DataFrame:
 
     Returns
     -------
-    df: pd.DataFrame
+    df : pd.DataFrame
         the input dataframe with the `float64` type
         columns downcasted.
     """
@@ -213,7 +214,7 @@ def optimize_ints(df: pd.DataFrame) -> pd.DataFrame:
 
     Returns
     -------
-    df: pd.DataFrame
+    df : pd.DataFrame
         the input dataframe with the `int64` type
         columns downcasted.
     """
@@ -221,3 +222,23 @@ def optimize_ints(df: pd.DataFrame) -> pd.DataFrame:
     df[ints] = df[ints].apply(pd.to_numeric, downcast='integer')
 
     return df
+
+
+def convert_list_to_dict(l: List[Any]) -> Dict[int, Any]:
+    """
+    Converts a list to a dictionary where the keys
+    are the enumerate iterator + 1.
+
+    Parameters
+    ----------
+    l : list
+        input dataframe, no specific columns.
+
+    Returns
+    -------
+    conversion : dict
+        A dictionary containing the list values.
+    """
+    conversion = {i + 1: [val] for i, val in enumerate(l)}
+
+    return conversion

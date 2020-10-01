@@ -23,6 +23,8 @@ from .utils import (
     group_skyregions,
     get_parallel_assoc_image_df
 )
+from vast_pipeline.utils.utils import convert_list_to_dict
+
 from .errors import MaxPipelineRunsError, PipelineConfigError
 
 
@@ -42,28 +44,37 @@ class Pipeline():
         '''
         self.name = name
         self.config = self.load_cfg(config_path)
-        self._reorder_images = False
+        # The epoch_based parameter below is for
+        # if the user has entered just lists we don't have
+        # access to the dates until the Image instances are
+        # created. So we flag this as true so that we can
+        # reorder the epochs once the date information is available.
+        # It is also recorded in the database such that there is a record
+        # of the fact that the run was processed in an epoch based mode.
+        self.epoch_based = False
 
         # Check if provided files are lists and convert to
         # dictionaries if so
-        for lst in [
+        for cfg_key in [
             'IMAGE_FILES', 'SELAVY_FILES',
             'BACKGROUND_FILES', 'NOISE_FILES'
         ]:
-            if isinstance(getattr(self.config, lst), list):
+            if isinstance(getattr(self.config, cfg_key), list):
                 setattr(
                     self.config,
-                    lst,
-                    self._convert_list_to_dict(
-                        getattr(self.config, lst)
+                    cfg_key,
+                    convert_list_to_dict(
+                        getattr(self.config, cfg_key)
                     )
                 )
-                # If the user has entered just lists we don't have
-                # access to the dates until the Image instances are
-                # created. So we flag this as true so that we can
-                # reorder the epochs.
-                self._reorder_images = True
-
+            elif isinstance(getattr(self.config, cfg_key), dict):
+                # Set to True if dictionaries are passed.
+                self.epoch_based = True
+            else:
+                raise PipelineConfigError((
+                    'Unknown images entry format!'
+                    f' Must be a list or dictionary.'
+                ))
 
         # A dictionary of path to Fits images, eg
         # "/data/images/I1233234.FITS" and selavy catalogues
@@ -115,16 +126,6 @@ class Pipeline():
 
         return mod
 
-
-    def _convert_list_to_dict(self, l):
-        """
-        Convert users list entry to a dictionary for pipeline processing.
-        """
-        conversion = {i + 1: [val,] for i, val in enumerate(l)}
-
-        return conversion
-
-
     def validate_cfg(self):
         """
         validate a pipeline run configuration against default parameters and
@@ -135,10 +136,14 @@ class Pipeline():
             getattr(self.config, 'SELAVY_FILES') and
             getattr(self.config, 'NOISE_FILES')):
             img_f_list = getattr(self.config, 'IMAGE_FILES')
-            img_f_list = sum([*img_f_list.values()], [])
+            img_f_list = [
+                item for sublist in img_f_list.values() for item in sublist
+            ] # creates a flat list of all the dictionary value lists
             for lst in ['IMAGE_FILES', 'SELAVY_FILES', 'NOISE_FILES']:
                 cfg_list = getattr(self.config, lst)
-                cfg_list = sum([*cfg_list.values()], [])
+                cfg_list = [
+                    item for sublist in cfg_list.values() for item in sublist
+                ]
 
                 # checks for duplicates in each list
                 if len(set(cfg_list)) != len(cfg_list):
@@ -204,7 +209,9 @@ class Pipeline():
 
             # check for duplicated values
             backgrd_f_list = getattr(self.config, 'BACKGROUND_FILES')
-            backgrd_f_list = sum([*backgrd_f_list.values()], [])
+            backgrd_f_list = [
+                item for sublist in backgrd_f_list.values() for item in sublist
+            ]
             if len(set(backgrd_f_list)) != len(backgrd_f_list):
                 raise PipelineConfigError(
                     'Duplicated files in: BACKGROUND_FILES list'
@@ -243,6 +250,7 @@ class Pipeline():
         pass
 
     def process_pipeline(self, p_run):
+        logger.info(f'Epoch based association: {self.epoch_based}')
         # upload/retrieve image data
         images, meas_dj_obj, skyregs_df = upload_images(
             self.img_paths,
@@ -256,7 +264,7 @@ class Pipeline():
 
         # If the user has given lists we need to reorder the
         # image epochs such that they are in date order.
-        if self._reorder_images:
+        if self.epoch_based is False:
             self.img_epochs = {}
             for i, img in enumerate(images):
                 self.img_epochs[img.name] = i + 1
@@ -273,7 +281,9 @@ class Pipeline():
 
         # 2.1 Check if sky regions to be associated can be
         # split into connected point groups
-        skyregion_groups = group_skyregions(skyregs_df)
+        skyregion_groups = group_skyregions(
+            skyregs_df[['id', 'centre_ra', 'centre_dec', 'xtr_radius']]
+        )
         n_skyregion_groups = skyregion_groups[
             'skyreg_group'
         ].unique().shape[0]
@@ -331,11 +341,10 @@ class Pipeline():
             sources_df[missing_source_cols],
             images_df,
             skyregs_df,
-            p_run
         )
 
         # STEP #4 New source analysis
-        new_sources_df, missing_sources_df = new_sources(
+        new_sources_df = new_sources(
             sources_df,
             missing_sources_df,
             self.config.NEW_SOURCE_MIN_SIGMA,
@@ -374,6 +383,7 @@ class Pipeline():
         with transaction.atomic():
             p_run.n_images = nr_img_processed
             p_run.n_sources = nr_sources
+            p_run.epoch_based = self.epoch_based
             p_run.save()
 
         pass
