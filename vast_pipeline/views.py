@@ -199,7 +199,7 @@ class RunViewSet(ModelViewSet):
     queryset = Run.objects.all()
     serializer_class = RunSerializer
 
-    @action(detail=True, methods=['get'])
+    @rest_framework.decorators.action(detail=True, methods=['get'])
     def images(self, request, pk=None):
         qs = Image.objects.filter(run__id=pk).order_by('id')
         qs = self.filter_queryset(qs)
@@ -211,7 +211,7 @@ class RunViewSet(ModelViewSet):
         serializer = ImageSerializer(qs, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['get'])
+    @rest_framework.decorators.action(detail=True, methods=['get'])
     def measurements(self, request, pk=None):
         qs = Measurement.objects.filter(image__run__in=[pk]).order_by('id')
         qs = self.filter_queryset(qs)
@@ -464,7 +464,7 @@ class ImageViewSet(ModelViewSet):
     queryset = Image.objects.all()
     serializer_class = ImageSerializer
 
-    @action(detail=True, methods=['get'])
+    @rest_framework.decorators.action(detail=True, methods=['get'])
     def measurements(self, request, pk=None):
         qs = Measurement.objects.filter(image__in=[pk], forced=False).order_by('id')
         qs = self.filter_queryset(qs)
@@ -476,7 +476,7 @@ class ImageViewSet(ModelViewSet):
         serializer = MeasurementSerializer(qs, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['get'])
+    @rest_framework.decorators.action(detail=True, methods=['get'])
     def runs(self, request, pk=None):
         image = self.queryset.get(pk=pk)
         qs = image.run.all().order_by('id')
@@ -709,7 +709,7 @@ class MeasurementViewSet(ModelViewSet):
         run_id = self.request.query_params.get('run_id', None)
         return self.queryset.filter(source__id=run_id) if run_id else self.queryset
 
-    @action(detail=True, methods=['get'])
+    @rest_framework.decorators.action(detail=True, methods=['get'])
     def siblings(self, request, pk=None):
         measurement = self.queryset.get(pk=pk)
         image_id = measurement.image_id
@@ -726,7 +726,7 @@ class MeasurementViewSet(ModelViewSet):
         serializer = self.get_serializer(qs, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['get'])
+    @rest_framework.decorators.action(detail=True, methods=['get'])
     def sources(self, request, pk=None):
         measurement = self.queryset.get(pk=pk)
         qs = measurement.source.all()
