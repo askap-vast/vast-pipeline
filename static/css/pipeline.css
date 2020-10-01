@@ -28,3 +28,29 @@
 #feedbackModalDialog {
   max-width: 75%;
 }
+
+#homeLogo:hover img{
+  display: none;
+}
+
+#homeLogo:hover:before {
+   font-style: normal;
+   font-variant: normal;
+   font-size: 1.5em;
+   text-rendering: auto;
+   -webkit-font-smoothing: antialiased;
+   font-family: "Font Awesome 5 Free";
+   font-weight: 900;
+   content: '\f015';
+}
+
+.dl-small dd {
+  margin-bottom: 0rem;
+}
+
+.card-header .fa {
+  transition: .3s transform ease-in-out;
+}
+.card-header .collapsed .fa {
+  transform: rotate(-90deg);
+}

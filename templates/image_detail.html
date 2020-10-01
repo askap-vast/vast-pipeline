@@ -1,11 +1,12 @@
 {% extends "base.html" %}
 
 {% load static %}
-
+{% load humanize %}
 {% load unit_tags %}
 
 {% block head %}
 
+<link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
 <link rel='stylesheet' href='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css' />
 
 {% endblock head %}
@@ -28,50 +29,161 @@
 
   <!-- Page Heading -->
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
-	  <h1 class="h3 mb-2 text-gray-800">Image: {{ image.name }}</h1>
+    <h1 class="h3 mb-2 text-gray-800">Image: {{ image.name }}</h1>
     <div class="">
-      <a href="{% url 'vast_pipeline:image_detail' image.id %}prev" class="d-none d-sm-inline-block btn btn-sm btn-light btn-icon-split shadow-sm">
+      <a href="{% url 'vast_pipeline:image_detail' image.id %}prev"
+        class="d-none d-sm-inline-block btn btn-sm btn-light btn-icon-split shadow-sm">
         <span class="icon text-gray-600">
           <i class="fas fa-arrow-left fa-sm"></i>
         </span>
         <span class="text">Previous</span>
       </a>
-      <a href="{% url 'vast_pipeline:image_detail' image.id %}next" class="d-none d-sm-inline-block btn btn-sm btn-light btn-icon-split shadow-sm">
+      <a href="{% url 'vast_pipeline:image_detail' image.id %}next"
+        class="d-none d-sm-inline-block btn btn-sm btn-light btn-icon-split shadow-sm">
         <span class="text">Next</span>
         <span class="icon text-gray-600">
           <i class="fas fa-arrow-right fa-sm"></i>
         </span>
       </a>
     </div>
-	</div>
+  </div>
 
   <div class="row">
-    <div class="col-lg-6">
+    <div class="col-lg-4">
       <!-- Basic Card Example -->
       <div class="card shadow mb-4" style="min-height: 40.3rem;">
         <div class="card-header py-3">
           <h6 class="m-0 font-weight-bold text-primary">Details</h6>
         </div>
         <div class="card-body">
-          <p><strong>RA: </strong> {{ image.ra }}</p>
-          <p><strong>DEC: </strong> {{ image.dec }}</p>
-          <p><strong>Beam BMAJ: </strong> {{ image.beam_bmaj|deg_to_arcsec|floatformat:3 }}''</p>
-          <p><strong>Beam BMIN: </strong> {{ image.beam_bmin|deg_to_arcsec|floatformat:3 }}''</p>
-          <p><strong>Beam BPA: </strong> {{ image.beam_bpa|floatformat:2 }}&deg;</p>
-          <p><strong>Median RMS: </strong> {{ image.rms_median|floatformat:3 }} mJy</p>
-          <p><strong>Min RMS: </strong> {{ image.rms_min|floatformat:3 }} mJy</p>
-          <p><strong>Max RMS: </strong> {{ image.rms_max|floatformat:3 }} mJy</p>
-          <p><strong>Comment: </strong> {{ image.comment }}</p>
+          <p>
+            <strong>Name: </strong>{{ image.name }}
+          </p>
+          <p>
+            <strong>Position: </strong><span class="clipboard-copy">{{ image.ra_hms }} {{ image.dec_dms }}</span><br>
+            <strong>Position (Decimal): </strong><span class="clipboard-copy">{{ image.ra|floatformat:6 }}
+              {{ image.dec|floatformat:6 }}</span><br>
+            <strong>Position (Galactic): </strong><span class="clipboard-copy">{{ image.l|floatformat:6 }}
+              {{ image.b|floatformat:6 }}</span><br>
+          </p>
+          <div class="row">
+            <div class="col-xl">
+              <p>
+                <strong>Beam BMAJ: </strong>{{ image.beam_bmaj|deg_to_arcsec|floatformat:3 }}&Prime;<br>
+                <strong>Beam BMIN: </strong>{{ image.beam_bmin|deg_to_arcsec|floatformat:3 }}&Prime;<br>
+                <strong>Beam BPA: </strong>{{ image.beam_bpa|floatformat:2 }}&deg;
+              </p>
+            </div>
+            <div class="col-xl">
+              <p>
+                <strong>Median RMS: </strong>{{ image.rms_median|floatformat:3 }} mJy<br>
+                <strong>Min RMS: </strong>{{ image.rms_min|floatformat:3 }} mJy<br>
+                <strong>Max RMS: </strong>{{ image.rms_max|floatformat:3 }} mJy
+              </p>
+            </div>
+          </div>
+          <p>
+            <strong>Frequency: </strong>{{ image.frequency|floatformat:1 }} MHz<br>
+            <strong>Bandwidth: </strong>{{ image.bandwidth|floatformat:1 }} MHz
+          </p>
+          <p>
+            <strong>Number of measurements: </strong>{{ image.n_meas|intcomma }} (<a href="#measHeader">Table</a>)<br>
+            <strong>Number of runs included in: </strong>{{ image.n_runs|intcomma }} (<a href="#runHeader">Table</a>)<p>
+            </p>
+          </p>
+          <p>
+            <strong>Comment: </strong>{{ image.comment }}
+          </p>
         </div>
       </div>
     </div>
     <!-- Aladin viz tile -->
-  	<div class="col-lg-6">
+    <div class="col-lg-8">
       <div class="card shadow mb-4">
         <div id="aladinViz" style="height:40.3rem;"></div>
       </div>
-  	</div>
-	</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col">
+      <div class="card shadow mb-4">
+        <h6 class="card-header m-0 font-weight-bold text-primary">
+          <a data-toggle="collapse" href="#collapseMeas" aria-expanded="true" aria-controls="collapseMeas"
+            id="measHeader" class="d-block">
+            <i class="fa fa-chevron-down pull-right"></i>
+            Measurements
+          </a>
+        </h6>
+        <!-- Card Content - Collapse -->
+        <div class="collapse show" id="collapseMeas">
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped table-hover" id="{{ datatables.0.table_id }}"
+                width="100%" cellspacing="0">
+                <thead>
+                  <tr>
+                    {% for name in datatables.0.colsNames %}
+                    <th>{{ name }}</th>
+                    {% endfor %}
+                  </tr>
+                </thead>
+                <tfoot>
+                  <tr>
+                    {% for name in datatables.0.colsNames %}
+                    <th>{{ name }}</th>
+                    {% endfor %}
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col">
+      <div class="card shadow mb-4">
+        <h6 class="card-header m-0 font-weight-bold text-primary">
+          <a data-toggle="collapse" href="#collapseRuns" aria-expanded="true" aria-controls="collapseMeas"
+            id="runHeader" class="d-block">
+            <i class="fa fa-chevron-down pull-right"></i>
+            Runs
+          </a>
+        </h6>
+        <!-- Card Content - Collapse -->
+        <div class="collapse show" id="collapseRuns">
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped table-hover" id="{{ datatables.1.table_id }}"
+                width="100%" cellspacing="0">
+                <thead>
+                  <tr>
+                    {% for name in datatables.1.colsNames %}
+                    <th>{{ name }}</th>
+                    {% endfor %}
+                  </tr>
+                </thead>
+                <tfoot>
+                  <tr>
+                    {% for name in datatables.1.colsNames %}
+                    <th>{{ name }}</th>
+                    {% endfor %}
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="position: fixed; top: 0; right: 0; z-index: 99">
+    <div id="alert_placeholder"></div>
+  </div>
 
 </div>
 <!-- /.container-fluid -->
@@ -85,14 +197,23 @@
 <script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
 <script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
 
+<!-- Datatable scripts -->
+{{ datatables|json_script:"datatable-conf" }}
+<script src="{% static 'js/datatables-pipeline.min.js' %}"></script>
+
 <!-- Aladin -->
 {{ image|json_script:"data-aladin" }}
-<script type='text/javascript' src='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js' charset='utf-8'></script>
+<script type='text/javascript' src='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js' charset='utf-8'>
+</script>
 <script src="{% static 'js/aladin-script.min.js' %}"></script>
 <script type="text/javascript">
-  let aladin = A.aladin('#aladinViz', {fov: 1});
+  let aladin = A.aladin('#aladinViz', {
+    fov: 1
+  });
   let aladinConf = JSON.parse(document.getElementById('data-aladin').textContent);
   configureAladin(aladin, aladinConf);
 </script>
+
+<script src="{% static 'js/clipboard-copy.min.js' %}"></script>
 
 {% endblock custom_page_scripts %}

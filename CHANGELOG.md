@@ -13,16 +13,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Added option to perform assocication of separate sky region groups in parallel [#277](https://github.com/askap-vast/vast-pipeline/pull/277).
 - Added new options to webinterface pipeline run creation [#277](https://github.com/askap-vast/vast-pipeline/pull/277).
 - Added `epoch_based` column run model [#277](https://github.com/askap-vast/vast-pipeline/pull/277).
+- Fills out information on all webinterface detail pages [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Adds frequency information the measurements and images webinterface tables. [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Adds celestial plot and tables to webinterface pipeline detail page [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Adds useful links to webinterface navbar [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Adds tool tips to webinterface source query [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Adds hash reading to webinterface source query to allow filling from URL hash parameters [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Add links to number cards on webinterface [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Added home icon on hover on webinterface [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Added copy-to-clipboard functionality on coordinates on webinterface [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 
 #### Changed
 - Updated the `get_src_skyregion_merged_df` logic to account for epochs [#277](https://github.com/askap-vast/vast-pipeline/pull/277).
+- Multiple changes to webinterface page layouts [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Changes source names to the format `ASKAP_hhmmss.ss(+/-)ddmmss.ss` [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Simplified webinterface navbar [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Excludes sources and pipeline runs from being listed in the source query page that are not complete on the webinterface [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Clarifies number of measurements on webinterface detail pages [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Changed `N.A.` labels to `N/A` on the webinterface [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 
 #### Fixed 
+- Fixes webinterface navbar overspill at small sizes [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Fixes webinterface favourite source table [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 
 #### Removed
+- Removed `static/css/collapse-box.css`, content moved to `pipeline.css` [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 
 #### List of PRs
 - [#277](https://github.com/askap-vast/vast-pipeline/pull/277) feat,model: Parallel and epoch based association.
+- [#345](https://github.com/askap-vast/vast-pipeline/pull/345) feat, fix: Website improvements.
 
 ## [0.1.0](https://github.com/askap-vast/vast-pipeline/releases/0.1.0) (2020/09/27)
 
