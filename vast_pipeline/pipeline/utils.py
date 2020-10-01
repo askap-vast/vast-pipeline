@@ -7,6 +7,7 @@ import pandas as pd
 import astropy.units as u
 import dask.dataframe as dd
 
+from typing import List
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
@@ -786,11 +787,30 @@ def get_src_skyregion_merged_df(
     return srcs_df
 
 
-def _get_skyregion_relations(row, coords, ids):
+def _get_skyregion_relations(
+    row: pd.Series,
+    coords: SkyCoord,
+    ids: pd.core.indexes.numeric.Int64Index
+) -> List[int]:
     '''
     For each sky region row a list is returned that
     contains the ids of other sky regions that overlap
     with the row sky region (including itself).
+
+    Parameters
+    ----------
+    row : pd.Series
+        A row from the dataframe containing all the sky regions of the run.
+        Contains the 'id', 'centre_ra', 'centre_dec' and 'xtr_radius' columns.
+    coords : SkyCoord
+        A SkyCoord holding the coordinates of all sky regions.
+    ids : The sky regions ids that match the coords.
+
+    Returns
+    -------
+    related_ids : List[int]
+        A list of other sky regions (including self) that are withing the
+        'xtr_radius' of the sky region in the row.
     '''
     target = SkyCoord(
         row['centre_ra'],
@@ -809,13 +829,38 @@ def _get_skyregion_relations(row, coords, ids):
     return related_ids
 
 
-def group_skyregions(df):
-    '''
+def group_skyregions(df: pd.DataFrame) -> pd.DataFrame:
+    """
     Logic to group sky regions into overlapping groups.
     Returns a dataframe containing the sky region id as
     the index and a column containing a list of the
     sky region group number it belongs to.
-    '''
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        A dataframe containing all the sky regions of the run. Only the
+        'id', 'centre_ra', 'centre_dec' and 'xtr_radius' columns are required.
+        +------+-------------+--------------+--------------+
+        |   id |   centre_ra |   centre_dec |   xtr_radius |
+        |------+-------------+--------------+--------------|
+        |    2 |    319.652  |    0.0030765 |      6.72488 |
+        |    3 |    319.652  |   -6.2989    |      6.7401  |
+        |    1 |     21.8361 |  -73.121     |      7.24662 |
+        +------+-------------+--------------+--------------+
+
+    Returns
+    -------
+    skyreg_group_ids : pd.DataFrame
+        The sky region group of each skyregion id.
+        +----+----------------+
+        |    |   skyreg_group |
+        |----+----------------|
+        |  2 |              1 |
+        |  3 |              1 |
+        |  1 |              2 |
+        +----+----------------+
+    """
     sr_coords = SkyCoord(
         df['centre_ra'],
         df['centre_dec'],
@@ -874,8 +919,44 @@ def group_skyregions(df):
     return skyreg_group_ids
 
 
-def get_parallel_assoc_image_df(images, skyregion_groups):
+def get_parallel_assoc_image_df(
+    images: List[Image], skyregion_groups: pd.DataFrame
+) -> pd.DataFrame:
+    """
+    Merge the sky region groups with the images and skyreg_ids.
 
+    Parameters
+    ----------
+    images : List
+        A list of the Image objects.
+    skyregion_groups: pd.DataFrame
+        The sky region group of each skyregion id.
+        +----+----------------+
+        |    |   skyreg_group |
+        |----+----------------|
+        |  2 |              1 |
+        |  3 |              1 |
+        |  1 |              2 |
+        +----+----------------+
+
+    Returns
+    -------
+    results : pd.DataFrame
+        The combined association results of the parallel association with
+        corrected source ids.
+        +----+-------------------------------+-------------+----------------+
+        |    | image                         |   skyreg_id |   skyreg_group |
+        |----+-------------------------------+-------------+----------------|
+        |  0 | VAST_2118+00A.EPOCH01.I.fits  |           2 |              1 |
+        |  1 | VAST_2118-06A.EPOCH01.I.fits  |           3 |              1 |
+        |  2 | VAST_0127-73A.EPOCH01.I.fits  |           1 |              2 |
+        |  3 | VAST_2118-06A.EPOCH03x.I.fits |           3 |              1 |
+        |  4 | VAST_2118-06A.EPOCH02.I.fits  |           3 |              1 |
+        |  5 | VAST_2118-06A.EPOCH05x.I.fits |           3 |              1 |
+        |  6 | VAST_2118-06A.EPOCH06x.I.fits |           3 |              1 |
+        |  7 | VAST_0127-73A.EPOCH08.I.fits  |           1 |              2 |
+        +----+-------------------------------+-------------+----------------+
+    """
     skyreg_ids = [i.skyreg_id for i in images]
 
     images_df = pd.DataFrame({

@@ -190,7 +190,7 @@ def optimize_floats(df: pd.DataFrame) -> pd.DataFrame:
 
     Returns
     -------
-    df: pd.DataFrame
+    df : pd.DataFrame
         the input dataframe with the `float64` type
         columns downcasted.
     """
@@ -214,7 +214,7 @@ def optimize_ints(df: pd.DataFrame) -> pd.DataFrame:
 
     Returns
     -------
-    df: pd.DataFrame
+    df : pd.DataFrame
         the input dataframe with the `int64` type
         columns downcasted.
     """
@@ -236,7 +236,7 @@ def convert_list_to_dict(l: List[Any]) -> Dict[int, Any]:
 
     Returns
     -------
-    conversion: dict
+    conversion : dict
         A dictionary containing the list values.
     """
     conversion = {i + 1: [val] for i, val in enumerate(l)}

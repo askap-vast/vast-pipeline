@@ -281,7 +281,9 @@ class Pipeline():
 
         # 2.1 Check if sky regions to be associated can be
         # split into connected point groups
-        skyregion_groups = group_skyregions(skyregs_df)
+        skyregion_groups = group_skyregions(
+            skyregs_df[['id', 'centre_ra', 'centre_dec', 'xtr_radius']]
+        )
         n_skyregion_groups = skyregion_groups[
             'skyreg_group'
         ].unique().shape[0]
