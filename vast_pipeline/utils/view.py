@@ -2,6 +2,7 @@
 
 import logging
 from vast_pipeline.models import SkyRegion
+from typing import List, Dict, Optional, Any
 
 # Defines the float format and scaling for all
 # parameters presented in DATATABLES via AJAX call
@@ -114,15 +115,57 @@ FLOAT_FIELDS = {
         'precision': 2,
         'scale': 1,
     },
+    'beam_bmaj': {
+        'precision': 2,
+        'scale': 3600.,
+    },
+    'beam_bmin': {
+        'precision': 2,
+        'scale': 3600.,
+    },
+    'beam_bpa': {
+        'precision': 2,
+        'scale': 1,
+    },
+    'frequency': {
+        'precision': 2,
+        'scale': 1,
+    }
 }
 
 
-def generate_colsfields(fields, url_prefix_dict, not_orderable_col=[]):
+def generate_colsfields(
+    fields: List[str], url_prefix_dict: Dict[str, str],
+    not_orderable_col: Optional[List[str]]=None,
+    not_searchable_col: Optional[List[str]]=None,
+) -> List[Dict[str, Any]]:
     """
-    generate data to be included in context for datatable
+    Generate data to be included in context for datatables.
+
+    Example of url_prefix_dict format:
+    api_col_dict = {
+        'source.name': reverse('vast_pipeline:source_detail', args=[1])[:-2],
+        'source.run.name': reverse('vast_pipeline:run_detail', args=[1])[:-2]
+    }
+
+    Args:
+        fields (list): List of fields to include as columns.
+        url_prefix_dict (dict): Dict containing the url prefix to form
+            href links in the datatables.
+        not_orderable_col (list): List of columns that should be set to
+            be not orderable in the final table.
+        not_searchable_col (list): List of columns that should be set to
+            be not searchable in the final table.
+
+    Returns:
+        colsfields (list): List containing JSON object.
     """
     colsfields = []
 
+    if not_orderable_col is None:
+        not_orderable_col = []
+    if not_searchable_col is None:
+        not_searchable_col = []
     for col in fields:
         field2append = {}
         if col == 'name':
@@ -174,16 +217,28 @@ def generate_colsfields(fields, url_prefix_dict, not_orderable_col=[]):
         if col in not_orderable_col:
             field2append['orderable'] = False
 
+        if col in not_searchable_col:
+            field2append['searchable'] = False
+
         colsfields.append(field2append)
 
     return colsfields
 
 
-def get_skyregions_collection():
+def get_skyregions_collection(run_id: Optional[int]=None) -> Dict[str, Any]:
     """
-    Produce Sky region geometry shapes for d3-celestial.
+    Produce Sky region geometry shapes JSON object for d3-celestial.
+
+    Args:
+        run_id (int, optional): Run ID to filter on if not None.
+
+    Returns:
+        skyregions_collection (dict): Dictionary representing a JSON obejct
+        containing the sky regions.
     """
     skyregions = SkyRegion.objects.all()
+    if run_id is not None:
+        skyregions = skyregions.filter(run=run_id)
 
     features = []
 
