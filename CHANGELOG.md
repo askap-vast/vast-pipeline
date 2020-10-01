@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), with an added `List of PRs` section and links to the relevant PRs on the individal updates. This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/0.1.0...HEAD)
 
 #### Added
 - Added the ability for the pipeline to read in groups of images which are defined as a single `epoch` [#277](https://github.com/askap-vast/vast-pipeline/pull/277).
@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Added the ability of the pipeline to separate images to associate into unique sky region groups [#277](https://github.com/askap-vast/vast-pipeline/pull/277).
 - Added option to perform assocication of separate sky region groups in parallel [#277](https://github.com/askap-vast/vast-pipeline/pull/277).
 - Added new options to webinterface pipeline run creation [#277](https://github.com/askap-vast/vast-pipeline/pull/277).
+- Added `epoch_based` column run model [#277](https://github.com/askap-vast/vast-pipeline/pull/277).
 
 #### Changed
 - Updated the `get_src_skyregion_merged_df` logic to account for epochs [#277](https://github.com/askap-vast/vast-pipeline/pull/277).
@@ -21,9 +22,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### Removed
 
 #### List of PRs
-- [#277](https://github.com/askap-vast/vast-pipeline/pull/277) feat: Parallel and epoch based association.
+- [#277](https://github.com/askap-vast/vast-pipeline/pull/277) feat,model: Parallel and epoch based association.
 
-## [0.1.0] (2020/09/27)
+## [0.1.0](https://github.com/askap-vast/vast-pipeline/releases/0.1.0) (2020/09/27)
 
 First release of the Vast Pipeline. This was able to process 707 images (EPOCH01 to EPOCH11x) on a machine with 64 GB of RAM.
 
@@ -62,6 +63,3 @@ First release of the Vast Pipeline. This was able to process 707 images (EPOCH01
 - [#287](https://github.com/askap-vast/vast-pipeline/pull/287) fix: Fix forced measurement parquet files write
 - [#286](https://github.com/askap-vast/vast-pipeline/pull/286) fix: compile JS9 without helper option
 - [#285](https://github.com/askap-vast/vast-pipeline/pull/285) fix: Fix removing forced parquet and clear images from piperun
-
-[unreleased]: https://github.com/askap-vast/vast-pipeline/compare/0.1.0...HEAD
-[0.1.0]: https://github.com/askap-vast/vast-pipeline/releases/0.1.0
