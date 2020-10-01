@@ -160,8 +160,7 @@ def one_to_many_basic(sources_df, skyc2_srcs):
 
     duplicated_skyc2 = original.append(not_original)
 
-    del original
-    del not_original
+    del original, not_original
 
     # Apply the updates to the actual temp_srcs.
     skyc2_srcs.loc[idx_to_change, 'source'] = new_source_ids
@@ -263,7 +262,9 @@ def one_to_many_advanced(temp_srcs, sources_df, method):
     # multi_srcs = duplicated_skyc1['source_skyc1'].unique()
 
     # Get the duplicated, sort by the distance column
-    duplicated_skyc1 = duplicated_skyc1.sort_values(by=['source_skyc1', dist_col])
+    duplicated_skyc1 = duplicated_skyc1.sort_values(
+        by=['source_skyc1', dist_col]
+    )
 
     # Get those that need to be given a new ID number (i.e. not the min dist_col)
     idx_to_change = duplicated_skyc1.index.values[
@@ -876,8 +877,7 @@ def association(images_df, limit, dr_limit, bw_limit,
         .rename(columns={'ra_source':'ra', 'dec_source':'dec'})
     )
 
-    del skyc1_srcs
-    del skyc2_srcs
+    del skyc1_srcs, skyc2_srcs
 
     logger.info(
         'Total association time: %.2f seconds%s.',

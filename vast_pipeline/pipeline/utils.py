@@ -798,14 +798,14 @@ def get_src_skyregion_merged_df(
 
     # create dataframe with all skyregions and sources combinations
     src_skyrg_df = cross_join(
-        srcs_df.reset_index().drop(['epoch_list', 'img_list'], axis=1),
+        srcs_df.drop(['epoch_list', 'img_list'], axis=1).reset_index(),
         skyreg_df.drop('skyreg_img_epoch_list', axis=1)
     )
 
-    skyreg_df = skyreg_df.set_index('id').drop(
+    skyreg_df = skyreg_df.drop(
         ['centre_ra', 'centre_dec', 'xtr_radius'],
         axis=1
-    )
+    ).set_index('id')
 
     src_skyrg_df['sep'] = np.rad2deg(
         on_sky_sep(
