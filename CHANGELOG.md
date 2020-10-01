@@ -3,23 +3,42 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), with an added `List of PRs` section and links to the relevant PRs on the individal updates. This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/0.1.0...HEAD)
 
 #### Added
+- Fills out information on all webinterface detail pages [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Adds frequency information the measurements and images webinterface tables. [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Adds celestial plot and tables to webinterface pipeline detail page [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Adds useful links to webinterface navbar [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Adds tool tips to webinterface source query [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Adds hash reading to webinterface source query to allow filling from URL hash parameters [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Add links to number cards on webinterface [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Added home icon on hover on webinterface [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Added copy-to-clipboard functionality on coordinates on webinterface [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 - Adds `n_selavy_measurements` and `n_forced_measurements` to run model [#362](https://github.com/askap-vast/vast-pipeline/pull/362).
 - Adds steps to populate new measurement count fields in pipeline run [#362](https://github.com/askap-vast/vast-pipeline/pull/362).
 
 #### Changed
+- Multiple changes to webinterface page layouts [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Changes source names to the format `ASKAP_hhmmss.ss(+/-)ddmmss.ss` [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Simplified webinterface navbar [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Excludes sources and pipeline runs from being listed in the source query page that are not complete on the webinterface [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Clarifies number of measurements on webinterface detail pages [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Changed `N.A.` labels to `N/A` on the webinterface [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 - Changes measurement counts view on website to use new model parameters [#362](https://github.com/askap-vast/vast-pipeline/pull/362).
 
 #### Fixed 
+- Fixes webinterface navbar overspill at small sizes [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Fixes webinterface favourite source table [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 
 #### Removed
+- Removed `static/css/collapse-box.css`, content moved to `pipeline.css` [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 
 #### List of PRs
+- [#345](https://github.com/askap-vast/vast-pipeline/pull/345) feat, fix: Website improvements.
 - [#362](https://github.com/askap-vast/vast-pipeline/pull/362) feat, model: Added number of measurements to Run DB model.
 
-## [0.1.0] (2020/09/27)
+## [0.1.0](https://github.com/askap-vast/vast-pipeline/releases/0.1.0) (2020/09/27)
 
 First release of the Vast Pipeline. This was able to process 707 images (EPOCH01 to EPOCH11x) on a machine with 64 GB of RAM.
 
@@ -58,6 +77,3 @@ First release of the Vast Pipeline. This was able to process 707 images (EPOCH01
 - [#287](https://github.com/askap-vast/vast-pipeline/pull/287) fix: Fix forced measurement parquet files write
 - [#286](https://github.com/askap-vast/vast-pipeline/pull/286) fix: compile JS9 without helper option
 - [#285](https://github.com/askap-vast/vast-pipeline/pull/285) fix: Fix removing forced parquet and clear images from piperun
-
-[unreleased]: https://github.com/askap-vast/vast-pipeline/compare/0.1.0...HEAD
-[0.1.0]: https://github.com/askap-vast/vast-pipeline/releases/0.1.0

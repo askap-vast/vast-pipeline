@@ -6,8 +6,9 @@
 
 {% block head %}
 
-<link rel='stylesheet' href='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css' />
 <link rel="stylesheet" href="{% static 'vendor/js9/js9-allinone.css' %}" />
+<link rel='stylesheet' href='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css' />
+<link rel="stylesheet" href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" />
 
 {% endblock head %}
 
@@ -29,164 +30,314 @@
 
   <!-- Page Heading -->
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
-	  <h1 class="h3 mb-2 text-gray-800">Measurement: {{ measurement.name }}</h1>
+    <h1 class="h3 mb-2 text-gray-800">Measurement: {{ measurement.name }}</h1>
     <div class="">
-        <a href="http://simbad.u-strasbg.fr/simbad/sim-coo?CooEpoch=2000&Coord={{ measurement.aladin_ra }}d{{ measurement.aladin_dec }}d&Radius.unit=arcmin&CooEqui=2000&CooFrame=FK5&Radius=10'" class="d-none d-sm-inline-block btn btn-sm btn-info btn-icon-split shadow-sm" target="_blank">
-          <span class="icon text-white-600">
-            <i class="fas fa-info-circle fa-sm"></i>
-          </span>
-          <span class="text">SIMBAD</span>
-        </a>
-        <a href="https://ned.ipac.caltech.edu/conesearch?search_type=Near%20Position%20Search&coordinates={{ measurement.aladin_ra }}d%20{{ measurement.aladin_dec }}d&radius=2.0&in_csys=Equatorial&in_equinox=J2000.0&out_csys=Equatorial&out_equinox=J2000.0&hconst=67.8&omegam=0.308&omegav=0.692&wmap=4&corr_z=1" class="d-none d-sm-inline-block btn btn-sm btn-info btn-icon-split shadow-sm" target="_blank">
-          <span class="icon text-white-600">
-            <i class="fas fa-info-circle fa-sm"></i>
-          </span>
-          <span class="text">NED</span>
-        </a>
-      <a href="{% url 'vast_pipeline:measurement_detail' measurement.id %}prev" class="d-none d-sm-inline-block btn btn-sm btn-light btn-icon-split shadow-sm">
+      <a href="http://simbad.u-strasbg.fr/simbad/sim-coo?CooEpoch=2000&Coord={{ measurement.aladin_ra }}d{{ measurement.aladin_dec }}d&Radius.unit=arcmin&CooEqui=2000&CooFrame=FK5&Radius=10'"
+        class="d-none d-sm-inline-block btn btn-sm btn-info btn-icon-split shadow-sm" target="_blank">
+        <span class="icon text-white-600">
+          <i class="fas fa-info-circle fa-sm"></i>
+        </span>
+        <span class="text">SIMBAD</span>
+      </a>
+      <a href="https://ned.ipac.caltech.edu/conesearch?search_type=Near%20Position%20Search&coordinates={{ measurement.aladin_ra }}d%20{{ measurement.aladin_dec }}d&radius=2.0&in_csys=Equatorial&in_equinox=J2000.0&out_csys=Equatorial&out_equinox=J2000.0&hconst=67.8&omegam=0.308&omegav=0.692&wmap=4&corr_z=1"
+        class="d-none d-sm-inline-block btn btn-sm btn-info btn-icon-split shadow-sm" target="_blank">
+        <span class="icon text-white-600">
+          <i class="fas fa-info-circle fa-sm"></i>
+        </span>
+        <span class="text">NED</span>
+      </a>
+      <a href="{% url 'vast_pipeline:measurement_detail' measurement.id %}prev"
+        class="d-none d-sm-inline-block btn btn-sm btn-light btn-icon-split shadow-sm">
         <span class="icon text-gray-600">
           <i class="fas fa-arrow-left fa-sm"></i>
         </span>
         <span class="text">Previous</span>
       </a>
-      <a href="{% url 'vast_pipeline:measurement_detail' measurement.id %}next" class="d-none d-sm-inline-block btn btn-sm btn-light btn-icon-split shadow-sm">
+      <a href="{% url 'vast_pipeline:measurement_detail' measurement.id %}next"
+        class="d-none d-sm-inline-block btn btn-sm btn-light btn-icon-split shadow-sm">
         <span class="text">Next</span>
         <span class="icon text-gray-600">
           <i class="fas fa-arrow-right fa-sm"></i>
         </span>
       </a>
     </div>
-	</div>
+  </div>
 
   <div class="row">
-    <div class="col-lg-6 d-flex align-items-stretch">
+    <div class="col-xl-4 d-flex">
       <!-- Basic Card Example -->
-      <div class="card shadow mb-4 w-100">
+      <div class="card shadow mb-4 w-100 flex-fill">
         <div class="card-header py-3">
           <h6 class="m-0 font-weight-bold text-primary">Details</h6>
         </div>
         <div class="card-body">
-          <p><strong>Image: </strong> <a href="/images/{{ measurement.image_id }}" target="_blank">{{ measurement.image_name }}</a></p>
-          <p><strong>Forced Extraction: </strong> {{ measurement.forced }}</p>
-          <p><strong>Sources:</strong>
-          {% if measurement.sources_info %}
-            {% for a,b in measurement.sources_info %}
-              <!-- if the comma is only in the if statement then there is an ugly space -->
-              {% if not forloop.last %}
-                <a href="{% url 'vast_pipeline:source_detail' a %}" target="_blank">{{ b }}</a>,
-              {% else %}
-                <a href="{% url 'vast_pipeline:source_detail' a %}" target="_blank">{{ b }}</a>
-              {% endif %}
-            {% endfor %}
-          {% else %}
-            None.
-          {% endif %}</p>
-          <p><strong>RA: </strong> {{ measurement.ra }}</p>
-          <p><strong>DEC: </strong> {{ measurement.dec }}</p>
-          <p><strong>Uncertainty EW: </strong> {{ measurement.uncertainty_ew|deg_to_arcsec|floatformat:3 }}''</p>
-          <p><strong>Uncertainty NS: </strong> {{ measurement.uncertainty_ns|deg_to_arcsec|floatformat:3 }}''</p>
-          <p><strong>BMAJ: </strong> {{ measurement.bmaj }}''</p>
-          <p><strong>BMIN: </strong> {{ measurement.bmin }}''</p>
-          <p><strong>BPA: </strong> {{ measurement.pa }}&deg;</p>
-          <p><strong>Has siblings: </strong> {{ measurement.has_siblings }}</p>
-          <p><strong>Island ID: </strong> {{ measurement.island_id }}</p>
-          <p><strong>flag_c4: </strong> {{ measurement.flag_c4 }}</p>
-          <p><strong>Comment: </strong> {{ measurement.comment }}</p>
+          <p>
+            <strong>Name: </strong>{{ measurement.name }}<br>
+            <strong>Island ID: </strong>{{ measurement.island_id }}<br>
+            <strong>Image: </strong><a href="/images/{{ measurement.image_id }}"
+              target="_blank">{{ measurement.image_name }}</a>
+          </p>
+          <p>
+            <strong>Number of sources: </strong>{{ measurement.nr_sources }} (<a href="#sourcesHeader">Source
+              Table</a>)
+          </p>
+          <p>
+            <strong>Position: </strong><span class="clipboard-copy">{{ measurement.ra_hms }}
+              {{ measurement.dec_dms }}</span><br>
+            <strong>Position (Decimal): </strong><span class="clipboard-copy">{{ measurement.ra }}
+              {{ measurement.dec }}</span><br>
+            <strong>Position (Galactic): </strong><span class="clipboard-copy">{{ measurement.l|floatformat:6 }}
+              {{ measurement.b|floatformat:6 }}</span>
+          </p>
+          <div class="row">
+            <div class="col-md">
+              <p>
+                <strong>Uncertainty RA: </strong>
+                {{ measurement.uncertainty_ew|deg_to_arcsec|floatformat:3 }}&Prime;<br>
+                <strong>Uncertainty Dec: </strong>{{ measurement.uncertainty_ns|deg_to_arcsec|floatformat:3 }}&Prime;
+              </p>
+              <p>
+                <strong>Major Axis: </strong>{{ measurement.bmaj|floatformat:2 }}&Prime;<br>
+                <strong>Minor Axis: </strong>{{ measurement.bmin|floatformat:2 }}&Prime;<br>
+                <strong>Position Angle: </strong>{{ measurement.pa|floatformat:2 }}&deg;<br>
+                <strong>Chi squared fit: </strong>{{ measurement.chi_squared_fit|floatformat:2 }}<br>
+                <strong>Frequency: </strong>{{ measurement.frequency|floatformat:2 }} MHz
+              </p>
+              <p>
+                <strong>Forced Extraction: </strong>{{ measurement.forced }}<br>
+                <strong>Has siblings: </strong>{{ measurement.has_siblings }}
+                {% if measurement.has_siblings %}
+                (<a href="#siblingHeader">Table</a>)
+                {% endif %}
+              </p>
+            </div>
+            <div class="col-md">
+              <p>
+                <strong>Peak Flux: </strong>{{ measurement.flux_peak|floatformat:3 }} &plusmn;
+                {{ measurement.flux_peak_err|floatformat:3 }} mJy/beam<br>
+                <strong>Int. Flux: </strong>{{ measurement.flux_int|floatformat:3 }} &plusmn;
+                {{ measurement.flux_int_err|floatformat:3 }} mJy
+              </p>
+              <p>
+                <strong>SNR: </strong>{{ measurement.snr|floatformat:2 }}<br>
+                <strong>Local RMS: </strong>{{ measurement.local_rms|floatformat:3 }} mJy<br>
+                <strong>Spectral Index:
+                </strong>{% if measurement.forced %}N/A{% else %}{{ measurement.spectral_index|floatformat:2 }}{% endif %}<br>
+                <strong>Spectral Index from TT:
+                </strong>{% if measurement.forced %}N/A{% else %}{{ measurement.spectral_index_from_TT }}{% endif %}
+              </p>
+              <p>
+                <strong>flag_c4: </strong>{{ measurement.flag_c4 }}<br>
+                <strong>Compactness: </strong>{{ measurement.compactness|floatformat:2 }}
+              </p>
+            </div>
+          </div>
+          <p>
+            <strong>Comment: </strong>{{ measurement.comment }}
+          </p>
         </div>
       </div>
     </div>
+
     <!-- Aladin viz tile -->
-    <div class="col-lg-6">
-      <div class="card shadow mb-4">
+    <div class="col-xl-4 d-flex">
+      <div class="card shadow mb-4 flex-fill" style="min-height: 33vh;">
+        <div id="aladinViz"></div>
+      </div>
+    </div>
+
+    <div class="col-xl-4 d-flex">
+      <div class="card shadow mb-4 flex-fill">
         <div class="card-header py-3">
           <h6 class="m-0 font-weight-bold text-primary">Postage Stamp</h6>
         </div>
         <div class="card-body">
-          <div class="JS9Menubar" data-width="500px"></div>
-          <div class="JS9" data-width="500px" data-height="400px"></div>
-        </div>
-      </div>
-
-      <div class="card shadow mb-4">
-        <div class="card-header py-3">
-          <h6 class="m-0 font-weight-bold text-primary">Aladin</h6>
-        </div>
-        <div class="card-body">
-          <div id="aladinViz" style="height:23.3rem;"></div>
+          <div class="JS9Menubar" data-width="450px"></div>
+          <div class="JS9" data-width="450px" data-height="450px"></div>
         </div>
       </div>
     </div>
   </div>
 
-</div>
-<!-- /.container-fluid -->
+  <div class="row">
+    <div class="col">
+      <!-- source table -->
+      <div class="card shadow mb-4">
+        <h6 class="card-header m-0 font-weight-bold text-primary" id="sourceTable">
+          <a data-toggle="collapse" href="#collapseTableSources" aria-expanded="true"
+            aria-controls="collapseTableSources" id="sourcesHeader" class="d-block">
+            <i class="fa fa-chevron-down pull-right"></i>
+            Sources
+          </a>
+        </h6>
+        <!-- Card Content - Collapse -->
+        <div class="collapse show" id="collapseTableSources">
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped table-hover" id="{{ datatables.0.table_id }}"
+                width="100%" cellspacing="0">
+                <thead>
+                  <tr>
+                    {% for name in datatables.0.colsNames %}
+                    <th>{{ name }}</th>
+                    {% endfor %}
+                  </tr>
+                </thead>
+                <tfoot>
+                  <tr>
+                    {% for name in datatables.0.colsNames %}
+                    <th>{{ name }}</th>
+                    {% endfor %}
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-{% endblock content %}
+  <!-- sibling table -->
+  <div class="row">
+    <div class="col">
+      <div class="card shadow mb-4">
+        <h6 class="card-header m-0 font-weight-bold text-primary">
+          <a data-toggle="collapse" href="#collapseSiblings" aria-expanded="true" aria-controls="collapseSiblings"
+            id="siblingHeader" class="d-block">
+            <i class="fa fa-chevron-down pull-right"></i>
+            Siblings
+          </a>
+        </h6>
+        <!-- Card Content - Collapse -->
+        <div class="collapse show" id="collapseSiblings">
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped table-hover" id="{{ datatables.1.table_id }}"
+                width="100%" cellspacing="0">
+                <thead>
+                  <tr>
+                    {% for name in datatables.1.colsNames %}
+                    <th>{{ name }}</th>
+                    {% endfor %}
+                  </tr>
+                </thead>
+                <tfoot>
+                  <tr>
+                    {% for name in datatables.1.colsNames %}
+                    <th>{{ name }}</th>
+                    {% endfor %}
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="position: fixed; top: 0; right: 0; z-index: 99">
+      <div id="alert_placeholder"></div>
+    </div>
+
+  </div>
+
+  {% endblock content %}
+
+  {% block scripts %}
+  <script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>
+
+  <!-- JS9 FITS viewer. Loads a bundled version of jQuery UI which conflicts with Bootstrap's
+  tooltips. Must be loaded before Bootstrap so that Bootstrap tooltips take precendence. -->
+  <script type="text/javascript" src="{% static 'vendor/js9/js9prefs.js' %}"></script>
+  <script type="text/javascript" src="{% static 'vendor/js9/js9support.min.js' %}"></script>
+  <script type="text/javascript" src="{% static 'vendor/js9/js9.min.js' %}"></script>
+  <script type="text/javascript" src="{% static 'vendor/js9/js9plugins.js' %}"></script>
+
+  <!-- Bootstrap core JavaScript-->
+  <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
+  <!-- Core plugin JavaScript-->
+  <script src="{% static 'vendor/jquery-easing/jquery.easing.min.js' %}"></script>
+
+  <!-- Custom scripts for all pages-->
+  <script src="{% static 'js/sb-admin-2.min.js' %}"></script>
+
+  <!-- Alerts script for all pages-->
+  <script src="{% static 'js/alerts.min.js' %}"></script>
+  {% endblock scripts %}
 
 
-{% block custom_page_scripts %}
-<!-- JS9 FITS viewer - must appear before DataTables -->
-<script type="text/javascript" src="{% static 'vendor/js9/js9prefs.js' %}"></script>
-<script type="text/javascript" src="{% static 'vendor/js9/js9support.min.js' %}"></script>
-<script type="text/javascript" src="{% static 'vendor/js9/js9.min.js' %}"></script>
-<script type="text/javascript" src="{% static 'vendor/js9/js9plugins.js' %}"></script>
+  {% block custom_page_scripts %}
+  <!-- Page level plugins -->
+  <script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
+  <script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
 
-<!-- Page level plugins -->
-<script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
-<script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+  <!-- Datatable scripts -->
+  {{ datatables|json_script:"datatable-conf" }}
+  <script src="{% static 'js/datatables-pipeline.min.js' %}"></script>
 
-<!-- Aladin -->
-{{ measurement|json_script:"data-aladin" }}
-<script type='text/javascript' src='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js' charset='utf-8'></script>
-<script src="{% static 'js/aladin-script.min.js' %}"></script>
-<script type="text/javascript">
-  let aladin = A.aladin('#aladinViz', {fov: 1});
-  let aladinConf = JSON.parse(document.getElementById('data-aladin').textContent);
-  configureAladin(aladin, aladinConf);
-</script>
-
-{{ measurement|json_script:"data-js9" }}
-<script type="text/javascript">
-  function resizeJS9() {
-    let js9Container = $(".JS9").parent();
-    let js9Menu = $(".JS9Menubar");
-    let width = js9Container.width();
-    let height = js9Container.height();
-    let resizeFudge = 0;
-    if (JS9.bugs.webkit_resize) {
-      resizeFudge = JS9.RESIZEFUDGE;
-    }
-    JS9.ResizeDisplay(width, height - js9Menu.height() - resizeFudge);
-  }
-  $(document).on("JS9:ready", function() {
-    let baseUrl = '{{ base_url }}' || null;
-    // function to add base url to an existing url if valid
-    addBaseUrl = (url) => baseUrl == null ? url : '/' + baseUrl + url;
-    var measurement = JSON.parse(document.getElementById("data-js9").textContent);
-    JS9.Load(
-      addBaseUrl('/cutout/' + measurement.name + '/large'),
-      {
-        scalemin: -0.001,
-        scalemax: 0.004,
-        color:'gray',
-        invert: true,
-        onload: image => {
-          JS9.SetZoom(4);
-          var region_url = addBaseUrl('/measurements/' + measurement.image_id + '/' + measurement.aladin_ra + ',' + measurement.aladin_dec + ',20arcmin/region?selection_model=measurement&selection_id={{ measurement.id }}&no_forced=True');
-          var opts = Object.assign({}, JS9.Regions.opts);
-          opts.tooltip = "$xreg.data.text"
-          JS9.NewShapeLayer("components", opts);
-          $.get(region_url, regions => {
-            JS9.AddShapes("components", regions, {changeable: false, strokeWidth: 1});
-          })
-        }
-      }
-    );
-    resizeJS9();
-    $(window).resize(function() {
-      resizeJS9();
+  <!-- Aladin -->
+  {{ measurement|json_script:"data-aladin" }}
+  <script type='text/javascript' src='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js'
+    charset='utf-8'></script>
+  <script src="{% static 'js/aladin-script.min.js' %}"></script>
+  <script type="text/javascript">
+    let aladin = A.aladin('#aladinViz', {
+      fov: 1
     });
-  });
-</script>
+    let aladinConf = JSON.parse(document.getElementById('data-aladin').textContent);
+    configureAladin(aladin, aladinConf);
+  </script>
 
-{% endblock custom_page_scripts %}
+  <script src="{% static 'js/clipboard-copy.min.js' %}"></script>
+
+  {{ measurement|json_script:"data-js9" }}
+  <script type="text/javascript">
+    function resizeJS9() {
+      let js9Container = $(".JS9").parent();
+      let js9Menu = $(".JS9Menubar");
+      let width = js9Container.width();
+      let height = js9Container.height();
+      let resizeFudge = 0;
+      if (JS9.bugs.webkit_resize) {
+        resizeFudge = JS9.RESIZEFUDGE;
+      }
+      JS9.ResizeDisplay(width, height - js9Menu.height() - resizeFudge);
+    }
+    $(document).on("JS9:ready", function () {
+      let baseUrl = '{{ base_url }}' || null;
+      // function to add base url to an existing url if valid
+      addBaseUrl = (url) => baseUrl == null ? url : '/' + baseUrl + url;
+      var measurement = JSON.parse(document.getElementById("data-js9").textContent);
+      JS9.Load(
+        addBaseUrl('/cutout/' + measurement.name + '/large'), {
+          scalemin: -0.001,
+          scalemax: 0.004,
+          color: 'gray',
+          invert: true,
+          onload: image => {
+            JS9.SetZoom(4);
+            var region_url = addBaseUrl('/measurements/' + measurement.image_id + '/' + measurement.aladin_ra +
+              ',' + measurement.aladin_dec +
+              ',20arcmin/region?selection_model=measurement&selection_id={{ measurement.id }}&no_forced=True');
+            var opts = Object.assign({}, JS9.Regions.opts);
+            opts.tooltip = "$xreg.data.text"
+            JS9.NewShapeLayer("components", opts);
+            $.get(region_url, regions => {
+              JS9.AddShapes("components", regions, {
+                changeable: false,
+                strokeWidth: 1
+              });
+            })
+          }
+        }
+      );
+      resizeJS9();
+      $(window).resize(function () {
+        resizeJS9();
+      });
+    });
+  </script>
+
+  {% endblock custom_page_scripts %}
