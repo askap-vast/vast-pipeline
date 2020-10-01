@@ -29,6 +29,7 @@ follow https://github.com/apache/incubator-superset/blob/master/CHANGELOG.md
 - Fixes webinterface favourite source table [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 
 ### Removed
+- Removed `static/css/collapse-box.css`, content moved to `pipeline.css` [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 
 ### List of PRs
 - [#345](https://github.com/askap-vast/vast-pipeline/pull/345) feat, fix: Website improvements.
