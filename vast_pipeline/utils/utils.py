@@ -10,6 +10,7 @@ from astroquery.simbad import Simbad
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from datetime import datetime
+from typing import Tuple, Optional
 
 
 logger = logging.getLogger(__name__)
@@ -130,14 +131,38 @@ def eq_to_cart(ra, dec):
     )
 
 
-def gal2equ(l,b):
+def equ2gal(ra: float, dec: float) -> Tuple[float, float]:
+    """
+    Convert equatorial coordinates to galactic
+
+    Args:
+        ra (float): Right ascension in units of degrees.
+        dec (float): Declination in units of degrees.
+
+    Returns:
+        Tuple (float, float): Galactic longitude and latitude in degrees.
+    """
+    c = SkyCoord(np.float(ra), np.float(dec), unit=(u.deg, u.deg), frame='icrs')
+    l = c.galactic.l.deg
+    b = c.galactic.b.deg
+
+    return l, b
+
+
+def gal2equ(l: float, b: float) -> Tuple[float, float]:
     """
     Convert galactic coordinates to equatorial.
+
+    Args:
+        l (float): Galactic longitude in degrees.
+        b (float): Galactic latitude in degrees.
+
+    Returns:
+        Tuple (float, float): Right ascension and declination in units of degrees.
     """
     c = SkyCoord(l=np.float(l) * u.deg, b=np.float(b) * u.deg, frame='galactic')
-    icrs = c.icrs
-    ra = icrs.ra.deg
-    dec = icrs.dec.deg
+    ra = c.icrs.ra.deg
+    dec = c.icrs.dec.deg
 
     return ra, dec
 

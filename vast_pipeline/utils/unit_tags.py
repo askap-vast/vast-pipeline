@@ -3,9 +3,30 @@ from django import template
 
 register = template.Library()
 
+
 @register.filter
-def deg_to_arcsec(angle):
+def deg_to_arcsec(angle: float) -> float:
     """
-    convert jansky to millijansky
+    Convert degrees to arcseconds.
+
+    Args:
+        angle (float): Angle in units of degrees.
+
+    Returns:
+        angle (float): Angle in units of arcseconds.
     """
     return float(angle) * 3600.
+
+
+@register.filter
+def deg_to_arcmin(angle: float) -> float:
+    """
+    Convert degrees to arcminutes.
+
+    Args:
+        angle (float): Angle in units of degrees.
+
+    Returns:
+        angle (float): Angle in units of arcminutes.
+    """
+    return float(angle) * 60.
