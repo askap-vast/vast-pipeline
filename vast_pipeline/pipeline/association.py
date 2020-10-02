@@ -560,9 +560,7 @@ def association(images_df, limit, dr_limit, bw_limit,
     for it, epoch in enumerate(unique_epochs[1:]):
         logger.info('Association iteration: #%i%s', it + 1, skyreg_tag)
         # load skyc2 source measurements and create SkyCoord
-        images = images_df.loc[
-            images_df['epoch'] == epoch
-        ]['image'].to_list()
+        images = images_df.loc[images_df['epoch'] == epoch, 'image'].to_list()
         max_beam_maj = (
             images_df.loc[images_df['epoch'] == epoch, 'image']
             .apply(lambda x: x.beam_bmaj)
