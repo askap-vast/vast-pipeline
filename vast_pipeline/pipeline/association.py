@@ -563,11 +563,11 @@ def association(images_df, limit, dr_limit, bw_limit,
         images = images_df.loc[
             images_df['epoch'] == epoch
         ]['image'].to_list()
-        max_beam_maj = images_df.loc[
-            images_df['epoch'] == epoch
-        ]['image'].apply(
-            lambda x: x.beam_bmaj
-        ).max()
+        max_beam_maj = (
+            images_df.loc[images_df['epoch'] == epoch, 'image']
+            .apply(lambda x: x.beam_bmaj)
+            .max()
+        )
         skyc2_srcs = prep_skysrc_df(
             images,
             config.FLUX_PERC_ERROR,
