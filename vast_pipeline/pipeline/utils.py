@@ -414,22 +414,56 @@ def prep_skysrc_df(
 
 
 def add_new_one_to_many_relations(
-    row, advanced=False, source_ids=pd.DataFrame()
-):
+    row: pd.Series, advanced: bool = False,
+    source_ids: Optional[pd.DataFrame] = None
+) -> List[int]:
     """
     This handles the relation information being created from the
     one_to_many functions in association.
+
+    Parameters
+    ----------
+    row : pd.Series
+        The relation information Series from the assoication dataframe. Only
+        the columns ['related_skyc1', 'source_skyc1'] are required for advanced
+        , these are instead called ['related', 'source'] for basic.
+    advanced : bool, optional
+        Whether advanced association is being used which changes the names
+        of the columns involved.
+    source_ids : int, optional
+        A dataframe that contains the other ids to append to related for each
+        original source.
+        +----------------+--------+
+        |   source_skyc1 | 0      |
+        |----------------+--------|
+        |            122 | [5542] |
+        |            254 | [5543] |
+        |            262 | [5544] |
+        |            405 | [5545] |
+        |            656 | [5546] |
+        +----------------+--------+
+
+
+    Returns
+    -------
+    out : List[int]
+        The new related field for the source in question, containing the
+        appended ids.
     """
+    if source_ids is None:
+        source_ids = pd.DataFrame()
+
     related_col = 'related_skyc1' if advanced else 'related'
     source_col = 'source_skyc1' if advanced else 'source'
 
+    # this is the not_original case where the original source id is appended.
     if source_ids.empty:
         if isinstance(row[related_col], list):
             out = row[related_col].append(row[source_col])
         else:
             out = [row[source_col],]
 
-    else:
+    else:  # the original case to append all the new ids.
         source_ids = source_ids.loc[row[source_col]].iloc[0]
         if isinstance(row[related_col], list):
             out = row[related_col] + source_ids

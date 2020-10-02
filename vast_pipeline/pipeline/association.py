@@ -122,19 +122,14 @@ def one_to_many_basic(sources_df, skyc2_srcs):
     # The original source need all the assoicated new ids appended to the
     # related column.
     # The not_original ones need just the original ID appended.
+    # copy() is used here to avoid chained indexing (set with copy warnings)
     not_original = duplicated_skyc2.loc[
-        duplicated_skyc2.duplicated('source')
-    ]
+        idx_to_change
+    ].copy()
 
     original = duplicated_skyc2.drop_duplicates(
         'source'
-    )
-
-    # If I don't do this I get SetWithCopy warnings
-    # and I have no idea why. I think drop_duplicates
-    # may return a frame with the copy parameter being true?
-    original = original.copy()
-    not_original = not_original.copy()
+    ).copy()
 
     new_original_related = pd.DataFrame(
         not_original[
@@ -144,6 +139,9 @@ def one_to_many_basic(sources_df, skyc2_srcs):
         )
     )
 
+    # Append the relations in each case, using the above 'new_original_related'
+    # for the original ones.
+    # The not original only require the appending of the original index.
     original['related'] = original[
         ['related', 'source']
     ].apply(
@@ -224,9 +222,12 @@ def one_to_many_basic(sources_df, skyc2_srcs):
 
 def one_to_many_advanced(temp_srcs, sources_df, method):
     '''
-    Finds and processes the one-to-many associations in the basic
-    association. The same logic is applied as in
-    'one_to_many_basic.
+    Finds and processes the one-to-many associations in the advanced
+    association. For each one-to-many association, the nearest
+    associated source is assigned the original source id, where as
+    the others are given new ids. The original source in skyc1 then
+    is copied to the sources_df to provide the extra association for
+    that source, i.e. it is forked.
 
     This is needed to be separate from the basic version
     as the data products between the two are different.
@@ -292,19 +293,15 @@ def one_to_many_advanced(temp_srcs, sources_df, method):
     # related column.
     # The not_original ones need just the original ID appended.
     not_original = duplicated_skyc1.loc[
-        duplicated_skyc1.duplicated('source_skyc1')
-    ]
+        idx_to_change
+    ].copy()
 
     original = duplicated_skyc1.drop_duplicates(
         'source_skyc1'
-    )
+    ).copy()
 
-    # If I don't do this I get SetWithCopy warnings
-    # and I have no idea why. I think drop_duplicates
-    # may return a frame with the copy parameter being true?
-    original = original.copy()
-    not_original = not_original.copy()
-
+    # This gathers all the new ids that need to be appended
+    # to the original related column.
     new_original_related = pd.DataFrame(
         not_original[
             ['source_skyc1', 'new_source_id']
@@ -313,6 +310,9 @@ def one_to_many_advanced(temp_srcs, sources_df, method):
         )
     )
 
+    # Append the relations in each case, using the above 'new_original_related'
+    # for the original ones.
+    # The not original only require the appending of the original index.
     original.loc[:, 'related_skyc1'] = original.loc[
         :, ['related_skyc1', 'source_skyc1']
     ].apply(
@@ -327,10 +327,10 @@ def one_to_many_advanced(temp_srcs, sources_df, method):
         axis=1
     )
 
+    # Merge them back together
     duplicated_skyc1 = original.append(not_original)
 
-    del original
-    del not_original
+    del original, not_original
 
     # Apply the updates to the actual temp_srcs.
     temp_srcs.loc[idx_to_change, 'source_skyc1'] = new_source_ids
@@ -441,7 +441,8 @@ def many_to_many_advanced(temp_srcs, method):
 def many_to_one_advanced(temp_srcs):
     '''
     Finds and processes the many-to-one associations in the advanced
-    association.
+    association. In this case in the related column we need to append
+    the ids of all the 'many' to each other (expect for itself).
     '''
     # use only these columns for easy debugging of the dataframe
     cols = [
@@ -451,8 +452,8 @@ def many_to_one_advanced(temp_srcs):
     ]
 
     duplicated_skyc2 = temp_srcs.loc[
-            temp_srcs['index_old_skyc2'].duplicated(keep=False),
-            cols
+        temp_srcs['index_old_skyc2'].duplicated(keep=False),
+        cols
     ]
     if duplicated_skyc2.empty:
         logger.debug('No many-to-one associations.')
@@ -844,8 +845,7 @@ def association(images_df, limit, dr_limit, bw_limit,
             how='left',
             suffixes=('', '_skyc2')
         )
-        del tmp_srcs_df
-        del weighted_df
+        del tmp_srcs_df, weighted_df
         skyc1_srcs['ra'] = skyc1_srcs['ra_skyc2']
         skyc1_srcs['dec'] = skyc1_srcs['dec_skyc2']
         skyc1_srcs['uncertainty_ew'] = skyc1_srcs['uncertainty_ew_skyc2']
