@@ -473,7 +473,26 @@ def add_new_one_to_many_relations(
     return out
 
 
-def add_new_many_to_one_relations(row):
+def add_new_many_to_one_relations(row: pd.Series) -> List[int]:
+    """
+    This handles the relation information being created from the
+    many_to_one function in advanced association.
+    It is a lot simpler than the one_to_many case as it purely just adds
+    the new relations to the relation column, taking into account if it is
+    already a list of relations or not (i.e. no previous relations).
+
+    Parameters
+    ----------
+    row : pd.Series
+        The relation information Series from the assoication dataframe. Only
+        the columns ['related_skyc1', 'new_relations'] are required.
+
+    Returns
+    -------
+    out : List[int]
+        The new related field for the source in question, containing the
+        appended ids.
+    """
     if isinstance(row['related_skyc1'], list):
         out = row['related_skyc1'] + row['new_relations']
     else:
