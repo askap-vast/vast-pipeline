@@ -747,10 +747,10 @@ def get_src_skyregion_merged_df(
         ['x', 'y', 'z', 'width_ra', 'width_dec'], axis=1
     )
 
-    images_df['name'] = images_df['image'].apply(
+    images_df['name'] = images_df['image_dj'].apply(
         lambda x: x.name
     )
-    images_df['datetime'] = images_df['image'].apply(
+    images_df['datetime'] = images_df['image_dj'].apply(
         lambda x: x.datetime
     )
 
@@ -1055,7 +1055,7 @@ def get_parallel_assoc_image_df(
     skyreg_ids = [i.skyreg_id for i in images]
 
     images_df = pd.DataFrame({
-        'image': images,
+        'image_dj': images,
         'skyreg_id': skyreg_ids,
     })
 

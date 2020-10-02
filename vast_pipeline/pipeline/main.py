@@ -307,12 +307,12 @@ class Pipeline():
         else:
             images_df = pd.DataFrame.from_dict(
                 {
-                    'image': images,
+                    'image_dj': images,
                     'epoch': image_epochs
                 }
             )
 
-            images_df['skyreg_id'] = images_df['image'].apply(
+            images_df['skyreg_id'] = images_df['image_dj'].apply(
                 lambda x: x.skyreg_id
             )
 

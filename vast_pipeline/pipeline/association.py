@@ -537,9 +537,11 @@ def association(images_df, limit, dr_limit, bw_limit,
     #     images = images['image'].to_list()
     unique_epochs = images_df.sort_values(by='epoch')['epoch'].unique()
 
-    first_images = images_df.loc[
-        images_df['epoch'] == unique_epochs[0]
-    ]['image'].to_list()
+    first_images = (
+        images_df
+        .loc[images_df['epoch'] == unique_epochs[0], 'image_dj']
+        .to_list()
+    )
 
     # initialise sky source dataframe
     skyc1_srcs = prep_skysrc_df(
@@ -560,9 +562,11 @@ def association(images_df, limit, dr_limit, bw_limit,
     for it, epoch in enumerate(unique_epochs[1:]):
         logger.info('Association iteration: #%i%s', it + 1, skyreg_tag)
         # load skyc2 source measurements and create SkyCoord
-        images = images_df.loc[images_df['epoch'] == epoch, 'image'].to_list()
+        images = (
+            images_df.loc[images_df['epoch'] == epoch, 'image_dj'].to_list()
+        )
         max_beam_maj = (
-            images_df.loc[images_df['epoch'] == epoch, 'image']
+            images_df.loc[images_df['epoch'] == epoch, 'image_dj']
             .apply(lambda x: x.beam_bmaj)
             .max()
         )
