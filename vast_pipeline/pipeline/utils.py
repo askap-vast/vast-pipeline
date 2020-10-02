@@ -251,17 +251,16 @@ def remove_duplicate_measurements(
     # Drop all self matches and we are left with those to drop
     # in the match id column.
     to_drop = results.loc[
-        results['source_id'] != results['match_id']
-    ]['match_id']
+        results['source_id'] != results['match_id'],
+        'match_id'
+    ]
     # Get the index values from the ith values
     to_drop_indexes = sources_df.iloc[to_drop].index.values
     logger.debug(
         "Dropping %i duplicate measurements.", to_drop_indexes.shape[0]
     )
     # Drop them from sources
-    sources_df = sources_df.drop(to_drop_indexes).sort_values(
-        by='ra'
-    )
+    sources_df = sources_df.drop(to_drop_indexes).sort_values(by='ra')
 
     # reset the source_df index
     sources_df = sources_df.reset_index(drop=True)
@@ -824,10 +823,10 @@ def get_src_skyregion_merged_df(
         ['x', 'y', 'z', 'width_ra', 'width_dec'], axis=1
     )
 
-    images_df['name'] = images_df['image'].apply(
+    images_df['name'] = images_df['image_dj'].apply(
         lambda x: x.name
     )
-    images_df['datetime'] = images_df['image'].apply(
+    images_df['datetime'] = images_df['image_dj'].apply(
         lambda x: x.datetime
     )
 
@@ -1146,7 +1145,7 @@ def get_parallel_assoc_image_df(
     skyreg_ids = [i.skyreg_id for i in images]
 
     images_df = pd.DataFrame({
-        'image': images,
+        'image_dj': images,
         'skyreg_id': skyreg_ids,
     })
 

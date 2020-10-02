@@ -290,7 +290,6 @@ class Pipeline():
 
         # 2.2 Associate with other measurements
         if self.config.ASSOCIATION_PARALLEL and n_skyregion_groups > 1:
-
             images_df = get_parallel_assoc_image_df(
                 images, skyregion_groups
             )
@@ -305,16 +304,15 @@ class Pipeline():
                 self.config,
                 n_skyregion_groups,
             )
-
         else:
             images_df = pd.DataFrame.from_dict(
                 {
-                    'image': images,
+                    'image_dj': images,
                     'epoch': image_epochs
                 }
             )
 
-            images_df['skyreg_id'] = images_df['image'].apply(
+            images_df['skyreg_id'] = images_df['image_dj'].apply(
                 lambda x: x.skyreg_id
             )
 
