@@ -192,7 +192,7 @@ def one_to_many_basic(sources_df, skyc2_srcs):
 
     # merge these so it's easy to explode and copy the index values.
     duplicated_skyc2 = (
-        duplicated_skyc2.loc[:,['source', 'new_source_id']]
+        duplicated_skyc2[['source', 'new_source_id']]
         .merge(
             source_df_index_to_copy,
             left_on='source',
@@ -209,7 +209,7 @@ def one_to_many_basic(sources_df, skyc2_srcs):
     ]
 
     # Apply the new_source_id
-    sources_to_copy.loc[:, 'source'] = duplicated_skyc2['new_source_id'].values
+    sources_to_copy['source'] = duplicated_skyc2['new_source_id'].values
 
     # and finally append.
     sources_df = sources_df.append(
