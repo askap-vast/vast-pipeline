@@ -54,3 +54,8 @@
 .card-header .collapsed .fa {
   transform: rotate(-90deg);
 }
+
+.comment-content {
+  max-height: 21rem;
+  overflow-y: scroll;
+}

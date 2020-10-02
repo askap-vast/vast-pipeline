@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_datatables',
     'social_django',
+    'crispy_forms',
     # pipeline app and others
     'vast_pipeline',
 ] + env('EXTRA_APPS', cast=list, default=[])
@@ -137,6 +138,7 @@ SOCIAL_AUTH_GITHUB_ORG_NAME = env('SOCIAL_AUTH_GITHUB_ORG_NAME', cast=str, defau
 SOCIAL_AUTH_GITHUB_ADMIN_TEAM = env('SOCIAL_AUTH_GITHUB_ADMIN_TEAM', cast=str, default='')
 SOCIAL_AUTH_GITHUB_SCOPE = ['read:org', 'user:email']
 
+CRISPY_TEMPLATE_PACK = "bootstrap4"
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases

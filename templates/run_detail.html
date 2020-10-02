@@ -111,8 +111,9 @@
   </div>
 
   <div class="row">
-    <div class="col-lg-5">
-      <div class="card shadow mb-4">
+    <div class="col-lg-5 mb-4">
+      <!-- details -->
+      <div class="card shadow h-100">
         <div class="card-header py-3">
           <h6 class="m-0 font-weight-bold text-primary">Details</h6>
         </div>
@@ -126,47 +127,38 @@
           <p><strong>Processing Datetime: </strong>{{ p_run.time }}</p>
           <p><strong>Run Status: </strong>{{ p_run.status }}</p>
           <p><strong>Path: </strong>{{ p_run.path }}</p>
-          <p><strong>Comment: </strong>{{ p_run.comment }}</p>
+          <p><strong>Description: </strong>{{ p_run.description }}</p>
           <a href="#configFile"><p><strong>Config File</strong></p></a>
           <a href="#logFile"><p><strong>Log File</strong></p></a>
         </div>
       </div>
-      <div class="card shadow mb-4">
-        <div class="card-header py-3">
-          <h6 class="m-0 font-weight-bold text-primary">User Comments</h6>
-        </div>
-        <div class="card-body">
-          TBC
+    </div>
+    <div class="col-lg-7 mb-4">
+      <!-- sky regions -->
+      <div class="card shadow h-100">
+        <h6 class="card-header m-0 font-weight-bold text-primary">
+          <a data-toggle="collapse" href="#collapseRegionCard" aria-expanded="true" aria-controls="collapseRegionCard" id="regionHeader" class="d-block">
+            <i class="fa fa-chevron-down pull-right"></i>
+              {% if p_run.status == 'Completed' %}
+                Run Sky Regions
+              {% else %}
+                Run Sky Regions (not completed so no sky regions are shown!)
+              {% endif %}
+          </a>
+        </h6>
+        <div id="collapseRegionCard" class="collapse show" aria-labelledby="regionHeader">
+          <div class="card-body">
+            <div id="celestial-map"></div>
+          </div>
         </div>
       </div>
     </div>
-    
-    <div class="col-lg-7">
-      <!-- sky regions -->
-       <div class="card shadow mb-4">
-         <h6 class="card-header m-0 font-weight-bold text-primary">
-           <a data-toggle="collapse" href="#collapseRegionCard" aria-expanded="true" aria-controls="collapseRegionCard" id="regionHeader" class="d-block">
-             <i class="fa fa-chevron-down pull-right"></i>
-               {% if p_run.status == 'Completed' %}
-                 Run Sky Regions
-               {% else %}
-                 Run Sky Regions (not completed so no sky regions are shown!)
-               {% endif %}
-           </a>
-         </h6>
-         <div id="collapseRegionCard" class="collapse show" aria-labelledby="regionHeader">
-           <div class="card-body">
-             <div id="celestial-map"></div>
-           </div>
-         </div>
-       </div>
-    </div>
   </div>
 
-  <!-- config file card -->
   <div class="row">
-    <div class="col-lg-12">
-      <div class="card shadow mb-4">
+    <div class="col-lg-8 mb-4">
+      <!-- config file card -->
+      <div class="card shadow h-100">
         <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
           <h6 class="m-0 font-weight-bold text-primary" id='configFile'>Config File</h6>
           <h6 id="editModeTitle" class="m-0 font-weight-bold text-warning" hidden><i>- - - Edit mode - - -</i></h6>
@@ -190,6 +182,10 @@
           <pre id="runConfigText" class="pre-scrollable" contenteditable="false"><code id="runConfigTextCode" class="language-python line-numbers" style="white-space: pre">{{ p_run.config_txt }}</code></pre>
         </div>
       </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+      <!-- comments -->
+      {% include "comments_component.html" %}
     </div>
   </div>
   

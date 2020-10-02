@@ -1,6 +1,5 @@
 import os
 import logging
-from shutil import copyfile
 
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings as sett
@@ -14,7 +13,7 @@ from vast_pipeline.pipeline.utils import get_create_p_run
 logger = logging.getLogger(__name__)
 
 
-def initialise_run(run_name, run_comment='', user=None, config=None):
+def initialise_run(run_name, run_description=None, user=None, config=None):
     # check for duplicated run name
     p_run = Run.objects.filter(name__exact=run_name)
     if p_run:
@@ -49,7 +48,7 @@ def initialise_run(run_name, run_comment='', user=None, config=None):
             fp.write(tm.render(**sett.PIPE_RUN_CONFIG_DEFAULTS))
 
     # create entry in db
-    p_run, _ = get_create_p_run(run_name, run_path, run_comment, user)
+    p_run, _ = get_create_p_run(run_name, run_path, run_description, user)
 
     return p_run
 

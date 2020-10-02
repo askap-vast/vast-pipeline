@@ -49,9 +49,9 @@
   </div>
 
   <div class="row">
-    <div class="col-lg-4">
+    <div class="col-lg-4 mb-4">
       <!-- Basic Card Example -->
-      <div class="card shadow mb-4" style="min-height: 40.3rem;">
+      <div class="card shadow" style="min-height: 40.3rem;">
         <div class="card-header py-3">
           <h6 class="m-0 font-weight-bold text-primary">Details</h6>
         </div>
@@ -91,17 +91,18 @@
             <strong>Number of runs included in: </strong>{{ image.n_runs|intcomma }} (<a href="#runHeader">Table</a>)<p>
             </p>
           </p>
-          <p>
-            <strong>Comment: </strong>{{ image.comment }}
-          </p>
         </div>
       </div>
     </div>
     <!-- Aladin viz tile -->
-    <div class="col-lg-8">
-      <div class="card shadow mb-4">
+    <div class="col-lg-4 mb-4">
+      <div class="card shadow">
         <div id="aladinViz" style="height:40.3rem;"></div>
       </div>
+    </div>
+    <!-- Comments -->
+    <div class="col-lg-4 mb-4">
+      {% include "comments_component.html" %}
     </div>
   </div>
 

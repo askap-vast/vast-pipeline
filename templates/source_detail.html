@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% load static %}
+{% load crispy_forms_tags %}
 
 {% load unit_tags %}
 
@@ -177,15 +178,22 @@
     </div>
   </div>
 
-  <!-- Light curve -->
-  <div class="card shadow mb-4">
-    <div class="card-header py-3">
-      <h6 class="m-0 font-weight-bold text-primary">Light Curve</h6>
-    </div>
-    <div class="card-body">
-      <div class="chart-area">
-        <canvas id="lightCurveChart"></canvas>
+  <div class="row">
+    <div class="col-xl-8 mb-4">
+      <!-- Area Chart -->
+      <div class="card shadow h-100">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">Light Curve</h6>
+        </div>
+        <div class="card-body">
+          <div class="chart-area">
+            <canvas id="lightCurveChart"></canvas>
+          </div>
+        </div>
       </div>
+    </div>
+    <div class="col-xl-4 mb-4">
+      {% include "comments_component.html" %}
     </div>
   </div>
 

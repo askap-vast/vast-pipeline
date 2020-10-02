@@ -171,6 +171,11 @@ class Run(CommentableModel):
         ],
         help_text='name of the pipeline run'
     )
+    description = models.CharField(
+        max_length=240,
+        blank=True,
+        help_text="A short description of the pipeline run."
+    )
     time = models.DateTimeField(
         auto_now=True,
         help_text='Datetime of a pipeline run.'
