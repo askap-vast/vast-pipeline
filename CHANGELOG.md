@@ -6,7 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/0.1.0...HEAD)
 
 #### Added
-- Added csv and excel export buttons to datatables on webinterface [#363](https://github.com/askap-vast/vast-pipeline/pull/363).
+- Added csv export button to datatables on webinterface [#363](https://github.com/askap-vast/vast-pipeline/pull/363).
+- Added support for Excel export button to datatables on webinterface (waiting on datatables buttons fix) [#363](https://github.com/askap-vast/vast-pipeline/pull/363).
 - Added column visibility button to datatables on webinterface [#363](https://github.com/askap-vast/vast-pipeline/pull/363).
 - Added dependancy datatables-buttons 1.6.4 [#363](https://github.com/askap-vast/vast-pipeline/pull/363).
 - Added dependancy jszip (required for Excel export) [#363](https://github.com/askap-vast/vast-pipeline/pull/363).
