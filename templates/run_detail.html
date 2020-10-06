@@ -126,7 +126,6 @@
           <p><strong>Processing Datetime: </strong>{{ p_run.time }}</p>
           <p><strong>Run Status: </strong>{{ p_run.status }}</p>
           <p><strong>Path: </strong>{{ p_run.path }}</p>
-          <p><strong>Epoch Based: </strong>{{ p_run.epoch_based }}</p>
           <p><strong>Comment: </strong>{{ p_run.comment }}</p>
           <a href="#configFile"><p><strong>Config File</strong></p></a>
           <a href="#logFile"><p><strong>Log File</strong></p></a>
@@ -151,7 +150,7 @@
                {% if p_run.status == 'Completed' %}
                  Run Sky Regions
                {% else %}
-                 Run Sky Regions (not completed so no sky regions are shown!)
+                 Run Sky Regions (run not complete so not all sky regions may be shown!)
                {% endif %}
            </a>
          </h6>
