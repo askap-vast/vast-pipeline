@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/0.1.0...HEAD)
 
 #### Added
+- Setting `HOME_DATA_DIR` to specify a directory relative to the user's home directory to scan for FITS and text files to use in a Run initialised with the UI [#361](https://github.com/askap-vast/vast-pipeline/pull/361).
 - Fills out information on all webinterface detail pages [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 - Adds frequency information the measurements and images webinterface tables. [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 - Adds celestial plot and tables to webinterface pipeline detail page [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
@@ -33,6 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Removed `static/css/collapse-box.css`, content moved to `pipeline.css` [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 
 #### List of PRs
+- [#361](https://github.com/askap-vast/vast-pipeline/pull/361) feat, fix: restrict home dir scan to specified directory.
 - [#372](https://github.com/askap-vast/vast-pipeline/pull/372) fix: fix social auth scope setting name.
 - [#345](https://github.com/askap-vast/vast-pipeline/pull/345) feat, fix: Website improvements.
 
