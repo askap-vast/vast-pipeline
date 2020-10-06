@@ -255,7 +255,7 @@ class Pipeline():
         # Update epoch based flag to not cause user confusion when running
         # the pipeline (i.e. if it was only updated at the end).
         if self.epoch_based:
-            with transaction.atomic()
+            with transaction.atomic():
                 p_run.epoch_based = self.epoch_based
                 p_run.save()
 
