@@ -442,7 +442,6 @@ def add_new_one_to_many_relations(
         |            656 | [5546] |
         +----------------+--------+
 
-
     Returns
     -------
     out : List[int]
