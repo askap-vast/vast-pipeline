@@ -56,7 +56,7 @@ def get_image_rms_measurements(
             data = hdul[0].data
 
     # Here we mimic the forced fits behaviour,
-    # sources within 3 beam widths of the image
+    # sources within 3 half BMAJ widths of the image
     # edges are ignored. The user buffer is also
     # applied for consistency.
     pixelscale = (
