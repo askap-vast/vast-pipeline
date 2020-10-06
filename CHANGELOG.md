@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Added copy-to-clipboard functionality on coordinates on webinterface [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 
 #### Changed
+- Updated validation of config file to check that all options are present and valid [#373](https://github.com/askap-vast/vast-pipeline/pull/373).
 - Multiple changes to webinterface page layouts [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 - Changes source names to the format `ASKAP_hhmmss.ss(+/-)ddmmss.ss` [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 - Simplified webinterface navbar [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
@@ -32,6 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Removed `static/css/collapse-box.css`, content moved to `pipeline.css` [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 
 #### List of PRs
+- [#373](https://github.com/askap-vast/vast-pipeline/pull/373) fix: Check all options are valid and present in validate_cfg.
 - [#345](https://github.com/askap-vast/vast-pipeline/pull/345) feat, fix: Website improvements.
 
 ## [0.1.0](https://github.com/askap-vast/vast-pipeline/releases/0.1.0) (2020/09/27)
