@@ -10081,7 +10081,8 @@ a:focus {
 }
 
 .sidebar {
-  width: 4.5rem;
+  text-align: center;
+  width: 6.5rem;
   min-height: 100vh;
 }
 
@@ -10236,7 +10237,7 @@ a:focus {
   font-size: 0.65rem;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 3840px) {
   .sidebar {
     width: 13rem !important;
   }

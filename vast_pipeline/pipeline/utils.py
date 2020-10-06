@@ -381,7 +381,7 @@ def get_source_models(row, pipeline_run=None):
     '''
     Fetches the source model (for DB injecting).
     '''
-    name = f"src_{deg2hms(row['wavg_ra'])}{deg2dms(row['wavg_dec'])}"
+    name = f"ASKAP_{deg2hms(row['wavg_ra'])}{deg2dms(row['wavg_dec'])}".replace(":", "")
     src = Source()
     src.run = pipeline_run
     src.name = name
