@@ -1,3 +1,5 @@
+@import "sb-admin-2-custom/sb-admin-2-custom";
+
 .alert-wrapper {
   position: fixed;
   right: 1rem;
@@ -19,40 +21,45 @@
 .wrap-form-control-readonly[readonly] {
   cursor: not-allowed;
   opacity: .5;
-}
 
-.wrap-form-control-readonly[readonly]:focus {
-  box-shadow: inset 0 0px 0 #ddd;
+  &:focus {
+    box-shadow: inset 0 0px 0 #ddd;
+  }
 }
 
 #feedbackModalDialog {
   max-width: 75%;
 }
 
-#homeLogo:hover img{
-  display: none;
-}
-
-#homeLogo:hover:before {
-   font-style: normal;
-   font-variant: normal;
-   font-size: 1.5em;
-   text-rendering: auto;
-   -webkit-font-smoothing: antialiased;
-   font-family: "Font Awesome 5 Free";
-   font-weight: 900;
-   content: '\f015';
+#homeLogo {
+  &:hover {
+    img {
+      display: none;
+    }
+    &:before {
+      font-style: normal;
+      font-variant: normal;
+      font-size: 1.5em;
+      text-rendering: auto;
+      -webkit-font-smoothing: antialiased;
+      font-family: "Font Awesome 5 Free";
+      font-weight: 900;
+      content: '\f015';
+    }
+  }
 }
 
 .dl-small dd {
   margin-bottom: 0rem;
 }
 
-.card-header .fa {
-  transition: .3s transform ease-in-out;
-}
-.card-header .collapsed .fa {
-  transform: rotate(-90deg);
+.card-header {
+  .fa {
+    transition: .3s transform ease-in-out;
+  }
+  .collapsed .fa {
+    transform: rotate(-90deg);
+  }
 }
 
 .card-corn-obj {
@@ -66,17 +73,17 @@
   margin-block-end: 0px;
 }
 
+
 .sidebar {
   text-align: center;
+  .sidebar-brand {
+    height: 3.375rem;
+    padding: unset;
+    text-transform: unset;
+  }
 }
 
 .sidebar .nav-item .collapse .collapse-inner,
 .sidebar .nav-item .collapsing .collapse-inner {
   min-width: unset;
-}
-
-.sidebar .sidebar-brand {
-  height: 3.375rem;
-  padding: unset;
-  text-transform: unset;
 }
