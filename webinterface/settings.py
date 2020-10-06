@@ -131,11 +131,10 @@ SOCIAL_AUTH_PIPELINE = (
 )
 
 SOCIAL_AUTH_GITHUB_ORG_KEY = env('SOCIAL_AUTH_GITHUB_KEY', cast=str, default='')
-SOCIAL_AUTH_GITHUB_ORG_SECRET = env('SOCIAL_AUTH_GITHUB_SECRET', cast=str, default=''
-    )
+SOCIAL_AUTH_GITHUB_ORG_SECRET = env('SOCIAL_AUTH_GITHUB_SECRET', cast=str, default='')
 SOCIAL_AUTH_GITHUB_ORG_NAME = env('SOCIAL_AUTH_GITHUB_ORG_NAME', cast=str, default='')
 SOCIAL_AUTH_GITHUB_ADMIN_TEAM = env('SOCIAL_AUTH_GITHUB_ADMIN_TEAM', cast=str, default='')
-SOCIAL_AUTH_GITHUB_SCOPE = ['read:org', 'user:email']
+SOCIAL_AUTH_GITHUB_ORG_SCOPE = ['read:org', 'user:email']
 
 
 # Database
