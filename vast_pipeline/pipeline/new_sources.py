@@ -70,7 +70,7 @@ def get_image_rms_measurements(
         pixelscale).value
     )
 
-    npix = int(npix * edge_buffer)
+    npix = int(round(npix * edge_buffer))
 
     coords = SkyCoord(
         group.wavg_ra, group.wavg_dec, unit=(u.deg, u.deg)
