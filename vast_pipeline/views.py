@@ -1210,7 +1210,6 @@ def SourceDetail(request, pk):
     # generate context for related sources datatable
     related_fields = [
         'name',
-        'comment',
         'wavg_ra',
         'wavg_dec',
         'avg_flux_int',
@@ -1245,7 +1244,6 @@ def SourceDetail(request, pk):
         'colsFields': related_colsfields,
         'colsNames': [
             'Name',
-            'Comment',
             'W. Avg. RA',
             'W. Avg. Dec',
             'Avg. Int. Flux (mJy)',
