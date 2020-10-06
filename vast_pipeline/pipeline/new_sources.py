@@ -13,7 +13,6 @@ from astropy.wcs.utils import (
     skycoord_to_pixel,
     proj_plane_pixel_scales
 )
-from scipy.ndimage import distance_transform_cdt
 
 from vast_pipeline.models import Image
 from vast_pipeline.utils.utils import StopWatch
@@ -25,6 +24,7 @@ logger = logging.getLogger(__name__)
 def check_primary_image(row):
     return row['primary'] in row['img_list']
 
+
 def gen_array_coords_from_wcs(coords, wcs):
     array_coords = wcs.world_to_array_index(coords)
     array_coords = np.array([
@@ -33,6 +33,7 @@ def gen_array_coords_from_wcs(coords, wcs):
     ])
 
     return array_coords
+
 
 def get_image_rms_measurements(
     group, nbeam: int = 3, edge_buffer: float = 1.0
@@ -104,27 +105,28 @@ def get_image_rms_measurements(
 
     array_coords = gen_array_coords_from_wcs(coords, wcs)
 
-    # convert to binary for taxicab distance calc
-    binary_data = (~np.isnan(data)).astype(int)
+    acceptable_no_nan_dist = int(
+        round(bmaj.to('arcsec').value / 2. / pixelscale.value)
+    )
 
-    # calculate 'taxicab' distances to the nearest NaN value
-    # as this is *much* faster than
-    distances = distance_transform_cdt(binary_data, metric='taxicab')
+    nan_valid = []
 
-    distance_values = distances[
-        array_coords[0],
-        array_coords[1]
-    ]
+    # Get slices of each source and check NaN is not included.
+    for i,j in zip(array_coords[0], array_coords[1]):
+        sl = tuple((
+            slice(i - acceptable_no_nan_dist, i + acceptable_no_nan_dist),
+            slice(j - acceptable_no_nan_dist, j + acceptable_no_nan_dist)
+        ))
+        if np.any(np.isnan(data[sl])):
+            nan_valid.append(False)
+        else:
+            nan_valid.append(True)
 
-    acceptable = np.ceil(bmaj.to('arcsec') / 2. / pixelscale)
-
-    valid = distance_values > acceptable
-
-    valid_indexes = group[valid].index.values
+    valid_indexes = group[nan_valid].index.values
 
     rms_values = data[
-        array_coords[0][valid],
-        array_coords[1][valid]
+        array_coords[0][nan_valid],
+        array_coords[1][nan_valid]
     ]
 
     # not matched ones will be NaN.
@@ -133,6 +135,7 @@ def get_image_rms_measurements(
     ] = rms_values.astype(np.float64) * 1.e3
 
     return group
+
 
 def parallel_get_rms_measurements(df, edge_buffer: float = 1.0):
     """
@@ -172,6 +175,7 @@ def parallel_get_rms_measurements(df, edge_buffer: float = 1.0):
     )
 
     return df
+
 
 def new_sources(
     sources_df, missing_sources_df, min_sigma, edge_buffer, p_run
@@ -298,7 +302,9 @@ def new_sources(
     )
 
     # this removes those that are out of range
-    new_sources_df['img_diff_true_rms'] = new_sources_df['img_diff_true_rms'].fillna(0.)
+    new_sources_df['img_diff_true_rms'] = (
+        new_sources_df['img_diff_true_rms'].fillna(0.)
+    )
     new_sources_df = new_sources_df[
         new_sources_df['img_diff_true_rms'] != 0
     ]
