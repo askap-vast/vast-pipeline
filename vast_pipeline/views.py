@@ -217,9 +217,11 @@ def RunDetail(request, id):
     if p_run_model.image_set.exists() and p_run_model.status == 'Completed':
         p_run['nr_meas'] = p_run['n_selavy_measurements']
         p_run['nr_frcd'] = p_run['n_forced_measurements']
+        p_run['nr_srcs'] = p_run['n_sources']
     else:
         p_run['nr_meas'] = 'N/A'
         p_run['nr_frcd'] = 'N/A'
+        p_run['nr_srcs'] = 'N/A'
 
     if p_run_model.status == 'Completed':
         p_run['new_srcs'] = Source.objects.filter(
