@@ -251,6 +251,14 @@ class Pipeline():
 
     def process_pipeline(self, p_run):
         logger.info(f'Epoch based association: {self.epoch_based}')
+
+        # Update epoch based flag to not cause user confusion when running
+        # the pipeline (i.e. if it was only updated at the end).
+        if self.epoch_based:
+            with transaction.atomic()
+                p_run.epoch_based = self.epoch_based
+                p_run.save()
+
         # upload/retrieve image data
         images, meas_dj_obj, skyregs_df = upload_images(
             self.img_paths,
@@ -381,7 +389,6 @@ class Pipeline():
         with transaction.atomic():
             p_run.n_images = nr_img_processed
             p_run.n_sources = nr_sources
-            p_run.epoch_based = self.epoch_based
             p_run.save()
 
         pass
