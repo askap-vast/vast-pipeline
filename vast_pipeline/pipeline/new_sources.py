@@ -21,7 +21,7 @@ from vast_pipeline.utils.utils import StopWatch
 logger = logging.getLogger(__name__)
 
 
-def check_primary_image(row):
+def check_primary_image(row) -> bool:
     """
     Checks if the primary image is in the image list.
 
@@ -38,7 +38,7 @@ def check_primary_image(row):
     return row['primary'] in row['img_list']
 
 
-def gen_array_coords_from_wcs(coords: SkyCoord, wcs: WCS):
+def gen_array_coords_from_wcs(coords: SkyCoord, wcs: WCS) -> numpy.ndarray:
     """
     Converts SkyCoord coordinates to array coordinates given a wcs.
 
@@ -67,7 +67,7 @@ def gen_array_coords_from_wcs(coords: SkyCoord, wcs: WCS):
 
 def get_image_rms_measurements(
     group: pd.DataFrame, nbeam: int = 3, edge_buffer: float = 1.0
-):
+) -> pd.DataFrame:
     """
     Take the coordinates provided from the group
     and measure the array cell value in the provided image.
@@ -184,7 +184,9 @@ def get_image_rms_measurements(
     return group
 
 
-def parallel_get_rms_measurements(df: pd.DataFrame, edge_buffer: float = 1.0):
+def parallel_get_rms_measurements(
+    df: pd.DataFrame, edge_buffer: float = 1.0
+) -> pd.DataFrame:
     """
     Wrapper function to use 'get_image_rms_measurements'
     in parallel with Dask. nbeam is not an option here as that parameter
@@ -242,7 +244,7 @@ def parallel_get_rms_measurements(df: pd.DataFrame, edge_buffer: float = 1.0):
 def new_sources(
     sources_df: pd.DataFrame, missing_sources_df: pd.DataFrame,
     min_sigma: float, edge_buffer: float, p_run: Run
-):
+) -> pd.DataFrame:
     """
     Processes the new sources detected to check that they are valid new sources.
     This involves checking to see that the source *should* be seen at all in
