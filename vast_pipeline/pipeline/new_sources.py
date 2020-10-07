@@ -297,23 +297,23 @@ def new_sources(
         The original input dataframe with the 'img_diff_true_rms' column added.
         The column will contain 'NaN' entires for sources that fail.
         Columns:
-            source - source id.
-            img_list - list of images.
-            wavg_ra - weighted average RA.
-            wavg_dec - weighted average Dec.
-            skyreg_img_list - list of sky regions of images in img_list.
-            img_diff - The images missing from coverage.
-            primary - What should be the first image.
-            detection - The first detection image.
-            detection_time - Datetime of detection.
-            img_diff_time - Difference in times from detection and diff.
-            img_diff_rms_min - Minimum rms of diff images.
-            img_diff_rms_median - Median rms of diff images.
-            img_diff_rms_path - rms path of diff images.
-            flux_peak - Flux peak of source (detection).
-            diff_sigma - SNR in differnce images (compared to minimum).
-            img_diff_true_rms - The true rms value from the diff images.
-            new_high_sigma - peak flux / true rms value.
+            source - source id, int.
+            img_list - list of images, List.
+            wavg_ra - weighted average RA, float.
+            wavg_dec - weighted average Dec, float.
+            skyreg_img_list - list of sky regions of images in img_list, List.
+            img_diff - The images missing from coverage, List.
+            primary - What should be the first image, str.
+            detection - The first detection image, str.
+            detection_time - Datetime of detection, datetime.datetime.
+            img_diff_time - Datetime of img_diff list, datetime.datetime.
+            img_diff_rms_min - Minimum rms of diff images, float.
+            img_diff_rms_median - Median rms of diff images, float.
+            img_diff_rms_path - rms path of diff images, str.
+            flux_peak - Flux peak of source (detection), float.
+            diff_sigma - SNR in differnce images (compared to minimum), float.
+            img_diff_true_rms - The true rms value from the diff images, float.
+            new_high_sigma - peak flux / true rms value, float.
     """
     timer = StopWatch()
 
