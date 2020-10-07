@@ -221,11 +221,17 @@ class Pipeline():
 
     def match_images_to_data(self):
         """
-        Loops through images and matches
+        Loops through images and matches the selavy, noise and bkg images.
+        Assumes that user has enteted images and other data in the same order.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
         """
-        # A dictionary of path to Fits images, eg
-        # "/data/images/I1233234.FITS" and selavy catalogues
-        # Used as a cache to avoid reloading cubes all the time.
         self.img_paths = {
             'selavy': {},
             'noise': {},
@@ -246,6 +252,8 @@ class Pipeline():
             ):
                 self.img_paths['noise'][x] = y
 
+            # check if backgound files have been given before
+            # attempting to match
             if key in self.config.BACKGROUND_FILES:
                 for x,y in zip(
                     self.config.IMAGE_FILES[key],
