@@ -14,7 +14,7 @@ from astropy.wcs.utils import (
     proj_plane_pixel_scales
 )
 
-from vast_pipeline.models import Image
+from vast_pipeline.models import Image, Run
 from vast_pipeline.utils.utils import StopWatch
 
 
@@ -22,10 +22,40 @@ logger = logging.getLogger(__name__)
 
 
 def check_primary_image(row):
+    """
+    Checks if the primary image is in the image list.
+
+    Parameters
+    ----------
+    row : pd.Series
+        Row of the missing_sources_df, need the keys 'primary' and 'img_list'.
+
+    Returns
+    -------
+    bool : bool
+        True if the primary image is in the image list.
+    """
     return row['primary'] in row['img_list']
 
 
-def gen_array_coords_from_wcs(coords, wcs):
+def gen_array_coords_from_wcs(coords: SkyCoord, wcs: WCS):
+    """
+    Converts SkyCoord coordinates to array coordinates given a wcs.
+
+    Parameters
+    ----------
+    coords : SkyCoord
+        The coordinates to convert.
+    wcs : WCS
+        The WCS to use for the conversion.
+
+    Returns
+    -------
+    array_coords : numpy.ndarray
+        Array containing the x and y array coordinates of the input sky
+        coordinates.
+        np.array([[x1, x2, x3], [y1, y2, y3]])
+    """
     array_coords = wcs.world_to_array_index(coords)
     array_coords = np.array([
         np.array(array_coords[0]),
@@ -36,11 +66,28 @@ def gen_array_coords_from_wcs(coords, wcs):
 
 
 def get_image_rms_measurements(
-    group, nbeam: int = 3, edge_buffer: float = 1.0
+    group: pd.DataFrame, nbeam: int = 3, edge_buffer: float = 1.0
 ):
     """
     Take the coordinates provided from the group
-    and measure the array value in the provided image.
+    and measure the array cell value in the provided image.
+
+    Parameters
+    ----------
+    group : pd.DataFrame
+        The group of sources to measure in the image, requiring the columns:
+        'source', 'wavg_ra', 'wavg_dec' and 'img_diff_rms_path'.
+    nbeam : int
+        The number of half beamwidths (BMAJ) away from the edge of the image or
+        a NaN value that is acceptable.
+    edge_buffer : float
+        Multiplicative factor applied to nbeam to act as a buffer.
+
+    Returns
+    -------
+    group : pd.DataFrame
+        The group dataframe with the 'img_diff_true_rms' column added. The
+        column will contain 'NaN' entires for sources that fail.
     """
     image = group.iloc[0]['img_diff_rms_path']
 
@@ -137,12 +184,27 @@ def get_image_rms_measurements(
     return group
 
 
-def parallel_get_rms_measurements(df, edge_buffer: float = 1.0):
+def parallel_get_rms_measurements(df: pd.DataFrame, edge_buffer: float = 1.0):
     """
     Wrapper function to use 'get_image_rms_measurements'
-    in parallel with Dask.
-    """
+    in parallel with Dask. nbeam is not an option here as that parameter
+    is fixed in forced extraction and so is made sure to be fixed here to. This
+    may change in the future.
 
+    Parameters
+    ----------
+    df : pd.DataFrame
+        The group of sources to measure in the images.
+    edge_buffer : float
+        Multiplicative factor to be passed to the 'get_image_rms_measurements'
+        function.
+
+    Returns
+    -------
+    df : pd.DataFrame
+        The original input dataframe with the 'img_diff_true_rms' column added.
+        The column will contain 'NaN' entires for sources that fail.
+    """
     out = df[[
         'source', 'wavg_ra', 'wavg_dec',
         'img_diff_rms_path'
@@ -178,13 +240,81 @@ def parallel_get_rms_measurements(df, edge_buffer: float = 1.0):
 
 
 def new_sources(
-    sources_df, missing_sources_df, min_sigma, edge_buffer, p_run
+    sources_df: pd.DataFrame, missing_sources_df: pd.DataFrame,
+    min_sigma: float, edge_buffer: float, p_run: Run
 ):
     """
-    Process the new sources detected to see if they are
-    valid.
-    """
+    Processes the new sources detected to check that they are valid new sources.
+    This involves checking to see that the source *should* be seen at all in
+    the images where it is not detected. For valid new sources the snr
+    value the source would have in non-detected images is also calculated.
 
+    Parameters
+    ----------
+    source_df : pd.DataFrame
+        The sources found from the association step.
+    missing_sources_df : pd.DataFrame
+        The dataframe containing the 'missing detections' for each source.
+    +----------+----------------------------------+-----------+------------+
+    |   source | img_list                         |   wavg_ra |   wavg_dec |
+    |----------+----------------------------------+-----------+------------+
+    |      278 | ['VAST_0127-73A.EPOCH01.I.fits'] |  22.2929  |   -71.8717 |
+    |      702 | ['VAST_0127-73A.EPOCH01.I.fits'] |  28.8125  |   -69.3547 |
+    |      776 | ['VAST_0127-73A.EPOCH01.I.fits'] |  31.8223  |   -70.4674 |
+    |      844 | ['VAST_0127-73A.EPOCH01.I.fits'] |  17.3152  |   -72.346  |
+    |      934 | ['VAST_0127-73A.EPOCH01.I.fits'] |   9.75754 |   -72.9629 |
+    +----------+----------------------------------+-----------+------------+
+    ------------------------------------------------------------------+
+     skyreg_img_list                                                  |
+    ------------------------------------------------------------------+
+     ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+     ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+     ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+     ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+     ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+    ------------------------------------------------------------------+
+    ----------------------------------+
+     img_diff                         |
+    ----------------------------------|
+     ['VAST_0127-73A.EPOCH08.I.fits'] |
+     ['VAST_0127-73A.EPOCH08.I.fits'] |
+     ['VAST_0127-73A.EPOCH08.I.fits'] |
+     ['VAST_0127-73A.EPOCH08.I.fits'] |
+     ['VAST_0127-73A.EPOCH08.I.fits'] |
+    ----------------------------------+
+    min_sigma : float
+        The minimum sigma value acceptable when compared to the minimum rms of
+        the respective image.
+    edge_buffer : float
+        Multiplicative factor to be passed to the 'get_image_rms_measurements'
+        function.
+    p_run : Run
+        The pipeline run.
+
+    Returns
+    -------
+    new_sources_df : pd.DataFrame
+        The original input dataframe with the 'img_diff_true_rms' column added.
+        The column will contain 'NaN' entires for sources that fail.
+        Columns:
+            source - source id.
+            img_list - list of images.
+            wavg_ra - weighted average RA.
+            wavg_dec - weighted average Dec.
+            skyreg_img_list - list of sky regions of images in img_list.
+            img_diff - The images missing from coverage.
+            primary - What should be the first image.
+            detection - The first detection image.
+            detection_time - Datetime of detection.
+            img_diff_time - Difference in times from detection and diff.
+            img_diff_rms_min - Minimum rms of diff images.
+            img_diff_rms_median - Median rms of diff images.
+            img_diff_rms_path - rms path of diff images.
+            flux_peak - Flux peak of source (detection).
+            diff_sigma - SNR in differnce images (compared to minimum).
+            img_diff_true_rms - The true rms value from the diff images.
+            new_high_sigma - peak flux / true rms value.
+    """
     timer = StopWatch()
 
     logger.info("Starting new source analysis.")
