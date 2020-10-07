@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/0.1.0...HEAD)
 
 #### Added
+- Updates image `background_path` from current run when not originally provided [#377](https://github.com/askap-vast/vast-pipeline/pull/377).
 - Fills out information on all webinterface detail pages [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 - Adds frequency information the measurements and images webinterface tables. [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 - Adds celestial plot and tables to webinterface pipeline detail page [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
@@ -33,6 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Removed `static/css/collapse-box.css`, content moved to `pipeline.css` [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 
 #### List of PRs
+- [#377](https://github.com/askap-vast/vast-pipeline/pull/377) fix: Update image bkg path when not originally provided.
 - [#372](https://github.com/askap-vast/vast-pipeline/pull/372) fix: fix social auth scope setting name.
 - [#345](https://github.com/askap-vast/vast-pipeline/pull/345) feat, fix: Website improvements.
 
