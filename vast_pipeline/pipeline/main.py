@@ -76,38 +76,6 @@ class Pipeline():
                     f' Must be a list or dictionary.'
                 ))
 
-        # A dictionary of path to Fits images, eg
-        # "/data/images/I1233234.FITS" and selavy catalogues
-        # Used as a cache to avoid reloading cubes all the time.
-        self.img_paths = {
-            'selavy': {},
-            'noise': {},
-            'background': {}
-        }
-        self.img_epochs = {}
-
-        for key in sorted(self.config.IMAGE_FILES.keys()):
-            for x,y in zip(
-                self.config.IMAGE_FILES[key],
-                self.config.SELAVY_FILES[key]
-            ):
-                self.img_paths['selavy'][x] = y
-
-            for x,y in zip(
-                self.config.IMAGE_FILES[key],
-                self.config.NOISE_FILES[key]
-            ):
-                self.img_paths['noise'][x] = y
-
-            for x,y in zip(
-                self.config.IMAGE_FILES[key],
-                self.config.BACKGROUND_FILES[key]
-            ):
-                self.img_paths['background'][x] = y
-
-            for x in self.config.IMAGE_FILES[key]:
-                self.img_epochs[os.path.basename(x)] = key
-
     @staticmethod
     def load_cfg(cfg):
         """
@@ -207,6 +175,18 @@ class Pipeline():
                     'Expecting list of background MAP files!'
                 )
 
+            monitor_settings = [
+                'MONITOR_MIN_SIGMA',
+                'MONITOR_EDGE_BUFFER_SCALE',
+                'MONITOR_CLUSTER_THRESHOLD',
+                'MONITOR_ALLOW_NAN',
+            ]
+            for mon_set in monitor_settings:
+                if mon_set not in dir(self.config):
+                    raise PipelineConfigError(mon_set + ' must be defined!')
+
+        # if defined, check background files regardless of monitor
+        if getattr(self.config, 'BACKGROUND_FILES'):
             # check for duplicated values
             backgrd_f_list = getattr(self.config, 'BACKGROUND_FILES')
             backgrd_f_list = [
@@ -230,16 +210,6 @@ class Pipeline():
                             f'file:\n{file}\ndoes not exists!'
                         )
 
-            monitor_settings = [
-                'MONITOR_MIN_SIGMA',
-                'MONITOR_EDGE_BUFFER_SCALE',
-                'MONITOR_CLUSTER_THRESHOLD',
-                'MONITOR_ALLOW_NAN',
-            ]
-            for mon_set in monitor_settings:
-                if mon_set not in dir(self.config):
-                    raise PipelineConfigError(mon_set + ' must be defined!')
-
         # validate every config from the config template
         for key in [k for k in dir(self.config) if k.isupper()]:
             if key.lower() not in settings.PIPE_RUN_CONFIG_DEFAULTS.keys():
@@ -248,6 +218,43 @@ class Pipeline():
                 )
 
         pass
+
+    def match_images_to_data(self):
+        """
+        Loops through images and matches
+        """
+        # A dictionary of path to Fits images, eg
+        # "/data/images/I1233234.FITS" and selavy catalogues
+        # Used as a cache to avoid reloading cubes all the time.
+        self.img_paths = {
+            'selavy': {},
+            'noise': {},
+            'background': {}
+        }
+        self.img_epochs = {}
+
+        for key in sorted(self.config.IMAGE_FILES.keys()):
+            for x,y in zip(
+                self.config.IMAGE_FILES[key],
+                self.config.SELAVY_FILES[key]
+            ):
+                self.img_paths['selavy'][x] = y
+
+            for x,y in zip(
+                self.config.IMAGE_FILES[key],
+                self.config.NOISE_FILES[key]
+            ):
+                self.img_paths['noise'][x] = y
+
+            if key in self.config.BACKGROUND_FILES:
+                for x,y in zip(
+                    self.config.IMAGE_FILES[key],
+                    self.config.BACKGROUND_FILES[key]
+                ):
+                    self.img_paths['background'][x] = y
+
+            for x in self.config.IMAGE_FILES[key]:
+                self.img_epochs[os.path.basename(x)] = key
 
     def process_pipeline(self, p_run):
         logger.info(f'Epoch based association: {self.epoch_based}')
@@ -258,6 +265,10 @@ class Pipeline():
             with transaction.atomic():
                 p_run.epoch_based = self.epoch_based
                 p_run.save()
+
+        # Match the image files to the respective selavy, noise and bkg files.
+        # Do this after validation is successful.
+        self.match_images_to_data()
 
         # upload/retrieve image data
         images, meas_dj_obj, skyregs_df = upload_images(
