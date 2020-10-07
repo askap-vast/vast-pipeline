@@ -56,20 +56,22 @@
         </span>
         <span class="text">NED</span>
       </a>
-      <a href="{% url 'vast_pipeline:source_detail' source.id %}prev"
-        class="d-none d-sm-inline-block btn btn-sm btn-light btn-icon-split shadow-sm">
+      {% if source_previous_id %}
+      <a href="{% url 'vast_pipeline:source_detail' source_previous_id %}" class="d-none d-sm-inline-block btn btn-sm btn-light btn-icon-split shadow-sm">
         <span class="icon text-gray-600">
           <i class="fas fa-arrow-left fa-sm"></i>
         </span>
         <span class="text">Previous</span>
       </a>
-      <a href="{% url 'vast_pipeline:source_detail' source.id %}next"
-        class="d-none d-sm-inline-block btn btn-sm btn-light btn-icon-split shadow-sm">
+      {% endif %}
+      {% if source_next_id %}
+      <a href="{% url 'vast_pipeline:source_detail' source_next_id %}" class="d-none d-sm-inline-block btn btn-sm btn-light btn-icon-split shadow-sm">
         <span class="text">Next</span>
         <span class="icon text-gray-600">
           <i class="fas fa-arrow-right fa-sm"></i>
         </span>
       </a>
+      {% endif %}
     </div>
   </div>
 
