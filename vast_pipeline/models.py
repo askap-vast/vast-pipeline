@@ -183,6 +183,14 @@ class Run(models.Model):
         default=0,
         help_text='number of sources extracted in this run'
     )
+    n_selavy_measurements = models.IntegerField(
+        default=0,
+        help_text='number of selavy measurements in this run'
+    )
+    n_forced_measurements = models.IntegerField(
+        default=0,
+        help_text='number of forced measurements in this run'
+    )
 
     objects = RunQuerySet.as_manager()
 
