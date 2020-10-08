@@ -72,26 +72,7 @@ def Home(request):
     totals['nr_pruns'] = Run.objects.count()
     totals['nr_imgs'] = Image.objects.count()
     totals['nr_srcs'] = Source.objects.count()
-    meas_glob = glob(os.path.join(
-        settings.PIPELINE_WORKING_DIR,
-        'images/**/measurements.parquet',
-    ))
-    check_run_db = Run.objects.exists()
-    totals['nr_meas'] = (
-        dd.read_parquet(meas_glob, columns='id')
-        .shape[0]
-        .compute()
-    ) if (check_run_db and meas_glob) else 0
-
-    f_meas_glob = glob(os.path.join(
-        settings.PIPELINE_WORKING_DIR,
-        '*/forced_meas*.parquet',
-    ))
-    totals['nr_f_meas'] = (
-        dd.read_parquet(f_meas_glob, columns='id')
-        .shape[0]
-        .compute()
-    ) if (check_run_db and f_meas_glob) else 0
+    totals['nr_meas'] = Measurement.objects.count()
 
     context = {
         'totals': totals,
@@ -232,46 +213,15 @@ def RunDetail(request, id):
     # build config path for POST and later
     p_run['user'] = p_run_model.user.username if p_run_model.user else None
     p_run['status'] = p_run_model.get_status_display()
+    # Change measurement count to N.A. if run is not complete.
     if p_run_model.image_set.exists() and p_run_model.status == 'Completed':
-        images = list(p_run_model.image_set.values('name', 'datetime'))
-        img_paths = list(map(
-            lambda x: os.path.join(
-                settings.PIPELINE_WORKING_DIR,
-                'images',
-                x.replace('.','_'),
-                'measurements.parquet'
-            ),
-            p_run_model.image_set.values_list('name', flat=True)
-        ))
-        p_run['nr_meas'] = (
-            dd.read_parquet(img_paths, columns='id')
-            .shape[0]
-            .compute()
-        )
+        p_run['nr_meas'] = p_run['n_selavy_measurements']
+        p_run['nr_frcd'] = p_run['n_forced_measurements']
+        p_run['nr_srcs'] = p_run['n_sources']
     else:
         p_run['nr_meas'] = 'N/A'
-
-    forced_path = glob(
-        os.path.join(p_run['path'], 'forced_measurements_*.parquet')
-    )
-    if forced_path and p_run_model.status == 'Completed':
-        try:
-            p_run['nr_frcd'] = (
-                dd.read_parquet(forced_path, columns='id')
-                .shape[0]
-                .compute()
-            )
-        except Exception as e:
-            messages.error(
-                request,
-                (
-                    'Issues in reading forced measurements parquet:\n'
-                    f'{e.args[0][:500]}'
-                )
-            )
-            pass
-    else:
         p_run['nr_frcd'] = 'N/A'
+        p_run['nr_srcs'] = 'N/A'
 
     if p_run_model.status == 'Completed':
         p_run['new_srcs'] = Source.objects.filter(
