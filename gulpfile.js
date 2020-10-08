@@ -188,6 +188,14 @@ function modules() {
   ])
     .pipe(gulp.dest(paths.vendor + '/datatables'));
 
+  // dataTables-buttons
+  var dataTablesButtons = gulp.src([
+    './node_modules/datatables.net-buttons/js/*.js',
+    './node_modules/datatables.net-buttons-bs4/js/*.js',
+    './node_modules/datatables.net-buttons-bs4/css/*.css'
+  ])
+    .pipe(gulp.dest(paths.vendor + '/datatables-buttons'));
+
   // Font Awesome
   var fontAwesome = gulp.src('./node_modules/@fortawesome/**/*')
     .pipe(gulp.dest(paths.vendor + ''));
@@ -202,6 +210,12 @@ function modules() {
     '!./node_modules/jquery/dist/core.js'
   ])
     .pipe(gulp.dest(paths.vendor + '/jquery'));
+
+  // jszip
+  var jszip = gulp.src([
+    './node_modules/jszip/dist/*.js',
+  ])
+    .pipe(gulp.dest(paths.vendor + '/jszip'));
 
   // d3 celestial
   var d3Celestial = gulp.src([
@@ -230,7 +244,7 @@ function modules() {
   var prismJsLineNumCss = gulp.src('./node_modules/prismjs/plugins/line-numbers/prism-line-numbers.css')
     .pipe(gulp.dest(paths.vendor + '/prismjs/line-numbers'));
 
-  return merge(bootstrapJS, chartJS, dataTables, fontAwesome, jquery, jqueryEasing, d3Celestial, d3CelestialData, d3CelestialImage, particlesJs, prismJs, prismJsPy, prismJsLineNum, prismJsCss, prismJsLineNumCss);
+  return merge(bootstrapJS, chartJS, dataTables, dataTablesButtons, fontAwesome, jquery, jqueryEasing, jszip, d3Celestial, d3CelestialData, d3CelestialImage, particlesJs, prismJs, prismJsPy, prismJsLineNum, prismJsCss, prismJsLineNumCss);
 }
 
 // CSS task

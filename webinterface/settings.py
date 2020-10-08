@@ -259,6 +259,9 @@ RAW_IMAGE_DIR = env('RAW_IMAGE_DIR', cast=str, default=os.path.join(BASE_DIR, 'r
 if '/' not in RAW_IMAGE_DIR:
     RAW_IMAGE_DIR = os.path.join(BASE_DIR, RAW_IMAGE_DIR)
 
+# extra user-supplied data folder, relative to the user's home directory on the deployment machine
+HOME_DATA_DIR = env('HOME_DATA_DIR', cast=str, default='vast-pipeline-extra-data')
+
 # allowed source finders
 SOURCE_FINDERS = ['selavy']
 
