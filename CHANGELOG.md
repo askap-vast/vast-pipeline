@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added links to tables and postage stamps on source detail page [#379](https://github.com/askap-vast/vast-pipeline/pull/379).
 - Updates image `background_path` from current run when not originally provided [#377](https://github.com/askap-vast/vast-pipeline/pull/377).
 - Added csv export button to datatables on webinterface [#363](https://github.com/askap-vast/vast-pipeline/pull/363).
 - Added support for Excel export button to datatables on webinterface (waiting on datatables buttons fix) [#363](https://github.com/askap-vast/vast-pipeline/pull/363).
@@ -52,6 +53,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#379](https://github.com/askap-vast/vast-pipeline/pull/372) feat: Add links to source detail template.
 - [#377](https://github.com/askap-vast/vast-pipeline/pull/377) fix: Update image bkg path when not originally provided.
 - [#363](https://github.com/askap-vast/vast-pipeline/pull/363) feat, dep: Add export and column visibility buttons to tables.
 - [#362](https://github.com/askap-vast/vast-pipeline/pull/362) feat, model: Added number of measurements to Run DB model.
