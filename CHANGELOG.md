@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added csv export button to datatables on webinterface [#363](https://github.com/askap-vast/vast-pipeline/pull/363).
+- Added support for Excel export button to datatables on webinterface (waiting on datatables buttons fix) [#363](https://github.com/askap-vast/vast-pipeline/pull/363).
+- Added column visibility button to datatables on webinterface [#363](https://github.com/askap-vast/vast-pipeline/pull/363).
+- Added dependancy datatables-buttons 1.6.4 [#363](https://github.com/askap-vast/vast-pipeline/pull/363).
+- Added dependancy jszip (required for Excel export) [#363](https://github.com/askap-vast/vast-pipeline/pull/363).
 - Adds `n_selavy_measurements` and `n_forced_measurements` to run model [#362](https://github.com/askap-vast/vast-pipeline/pull/362).
 - Adds steps to populate new measurement count fields in pipeline run [#362](https://github.com/askap-vast/vast-pipeline/pull/362).
 - Source order from the query is preserved on source detail view [#364](https://github.com/askap-vast/vast-pipeline/pull/364).
@@ -23,6 +28,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Bumped datatables to 1.10.22 [#363](https://github.com/askap-vast/vast-pipeline/pull/363).
+- Changed `dom` layout on datatables [#363](https://github.com/askap-vast/vast-pipeline/pull/363).
+- Changed external results table pagination buttons on source detail webinterface page pagination to include less numbers to avoid overlap [#363](https://github.com/askap-vast/vast-pipeline/pull/363).
 - Changes measurement counts view on website to use new model parameters [#362](https://github.com/askap-vast/vast-pipeline/pull/362).
 - Multiple changes to webinterface page layouts [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 - Changes source names to the format `ASKAP_hhmmss.ss(+/-)ddmmss.ss` [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
@@ -43,6 +51,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#363](https://github.com/askap-vast/vast-pipeline/pull/363) feat, dep: Add export and column visibility buttons to tables.
 - [#362](https://github.com/askap-vast/vast-pipeline/pull/362) feat, model: Added number of measurements to Run DB model.
 - [#364](https://github.com/askap-vast/vast-pipeline/pull/361) feat: preserve source query order on detail view.
 - [#361](https://github.com/askap-vast/vast-pipeline/pull/361) feat, fix: restrict home dir scan to specified directory.

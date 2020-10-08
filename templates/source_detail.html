@@ -9,6 +9,7 @@
 <link rel='stylesheet' href='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css' />
 <link rel="stylesheet" href="{% static 'vendor/js9/js9-allinone.css' %}" />
 <link rel="stylesheet" href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" />
+<link rel="stylesheet" href="{% static 'vendor/datatables-buttons/buttons.bootstrap4.min.css' %}" />
 
 {% endblock head %}
 
@@ -358,6 +359,12 @@
 <!-- Page level plugins -->
 <script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
 <script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'vendor/datatables-buttons/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'vendor/datatables-buttons/buttons.bootstrap4.min.js' %}"></script>
+<script src="{% static 'vendor/datatables-buttons/buttons.colVis.min.js' %}"></script>
+<script src="{% static 'vendor/datatables-buttons/buttons.html5.min.js' %}"></script>
+<script src="{% static 'vendor/datatables-buttons/buttons.flash.min.js' %}"></script>
+<script src="{% static 'vendor/jszip/jszip.min.js' %}"></script>
 
 <!-- Datatable scripts -->
 {{ datatables|json_script:"datatable-conf" }}
