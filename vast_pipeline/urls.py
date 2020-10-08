@@ -35,11 +35,7 @@ urlpatterns = [
         name='measurement_detail'
     ),
     path('sources/query/', views.SourceQuery, name='source_query'),
-    re_path(
-        r'^sources/(?P<id>\d+)(?:/(?P<action>[\w]+))?/$',
-        views.SourceDetail,
-        name='source_detail'
-    ),
+    path('sources/<int:pk>/', views.SourceDetail, name='source_detail'),
     path('sources/favs/', views.UserSourceFavsList, name='source_favs'),
     path('cutout/<str:measurement_name>/', views.ImageCutout.as_view(), name='cutout'),
     path('cutout/<str:measurement_name>/<str:size>/', views.ImageCutout.as_view(), name='cutout'),
