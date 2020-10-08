@@ -27,7 +27,7 @@ from django.conf import settings
 from django.contrib import messages
 
 from rest_framework import status
-from rest_framework.decorators import action
+import rest_framework.decorators
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -180,7 +180,7 @@ class RunViewSet(ModelViewSet):
     queryset = Run.objects.all()
     serializer_class = RunSerializer
 
-    @action(detail=True, methods=['get'])
+    @rest_framework.decorators.action(detail=True, methods=['get'])
     def images(self, request, pk=None):
         qs = Image.objects.filter(run__id=pk).order_by('id')
         qs = self.filter_queryset(qs)
@@ -192,7 +192,7 @@ class RunViewSet(ModelViewSet):
         serializer = ImageSerializer(qs, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['get'])
+    @rest_framework.decorators.action(detail=True, methods=['get'])
     def measurements(self, request, pk=None):
         qs = Measurement.objects.filter(image__run__in=[pk]).order_by('id')
         qs = self.filter_queryset(qs)
@@ -414,7 +414,7 @@ class ImageViewSet(ModelViewSet):
     queryset = Image.objects.all()
     serializer_class = ImageSerializer
 
-    @action(detail=True, methods=['get'])
+    @rest_framework.decorators.action(detail=True, methods=['get'])
     def measurements(self, request, pk=None):
         qs = Measurement.objects.filter(image__in=[pk], forced=False).order_by('id')
         qs = self.filter_queryset(qs)
@@ -426,7 +426,7 @@ class ImageViewSet(ModelViewSet):
         serializer = MeasurementSerializer(qs, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['get'])
+    @rest_framework.decorators.action(detail=True, methods=['get'])
     def runs(self, request, pk=None):
         image = self.queryset.get(pk=pk)
         qs = image.run.all().order_by('id')
@@ -659,7 +659,7 @@ class MeasurementViewSet(ModelViewSet):
         run_id = self.request.query_params.get('run_id', None)
         return self.queryset.filter(source__id=run_id) if run_id else self.queryset
 
-    @action(detail=True, methods=['get'])
+    @rest_framework.decorators.action(detail=True, methods=['get'])
     def siblings(self, request, pk=None):
         measurement = self.queryset.get(pk=pk)
         image_id = measurement.image_id
@@ -676,7 +676,7 @@ class MeasurementViewSet(ModelViewSet):
         serializer = self.get_serializer(qs, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['get'])
+    @rest_framework.decorators.action(detail=True, methods=['get'])
     def sources(self, request, pk=None):
         measurement = self.queryset.get(pk=pk)
         qs = measurement.source.all()
@@ -934,7 +934,18 @@ class SourceViewSet(ModelViewSet):
 
         return qs
 
-    @action(detail=True, methods=['get'])
+    def list(self, request, *args, **kwargs):
+        """Override the DRF ModelViewSet.list function to store the source ID order in the
+        user session to retain the source order for source detail view next and previous
+        button links. Then, call the original list function.
+        """
+        queryset = self.filter_queryset(self.get_queryset())
+        self.request.session["source_query_result_ids"] = list(
+            queryset.values_list("id", flat=True)
+        )
+        return super().list(request, *args, **kwargs)
+
+    @rest_framework.decorators.action(detail=True, methods=['get'])
     def related(self, request, pk=None):
         qs = Source.objects.filter(related__id=pk).order_by('id')
         qs = self.filter_queryset(qs)
@@ -1034,47 +1045,9 @@ def SourceQuery(request):
 
 # Source detail
 @login_required
-def SourceDetail(request, id, action=None):
+def SourceDetail(request, pk):
     # source data
-    source = Source.objects.all()
-    if action:
-        if action == 'next':
-            src = source.filter(id__gt=id)
-            if src.exists():
-                source = (
-                    src.annotate(run_name=F('run__name'))
-                    .values()
-                    .first()
-                )
-            else:
-                source = (
-                    source.filter(id=id)
-                    .annotate(run_name=F('run__name'))
-                    .values()
-                    .get()
-                )
-        elif action == 'prev':
-            src = source.filter(id__lt=id)
-            if src.exists():
-                source = (
-                    src.annotate(run_name=F('run__name'))
-                    .values()
-                    .last()
-                )
-            else:
-                source = (
-                    source.filter(id=id)
-                    .annotate(run_name=F('run__name'))
-                    .values()
-                    .get()
-                )
-    else:
-        source = (
-            source.filter(id=id)
-            .annotate(run_name=F('run__name'))
-            .values()
-            .get()
-        )
+    source = Source.objects.filter(id=pk).annotate(run_name=F('run__name')).values().get()
     source['aladin_ra'] = source['wavg_ra']
     source['aladin_dec'] = source['wavg_dec']
     source['aladin_zoom'] = 0.15
@@ -1104,7 +1077,7 @@ def SourceDetail(request, id, action=None):
         'image_id'
     ]
     measurements = list(
-        Measurement.objects.filter(source__id=id).annotate(
+        Measurement.objects.filter(source__id=pk).annotate(
             datetime=F('image__datetime'),
             image_name=F('image__name'),
             frequency=F('image__band__frequency'),
@@ -1206,8 +1179,21 @@ def SourceDetail(request, id, action=None):
         'search': True,
     }
 
+    # find next and previous sources
+    source_query_result_id_list = request.session.get("source_query_result_ids", [])
+    source_next_id, source_previous_id = None, None
+    for i, source_id in enumerate(source_query_result_id_list):
+        if source_id == source['id']:
+            if i + 1 < len(source_query_result_id_list):
+                source_next_id = source_query_result_id_list[i + 1]
+            if i - 1 >= 0:
+                source_previous_id = source_query_result_id_list[i - 1]
+            break
+
     context = {
         'source': source,
+        'source_next_id': source_next_id,
+        'source_previous_id': source_previous_id,
         'datatables': [measurements, related_datatables],
         # flag to deactivate starring and render yellow star
         'sourcefav': (
@@ -1428,13 +1414,13 @@ class RawImageListSet(ViewSet):
             lambda x: os.path.join(img_root, x, '**' + os.sep + '*.txt'),
             img_subfolders2
         ))
-        # add home directory for user and jupyter-user (user = github name)
+        # add home directory user data for user and jupyter-user (user = github name)
         req_user = request.user.username
         for user in [f'~{req_user}', f'~jupyter-{req_user}']:
-            user_home = os.path.expanduser(user)
-            if os.path.exists(user_home):
-                img_regex_list.append(os.path.join(user_home, '**' + os.sep + '*.fits'))
-                selavy_regex_list.append(os.path.join(user_home, '**' + os.sep + '*.txt'))
+            user_home_data = os.path.join(os.path.expanduser(user), settings.HOME_DATA_DIR)
+            if settings.HOME_DATA_DIR and os.path.exists(user_home_data):
+                img_regex_list.append(os.path.join(user_home_data, '**' + os.sep + '*.fits'))
+                selavy_regex_list.append(os.path.join(user_home_data, '**' + os.sep + '*.txt'))
 
         # generate raw image list in parallel
         dask_list = db.from_sequence(img_regex_list)
@@ -1471,7 +1457,7 @@ class RunConfigSet(ViewSet):
     permission_classes = [IsAuthenticated]
     queryset = Run.objects.all()
 
-    @action(detail=True, methods=['get'])
+    @rest_framework.decorators.action(detail=True, methods=['get'])
     def validate(self, request, pk=None):
         if not pk:
             return Response(
@@ -1528,7 +1514,7 @@ class RunConfigSet(ViewSet):
 
         return Response(msg, status=status.HTTP_202_ACCEPTED)
 
-    @action(detail=True, methods=['post'])
+    @rest_framework.decorators.action(detail=True, methods=['post'])
     def write(self, request, pk=None):
         # this post is for writing the config text (modified or not)
         # from the UI to a config.py file
@@ -1672,7 +1658,7 @@ class UtilitiesSet(ViewSet):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [IsAuthenticated]
 
-    @action(methods=['get'], detail=False)
+    @rest_framework.decorators.action(methods=['get'], detail=False)
     def sesame_search(self, request: Request) -> Response:
         """Query the Sesame name resolver service and return a coordinate.
 
@@ -1700,7 +1686,7 @@ class UtilitiesSet(ViewSet):
 
         return Response(serializer.data)
 
-    @action(methods=['get'], detail=False)
+    @rest_framework.decorators.action(methods=['get'], detail=False)
     def coordinate_validator(self, request: Request) -> Response:
         """Validate a coordinate string.
 
@@ -1724,7 +1710,7 @@ class UtilitiesSet(ViewSet):
         serializer.is_valid(raise_exception=True)
         return Response()
 
-    @action(methods=["get"], detail=False)
+    @rest_framework.decorators.action(methods=["get"], detail=False)
     def simbad_ned_search(self, request: Request) -> Response:
         """Perform a cone search with SIMBAD and NED and return the combined results.
 
