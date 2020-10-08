@@ -105,6 +105,10 @@ def get_create_img(p_run, band_id, image):
     img = Image.objects.filter(name__exact=image.name)
     if img.exists():
         img = img.get()
+        # Add background path if not originally provided
+        if image.background_path and not img.background_path:
+            img.background_path = image.background_path
+            img.save()
         skyreg = get_create_skyreg(p_run, img)
         # check and add the many to many if not existent
         if not Image.objects.filter(

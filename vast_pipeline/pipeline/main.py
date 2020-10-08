@@ -76,38 +76,6 @@ class Pipeline():
                     f' Must be a list or dictionary.'
                 ))
 
-        # A dictionary of path to Fits images, eg
-        # "/data/images/I1233234.FITS" and selavy catalogues
-        # Used as a cache to avoid reloading cubes all the time.
-        self.img_paths = {
-            'selavy': {},
-            'noise': {},
-            'background': {}
-        }
-        self.img_epochs = {}
-
-        for key in sorted(self.config.IMAGE_FILES.keys()):
-            for x,y in zip(
-                self.config.IMAGE_FILES[key],
-                self.config.SELAVY_FILES[key]
-            ):
-                self.img_paths['selavy'][x] = y
-
-            for x,y in zip(
-                self.config.IMAGE_FILES[key],
-                self.config.NOISE_FILES[key]
-            ):
-                self.img_paths['noise'][x] = y
-
-            for x,y in zip(
-                self.config.IMAGE_FILES[key],
-                self.config.BACKGROUND_FILES[key]
-            ):
-                self.img_paths['background'][x] = y
-
-            for x in self.config.IMAGE_FILES[key]:
-                self.img_epochs[os.path.basename(x)] = key
-
     @staticmethod
     def load_cfg(cfg):
         """
@@ -207,6 +175,18 @@ class Pipeline():
                     'Expecting list of background MAP files!'
                 )
 
+            monitor_settings = [
+                'MONITOR_MIN_SIGMA',
+                'MONITOR_EDGE_BUFFER_SCALE',
+                'MONITOR_CLUSTER_THRESHOLD',
+                'MONITOR_ALLOW_NAN',
+            ]
+            for mon_set in monitor_settings:
+                if mon_set not in dir(self.config):
+                    raise PipelineConfigError(mon_set + ' must be defined!')
+
+        # if defined, check background files regardless of monitor
+        if getattr(self.config, 'BACKGROUND_FILES'):
             # check for duplicated values
             backgrd_f_list = getattr(self.config, 'BACKGROUND_FILES')
             backgrd_f_list = [
@@ -230,16 +210,6 @@ class Pipeline():
                             f'file:\n{file}\ndoes not exists!'
                         )
 
-            monitor_settings = [
-                'MONITOR_MIN_SIGMA',
-                'MONITOR_EDGE_BUFFER_SCALE',
-                'MONITOR_CLUSTER_THRESHOLD',
-                'MONITOR_ALLOW_NAN',
-            ]
-            for mon_set in monitor_settings:
-                if mon_set not in dir(self.config):
-                    raise PipelineConfigError(mon_set + ' must be defined!')
-
         # validate every config from the config template
         for key in [k for k in dir(self.config) if k.isupper()]:
             if key.lower() not in settings.PIPE_RUN_CONFIG_DEFAULTS.keys():
@@ -249,15 +219,64 @@ class Pipeline():
 
         pass
 
+    def match_images_to_data(self):
+        """
+        Loops through images and matches the selavy, noise and bkg images.
+        Assumes that user has enteted images and other data in the same order.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
+        self.img_paths = {
+            'selavy': {},
+            'noise': {},
+            'background': {}
+        }
+        self.img_epochs = {}
+
+        for key in sorted(self.config.IMAGE_FILES.keys()):
+            for x,y in zip(
+                self.config.IMAGE_FILES[key],
+                self.config.SELAVY_FILES[key]
+            ):
+                self.img_paths['selavy'][x] = y
+
+            for x,y in zip(
+                self.config.IMAGE_FILES[key],
+                self.config.NOISE_FILES[key]
+            ):
+                self.img_paths['noise'][x] = y
+
+            # check if backgound files have been given before
+            # attempting to match
+            if key in self.config.BACKGROUND_FILES:
+                for x,y in zip(
+                    self.config.IMAGE_FILES[key],
+                    self.config.BACKGROUND_FILES[key]
+                ):
+                    self.img_paths['background'][x] = y
+
+            for x in self.config.IMAGE_FILES[key]:
+                self.img_epochs[os.path.basename(x)] = key
+
     def process_pipeline(self, p_run):
         logger.info(f'Epoch based association: {self.epoch_based}')
 
         # Update epoch based flag to not cause user confusion when running
         # the pipeline (i.e. if it was only updated at the end).
         if self.epoch_based:
-            with transaction.atomic()
+            with transaction.atomic():
                 p_run.epoch_based = self.epoch_based
                 p_run.save()
+
+        # Match the image files to the respective selavy, noise and bkg files.
+        # Do this after validation is successful.
+        self.match_images_to_data()
 
         # upload/retrieve image data
         images, meas_dj_obj, skyregs_df = upload_images(
@@ -337,6 +356,10 @@ class Pipeline():
         if SurveySource.objects.exists():
             pass
 
+        # Obtain the number of selavy measurements for the run
+        # n_selavy_measurements = sources_df.
+        nr_selavy_measurements = sources_df['id'].unique().shape[0]
+
         # STEP #3: Merge sky regions and sources ready for
         # steps 4 and 5 below.
         missing_source_cols = [
@@ -359,7 +382,11 @@ class Pipeline():
 
         # STEP #5: Run forced extraction/photometry if asked
         if self.config.MONITOR:
-            sources_df, meas_dj_obj = forced_extraction(
+            (
+                sources_df,
+                meas_dj_obj,
+                nr_forced_measurements
+            ) = forced_extraction(
                 sources_df,
                 self.config.ASTROMETRIC_UNCERTAINTY_RA / 3600.,
                 self.config.ASTROMETRIC_UNCERTAINTY_DEC / 3600.,
@@ -389,6 +416,10 @@ class Pipeline():
         with transaction.atomic():
             p_run.n_images = nr_img_processed
             p_run.n_sources = nr_sources
+            p_run.n_selavy_measurements = nr_selavy_measurements
+            p_run.n_forced_measurements = (
+                nr_forced_measurements if self.config.MONITOR else 0
+            )
             p_run.save()
 
         pass

@@ -94,6 +94,8 @@ class Migration(migrations.Migration):
                 ('status', models.CharField(choices=[('INI', 'Initialised'), ('RUN', 'Running'), ('END', 'Completed'), ('ERR', 'Error')], default='INI', help_text='Status of the pipeline run.', max_length=3)),
                 ('n_images', models.IntegerField(default=0, help_text='number of images processed in this run')),
                 ('n_sources', models.IntegerField(default=0, help_text='number of sources extracted in this run')),
+                ('n_selavy_measurements', models.IntegerField(default=0, help_text='number of selavy measurements in this run')),
+                ('n_forced_measurements', models.IntegerField(default=0, help_text='number of forced measurements in this run')),
                 ('epoch_based', models.BooleanField(default=False, help_text='Whether the run was processed using epoch based association, i.e. the user passed in groups of images defining epochs rather than every image being treated individually.')),
                 ('user', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
             ],
