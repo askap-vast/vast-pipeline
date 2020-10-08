@@ -356,6 +356,10 @@ class Pipeline():
         if SurveySource.objects.exists():
             pass
 
+        # Obtain the number of selavy measurements for the run
+        # n_selavy_measurements = sources_df.
+        nr_selavy_measurements = sources_df['id'].unique().shape[0]
+
         # STEP #3: Merge sky regions and sources ready for
         # steps 4 and 5 below.
         missing_source_cols = [
@@ -378,7 +382,11 @@ class Pipeline():
 
         # STEP #5: Run forced extraction/photometry if asked
         if self.config.MONITOR:
-            sources_df, meas_dj_obj = forced_extraction(
+            (
+                sources_df,
+                meas_dj_obj,
+                nr_forced_measurements
+            ) = forced_extraction(
                 sources_df,
                 self.config.ASTROMETRIC_UNCERTAINTY_RA / 3600.,
                 self.config.ASTROMETRIC_UNCERTAINTY_DEC / 3600.,
@@ -408,6 +416,10 @@ class Pipeline():
         with transaction.atomic():
             p_run.n_images = nr_img_processed
             p_run.n_sources = nr_sources
+            p_run.n_selavy_measurements = nr_selavy_measurements
+            p_run.n_forced_measurements = (
+                nr_forced_measurements if self.config.MONITOR else 0
+            )
             p_run.save()
 
         pass

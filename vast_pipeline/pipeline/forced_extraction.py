@@ -558,7 +558,10 @@ def forced_extraction(
         ignore_index=True
     )
 
+    # get the number of forced extractions for the run
+    n_forced = extr_df.shape[0]
+
     logger.info(
         'Total forced extraction time: %.2f seconds', timer.reset_init()
     )
-    return sources_df, meas_dj_obj
+    return sources_df, meas_dj_obj, n_forced

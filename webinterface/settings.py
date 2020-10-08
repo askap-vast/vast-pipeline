@@ -131,11 +131,10 @@ SOCIAL_AUTH_PIPELINE = (
 )
 
 SOCIAL_AUTH_GITHUB_ORG_KEY = env('SOCIAL_AUTH_GITHUB_KEY', cast=str, default='')
-SOCIAL_AUTH_GITHUB_ORG_SECRET = env('SOCIAL_AUTH_GITHUB_SECRET', cast=str, default=''
-    )
+SOCIAL_AUTH_GITHUB_ORG_SECRET = env('SOCIAL_AUTH_GITHUB_SECRET', cast=str, default='')
 SOCIAL_AUTH_GITHUB_ORG_NAME = env('SOCIAL_AUTH_GITHUB_ORG_NAME', cast=str, default='')
 SOCIAL_AUTH_GITHUB_ADMIN_TEAM = env('SOCIAL_AUTH_GITHUB_ADMIN_TEAM', cast=str, default='')
-SOCIAL_AUTH_GITHUB_SCOPE = ['read:org', 'user:email']
+SOCIAL_AUTH_GITHUB_ORG_SCOPE = ['read:org', 'user:email']
 
 
 # Database
@@ -259,6 +258,9 @@ if '/' not in SURVEYS_WORKING_DIR:
 RAW_IMAGE_DIR = env('RAW_IMAGE_DIR', cast=str, default=os.path.join(BASE_DIR, 'raw-images'))
 if '/' not in RAW_IMAGE_DIR:
     RAW_IMAGE_DIR = os.path.join(BASE_DIR, RAW_IMAGE_DIR)
+
+# extra user-supplied data folder, relative to the user's home directory on the deployment machine
+HOME_DATA_DIR = env('HOME_DATA_DIR', cast=str, default='vast-pipeline-extra-data')
 
 # allowed source finders
 SOURCE_FINDERS = ['selavy']
