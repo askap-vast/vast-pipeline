@@ -104,3 +104,5 @@ celerybeat-schedule
 *run*/
 *survey*/
 **/*.env
+
+.idea/
