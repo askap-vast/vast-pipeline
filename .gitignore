@@ -109,3 +109,4 @@ Dockerfile
 docker/
 .dockerignore
 docker-compose.yml
+.idea/
