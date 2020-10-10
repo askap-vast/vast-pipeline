@@ -1177,7 +1177,7 @@ def _correct_parallel_source_ids(
     df : pd.DataFrame
         The input df with correct source ids.
     """
-    df.loc[:, 'source'] = df['source'].values + correction
+    df['source'] = df['source'].values + correction
     related_mask = ~(df['related'].isna())
 
     new_relations = df.loc[
@@ -1199,7 +1199,8 @@ def parallel_association(
     dr_limit: float,
     bw_limit: float,
     duplicate_limit: Angle,
-    config,
+    # TODO update config typing.
+    config, # a 'module` typing.
     n_skyregion_groups: int
 ) -> pd.DataFrame:
     """
@@ -1265,6 +1266,7 @@ def parallel_association(
 
     n_cpu = cpu_count() - 1
 
+    # pass each skyreg_group through the normal association process.
     results = (
         dd.from_pandas(images_df, n_cpu)
         .groupby('skyreg_group')
@@ -1279,21 +1281,57 @@ def parallel_association(
         ).compute(n_workers=n_cpu, scheduler='processes')
     )
 
+    # results are the normal dataframe of results with the columns:
+    # 'id', 'uncertainty_ew', 'weight_ew', 'uncertainty_ns', 'weight_ns',
+    # 'flux_int', 'flux_int_err', 'flux_peak', 'flux_peak_err', 'forced',
+    # 'compactness', 'has_siblings', 'snr', 'image', 'datetime', 'source',
+    # 'ra', 'dec', 'd2d', 'dr', 'related', 'epoch', 'interim_ew' and
+    # 'interim_ns'.
+
+    # The index however is now a multi index with the skyregion group and
+    # a general result index. Hence the general result index is repeated for
+    # each skyreg_group along with the source_ids. This needs to be collapsed
+    # and the source id's corrected.
+
+    # Index example:
+    #                        id
+    # skyreg_group
+    # --------------------------
+    # 2            0      15640
+    #              1      15641
+    #              2      15642
+    #              3      15643
+    #              4      15644
+    # ...                   ...
+    # 1            46975  53992
+    #              46976  54062
+    #              46977  54150
+    #              46978  54161
+    #              46979  54164
+
+    # obtain the top level skyreg_group indexes.
     indexes = results.index.levels[0].values
 
+    # The first index acts as the base, so the others are looped over and
+    # corrected.
     for i in indexes[1:]:
+        # Get the maximum source ID from the previous group.
         max_id = results.loc[i - 1].source.max()
+        # Run through the correction function, only the 'source' and 'related'
+        # columns are passed and returned (corrected).
         corr_df = _correct_parallel_source_ids(
-            results.loc[i].loc[:, ['source', 'related']],
+            results.loc[i][['source', 'related']],
             max_id
         )
-        # I couldn't get the value set to work without a copy
-        # warning without setting the multi-index first.
-        corr_df.index = results.loc[(i, slice(None)), ].index
+        # replace the values in the results with the corrected source and
+        # related values
         results.loc[
-            (i, slice(None)) , ['source', 'related']
+            (i, slice(None)), ['source', 'related']
         ] = corr_df
 
+        del corr_df
+
+    # reset the indeex of the final corrected and collapsed result
     results = results.reset_index(drop=True)
 
     logger.info(
