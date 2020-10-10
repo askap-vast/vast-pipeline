@@ -953,6 +953,8 @@ def get_src_skyregion_merged_df(
         axis=1
     )
 
+    srcs_df = srcs_df.drop(['img_list', 'skyreg_img_list', 'primary'], axis=1)
+
     logger.info(
         'Ideal source coverage time: %.2f seconds', merged_timer.reset()
     )
