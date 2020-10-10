@@ -881,7 +881,8 @@ def parallel_association(
     # obtain the top level skyreg_group indexes.
     indexes = results.index.levels[0].values
 
-    # The first index is fine so the others are looped over and corrected.
+    # The first index acts as the base, so the others are looped over and
+    # corrected.
     for i in indexes[1:]:
         # Get the maximum source ID from the previous group.
         max_id = results.loc[i - 1].source.max()
