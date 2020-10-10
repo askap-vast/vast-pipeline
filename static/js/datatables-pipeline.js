@@ -50,8 +50,8 @@ $(document).ready(function() {
   $('[data-toggle="tooltip"]').tooltip();
   let buttons = [
     {extend: 'colvis', className: 'btn-info btn-sm'},
-    {extend: 'csv', className: 'btn-info btn-sm'}
-    // {extend: 'excel', className: 'btn-info btn-sm'}
+    {extend: 'csv', className: 'btn-info btn-sm'},
+    {extend: 'excel', className: 'btn-info btn-sm'}
   ]
   let dom = (
     "<'row'<'col-sm-3'l><'col-sm-6 text-center'B><'col-sm-3'f>>" +
