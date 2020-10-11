@@ -21,7 +21,7 @@ from vast_pipeline.utils.utils import StopWatch
 logger = logging.getLogger(__name__)
 
 
-def check_primary_image(row) -> bool:
+def check_primary_image(row: pd.Series) -> bool:
     """
     Checks if the primary image is in the image list.
 
