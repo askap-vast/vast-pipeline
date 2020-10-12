@@ -75,14 +75,10 @@ def final_operations(
         axis=1,
         meta=object
     )
-    import ipdb; ipdb.set_trace()  # breakpoint 0eaeae7c //
     # upload sources and related to DB
-    upload_sources(p_run, srcs_df)
+    srcs_df = upload_sources(p_run, srcs_df)
 
-    # get db ids for sources
-    srcs_df['id'] = srcs_df['src_dj'].apply(lambda x: x.id, meta=int)
-
-    import ipdb; ipdb.set_trace()  # breakpoint bcf8f142 //
+    import ipdb; ipdb.set_trace()  # breakpoint 04f4de0a //
     # gather the related df, upload to db and save to parquet file
     # the df will look like
     #

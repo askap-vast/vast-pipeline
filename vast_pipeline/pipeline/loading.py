@@ -1,11 +1,14 @@
 import os
 import logging
 import pandas as pd
+import dask.dataframe as dd
 
 from django.db import transaction
 
 from vast_pipeline.image.main import SelavyImage
-from vast_pipeline.models import Association, Measurement, Source, RelatedSource
+from vast_pipeline.models import (
+    Association, Measurement, RelatedSource, Run, Source
+)
 from .utils import (
     get_create_img, get_create_img_band, get_measurement_models
 )
@@ -147,7 +150,7 @@ def upload_images(paths, config, pipeline_run):
     return images, meas_dj_obj
 
 
-def upload_sources(pipeline_run, srcs_df):
+def upload_sources(pipeline_run: Run, srcs_df: dd.DataFrame) -> dd.DataFrame:
     '''
     delete previous sources for given pipeline run and bulk upload
     new found sources as well as related sources
@@ -166,7 +169,24 @@ def upload_sources(pipeline_run, srcs_df):
             )
             logger.debug('(type, #deleted): %s', detail_del)
 
-    bulk_upload_model(srcs_df['src_dj'], Source)
+    dj_src_models = srcs_df['src_dj'].compute()
+    bulk_upload_model(dj_src_models, Source)
+
+    # get db ids for sources and drop the models
+    srcs_df = srcs_df.drop('src_dj', axis=1)
+    dj_src_models = dj_src_models.to_frame()
+    dj_src_models['id'] = dj_src_models['src_dj'].apply(lambda x: x.id)
+    dj_src_models = dj_src_models.drop('src_dj', axis=1)
+
+    srcs_df = dd.merge(
+        srcs_df,
+        dj_src_models,
+        left_index=True,
+        right_index=True
+    )
+
+    return srcs_df.persist()
+
 
 
 def upload_related_sources(related):
