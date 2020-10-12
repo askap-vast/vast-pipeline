@@ -45,7 +45,7 @@ def final_operations(
 
     Returns
     -------
-    nr_sources: int
+    nr_sources : int
         The number of sources contained in the pipeline (used in the next steps
         of main.py).
     """
@@ -86,14 +86,15 @@ def final_operations(
         nthneighbor=2
     )
 
+    # add the separation distance in degrees
     srcs_df['n_neighbour_dist'] = d2d.deg
 
-    # upload sources and related to DB
+    # upload sources to DB using the source_models generator
     src_dj_ids = upload_sources(
         p_run, source_models_generator(srcs_df, pipeline_run=p_run)
     )
 
-    # get db ids for sources
+    # attach the DB IDs just obtained to the source dataframe
     srcs_df['id'] = src_dj_ids
 
     # gather the related df, upload to db and save to parquet file
@@ -128,6 +129,7 @@ def final_operations(
         index=False
     )
 
+    # upload the relations using the related generator.
     upload_related_sources(
         related_models_generator(related_df)
     )
@@ -150,7 +152,7 @@ def final_operations(
         .merge(srcs_df.rename(columns={'id': 'source_id'}), on='source')
     )
 
-    # upload associations in DB
+    # upload associations in DB using the generator
     upload_associations(
         association_models_generator(sources_df)
     )
