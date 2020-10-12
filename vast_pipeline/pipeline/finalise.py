@@ -7,18 +7,23 @@ from astropy.coordinates import SkyCoord
 
 from vast_pipeline.models import Association, RelatedSource
 from vast_pipeline.utils.utils import StopWatch
+from vast_pipeline.pipeline.generators import (
+    source_models_generator,
+    related_models_generator,
+    association_models_generator
+)
 
 from .loading import (
     upload_associations, upload_sources, upload_related_sources
 )
-from .utils import get_source_models, parallel_groupby
+from .utils import parallel_groupby
 
 
 logger = logging.getLogger(__name__)
 
 
 def final_operations(
-    sources_df, first_img, p_run, meas_dj_obj, new_sources_df):
+    sources_df, first_img, p_run, new_sources_df):
     timer = StopWatch()
 
     # calculate source fields
@@ -58,17 +63,13 @@ def final_operations(
 
     srcs_df['n_neighbour_dist'] = d2d.deg
 
-    # generate the source models
-    srcs_df['src_dj'] = srcs_df.apply(
-        get_source_models,
-        pipeline_run=p_run,
-        axis=1
-    )
     # upload sources and related to DB
-    upload_sources(p_run, srcs_df)
+    src_dj_ids = upload_sources(
+        p_run, source_models_generator(srcs_df, pipeline_run=p_run)
+    )
 
     # get db ids for sources
-    srcs_df['id'] = srcs_df['src_dj'].apply(lambda x: x.id)
+    srcs_df['id'] = src_dj_ids
 
     # gather the related df, upload to db and save to parquet file
     # the df will look like
@@ -101,19 +102,17 @@ def final_operations(
         os.path.join(p_run.path, 'relations.parquet'),
         index=False
     )
-    # create related models and write them to db
-    related_df['rel_src_dj'] = related_df.apply(
-        lambda row: RelatedSource(**row.to_dict()), axis=1
-    )
-    upload_related_sources(related_df['rel_src_dj'])
-    del related_df
 
+    upload_related_sources(
+        related_models_generator(related_df)
+    )
+
+    del related_df
 
     # write sources to parquet file
     srcs_df = srcs_df.drop(['related_list', 'img_list'], axis=1)
     (
-        srcs_df.drop('src_dj', axis=1)
-        .set_index('id')# set the index to db ids, dropping the source idx
+        srcs_df.set_index('id')# set the index to db ids, dropping the source idx
         .to_parquet(os.path.join(p_run.path, 'sources.parquet'))
     )
 
@@ -124,21 +123,12 @@ def final_operations(
     sources_df = (
         sources_df.drop('related', axis=1)
         .merge(srcs_df.rename(columns={'id': 'source_id'}), on='source')
-        .merge(meas_dj_obj, on='id')
     )
 
-    # Create Associan objects (linking measurements into single sources)
-    # and insert in DB
-    sources_df['assoc_dj'] = sources_df.apply(
-        lambda row: Association(
-            meas=row['meas_dj'],
-            source=row['src_dj'],
-            d2d=row['d2d'],
-            dr=row['dr'],
-        ), axis=1
-    )
     # upload associations in DB
-    upload_associations(sources_df['assoc_dj'])
+    upload_associations(
+        association_models_generator(sources_df)
+    )
 
     # write associations to parquet file
     sources_df.rename(columns={'id': 'meas_id'})[

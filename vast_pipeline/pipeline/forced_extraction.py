@@ -20,8 +20,9 @@ from vast_pipeline.image.utils import on_sky_sep
 from .loading import bulk_upload_model
 from .forced_phot import ForcedPhot
 from .utils import (
-    cross_join, get_measurement_models, parallel_groupby_coord
+    cross_join, parallel_groupby_coord
 )
+from vast_pipeline.pipeline.generators import measurement_models_generator
 from ..utils.utils import StopWatch
 
 
@@ -369,7 +370,7 @@ def write_group_to_parquet(df, fname):
     to a parquet file
     '''
     (
-        df.drop(['d2d', 'dr', 'source', 'meas_dj', 'image'], axis=1)
+        df.drop(['d2d', 'dr', 'source', 'image'], axis=1)
         .to_parquet(fname, index=False)
     )
 
@@ -397,9 +398,8 @@ def parallel_write_parquet(df, run_path):
 
 
 def forced_extraction(
-        sources_df, cfg_err_ra, cfg_err_dec, p_run,
-        meas_dj_obj, extr_df, min_sigma, edge_buffer,
-        cluster_threshold, allow_nan
+        sources_df, cfg_err_ra, cfg_err_dec, p_run, extr_df,
+        min_sigma, edge_buffer, cluster_threshold, allow_nan
     ):
     """
     check and extract expected measurements, and associated them with the
@@ -517,9 +517,6 @@ def forced_extraction(
 
     extr_df = extr_df[col_order + remaining]
 
-    # Create measurement Django objects
-    extr_df['meas_dj'] = extr_df.apply(get_measurement_models, axis=1)
-
     # Delete previous forced measurements and update new forced
     # measurements in the db
     # get the forced measurements ids for the current pipeline run
@@ -530,10 +527,12 @@ def forced_extraction(
     for parquet in forced_parquets:
         os.remove(parquet)
 
-    bulk_upload_model(extr_df['meas_dj'], Measurement)
+    meas_dj_ids = bulk_upload_model(
+        Measurement, measurement_models_generator(extr_df), return_ids=True
+    )
 
     # make the measurement id column and rename to source
-    extr_df['id'] = extr_df['meas_dj'].apply(lambda x: x.id)
+    extr_df['id'] = meas_dj_ids
     extr_df = extr_df.rename(columns={'source_tmp_id':'source'})
 
     # write forced measurements to specific parquet
@@ -541,12 +540,6 @@ def forced_extraction(
         'Saving forced measurements to specific parquet file...'
     )
     parallel_write_parquet(extr_df, p_run.path)
-
-    # append new measurements to prev meas df
-    meas_dj_obj = meas_dj_obj.append(
-        extr_df[['meas_dj', 'id']],
-        ignore_index=True
-    )
 
     # append new meas into main df and proceed with source groupby etc
     sources_df = sources_df.append(
@@ -560,4 +553,4 @@ def forced_extraction(
     logger.info(
         'Total forced extraction time: %.2f seconds', timer.reset_init()
     )
-    return sources_df, meas_dj_obj, n_forced
+    return sources_df, n_forced

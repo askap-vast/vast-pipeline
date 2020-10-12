@@ -190,7 +190,7 @@ class Pipeline():
 
     def process_pipeline(self, p_run):
         # upload/retrieve image data
-        images, meas_dj_obj = upload_images(
+        images = upload_images(
             self.img_paths,
             self.config,
             p_run
@@ -240,14 +240,12 @@ class Pipeline():
         if self.config.MONITOR:
             (
                 sources_df,
-                meas_dj_obj,
                 nr_forced_measurements
             ) = forced_extraction(
                 sources_df,
                 self.config.ASTROMETRIC_UNCERTAINTY_RA / 3600.,
                 self.config.ASTROMETRIC_UNCERTAINTY_DEC / 3600.,
                 p_run,
-                meas_dj_obj,
                 missing_sources_df,
                 self.config.MONITOR_MIN_SIGMA,
                 self.config.MONITOR_EDGE_BUFFER_SCALE,
@@ -261,7 +259,6 @@ class Pipeline():
             sources_df,
             images[0].name,
             p_run,
-            meas_dj_obj,
             new_sources_df
         )
 

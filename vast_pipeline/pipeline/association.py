@@ -8,7 +8,7 @@ from astropy.coordinates import Angle
 
 from .loading import upload_associations, upload_sources
 from .utils import (
-    get_or_append_list, get_source_models, prep_skysrc_df
+    get_or_append_list, prep_skysrc_df
 )
 from vast_pipeline.models import Association
 from vast_pipeline.utils.utils import StopWatch

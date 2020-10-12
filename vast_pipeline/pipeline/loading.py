@@ -3,11 +3,13 @@ import logging
 import pandas as pd
 
 from django.db import transaction
+from itertools import islice
 
 from vast_pipeline.image.main import SelavyImage
+from vast_pipeline.pipeline.generators import measurement_models_generator
 from vast_pipeline.models import Association, Measurement, Source, RelatedSource
 from .utils import (
-    get_create_img, get_create_img_band, get_measurement_models
+    get_create_img, get_create_img_band
 )
 from vast_pipeline.utils.utils import StopWatch
 
@@ -16,21 +18,25 @@ logger = logging.getLogger(__name__)
 
 
 @transaction.atomic
-def bulk_upload_model(objs, djmodel, batch_size=10_000):
+def bulk_upload_model(djmodel, generator, batch_size=10_000, return_ids=False):
     '''
     bulk upload a pandas series of django models to db
     objs: pandas.Series
     djmodel: django.model
     '''
-    size = objs.size
-    objs = objs.values.tolist()
-
-    for idx in range(0, size, batch_size):
-        out_bulk = djmodel.objects.bulk_create(
-            objs[idx : idx + batch_size],
-            batch_size
-        )
+    bulk_ids = []
+    while True:
+        items = list(islice(generator, batch_size))
+        if not items:
+            break
+        out_bulk = djmodel.objects.bulk_create(items)
         logger.info('Bulk created #%i %s', len(out_bulk), djmodel.__name__)
+        # save the DB ids to return
+        if return_ids:
+            [bulk_ids.append(i.id) for i in out_bulk]
+
+    if return_ids:
+        return bulk_ids
 
 
 def upload_images(paths, config, pipeline_run):
@@ -42,7 +48,6 @@ def upload_images(paths, config, pipeline_run):
     images = []
     skyregions = []
     bands = []
-    meas_dj_obj = pd.DataFrame()
 
     for path in paths['selavy']:
         # STEP #1: Load image and measurements
@@ -77,13 +82,12 @@ def upload_images(paths, config, pipeline_run):
             # grab the measurements and skip to process next image
             measurements = (
                 pd.Series(
-                    Measurement.objects.filter(image__id=img.id),
+                    Measurement.objects.filter(forced=False, image__id=img.id),
                     name='meas_dj'
                 )
                 .to_frame()
             )
             measurements['id'] = measurements['meas_dj'].apply(lambda x: x.id)
-            meas_dj_obj = meas_dj_obj.append(measurements)
             continue
 
         # 1.3 get the image measurements and save them in DB
@@ -93,26 +97,21 @@ def upload_images(paths, config, pipeline_run):
             measurements.shape[0], measurements.shape[1]
         )
 
-        # do DB bulk create
-        logger.info('Uploading to DB...')
-        measurements['meas_dj'] = measurements.apply(
-            get_measurement_models, axis=1
-        )
         # do a upload without evaluate the objects, that should be faster
-        bulk_upload_model(measurements['meas_dj'], Measurement)
+        meas_dj_ids = bulk_upload_model(
+            Measurement, measurement_models_generator(measurements),
+            return_ids=True
+        )
 
         # make a columns with the measurement id
-        measurements['id'] = measurements['meas_dj'].apply(lambda x: x.id)
-        meas_dj_obj = meas_dj_obj.append(
-            measurements.loc[:, ['id','meas_dj']]
-        )
+        measurements['id'] = meas_dj_ids
 
         # save measurements to parquet file in pipeline run folder
         base_folder = os.path.dirname(img.measurements_path)
         if not os.path.exists(base_folder):
             os.makedirs(base_folder)
 
-        measurements.drop('meas_dj', axis=1).to_parquet(
+        measurements.to_parquet(
             img.measurements_path,
             index=False
         )
@@ -144,10 +143,10 @@ def upload_images(paths, config, pipeline_run):
         'Total images upload/loading time: %.2f seconds',
         timer.reset_init()
     )
-    return images, meas_dj_obj
+    return images
 
 
-def upload_sources(pipeline_run, srcs_df):
+def upload_sources(pipeline_run, sources):
     '''
     delete previous sources for given pipeline run and bulk upload
     new found sources as well as related sources
@@ -166,13 +165,16 @@ def upload_sources(pipeline_run, srcs_df):
             )
             logger.debug('(type, #deleted): %s', detail_del)
 
-    bulk_upload_model(srcs_df['src_dj'], Source)
+    src_dj_ids = bulk_upload_model(Source, sources, return_ids=True)
+
+    return src_dj_ids
 
 
 def upload_related_sources(related):
     logger.info('Populate "related" field of sources...')
-    bulk_upload_model(related, RelatedSource)
+    bulk_upload_model(RelatedSource, related)
 
 
 def upload_associations(associations_list):
-    bulk_upload_model(associations_list, Association)
+    logger.info('Upload associations...')
+    bulk_upload_model(Association, associations_list)
