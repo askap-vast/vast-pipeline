@@ -23,12 +23,12 @@ def measurement_models_generator(
 
     Parameters
     ----------
-    meas_df: pd.DataFrame
+    meas_df : pd.DataFrame
         The dataframe from the pipeline containing the measurements of an image.
 
     Returns
     -------
-    one_m: Iterable[Measurement]
+    one_m : Iterable[Measurement]
         An iterable generator object containing the yielded Measurement
         objects.
     """
@@ -49,14 +49,14 @@ def source_models_generator(
 
     Parameters
     ----------
-    src_df: pd.DataFrame
+    src_df : pd.DataFrame
         The dataframe from the pipeline containing the measurements of an image.
-    pipeline_run: Run
+    pipeline_run : Run
         The pipeline Run object of which the sources are associated with.
 
     Returns
     -------
-    src: Iterable[Source]
+    src : Iterable[Source]
         An iterable generator object containing the yielded Source objects.
     """
     for i, row in src_df.iterrows():
@@ -83,13 +83,13 @@ def association_models_generator(
 
     Parameters
     ----------
-    assoc_df: pd.DataFrame
+    assoc_df : pd.DataFrame
         The dataframe from the pipeline containing the associations between
         measurements and sources.
 
     Returns
     -------
-    Association: Iterable[Association]
+    Association : Iterable[Association]
         An iterable generator object containing the yielded Association objects.
     """
     for i, row in assoc_df.iterrows():
@@ -110,13 +110,13 @@ def related_models_generator(
 
     Parameters
     ----------
-    related_df: pd.DataFrame
+    related_df : pd.DataFrame
         The dataframe from the pipeline containing the relations between
         sources.
 
     Returns
     -------
-    RelatedSource: Iterable[RelatedSource]
+    RelatedSource : Iterable[RelatedSource]
         An iterable generator object containing the yielded Association objects.
     """
     for i, row in related_df.iterrows():

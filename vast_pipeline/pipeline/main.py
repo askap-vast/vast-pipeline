@@ -257,7 +257,6 @@ class Pipeline():
         # metrics and upload data to database
         nr_sources = final_operations(
             sources_df,
-            images[0].name,
             p_run,
             new_sources_df
         )

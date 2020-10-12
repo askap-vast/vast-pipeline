@@ -5,7 +5,7 @@ import pandas as pd
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from vast_pipeline.models import Association, RelatedSource
+from vast_pipeline.models import Association, RelatedSource, Run
 from vast_pipeline.utils.utils import StopWatch
 from vast_pipeline.pipeline.generators import (
     source_models_generator,
@@ -23,7 +23,32 @@ logger = logging.getLogger(__name__)
 
 
 def final_operations(
-    sources_df, first_img, p_run, new_sources_df):
+    sources_df: pd.DataFrame, p_run: Run, new_sources_df: pd.DataFrame
+) -> int:
+    """
+    Performs the final operations of the pipeline:
+    - Calculates the statistics for the final sources.
+    - Uploads sources and writes parquet.
+    - Uploads related sources and writes parquet.
+    - Uploads associations and writes parquet.
+
+    Parameters
+    ----------
+    sources_df : pd.DataFrame
+        The main sources_df dataframe produced from the pipeline. Contains all
+        measurements and the association information.
+    p_run : Run
+        The pipeline Run object of which the sources are associated with.
+    new_sources_df : pd.DataFrame
+        The new sources dataframe, only contains the 'new_source_high_sigma'
+        column (source_id is the index).
+
+    Returns
+    -------
+    nr_sources: int
+        The number of sources contained in the pipeline (used in the next steps
+        of main.py).
+    """
     timer = StopWatch()
 
     # calculate source fields
