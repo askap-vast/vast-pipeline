@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added `vast_pipeline/pipeline/generators.py` which contains generator functions [#382](https://github.com/askap-vast/vast-pipeline/pull/382).
 - Added links to tables and postage stamps on source detail page [#379](https://github.com/askap-vast/vast-pipeline/pull/379).
 - Updates image `background_path` from current run when not originally provided [#377](https://github.com/askap-vast/vast-pipeline/pull/377).
 - Added csv export button to datatables on webinterface [#363](https://github.com/askap-vast/vast-pipeline/pull/363).
