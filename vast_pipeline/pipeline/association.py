@@ -896,7 +896,7 @@ def parallel_association(
         # related values
         results.loc[
             (i, slice(None)), ['source', 'related']
-        ] = corr_df
+        ] = corr_df.values
 
         del corr_df
 
