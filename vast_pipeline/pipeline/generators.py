@@ -1,5 +1,5 @@
 # contains all the generators for bulk data uploading
-# assumes these are used with apply on a dataframe
+
 import logging
 
 import pandas as pd
