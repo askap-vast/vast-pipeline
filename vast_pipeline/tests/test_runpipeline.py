@@ -9,7 +9,7 @@ from vast_pipeline.pipeline.main import Pipeline
 from vast_pipeline.pipeline.errors import PipelineConfigError
 
 
-TEST_ROOT = os.path.join(s.BASE_DIR, 'pipeline', 'tests')
+TEST_ROOT = os.path.join(s.BASE_DIR, 'vast_pipeline', 'tests')
 
 
 @override_settings(
@@ -17,7 +17,10 @@ TEST_ROOT = os.path.join(s.BASE_DIR, 'pipeline', 'tests')
     RAW_IMAGE_DIR=os.path.join(TEST_ROOT, 'data'),
 )
 class RunPipelineTest(TestCase):
-    basic_assoc_run = os.path.join(s.PIPELINE_WORKING_DIR, 'basic-association')
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.basic_assoc_run = os.path.join(s.PIPELINE_WORKING_DIR, 'basic-association')
 
     def setUp(self):
         # TODO: replace with a load images function and call 'runpipeline'
