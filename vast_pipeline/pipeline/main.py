@@ -5,18 +5,26 @@ import logging
 from astropy import units as u
 from astropy.coordinates import Angle
 
+import pandas as pd
+
 from django.conf import settings
 from django.db import transaction
 
 from importlib.util import spec_from_file_location, module_from_spec
 
 from vast_pipeline.models import Run, SurveySource
-from .association import association
+from .association import association, parallel_association
 from .new_sources import new_sources
 from .forced_extraction import forced_extraction
 from .finalise import final_operations
 from .loading import upload_images
-from .utils import get_src_skyregion_merged_df
+from .utils import (
+    get_src_skyregion_merged_df,
+    group_skyregions,
+    get_parallel_assoc_image_df
+)
+from vast_pipeline.utils.utils import convert_list_to_dict
+
 from .errors import MaxPipelineRunsError, PipelineConfigError
 
 
@@ -36,29 +44,37 @@ class Pipeline():
         '''
         self.name = name
         self.config = self.load_cfg(config_path)
+        # The epoch_based parameter below is for
+        # if the user has entered just lists we don't have
+        # access to the dates until the Image instances are
+        # created. So we flag this as true so that we can
+        # reorder the epochs once the date information is available.
+        # It is also recorded in the database such that there is a record
+        # of the fact that the run was processed in an epoch based mode.
+        self.epoch_based = False
 
-        # A dictionary of path to Fits images, eg
-        # "/data/images/I1233234.FITS" and selavy catalogues
-        # Used as a cache to avoid reloading cubes all the time.
-        self.img_paths = {}
-        self.img_paths['selavy'] = {
-            x:y for x,y in zip(
-                self.config.IMAGE_FILES,
-                self.config.SELAVY_FILES
-            )
-        }
-        self.img_paths['noise'] = {
-            x:y for x,y in zip(
-                self.config.IMAGE_FILES,
-                self.config.NOISE_FILES
-            )
-        }
-        self.img_paths['background'] = {
-            x:y for x,y in zip(
-                self.config.IMAGE_FILES,
-                self.config.BACKGROUND_FILES
-            )
-        }
+        # Check if provided files are lists and convert to
+        # dictionaries if so
+        for cfg_key in [
+            'IMAGE_FILES', 'SELAVY_FILES',
+            'BACKGROUND_FILES', 'NOISE_FILES'
+        ]:
+            if isinstance(getattr(self.config, cfg_key), list):
+                setattr(
+                    self.config,
+                    cfg_key,
+                    convert_list_to_dict(
+                        getattr(self.config, cfg_key)
+                    )
+                )
+            elif isinstance(getattr(self.config, cfg_key), dict):
+                # Set to True if dictionaries are passed.
+                self.epoch_based = True
+            else:
+                raise PipelineConfigError((
+                    'Unknown images entry format!'
+                    f' Must be a list or dictionary.'
+                ))
 
     @staticmethod
     def load_cfg(cfg):
@@ -78,7 +94,6 @@ class Pipeline():
 
         return mod
 
-
     def validate_cfg(self):
         """
         validate a pipeline run configuration against default parameters and
@@ -89,22 +104,31 @@ class Pipeline():
             getattr(self.config, 'SELAVY_FILES') and
             getattr(self.config, 'NOISE_FILES')):
             img_f_list = getattr(self.config, 'IMAGE_FILES')
+            img_f_list = [
+                item for sublist in img_f_list.values() for item in sublist
+            ] # creates a flat list of all the dictionary value lists
             for lst in ['IMAGE_FILES', 'SELAVY_FILES', 'NOISE_FILES']:
-                # checks for duplicates in each list
                 cfg_list = getattr(self.config, lst)
+                cfg_list = [
+                    item for sublist in cfg_list.values() for item in sublist
+                ]
+
+                # checks for duplicates in each list
                 if len(set(cfg_list)) != len(cfg_list):
                     raise PipelineConfigError(f'Duplicated files in: \n{lst}')
+
                 # check if nr of files match nr of images
                 if len(cfg_list) != len(img_f_list):
                     raise PipelineConfigError(
                         f'Number of {lst} files not matching number of images'
                     )
-                # check if file exists
-                for file in cfg_list:
-                    if not os.path.exists(file):
-                        raise PipelineConfigError(
-                            f'file:\n{file}\ndoes not exists!'
-                        )
+
+                for key in getattr(self.config, lst):
+                    for file in getattr(self.config, lst)[key]:
+                        if not os.path.exists(file):
+                            raise PipelineConfigError(
+                                f'file:\n{file}\ndoes not exists!'
+                            )
         else:
             raise PipelineConfigError(
                 'No image and/or Selavy and/or noise file paths passed!'
@@ -150,24 +174,6 @@ class Pipeline():
                 raise PipelineConfigError(
                     'Expecting list of background MAP files!'
                 )
-            # check for duplicated values
-            backgrd_f_list = getattr(self.config, 'BACKGROUND_FILES')
-            if len(set(backgrd_f_list)) != len(backgrd_f_list):
-                raise PipelineConfigError(
-                    'Duplicated files in: BACKGROUND_FILES list'
-                )
-            # check if provided more background files than images
-            if len(backgrd_f_list) != len(getattr(self.config, 'IMAGE_FILES')):
-                raise PipelineConfigError((
-                    'Number of BACKGROUND_FILES different from number of'
-                    ' IMAGE_FILES files'
-                ))
-            # check if all background files exist
-            for file in backgrd_f_list:
-                if not os.path.exists(file):
-                    raise PipelineConfigError(
-                        f'file:\n{file}\ndoes not exists!'
-                    )
 
             monitor_settings = [
                 'MONITOR_MIN_SIGMA',
@@ -179,6 +185,31 @@ class Pipeline():
                 if mon_set not in dir(self.config):
                     raise PipelineConfigError(mon_set + ' must be defined!')
 
+        # if defined, check background files regardless of monitor
+        if getattr(self.config, 'BACKGROUND_FILES'):
+            # check for duplicated values
+            backgrd_f_list = getattr(self.config, 'BACKGROUND_FILES')
+            backgrd_f_list = [
+                item for sublist in backgrd_f_list.values() for item in sublist
+            ]
+            if len(set(backgrd_f_list)) != len(backgrd_f_list):
+                raise PipelineConfigError(
+                    'Duplicated files in: BACKGROUND_FILES list'
+                )
+            # check if provided more background files than images
+            if len(backgrd_f_list) != len(img_f_list):
+                raise PipelineConfigError((
+                    'Number of BACKGROUND_FILES different from number of'
+                    ' IMAGE_FILES files'
+                ))
+
+            for key in getattr(self.config, 'BACKGROUND_FILES'):
+                for file in getattr(self.config, 'BACKGROUND_FILES')[key]:
+                    if not os.path.exists(file):
+                        raise PipelineConfigError(
+                            f'file:\n{file}\ndoes not exists!'
+                        )
+
         # validate every config from the config template
         for key in [k for k in dir(self.config) if k.isupper()]:
             if key.lower() not in settings.PIPE_RUN_CONFIG_DEFAULTS.keys():
@@ -188,34 +219,142 @@ class Pipeline():
 
         pass
 
+    def match_images_to_data(self):
+        """
+        Loops through images and matches the selavy, noise and bkg images.
+        Assumes that user has enteted images and other data in the same order.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
+        self.img_paths = {
+            'selavy': {},
+            'noise': {},
+            'background': {}
+        }
+        self.img_epochs = {}
+
+        for key in sorted(self.config.IMAGE_FILES.keys()):
+            for x,y in zip(
+                self.config.IMAGE_FILES[key],
+                self.config.SELAVY_FILES[key]
+            ):
+                self.img_paths['selavy'][x] = y
+
+            for x,y in zip(
+                self.config.IMAGE_FILES[key],
+                self.config.NOISE_FILES[key]
+            ):
+                self.img_paths['noise'][x] = y
+
+            # check if backgound files have been given before
+            # attempting to match
+            if key in self.config.BACKGROUND_FILES:
+                for x,y in zip(
+                    self.config.IMAGE_FILES[key],
+                    self.config.BACKGROUND_FILES[key]
+                ):
+                    self.img_paths['background'][x] = y
+
+            for x in self.config.IMAGE_FILES[key]:
+                self.img_epochs[os.path.basename(x)] = key
+
     def process_pipeline(self, p_run):
+        logger.info(f'Epoch based association: {self.epoch_based}')
+
+        # Update epoch based flag to not cause user confusion when running
+        # the pipeline (i.e. if it was only updated at the end).
+        if self.epoch_based:
+            with transaction.atomic():
+                p_run.epoch_based = self.epoch_based
+                p_run.save()
+
+        # Match the image files to the respective selavy, noise and bkg files.
+        # Do this after validation is successful.
+        self.match_images_to_data()
+
         # upload/retrieve image data
-        images, meas_dj_obj = upload_images(
+        images, meas_dj_obj, skyregs_df = upload_images(
             self.img_paths,
             self.config,
             p_run
         )
 
         # STEP #2: measurements association
-        # 2.1 Associate Measurements with reference survey sources
-        if SurveySource.objects.exists():
-            pass
-
-        # 2.2 Associate with other measurements
         # order images by time
         images.sort(key=operator.attrgetter('datetime'))
+
+        # If the user has given lists we need to reorder the
+        # image epochs such that they are in date order.
+        if self.epoch_based is False:
+            self.img_epochs = {}
+            for i, img in enumerate(images):
+                self.img_epochs[img.name] = i + 1
+
+        image_epochs = [
+            self.img_epochs[img.name] for img in images
+        ]
         limit = Angle(self.config.ASSOCIATION_RADIUS * u.arcsec)
         dr_limit = self.config.ASSOCIATION_DE_RUITER_RADIUS
         bw_limit = self.config.ASSOCIATION_BEAMWIDTH_LIMIT
-
-        sources_df = association(
-            p_run,
-            images,
-            limit,
-            dr_limit,
-            bw_limit,
-            self.config,
+        duplicate_limit = Angle(
+            self.config.ASSOCIATION_EPOCH_DUPLICATE_RADIUS * u.arcsec
         )
+
+        # 2.1 Check if sky regions to be associated can be
+        # split into connected point groups
+        skyregion_groups = group_skyregions(
+            skyregs_df[['id', 'centre_ra', 'centre_dec', 'xtr_radius']]
+        )
+        n_skyregion_groups = skyregion_groups[
+            'skyreg_group'
+        ].unique().shape[0]
+
+        # 2.2 Associate with other measurements
+        if self.config.ASSOCIATION_PARALLEL and n_skyregion_groups > 1:
+            images_df = get_parallel_assoc_image_df(
+                images, skyregion_groups
+            )
+            images_df['epoch'] = image_epochs
+
+            sources_df = parallel_association(
+                images_df,
+                limit,
+                dr_limit,
+                bw_limit,
+                duplicate_limit,
+                self.config,
+                n_skyregion_groups,
+            )
+        else:
+            images_df = pd.DataFrame.from_dict(
+                {
+                    'image_dj': images,
+                    'epoch': image_epochs
+                }
+            )
+
+            images_df['skyreg_id'] = images_df['image_dj'].apply(
+                lambda x: x.skyreg_id
+            )
+
+            sources_df = association(
+                images_df,
+                limit,
+                dr_limit,
+                bw_limit,
+                duplicate_limit,
+                self.config,
+            )
+
+        # 2.3 Associate Measurements with reference survey sources
+        if SurveySource.objects.exists():
+            pass
 
         # Obtain the number of selavy measurements for the run
         # n_selavy_measurements = sources_df.
@@ -223,9 +362,14 @@ class Pipeline():
 
         # STEP #3: Merge sky regions and sources ready for
         # steps 4 and 5 below.
+        missing_source_cols = [
+            'source', 'datetime', 'image', 'epoch',
+            'interim_ew', 'weight_ew', 'interim_ns', 'weight_ns'
+        ]
         missing_sources_df = get_src_skyregion_merged_df(
-            sources_df,
-            p_run
+            sources_df[missing_source_cols],
+            images_df,
+            skyregs_df,
         )
 
         # STEP #4 New source analysis
@@ -235,6 +379,11 @@ class Pipeline():
             self.config.NEW_SOURCE_MIN_SIGMA,
             self.config.MONITOR_EDGE_BUFFER_SCALE,
             p_run
+        )
+
+        # Drop column no longer required in missing_sources_df.
+        missing_sources_df = (
+            missing_sources_df.drop(['in_primary'], axis=1)
         )
 
         # STEP #5: Run forced extraction/photometry if asked
@@ -255,6 +404,8 @@ class Pipeline():
                 self.config.MONITOR_CLUSTER_THRESHOLD,
                 self.config.MONITOR_ALLOW_NAN
             )
+
+        del missing_sources_df
 
         # STEP #6: finalise the df getting unique sources, calculating
         # metrics and upload data to database

@@ -323,7 +323,7 @@ def new_sources(
 
     cols = [
         'id', 'name', 'noise_path', 'datetime',
-        'rms_median', 'rms_min', 'rms_max'
+        'rms_median', 'rms_min', 'rms_max',
     ]
 
     images_df = pd.DataFrame(list(
@@ -334,22 +334,6 @@ def new_sources(
 
     # Get rid of sources that are not 'new', i.e. sources which the
     # first sky region image is not in the image list
-
-    missing_sources_df['primary'] = missing_sources_df[
-        'skyreg_img_list'
-    ].apply(lambda x: x[0])
-
-    missing_sources_df['detection'] = missing_sources_df[
-        'img_list'
-    ].apply(lambda x: x[0])
-
-    missing_sources_df['in_primary'] = missing_sources_df[
-        ['primary', 'img_list']
-    ].apply(
-        check_primary_image,
-        axis=1
-    )
-
     new_sources_df = missing_sources_df[
         missing_sources_df['in_primary'] == False
     ].drop(
@@ -453,12 +437,18 @@ def new_sources(
     )
 
     # keep only the highest for each source, rename for the daatabase
-    new_sources_df = new_sources_df.drop_duplicates('source').rename(
-        columns={'true_sigma':'new_high_sigma'}
+    new_sources_df = (
+        new_sources_df
+        .drop_duplicates('source')
+        .set_index('source')
+        .rename(columns={'true_sigma':'new_high_sigma'})
     )
+
+    # moving forward only the new_high_sigma columns is needed, drop all others.
+    new_sources_df = new_sources_df[['new_high_sigma']]
 
     logger.info(
         'Total new source analysis time: %.2f seconds', timer.reset_init()
     )
 
-    return new_sources_df.set_index('source')
+    return new_sources_df
