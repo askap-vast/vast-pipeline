@@ -104,6 +104,8 @@ After creating the folders with the defaults values your directory tree should l
 ├── <b>static</b>
 ├── <b>templates</b>
 ├── <b>pipeline-runs</b>
+├── <b>raw-images</b>
+├── <b>reference-surveys</b>
 ├── <b>vast_pipeline</b>
 └── <b>webinterface</b>
 </code></pre>
@@ -133,7 +135,7 @@ Output:
 ```bash
  ...
 
-[pipeline]
+[vast_pipeline]
   clearpiperun
   importsurvey
   initpiperun
