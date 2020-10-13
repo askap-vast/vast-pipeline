@@ -9,7 +9,7 @@ from vast_pipeline.pipeline.main import Pipeline
 from vast_pipeline.pipeline.errors import PipelineConfigError
 
 
-TEST_ROOT = os.path.join(s.BASE_DIR, 'pipeline', 'tests')
+TEST_ROOT = os.path.join(s.BASE_DIR, 'vast_pipeline', 'tests')
 
 
 @override_settings(

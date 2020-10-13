@@ -10,7 +10,7 @@ urlpatterns = [
     path('', Home, name='index'),
     path('login/', Login, name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
-    path('', include('pipeline.urls')),
+    path('', include('vast_pipeline.urls')),
     path('social-auth/', include('social_django.urls', namespace='social')),
 ]
 
