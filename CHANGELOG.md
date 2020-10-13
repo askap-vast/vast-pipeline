@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Range and NaN check on new source analysis to match forced extraction [#374](https://github.com/askap-vast/vast-pipeline/pull/374).
 - Added the ability for the pipeline to read in groups of images which are defined as a single `epoch` [#277](https://github.com/askap-vast/vast-pipeline/pull/277).
 - Added the ability of the pipeline to remove duplicated measurements from an epoch [#277](https://github.com/askap-vast/vast-pipeline/pull/277).
 - Added option to control separation measurements which are defined as a duplicate [#277](https://github.com/askap-vast/vast-pipeline/pull/277).
@@ -67,6 +68,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#374](https://github.com/askap-vast/vast-pipeline/pull/374) feat, fix: Bring new source checks inline with forced extraction.
 - [#373](https://github.com/askap-vast/vast-pipeline/pull/373) fix: Check all options are valid and present in validate_cfg.
 - [#307](https://github.com/askap-vast/vast-pipeline/pull/307) feat: Improve relation functions and general association speed ups.
 - [#277](https://github.com/askap-vast/vast-pipeline/pull/277) feat,model: Parallel and epoch based association.
