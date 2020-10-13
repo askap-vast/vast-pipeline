@@ -405,6 +405,10 @@ def forced_extraction(
     check and extract expected measurements, and associated them with the
     related source(s)
     """
+    logger.info(
+        'Starting force extraction step.'
+    )
+
     timer = StopWatch()
 
     # get all the skyregions and related images
@@ -437,9 +441,6 @@ def forced_extraction(
 # | VAST_2118-06A.EPOCH01.I.fits  |  0.173946 | 2019-08-27 18:12:16.700000+00:00 |             319.652 |              -6.2989 |               6.7401 |
 # | VAST_2118-06A.EPOCH03x.I.fits |  0.165395 | 2019-10-29 10:01:20.500000+00:00 |             319.652 |              -6.2989 |               6.7401 |
 # | VAST_2118-06A.EPOCH02.I.fits  |  0.16323  | 2019-10-30 08:31:20.200000+00:00 |             319.652 |              -6.2989 |               6.7401 |
-
-    # prepare df to groupby image and apply force extraction function
-    extr_df = extr_df[['wavg_ra', 'wavg_dec', 'img_diff', 'detection']]
 
     timer.reset()
     extr_df = parallel_extraction(

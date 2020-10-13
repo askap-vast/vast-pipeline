@@ -150,7 +150,8 @@ def upload_images(paths, config, pipeline_run):
         'Total images upload/loading time: %.2f seconds',
         timer.reset_init()
     )
-    return images
+
+    return images, skyregs_df
 
 
 def upload_sources(sources_df, pipeline_run):

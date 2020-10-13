@@ -71,8 +71,8 @@ def final_operations(
 
     # calculate nearest neighbour
     srcs_skycoord = SkyCoord(
-        srcs_df['wavg_ra'],
-        srcs_df['wavg_dec'],
+        srcs_df['wavg_ra'].values,
+        srcs_df['wavg_dec'].values,
         unit=(u.deg, u.deg)
     )
 
