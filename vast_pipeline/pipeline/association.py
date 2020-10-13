@@ -1,6 +1,8 @@
 import logging
 import numpy as np
 import pandas as pd
+import dask.dataframe as dd
+from psutil import cpu_count
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -512,22 +514,43 @@ def advanced_association(
     return sources_df, skyc1_srcs
 
 
-def association(p_run, images, limit, dr_limit, bw_limit,
-    config):
+def association(images_df, limit, dr_limit, bw_limit,
+    duplicate_limit, config):
     '''
     The main association function that does the common tasks between basic
     and advanced modes.
     '''
     timer = StopWatch()
+
+    if 'skyreg_group' in images_df.columns:
+        skyreg_group = images_df['skyreg_group'].iloc[0]
+        skyreg_tag = " (sky region group %s)" % skyreg_group
+    else:
+        skyreg_tag = ""
+
     method = config.ASSOCIATION_METHOD
+
+    logger.info('Starting association%s.', skyreg_tag)
     logger.info('Association mode selected: %s.', method)
+
+    # if isinstance(images, pd.DataFrame):
+    #     images = images['image'].to_list()
+    unique_epochs = images_df.sort_values(by='epoch')['epoch'].unique()
+
+    first_images = (
+        images_df
+        .loc[images_df['epoch'] == unique_epochs[0], 'image_dj']
+        .to_list()
+    )
 
     # initialise sky source dataframe
     skyc1_srcs = prep_skysrc_df(
-        images[0],
+        first_images,
         config.FLUX_PERC_ERROR,
+        duplicate_limit,
         ini_df=True
     )
+    skyc1_srcs['epoch'] = unique_epochs[0]
     # create base catalogue
     skyc1 = SkyCoord(
         ra=skyc1_srcs['ra'].values * u.degree,
@@ -536,10 +559,23 @@ def association(p_run, images, limit, dr_limit, bw_limit,
     # initialise the sources dataframe using first image as base
     sources_df = skyc1_srcs.copy()
 
-    for it, image in enumerate(images[1:]):
-        logger.info('Association iteration: #%i', it + 1)
+    for it, epoch in enumerate(unique_epochs[1:]):
+        logger.info('Association iteration: #%i%s', it + 1, skyreg_tag)
         # load skyc2 source measurements and create SkyCoord
-        skyc2_srcs = prep_skysrc_df(image, config.FLUX_PERC_ERROR)
+        images = (
+            images_df.loc[images_df['epoch'] == epoch, 'image_dj'].to_list()
+        )
+        max_beam_maj = (
+            images_df.loc[images_df['epoch'] == epoch, 'image_dj']
+            .apply(lambda x: x.beam_bmaj)
+            .max()
+        )
+        skyc2_srcs = prep_skysrc_df(
+            images,
+            config.FLUX_PERC_ERROR,
+            duplicate_limit
+        )
+        skyc2_srcs['epoch'] = epoch
         skyc2 = SkyCoord(
             ra=skyc2_srcs['ra'].values * u.degree,
             dec=skyc2_srcs['dec'].values * u.degree
@@ -558,7 +594,7 @@ def association(p_run, images, limit, dr_limit, bw_limit,
         elif method in ['advanced', 'deruiter']:
             if method == 'deruiter':
                 bw_max = Angle(
-                    bw_limit * (image.beam_bmaj * 3600. / 2.) * u.arcsec
+                    bw_limit * (max_beam_maj * 3600. / 2.) * u.arcsec
                 )
             else:
                 bw_max = limit
@@ -577,7 +613,8 @@ def association(p_run, images, limit, dr_limit, bw_limit,
             raise Exception('association method not implemented!')
 
         logger.info(
-            'Calculating weighted average RA and Dec for sources...'
+            'Calculating weighted average RA and Dec for sources%s...',
+            skyreg_tag
         )
 
         # account for RA wrapping
@@ -638,7 +675,8 @@ def association(p_run, images, limit, dr_limit, bw_limit,
         logger.debug('Groupby concat time %f', stats.reset())
 
         logger.info(
-            'Finalising base sources catalogue ready for next iteration...'
+            'Finalising base sources catalogue ready for next iteration%s...',
+            skyreg_tag
         )
         # merge the weighted ra and dec and replace the values
         skyc1_srcs = skyc1_srcs.merge(
@@ -667,7 +705,9 @@ def association(p_run, images, limit, dr_limit, bw_limit,
             ra=skyc1_srcs['ra'] * u.degree,
             dec=skyc1_srcs['dec'] * u.degree
         )
-        logger.info('Association iteration #%i complete.', it + 1)
+        logger.info(
+            'Association iteration #%i complete%s.', it + 1, skyreg_tag
+        )
 
     # End of iteration over images, ra and dec columns are actually the
     # average over each iteration so remove ave ra and ave dec used for
@@ -678,6 +718,193 @@ def association(p_run, images, limit, dr_limit, bw_limit,
     )
 
     logger.info(
-        'Total association time: %.2f seconds', timer.reset_init()
+        'Total association time: %.2f seconds%s.',
+        timer.reset_init(),
+        skyreg_tag
     )
     return sources_df
+
+
+def _correct_parallel_source_ids(
+    df: pd.DataFrame, correction: int
+) -> pd.DataFrame:
+    """
+    This function is to correct the source ids after the combination of
+    the associaiton dataframes produced by parallel association - as source
+    ids will be duplicated if left.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Holds the measurements associated into sources. The output of of the
+        association step (sources_df).
+    correction : int
+        The value to add to the source ids.
+
+    Returns
+    -------
+    df : pd.DataFrame
+        The input df with correct source ids.
+    """
+    df['source'] = df['source'].values + correction
+    related_mask = ~(df['related'].isna())
+
+    new_relations = df.loc[
+        related_mask, 'related'
+    ].explode() + correction
+
+    df.loc[
+        df[related_mask].index.values, 'related'
+    ] = new_relations.groupby(level=0).apply(
+        lambda x: x.values.tolist()
+    )
+
+    return df
+
+
+def parallel_association(
+    images_df: pd.DataFrame,
+    limit: Angle,
+    dr_limit: float,
+    bw_limit: float,
+    duplicate_limit: Angle,
+    # TODO update config typing.
+    config, # a 'module` typing.
+    n_skyregion_groups: int
+) -> pd.DataFrame:
+    """
+    Launches association on different sky region groups in parallel using Dask.
+
+    Parameters
+    ----------
+    images_df : pd.DataFrame
+        Holds the images that are being processed. Also contains what sky
+        region group the image belongs to.
+    limit: Angle
+        The association radius limit.
+    dr_limit : float
+        The de Ruiter radius limit.
+    bw_limit : float
+        The beamwidth limit.
+    duplicate_limit: Angle
+        The duplicate radius detection limit.
+    config : module
+        The pipeline config settings.
+    n_skyregion_groups: int
+        The number of sky region groups.
+
+    Returns
+    -------
+    results : pd.DataFrame
+        The combined association results of the parallel association with
+        corrected source ids.
+    """
+    logger.info(
+        "Running parallel association for %i sky region groups.",
+        n_skyregion_groups
+    )
+
+    timer = StopWatch()
+
+    meta = {
+        'id': 'i',
+        'uncertainty_ew': 'f',
+        'weight_ew': 'f',
+        'uncertainty_ns': 'f',
+        'weight_ns': 'f',
+        'flux_int': 'f',
+        'flux_int_err': 'f',
+        'flux_peak': 'f',
+        'flux_peak_err': 'f',
+        'forced': '?',
+        'compactness': 'f',
+        'has_siblings': '?',
+        'snr': 'f',
+        'image': 'U',
+        'datetime': 'datetime64[ns]',
+        'source': 'i',
+        'ra': 'f',
+        'dec': 'f',
+        'd2d': 'f',
+        'dr': 'f',
+        'related': 'O',
+        'epoch': 'i',
+        'interim_ew': 'f',
+        'interim_ns': 'f',
+    }
+
+    n_cpu = cpu_count() - 1
+
+    # pass each skyreg_group through the normal association process.
+    results = (
+        dd.from_pandas(images_df, n_cpu)
+        .groupby('skyreg_group')
+        .apply(
+            association,
+            limit=limit,
+            dr_limit=dr_limit,
+            bw_limit=bw_limit,
+            duplicate_limit=duplicate_limit,
+            config=config,
+            meta=meta
+        ).compute(n_workers=n_cpu, scheduler='processes')
+    )
+
+    # results are the normal dataframe of results with the columns:
+    # 'id', 'uncertainty_ew', 'weight_ew', 'uncertainty_ns', 'weight_ns',
+    # 'flux_int', 'flux_int_err', 'flux_peak', 'flux_peak_err', 'forced',
+    # 'compactness', 'has_siblings', 'snr', 'image', 'datetime', 'source',
+    # 'ra', 'dec', 'd2d', 'dr', 'related', 'epoch', 'interim_ew' and
+    # 'interim_ns'.
+
+    # The index however is now a multi index with the skyregion group and
+    # a general result index. Hence the general result index is repeated for
+    # each skyreg_group along with the source_ids. This needs to be collapsed
+    # and the source id's corrected.
+
+    # Index example:
+    #                        id
+    # skyreg_group
+    # --------------------------
+    # 2            0      15640
+    #              1      15641
+    #              2      15642
+    #              3      15643
+    #              4      15644
+    # ...                   ...
+    # 1            46975  53992
+    #              46976  54062
+    #              46977  54150
+    #              46978  54161
+    #              46979  54164
+
+    # obtain the top level skyreg_group indexes.
+    indexes = results.index.levels[0].values
+
+    # The first index acts as the base, so the others are looped over and
+    # corrected.
+    for i in indexes[1:]:
+        # Get the maximum source ID from the previous group.
+        max_id = results.loc[i - 1].source.max()
+        # Run through the correction function, only the 'source' and 'related'
+        # columns are passed and returned (corrected).
+        corr_df = _correct_parallel_source_ids(
+            results.loc[i][['source', 'related']],
+            max_id
+        )
+        # replace the values in the results with the corrected source and
+        # related values
+        results.loc[
+            (i, slice(None)), ['source', 'related']
+        ] = corr_df.values
+
+        del corr_df
+
+    # reset the indeex of the final corrected and collapsed result
+    results = results.reset_index(drop=True)
+
+    logger.info(
+        'Total parallel association time: %.2f seconds', timer.reset_init()
+    )
+
+    return results

@@ -405,6 +405,10 @@ def forced_extraction(
     check and extract expected measurements, and associated them with the
     related source(s)
     """
+    logger.info(
+        'Starting force extraction step.'
+    )
+
     timer = StopWatch()
 
     # get all the skyregions and related images

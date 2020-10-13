@@ -144,7 +144,7 @@ def upload_images(paths, config, pipeline_run):
         'Total images upload/loading time: %.2f seconds',
         timer.reset_init()
     )
-    return images, meas_dj_obj
+    return images, meas_dj_obj, skyregs_df
 
 
 def upload_sources(pipeline_run, srcs_df):
