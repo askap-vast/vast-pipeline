@@ -6,7 +6,12 @@ from django.db import transaction
 from itertools import islice
 
 from vast_pipeline.image.main import SelavyImage
-from vast_pipeline.pipeline.generators import measurement_models_generator
+from vast_pipeline.pipeline.generators import (
+    measurement_models_generator,
+    source_models_generator,
+    related_models_generator,
+    association_models_generator
+)
 from vast_pipeline.models import Association, Measurement, Source, RelatedSource
 from .utils import (
     get_create_img, get_create_img_band
@@ -21,8 +26,10 @@ logger = logging.getLogger(__name__)
 def bulk_upload_model(djmodel, generator, batch_size=10_000, return_ids=False):
     '''
     bulk upload a pandas series of django models to db
-    objs: pandas.Series
     djmodel: django.model
+    generator: generator
+    batch_size: int
+    return_ids: bool
     '''
     bulk_ids = []
     while True:
@@ -146,7 +153,7 @@ def upload_images(paths, config, pipeline_run):
     return images
 
 
-def upload_sources(pipeline_run, sources):
+def upload_sources(sources_df, pipeline_run):
     '''
     delete previous sources for given pipeline run and bulk upload
     new found sources as well as related sources
@@ -165,16 +172,22 @@ def upload_sources(pipeline_run, sources):
             )
             logger.debug('(type, #deleted): %s', detail_del)
 
-    src_dj_ids = bulk_upload_model(Source, sources, return_ids=True)
+    src_dj_ids = bulk_upload_model(
+        Source,
+        source_models_generator(sources_df, pipeline_run=pipeline_run),
+        return_ids=True
+    )
 
     return src_dj_ids
 
 
-def upload_related_sources(related):
+def upload_related_sources(related_df):
     logger.info('Populate "related" field of sources...')
-    bulk_upload_model(RelatedSource, related)
+    bulk_upload_model(RelatedSource, related_models_generator(related_df))
 
 
-def upload_associations(associations_list):
+def upload_associations(associations_df):
     logger.info('Upload associations...')
-    bulk_upload_model(Association, associations_list)
+    bulk_upload_model(
+        Association, association_models_generator(associations_df)
+    )

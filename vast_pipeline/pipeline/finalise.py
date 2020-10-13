@@ -7,11 +7,6 @@ from astropy.coordinates import SkyCoord
 
 from vast_pipeline.models import Association, RelatedSource, Run
 from vast_pipeline.utils.utils import StopWatch
-from vast_pipeline.pipeline.generators import (
-    source_models_generator,
-    related_models_generator,
-    association_models_generator
-)
 
 from .loading import (
     upload_associations, upload_sources, upload_related_sources
@@ -89,10 +84,8 @@ def final_operations(
     # add the separation distance in degrees
     srcs_df['n_neighbour_dist'] = d2d.deg
 
-    # upload sources to DB using the source_models generator
-    src_dj_ids = upload_sources(
-        p_run, source_models_generator(srcs_df, pipeline_run=p_run)
-    )
+    # upload sources to DB
+    src_dj_ids = upload_sources(srcs_df, p_run)
 
     # attach the DB IDs just obtained to the source dataframe
     srcs_df['id'] = src_dj_ids
@@ -129,10 +122,8 @@ def final_operations(
         index=False
     )
 
-    # upload the relations using the related generator.
-    upload_related_sources(
-        related_models_generator(related_df)
-    )
+    # upload the relations to DB.
+    upload_related_sources(related_df)
 
     del related_df
 
@@ -152,10 +143,8 @@ def final_operations(
         .merge(srcs_df.rename(columns={'id': 'source_id'}), on='source')
     )
 
-    # upload associations in DB using the generator
-    upload_associations(
-        association_models_generator(sources_df)
-    )
+    # upload associations into DB
+    upload_associations(sources_df)
 
     # write associations to parquet file
     sources_df.rename(columns={'id': 'meas_id'})[
