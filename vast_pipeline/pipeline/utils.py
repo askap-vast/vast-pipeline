@@ -416,16 +416,91 @@ def prep_skysrc_df(
     return df
 
 
-def get_or_append_list(obj_in, elem):
-    '''
-    return a list with elem in it, if obj_in is list append to it
-    '''
-    if isinstance(obj_in, list):
-        out = obj_in
-        out.append(elem)
-        return out
+def add_new_one_to_many_relations(
+    row: pd.Series, advanced: bool = False,
+    source_ids: Optional[pd.DataFrame] = None
+) -> List[int]:
+    """
+    This handles the relation information being created from the
+    one_to_many functions in association.
 
-    return [elem]
+    Parameters
+    ----------
+    row : pd.Series
+        The relation information Series from the assoication dataframe. Only
+        the columns ['related_skyc1', 'source_skyc1'] are required for advanced
+        , these are instead called ['related', 'source'] for basic.
+    advanced : bool, optional
+        Whether advanced association is being used which changes the names
+        of the columns involved.
+    source_ids : int, optional
+        A dataframe that contains the other ids to append to related for each
+        original source.
+        +----------------+--------+
+        |   source_skyc1 | 0      |
+        |----------------+--------|
+        |            122 | [5542] |
+        |            254 | [5543] |
+        |            262 | [5544] |
+        |            405 | [5545] |
+        |            656 | [5546] |
+        +----------------+--------+
+
+    Returns
+    -------
+    out : List[int]
+        The new related field for the source in question, containing the
+        appended ids.
+    """
+    if source_ids is None:
+        source_ids = pd.DataFrame()
+
+    related_col = 'related_skyc1' if advanced else 'related'
+    source_col = 'source_skyc1' if advanced else 'source'
+
+    # this is the not_original case where the original source id is appended.
+    if source_ids.empty:
+        if isinstance(row[related_col], list):
+            out = row[related_col].append(row[source_col])
+        else:
+            out = [row[source_col],]
+
+    else:  # the original case to append all the new ids.
+        source_ids = source_ids.loc[row[source_col]].iloc[0]
+        if isinstance(row[related_col], list):
+            out = row[related_col] + source_ids
+        else:
+            out = source_ids
+
+    return out
+
+
+def add_new_many_to_one_relations(row: pd.Series) -> List[int]:
+    """
+    This handles the relation information being created from the
+    many_to_one function in advanced association.
+    It is a lot simpler than the one_to_many case as it purely just adds
+    the new relations to the relation column, taking into account if it is
+    already a list of relations or not (i.e. no previous relations).
+
+    Parameters
+    ----------
+    row : pd.Series
+        The relation information Series from the assoication dataframe. Only
+        the columns ['related_skyc1', 'new_relations'] are required.
+
+    Returns
+    -------
+    out : List[int]
+        The new related field for the source in question, containing the
+        appended ids.
+    """
+    if isinstance(row['related_skyc1'], list):
+        out = row['related_skyc1'] + row['new_relations']
+    else:
+        out = row['new_relations']
+
+    return out
 
 
 def cross_join(left, right):
@@ -777,7 +852,15 @@ def get_src_skyregion_merged_df(
     del sources_df
 
     # create dataframe with all skyregions and sources combinations
-    src_skyrg_df = cross_join(srcs_df.reset_index(), skyreg_df)
+    src_skyrg_df = cross_join(
+        srcs_df.drop(['epoch_list', 'img_list'], axis=1).reset_index(),
+        skyreg_df.drop('skyreg_img_epoch_list', axis=1)
+    )
+
+    skyreg_df = skyreg_df.drop(
+        ['centre_ra', 'centre_dec', 'xtr_radius'],
+        axis=1
+    ).set_index('id')
 
     src_skyrg_df['sep'] = np.rad2deg(
         on_sky_sep(
@@ -791,10 +874,16 @@ def get_src_skyregion_merged_df(
     # select rows where separation is less than sky region radius
     # drop not more useful columns and groupby source id
     # compute list of images
-    src_skyrg_df = src_skyrg_df.loc[
-        src_skyrg_df.sep < src_skyrg_df.xtr_radius,
-        ['source', 'skyreg_img_epoch_list', 'sep']
-    ].explode('skyreg_img_epoch_list')
+    src_skyrg_df = (
+        src_skyrg_df.loc[
+            src_skyrg_df.sep < src_skyrg_df.xtr_radius,
+            ['source', 'id', 'sep']
+        ].merge(skyreg_df, left_on='id', right_index=True)
+        .drop('id', axis=1)
+        .explode('skyreg_img_epoch_list')
+    )
+
+    del skyreg_df
 
     src_skyrg_df[
         ['skyreg_img_list', 'skyreg_epoch', 'skyreg_datetime']
@@ -863,6 +952,8 @@ def get_src_skyregion_merged_df(
         check_primary_image,
         axis=1
     )
+
+    srcs_df = srcs_df.drop(['img_list', 'skyreg_img_list', 'primary'], axis=1)
 
     logger.info(
         'Ideal source coverage time: %.2f seconds', merged_timer.reset()

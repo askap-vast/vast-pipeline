@@ -240,12 +240,18 @@ def new_sources(
     )
 
     # keep only the highest for each source, rename for the daatabase
-    new_sources_df = new_sources_df.drop_duplicates('source').rename(
-        columns={'true_sigma':'new_high_sigma'}
+    new_sources_df = (
+        new_sources_df
+        .drop_duplicates('source')
+        .set_index('source')
+        .rename(columns={'true_sigma':'new_high_sigma'})
     )
+
+    # moving forward only the new_high_sigma columns is needed, drop all others.
+    new_sources_df = new_sources_df[['new_high_sigma']]
 
     logger.info(
         'Total new source analysis time: %.2f seconds', timer.reset_init()
     )
 
-    return new_sources_df.set_index('source')
+    return new_sources_df

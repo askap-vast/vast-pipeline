@@ -37,6 +37,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Rewritten relation functions to improve speed [#307](https://github.com/askap-vast/vast-pipeline/pull/307).
+- Minor changes to association to increase speed [#307](https://github.com/askap-vast/vast-pipeline/pull/307).
+- Changes to decrease memory usage during the calculation of the ideal coverage dataframe [#307](https://github.com/askap-vast/vast-pipeline/pull/307).
 - Updated the `get_src_skyregion_merged_df` logic to account for epochs [#277](https://github.com/askap-vast/vast-pipeline/pull/277).
 - Updated the job creation modal layout [#277](https://github.com/askap-vast/vast-pipeline/pull/277).
 - Bumped datatables-buttons to 1.6.5 and enabled excel export buttton [#380](https://github.com/askap-vast/vast-pipeline/pull/380).
@@ -63,6 +66,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#307](https://github.com/askap-vast/vast-pipeline/pull/307) feat: Improve relation functions and general association speed ups.
 - [#277](https://github.com/askap-vast/vast-pipeline/pull/277) feat,model: Parallel and epoch based association.
 - [#380](https://github.com/askap-vast/vast-pipeline/pull/380) feat, dep: Enable Excel export button.
 - [#379](https://github.com/askap-vast/vast-pipeline/pull/372) feat: Add links to source detail template.

@@ -380,6 +380,11 @@ class Pipeline():
             p_run
         )
 
+        # Drop column no longer required in missing_sources_df.
+        missing_sources_df = (
+            missing_sources_df.drop(['in_primary'], axis=1)
+        )
+
         # STEP #5: Run forced extraction/photometry if asked
         if self.config.MONITOR:
             (
@@ -398,6 +403,8 @@ class Pipeline():
                 self.config.MONITOR_CLUSTER_THRESHOLD,
                 self.config.MONITOR_ALLOW_NAN
             )
+
+        del missing_sources_df
 
         # STEP #6: finalise the df getting unique sources, calculating
         # metrics and upload data to database
