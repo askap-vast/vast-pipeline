@@ -39,6 +39,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - Updated the `get_src_skyregion_merged_df` logic to account for epochs [#277](https://github.com/askap-vast/vast-pipeline/pull/277).
 - Updated the job creation modal layout [#277](https://github.com/askap-vast/vast-pipeline/pull/277).
+- Bumped datatables-buttons to 1.6.5 and enabled excel export buttton [#380](https://github.com/askap-vast/vast-pipeline/pull/380).
 - Bumped datatables to 1.10.22 [#363](https://github.com/askap-vast/vast-pipeline/pull/363).
 - Changed `dom` layout on datatables [#363](https://github.com/askap-vast/vast-pipeline/pull/363).
 - Changed external results table pagination buttons on source detail webinterface page pagination to include less numbers to avoid overlap [#363](https://github.com/askap-vast/vast-pipeline/pull/363).
@@ -63,6 +64,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### List of PRs
 
 - [#277](https://github.com/askap-vast/vast-pipeline/pull/277) feat,model: Parallel and epoch based association.
+- [#380](https://github.com/askap-vast/vast-pipeline/pull/380) feat, dep: Enable Excel export button.
 - [#379](https://github.com/askap-vast/vast-pipeline/pull/372) feat: Add links to source detail template.
 - [#377](https://github.com/askap-vast/vast-pipeline/pull/377) fix: Update image bkg path when not originally provided.
 - [#363](https://github.com/askap-vast/vast-pipeline/pull/363) feat, dep: Add export and column visibility buttons to tables.
