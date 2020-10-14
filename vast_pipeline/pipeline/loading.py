@@ -40,7 +40,7 @@ def bulk_upload_model(djmodel, generator, batch_size=10_000, return_ids=False):
         logger.info('Bulk created #%i %s', len(out_bulk), djmodel.__name__)
         # save the DB ids to return
         if return_ids:
-            bulk_ids.extend(list(map(lambda i: i.id, outbulk)))
+            bulk_ids.extend(list(map(lambda i: i.id, out_bulk)))
 
     if return_ids:
         return bulk_ids
