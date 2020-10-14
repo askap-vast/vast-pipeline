@@ -628,7 +628,7 @@ class ForcedPhot:
             self.pixelscale).value
         )
 
-        npix = int(npix * edge_buffer)
+        npix = int(round(npix * edge_buffer))
 
         X0_mask = (X0 < npix) | (X0 > self.NAXIS1 - npix)
         Y0_mask = (Y0 < npix) | (Y0 > self.NAXIS2 - npix)

@@ -4,10 +4,14 @@ import glob
 import vaex
 import numpy as np
 import pandas as pd
+import astropy.units as u
 import dask.dataframe as dd
+
+from typing import List, Optional
+from astropy.io import fits
+from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
 from django.conf import settings
-
 from psutil import cpu_count
 from itertools import chain
 
@@ -22,14 +26,6 @@ from vast_pipeline.image.utils import on_sky_sep
 
 
 logger = logging.getLogger(__name__)
-
-
-def get_measurement_models(row):
-    one_m = Measurement()
-    for fld in one_m._meta.get_fields():
-        if getattr(fld, 'attname', None) and fld.attname in row.index:
-            setattr(one_m, fld.attname, row[fld.attname])
-    return one_m
 
 
 def get_create_skyreg(p_run, image):
@@ -168,61 +164,335 @@ def get_create_p_run(name, path, comment='', user=None):
     return p_run, False
 
 
-def prep_skysrc_df(image, perc_error, ini_df=False):
-    '''
-    initiliase the source dataframe to use in association logic by
-    reading the measurement parquet file and creating columns
-    inputs
-    image: django image model
-    ini_df: flag to initialise source id depending if inital df or not
-    '''
-    cols = [
-    'id',
-    'ra',
-    'uncertainty_ew',
-    'weight_ew',
-    'dec',
-    'uncertainty_ns',
-    'weight_ns',
-    'flux_int',
-    'flux_int_err',
-    'flux_peak',
-    'flux_peak_err',
-    'forced',
-    'compactness',
-    'has_siblings',
-    'snr'
+def remove_duplicate_measurements(
+    sources_df: pd.DataFrame,
+    dup_lim: Optional[Angle] = None,
+    ini_df: bool = False
+) -> pd.DataFrame:
+    """
+    Remove perceived duplicate sources from a dataframe of loaded
+    measurements. Duplicates are determined by their separation and whether
+    this distances is within the 'dup_lim'.
+
+    Parameters
+    ----------
+    source_df : pd.DataFrame
+        The loaded measurements from two or more images.
+    dup_lim : Angle, optional
+        The separation limit of when a source is considered a duplicate.
+        Defaults to None in which case 2.5 arcsec is used (usual ASKAP
+        pixel size).
+    ini_df : bool, optional
+        Boolean to indicate whether these sources are part of the initial
+        source list creation for association. If 'True' the source ids are
+        reset ready for the first iteration. Defaults to 'False'.
+
+    Returns
+    -------
+    sources_df : pd.DataFrame
+        The input sources_df with duplicate sources removed.
+    """
+    logger.debug('Cleaning duplicate sources from epoch...')
+
+    if dup_lim is None:
+        dup_lim = Angle(2.5 * u.arcsec)
+
+    logger.debug(
+        'Using duplicate crossmatch radius of %.2f arcsec.', dup_lim.arcsec
+    )
+
+    min_source = sources_df['source'].min()
+
+    # sort by the distance from the image centre so we know
+    # that the first source is always the one to keep
+    sources_df = sources_df.sort_values(by='dist_from_centre')
+
+    sources_sc = SkyCoord(
+        sources_df['ra'],
+        sources_df['dec'],
+        unit=(u.deg, u.deg)
+    )
+
+    # perform search around sky to get all self matches
+    idxc, idxcatalog, d2d_around, _ = sources_sc.search_around_sky(
+        sources_sc, dup_lim
+    )
+
+    # create df from results
+    results = pd.DataFrame(
+        data={
+            'source_id': idxc,
+            'match_id': idxcatalog,
+            'source_image': sources_df.iloc[idxc]['image'].tolist(),
+            'match_image': sources_df.iloc[idxcatalog]['image'].tolist()
+        }
+    )
+
+    # Drop those that are matched from the same image
+    matching_image_mask = (
+        results['source_image'] != results['match_image']
+    )
+
+    results = (
+        results.loc[matching_image_mask]
+        .drop(['source_image', 'match_image'], axis=1)
+    )
+
+    # create a pair column defining each pair ith index
+    results['pair'] = results.apply(tuple, 1).apply(sorted).apply(tuple)
+    # Drop the duplicate pairs (pairs are sorted so this works)
+    results = results.drop_duplicates('pair')
+    # No longer need pair
+    results = results.drop('pair', axis=1)
+    # Drop all self matches and we are left with those to drop
+    # in the match id column.
+    to_drop = results.loc[
+        results['source_id'] != results['match_id'],
+        'match_id'
     ]
+    # Get the index values from the ith values
+    to_drop_indexes = sources_df.iloc[to_drop].index.values
+    logger.debug(
+        "Dropping %i duplicate measurements.", to_drop_indexes.shape[0]
+    )
+    # Drop them from sources
+    sources_df = sources_df.drop(to_drop_indexes).sort_values(by='ra')
+
+    # reset the source_df index
+    sources_df = sources_df.reset_index(drop=True)
+
+    # Reset the source number
+    if ini_df:
+        sources_df['source'] = sources_df.index + 1
+
+    del results
+
+    return sources_df
+
+
+def _load_measurements(
+    image: Image,
+    cols: List[str],
+    start_id: int = 0,
+    ini_df: bool = False
+) -> pd.DataFrame:
+    """
+    Load the measurements for an image from the parquet file.
+
+    Parameters
+    ----------
+    image : Image
+        The object representing the image for which to load the measurements.
+    cols : List[str]
+        The columns to load.
+    start_id : int, optional
+        The number to start from when setting the source ids (when 'ini_df' is
+        'True'). Defaults to 0.
+    ini_df : bool, optional
+        Boolean to indicate whether these sources are part of the initial
+        source list creation for association. If 'True' the source ids are
+        reset ready for the first iteration. Defaults to 'False'.
+
+    Returns
+    -------
+    df : pd.DataFrame
+        The measurements of the image with some extra values set ready for
+        assoication.
+    """
+    image_centre = SkyCoord(
+        image.ra,
+        image.dec,
+        unit=(u.deg, u.deg)
+    )
 
     df = pd.read_parquet(image.measurements_path, columns=cols)
     df['image'] = image.name
     df['datetime'] = image.datetime
-    # these are the first 'sources'
-    df['source'] = df.index + 1 if ini_df else -1
+    # these are the first 'sources' if ini_df is True.
+    df['source'] = df.index + start_id + 1 if ini_df else -1
     df['ra_source'] = df['ra']
     df['dec_source'] = df['dec']
     df['d2d'] = 0.
     df['dr'] = 0.
     df['related'] = None
-    logger.info('Correcting flux errors with config error setting...')
-    for col in ['flux_int', 'flux_peak']:
-        df[f'{col}_err'] = np.hypot(
-            df[f'{col}_err'].values, perc_error * df[col].values
-        )
+
+    sources_sc = SkyCoord(
+        df['ra'],
+        df['dec'],
+        unit=(u.deg, u.deg)
+    )
+
+    seps = sources_sc.separation(image_centre).degree
+    df['dist_from_centre'] = seps
+
+    del sources_sc
+    del seps
 
     return df
 
 
-def get_or_append_list(obj_in, elem):
+def prep_skysrc_df(
+    images: List[Image],
+    perc_error: float = 0.,
+    duplicate_limit: Optional[Angle] = None,
+    ini_df: bool = False
+):
     '''
-    return a list with elem in it, if obj_in is list append to it
-    '''
-    if isinstance(obj_in, list):
-        out = obj_in
-        out.append(elem)
-        return out
+    Initiliase the source dataframe to use in association logic by
+    reading the measurement parquet file and creating columns. When epoch
+    based assoication is used it will also remove duplicate measurements from
+    the list of sources.
 
-    return [elem]
+    Parameters
+    ----------
+    images : List[Image]
+        A list holding the Image objects of the images to load measurements for.
+    perc_error : float, optional
+        A percentage flux error to apply to the flux errors of the
+        measurements. Defaults to 0.
+    duplicate_limit : Angle, optional
+        The separation limit of when a source is considered a duplicate.
+        Defaults to None in which case 2.5 arcsec is used in the
+        'remove_duplicate_measurements' function (usual ASKAP pixel size).
+    ini_df : bool, optional
+        Boolean to indicate whether these sources are part of the initial
+        source list creation for association. If 'True' the source ids are
+        reset ready for the first iteration. Defaults to 'False'.
+
+    Returns
+    -------
+    df : pd.DataFrame
+        The measurements of the image(s) with some extra values set ready for
+        assoication and duplicates removed if necessary.
+    '''
+    cols = [
+        'id',
+        'ra',
+        'uncertainty_ew',
+        'weight_ew',
+        'dec',
+        'uncertainty_ns',
+        'weight_ns',
+        'flux_int',
+        'flux_int_err',
+        'flux_peak',
+        'flux_peak_err',
+        'forced',
+        'compactness',
+        'has_siblings',
+        'snr'
+    ]
+
+    df = _load_measurements(images[0], cols, ini_df=ini_df)
+
+    if len(images) > 1:
+        for img in images[1:]:
+            df = df.append(
+                _load_measurements(img, cols, df.source.max(), ini_df=ini_df),
+                ignore_index=True
+            )
+
+        df = remove_duplicate_measurements(
+            df, dup_lim=duplicate_limit, ini_df=ini_df
+        )
+
+    df = df.drop('dist_from_centre', axis=1)
+
+    if perc_error != 0.0:
+        logger.info('Correcting flux errors with config error setting...')
+        for col in ['flux_int', 'flux_peak']:
+            df[f'{col}_err'] = np.hypot(
+                df[f'{col}_err'].values, perc_error * df[col].values
+            )
+
+    return df
+
+
+def add_new_one_to_many_relations(
+    row: pd.Series, advanced: bool = False,
+    source_ids: Optional[pd.DataFrame] = None
+) -> List[int]:
+    """
+    This handles the relation information being created from the
+    one_to_many functions in association.
+
+    Parameters
+    ----------
+    row : pd.Series
+        The relation information Series from the assoication dataframe. Only
+        the columns ['related_skyc1', 'source_skyc1'] are required for advanced
+        , these are instead called ['related', 'source'] for basic.
+    advanced : bool, optional
+        Whether advanced association is being used which changes the names
+        of the columns involved.
+    source_ids : int, optional
+        A dataframe that contains the other ids to append to related for each
+        original source.
+        +----------------+--------+
+        |   source_skyc1 | 0      |
+        |----------------+--------|
+        |            122 | [5542] |
+        |            254 | [5543] |
+        |            262 | [5544] |
+        |            405 | [5545] |
+        |            656 | [5546] |
+        +----------------+--------+
+
+    Returns
+    -------
+    out : List[int]
+        The new related field for the source in question, containing the
+        appended ids.
+    """
+    if source_ids is None:
+        source_ids = pd.DataFrame()
+
+    related_col = 'related_skyc1' if advanced else 'related'
+    source_col = 'source_skyc1' if advanced else 'source'
+
+    # this is the not_original case where the original source id is appended.
+    if source_ids.empty:
+        if isinstance(row[related_col], list):
+            out = row[related_col].append(row[source_col])
+        else:
+            out = [row[source_col],]
+
+    else:  # the original case to append all the new ids.
+        source_ids = source_ids.loc[row[source_col]].iloc[0]
+        if isinstance(row[related_col], list):
+            out = row[related_col] + source_ids
+        else:
+            out = source_ids
+
+    return out
+
+
+def add_new_many_to_one_relations(row: pd.Series) -> List[int]:
+    """
+    This handles the relation information being created from the
+    many_to_one function in advanced association.
+    It is a lot simpler than the one_to_many case as it purely just adds
+    the new relations to the relation column, taking into account if it is
+    already a list of relations or not (i.e. no previous relations).
+
+    Parameters
+    ----------
+    row : pd.Series
+        The relation information Series from the assoication dataframe. Only
+        the columns ['related_skyc1', 'new_relations'] are required.
+
+    Returns
+    -------
+    out : List[int]
+        The new related field for the source in question, containing the
+        appended ids.
+    """
+    if isinstance(row['related_skyc1'], list):
+        out = row['related_skyc1'] + row['new_relations']
+    else:
+        out = row['new_relations']
+
+    return out
 
 
 def cross_join(left, right):
@@ -359,7 +629,9 @@ def parallel_groupby(df):
 
 def calc_ave_coord(grp):
     d = {}
+    grp = grp.sort_values(by='datetime')
     d['img_list'] = grp['image'].values.tolist()
+    d['epoch_list'] = grp['epoch'].values.tolist()
     d['wavg_ra'] = grp['interim_ew'].sum() / grp['weight_ew'].sum()
     d['wavg_dec'] = grp['interim_ns'].sum() / grp['weight_ns'].sum()
     return pd.Series(d)
@@ -368,6 +640,7 @@ def calc_ave_coord(grp):
 def parallel_groupby_coord(df):
     col_dtype = {
         'img_list': 'O',
+        'epoch_list': 'O',
         'wavg_ra': 'f',
         'wavg_dec': 'f',
     }
@@ -379,20 +652,6 @@ def parallel_groupby_coord(df):
         .compute(num_workers=n_cpu, scheduler='processes')
     )
     return out
-
-
-def get_source_models(row, pipeline_run=None):
-    '''
-    Fetches the source model (for DB injecting).
-    '''
-    name = f"ASKAP_{deg2hms(row['wavg_ra'])}{deg2dms(row['wavg_dec'])}".replace(":", "")
-    src = Source()
-    src.run = pipeline_run
-    src.name = name
-    for fld in src._meta.get_fields():
-        if getattr(fld, 'attname', None) and fld.attname in row.index:
-            setattr(src, fld.attname, row[fld.attname])
-    return src
 
 
 def get_rms_noise_image_values(rms_path):
@@ -419,62 +678,168 @@ def get_rms_noise_image_values(rms_path):
 
 
 def get_image_list_diff(row):
-    out = list(filter(lambda arg: arg not in row['img_list'], row['skyreg_img_list']))
+    out = list(
+        filter(lambda arg: arg not in row['img_list'], row['skyreg_img_list'])
+    )
 
     # set empty list to -1
+    if not out:
+        return -1
+
+    # Check that an epoch has not already been seen (just not in the 'ideal' image)
+    out_epochs = [
+        row['skyreg_epoch'][pair[0]] for pair in enumerate(
+            row['skyreg_img_list']
+        ) if pair[1] in out
+    ]
+
+    out = [
+        out[pair[0]] for pair in enumerate(
+            out_epochs
+        ) if pair[1] not in row['epoch_list']
+    ]
+
     if not out:
         out = -1
 
     return out
 
 
-def get_src_skyregion_merged_df(sources_df, p_run):
+def get_names_and_epochs(grp):
+    d = {}
+    d['skyreg_img_epoch_list'] = [[[x,], y, z] for x,y,z in zip(
+        grp['name'].values.tolist(),
+        grp['epoch'].values.tolist(),
+        grp['datetime'].values.tolist()
+    )]
+
+    return pd.Series(d)
+
+
+def check_primary_image(row: pd.Series) -> bool:
     """
-    check and extract expected measurements, and associated them with the
-    related source(s)
+    Checks whether the primary image of the ideal source
+    dataframe is in the image list for the source.
+
+    Parameters
+    ----------
+    row : pd.Series
+        input dataframe row, with columns ['primary']
+        and ['img_list'].
+
+    Returns
+    -------
+    bool : bool
+        True if primary in image list else False.
     """
+    return row['primary'] in row['img_list']
 
-    timer = StopWatch()
 
-    # get all the skyregions and related images
-    cols = [
-        'id', 'name', 'measurements_path', 'path', 'noise_path',
-        'beam_bmaj', 'beam_bmin', 'beam_bpa', 'background_path',
-        'datetime', 'skyreg__id'
-    ]
+def get_src_skyregion_merged_df(
+    sources_df: pd.DataFrame, images_df: pd.DataFrame, skyreg_df: pd.DataFrame
+) -> pd.DataFrame:
+    """
+    Analyses the current sources_df to determine what the 'ideal coverage'
+    for each source should be. In other words, what images is the source
+    missing in when it should have been seen.
 
-    skyreg_cols = [
-        'id', 'centre_ra', 'centre_dec', 'xtr_radius'
-    ]
+    Parameters
+    ----------
+    sources_df : pd.DataFrame
+        The output of the assoication step containing the
+        measurements assoicated into sources.
+    images_df : pd.DataFrame
+        Contains the images of the pipeline run. I.e. all image
+        objects for the run loaded into a dataframe.
+    skyreg_df : pd.DataFrame
+        Contains the sky regions of the pipeline run. I.e. all
+        sky region objects for the run loaded into a dataframe.
 
-    images_df = pd.DataFrame(list(
-        Image.objects.filter(
-            run=p_run
-        ).select_related('skyreg').order_by('datetime').values(*tuple(cols))
-    )).explode('skyreg__id')
+    Returns
+    -------
+    srcs_df : pd.DataFrame
+        DataFrame containing missing image information. Output format:
+        +----------+----------------------------------+-----------+------------+
+        |   source | img_list                         |   wavg_ra |   wavg_dec |
+        |----------+----------------------------------+-----------+------------+
+        |      278 | ['VAST_0127-73A.EPOCH01.I.fits'] |  22.2929  |   -71.8717 |
+        |      702 | ['VAST_0127-73A.EPOCH01.I.fits'] |  28.8125  |   -69.3547 |
+        |      844 | ['VAST_0127-73A.EPOCH01.I.fits'] |  17.3152  |   -72.346  |
+        |      934 | ['VAST_0127-73A.EPOCH01.I.fits'] |   9.75754 |   -72.9629 |
+        |     1290 | ['VAST_0127-73A.EPOCH01.I.fits'] |  20.8455  |   -76.8269 |
+        +----------+----------------------------------+-----------+------------+
+        ------------------------------------------------------------------+
+         skyreg_img_list                                                  |
+        ------------------------------------------------------------------+
+         ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+         ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+         ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+         ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+         ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+        ------------------------------------------------------------------+
+        ----------------------------------+------------------------------+
+         img_diff                         | primary                      |
+        ----------------------------------+------------------------------+
+         ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
+         ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
+         ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
+         ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
+         ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
+        ----------------------------------+------------------------------+
+        ------------------------------+--------------+
+         detection                    | in_primary   |
+        ------------------------------+--------------|
+         VAST_0127-73A.EPOCH01.I.fits | True         |
+         VAST_0127-73A.EPOCH01.I.fits | True         |
+         VAST_0127-73A.EPOCH01.I.fits | True         |
+         VAST_0127-73A.EPOCH01.I.fits | True         |
+         VAST_0127-73A.EPOCH01.I.fits | True         |
+        ------------------------------+--------------+
+    """
+    logger.info("Creating ideal source coverage df...")
 
-    skyreg_df = pd.DataFrame(list(
-        SkyRegion.objects.all().filter(run=p_run).values(*tuple(skyreg_cols))
-    ))
+    merged_timer = StopWatch()
+
+    skyreg_df = skyreg_df.drop(
+        ['x', 'y', 'z', 'width_ra', 'width_dec'], axis=1
+    )
+
+    images_df['name'] = images_df['image_dj'].apply(
+        lambda x: x.name
+    )
+    images_df['datetime'] = images_df['image_dj'].apply(
+        lambda x: x.datetime
+    )
 
     skyreg_df = skyreg_df.join(
         pd.DataFrame(
-            images_df.groupby('skyreg__id').apply(
-                lambda x: x['name'].values.tolist()
+            images_df.groupby('skyreg_id').apply(
+                get_names_and_epochs
             )
-        ).rename(columns={0:'skyreg_img_list'}),
+        ),
         on='id'
     )
 
     sources_df = sources_df.sort_values(by='datetime')
     # calculate some metrics on sources
     # compute only some necessary metrics in the groupby
-    timer.reset()
+    timer = StopWatch()
     srcs_df = parallel_groupby_coord(sources_df)
-    logger.info('Groupby-apply time: %.2f seconds', timer.reset())
+    logger.debug('Groupby-apply time: %.2f seconds', timer.reset())
+
+    del sources_df
 
     # create dataframe with all skyregions and sources combinations
-    src_skyrg_df = cross_join(srcs_df.reset_index(), skyreg_df)
+    src_skyrg_df = cross_join(
+        srcs_df.drop(['epoch_list', 'img_list'], axis=1).reset_index(),
+        skyreg_df.drop('skyreg_img_epoch_list', axis=1)
+    )
+
+    skyreg_df = skyreg_df.drop(
+        ['centre_ra', 'centre_dec', 'xtr_radius'],
+        axis=1
+    ).set_index('id')
+
     src_skyrg_df['sep'] = np.rad2deg(
         on_sky_sep(
             np.deg2rad(src_skyrg_df['wavg_ra'].values),
@@ -489,10 +854,43 @@ def get_src_skyregion_merged_df(sources_df, p_run):
     # compute list of images
     src_skyrg_df = (
         src_skyrg_df.loc[
-            src_skyrg_df['sep'] < src_skyrg_df['xtr_radius'],
-            ['source', 'skyreg_img_list']
-        ]
-        .groupby('source')
+            src_skyrg_df.sep < src_skyrg_df.xtr_radius,
+            ['source', 'id', 'sep']
+        ].merge(skyreg_df, left_on='id', right_index=True)
+        .drop('id', axis=1)
+        .explode('skyreg_img_epoch_list')
+    )
+
+    del skyreg_df
+
+    src_skyrg_df[
+        ['skyreg_img_list', 'skyreg_epoch', 'skyreg_datetime']
+    ] = pd.DataFrame(
+        src_skyrg_df['skyreg_img_epoch_list'].tolist(),
+        index=src_skyrg_df.index
+    )
+
+    src_skyrg_df = src_skyrg_df.drop('skyreg_img_epoch_list', axis=1)
+
+    src_skyrg_df = (
+        src_skyrg_df.sort_values(
+            ['source', 'sep']
+        )
+        .drop_duplicates(['source', 'skyreg_epoch'])
+        .sort_values(by='skyreg_datetime')
+        .drop(
+            ['sep', 'skyreg_datetime'],
+            axis=1
+        )
+    )
+    # annoyingly epoch needs to be not a list to drop duplicates
+    # but then we need to sum the epochs into a list
+    src_skyrg_df['skyreg_epoch'] = src_skyrg_df['skyreg_epoch'].apply(
+        lambda x: [x,]
+    )
+
+    src_skyrg_df = (
+        src_skyrg_df.groupby('source')
         .agg('sum') # sum because we need to preserve order
     )
 
@@ -503,7 +901,9 @@ def get_src_skyregion_merged_df(sources_df, p_run):
 
     del src_skyrg_df
 
-    srcs_df['img_diff'] = srcs_df[['img_list', 'skyreg_img_list']].apply(
+    srcs_df['img_diff'] = srcs_df[
+        ['img_list', 'skyreg_img_list', 'epoch_list', 'skyreg_epoch']
+    ].apply(
         get_image_list_diff, axis=1
     )
 
@@ -511,7 +911,235 @@ def get_src_skyregion_merged_df(sources_df, p_run):
         srcs_df['img_diff'] != -1
     ]
 
+    srcs_df = srcs_df.drop(
+        ['epoch_list', 'skyreg_epoch'],
+        axis=1
+    )
+
+    srcs_df['primary'] = srcs_df[
+        'skyreg_img_list'
+    ].apply(lambda x: x[0])
+
+    srcs_df['detection'] = srcs_df[
+        'img_list'
+    ].apply(lambda x: x[0])
+
+    srcs_df['in_primary'] = srcs_df[
+        ['primary', 'img_list']
+    ].apply(
+        check_primary_image,
+        axis=1
+    )
+
+    srcs_df = srcs_df.drop(['img_list', 'skyreg_img_list', 'primary'], axis=1)
+
+    logger.info(
+        'Ideal source coverage time: %.2f seconds', merged_timer.reset()
+    )
+
     return srcs_df
+
+
+def _get_skyregion_relations(
+    row: pd.Series,
+    coords: SkyCoord,
+    ids: pd.core.indexes.numeric.Int64Index
+) -> List[int]:
+    '''
+    For each sky region row a list is returned that
+    contains the ids of other sky regions that overlap
+    with the row sky region (including itself).
+
+    Parameters
+    ----------
+    row : pd.Series
+        A row from the dataframe containing all the sky regions of the run.
+        Contains the 'id', 'centre_ra', 'centre_dec' and 'xtr_radius' columns.
+    coords : SkyCoord
+        A SkyCoord holding the coordinates of all sky regions.
+    ids : The sky regions ids that match the coords.
+
+    Returns
+    -------
+    related_ids : List[int]
+        A list of other sky regions (including self) that are withing the
+        'xtr_radius' of the sky region in the row.
+    '''
+    target = SkyCoord(
+        row['centre_ra'],
+        row['centre_dec'],
+        unit=(u.deg, u.deg)
+    )
+
+    seps = target.separation(coords)
+
+    # place a slight buffer on the radius to make sure
+    # any neighbouring fields are caught
+    mask = seps <= row['xtr_radius'] * 1.1 * u.deg
+
+    related_ids = ids[mask].to_list()
+
+    return related_ids
+
+
+def group_skyregions(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Logic to group sky regions into overlapping groups.
+    Returns a dataframe containing the sky region id as
+    the index and a column containing a list of the
+    sky region group number it belongs to.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        A dataframe containing all the sky regions of the run. Only the
+        'id', 'centre_ra', 'centre_dec' and 'xtr_radius' columns are required.
+        +------+-------------+--------------+--------------+
+        |   id |   centre_ra |   centre_dec |   xtr_radius |
+        |------+-------------+--------------+--------------|
+        |    2 |    319.652  |    0.0030765 |      6.72488 |
+        |    3 |    319.652  |   -6.2989    |      6.7401  |
+        |    1 |     21.8361 |  -73.121     |      7.24662 |
+        +------+-------------+--------------+--------------+
+
+    Returns
+    -------
+    skyreg_group_ids : pd.DataFrame
+        The sky region group of each skyregion id.
+        +----+----------------+
+        |    |   skyreg_group |
+        |----+----------------|
+        |  2 |              1 |
+        |  3 |              1 |
+        |  1 |              2 |
+        +----+----------------+
+    """
+    sr_coords = SkyCoord(
+        df['centre_ra'],
+        df['centre_dec'],
+        unit=(u.deg, u.deg)
+    )
+
+    df = df.set_index('id')
+
+    results = df.apply(
+        _get_skyregion_relations,
+        args=(sr_coords, df.index),
+        axis=1
+    )
+
+    skyreg_groups = {}
+
+    master_done = []  # keep track of all checked ids in master done
+
+    for skyreg_id, neighbours in results.iteritems():
+
+        if skyreg_id not in master_done:
+            local_done = []   # a local done list for the sky region group.
+            # add the current skyreg_id to both master and local done.
+            master_done.append(skyreg_id)
+            local_done.append(skyreg_id)
+            # Define the new group number based on the existing ones.
+            skyreg_group = len(skyreg_groups) + 1
+            # Add all the ones that we know are neighbours that were obtained
+            # from _get_skyregion_relations.
+            skyreg_groups[skyreg_group] = list(neighbours)
+
+            # Now the sky region group is extended out to include all those sky
+            # regions that overlap with the neighbours.
+            # Each neighbour is checked and added to the local done list.
+            # Checked means that for each neighbour, it's own neighbours are
+            # added to the current group if not in already.
+            # When the local done is equal to the skyreg group we know that
+            # we have exhausted all possible neighbours and that results in a
+            # sky region group.
+            while sorted(local_done) != sorted(skyreg_groups[skyreg_group]):
+                # Loop over each neighbour
+                for other_skyreg_id in skyreg_groups[skyreg_group]:
+                    # If we haven't checked this neighbour locally proceed.
+                    if other_skyreg_id not in local_done:
+                        # Add it to the local checked.
+                        local_done.append(other_skyreg_id)
+                        # Get the neighbours neighbour and add these.
+                        new_vals = results.loc[other_skyreg_id]
+                        for k in new_vals:
+                            if k not in skyreg_groups[skyreg_group]:
+                                skyreg_groups[skyreg_group].append(k)
+
+            # Reached the end of the group so append all to the master
+            # done list
+            for j in skyreg_groups[skyreg_group]:
+                master_done.append(j)
+        else:
+            # continue if already placed in group
+            continue
+
+    # flip the dictionary around
+    skyreg_group_ids = {}
+    for i in skyreg_groups:
+        for j in skyreg_groups[i]:
+            skyreg_group_ids[j]=i
+
+    skyreg_group_ids = pd.DataFrame.from_dict(
+        skyreg_group_ids, orient='index'
+    ).rename(columns={0: 'skyreg_group'})
+
+    return skyreg_group_ids
+
+
+def get_parallel_assoc_image_df(
+    images: List[Image], skyregion_groups: pd.DataFrame
+) -> pd.DataFrame:
+    """
+    Merge the sky region groups with the images and skyreg_ids.
+
+    Parameters
+    ----------
+    images : List
+        A list of the Image objects.
+    skyregion_groups: pd.DataFrame
+        The sky region group of each skyregion id.
+        +----+----------------+
+        |    |   skyreg_group |
+        |----+----------------|
+        |  2 |              1 |
+        |  3 |              1 |
+        |  1 |              2 |
+        +----+----------------+
+
+    Returns
+    -------
+    results : pd.DataFrame
+        The combined association results of the parallel association with
+        corrected source ids.
+        +----+-------------------------------+-------------+----------------+
+        |    | image                         |   skyreg_id |   skyreg_group |
+        |----+-------------------------------+-------------+----------------|
+        |  0 | VAST_2118+00A.EPOCH01.I.fits  |           2 |              1 |
+        |  1 | VAST_2118-06A.EPOCH01.I.fits  |           3 |              1 |
+        |  2 | VAST_0127-73A.EPOCH01.I.fits  |           1 |              2 |
+        |  3 | VAST_2118-06A.EPOCH03x.I.fits |           3 |              1 |
+        |  4 | VAST_2118-06A.EPOCH02.I.fits  |           3 |              1 |
+        |  5 | VAST_2118-06A.EPOCH05x.I.fits |           3 |              1 |
+        |  6 | VAST_2118-06A.EPOCH06x.I.fits |           3 |              1 |
+        |  7 | VAST_0127-73A.EPOCH08.I.fits  |           1 |              2 |
+        +----+-------------------------------+-------------+----------------+
+    """
+    skyreg_ids = [i.skyreg_id for i in images]
+
+    images_df = pd.DataFrame({
+        'image_dj': images,
+        'skyreg_id': skyreg_ids,
+    })
+
+    images_df = images_df.merge(
+        skyregion_groups,
+        how='left',
+        left_on='skyreg_id',
+        right_index=True
+    )
+
+    return images_df
 
 
 def create_measurements_arrow_file(p_run: Run) -> None:

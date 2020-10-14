@@ -43,7 +43,7 @@
     "chartjs-plugin-error-bars": "^1.2.2",
     "d3-celestial": "^0.7.17",
     "datatables.net-bs4": "1.10.22",
-    "datatables.net-buttons-bs4": "1.6.4",
+    "datatables.net-buttons-bs4": "1.6.5",
     "dotenv": "^8.2.0",
     "jquery": "3.4.1",
     "jquery.easing": "^1.4.1",
