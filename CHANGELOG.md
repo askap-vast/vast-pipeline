@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Adds basic commenting functionality for sources, measurements, images, and runs [#368](https://github.com/askap-vast/vast-pipeline/pull/368).
 - Custom CSS now processed with Sass: Bootstrap and sb-admin-2 theme are compiled into a single stylesheet [#370](https://github.com/askap-vast/vast-pipeline/pull/370).
 - Added `vast_pipeline/pipeline/generators.py` which contains generator functions [#382](https://github.com/askap-vast/vast-pipeline/pull/382).
 - Range and NaN check on new source analysis to match forced extraction [#374](https://github.com/askap-vast/vast-pipeline/pull/374).
@@ -40,6 +41,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- The `comment` field in the Run model has been renamed to `description`. A `comment` many-to-many relationship was added to permit user comments on Run instances [#368](https://github.com/askap-vast/vast-pipeline/pull/368).
 - Moved sb-admin-2 Bootstrap theme static assets to NPM package dependency [#370](https://github.com/askap-vast/vast-pipeline/pull/370).
 - Refactored bulk uploading to use iterable generator objects [#382](https://github.com/askap-vast/vast-pipeline/pull/382).
 - Updated validation of config file to check that all options are present and valid [#373](https://github.com/askap-vast/vast-pipeline/pull/373).
@@ -74,6 +76,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#368](https://github.com/askap-vast/vast-pipeline/pull/368) feat: vast-candidates merger: Add user commenting
 - [#370](https://github.com/askap-vast/vast-pipeline/pull/370) feat: moved sb-admin-2 assets to dependencies.
 - [#382](https://github.com/askap-vast/vast-pipeline/pull/380) feat: Refactored bulk uploading of objects.
 - [#374](https://github.com/askap-vast/vast-pipeline/pull/374) feat, fix: Bring new source checks inline with forced extraction.
@@ -95,6 +98,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 First release of the Vast Pipeline. This was able to process 707 images (EPOCH01 to EPOCH11x) on a machine with 64 GB of RAM.
 
 #### List of PRs
+
 - [#347](https://github.com/askap-vast/vast-pipeline/pull/347) feat: Towards first release
 - [#354](https://github.com/askap-vast/vast-pipeline/pull/354) fix, model: Updated Band model fields to floats
 - [#346](https://github.com/askap-vast/vast-pipeline/pull/346) fix: fix JS9 overflow in measurement detail view

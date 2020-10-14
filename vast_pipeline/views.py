@@ -7,7 +7,7 @@ import dask.dataframe as dd
 import dask.bag as db
 import pandas as pd
 
-from typing import Dict, Any
+from typing import Dict, Any, Tuple
 from glob import glob
 from itertools import tee
 
@@ -19,12 +19,13 @@ from astropy.wcs.utils import proj_plane_pixel_scales
 from astroquery.simbad import Simbad
 from astroquery.ned import Ned
 
-from django.http import FileResponse, Http404, HttpResponseRedirect
-from django.db.models import F, Count
-from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.contenttypes.models import ContentType
+from django.db.models import F, Count, QuerySet
+from django.http import FileResponse, Http404, HttpResponseRedirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 
 from rest_framework import status
 import rest_framework.decorators
@@ -40,7 +41,7 @@ from rest_framework import serializers
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.contrib.auth.decorators import login_required
 
-from vast_pipeline.models import Image, Measurement, Run, Source, SourceFav
+from vast_pipeline.models import Comment, CommentableModel, Image, Measurement, Run, Source, SourceFav
 from vast_pipeline.serializers import (
     ImageSerializer, MeasurementSerializer, RunSerializer,
     SourceSerializer, RawImageSelavyListSerializer,
@@ -50,11 +51,43 @@ from vast_pipeline.serializers import (
 from vast_pipeline.utils.utils import deg2dms, deg2hms, parse_coord, equ2gal
 from vast_pipeline.utils.view import generate_colsfields, get_skyregions_collection
 from vast_pipeline.management.commands.initpiperun import initialise_run
-from vast_pipeline.forms import PipelineRunForm
+from vast_pipeline.forms import PipelineRunForm, CommentForm
 from vast_pipeline.pipeline.main import Pipeline
 
 
 logger = logging.getLogger(__name__)
+
+
+def _process_comment_form_get_comments(
+    request, instance: CommentableModel
+) -> Tuple[CommentForm, "QuerySet[Comment]"]:
+    """Process the comment form and return the form and comment objects. If the `request`
+    method was POST, create a `Comment` object attached to `instance`.
+
+    Args:
+        request: Django HTTP request object.
+        instance (CommentableModel): Django object that is a subclass of `CommentableModel`.
+            This is the object the comment will be attached to.
+
+    Returns:
+        Tuple[CommentForm, QuerySet[Comment]]: a new, unbound `CommentForm` instance; and
+            the `QuerySet` of `Comment` objects attached to `instance`.
+    """
+    if request.method == "POST":
+        comment_form = CommentForm(request.POST)
+        if comment_form.is_valid():
+            comment = comment_form.save(commit=False)
+            comment.author = request.user
+            comment.content_object = instance
+            comment.save()
+    comment_form = CommentForm()
+
+    comment_target_type = ContentType.objects.get_for_model(instance)
+    comments = Comment.objects.filter(
+        content_type__pk=comment_target_type.id, object_id=instance.id,
+    ).order_by("datetime")
+
+    return comment_form, comments
 
 
 def Login(request):
@@ -137,7 +170,6 @@ def RunIndex(request):
         'name',
         'time',
         'path',
-        'comment',
         'n_images',
         'n_sources',
         'status'
@@ -164,7 +196,7 @@ def RunIndex(request):
                 ),
                 'colsFields': colsfields,
                 'colsNames': [
-                    'Name', 'Run Datetime', 'Path', 'Comment', 'Nr Images',
+                    'Name', 'Run Datetime', 'Path', 'Nr Images',
                     'Nr Sources', 'Run Status'
                 ],
                 'search': True,
@@ -339,15 +371,19 @@ def RunDetail(request, id):
         'search': True,
     }
 
-    return render(
-        request, 'run_detail.html',
-        {
-            'p_run': p_run,
-            'datatables': [image_datatable, meas_datatable],
-            'd3_celestial_skyregions': get_skyregions_collection(run_id=id),
-            'static_url': settings.STATIC_URL
-        }
+    context = {
+        "p_run": p_run,
+        "datatables": [image_datatable, meas_datatable],
+        "d3_celestial_skyregions": get_skyregions_collection(run_id=id),
+        "static_url": settings.STATIC_URL,
+    }
+
+    context["comment_form"], context["comments"] = _process_comment_form_get_comments(
+        request,
+        p_run_model
     )
+
+    return render(request, 'run_detail.html', context)
 
 
 # Images table
@@ -552,7 +588,6 @@ def ImageDetail(request, id, action=None):
         'name',
         'time',
         'path',
-        'comment',
         'n_images',
         'n_sources',
         'status'
@@ -574,7 +609,6 @@ def ImageDetail(request, id, action=None):
             'Name',
             'Run Datetime',
             'Path',
-            'Comment',
             'Nr Images',
             'Nr Sources',
             'Run Status'
@@ -583,6 +617,12 @@ def ImageDetail(request, id, action=None):
     }
 
     context = {'image': image, 'datatables': [meas_datatable, run_datatable]}
+
+    context["comment_form"], context["comments"] = _process_comment_form_get_comments(
+        request,
+        Image.objects.get(id=image["id"])
+    )
+
     return render(request, 'image_detail.html', context)
 
 
@@ -777,7 +817,6 @@ def MeasurementDetail(request, id, action=None):
 
     source_fields = [
         'name',
-        'comment',
         'run.name',
         'wavg_ra',
         'wavg_dec',
@@ -820,7 +859,6 @@ def MeasurementDetail(request, id, action=None):
         'colsFields': source_colsfields,
         'colsNames': [
             'Name',
-            'Comment',
             'Run',
             'W. Avg. RA',
             'W. Avg. Dec',
@@ -853,6 +891,11 @@ def MeasurementDetail(request, id, action=None):
     # add base url for using in JS9 if assigned
     if settings.BASE_URL and settings.BASE_URL != '':
         context['base_url'] = settings.BASE_URL.strip('/')
+
+    context["comment_form"], context["comments"] = _process_comment_form_get_comments(
+        request,
+        Measurement.objects.get(id=measurement["id"])
+    )
 
     return render(request, 'measurement_detail.html', context)
 
@@ -963,7 +1006,6 @@ class SourceViewSet(ModelViewSet):
 def SourceQuery(request):
     fields = [
         'name',
-        'comment',
         'run.name',
         'wavg_ra',
         'wavg_dec',
@@ -1014,7 +1056,6 @@ def SourceQuery(request):
                 'colsFields': colsfields,
                 'colsNames': [
                     'Name',
-                    'Comment',
                     'Run',
                     'W. Avg. RA',
                     'W. Avg. Dec',
@@ -1119,7 +1160,6 @@ def SourceDetail(request, pk):
     # generate context for related sources datatable
     related_fields = [
         'name',
-        'comment',
         'wavg_ra',
         'wavg_dec',
         'avg_flux_int',
@@ -1154,7 +1194,6 @@ def SourceDetail(request, pk):
         'colsFields': related_colsfields,
         'colsNames': [
             'Name',
-            'Comment',
             'W. Avg. RA',
             'W. Avg. Dec',
             'Avg. Int. Flux (mJy)',
@@ -1208,6 +1247,10 @@ def SourceDetail(request, pk):
     if settings.BASE_URL and settings.BASE_URL != '':
         context['base_url'] = settings.BASE_URL.strip('/')
 
+    context["comment_form"], context["comments"] = _process_comment_form_get_comments(
+        request,
+        Source.objects.get(id=source["id"])
+    )
     return render(request, 'source_detail.html', context)
 
 

@@ -87,3 +87,8 @@
 .sidebar .nav-item .collapsing .collapse-inner {
   min-width: unset;
 }
+
+.comment-content {
+  max-height: 21rem;
+  overflow-y: scroll;
+}
