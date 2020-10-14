@@ -26,7 +26,7 @@
     "transient-astronomy",
     "transients"
   ],
-  "author": "VAST Development Team",
+  "author": "The VAST Development Team",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/askap-vast/vast-pipeline/issues"
