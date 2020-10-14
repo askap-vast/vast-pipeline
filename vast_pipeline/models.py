@@ -3,9 +3,31 @@ import math
 from django.db import models
 from django.core.validators import RegexValidator
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.models import ContentType
 
 
-# Create your models here.
+class Comment(models.Model):
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    datetime = models.DateTimeField(auto_now_add=True)
+    comment = models.TextField()
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+
+
+class CommentableModel(models.Model):
+    comment = GenericRelation(
+        Comment,
+        content_type_field="content_type",
+        object_id_field="object_id",
+        related_query_name="%(class)s",
+    )
+
+    class Meta:
+        abstract = True
+
+
 class Survey(models.Model):
     """An external survey eg NVSS, SUMSS"""
     name = models.CharField(
@@ -125,7 +147,7 @@ class RunQuerySet(models.QuerySet):
         return self.filter(status='RUN').count() >= max_runs
 
 
-class Run(models.Model):
+class Run(CommentableModel):
     """
     A Run is essentially a pipeline run/processing istance over a set of
     images
@@ -149,6 +171,11 @@ class Run(models.Model):
         ],
         help_text='name of the pipeline run'
     )
+    description = models.CharField(
+        max_length=240,
+        blank=True,
+        help_text="A short description of the pipeline run."
+    )
     time = models.DateTimeField(
         auto_now=True,
         help_text='Datetime of a pipeline run.'
@@ -156,12 +183,6 @@ class Run(models.Model):
     path = models.FilePathField(
         max_length=200,
         help_text='path to the pipeline run'
-    )
-    comment = models.TextField(
-        max_length=1000,
-        default='',
-        blank=True,
-        help_text='A description of this pipeline run'
     )
     STATUS_CHOICES = [
         ('INI', 'Initialised'),
@@ -271,7 +292,7 @@ class SourceQuerySet(models.QuerySet):
         )
 
 
-class Source(models.Model):
+class Source(CommentableModel):
     run = models.ForeignKey(Run, on_delete=models.CASCADE, null=True,)
     cross_match_sources = models.ManyToManyField(
         SurveySource,
@@ -286,7 +307,6 @@ class Source(models.Model):
     )
 
     name = models.CharField(max_length=100)
-    comment = models.TextField(max_length=1000, default='', blank=True)
     new = models.BooleanField(default=False, help_text='New Source.')
 
     # average fields calculated from the source measurements
@@ -411,7 +431,7 @@ class RelatedSource(models.Model):
         ]
 
 
-class Image(models.Model):
+class Image(CommentableModel):
     """An image is a 2D radio image from a cube"""
     band = models.ForeignKey(Band, on_delete=models.CASCADE)
     run = models.ManyToManyField(Run)
@@ -539,7 +559,7 @@ class MeasurementQuerySet(models.QuerySet):
         )
 
 
-class Measurement(models.Model):
+class Measurement(CommentableModel):
     """
     A Measurement is an object in the sky that has been detected at least once.
     Essentially a source single measurement in time.

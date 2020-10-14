@@ -21,7 +21,7 @@ class SerializerTest(SimpleTestCase):
         obj = mod.Run(
             name=run_name,
             path=os.path.join(s.PIPELINE_WORKING_DIR, run_name),
-            comment=f'this is the comment of my {run_name}'
+            description=f'this is the description of my {run_name}'
         )
         return obj
 
@@ -33,9 +33,12 @@ class SerializerTest(SimpleTestCase):
             'id': None,
             'path': 'testing-projects/my_test_pipe_run',
             'name': 'my_test_pipe_run',
-            'comment': 'this is the comment of my my_test_pipe_run'
+            'description': 'this is the description of my my_test_pipe_run'
         }
-        expected_content = b'{"id":null,"path":"testing-projects/my_test_pipe_run","name":"my_test_pipe_run","comment":"this is the comment of my my_test_pipe_run"}'
+        expected_content = (
+            b'{"id":null,"path":"testing-projects/my_test_pipe_run","name":"my_test_pipe_run",'
+            b'"description":"this is the description of my my_test_pipe_run"}'
+        )
 
         run = self.create_run_obj()
         serializer = ser.RunSerializer(run)
@@ -181,7 +184,6 @@ class SerializerTest(SimpleTestCase):
     def create_source_obj():
         obj = mod.Source(
             name='src_00:56:29.78-24:24:59.05',
-            comment='comment of this source',
             ave_ra=14.124,
             ave_dec=-24.416,
             ave_flux_int=0.24,
@@ -203,7 +205,6 @@ class SerializerTest(SimpleTestCase):
             'ave_ra': '00h56m29.76s',
             'ave_dec': '-24d24m57.60s',
             'name': 'src_00:56:29.78-24:24:59.05',
-            'comment': 'comment of this source',
             'new': False,
             'ave_flux_int': 0.24,
             'ave_flux_peak': 0.21475,
@@ -215,9 +216,8 @@ class SerializerTest(SimpleTestCase):
         }
         expected_content = (
             b'{"id":null,"ave_ra":"00h56m29.76s","ave_dec":"-24d24m57.60s"'
-            b',"name":"src_00:56:29.78-24:24:59.05","comment":"comment of'
-            b' this source","new":false,"ave_flux_int":0.24,"ave_flux_peak"'
-            b':0.21475,"max_flux_peak":0.252,"v_int":0.119,"v_peak":0.165,'
+            b',"name":"src_00:56:29.78-24:24:59.05","new":false,"ave_flux_int":0.24,'
+            b'"ave_flux_peak":0.21475,"max_flux_peak":0.252,"v_int":0.119,"v_peak":0.165,'
             b'"eta_int":209.215,"eta_peak":1258.25}')
 
         src = self.create_source_obj()

@@ -1,0 +1,23 @@
+// Import Custom SB Admin 2 Variables (Overrides Default Bootstrap Variables)
+@import "../../node_modules/startbootstrap-sb-admin-2/scss/variables";
+
+// Import Bootstrap
+@import "../../node_modules/startbootstrap-sb-admin-2/vendor/bootstrap/scss/bootstrap.scss";
+
+// Import local custom variables
+@import "variables.scss";
+
+// Import Custom SB Admin 2 Mixins and Components
+@import "../../node_modules/startbootstrap-sb-admin-2/scss/mixins";
+@import "../../node_modules/startbootstrap-sb-admin-2/scss/global";
+@import "../../node_modules/startbootstrap-sb-admin-2/scss/utilities";
+
+// Custom Components
+@import "../../node_modules/startbootstrap-sb-admin-2/scss/dropdowns";
+@import "navs.scss";
+@import "../../node_modules/startbootstrap-sb-admin-2/scss/buttons";
+@import "../../node_modules/startbootstrap-sb-admin-2/scss/cards";
+@import "../../node_modules/startbootstrap-sb-admin-2/scss/charts";
+@import "../../node_modules/startbootstrap-sb-admin-2/scss/login";
+@import "../../node_modules/startbootstrap-sb-admin-2/scss/error";
+@import "../../node_modules/startbootstrap-sb-admin-2/scss/footer";

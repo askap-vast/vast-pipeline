@@ -147,7 +147,7 @@ def get_create_img(p_run, band_id, image):
     return (img, skyreg, False)
 
 
-def get_create_p_run(name, path, comment='', user=None):
+def get_create_p_run(name, path, description=None, user=None):
     '''
     get or create a pipeline run in db, return the run django object and
     a flag True/False if has been created or already exists
@@ -156,7 +156,8 @@ def get_create_p_run(name, path, comment='', user=None):
     if p_run:
         return p_run.get(), True
 
-    p_run = Run(name=name, comment=comment, path=path)
+    description = "" if description is None else description
+    p_run = Run(name=name, description=description, path=path)
     if user:
         p_run.user = user
     p_run.save()
