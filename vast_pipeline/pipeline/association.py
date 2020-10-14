@@ -9,9 +9,8 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.coordinates import Angle
 
-from .loading import upload_associations, upload_sources
 from .utils import (
-    get_source_models, prep_skysrc_df,
+    prep_skysrc_df,
     add_new_one_to_many_relations,
     add_new_many_to_one_relations
 )

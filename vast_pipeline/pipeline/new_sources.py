@@ -38,7 +38,7 @@ def check_primary_image(row: pd.Series) -> bool:
     return row['primary'] in row['img_list']
 
 
-def gen_array_coords_from_wcs(coords: SkyCoord, wcs: WCS) -> numpy.ndarray:
+def gen_array_coords_from_wcs(coords: SkyCoord, wcs: WCS) -> np.ndarray:
     """
     Converts SkyCoord coordinates to array coordinates given a wcs.
 
@@ -51,7 +51,7 @@ def gen_array_coords_from_wcs(coords: SkyCoord, wcs: WCS) -> numpy.ndarray:
 
     Returns
     -------
-    array_coords : numpy.ndarray
+    array_coords : np.ndarray
         Array containing the x and y array coordinates of the input sky
         coordinates.
         np.array([[x1, x2, x3], [y1, y2, y3]])

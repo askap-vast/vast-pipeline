@@ -28,14 +28,6 @@ from vast_pipeline.image.utils import on_sky_sep
 logger = logging.getLogger(__name__)
 
 
-def get_measurement_models(row):
-    one_m = Measurement()
-    for fld in one_m._meta.get_fields():
-        if getattr(fld, 'attname', None) and fld.attname in row.index:
-            setattr(one_m, fld.attname, row[fld.attname])
-    return one_m
-
-
 def get_create_skyreg(p_run, image):
     '''
     This create a Sky Region object in Django ORM given the related
@@ -660,20 +652,6 @@ def parallel_groupby_coord(df):
         .compute(num_workers=n_cpu, scheduler='processes')
     )
     return out
-
-
-def get_source_models(row, pipeline_run=None):
-    '''
-    Fetches the source model (for DB injecting).
-    '''
-    name = f"ASKAP_{deg2hms(row['wavg_ra'])}{deg2dms(row['wavg_dec'])}".replace(":", "")
-    src = Source()
-    src.run = pipeline_run
-    src.name = name
-    for fld in src._meta.get_fields():
-        if getattr(fld, 'attname', None) and fld.attname in row.index:
-            setattr(src, fld.attname, row[fld.attname])
-    return src
 
 
 def get_rms_noise_image_values(rms_path):

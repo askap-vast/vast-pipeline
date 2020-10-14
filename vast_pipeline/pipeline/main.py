@@ -17,7 +17,7 @@ from .association import association, parallel_association
 from .new_sources import new_sources
 from .forced_extraction import forced_extraction
 from .finalise import final_operations
-from .loading import upload_images
+from .loading import make_upload_images
 from .utils import (
     get_src_skyregion_merged_df,
     group_skyregions,
@@ -258,7 +258,7 @@ class Pipeline():
         self.match_images_to_data()
 
         # upload/retrieve image data
-        images, meas_dj_obj, skyregs_df = upload_images(
+        images, skyregs_df = make_upload_images(
             self.img_paths,
             self.config,
             p_run
@@ -369,14 +369,12 @@ class Pipeline():
         if self.config.MONITOR:
             (
                 sources_df,
-                meas_dj_obj,
                 nr_forced_measurements
             ) = forced_extraction(
                 sources_df,
                 self.config.ASTROMETRIC_UNCERTAINTY_RA / 3600.,
                 self.config.ASTROMETRIC_UNCERTAINTY_DEC / 3600.,
                 p_run,
-                meas_dj_obj,
                 missing_sources_df,
                 self.config.MONITOR_MIN_SIGMA,
                 self.config.MONITOR_EDGE_BUFFER_SCALE,
@@ -390,9 +388,7 @@ class Pipeline():
         # metrics and upload data to database
         nr_sources = final_operations(
             sources_df,
-            images[0].name,
             p_run,
-            meas_dj_obj,
             new_sources_df
         )
 
