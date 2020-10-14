@@ -1,0 +1,3 @@
+// Add a xxl breakpoint to the defaults
+$grid-breakpoints: map-merge($grid-breakpoints, (xxl: 3840px));
+$container-max-widths: map-merge($container-max-widths, (xxl: 3840px));

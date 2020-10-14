@@ -50,7 +50,8 @@
     "js9": "git+https://github.com/ericmandel/js9.git#v3.0",
     "jszip": "3.5.0",
     "particles.js": "^2.0.0",
-    "prismjs": "^1.21.0"
+    "prismjs": "^1.21.0",
+    "startbootstrap-sb-admin-2": "4.0.7"
   },
   "devDependencies": {
     "@babel/core": "^7.10.2",
@@ -58,10 +59,12 @@
     "browser-sync": "2.26.7",
     "del": "5.1.0",
     "gulp": "4.0.2",
+    "gulp-autoprefixer": "^7.0.1",
     "gulp-babel": "^8.0.0",
     "gulp-clean-css": "4.2.0",
     "gulp-rename": "2.0.0",
     "gulp-run-command": "0.0.10",
+    "gulp-sass": "^4.1.0",
     "gulp-sourcemaps": "^2.6.5",
     "gulp-uglify": "3.0.2",
     "merge-stream": "2.0.0"
