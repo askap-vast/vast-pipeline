@@ -15,6 +15,9 @@ class RunSerializer(serializers.ModelSerializer):
     path = serializers.SerializerMethodField()
     n_sources = serializers.IntegerField(read_only=True)
     n_images = serializers.IntegerField(read_only=True)
+    n_selavy_measurements = serializers.IntegerField(read_only=True)
+    n_forced_measurements = serializers.IntegerField(read_only=True)
+    epoch_based = serializers.BooleanField(read_only=True)
     status = serializers.CharField(source='get_status_display')
 
     class Meta:

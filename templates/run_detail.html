@@ -7,6 +7,7 @@
 
 <!-- PrismJS CSS -->
 <link rel="stylesheet" href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" />
+<link rel="stylesheet" href="{% static 'vendor/datatables-buttons/buttons.bootstrap4.min.css' %}" />
 <link rel="stylesheet" href="{% static 'vendor/prismjs/prism.css' %}">
 <link rel="stylesheet" href="{% static 'vendor/prismjs/line-numbers/prism-line-numbers.css' %}">
 
@@ -80,7 +81,7 @@
           <div class="row no-gutters align-items-center">
             <div class="col mr-2">
               <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Total Nr Sources</div>
-              <div class="h5 mb-0 font-weight-bold text-gray-800">{{ p_run.n_sources|intcomma }}</div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">{{ p_run.nr_srcs|intcomma }}</div>
             </div>
             <div class="col-auto">
               <i class="fas fa-share-alt fa-2x text-gray-300"></i>
@@ -142,7 +143,7 @@
               {% if p_run.status == 'Completed' %}
                 Run Sky Regions
               {% else %}
-                Run Sky Regions (not completed so no sky regions are shown!)
+                Run Sky Regions (run not complete so not all sky regions may be shown!)
               {% endif %}
           </a>
         </h6>
@@ -313,6 +314,12 @@
 <!-- Page level plugins -->
 <script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
 <script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'vendor/datatables-buttons/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'vendor/datatables-buttons/buttons.bootstrap4.min.js' %}"></script>
+<script src="{% static 'vendor/datatables-buttons/buttons.colVis.min.js' %}"></script>
+<script src="{% static 'vendor/datatables-buttons/buttons.html5.min.js' %}"></script>
+<script src="{% static 'vendor/datatables-buttons/buttons.flash.min.js' %}"></script>
+<script src="{% static 'vendor/jszip/jszip.min.js' %}"></script>
 
 <!-- PrismJS -->
 <script src="{% static 'vendor/prismjs/prism.js' %}"></script>

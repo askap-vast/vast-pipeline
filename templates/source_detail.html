@@ -10,6 +10,7 @@
 <link rel='stylesheet' href='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css' />
 <link rel="stylesheet" href="{% static 'vendor/js9/js9-allinone.css' %}" />
 <link rel="stylesheet" href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" />
+<link rel="stylesheet" href="{% static 'vendor/datatables-buttons/buttons.bootstrap4.min.css' %}" />
 
 {% endblock head %}
 
@@ -116,7 +117,7 @@
                 <strong>Min SNR: </strong>{{ source.min_snr|floatformat:2 }}
               </p>
               <p>
-                <strong>Nr Datapoints: </strong>{{ source.n_meas }}<br>
+                <strong>Nr Datapoints: </strong>{{ source.n_meas }} (<a href="#measurementsHeader">Table</a>)<br>
                 <strong>Nr Selavy: </strong>{{ source.n_meas_sel }}<br>
                 <strong>Nr Forced: </strong>{{ source.n_meas_forced }}
               </p>
@@ -134,8 +135,15 @@
                 </strong>{% if source.new %}{{ source.new_high_sigma|floatformat:2 }}{% else %}N/A{% endif %}
               </p>
               <p>
-                <strong>Nr Relations: </strong>{{ source.n_rel }}<br>
+                <strong>Nr Relations: </strong>{{ source.n_rel }} 
+                {% if source.n_rel > 0 %}
+                  (<a href="#relatedHeader">Table</a>)
+                {% endif %}<br>
                 <strong>Nr Siblings: </strong>{{ source.n_sibl }}
+              </p>
+              <p>
+                <a href="#lightcurveHeader">Lightcurve</a><br>
+                <a href="#postageHeader">Postage stamps</a>
               </p>
             </div>
           </div>
@@ -181,7 +189,7 @@
     <div class="col-xl-8 mb-4">
       <!-- Area Chart -->
       <div class="card shadow h-100">
-        <div class="card-header py-3">
+        <div class="card-header py-3" id="lightcurveHeader">
           <h6 class="m-0 font-weight-bold text-primary">Light Curve</h6>
         </div>
         <div class="card-body">
@@ -200,7 +208,7 @@
   <div class="card shadow mb-4">
     <h6 class="card-header m-0 font-weight-bold text-primary">
       <a data-toggle="collapse" href="#collapse-postage-stamps" aria-expanded="true"
-        aria-controls="collapse-postage-stamps" id="heading-example" class="d-block">
+        aria-controls="collapse-postage-stamps" id="postageHeader" class="d-block">
         <i class="fa fa-chevron-down pull-right"></i>
         Postage Stamps
       </a>
@@ -235,7 +243,7 @@
 
   <!-- DataTable Source Measurements -->
   <div class="card shadow mb-4">
-    <div class="card-header py-3">
+    <div class="card-header py-3" id="measurementsHeader">
       <h6 class="m-0 font-weight-bold text-primary">Source Measurements</h6>
     </div>
     <div class="card-body">
@@ -265,7 +273,7 @@
   <!-- Datatable Related Sources -->
   <div class="card shadow mb-4">
     <a href="#collapseRelatedSources" class="d-block card-header py-3" data-toggle="collapse" role="button"
-      aria-expanded="true" aria-controls="collapseRelatedSources">
+      aria-expanded="true" aria-controls="collapseRelatedSources" id="relatedHeader">
       <h6 class="m-0 font-weight-bold text-primary">Related Sources</h6>
     </a>
     <!-- Card Content - Collapse -->
@@ -365,6 +373,12 @@
 <!-- Page level plugins -->
 <script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
 <script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'vendor/datatables-buttons/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'vendor/datatables-buttons/buttons.bootstrap4.min.js' %}"></script>
+<script src="{% static 'vendor/datatables-buttons/buttons.colVis.min.js' %}"></script>
+<script src="{% static 'vendor/datatables-buttons/buttons.html5.min.js' %}"></script>
+<script src="{% static 'vendor/datatables-buttons/buttons.flash.min.js' %}"></script>
+<script src="{% static 'vendor/jszip/jszip.min.js' %}"></script>
 
 <!-- Datatable scripts -->
 {{ datatables|json_script:"datatable-conf" }}

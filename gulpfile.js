@@ -16,6 +16,8 @@ const gulp = require('gulp'),
   rename = require('gulp-rename'),
   uglify = require('gulp-uglify'),
   babel = require('gulp-babel'),
+  sass = require("gulp-sass"),
+  autoprefixer = require("gulp-autoprefixer"),
   // exec = require('child_process').exec,
   // spawn = require('child_process').spawn,
   run = require('gulp-run-command').default,
@@ -28,6 +30,7 @@ const pathsConfig = function () {
   let root = __dirname;
   let dist = root + '/static';
   let cssFolder = dist + '/css';
+  let scssFolder = root + '/scss';
   let jsFolder = dist + '/js';
 
   return {
@@ -36,6 +39,8 @@ const pathsConfig = function () {
     cssDir: cssFolder,
     css: cssFolder + '/**/*.css',
     cssMin: cssFolder + '/**/*.min.css',
+    scssDir: scssFolder,
+    scss: scssFolder + '/**/*.scss',
     jsDir: jsFolder,
     js: jsFolder + '/**/*.js',
     jsMin: jsFolder + '/**/*.min.js',
@@ -173,7 +178,13 @@ function modules() {
   var bootstrapSelectCSS = gulp.src('./node_modules/bootstrap-select/dist/css/*')
     .pipe(gulp.dest(paths.vendor + '/bootstrap-select/css'));
 
-  // ChartJS
+  // SB Admin 2 Bootstrap template
+  var bootstrapSbAdmin2 = gulp.src([
+    './node_modules/startbootstrap-sb-admin-2/js/*.js',
+    './node_modules/startbootstrap-sb-admin-2/css/*.css'
+  ]).pipe(gulp.dest(paths.vendor + '/startbootstrap-sb-admin-2'));
+  
+    // ChartJS
   var chartJS = gulp.src([
     './node_modules/chart.js/dist/*.js',
     './node_modules/chartjs-plugin-error-bars/build/*.js'
@@ -187,6 +198,14 @@ function modules() {
     './node_modules/datatables.net-bs4/css/*.css'
   ])
     .pipe(gulp.dest(paths.vendor + '/datatables'));
+
+  // dataTables-buttons
+  var dataTablesButtons = gulp.src([
+    './node_modules/datatables.net-buttons/js/*.js',
+    './node_modules/datatables.net-buttons-bs4/js/*.js',
+    './node_modules/datatables.net-buttons-bs4/css/*.css'
+  ])
+    .pipe(gulp.dest(paths.vendor + '/datatables-buttons'));
 
   // Font Awesome
   var fontAwesome = gulp.src('./node_modules/@fortawesome/**/*')
@@ -202,6 +221,12 @@ function modules() {
     '!./node_modules/jquery/dist/core.js'
   ])
     .pipe(gulp.dest(paths.vendor + '/jquery'));
+
+  // jszip
+  var jszip = gulp.src([
+    './node_modules/jszip/dist/*.js',
+  ])
+    .pipe(gulp.dest(paths.vendor + '/jszip'));
 
   // d3 celestial
   var d3Celestial = gulp.src([
@@ -230,7 +255,21 @@ function modules() {
   var prismJsLineNumCss = gulp.src('./node_modules/prismjs/plugins/line-numbers/prism-line-numbers.css')
     .pipe(gulp.dest(paths.vendor + '/prismjs/line-numbers'));
 
-  return merge(bootstrapJS, chartJS, dataTables, fontAwesome, jquery, jqueryEasing, d3Celestial, d3CelestialData, d3CelestialImage, particlesJs, prismJs, prismJsPy, prismJsLineNum, prismJsCss, prismJsLineNumCss);
+  return merge(bootstrapJS, bootstrapSbAdmin2, chartJS, dataTables, dataTablesButtons, fontAwesome, jquery, jqueryEasing, jszip, d3Celestial, d3CelestialData, d3CelestialImage, particlesJs, prismJs, prismJsPy, prismJsLineNum, prismJsCss, prismJsLineNumCss);
+}
+
+// SCSS task
+function scssTask() {
+  return gulp
+  .src(paths.scss)
+  .pipe(sass({
+    outputStyle: "expanded",
+  }))
+  .on("error", sass.logError)
+  .pipe(autoprefixer({
+    cascade: false
+  }))
+  .pipe(gulp.dest(paths.cssDir));
 }
 
 // CSS task
@@ -275,6 +314,7 @@ function jsTask() {
 
 // Watch files
 function watchFiles() {
+  gulp.watch(paths.scss, scssTask);
   gulp.watch([paths.css, '!' + paths.cssMin], cssTask);
   gulp.watch([paths.js, '!' + paths.jsMin], jsTask);
   gulp.watch(paths.html, browserSyncReload);
@@ -282,7 +322,7 @@ function watchFiles() {
 
 // Define complex tasks
 const js9 = gulp.series(js9Dir, js9MakeConfig, js9Make, js9MakeInst, js9Config)
-const assets = gulp.parallel(cssTask, jsTask)
+const assets = gulp.parallel(gulp.series(scssTask, cssTask), jsTask)
 const vendor = gulp.series(clean, gulp.parallel(modules, js9))
 const build = gulp.series(vendor, assets);
 const watch = gulp.series(assets, gulp.parallel(watchFiles, browserSync));

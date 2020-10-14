@@ -132,11 +132,10 @@ SOCIAL_AUTH_PIPELINE = (
 )
 
 SOCIAL_AUTH_GITHUB_ORG_KEY = env('SOCIAL_AUTH_GITHUB_KEY', cast=str, default='')
-SOCIAL_AUTH_GITHUB_ORG_SECRET = env('SOCIAL_AUTH_GITHUB_SECRET', cast=str, default=''
-    )
+SOCIAL_AUTH_GITHUB_ORG_SECRET = env('SOCIAL_AUTH_GITHUB_SECRET', cast=str, default='')
 SOCIAL_AUTH_GITHUB_ORG_NAME = env('SOCIAL_AUTH_GITHUB_ORG_NAME', cast=str, default='')
 SOCIAL_AUTH_GITHUB_ADMIN_TEAM = env('SOCIAL_AUTH_GITHUB_ADMIN_TEAM', cast=str, default='')
-SOCIAL_AUTH_GITHUB_SCOPE = ['read:org', 'user:email']
+SOCIAL_AUTH_GITHUB_ORG_SCOPE = ['read:org', 'user:email']
 
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
@@ -262,6 +261,9 @@ RAW_IMAGE_DIR = env('RAW_IMAGE_DIR', cast=str, default=os.path.join(BASE_DIR, 'r
 if '/' not in RAW_IMAGE_DIR:
     RAW_IMAGE_DIR = os.path.join(BASE_DIR, RAW_IMAGE_DIR)
 
+# extra user-supplied data folder, relative to the user's home directory on the deployment machine
+HOME_DATA_DIR = env('HOME_DATA_DIR', cast=str, default='vast-pipeline-extra-data')
+
 # allowed source finders
 SOURCE_FINDERS = ['selavy']
 
@@ -292,6 +294,8 @@ PIPE_RUN_CONFIG_DEFAULTS = {
     'monitor_allow_nan': False,
     'astrometric_uncertainty_ra': 1,
     'astrometric_uncertainty_dec': 1,
+    'association_parallel': False,
+    'association_epoch_duplicate_radius': 2.5,
     'association_method': 'basic',
     'association_radius': 10.,
     'association_de_ruiter_radius': 5.68,
