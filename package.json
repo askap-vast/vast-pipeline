@@ -44,7 +44,7 @@
     "datatables.net-bs4": "1.10.22",
     "datatables.net-buttons-bs4": "1.6.5",
     "dotenv": "^8.2.0",
-    "jquery": "3.4.1",
+    "jquery": "3.5.0",
     "jquery.easing": "^1.4.1",
     "js9": "git+https://github.com/ericmandel/js9.git#v3.0",
     "jszip": "3.5.0",
