@@ -16,13 +16,12 @@ from pyarrow.parquet import read_schema
 
 from vast_pipeline.models import Image, Measurement
 from vast_pipeline.image.utils import on_sky_sep
+from vast_pipeline.pipeline.loading import make_upload_measurements
 
-from .loading import bulk_upload_model
 from .forced_phot import ForcedPhot
 from .utils import (
     cross_join, parallel_groupby_coord
 )
-from vast_pipeline.pipeline.generators import measurement_models_generator
 from ..utils.utils import StopWatch
 
 
@@ -528,12 +527,9 @@ def forced_extraction(
     for parquet in forced_parquets:
         os.remove(parquet)
 
-    meas_dj_ids = bulk_upload_model(
-        Measurement, measurement_models_generator(extr_df), return_ids=True
-    )
+    # upload the measurements, a column 'id' is returned with the DB id
+    extr_df = make_upload_measurements(extr_df)
 
-    # make the measurement id column and rename to source
-    extr_df['id'] = meas_dj_ids
     extr_df = extr_df.rename(columns={'source_tmp_id':'source'})
 
     # write forced measurements to specific parquet

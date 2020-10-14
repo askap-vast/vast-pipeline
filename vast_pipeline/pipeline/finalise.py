@@ -9,7 +9,7 @@ from vast_pipeline.models import Association, RelatedSource, Run
 from vast_pipeline.utils.utils import StopWatch
 
 from .loading import (
-    upload_associations, upload_sources, upload_related_sources
+    make_upload_associations, make_upload_sources, make_upload_related_sources
 )
 from .utils import parallel_groupby
 
@@ -84,11 +84,8 @@ def final_operations(
     # add the separation distance in degrees
     srcs_df['n_neighbour_dist'] = d2d.deg
 
-    # upload sources to DB
-    src_dj_ids = upload_sources(srcs_df, p_run)
-
-    # attach the DB IDs just obtained to the source dataframe
-    srcs_df['id'] = src_dj_ids
+    # upload sources to DB, column 'id' with DB id is contained in return
+    srcs_df = make_upload_sources(srcs_df, p_run)
 
     # gather the related df, upload to db and save to parquet file
     # the df will look like
@@ -123,7 +120,7 @@ def final_operations(
     )
 
     # upload the relations to DB.
-    upload_related_sources(related_df)
+    make_upload_related_sources(related_df)
 
     del related_df
 
@@ -144,7 +141,7 @@ def final_operations(
     )
 
     # upload associations into DB
-    upload_associations(sources_df)
+    make_upload_associations(sources_df)
 
     # write associations to parquet file
     sources_df.rename(columns={'id': 'meas_id'})[

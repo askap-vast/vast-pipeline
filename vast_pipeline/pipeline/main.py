@@ -17,7 +17,7 @@ from .association import association, parallel_association
 from .new_sources import new_sources
 from .forced_extraction import forced_extraction
 from .finalise import final_operations
-from .loading import upload_images
+from .loading import make_upload_images
 from .utils import (
     get_src_skyregion_merged_df,
     group_skyregions,
@@ -258,7 +258,7 @@ class Pipeline():
         self.match_images_to_data()
 
         # upload/retrieve image data
-        images, skyregs_df = upload_images(
+        images, skyregs_df = make_upload_images(
             self.img_paths,
             self.config,
             p_run

@@ -6,7 +6,7 @@ from django.db import transaction
 from itertools import islice
 
 from vast_pipeline.image.main import SelavyImage
-from vast_pipeline.pipeline.generators import (
+from vast_pipeline.pipeline.model_generator import (
     measurement_models_generator,
     source_models_generator,
     related_models_generator,
@@ -46,7 +46,7 @@ def bulk_upload_model(djmodel, generator, batch_size=10_000, return_ids=False):
         return bulk_ids
 
 
-def upload_images(paths, config, pipeline_run):
+def make_upload_images(paths, config, pipeline_run):
     '''
     carry the first part of the pipeline, by uploading all the images
     to the image table and populated band and skyregion objects
@@ -104,14 +104,8 @@ def upload_images(paths, config, pipeline_run):
             measurements.shape[0], measurements.shape[1]
         )
 
-        # do a upload without evaluate the objects, that should be faster
-        meas_dj_ids = bulk_upload_model(
-            Measurement, measurement_models_generator(measurements),
-            return_ids=True
-        )
-
-        # make a columns with the measurement id
-        measurements['id'] = meas_dj_ids
+        # upload measurements, a column with the db is added to the df
+        measurements = make_upload_measurements(measurements)
 
         # save measurements to parquet file in pipeline run folder
         base_folder = os.path.dirname(img.measurements_path)
@@ -154,7 +148,7 @@ def upload_images(paths, config, pipeline_run):
     return images, skyregs_df
 
 
-def upload_sources(sources_df, pipeline_run):
+def make_upload_sources(sources_df, pipeline_run):
     '''
     delete previous sources for given pipeline run and bulk upload
     new found sources as well as related sources
@@ -179,16 +173,30 @@ def upload_sources(sources_df, pipeline_run):
         return_ids=True
     )
 
-    return src_dj_ids
+    sources_df['id'] = src_dj_ids
+
+    return sources_df
 
 
-def upload_related_sources(related_df):
+def make_upload_related_sources(related_df):
     logger.info('Populate "related" field of sources...')
     bulk_upload_model(RelatedSource, related_models_generator(related_df))
 
 
-def upload_associations(associations_df):
+def make_upload_associations(associations_df):
     logger.info('Upload associations...')
     bulk_upload_model(
         Association, association_models_generator(associations_df)
     )
+
+
+def make_upload_measurements(measurements_df):
+    meas_dj_ids = bulk_upload_model(
+        Measurement,
+        measurement_models_generator(measurements_df),
+        return_ids=True
+    )
+
+    measurements_df['id'] = meas_dj_ids
+
+    return measurements_df
