@@ -10,7 +10,8 @@ from vast_pipeline.pipeline.model_generator import (
     measurement_models_generator,
     source_models_generator,
     related_models_generator,
-    association_models_generator
+    association_models_generator,
+    measurement_pair_models_generator,
 )
 from vast_pipeline.models import Association, Measurement, Source, RelatedSource, MeasurementPair
 from vast_pipeline.pipeline.utils import (
@@ -201,9 +202,11 @@ def make_upload_measurements(measurements_df):
     return measurements_df
 
 
-def upload_associations(associations_list):
-    bulk_upload_model(associations_list, Association)
-
-
-def upload_measurement_pairs(measurement_pairs_list):
-    bulk_upload_model(measurement_pairs_list, MeasurementPair)
+def make_upload_measurement_pairs(measurement_pairs_df):
+    meas_pair_dj_ids = bulk_upload_model(
+        MeasurementPair,
+        measurement_pair_models_generator(measurement_pairs_df),
+        return_ids=True
+    )
+    measurement_pairs_df["id"] = meas_pair_dj_ids
+    return measurement_pairs_df

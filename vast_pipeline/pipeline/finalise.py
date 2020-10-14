@@ -5,11 +5,11 @@ import pandas as pd
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from vast_pipeline.models import Run, MeasurementPair
+from vast_pipeline.models import Run
 from vast_pipeline.utils.utils import StopWatch, optimize_floats, optimize_ints
 from vast_pipeline.pipeline.loading import (
     make_upload_associations, make_upload_sources, make_upload_related_sources,
-    upload_measurement_pairs
+    make_upload_measurement_pairs,
 )
 from vast_pipeline.pipeline.utils import parallel_groupby, calculate_measurement_pair_metrics
 
@@ -159,29 +159,13 @@ def final_operations(
     measurement_pairs_df = measurement_pairs_df.join(
         srcs_df.id.rename("source_id"), on="source"
     )
-    # create the measurement pair objects
-    measurement_pairs_df["measurement_pair_dj"] = measurement_pairs_df.apply(
-        lambda row: MeasurementPair(
-            source_id=row["source_id"],  # set the source foreign key ID directly
-            measurement_a_id=row["id_a"],
-            measurement_b_id=row["id_b"],
-            vs_peak=row["vs_peak"],
-            vs_int=row["vs_int"],
-            m_peak=row["m_peak"],
-            m_int=row["m_int"],
-        ),
-        axis=1,
-    )
-    upload_measurement_pairs(measurement_pairs_df["measurement_pair_dj"])
+    # create the measurement pair objects and upload to DB
+    measurement_pairs_df = make_upload_measurement_pairs(measurement_pairs_df)
 
-    # get the MeasurementPair object primary keys
-    measurement_pairs_df["id"] = measurement_pairs_df["measurement_pair_dj"].apply(
-        lambda x: x.id
-    )
     # optimize measurement pair DataFrame and save to parquet file
     measurement_pairs_df = optimize_ints(
         optimize_floats(
-            measurement_pairs_df.drop(columns=["source", "measurement_pair_dj"]).rename(
+            measurement_pairs_df.drop(columns=["source"]).rename(
                 columns={"id_a": "meas_id_a", "id_b": "meas_id_b"}
             )
         )
