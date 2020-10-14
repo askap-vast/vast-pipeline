@@ -369,6 +369,23 @@ class Source(CommentableModel):
     n_neighbour_dist = models.FloatField(
         help_text='Distance to the nearest neighbour (deg)'
     )
+    vs_max_int = models.FloatField(
+        null=True,
+        help_text='Maximum value of all measurement pair variability t-statistics for int flux.'
+    )
+    m_abs_max_int = models.FloatField(
+        null=True,
+        help_text='Maximum absolute value of all measurement pair modulation indices for int flux.'
+    )
+    vs_max_peak = models.FloatField(
+        null=True,
+        help_text='Maximum value of all measurement pair variability t-statistics for peak flux.'
+    )
+    m_abs_max_peak = models.FloatField(
+        null=True,
+        help_text='Maximum absolute value of all measurement pair modulation indices for peak flux.'
+    )
+
 
     # total metrics to report in UI
     n_meas = models.IntegerField(
@@ -750,3 +767,35 @@ class SourceFav(models.Model):
         blank=True,
         help_text='Why did you include this as favourite'
     )
+
+
+class MeasurementPair(models.Model):
+    """Links two Measurement objects from the same Source and stores two variability metrics
+    for peak and integrated fluxes:
+        - `vs_peak` and `vs_int` is the variability t-statistic. e.g. if Vs is 4.3, then
+            the source is considered variable to a 95% CI.
+        - `m_peak` and `m_int` is the modulation index, related to fractional variability.
+    See Section 5 of Mooley et al. (2016) for details, DOI: 10.3847/0004-637X/818/2/105.
+    """
+    source = models.ForeignKey(Source, on_delete=models.CASCADE)
+    measurement_a = models.ForeignKey(
+        Measurement, related_name="measurement_pairs_a", on_delete=models.CASCADE
+    )
+    measurement_b = models.ForeignKey(
+        Measurement, related_name="measurement_pairs_b", on_delete=models.CASCADE
+    )
+    vs_peak = models.FloatField(help_text="Variability metric: t-statistic for peak fluxes.")
+    m_peak = models.FloatField(help_text="Variability metric: modulation index for peak fluxes.")
+    vs_int = models.FloatField(help_text="Variability metric: t-statistic for integrated fluxes.")
+    m_int = models.FloatField(help_text="Variability metric: modulation index for integrated fluxes.")
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["source", "measurement_a", "measurement_b"],
+                name="%(app_label)s_%(class)s_unique_pair"
+            )
+        ]
+
+    def __str__(self):
+        return f"({self.measurement_a}, {self.measurement_b})"

@@ -130,7 +130,23 @@ FLOAT_FIELDS = {
     'frequency': {
         'precision': 2,
         'scale': 1,
-    }
+    },
+    'vs_max_int': {
+        'precision': 2,
+        'scale': 1,
+    },
+    'vs_max_peak': {
+        'precision': 2,
+        'scale': 1,
+    },
+    'm_abs_max_int': {
+        'precision': 2,
+        'scale': 1,
+    },
+    'm_abs_max_peak': {
+        'precision': 2,
+        'scale': 1,
+    },
 }
 
 

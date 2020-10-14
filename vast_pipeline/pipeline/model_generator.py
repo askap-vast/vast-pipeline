@@ -7,7 +7,7 @@ import pandas as pd
 from typing import Iterable
 from vast_pipeline.utils.utils import deg2hms, deg2dms
 from vast_pipeline.models import (
-    Association, Measurement, Source, RelatedSource, Run
+    Association, Measurement, MeasurementPair, Source, RelatedSource, Run
 )
 
 
@@ -121,3 +121,31 @@ def related_models_generator(
     """
     for i, row in related_df.iterrows():
         yield RelatedSource(**row.to_dict())
+
+
+def measurement_pair_models_generator(
+    measurement_pairs_df: pd.DataFrame,
+) -> Iterable[MeasurementPair]:
+    """Creates a generator of MeasurementPair objects from an input pipeline measurement
+    pair dataframe.
+
+    Parameters
+    ----------
+    measurement_pairs_df : pd.DataFrame
+        The DataFrame of measurement pairs.
+
+    Returns
+    -------
+    Iterable[MeasurementPair]
+        An iterable of MeasurementPair objects, one for each row of `measurement_pairs_df`.
+    """
+    for i, row in measurement_pairs_df.iterrows():
+        yield MeasurementPair(
+            source_id=row["source_id"],
+            measurement_a_id=row["id_a"],
+            measurement_b_id=row["id_b"],
+            vs_peak=row["vs_peak"],
+            vs_int=row["vs_int"],
+            m_peak=row["m_peak"],
+            m_int=row["m_int"],
+        )

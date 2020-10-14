@@ -121,6 +121,11 @@
                 <strong>Nr Selavy: </strong>{{ source.n_meas_sel }}<br>
                 <strong>Nr Forced: </strong>{{ source.n_meas_forced }}
               </p>
+              <p>
+                <strong>Nr Relations: </strong>{{ source.n_rel }} 
+                {% if source.n_rel > 0 %}(<a href="#relatedHeader">Table</a>){% endif %}<br>
+                <strong>Nr Siblings: </strong>{{ source.n_sibl }}
+              </p>
             </div>
             <div class="col-xl">
               <p>
@@ -135,11 +140,10 @@
                 </strong>{% if source.new %}{{ source.new_high_sigma|floatformat:2 }}{% else %}N/A{% endif %}
               </p>
               <p>
-                <strong>Nr Relations: </strong>{{ source.n_rel }} 
-                {% if source.n_rel > 0 %}
-                  (<a href="#relatedHeader">Table</a>)
-                {% endif %}<br>
-                <strong>Nr Siblings: </strong>{{ source.n_sibl }}
+                <strong>Max Vs metric (peak): </strong>{{ source.vs_max_peak|floatformat:2 }}<br>
+                <strong>Max Vs metric (int): </strong>{{ source.vs_max_int|floatformat:2 }}<br>
+                <strong>Max |m| metric (peak): </strong>{{ source.m_abs_max_peak|floatformat:2 }}<br>
+                <strong>Max |m| metric (int): </strong>{{ source.m_abs_max_int|floatformat:2 }}
               </p>
               <p>
                 <a href="#lightcurveHeader">Lightcurve</a><br>
@@ -189,13 +193,25 @@
     <div class="col-xl-8 mb-4">
       <!-- Area Chart -->
       <div class="card shadow h-100">
-        <div class="card-header py-3" id="lightcurveHeader">
+        <div class="card-header py-3 clearfix" id="lightcurveHeader">
           <h6 class="m-0 font-weight-bold text-primary">Light Curve</h6>
+          <div class="float-right" id="fluxTypeRadioContainer">
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="fluxTypeRadio" id="fluxTypeRadioPeak" value="peak" checked>
+              <label class="form-check-label" for="fluxTypeRadioPeak">
+                Peak
+              </label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="fluxTypeRadio" id="fluxTypeRadioInt" value="int">
+              <label class="form-check-label" for="fluxTypeRadioInt">
+                Integrated
+              </label>
+            </div>
+          </div>
         </div>
         <div class="card-body">
-          <div class="chart-area">
-            <canvas id="lightCurveChart"></canvas>
-          </div>
+          <div id="lightCurveBokeh"></div>
         </div>
       </div>
     </div>
@@ -384,11 +400,8 @@
 {{ datatables|json_script:"datatable-conf" }}
 <script src="{% static 'js/datatables-pipeline.min.js' %}"></script>
 
-<!-- Chart scripts -->
-{{ datatables.0|json_script:"chart-data" }}
-<script src="{% static 'vendor/chart.js/Chart.bundle.min.js' %}"></script>
-<script src="{% static 'vendor/chart.js/Plugin.Errorbars.min.js' %}"></script>
-<script src="{% static 'js/light-curve-chart.min.js' %}"></script>
+<!-- Bokeh scripts -->
+<script src="{% static 'vendor/bokehjs/bokeh.min.js' %}"></script>
 
 <!-- Aladin -->
 {{ source|json_script:"data-aladin" }}
@@ -454,6 +467,18 @@
     });
     JS9.SetZoom(zoom);
   }
+
+  function getLightcurvePlot(fluxType = "peak") {
+    let usePeakFlux = fluxType === "peak";
+    fetch("{% url 'vast_pipeline:api_source_plots-lightcurve' source.id %}?peak_flux=" + usePeakFlux)
+      .then(function (response) {
+        return response.json()
+      })
+      .then(function (item) {
+        $("#lightCurveBokeh").empty();
+        return Bokeh.embed.embed_item(item, "lightCurveBokeh")
+      })
+  }
   // when JS9 is ready, load the cutout images into the correct display panels
   $(document).on("JS9:ready", async function () {
     var measurementData = JSON.parse(document.getElementById("data-js9").textContent);
@@ -485,5 +510,17 @@
       })
     });
   });
+
+  // get the lightcurve plot whenever the flux type radio value changes
+  $("#fluxTypeRadioContainer").on("change", function(e) {
+    console.log("getting lightcurve plot for flux type", e.target.value);
+    getLightcurvePlot(e.target.value);
+  });
+
+  $(document).ready(function () {
+    let fluxType = $('input[name="fluxTypeRadio"]:checked').val();
+    getLightcurvePlot(fluxType);
+  });
+
 </script>
 {% endblock custom_page_scripts %}

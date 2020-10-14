@@ -104,3 +104,8 @@ celerybeat-schedule
 *run*/
 *survey*/
 **/*.env
+
+Dockerfile
+docker/
+.dockerignore
+docker-compose.yml

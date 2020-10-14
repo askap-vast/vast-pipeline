@@ -178,18 +178,15 @@ function modules() {
   var bootstrapSelectCSS = gulp.src('./node_modules/bootstrap-select/dist/css/*')
     .pipe(gulp.dest(paths.vendor + '/bootstrap-select/css'));
 
+  // Bokeh
+  var bokehJS = gulp.src('./node_modules/@bokeh/bokehjs/build/js/bokeh.min.js')
+    .pipe(gulp.dest(paths.vendor + '/bokehjs'));
+
   // SB Admin 2 Bootstrap template
   var bootstrapSbAdmin2 = gulp.src([
     './node_modules/startbootstrap-sb-admin-2/js/*.js',
     './node_modules/startbootstrap-sb-admin-2/css/*.css'
   ]).pipe(gulp.dest(paths.vendor + '/startbootstrap-sb-admin-2'));
-  
-    // ChartJS
-  var chartJS = gulp.src([
-    './node_modules/chart.js/dist/*.js',
-    './node_modules/chartjs-plugin-error-bars/build/*.js'
-  ])
-    .pipe(gulp.dest(paths.vendor + '/chart.js'));
 
   // dataTables
   var dataTables = gulp.src([
@@ -255,7 +252,7 @@ function modules() {
   var prismJsLineNumCss = gulp.src('./node_modules/prismjs/plugins/line-numbers/prism-line-numbers.css')
     .pipe(gulp.dest(paths.vendor + '/prismjs/line-numbers'));
 
-  return merge(bootstrapJS, bootstrapSbAdmin2, chartJS, dataTables, dataTablesButtons, fontAwesome, jquery, jqueryEasing, jszip, d3Celestial, d3CelestialData, d3CelestialImage, particlesJs, prismJs, prismJsPy, prismJsLineNum, prismJsCss, prismJsLineNumCss);
+  return merge(bootstrapJS, bootstrapSbAdmin2, bokehJS, dataTables, dataTablesButtons, fontAwesome, jquery, jqueryEasing, jszip, d3Celestial, d3CelestialData, d3CelestialImage, particlesJs, prismJs, prismJsPy, prismJsLineNum, prismJsCss, prismJsLineNumCss);
 }
 
 // SCSS task

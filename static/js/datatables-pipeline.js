@@ -324,6 +324,24 @@ $(document).ready(function() {
     if (var_eta_max.value) {
       qry_url = qry_url + "&max_" + var_eta_type.value + "=" + var_eta_max.value;
     };
+    let var_vs_max_type = document.getElementById("varMaxVsMetricSelect");
+    let var_vs_max_min = document.getElementById("varMaxVsMinSelect");
+    let var_vs_max_max = document.getElementById("varMaxVsMaxSelect");
+    if (var_vs_max_min.value) {
+      qry_url = qry_url + "&min_" + var_vs_max_type.value + "=" + var_vs_max_min.value;
+    };
+    if (var_vs_max_max.value) {
+      qry_url = qry_url + "&max_" + var_vs_max_type.value + "=" + var_vs_max_max.value;
+    };
+    let var_m_abs_max_type = document.getElementById("varMaxAbsMMetricSelect");
+    let var_m_abs_max_min = document.getElementById("varMaxAbsMMinSelect");
+    let var_m_abs_max_max = document.getElementById("varMaxAbsMMaxSelect");
+    if (var_m_abs_max_min.value) {
+      qry_url = qry_url + "&min_" + var_m_abs_max_type.value + "=" + var_m_abs_max_min.value;
+    };
+    if (var_m_abs_max_max.value) {
+      qry_url = qry_url + "&max_" + var_m_abs_max_type.value + "=" + var_m_abs_max_max.value;
+    };
     let datapts_min = document.getElementById("datapointMinSelect");
     let datapts_max = document.getElementById("datapointMaxSelect");
     if (datapts_min.value) {

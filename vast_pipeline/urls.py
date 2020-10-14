@@ -18,6 +18,7 @@ router.register(r'rawimages', views.RawImageListSet, 'api_rawimages')
 router.register(r'runcfg', views.RunConfigSet, 'api_runcfg')
 router.register(r'sourcesfavs', views.SourceFavViewSet, 'api_sources_favs')
 router.register(r'utils', views.UtilitiesSet, 'api_utils')
+router.register(r'plots', views.SourcePlotsSet, 'api_source_plots')
 
 urlpatterns = [
     path('piperuns/', views.RunIndex, name='run_index'),
