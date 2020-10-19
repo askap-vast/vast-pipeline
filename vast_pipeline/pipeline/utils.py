@@ -1227,8 +1227,7 @@ def calculate_vs_metric(
     Returns:
         float: the Vs metric for flux values "A" and "B".
     """
-    vs = (flux_a - flux_b) / np.hypot(flux_err_a, flux_err_b)
-    return np.abs(vs)
+    return (flux_a - flux_b) / np.hypot(flux_err_a, flux_err_b)
 
 
 def calculate_m_metric(flux_a: float, flux_b: float) -> float:
