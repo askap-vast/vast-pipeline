@@ -113,12 +113,14 @@
           <h6 class="m-0 font-weight-bold text-primary">Welcome to the VAST Pipeline!</h6>
         </div>
         <div class="card-body overflow-auto">
+         <p>Use the navigation sidebar to explore the website. Where to go for common tasks:</p>
           <ul>
             <li>To search for a source by name or coordinates use the <a href="{% url 'vast_pipeline:source_query' %}">Sources Query</a> page.</li><br>
             <li>To see what pipeline runs are available see the <a href="{% url 'vast_pipeline:run_index' %}">Pipeline Runs</a> page.</li><br>
-            <li>If you find an issue please use the <a target="_blank" href="https://github.com/askap-vast/vast-pipeline/issues/new">Raise Issue</a> button in the sidebar.</li><br>
-            <li>Links to other VAST servies such as the <a target="_blank" href="https://data.vast-survey.org">JupyterHub</a> or <a target="_blank" href="https://github.com/askap-vast/vast-project/wiki">Wiki</a> can be found under 'VAST Links' in the sidebar.</li><br>
           </ul>
+        <p>If you find an issue please use the <a target="_blank" href="https://github.com/askap-vast/vast-pipeline/issues/new">raise an issue on Github</a>. This link is always available via the sidebar.</p>
+        <p>Links to other VAST servies such as the <a target="_blank" href="https://data.vast-survey.org">JupyterHub</a> or <a target="_blank" href="https://github.com/askap-vast/vast-project/wiki">Wiki</a> can be found under 'VAST Links' in the sidebar.</p>
+        <p>Currently users are unable to launch processing of their own run from the website. This feature is coming soon. In the meantime please contact the admin team if you wish to process your own run.</p>
         </div>
       </div>
     </div>
