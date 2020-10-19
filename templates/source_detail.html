@@ -122,7 +122,7 @@
                 <strong>Nr Forced: </strong>{{ source.n_meas_forced }}
               </p>
               <p>
-                <strong>Nr Relations: </strong>{{ source.n_rel }} 
+                <strong>Nr Relations: </strong>{{ source.n_rel }}
                 {% if source.n_rel > 0 %}(<a href="#relatedHeader">Table</a>){% endif %}<br>
                 <strong>Nr Siblings: </strong>{{ source.n_sibl }}
               </p>
@@ -212,6 +212,9 @@
         </div>
         <div class="card-body">
           <div id="lightCurveBokeh"></div>
+          <div style="text-align: center; margin-top: 1rem">
+            <a href="#measurementsHeader">Go to Measurements table to download CSV</a>
+          </div>
         </div>
       </div>
     </div>
