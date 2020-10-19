@@ -45,8 +45,7 @@ class Command(BaseCommand):
             action='store_true',
             help=(
                 'Flag to keep the pipeline run(s) parquet files. '
-                'Will also apply to the measurements.arrow file if'
-                ' present.'
+                'Will also apply to arrow files if present.'
             )
         )
         parser.add_argument(

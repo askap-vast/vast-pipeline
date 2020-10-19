@@ -282,10 +282,10 @@
               </div>
               <div class="col">
                 <div class="custom-control custom-switch">
-                  <input type="checkbox" class="custom-control-input" id="measurementsArrowSwitch" {% if runconfig.create_measurements_arrow_file %} checked="checked" {% endif %} name="create_measurements_arrow_file">
-                  <label class="custom-control-label font-weight-bold text-gray-800" for="measurementsArrowSwitch">Create Measurements Arrow File</label>
+                  <input type="checkbox" class="custom-control-input" id="measurementsArrowSwitch" {% if runconfig.create_measurements_arrow_file %} checked="checked" {% endif %} name="create_measurements_arrow_files">
+                  <label class="custom-control-label font-weight-bold text-gray-800" for="measurementsArrowSwitch">Create Measurements Arrow Files</label>
                   <a href="#" data-toggle="tooltip" data-placement="top" title=
-                      "The pipeline will create a `measurements.arrow` file alongside the parquet files in the run directory to allow easier exploration post analysis. Recommended for very large runs (millions of measurements)."
+                      "The pipeline will create `measurements.arrow` and `measurement_pairs.arrow` files alongside the parquet files in the run directory to allow easier exploration post analysis. Recommended for very large runs (millions of measurements)."
                   ><i class="fas fa-info-circle"></i></a>
                 </div>
               </div>

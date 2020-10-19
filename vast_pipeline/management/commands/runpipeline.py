@@ -8,7 +8,8 @@ from django.core.management.base import BaseCommand, CommandError
 from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
 from vast_pipeline.pipeline.main import Pipeline
 from vast_pipeline.pipeline.utils import (
-    get_create_p_run, create_measurements_arrow_file
+    get_create_p_run, create_measurements_arrow_file,
+    create_measurement_pairs_arrow_file
 )
 from vast_pipeline.utils.utils import StopWatch
 from ..helpers import get_p_run_name
@@ -112,8 +113,9 @@ class Command(BaseCommand):
             raise CommandError(f'Processing error:\n{e}')
 
         # Create arrow file after success if selected.
-        if pipeline.config.CREATE_MEASUREMENTS_ARROW_FILE:
+        if pipeline.config.CREATE_MEASUREMENTS_ARROW_FILES:
             create_measurements_arrow_file(p_run)
+            create_measurement_pairs_arrow_file(p_run)
 
         # set the pipeline status as completed
         pipeline.set_status(p_run, 'END')
