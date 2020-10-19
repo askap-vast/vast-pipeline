@@ -88,7 +88,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
-- [#393](https://github.com/askap-vast/vast-pipeline/pull/393) feat: Added measurement_pairs arrow export
+- [#393](https://github.com/askap-vast/vast-pipeline/pull/393) feat: Added measurement_pairs arrow export.
 - [#387](https://github.com/askap-vast/vast-pipeline/pull/387) feat: Minor website updates.
 - [#386](https://github.com/askap-vast/vast-pipeline/pull/386) fix: fix lightcurve header floats.
 - [#368](https://github.com/askap-vast/vast-pipeline/pull/368) feat: vast-candidates merger: Add user commenting
