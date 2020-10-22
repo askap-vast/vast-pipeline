@@ -47,6 +47,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Updated RACS HiPS URL in Aladin [#399](https://github.com/askap-vast/vast-pipeline/pull/399).
 - Changed home page changelog space to welcome/help messages [#387](https://github.com/askap-vast/vast-pipeline/pull/387).
 - The `comment` field in the Run model has been renamed to `description`. A `comment` many-to-many relationship was added to permit user comments on Run instances [#368](https://github.com/askap-vast/vast-pipeline/pull/368).
 - Moved sb-admin-2 Bootstrap theme static assets to NPM package dependency [#370](https://github.com/askap-vast/vast-pipeline/pull/370).
@@ -86,6 +87,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#399](https://github.com/askap-vast/vast-pipeline/pull/399) fix: Updated RACS HiPS path.
 - [#387](https://github.com/askap-vast/vast-pipeline/pull/387) feat: Minor website updates.
 - [#386](https://github.com/askap-vast/vast-pipeline/pull/386) fix: fix lightcurve header floats.
 - [#368](https://github.com/askap-vast/vast-pipeline/pull/368) feat: vast-candidates merger: Add user commenting
