@@ -1,6 +1,5 @@
-**********************************
-VAST Pipeline - Installation Notes
-**********************************
+Installation Notes
+==================
 
 This document explains how to install all the packages that the pipeline needs to run, as well as the PostgreSQL database. Following this documentation should get you started with a good **LOCAL** development environment, where you can mess up things, but always go back and fix it up.
 
@@ -178,5 +177,6 @@ In order to set up the front end assets, run:
 
 **NOTE**: make sure you are in the root of the repo, as shown above. That command "clean install" all the dependencies, copies files into the ``static/vendor`` folder and minified CSS and JS files. For more details of compilation of frontend assets (e.g. single tasks), and developement set up read the [Front End `README.md`](./static/README.md).
 
+----
 
 Done! Now open the [`README.md`](./README.md) file to see how to initialize and run the pipeline. Otherwise if you intend on developing the repo open the [`CONTRIBUTING.md`](./CONTRIBUTING.md) file for instructions on how to contribute to the repo.
