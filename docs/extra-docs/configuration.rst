@@ -1,0 +1,90 @@
+Pipeline Configuration
+===========================
+
+The following instructions, will get you started in setting up the database and pipeline configuration
+
+1. Copy the setting configuration file template, and fill it with your settings (see `defaults <https://github.com/askap-vast/vast-pipeline/blob/master/webinterface/.env.template>`_.
+
+.. code-block:: bash
+
+    cp webinterface/.env.template webinterface/.env
+
+2. Choose a database name and user with password (e.g. database name: ``vastdb``; user: ``vast``, psw: ``vastpsw``), and add the connection details in ``.env`` (for URL syntax see `this link <https://django-environ.readthedocs.io/en/latest/#tips>`_)
+
+.. code-block:: cmake
+
+    DATABASE_URL=psql://FILLMYUSER:FILLMYPASSWORD@FILLMYHOST:FILLMYPORT/FILLMYDBNAME
+
+NOTE: the connection details (host and port) are the same that you setup in [`INSTALL.md`](./INSTALL.md). The database/user names must not contain any spaces or dashes, so use the underscore if you want, e.g. `this_is_my_db_name`.
+
+3. Create the database user and database name, by running:
+
+.. code-block:: bash
+
+    $ ./init-tools/init-db.sh localhost 5432 postgres postgres vast vastpsw vastdb
+
+For help on the command run it without arguments
+
+.. code-block:: language
+
+    $ ./init-tools/init-db.sh
+    Usage: init-db.sh HOST PORT ADMINUSER ADMINPSW USER USERPSW DBNAME
+    Eg:    init-db.sh localhost 5432 postgres postgres vast vastpsw vastdb
+
+    Help: This will create a postgresql user 'vast' with login password 'vastpsw'
+         and a database 'vastdb' and grant to 'vast' user all the privileges to 'vastdb'
+
+If everything went well the output is:
+
+.. code-block:: bash
+
+    connecting to PostgreSQL on 'localhost:5433' as admin 'postgres'
+    creating user 'vast' with login password 'vastpsw' and give it createdb privileges
+    CREATE ROLE
+    ************************************
+    creating db 'vastdb'
+
+4. Create the database tables. Remember first to activate the Python environment as described in [`INSTALL.md`](./INSTALL.md).
+
+.. code-block:: bash
+
+    (pipeline_env)$ ./manage.py migrate
+
+5. Create the directories listed at the bottom of ``settings.py`` and update the details on your setting configuration file ``.env`` (single name, e.g. ``pipeline-runs`` means path relative to ``BASE_DIR``, so the main folder where you cloned the repo).
+
+.. code-block:: python
+
+    # reference surveys default folder
+    PIPELINE_WORKING_DIR = env('PIPELINE_WORKING_DIR', cast=str, default=os.path.join(BASE_DIR, 'pipeline-runs'))
+
+    # reference surveys default folder
+    SURVEYS_WORKING_DIR = env('SURVEYS_WORKING_DIR', cast=str, default=os.path.join(BASE_DIR, 'reference-surveys'))
+
+The defaults values of the folders are pre-filled in your `.env <https://github.com/askap-vast/vast-pipeline/blob/master/webinterface/.env.template>`_ file, and even if that variables are not present in such file, the settings assumed the default values, which are relative to the main repo folder. So create the folders with (Note: make sure you change BASE_DIR to ``vast-pipeline``):
+
+.. code-block:: bash
+
+    cd BASE_DIR && mkdir pipeline-runs && mkdir reference-surveys
+
+After creating the folders with the defaults values your directory tree should look like this:
+
+.. code-block:: bash
+
+    ├── CHANGELOG.rst
+    ├── CODE_OF_CONDUCT.rst
+    ├── CONTRIBUTING.rst
+    ├── gulpfile.js
+    ├── init-tools
+    ├── INSTALL.rst
+    ├── LICENSE.txt
+    ├── manage.py
+    ├── node_modules
+    ├── package.json
+    ├── package-lock.json
+    ├── README.rst
+    ├── requirements
+    ├── static
+    ├── templates
+    ├── pipeline-runs
+    ├── vast_pipeline
+    └── webinterface
