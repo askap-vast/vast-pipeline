@@ -88,8 +88,8 @@ def final_operations(
     srcs_df = srcs_df.join(
         measurement_pairs_df.groupby("source")
         .agg(
-            vs_max_int=("vs_int", "max"),
-            vs_max_peak=("vs_peak", "max"),
+            vs_max_int=("vs_int", lambda x: x.abs().max()),
+            vs_max_peak=("vs_peak", lambda x: x.abs().max()),
             m_abs_max_int=("m_int", lambda x: x.abs().max()),
             m_abs_max_peak=("m_peak", lambda x: x.abs().max()),
         )

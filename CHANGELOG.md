@@ -49,6 +49,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### Changed
 
 - Changed config argument `CREATE_MEASUREMENTS_ARROW_FILE` -> `CREATE_MEASUREMENTS_ARROW_FILES` [#393](https://github.com/askap-vast/vast-pipeline/pull/393).
+- Updated RACS HiPS URL in Aladin [#399](https://github.com/askap-vast/vast-pipeline/pull/399).
 - Changed home page changelog space to welcome/help messages [#387](https://github.com/askap-vast/vast-pipeline/pull/387).
 - The `comment` field in the Run model has been renamed to `description`. A `comment` many-to-many relationship was added to permit user comments on Run instances [#368](https://github.com/askap-vast/vast-pipeline/pull/368).
 - Moved sb-admin-2 Bootstrap theme static assets to NPM package dependency [#370](https://github.com/askap-vast/vast-pipeline/pull/370).
@@ -74,6 +75,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed max source Vs metric to being an absolute value [#391](https://github.com/askap-vast/vast-pipeline/pull/391).
 - Fixed misalignment of lightcurve card header text and the flux type radio buttons [#386](https://github.com/askap-vast/vast-pipeline/pull/386).
 - Fixes incorrently named GitHub `social-auth` settings variable that prevented users from logging in with GitHub [#372](https://github.com/askap-vast/vast-pipeline/pull/372).
 - Fixes webinterface navbar overspill at small sizes [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
@@ -81,6 +83,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Removed
 
+- Removed 'selavy' from homepage measurements count label [#391](https://github.com/askap-vast/vast-pipeline/pull/391).
+- Removed leftover `pipeline/plots.py` file [#391](https://github.com/askap-vast/vast-pipeline/pull/391).
 - Removed `static/css/pipeline.css`, this file is now produced by compiling the Sass (`scss/**/*.scss`) files with Gulp [#370](https://github.com/askap-vast/vast-pipeline/pull/370).
 - Removed any storage of `meas_dj_obj` or `src_dj_obj` in the pipeline [#382](https://github.com/askap-vast/vast-pipeline/pull/382).
 - Removed `static/vendor/chart-js` package [#305](https://github.com/askap-vast/vast-pipeline/pull/305).
@@ -89,6 +93,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### List of PRs
 
 - [#393](https://github.com/askap-vast/vast-pipeline/pull/393) feat: Added measurement_pairs arrow export.
+- [#399](https://github.com/askap-vast/vast-pipeline/pull/399) fix: Updated RACS HiPS path.
+- [#391](https://github.com/askap-vast/vast-pipeline/pull/391) fix: Vs metric fix and removed pipeline/plots.py.
 - [#387](https://github.com/askap-vast/vast-pipeline/pull/387) feat: Minor website updates.
 - [#386](https://github.com/askap-vast/vast-pipeline/pull/386) fix: fix lightcurve header floats.
 - [#368](https://github.com/askap-vast/vast-pipeline/pull/368) feat: vast-candidates merger: Add user commenting
