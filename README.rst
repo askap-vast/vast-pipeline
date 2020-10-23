@@ -5,7 +5,6 @@ VAST Pipeline
     :target: http://www.astropy.org/
     :alt: astropy
 
-
 This repository holds the code of the Radio Transient detection pipeline for the VAST project.
 
 Read Installation instructions. If you intend to contribute to/develop the code base please read and follow the guidelines. Detailed documentation on `Vast Pipeline Documentation <http://>`_.
@@ -15,10 +14,13 @@ Features
 
 * Code base in ``Python 3.6+``, recommended ``3.7``
 * Source association/manipulations using ``Astropy4+`` and ``Pandas1+`` dataframe
+* Association methods: basic (``Astropy`` crossmatch), advanced (search with a fixed distance), De Ruiter
+* Flagging of "New Source" and "Related Source"
+* Forced Extraction (Monitor) backward and forward in time
 * Parallelization and scalability using Dask API (``Dask 2+``)
 * Data exploration in modern ``Django3+`` Web App (Bootstrap 4)
-* Accessing raw pipeline output data using parquet and arrow files
-* Pipeline interface both from command line (CLI) and via Web App
+* Accessing raw pipeline output data using ``.parquet`` and ``.arrow`` files
+* Pipeline interface from command line (CLI) and via Web App
 * Web App is served by ``Postgres12+`` with `Q3C plugin <https://github.com/segasai/q3c>`_
 
 
