@@ -8,7 +8,7 @@ function configureAladin(aladin, aladinConf) {
     aladin.gotoPosition(aladinConf.aladin_ra , aladinConf.aladin_dec);
     var sumss = aladin.createImageSurvey('SUMSS', 'SUMSS', 'https://alasky.u-strasbg.fr/SUMSS', 'equatorial', 6, {imgFormat: 'png'});
     var nvss = aladin.createImageSurvey('NVSS', 'NVSS', 'https://alasky.u-strasbg.fr/NVSS/intensity/', 'equatorial', 5, {imgFormat: 'jpg'});
-    var racs = aladin.createImageSurvey('RACS', 'RACS', 'https://www.atnf.csiro.au/people/Emil.Lenc/HiPS/RACS_I1/', 'equatorial', 8, {imgFormat: 'png'});
+    var racs = aladin.createImageSurvey('RACS', 'RACS', 'https://www.atnf.csiro.au/research/RACS/RACS_I1/', 'equatorial', 8, {imgFormat: 'png'});
     var vast_epoch_01 = aladin.createImageSurvey(
         'VAST Pilot 1', 'VAST Pilot 1', 'https://www.atnf.csiro.au/people/Emil.Lenc/HiPS/VAST1_I4', 'equatorial', 6, {imgFormat: 'png'}
     );
