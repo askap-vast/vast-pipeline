@@ -1,0 +1,418 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Developing Notes &mdash; Vast Pipeline 99.99.99dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Change Log" href="history.html" />
+    <link rel="prev" title="Usage" href="extra-docs/usage.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> Vast Pipeline
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extra-docs/usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Developing Notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#terminology">Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pull-request-guideline">Pull Request Guideline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#releasing-guidelines">Releasing Guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#solving-your-models-py-migrations-issues">Solving your <code class="docutils literal notranslate"><span class="pre">models.py</span></code>/migrations issues</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#you-modify-models-py">1. You modify <code class="docutils literal notranslate"><span class="pre">models.py</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#someone-else-modified-models-py-and-you-pull-the-changes">2. Someone else modified <code class="docutils literal notranslate"><span class="pre">models.py</span></code> and you pull the changes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#removing-clearing-data">Removing/Clearing Data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#reset-the-database">Reset the database</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#clearing-run-data">Clearing Run Data</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#run-tests">Run Tests</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Change Log</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Vast Pipeline</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Developing Notes</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/developing.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="developing-notes">
+<h1>Developing Notes<a class="headerlink" href="#developing-notes" title="Permalink to this headline">¶</a></h1>
+<p>This document explains how to contribute to the project code base.</p>
+<p>A very exahustive set of general guidelines can be follow <a class="reference external" href="https://github.com/apache/incubator-superset/blob/master/CONTRIBUTING.md">Superset Contributing</a>, but I think the following will suffice for our purpose.</p>
+<div class="contents local topic" id="table-of-contents">
+<p class="topic-title"><strong>Table of Contents</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#terminology" id="id3">Terminology</a></p></li>
+<li><p><a class="reference internal" href="#pull-request-guideline" id="id4">Pull Request Guideline</a></p></li>
+<li><p><a class="reference internal" href="#releasing-guidelines" id="id5">Releasing Guidelines</a></p></li>
+<li><p><a class="reference internal" href="#solving-your-models-py-migrations-issues" id="id6">Solving your <code class="docutils literal notranslate"><span class="pre">models.py</span></code>/migrations issues</a></p>
+<ul>
+<li><p><a class="reference internal" href="#you-modify-models-py" id="id7">1. You modify <code class="docutils literal notranslate"><span class="pre">models.py</span></code></a></p></li>
+<li><p><a class="reference internal" href="#someone-else-modified-models-py-and-you-pull-the-changes" id="id8">2. Someone else modified <code class="docutils literal notranslate"><span class="pre">models.py</span></code> and you pull the changes</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#removing-clearing-data" id="id9">Removing/Clearing Data</a></p>
+<ul>
+<li><p><a class="reference internal" href="#reset-the-database" id="id10">Reset the database</a></p></li>
+<li><p><a class="reference internal" href="#clearing-run-data" id="id11">Clearing Run Data</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#run-tests" id="id12">Run Tests</a></p></li>
+</ul>
+</div>
+<div class="section" id="terminology">
+<h2><a class="toc-backref" href="#id3">Terminology</a><a class="headerlink" href="#terminology" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Pipeline run (or ‘Run’) -&gt; Pipeline run instance, also referred as <code class="docutils literal notranslate"><span class="pre">run,</span> <span class="pre">p_run,</span> <span class="pre">piperun,</span> <span class="pre">pipe_run,</span> <span class="pre">...</span></code> in the code</p></li>
+<li><p>Measurement -&gt; the extracted measurement from the source finder of a single astrophysical source from an image, referred in the code as <code class="docutils literal notranslate"><span class="pre">measurement(s),</span> <span class="pre">meas,</span> <span class="pre">...</span></code></p></li>
+<li><p>Source -&gt; A collection of single measurements for the same astrophysical source, referred as <code class="docutils literal notranslate"><span class="pre">src,</span> <span class="pre">source,</span> <span class="pre">...</span></code> in the code</p></li>
+</ul>
+</div>
+<div class="section" id="pull-request-guideline">
+<h2><a class="toc-backref" href="#id4">Pull Request Guideline</a><a class="headerlink" href="#pull-request-guideline" title="Permalink to this headline">¶</a></h2>
+<p>First consider
+&gt; opening an issue before creating/issuing the PR.</p>
+<p>So we can separe problems from solutions.</p>
+<ol class="arabic simple">
+<li><p>Open an issue (e.g. <code class="docutils literal notranslate"><span class="pre">My</span> <span class="pre">issue</span> <span class="pre">123-my-issue-blah</span></code>, GitHub will assign a id e.g. ` <a href="#id1"><span class="problematic" id="id2">`</span></a>).</p></li>
+<li><p>Branch off <code class="docutils literal notranslate"><span class="pre">master</span></code> by naming your branch <code class="docutils literal notranslate"><span class="pre">fix-#123-my-issue-blah</span></code> (keep it short please).</p></li>
+<li><p>Do your changes.</p></li>
+<li><p>Run one or more pipeline run on full images to test functionality.</p></li>
+<li><p>Run test locally with <code class="docutils literal notranslate"><span class="pre">./manage.py</span> <span class="pre">test</span> <span class="pre">pipeline</span></code> (there are few tests, mostly not working).</p></li>
+<li><p>Run the webserver and check the functionality.</p></li>
+<li><p>Commit and issue the PR.</p></li>
+</ol>
+<p>PRs not branched off master will be <strong>rejected</strong>!.</p>
+</div>
+<div class="section" id="releasing-guidelines">
+<h2><a class="toc-backref" href="#id5">Releasing Guidelines</a><a class="headerlink" href="#releasing-guidelines" title="Permalink to this headline">¶</a></h2>
+<p>In to order to make a release, please follow these steps (example: making the <code class="docutils literal notranslate"><span class="pre">0.1.0</span></code> release):</p>
+<ol class="arabic simple">
+<li><p>Make sure that every new feature and PR will be merged to master, before continuing with the releasing process.</p></li>
+<li><p>Update the [<cite>CHANGELOG.md</cite>](./CHANGELOG.md) on <code class="docutils literal notranslate"><span class="pre">master</span></code> directly (only admin can and need to force-push the changes) with the list of changes. An example of format can be found <a class="reference external" href="https://github.com/apache/incubator-superset/blob/master/CHANGELOG.md">Superset Changelog</a>.</p></li>
+<li><p>The <cite>0.1.X</cite> branch will be updated by merging <cite>master</cite> into <cite>0.1.X</cite>.</p></li>
+<li><p>Branch off <cite>0.1.X</cite> and call it <cite>0.1.1</cite>, then change the <cite>package.json</cite> with the version of the release, commit and tag the commit. Push commit and tag to origin.</p></li>
+<li><p>Make a release in GitHub using that tag.</p></li>
+</ol>
+<p><strong>NOTE</strong>: keep the version on <code class="docutils literal notranslate"><span class="pre">master</span></code> branch to something like 99.99.99dev and in <cite>0.1.X</cite> branch to something like 0.1.99dev. In the release branch, change only the version in [<cite>package.json</cite>](./package.json).</p>
+</div>
+<div class="section" id="solving-your-models-py-migrations-issues">
+<h2><a class="toc-backref" href="#id6">Solving your <code class="docutils literal notranslate"><span class="pre">models.py</span></code>/migrations issues</a><a class="headerlink" href="#solving-your-models-py-migrations-issues" title="Permalink to this headline">¶</a></h2>
+<p>First of all the <code class="docutils literal notranslate"><span class="pre">makemigrations</span></code> command must be run only if you modified the <code class="docutils literal notranslate"><span class="pre">models.py</span></code> or you pull down changes (i.e. <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">pull</span></code>) that modify <code class="docutils literal notranslate"><span class="pre">models.py</span></code>. So please refer to the cases below:</p>
+<div class="section" id="you-modify-models-py">
+<h3><a class="toc-backref" href="#id7">1. You modify <code class="docutils literal notranslate"><span class="pre">models.py</span></code></a><a class="headerlink" href="#you-modify-models-py" title="Permalink to this headline">¶</a></h3>
+<p>In this case there are 2 situations that arise:</p>
+<ol class="arabic">
+<li><p>You currently don’t have a production environment and/or you are comfortable in dropping all the data in the database. In this case, you don’t need to update the production environment with multiple migration files even though Django docs promote making as many migrations as you need to (<a class="reference external" href="https://docs.djangoproject.com/en/3.0/topics/migrations/#squashing-migrations">see Django migration guidelines</a>). For such reasons please consider doing the following steps:</p>
+<p>1.1. Make your changes to <code class="docutils literal notranslate"><span class="pre">models.py</span></code>.</p>
+<p>1.2. Remove all the migration files including <cite>0002_q3c.python</cite>.</p>
+<p>1.3. Run <code class="docutils literal notranslate"><span class="pre">./manage.py</span> <span class="pre">makemigrations</span></code>. This  will generate a <strong>NEW</strong> <code class="docutils literal notranslate"><span class="pre">0001_initial.py</span></code> file.</p>
+<p>1.4. Commit the new migraton file <code class="docutils literal notranslate"><span class="pre">0001_initial.py</span></code> as well as <code class="docutils literal notranslate"><span class="pre">models.py</span></code> within a single commit, and add an appropriate message (e.g. add field X to model Y). <strong>DO NOT</strong> commit the removal of <code class="docutils literal notranslate"><span class="pre">0002_q3c.py</span></code>.</p>
+<p>1.5. Get back the Q3C migration file <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">pipeline/migrations/0002_q3c.py</span></code>.</p>
+</li>
+<li><p>You currently have a production environment and/or you do not want to lose all the data in the database. In this situation, you need to be careful not to mess up with the producation database, so please consider doing the following steps:</p>
+<p>2.1. Make a copy (“dump”) of the production database as it is, e.g. (by logging remotely to the server) <code class="docutils literal notranslate"><span class="pre">pg_dump</span> <span class="pre">-h</span> <span class="pre">DBHOST_PROD</span> <span class="pre">-p</span> <span class="pre">DBPORT_PROD</span> <span class="pre">-U</span> <span class="pre">DBUSER_PROD</span> <span class="pre">-Fc</span> <span class="pre">-o</span> <span class="pre">DBNAME_PROD</span> <span class="pre">&gt;</span> <span class="pre">prod-backup-$(date</span> <span class="pre">+&quot;%F_%H%M&quot;).sql</span></code>.</p>
+<p>2.2. Upload the copy to your local development database, e.g. <code class="docutils literal notranslate"><span class="pre">pg_restore</span> <span class="pre">-h</span> <span class="pre">DBHOST_DEV</span> <span class="pre">-p</span> <span class="pre">DBPORT_DEV</span> <span class="pre">--verbose</span> <span class="pre">--clean</span> <span class="pre">--no-acl</span> <span class="pre">--no-owner</span> <span class="pre">-U</span> <span class="pre">DBUSER_DEV</span> <span class="pre">-d</span> <span class="pre">DBNAME_DEV</span> <span class="pre">prod-backup.sql</span></code>.</p>
+<p>2.3. Make your changes to <code class="docutils literal notranslate"><span class="pre">models.py</span></code>.</p>
+<p>2.4. Run <code class="docutils literal notranslate"><span class="pre">./manage.py</span> <span class="pre">makemigrations</span></code> with optional but strongly recommended <code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">'my_migration_name'</span></code>. This will generate a new migration file <code class="docutils literal notranslate"><span class="pre">000X_my_migration_name.py</span></code> where X is incremented by 1 with respect the last migration file.</p>
+<p>2.5. Commit the new migraton file <code class="docutils literal notranslate"><span class="pre">000X_my_migration_name.py</span></code> as well as <code class="docutils literal notranslate"><span class="pre">models.py</span></code> within a single commit, and add an appropriate message (e.g. add field X to model Y)</p>
+</li>
+</ol>
+<p><strong>NOTE</strong>: do not modify the <code class="docutils literal notranslate"><span class="pre">0002_q3c.py</span></code> file as it relates to migration operations for using Q3C plugin and related functions!</p>
+</div>
+<div class="section" id="someone-else-modified-models-py-and-you-pull-the-changes">
+<h3><a class="toc-backref" href="#id8">2. Someone else modified <code class="docutils literal notranslate"><span class="pre">models.py</span></code> and you pull the changes</a><a class="headerlink" href="#someone-else-modified-models-py-and-you-pull-the-changes" title="Permalink to this headline">¶</a></h3>
+<p>Situation:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>~/vast-pipeline <span class="o">[</span>master<span class="o">]</span>$ git fetch <span class="o">&amp;&amp;</span> git pull
+Updating abc123..321cba
+Fast-forward
+ pipeline/models.py <span class="p">|</span> <span class="m">4</span> +++-
+ pipeline/migrations/0001_initial.py <span class="p">|</span> <span class="m">5</span> ++++-
+ <span class="m">2</span> file changed, <span class="m">9</span> insertions<span class="o">(</span>+<span class="o">)</span>, <span class="m">2</span> deletions<span class="o">(</span>-<span class="o">)</span>
+</pre></div>
+</div>
+<p>You realise that you are in this situation when:</p>
+<ul class="simple">
+<li><p>In the command above you see changes (i.e. <code class="docutils literal notranslate"><span class="pre">+</span></code> or <code class="docutils literal notranslate"><span class="pre">-</span></code>) in <code class="docutils literal notranslate"><span class="pre">models.py</span></code> and/or in migrations (i.e. <code class="docutils literal notranslate"><span class="pre">XXXX_some_migration.py</span></code>)</p></li>
+<li><p>Running the webserver, a message reports</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>You have unapplied migrations<span class="p">;</span>
+your app may not work properly <span class="k">until</span> they are applied.
+Run <span class="s1">&#39;python manage.py migrate&#39;</span> to apply them.
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Running the pipeline you have errors related to the database models</p></li>
+</ul>
+<p>Solutions to such scenario:</p>
+<p>If you don’t mind losing all the data in your database just follow the [Reset the database](#reset-the-database) instructions to drop all the data. But if you want to keep your data, you have to fix these changes by trying running <code class="docutils literal notranslate"><span class="pre">makemigrations</span></code> and <code class="docutils literal notranslate"><span class="pre">migrate</span></code>. But ideally you should follow the following steps:</p>
+<ol class="arabic simple">
+<li><p>Identify the previous commit before pulling the changes (when your migration and model files were working):</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>~/vast-pipeline <span class="o">[</span>master<span class="o">]</span>$ git show -1 pipeline/models.py <span class="c1">#OR</span>
+~/vast-pipeline <span class="o">[</span>master<span class="o">]</span>$ git show -2 pipeline/models.py <span class="c1">#OR</span>
+~/vast-pipeline <span class="o">[</span>master<span class="o">]</span>$ git show -1 pipeline/migrations/XXXX_my_migration.py
+</pre></div>
+</div>
+<p>Or even better</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>~/vast-pipeline <span class="o">[</span>master<span class="o">]</span>$ git log -p pipeline/models.py
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Take note of the commit hash of the old changes (i.e. before pulling down the new changes). Checkout <strong>ONLY</strong> your old migration files, for example like this:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>~/vast-pipeline <span class="o">[</span>master<span class="o">]</span>$ git checkout 37cabac84785742437927c785b63a767aa8ac5ff pipeline/migrations/0001_initial.py
+</pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li><p>Make the migrations <code class="docutils literal notranslate"><span class="pre">./manage.py</span> <span class="pre">makemigrations</span> <span class="pre">&amp;&amp;</span> <span class="pre">./manage.py</span> <span class="pre">migrate</span></code></p></li>
+<li><p>Run the pipeline and the webserver to see that everything is working fine</p></li>
+<li><p>Squash the migrations using <a class="reference external" href="https://docs.djangoproject.com/en/3.0/topics/migrations/#squashing-migrations">Django migration guidelines</a></p></li>
+<li><p>Continue with the normal development cycle (i.e. branch off master, do changes, commit everything, _including your changes in the models/migrations even done with the squashing!_)</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="removing-clearing-data">
+<h2><a class="toc-backref" href="#id9">Removing/Clearing Data</a><a class="headerlink" href="#removing-clearing-data" title="Permalink to this headline">¶</a></h2>
+<p>The following sub-sections show how to completely drop every data in the database and how to remove only the data related to one or more pipeline runs.</p>
+<div class="section" id="reset-the-database">
+<h3><a class="toc-backref" href="#id10">Reset the database</a><a class="headerlink" href="#reset-the-database" title="Permalink to this headline">¶</a></h3>
+<p>Make sure you installed the [requirements <cite>dev.txt</cite>](./requirements/dev.txt). And <code class="docutils literal notranslate"><span class="pre">django_extensions</span></code> is in <code class="docutils literal notranslate"><span class="pre">EXTRA_APPS</span></code> in your setting configuration file <code class="docutils literal notranslate"><span class="pre">.env</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">EXTRA_APPS=django_extensions,another_app,...</span></code>).</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>pipeline_env<span class="o">)</span>$ ./manage.py reset_db  <span class="o">&amp;&amp;</span> ./manage.py migrate
+<span class="c1"># use the following for no confirmation prompt</span>
+<span class="o">(</span>pipeline_env<span class="o">)</span>$ ./manage.py reset_db --noinput  <span class="o">&amp;&amp;</span> ./manage.py migrate
+</pre></div>
+</div>
+</div>
+<div class="section" id="clearing-run-data">
+<h3><a class="toc-backref" href="#id11">Clearing Run Data</a><a class="headerlink" href="#clearing-run-data" title="Permalink to this headline">¶</a></h3>
+<p>It is convenient removing the data belonging to one or more pipeline run, while developing the code base. This is particularly useful to save time and don’t upload the image data along with the measurements. The data related to the pipeline are the Sources, Associations, Forced extractions entries in database and the parquet files in the respective folder. By default the command will keep the run folder with the config and the log files.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>pipeline_env<span class="o">)</span>$ ./manage.py clearpiperun path/to/my-pipe-run
+</pre></div>
+</div>
+<p>To clear more than one run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>pipeline_env<span class="o">)</span>$ ./manage.py clearpiperun path/to/my-pipe-run1 my-pipe-run2 path/to/my-pipe-run3
+</pre></div>
+</div>
+<p>The command accept both a path or a name of the pipeline run(s). To remove <strong>all</strong> the runs, issue:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>pipeline_env<span class="o">)</span>$ ./manage.py clearpiperun clearall
+</pre></div>
+</div>
+<p>The command to keep the parquet files is:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>pipeline_env<span class="o">)</span>$ ./manage.py clearpiperun path/to/my-pipe-run --keep-parquet
+</pre></div>
+</div>
+<p>The remove completely the pipeline folder</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>pipeline_env<span class="o">)</span>$ ./manage.py clearpiperun path/to/my-pipe-run --remove-all
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="run-tests">
+<h2><a class="toc-backref" href="#id12">Run Tests</a><a class="headerlink" href="#run-tests" title="Permalink to this headline">¶</a></h2>
+<p>Test are found under the folder [tests](./pipeline/tests/). Have a look and feel free to include new tests.</p>
+<p>Run the tests with the following:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>pipeline_env<span class="o">)</span>$ ./manage.py <span class="nb">test</span> pipeline
+</pre></div>
+</div>
+<p>Two example tests, currently working are run with the following:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>pipeline_env<span class="o">)</span>$ ./manage.py <span class="nb">test</span> pipeline.tests.test_runpipeline.CheckRunConfigValidationTest
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>pipeline_env<span class="o">)</span>$ ./manage.py <span class="nb">test</span> pipeline.tests.test_webserver
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="history.html" class="btn btn-neutral float-right" title="Change Log" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="extra-docs/usage.html" class="btn btn-neutral float-left" title="Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, The VAST Development Team
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

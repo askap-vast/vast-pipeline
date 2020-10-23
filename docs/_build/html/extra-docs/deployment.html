@@ -1,0 +1,267 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Production Deployment &mdash; Vast Pipeline 99.99.99dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Developing Notes" href="../developing.html" />
+    <link rel="prev" title="Usage" href="usage.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> Vast Pipeline
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Production Deployment</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#security">Security</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../developing.html">Developing Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../history.html">Change Log</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Vast Pipeline</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Production Deployment</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/extra-docs/deployment.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="production-deployment">
+<h1>Production Deployment<a class="headerlink" href="#production-deployment" title="Permalink to this headline">¶</a></h1>
+<p>This section describes a simple deployment without using Docker containers, assuming the use of <a class="reference external" href="http://whitenoise.evans.io/en/stable/">WhiteNoise</a> to serve the static files. It is possible to serve the static files using other methods (e.g. Nginx). And in the future it is possible to upgrade the deployment stack using Docker container and Docker compose (we foresee 3 main containers: Django, Dask and Traefik). We recommend in any case reading <a class="reference external" href="https://docs.djangoproject.com/en/3.1/howto/deployment/">Django deployment documentation</a> for general knowledge.</p>
+<p>We assume deployment to a <strong>UNIX server</strong>.</p>
+<p>The following steps describes how to set up the Django side of the production deployment, and can be of reference for a future Dockerization. They assumed you have <code class="docutils literal notranslate"><span class="pre">SSH</span></code> access to your remote server and have <code class="docutils literal notranslate"><span class="pre">sudo</span></code> priviledges.</p>
+<ol class="arabic">
+<li><p>Clone the repo in a suitable path, e.g. <code class="docutils literal notranslate"><span class="pre">/opt/</span></code>.</p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> /opt <span class="o">&amp;&amp;</span> sudo git clone https://github.com/askap-vast/vast-pipeline
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Follow the installation instructions in [<cite>INSTALL.md</cite>](./INSTALL.md). We recommend installing the Python virtual environment under the pipeline folder.</p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> /opt/vast-pipeline <span class="o">&amp;&amp;</span> virtualenv -p python3 pipeline_env
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Configure your <code class="docutils literal notranslate"><span class="pre">.env</span></code> files with all the right settings.</p></li>
+<li><p>Check that your server is running fine by changing <code class="docutils literal notranslate"><span class="pre">DEBUG=True</span></code> in the <code class="docutils literal notranslate"><span class="pre">.env</span></code> file.</p></li>
+<li><p>Run Django deployment checklist command to see what are you missing. It is possible that some options are turned off, as implemented in the reverse proxy or load balancer of your server (e.g. <code class="docutils literal notranslate"><span class="pre">SECURE_SSL_REDIRECT</span> <span class="pre">=</span> <span class="pre">False</span></code> or not set, assumes your reverse proxy redirect HTTP to HTTPS).</p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>pipeline_env<span class="o">)</span>$ ./manage.py check --deploy
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Build up the static and fix url in JS9:</p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>pipeline_env<span class="o">)</span>$ <span class="nb">cd</span> /opt/vast-pipeline <span class="o">&amp;&amp;</span> npm ci <span class="o">&amp;&amp;</span> npm start <span class="o">&amp;&amp;</span> npm run js9staticprod <span class="o">&amp;&amp;</span> ./manage.py collectstatic -c --noinput
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Set up a unit/systemd file as recommended in <a class="reference external" href="https://docs.gunicorn.org/en/latest/deploy.html#systemd">Gunicorn docs</a> (feel free to use the socket or an IP and port). An example of command to write in the file is (assuming a virtual environment is installed in <cite>venv</cite> under the main pipeline folder):</p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">ExecStart</span><span class="o">=</span>/opt/vast-pipeline/venv/bin/gunicorn -w <span class="m">3</span> -k gevent --worker-connections<span class="o">=</span><span class="m">1000</span> --timeout <span class="m">120</span> --limit-request-line <span class="m">6000</span> -b <span class="m">127</span>.0.0.1:8000 webinterface.wsgi
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Finalise the installation of the unit file. Some good instructions on where to put, link and install the unit file are described in the <a class="reference external" href="https://jupyterhub.readthedocs.io/en/stable/installation-guide-hard.html#setup-systemd-service">Jupyter Hub docs</a></p></li>
+</ol>
+<div class="section" id="security">
+<h2>Security<a class="headerlink" href="#security" title="Permalink to this headline">¶</a></h2>
+<p>By default the settings file has some security parameters that are set when you run the web app in production (<code class="docutils literal notranslate"><span class="pre">DEBUG</span> <span class="pre">=</span> <span class="pre">False</span></code>), but you can read more in the Django documentation or in <a class="reference external" href="https://adamj.eu/tech/2019/04/10/how-to-score-a+-for-security-headers-on-your-django-website/">this blog post</a> in which they explain how to get an A+ rating for your web site.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../developing.html" class="btn btn-neutral float-right" title="Developing Notes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="usage.html" class="btn btn-neutral float-left" title="Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, The VAST Development Team
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

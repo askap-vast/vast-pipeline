@@ -1,0 +1,5 @@
+Quickstart
+**********
+
+.. include:: ../INSTALL.rst
+.. include:: ./quickstart/configuration.rst

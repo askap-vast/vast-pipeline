@@ -1,0 +1,366 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Usage &mdash; Vast Pipeline 99.99.99dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> Vast Pipeline
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../history.html">Change Log</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Vast Pipeline</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Usage</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/extra-docs/usage.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="usage">
+<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
+<div class="contents local topic" id="table-of-contents">
+<p class="topic-title"><strong>Table of Contents</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pipeline-login" id="id1">Pipeline Login</a></p></li>
+<li><p><a class="reference internal" href="#pipeline-usage" id="id2">Pipeline Usage</a></p>
+<ul>
+<li><p><a class="reference internal" href="#initialise-a-pipeline-run" id="id3">Initialise a Pipeline Run</a></p></li>
+<li><p><a class="reference internal" href="#run-a-pipeline-instance" id="id4">Run a Pipeline Instance</a></p></li>
+<li><p><a class="reference internal" href="#resetting-a-pipeline-run" id="id5">Resetting a Pipeline Run</a></p></li>
+<li><p><a class="reference internal" href="#import-survey-data" id="id6">Import survey data</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#data-exploration-via-django-web-server" id="id7">Data Exploration via Django Web Server</a></p></li>
+</ul>
+</div>
+<div class="section" id="pipeline-login">
+<h2><a class="toc-backref" href="#id1">Pipeline Login</a><a class="headerlink" href="#pipeline-login" title="Permalink to this headline">¶</a></h2>
+<p>Currently the pipeline support only login via GitHub Team and/or as Django administrator.</p>
+<p>Please make sure to fill the <code class="docutils literal notranslate"><span class="pre">SOCIAL_AUTH_GITHUB_KEY,</span> <span class="pre">SOCIAL_AUTH_GITHUB_SECRET,</span> <span class="pre">SOCIAL_AUTH_GITHUB_TEAM_ID,</span> <span class="pre">SOCIAL_AUTH_GITHUB_TEAM_ADMIN</span></code> in your [<cite>.env</cite>](./webinterface/.env.template) file. Also be sure to be part of the GitHub team, if not ask &#64;srggrs, &#64;ajstewart or &#64;marxide to be added.</p>
+<p>You can also login on your <strong>local</strong> version for doing some develpment by creating an admin user:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./manage.py createsuperuser
+</pre></div>
+</div>
+<p>Fill in your details and then login with the created credentials at <code class="docutils literal notranslate"><span class="pre">localhost:8000/pipe-admin</span></code> (change ip and port if needed). That will log you in the Django admin site. Go to <code class="docutils literal notranslate"><span class="pre">localhost:8000</span></code> or click “site” on the right top corner to enter the vast pipeline website.</p>
+</div>
+<div class="section" id="pipeline-usage">
+<h2><a class="toc-backref" href="#id2">Pipeline Usage</a><a class="headerlink" href="#pipeline-usage" title="Permalink to this headline">¶</a></h2>
+<p>All the pipeline commands are run using the Django global <code class="docutils literal notranslate"><span class="pre">./manage.py</span> <span class="pre">&lt;command&gt;</span></code> interface. Therefore you need to activate the <code class="docutils literal notranslate"><span class="pre">Python</span></code> environment. You can have a look at the available commands for the pipeline app:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>pipeline_env<span class="o">)</span>$ ./manage.py <span class="nb">help</span>
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>...
+
+<span class="o">[</span>pipeline<span class="o">]</span>
+  clearpiperun
+  importsurvey
+  initpiperun
+  runpipeline
+
+...
+</pre></div>
+</div>
+<p>There are 4 commands, described in detail below.</p>
+<div class="section" id="initialise-a-pipeline-run">
+<h3><a class="toc-backref" href="#id3">Initialise a Pipeline Run</a><a class="headerlink" href="#initialise-a-pipeline-run" title="Permalink to this headline">¶</a></h3>
+<p>In order to process the images in the pipeline, you must create/initialise a pipeline run first.</p>
+<p>The pipeline run creation is done using the <code class="docutils literal notranslate"><span class="pre">initpiperun</span></code> django command, which requires a pipeline run folder. The command creates a folder with the pipeline run name under the settings <code class="docutils literal notranslate"><span class="pre">PROJECT_WORKING_DIR</span></code> defined in [settings](./webinterface/settings.template.py).</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>pipeline_env<span class="o">)</span>$ ./manage.py initpiperun --help
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>usage: manage.py initpiperun [-h] [--version] [-v {0,1,2,3}]
+                          [--settings SETTINGS] [--pythonpath PYTHONPATH]
+                          [--traceback] [--no-color] [--force-color]
+                          runname
+
+Create the pipeline run folder structure to run a pipeline instance
+
+positional arguments:
+   runname       Name of the pipeline run.
+
+optional arguments:
+   -h, --help            show this help message and exit
+   --version             show program&#39;s version number and exit
+   -v {0,1,2,3}, --verbosity {0,1,2,3}
+                           Verbosity level; 0=minimal output, 1=normal output,
+                           2=verbose output, 3=very verbose output
+   --settings SETTINGS   The Python path to a settings module, e.g.
+                           &quot;myproject.settings.main&quot;. If this isn&#39;t provided, the
+                           DJANGO_SETTINGS_MODULE environment variable will be
+                           used.
+   --pythonpath PYTHONPATH
+                           A directory to add to the Python path, e.g.
+                           &quot;/home/djangoprojects/myproject&quot;.
+   --traceback           Raise on CommandError exceptions
+   --no-color            Don&#39;t colorize the command output.
+   --force-color         Force colorization of the command output.
+</pre></div>
+</div>
+<p>The command yields the following folder structure:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>pipeline_env<span class="o">)</span>$ ./manage.py initpiperun my_pipe_run
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="m">2020</span>-02-27 <span class="m">23</span>:04:33,344 initpiperun INFO creating pipeline run folder
+<span class="m">2020</span>-02-27 <span class="m">23</span>:04:33,344 initpiperun INFO copying default config in pipeline run folder
+<span class="m">2020</span>-02-27 <span class="m">23</span>:04:33,344 initpiperun INFO pipeline run initialisation successful! Please modify the <span class="s2">&quot;config.py&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="run-a-pipeline-instance">
+<h3><a class="toc-backref" href="#id4">Run a Pipeline Instance</a><a class="headerlink" href="#run-a-pipeline-instance" title="Permalink to this headline">¶</a></h3>
+<p>The pipeline is run using <code class="docutils literal notranslate"><span class="pre">runpipeline</span></code> django command.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>pipeline_env<span class="o">)</span>$ ./manage.py runpipeline --help
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>usage: manage.py runpipeline [-h] [--version] [-v {0,1,2,3}]
+                          [--settings SETTINGS] [--pythonpath PYTHONPATH]
+                          [--traceback] [--no-color] [--force-color]
+                          [--skip-checks]
+                          piperun
+
+Process the pipeline for a list of images and Selavy catalogs
+
+positional arguments:
+  piperun       Path or name of the pipeline run.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --version             show program&#39;s version number and exit
+  -v {0,1,2,3}, --verbosity {0,1,2,3}
+                        Verbosity level; 0=minimal output, 1=normal output,
+                        2=verbose output, 3=very verbose output
+  --settings SETTINGS   The Python path to a settings module, e.g.
+                        &quot;myproject.settings.main&quot;. If this isn&#39;t provided, the
+                        DJANGO_SETTINGS_MODULE environment variable will be
+                        used.
+  --pythonpath PYTHONPATH
+                        A directory to add to the Python path, e.g.
+                        &quot;/home/djangoprojects/myproject&quot;.
+  --traceback           Raise on CommandError exceptions
+  --no-color            Don&#39;t colorize the command output.
+  --force-color         Force colorization of the command output.
+  --skip-checks         Skip system checks.
+</pre></div>
+</div>
+<p>General usage:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>pipeline_env<span class="o">)</span>$ ./manage.py runpipeline path/to/my_pipe_run
+</pre></div>
+</div>
+</div>
+<div class="section" id="resetting-a-pipeline-run">
+<h3><a class="toc-backref" href="#id5">Resetting a Pipeline Run</a><a class="headerlink" href="#resetting-a-pipeline-run" title="Permalink to this headline">¶</a></h3>
+<p>Detailed commands for resetting the database can be found in [<cite>CONTRIBUTING.md</cite>](./CONTRIBUTING.md).</p>
+<p>Resetting a pipeline run can be done using the <code class="docutils literal notranslate"><span class="pre">clearpiperun</span></code> command: it will delete all images (and related objects such as sources) associated with that pipeline run, if that images does not belong to another pipeline run. It will deleted all the sources associated with that pipeline run.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>pipeline_env<span class="o">)</span>$ ./manage.py clearpiperun path/to/my_pipe_run
+<span class="c1"># or</span>
+<span class="o">(</span>pipeline_env<span class="o">)</span>$ ./manage.py clearpiperun my_pipe_run
+</pre></div>
+</div>
+<p>More details on the <code class="docutils literal notranslate"><span class="pre">clearpiperun</span></code> command can be found in the [Contributing guidelines](./CONTRIBUTING.md#clearing-run-data).</p>
+</div>
+<div class="section" id="import-survey-data">
+<h3><a class="toc-backref" href="#id6">Import survey data</a><a class="headerlink" href="#import-survey-data" title="Permalink to this headline">¶</a></h3>
+<p>This functionality is still not developed</p>
+</div>
+</div>
+<div class="section" id="data-exploration-via-django-web-server">
+<h2><a class="toc-backref" href="#id7">Data Exploration via Django Web Server</a><a class="headerlink" href="#data-exploration-via-django-web-server" title="Permalink to this headline">¶</a></h2>
+<p>Make sure you installed and compiled correctly the frontend assets see [guide](./INSTALL.md#pipeline-front-end-assets-quickstart)</p>
+<ol class="arabic simple">
+<li><p>Start the Django development web server:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>pipeline_env<span class="o">)</span>$ ./manage.py runserver
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Test the webserver by pointing your browser at <a class="reference external" href="http://127.0.0.1:8000">http://127.0.0.1:8000</a> or <a class="reference external" href="http://localhost:8000">http://localhost:8000</a></p></li>
+</ol>
+<p>The webserver is independent of <code class="docutils literal notranslate"><span class="pre">runpipeline</span></code> and you can use the website while the pipeline commands are running.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, The VAST Development Team
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

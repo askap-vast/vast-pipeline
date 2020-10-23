@@ -1,0 +1,250 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>&lt;no title&gt; &mdash; Vast Pipeline 99.99.99dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> Vast Pipeline
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation Notes</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Vast Pipeline</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>&lt;no title&gt;</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/quickstart/deployment.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <p>## Production Deployment
+This section describes a simple deployment without using Docker containers, assuming the use of [WhiteNoise](<a class="reference external" href="http://whitenoise.evans.io/en/stable/">http://whitenoise.evans.io/en/stable/</a>) to serve the static files. It is possible to serve the static files using other methods (e.g. Nginx). And in the future it is possible to upgrade the deployment stack using Docker container and Docker compose (we foresee 3 main containers: Django, Dask and Traefik). We recommend in any case reading [Django deployment documentation](<a class="reference external" href="https://docs.djangoproject.com/en/3.1/howto/deployment/">https://docs.djangoproject.com/en/3.1/howto/deployment/</a>) for general knowledge.</p>
+<p>We assume deployment to a __UNIX <a href="#id1"><span class="problematic" id="id2">server__</span></a>.</p>
+<p>The following steps describes how to set up the Django side of the production deployment, and can be of reference for a future Dockerization. They assumed you have <cite>SSH</cite> access to your remote server and have <cite>sudo</cite> priviledges.</p>
+<ol class="arabic simple">
+<li><p>Clone the repo in a suitable path, e.g. <cite>/opt/</cite>.</p></li>
+</ol>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">`bash</span>
+<span class="pre">$</span> <span class="pre">cd</span> <span class="pre">/opt</span> <span class="pre">&amp;&amp;</span> <span class="pre">sudo</span> <span class="pre">git</span> <span class="pre">clone</span> <span class="pre">https://github.com/askap-vast/vast-pipeline</span>
+<span class="pre">`</span></code></p>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li><p>Follow the installation instructions in [<cite>INSTALL.md</cite>](./INSTALL.md). We recommend installing the Python virtual environment under the pipeline folder.</p></li>
+</ol>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">`bash</span>
+<span class="pre">$</span> <span class="pre">cd</span> <span class="pre">/opt/vast-pipeline</span> <span class="pre">&amp;&amp;</span> <span class="pre">virtualenv</span> <span class="pre">-p</span> <span class="pre">python3</span> <span class="pre">pipeline_env</span>
+<span class="pre">`</span></code></p>
+</div></blockquote>
+<ol class="arabic simple" start="3">
+<li><p>Configure your <cite>.env</cite> files with all the right settings.</p></li>
+<li><p>Check that your server is running fine by changing <cite>DEBUG = True</cite> in the <cite>.env</cite> file.</p></li>
+<li><p>Run Django deployment checklist command to see what are you missing. It is possible that some options are turned off, as implemented in the reverse proxy or load balancer of your server (e.g. <cite>SECURE_SSL_REDIRECT = False</cite> or not set, assumes your reverse proxy redirect HTTP to HTTPS).</p></li>
+</ol>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">`bash</span>
+<span class="pre">(pipeline_env)$</span> <span class="pre">./manage.py</span> <span class="pre">check</span> <span class="pre">--deploy</span>
+<span class="pre">`</span></code></p>
+</div></blockquote>
+<ol class="arabic simple" start="6">
+<li><p>Build up the static and fix url in JS9:</p></li>
+</ol>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">`bash</span>
+<span class="pre">(pipeline_env)$</span> <span class="pre">cd</span> <span class="pre">/opt/vast-pipeline</span> <span class="pre">&amp;&amp;</span> <span class="pre">npm</span> <span class="pre">ci</span> <span class="pre">&amp;&amp;</span> <span class="pre">npm</span> <span class="pre">start</span> <span class="pre">&amp;&amp;</span> <span class="pre">npm</span> <span class="pre">run</span> <span class="pre">js9staticprod</span> <span class="pre">&amp;&amp;</span> <span class="pre">./manage.py</span> <span class="pre">collectstatic</span> <span class="pre">-c</span> <span class="pre">--noinput</span>
+<span class="pre">`</span></code></p>
+</div></blockquote>
+<ol class="arabic simple" start="7">
+<li><p>Set up a unit/systemd file as recommended in [Gunicorn docs](<a class="reference external" href="https://docs.gunicorn.org/en/latest/deploy.html#systemd">https://docs.gunicorn.org/en/latest/deploy.html#systemd</a>) (feel free to use the socket or an IP and port). An example of command to write in the file is (assuming a virtual environment is installed in <cite>venv</cite> under the main pipeline folder):</p></li>
+</ol>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">`bash</span>
+<span class="pre">ExecStart=/opt/vast-pipeline/venv/bin/gunicorn</span> <span class="pre">-w</span> <span class="pre">3</span> <span class="pre">-k</span> <span class="pre">gevent</span> <span class="pre">--worker-connections=1000</span> <span class="pre">--timeout</span> <span class="pre">120</span> <span class="pre">--limit-request-line</span> <span class="pre">6000</span> <span class="pre">-b</span> <span class="pre">127.0.0.1:8000</span> <span class="pre">webinterface.wsgi</span>
+<span class="pre">`</span></code></p>
+</div></blockquote>
+<ol class="arabic simple" start="8">
+<li><p>Finalise the installation of the unit file. Some good instructions on where to put, link and install the unit file are described in the [Jupyter Hub docs](<a class="reference external" href="https://jupyterhub.readthedocs.io/en/stable/installation-guide-hard.html#setup-systemd-service">https://jupyterhub.readthedocs.io/en/stable/installation-guide-hard.html#setup-systemd-service</a>)</p></li>
+</ol>
+<p>### Security</p>
+<p>By default the settings file has some security parameters that are set when you run the web app in production (<cite>DEBUG = False</cite>), but you can read more in the Django documentation or in this [blog post](<a class="reference external" href="https://adamj.eu/tech/2019/04/10/how-to-score-a+-for-security-headers-on-your-django-website/">https://adamj.eu/tech/2019/04/10/how-to-score-a+-for-security-headers-on-your-django-website/</a>) in which they explain how to get an A+ rating for your web site.</p>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, The VAST Development Team
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

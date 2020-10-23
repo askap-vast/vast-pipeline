@@ -1,0 +1,494 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Quickstart &mdash; Vast Pipeline 99.99.99dev documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Change Log" href="history.html" />
+    <link rel="prev" title="VAST Pipeline" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> Vast Pipeline
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installation-notes">Installation Notes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#postgresql">PostgreSQL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pipeline-python-environment">Pipeline Python Environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pipeline-front-end-assets-quickstart">Pipeline Front End Assets Quickstart</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#installation-of-node-and-npm">Installation of <cite>Node</cite> and <cite>npm</cite></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#setting-up-the-front-end-assets">Setting up the front end assets</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#vast-pipeline-configuration">Vast Pipeline Configuration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Change Log</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Vast Pipeline</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Quickstart</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/installation.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="quickstart">
+<h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="installation-notes">
+<h2>Installation Notes<a class="headerlink" href="#installation-notes" title="Permalink to this headline">¶</a></h2>
+<p>This document explains how to install all the packages that the pipeline needs to run, as well as the PostgreSQL database. Following this documentation should get you started with a good <strong>LOCAL</strong> development environment, where you can mess up things, but always go back and fix it up.</p>
+<p>Note for installs on a Mac, the use of <code class="docutils literal notranslate"><span class="pre">homebrew</span></code> is recommended (<a class="reference external" href="https://brew.sh">https://brew.sh</a>).</p>
+<div class="contents local topic" id="table-of-contents">
+<p class="topic-title"><strong>Table of Contents</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#postgresql" id="id1">PostgreSQL</a></p></li>
+<li><p><a class="reference internal" href="#pipeline-python-environment" id="id2">Pipeline Python Environment</a></p></li>
+<li><p><a class="reference internal" href="#pipeline-front-end-assets-quickstart" id="id3">Pipeline Front End Assets Quickstart</a></p>
+<ul>
+<li><p><a class="reference internal" href="#installation-of-node-and-npm" id="id4">Installation of <cite>Node</cite> and <cite>npm</cite></a></p></li>
+<li><p><a class="reference internal" href="#setting-up-the-front-end-assets" id="id5">Setting up the front end assets</a></p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="postgresql">
+<h3><a class="toc-backref" href="#id1">PostgreSQL</a><a class="headerlink" href="#postgresql" title="Permalink to this headline">¶</a></h3>
+<p>I don’t recommend installing the database as part of a system package (e.g. <code class="docutils literal notranslate"><span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">postgres</span></code>), but instead use docker, which let you mess up things and keep your database installation separated from the system packages. In this way you can easily destroy and re-create the database without messing up your OS installed packages.</p>
+<p>Steps:</p>
+<ol class="arabic simple">
+<li><p>Installing docker in your system. Refer to <a class="reference external" href="https://docs.docker.com/install/">this official documentation</a>, and for Ubuntu users to <a class="reference external" href="https://docs.docker.com/install/linux/docker-ce/ubuntu/">this</a>. Remember to add your <code class="docutils literal notranslate"><span class="pre">user</span></code> to the <code class="docutils literal notranslate"><span class="pre">docker</span></code> group <a class="reference external" href="https://docs.docker.com/install/linux/linux-postinstall/">official docs</a>, by running</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo groupadd docker
+sudo usermod -aG docker <span class="nv">$USER</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>create your PostgreSQL container: <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">run</span> <span class="pre">--name</span> <span class="pre">NAME_OF_MyCONTAINER</span> <span class="pre">-e</span> <span class="pre">POSTGRES_PASSWORD=postgres</span> <span class="pre">-p</span> <span class="pre">127.0.0.1:5432:5432</span> <span class="pre">-d</span> <span class="pre">postgres</span></code>. This will install a PostgreSQL 12.1 container exposing the container internal port 5432 to your system (<code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code> or <code class="docutils literal notranslate"><span class="pre">localhost</span></code>) at port <code class="docutils literal notranslate"><span class="pre">5432</span></code>. I encourage to change the localhost port (e.g. <code class="docutils literal notranslate"><span class="pre">5433:5432</span></code>) so you know you’re are in control! The command setup automatically a user <code class="docutils literal notranslate"><span class="pre">postgres</span></code> with password <code class="docutils literal notranslate"><span class="pre">postgres</span></code> and default database <code class="docutils literal notranslate"><span class="pre">postgres</span></code>. If everything goes well, you see your container up and running by issuing <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">ps</span></code>.</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                    NAMES
+afnafnalkfo3        postgres:12.1        <span class="s2">&quot;docker-entrypoint.s…&quot;</span>   <span class="m">22</span> hours ago        Up <span class="m">22</span> hours         localhost:5432-&gt;5432/tcp   NAME_OF_MyCONTAINER
+</pre></div>
+</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">localhost</span></code> is not passed, the command exposes the port on <code class="docutils literal notranslate"><span class="pre">0.0.0.0</span></code> so other users on the same subnet (e.g. same WiFi access point) can connect to it (I don’t recommend it for a local development environment!)</p>
+<ol class="arabic" start="3">
+<li><p>Install PostgreSQL dependency <a class="reference external" href="https://github.com/segasai/q3c">Q3C</a>:</p>
+<ol class="loweralpha simple">
+<li><p>Connect to the container by running <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">exec</span> <span class="pre">-it</span> <span class="pre">NAME_OF_MyCONTAINER</span> <span class="pre">bash</span></code>. That runs <code class="docutils literal notranslate"><span class="pre">bash</span></code> shell as <code class="docutils literal notranslate"><span class="pre">root</span></code> inside the container.</p></li>
+<li><p>Install the packages, replace XX with the postgres version installed in docker (check version with <code class="docutils literal notranslate"><span class="pre">psql</span> <span class="pre">-U</span> <span class="pre">postgres</span></code>):</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>apt-get update -y <span class="o">&amp;&amp;</span> apt-get install -y libssl-dev <span class="se">\</span>
+  libkrb5-dev zlib1g-dev make git gcc postgresql-server-dev-XX postgresql-common
+</pre></div>
+</div>
+<ol class="loweralpha simple" start="3">
+<li><p>Clone <code class="docutils literal notranslate"><span class="pre">Q3C</span></code> repo and install it:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/segasai/q3c.git
+<span class="nb">cd</span> q3c
+make
+make install
+</pre></div>
+</div>
+</li>
+</ol>
+<p>You can disconnect from the container and the database installation should now be complete. You can connect to the database by running the <code class="docutils literal notranslate"><span class="pre">psql</span></code> CLI (Command Line Interface) by installing on your system (e.g. Ubuntu <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">postgres-common</span></code> or just <code class="docutils literal notranslate"><span class="pre">postgresql-client-common</span></code>, Mac: <code class="docutils literal notranslate"><span class="pre">brew</span> <span class="pre">install</span> <span class="pre">libpq</span></code>). Alternatively you can access the CLI by connecting to the container as described above (<code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">exec</span> <span class="pre">-it</span> <span class="pre">NAME_OF_MyCONTAINER</span> <span class="pre">bash</span></code>). Finally connect to your PostgreSQL instance:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>psql -h localhost -p <span class="m">5432</span> -U postgres
+</pre></div>
+</div>
+<p>Output:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>psql <span class="o">(</span>YYYY <span class="o">(</span>MYOS YYYY<span class="o">)</span>, server XXXX<span class="o">)</span>
+Type <span class="s2">&quot;help&quot;</span> <span class="k">for</span> help.
+
+<span class="nv">postgres</span><span class="o">=</span><span class="c1">#</span>
+</pre></div>
+</div>
+<p>The command will ask you for the password, please type <code class="docutils literal notranslate"><span class="pre">postgres</span></code>. The password is set by the <code class="docutils literal notranslate"><span class="pre">POSTGRES_PASSWORD=postgres</span></code> environment variable at container initialization, and <strong>CAN’T</strong> be changed afterward.</p>
+<p>As you can see does not matter if the CLI client is for higher PostgreSQL versions, as it still connect to your instance ( e.g. <code class="docutils literal notranslate"><span class="pre">psql</span> <span class="pre">(11.0</span> <span class="pre">(Ubuntu</span> <span class="pre">11.0-2.pgdg18.04+1),</span> <span class="pre">server</span> <span class="pre">12.1</span> <span class="pre">(Debian</span> <span class="pre">12.1-1.pgdg100+1))</span></code>).</p>
+<p>Basic Start/Stop commands are <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">start</span> <span class="pre">NAME_OF_MyCONTAINER</span></code> and <code class="docutils literal notranslate"><span class="pre">docker</span> <span class="pre">stop</span> <span class="pre">NAME_OF_MyCONTAINER</span></code>. Remember to start your container after rebooting your machine, if you don’t have docker daemon configured to autoload!</p>
+</div>
+<div class="section" id="pipeline-python-environment">
+<h3><a class="toc-backref" href="#id2">Pipeline Python Environment</a><a class="headerlink" href="#pipeline-python-environment" title="Permalink to this headline">¶</a></h3>
+<p>I strongly recommend to setup a virtual environment, in which you can then install all these <cite>Python</cite> modules into.
+This will avoid conflicts either with the system version of python, or with other code that you have that require different versions of these modules.</p>
+<p>Steps:</p>
+<ol class="arabic simple">
+<li><p>Install OS requirements:</p></li>
+</ol>
+<ul class="simple">
+<li><p>gcc</p></li>
+<li><p>python3-dev</p></li>
+<li><p>libpq-dev</p></li>
+<li><p>libgraphviz-dev (for development requirements)</p></li>
+</ul>
+<p>For Ubuntu:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo apt-get install python3-dev libpq-dev libgraphviz-dev
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Copy repo link from <cite>Clone or download</cite> button and clone the repository:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone &lt;PASTE REPO LINK&gt; <span class="o">&amp;&amp;</span> <span class="nb">cd</span> &lt;REPO&gt;
+</pre></div>
+</div>
+<p><strong>NOTE</strong>: DO NOT change the the folder name, e.g. <cite>git clone https://github.com/askap-vast/vast-pipeline.git my-pipeline-local-dev</cite></p>
+<ol class="arabic simple" start="3">
+<li><p>Setup a <code class="docutils literal notranslate"><span class="pre">Python</span> <span class="pre">&gt;=</span> <span class="pre">3.6</span></code> virtual environment. E.g. with <code class="docutils literal notranslate"><span class="pre">virtualenv</span></code>:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>virtualenv -p python3 pipeline_env
+</pre></div>
+</div>
+<p>Otherwise use <code class="docutils literal notranslate"><span class="pre">Anaconda/conda</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda create -n pipeline_env <span class="nv">python</span><span class="o">=</span><span class="m">3</span>.6
+</pre></div>
+</div>
+<p><strong>NOTE</strong>: you can name the environment whatever you want instead of <cite>pipeline_env</cite></p>
+<ol class="arabic simple" start="4">
+<li><p>Activate the environment.</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span> pipeline_env/bin/activate
+</pre></div>
+</div>
+<p>Otherwise use <code class="docutils literal notranslate"><span class="pre">Anaconda/conda</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda activate pipeline_env
+</pre></div>
+</div>
+<ol class="arabic simple" start="5">
+<li><p>Install the development requirements</p></li>
+</ol>
+<p>Note that if you want to install the development requirements, graphviz needs to be installed on your system (Ubuntu: <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">graphviz</span></code>, Mac: <code class="docutils literal notranslate"><span class="pre">brew</span> <span class="pre">install</span> <span class="pre">graphviz</span></code>).</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>pipeline_env<span class="o">)</span>$ pip install -r requirements/dev.txt
+</pre></div>
+</div>
+<p>or with conda (some packages will not be installed properly so check and eventually install them manually, if not with <code class="docutils literal notranslate"><span class="pre">conda</span></code>, with <code class="docutils literal notranslate"><span class="pre">pip</span></code>):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>pipeline_env<span class="o">)</span>$ <span class="k">while</span> <span class="nb">read</span> requirement<span class="p">;</span> <span class="k">do</span> conda install --yes <span class="nv">$requirement</span><span class="p">;</span> <span class="k">done</span> &lt; requirements/dev.txt
+<span class="o">(</span>pipeline_env<span class="o">)</span>$ <span class="k">while</span> <span class="nb">read</span> requirement<span class="p">;</span> <span class="k">do</span> conda install --yes <span class="nv">$requirement</span><span class="p">;</span> <span class="k">done</span> &lt; requirements/base.txt
+</pre></div>
+</div>
+</div>
+<div class="section" id="pipeline-front-end-assets-quickstart">
+<h3><a class="toc-backref" href="#id3">Pipeline Front End Assets Quickstart</a><a class="headerlink" href="#pipeline-front-end-assets-quickstart" title="Permalink to this headline">¶</a></h3>
+<p>In order to install and compile the frontend assets (modules like js9 and bootstrap, as well as minification of JS and CSS files) you need a recent version of <cite>node</cite> with <cite>npm</cite> installed.</p>
+<div class="section" id="installation-of-node-and-npm">
+<h4><a class="toc-backref" href="#id4">Installation of <cite>Node</cite> and <cite>npm</cite></a><a class="headerlink" href="#installation-of-node-and-npm" title="Permalink to this headline">¶</a></h4>
+<p>We recommend install an node version manager like <a class="reference external" href="https://github.com/nvm-sh/nvm">nvm</a>. Check the links for the latest version, but the time of writing, the following command will install <code class="docutils literal notranslate"><span class="pre">nvm</span></code> and <code class="docutils literal notranslate"><span class="pre">node</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh <span class="p">|</span> bash
+<span class="nb">command</span> -v nvm <span class="o">&amp;&amp;</span> nvm install --lts <span class="o">||</span> <span class="nb">echo</span> <span class="s2">&quot;nvm not found&quot;</span>
+</pre></div>
+</div>
+<p>That would install <code class="docutils literal notranslate"><span class="pre">node</span> <span class="pre">v12.17.0</span></code> at the time of writing.</p>
+</div>
+<div class="section" id="setting-up-the-front-end-assets">
+<h4><a class="toc-backref" href="#id5">Setting up the front end assets</a><a class="headerlink" href="#setting-up-the-front-end-assets" title="Permalink to this headline">¶</a></h4>
+<p>In order to set up the front end assets, run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">pwd</span>
+/PATH/TO/REPO/vast-pipeline
+$ npm ci <span class="o">&amp;&amp;</span> npm start
+</pre></div>
+</div>
+<p><strong>NOTE</strong>: make sure you are in the root of the repo, as shown above. That command “clean install” all the dependencies, copies files into the <code class="docutils literal notranslate"><span class="pre">static/vendor</span></code> folder and minified CSS and JS files. For more details of compilation of frontend assets (e.g. single tasks), and developement set up read the [Front End <cite>README.md</cite>](./static/README.md).</p>
+<hr class="docutils" />
+<p>Done! Now open the [<cite>README.md</cite>](./README.md) file to see how to initialize and run the pipeline. Otherwise if you intend on developing the repo open the [<cite>CONTRIBUTING.md</cite>](./CONTRIBUTING.md) file for instructions on how to contribute to the repo.</p>
+</div>
+</div>
+</div>
+<div class="section" id="vast-pipeline-configuration">
+<h2>Vast Pipeline Configuration<a class="headerlink" href="#vast-pipeline-configuration" title="Permalink to this headline">¶</a></h2>
+<p>The following instructions, will get you started in setting up the database and pipeline configuration</p>
+<ol class="arabic simple">
+<li><p>Copy the setting configuration file template, and fill it with your settings (see <a class="reference external" href="https://github.com/askap-vast/vast-pipeline/blob/master/webinterface/.env.template">defaults</a>.</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cp webinterface/.env.template webinterface/.env
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Choose a database name and user with password (e.g. database name: <code class="docutils literal notranslate"><span class="pre">vastdb</span></code>; user: <code class="docutils literal notranslate"><span class="pre">vast</span></code>, psw: <code class="docutils literal notranslate"><span class="pre">vastpsw</span></code>), and add the connection details in <code class="docutils literal notranslate"><span class="pre">.env</span></code> (for URL syntax see <a class="reference external" href="https://django-environ.readthedocs.io/en/latest/#tips">this link</a>)</p></li>
+</ol>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span>DATABASE_URL=psql://FILLMYUSER:FILLMYPASSWORD@FILLMYHOST:FILLMYPORT/FILLMYDBNAME
+</pre></div>
+</div>
+<p>NOTE: the connection details (host and port) are the same that you setup in [<cite>INSTALL.md</cite>](./INSTALL.md). The database/user names must not contain any spaces or dashes, so use the underscore if you want, e.g. <cite>this_is_my_db_name</cite>.</p>
+<ol class="arabic simple" start="3">
+<li><p>Create the database user and database name, by running:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./init-tools/init-db.sh localhost <span class="m">5432</span> postgres postgres vast vastpsw vastdb
+</pre></div>
+</div>
+<p>For help on the command run it without arguments</p>
+<div class="highlight-language notranslate"><div class="highlight"><pre><span></span>$ ./init-tools/init-db.sh
+Usage: init-db.sh HOST PORT ADMINUSER ADMINPSW USER USERPSW DBNAME
+Eg:    init-db.sh localhost 5432 postgres postgres vast vastpsw vastdb
+
+Help: This will create a postgresql user &#39;vast&#39; with login password &#39;vastpsw&#39;
+     and a database &#39;vastdb&#39; and grant to &#39;vast&#39; user all the privileges to &#39;vastdb&#39;
+</pre></div>
+</div>
+<p>If everything went well the output is:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>connecting to PostgreSQL on <span class="s1">&#39;localhost:5433&#39;</span> as admin <span class="s1">&#39;postgres&#39;</span>
+creating user <span class="s1">&#39;vast&#39;</span> with login password <span class="s1">&#39;vastpsw&#39;</span> and give it createdb privileges
+CREATE ROLE
+************************************
+creating db <span class="s1">&#39;vastdb&#39;</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="4">
+<li><p>Create the database tables. Remember first to activate the Python environment as described in [<cite>INSTALL.md</cite>](./INSTALL.md).</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>pipeline_env<span class="o">)</span>$ ./manage.py migrate
+</pre></div>
+</div>
+<ol class="arabic simple" start="5">
+<li><p>Create the directories listed at the bottom of <code class="docutils literal notranslate"><span class="pre">settings.py</span></code> and update the details on your setting configuration file <code class="docutils literal notranslate"><span class="pre">.env</span></code> (single name, e.g. <code class="docutils literal notranslate"><span class="pre">pipeline-runs</span></code> means path relative to <code class="docutils literal notranslate"><span class="pre">BASE_DIR</span></code>, so the main folder where you cloned the repo).</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># reference surveys default folder</span>
+<span class="n">PIPELINE_WORKING_DIR</span> <span class="o">=</span> <span class="n">env</span><span class="p">(</span><span class="s1">&#39;PIPELINE_WORKING_DIR&#39;</span><span class="p">,</span> <span class="n">cast</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">BASE_DIR</span><span class="p">,</span> <span class="s1">&#39;pipeline-runs&#39;</span><span class="p">))</span>
+
+<span class="c1"># reference surveys default folder</span>
+<span class="n">SURVEYS_WORKING_DIR</span> <span class="o">=</span> <span class="n">env</span><span class="p">(</span><span class="s1">&#39;SURVEYS_WORKING_DIR&#39;</span><span class="p">,</span> <span class="n">cast</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">BASE_DIR</span><span class="p">,</span> <span class="s1">&#39;reference-surveys&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>The defaults values of the folders are pre-filled in your <a class="reference external" href="https://github.com/askap-vast/vast-pipeline/blob/master/webinterface/.env.template">.env</a> file, and even if that variables are not present in such file, the settings assumed the default values, which are relative to the main repo folder. So create the folders with (Note: make sure you change BASE_DIR to <code class="docutils literal notranslate"><span class="pre">vast-pipeline</span></code>):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> BASE_DIR <span class="o">&amp;&amp;</span> mkdir pipeline-runs <span class="o">&amp;&amp;</span> mkdir reference-surveys
+</pre></div>
+</div>
+<p>After creating the folders with the defaults values your directory tree should look like this:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>├── CHANGELOG.md
+├── CODE_OF_CONDUCT.md
+├── CONTRIBUTING.md
+├── gulpfile.js
+├── .. highlight::&lt;b&gt;init-tools&lt;/b&gt;
+├── INSTALL.md
+├── LICENSE.txt
+├── manage.py
+├── &lt;b&gt;node_modules&lt;/b&gt;
+├── package.json
+├── package-lock.json
+├── README.md
+├── &lt;b&gt;requirements&lt;/b&gt;
+├── &lt;b&gt;static&lt;/b&gt;
+├── &lt;b&gt;templates&lt;/b&gt;
+├── &lt;b&gt;pipeline-runs&lt;/b&gt;
+├── &lt;b&gt;vast_pipeline&lt;/b&gt;
+└── &lt;b&gt;webinterface&lt;/b&gt;
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span>
+CHANGELOG.md
+<span class="nb">source</span>
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
+dask-worker-space
+docs
+gulpfile.js
+init-tools
+INSTALL.rst
+LICENSE.txt
+manage.py
+node_modules
+notebooks
+package.json
+package-lock.json
+pipeline
+README.md
+requirements
+static
+templates
+testing-pipe-runs
+vast-pipe-env
+vast_pipeline
+vast-pipeline.sublime-project
+vast-pipeline.sublime-workspace
+webinterface
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="history.html" class="btn btn-neutral float-right" title="Change Log" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="VAST Pipeline" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, The VAST Development Team
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

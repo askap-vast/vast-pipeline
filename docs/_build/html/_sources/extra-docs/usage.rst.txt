@@ -1,0 +1,186 @@
+Usage
+=====
+
+.. contents:: **Table of Contents**
+   :depth: 2
+   :local:
+
+Pipeline Login
+--------------
+
+Currently the pipeline support only login via GitHub Team and/or as Django administrator.
+
+Please make sure to fill the ``SOCIAL_AUTH_GITHUB_KEY, SOCIAL_AUTH_GITHUB_SECRET, SOCIAL_AUTH_GITHUB_TEAM_ID, SOCIAL_AUTH_GITHUB_TEAM_ADMIN`` in your [`.env`](./webinterface/.env.template) file. Also be sure to be part of the GitHub team, if not ask @srggrs, @ajstewart or @marxide to be added.
+
+You can also login on your **local** version for doing some develpment by creating an admin user:
+
+.. code-block:: bash
+
+    $ ./manage.py createsuperuser
+
+Fill in your details and then login with the created credentials at ``localhost:8000/pipe-admin`` (change ip and port if needed). That will log you in the Django admin site. Go to ``localhost:8000`` or click "site" on the right top corner to enter the vast pipeline website.
+
+Pipeline Usage
+--------------
+
+All the pipeline commands are run using the Django global ``./manage.py <command>`` interface. Therefore you need to activate the ``Python`` environment. You can have a look at the available commands for the pipeline app:
+
+.. code-block:: bash
+
+    (pipeline_env)$ ./manage.py help
+
+Output:
+
+.. code-block:: bash
+
+   ...
+
+   [pipeline]
+     clearpiperun
+     importsurvey
+     initpiperun
+     runpipeline
+
+   ...
+
+There are 4 commands, described in detail below.
+
+Initialise a Pipeline Run
++++++++++++++++++++++++++
+
+In order to process the images in the pipeline, you must create/initialise a pipeline run first.
+
+The pipeline run creation is done using the ``initpiperun`` django command, which requires a pipeline run folder. The command creates a folder with the pipeline run name under the settings ``PROJECT_WORKING_DIR`` defined in [settings](./webinterface/settings.template.py).
+
+.. code-block:: bash
+
+    (pipeline_env)$ ./manage.py initpiperun --help
+
+Output:
+
+.. code-block:: bash
+
+   usage: manage.py initpiperun [-h] [--version] [-v {0,1,2,3}]
+                             [--settings SETTINGS] [--pythonpath PYTHONPATH]
+                             [--traceback] [--no-color] [--force-color]
+                             runname
+
+   Create the pipeline run folder structure to run a pipeline instance
+
+   positional arguments:
+      runname       Name of the pipeline run.
+
+   optional arguments:
+      -h, --help            show this help message and exit
+      --version             show program's version number and exit
+      -v {0,1,2,3}, --verbosity {0,1,2,3}
+                              Verbosity level; 0=minimal output, 1=normal output,
+                              2=verbose output, 3=very verbose output
+      --settings SETTINGS   The Python path to a settings module, e.g.
+                              "myproject.settings.main". If this isn't provided, the
+                              DJANGO_SETTINGS_MODULE environment variable will be
+                              used.
+      --pythonpath PYTHONPATH
+                              A directory to add to the Python path, e.g.
+                              "/home/djangoprojects/myproject".
+      --traceback           Raise on CommandError exceptions
+      --no-color            Don't colorize the command output.
+      --force-color         Force colorization of the command output.
+
+The command yields the following folder structure:
+
+.. code-block:: bash
+
+    (pipeline_env)$ ./manage.py initpiperun my_pipe_run
+
+Output:
+
+.. code-block:: bash
+
+    2020-02-27 23:04:33,344 initpiperun INFO creating pipeline run folder
+    2020-02-27 23:04:33,344 initpiperun INFO copying default config in pipeline run folder
+    2020-02-27 23:04:33,344 initpiperun INFO pipeline run initialisation successful! Please modify the "config.py"
+
+Run a Pipeline Instance
++++++++++++++++++++++++
+
+The pipeline is run using ``runpipeline`` django command.
+
+.. code-block:: bash
+
+    (pipeline_env)$ ./manage.py runpipeline --help
+
+Output:
+
+.. code-block:: bash
+
+   usage: manage.py runpipeline [-h] [--version] [-v {0,1,2,3}]
+                             [--settings SETTINGS] [--pythonpath PYTHONPATH]
+                             [--traceback] [--no-color] [--force-color]
+                             [--skip-checks]
+                             piperun
+
+   Process the pipeline for a list of images and Selavy catalogs
+
+   positional arguments:
+     piperun       Path or name of the pipeline run.
+
+   optional arguments:
+     -h, --help            show this help message and exit
+     --version             show program's version number and exit
+     -v {0,1,2,3}, --verbosity {0,1,2,3}
+                           Verbosity level; 0=minimal output, 1=normal output,
+                           2=verbose output, 3=very verbose output
+     --settings SETTINGS   The Python path to a settings module, e.g.
+                           "myproject.settings.main". If this isn't provided, the
+                           DJANGO_SETTINGS_MODULE environment variable will be
+                           used.
+     --pythonpath PYTHONPATH
+                           A directory to add to the Python path, e.g.
+                           "/home/djangoprojects/myproject".
+     --traceback           Raise on CommandError exceptions
+     --no-color            Don't colorize the command output.
+     --force-color         Force colorization of the command output.
+     --skip-checks         Skip system checks.
+
+General usage:
+
+.. code-block:: bash
+
+   (pipeline_env)$ ./manage.py runpipeline path/to/my_pipe_run
+
+Resetting a Pipeline Run
+++++++++++++++++++++++++
+
+Detailed commands for resetting the database can be found in [`CONTRIBUTING.md`](./CONTRIBUTING.md).
+
+Resetting a pipeline run can be done using the ``clearpiperun`` command: it will delete all images (and related objects such as sources) associated with that pipeline run, if that images does not belong to another pipeline run. It will deleted all the sources associated with that pipeline run.
+
+.. code-block:: bash
+
+   (pipeline_env)$ ./manage.py clearpiperun path/to/my_pipe_run
+   # or
+   (pipeline_env)$ ./manage.py clearpiperun my_pipe_run
+
+More details on the ``clearpiperun`` command can be found in the [Contributing guidelines](./CONTRIBUTING.md#clearing-run-data).
+
+Import survey data
+++++++++++++++++++
+
+This functionality is still not developed
+
+
+Data Exploration via Django Web Server
+--------------------------------------
+
+Make sure you installed and compiled correctly the frontend assets see [guide](./INSTALL.md#pipeline-front-end-assets-quickstart)
+
+1. Start the Django development web server:
+
+.. code-block:: bash
+
+   (pipeline_env)$ ./manage.py runserver
+
+2. Test the webserver by pointing your browser at http://127.0.0.1:8000 or http://localhost:8000
+
+The webserver is independent of ``runpipeline`` and you can use the website while the pipeline commands are running.
