@@ -15,6 +15,7 @@ Detailed Vast Pipeline documentation
    quickstart
    extra-docs/usage
    extra-docs/deployment
+   extra-docs/architecture
    developing
    history
 
