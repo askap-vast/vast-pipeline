@@ -34,6 +34,18 @@ So we can separe problems from solutions.
 
 PRs not branched off master will be **rejected**!.
 
+Building the Documentation
+--------------------------
+
+The documentation is developed with the `Sphinx <https://www.sphinx-doc.org/en/master/>`_ package. Modify the related ``.rst`` files, eventually add sections to ``index.rst`` and build with the following command:
+
+.. code-block:: bash
+
+    (pipeline_env)$ cd ./docs $$ make html
+
+The documentation can be also compiled to pdf and other format. Refer to `Sphinx documentation <https://www.sphinx-doc.org/en/master/contents.html>`_
+
+
 Releasing Guidelines
 --------------------
 
