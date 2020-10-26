@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_datatables',
     'social_django',
-    'background_task',
+    'django_q',
     # pipeline app and others
     'pipeline',
 ] + env('EXTRA_APPS', cast=list, default=[])
@@ -144,6 +144,26 @@ DATABASES = {
     'default': env.db()
 }
 
+# Cache (necessary to run pipeline jobs from UI)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'pipeline_cache_table',
+    }
+}
+
+# Django Queue Cluster
+Q_CLUSTER = {
+    'name': 'VastPipeline',
+    'workers': 3,
+    'timeout': 90,
+    'retry': 120,
+    'queue_limit': 20,
+    'bulk': 10,
+    'orm': 'default',# same as above in DATABASES but can be changed
+    'label': 'Django Q tasks'
+}
+
 # REST framework settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -242,6 +262,7 @@ if not DEBUG:
     # from https://ubuntu.com/blog/django-behind-a-proxy-fixing-absolute-urls
     USE_X_FORWARDED_HOST = True
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 
 # PIPELINE settings
 # project default folder
