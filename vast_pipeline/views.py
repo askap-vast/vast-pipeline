@@ -943,7 +943,9 @@ class SourceViewSet(ModelViewSet):
             'avg_compactness',
             'min_snr',
             'max_snr',
-            'n_neighbour_dist'
+            'n_neighbour_dist',
+            'source_selection',
+            'source_selection_type'
         ]
 
         neighbour_unit = self.request.query_params.get('NeighbourUnit')
@@ -960,6 +962,24 @@ class SourceViewSet(ModelViewSet):
         measurements = self.request.query_params.get('meas')
         if measurements:
             qry_dict['measurements'] = measurements
+
+        if 'source_selection' in self.request.query_params:
+            selection_type = self.request.query_params['source_selection_type']
+            selection = (
+                self.request.query_params['source_selection']
+                .replace(" ", "")
+                .split(",")
+            )
+            if selection_type == 'name':
+                qry_dict['name__in'] = selection
+            else:
+                try:
+                    selection = [int(i) for i in selection]
+                    qry_dict['id__in'] = selection
+                except:
+                    # this avoids an error on the check if the user has
+                    # accidentally entered names with a 'id' selection type.
+                    qry_dict['id'] = -1
 
         if 'newsrc' in self.request.query_params:
             qry_dict['new'] = True
@@ -1039,7 +1059,7 @@ def SourceQuery(request):
         'm_abs_max_peak',
         'n_sibl',
         'new',
-        'new_high_sigma'
+        'new_high_sigma',
     ]
 
     api_col_dict = {
