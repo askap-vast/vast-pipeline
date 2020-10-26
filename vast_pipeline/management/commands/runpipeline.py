@@ -17,6 +17,10 @@ from pipeline.pipeline.errors import PipelineError, PipelineConfigError
 
 logger = logging.getLogger(__name__)
 
+# from django_q.tasks import async_task
+# r = Run.objects.first()
+# async_task('pipeline.management.commands.runpipeline.run_pipe', r.name, None, r, False, True, sync=True)
+
 
 def run_pipe(name, path_name=None, run_dj_obj=None, cmd=True, debug=False):
     # intitialise the pipeline with the configuration
@@ -70,9 +74,9 @@ def run_pipe(name, path_name=None, run_dj_obj=None, cmd=True, debug=False):
             for parquet in forced_parquets:
                 os.remove(parquet)
 
-    logger.info('Source finder: %s', pipeline.config.SOURCE_FINDER)
-    logger.info('Using pipeline run "%s"', pipeline.name)
-    logger.info('Source monitoring: %s', pipeline.config.MONITOR)
+    logger.info("Source finder: %s", pipeline.config.SOURCE_FINDER)
+    logger.info("Using pipeline run '%s'", pipeline.name)
+    logger.info("Source monitoring: %s", pipeline.config.MONITOR)
 
     stopwatch = StopWatch()
 
