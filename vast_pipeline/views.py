@@ -1059,7 +1059,7 @@ def SourceQuery(request):
         'm_abs_max_peak',
         'n_sibl',
         'new',
-        'new_high_sigma',
+        'new_high_sigma'
     ]
 
     api_col_dict = {
