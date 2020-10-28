@@ -18,10 +18,6 @@ from vast_pipeline.pipeline.errors import PipelineError, PipelineConfigError
 
 logger = logging.getLogger(__name__)
 
-# from django_q.tasks import async_task
-# r = Run.objects.first()
-# async_task('pipeline.management.commands.runpipeline.run_pipe', r.name, None, r, False, True, sync=True)
-
 
 def run_pipe(name, path_name=None, run_dj_obj=None, cmd=True, debug=False):
     # intitialise the pipeline with the configuration
