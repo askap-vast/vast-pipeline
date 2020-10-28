@@ -26,7 +26,6 @@ def run_pipe(name, path_name=None, run_dj_obj=None, cmd=True, debug=False):
         name=run_dj_obj.name if run_dj_obj else name,
         config_path=os.path.join(path, 'config.py')
     )
-
     # set up logging for running pipeline from UI
     if not cmd:
         # set up the logger for the UI job

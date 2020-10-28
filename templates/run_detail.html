@@ -65,10 +65,10 @@
           {% endif %}
           <div class="btn-group btn-group-toggle" data-toggle="buttons">
             <label class="btn btn-sm btn-primary {% if p_run.status == 'Running' or p_run.status == 'Queued' %} disabled {% endif %}">
-              <input type="radio" name="debug" id="debugOff" autocomplete="off" checked> Debug Off
+              <input type="radio" name="debug" id="debugOff" autocomplete="off" value='debugOff' checked> Debug Off
             </label>
             <label class="btn btn-sm btn-primary {% if p_run.status == 'Running' or p_run.status == 'Queued' %} disabled {% endif %}">
-              <input type="radio" name="debug" id="debugOn" autocomplete="off"> Debug On
+              <input type="radio" name="debug" id="debugOn" autocomplete="off" value='debugOn'> Debug On
             </label>
           </div>
         </form>

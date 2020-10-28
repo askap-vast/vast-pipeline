@@ -289,7 +289,8 @@ class RunViewSet(ModelViewSet):
             with transaction.atomic():
                 p_run.status = 'QUE'
                 p_run.save()
-            debug_flag = request.POST.get('debug', False)
+            debug_flag = request.POST.get('debug', 'debugOff')
+            debug_flag = True if debug_flag == 'debugOn' else False
             async_task(
                 'vast_pipeline.management.commands.runpipeline.run_pipe',
                 p_run.name, p_run.path, p_run, False, debug_flag,
