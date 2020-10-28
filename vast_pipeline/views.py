@@ -262,7 +262,16 @@ class RunViewSet(ModelViewSet):
             messages.error(request, f'Error in config write: {e}')
             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-        n_piperuns_running = self.queryset.filter(status='RUN').count()
+        if p_run.user != request.user.get_username():
+            if not request.user.is_staff:
+                msg = (
+                    'You do not have permission to process this pipeline run!'
+                )
+                messages.error(
+                    request,
+                    msg
+                )
+                return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
         if Run.objects.check_max_runs(settings.MAX_PIPELINE_RUNS):
             msg = (
