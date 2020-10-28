@@ -3,6 +3,7 @@ import logging
 import traceback
 import warnings
 
+from django.db import transaction
 from django.core.management.base import BaseCommand, CommandError
 from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
 from vast_pipeline.pipeline.main import Pipeline
@@ -12,7 +13,7 @@ from vast_pipeline.pipeline.utils import (
 from vast_pipeline.utils.utils import StopWatch
 from ..helpers import get_p_run_name
 from astropy.utils.exceptions import AstropyWarning
-from pipeline.pipeline.errors import PipelineError, PipelineConfigError
+from vast_pipeline.pipeline.errors import PipelineError, PipelineConfigError
 
 
 logger = logging.getLogger(__name__)
@@ -51,6 +52,9 @@ def run_pipe(name, path_name=None, run_dj_obj=None, cmd=True, debug=False):
             traceback.print_exc()
         logger.exception('Config error:\n%s', e)
         msg = f'Config error:\n{e}'
+        # If the run is already created (e.g. through UI) then set status to
+        # error
+        pipeline.set_status(run_dj_obj, 'ERR')
         raise CommandError(msg) if cmd else PipelineConfigError(msg)
 
     if pipeline.config.SUPPRESS_ASTROPY_WARNINGS:
@@ -91,7 +95,7 @@ def run_pipe(name, path_name=None, run_dj_obj=None, cmd=True, debug=False):
         # set the pipeline status as error
         pipeline.set_status(p_run, 'ERR')
 
-        if options['verbosity'] > 1:
+        if debug:
             traceback.print_exc()
         logger.exception('Processing error:\n%s', e)
         raise CommandError(f'Processing error:\n{e}')
@@ -146,7 +150,7 @@ class Command(BaseCommand):
             # set the traceback on
             options['traceback'] = True
 
-        p_run_name = p_run_path
+        # p_run_name = p_run_path
         # remove ending / if present
         if p_run_name[-1] == '/':
             p_run_name = p_run_name[:-1]

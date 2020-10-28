@@ -24,10 +24,13 @@ from bokeh.embed import json_item
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
+from django.db import transaction
 from django.db.models import F, Count, QuerySet
 from django.http import FileResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
+
+from django_q.tasks import async_task
 
 from rest_framework import status
 import rest_framework.decorators
@@ -58,6 +61,7 @@ from vast_pipeline.utils.view import generate_colsfields, get_skyregions_collect
 from vast_pipeline.management.commands.initpiperun import initialise_run
 from vast_pipeline.forms import PipelineRunForm, CommentForm
 from vast_pipeline.pipeline.main import Pipeline
+from vast_pipeline.pipeline.utils import get_create_p_run
 
 
 logger = logging.getLogger(__name__)
@@ -240,6 +244,68 @@ class RunViewSet(ModelViewSet):
 
         serializer = MeasurementSerializer(qs, many=True)
         return Response(serializer.data)
+
+    @rest_framework.decorators.action(detail=True, methods=['post'])
+    def run(self, request, pk=None):
+        # this is used to launch the pipeline run (passing to the Django Q
+        # cluster).
+        if not pk:
+            messages.error(
+                request,
+                'Error in config write: Run pk parameter null or not passed'
+            )
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        try:
+            p_run = get_object_or_404(self.queryset, pk=pk)
+        except Exception as e:
+            messages.error(request, f'Error in config write: {e}')
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        n_piperuns_running = self.queryset.filter(status='RUN').count()
+
+        if Run.objects.check_max_runs(settings.MAX_PIPELINE_RUNS):
+            msg = (
+                'The maximum number of simultaneous pipeline runs has been'
+                f' reached ({settings.MAX_PIPELINE_RUNS})! Please try again'
+                ' when other jobs have finished.'
+            )
+            messages.error(
+                request,
+                msg
+            )
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        try:
+            with transaction.atomic():
+                p_run.status = 'QUE'
+                p_run.save()
+            debug_flag = request.POST.get('debug', False)
+            async_task(
+                'vast_pipeline.management.commands.runpipeline.run_pipe',
+                p_run.name, p_run.path, p_run, False, debug_flag,
+                task_name=p_run.name, ack_failure=True
+            )
+            msg = (
+                f'{p_run.name} successfully started processing. Refresh the'
+                ' page to check the status.'
+            )
+            messages.success(
+                request,
+                msg
+            )
+        except Exception as e:
+            with transaction.atomic():
+                p_run.status = 'ERR'
+                p_run.save()
+
+            messages.error(request, f'Error in running pipeline: {e}')
+
+        return HttpResponseRedirect(
+            reverse('vast_pipeline:run_detail', args=[p_run.id])
+        )
+
+        return Response(request)
 
 
 # Run detail

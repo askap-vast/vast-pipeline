@@ -186,6 +186,7 @@ class Run(CommentableModel):
     )
     STATUS_CHOICES = [
         ('INI', 'Initialised'),
+        ('QUE', 'Queued'),
         ('RUN', 'Running'),
         ('END', 'Completed'),
         ('ERR', 'Error'),
