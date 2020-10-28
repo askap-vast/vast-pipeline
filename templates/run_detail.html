@@ -48,7 +48,8 @@
               <span class="text">Run pipeline</span>
             </button>
           {% elif p_run.status == 'Completed' %}
-            <button class="btn btn-sm btn-danger align-items-center btn-icon-split shadow-sm" id="runPipe">
+            <button class="btn btn-sm btn-danger align-items-center btn-icon-split shadow-sm" id="runPipe" data-toggle="tooltip" data-placement="top" title=
+                      "Re-running will remove all previous outputs!">
               <span class="icon text-white-600">
                 <i class="fas fa-rocket fa-lg"></i>
               </span>
