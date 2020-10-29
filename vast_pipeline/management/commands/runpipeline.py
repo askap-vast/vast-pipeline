@@ -20,7 +20,31 @@ logger = logging.getLogger(__name__)
 
 
 def run_pipe(name, path_name=None, run_dj_obj=None, cmd=True, debug=False):
-    # intitialise the pipeline with the configuration
+    '''
+    Main function to run the pipeline.
+
+    Parameters
+    ----------
+    name : str
+        The name of the pipeline run (p_run.name).
+    path_name : str, optional
+        The path of the directory of the pipeline run (p_run.path), defaults to
+        None.
+    run_dj_obj : Run, optional
+        The Run object of the pipeline run, defaults to None.
+    cmd : bool, optional
+        Flag to signify whether the pipeline run has been run via the UI
+        (False), or the command line (True). Defaults to True.
+    debug : bool, optional
+        Flag to signify whether to enable debug verbosity to the logging
+        output. Defaults to False.
+
+    Returns
+    -------
+    bool : bool OR CommandError : CommandError
+        Boolean equal to `True` on a successful completion, or in cases of
+        failures a CommandError is returned.
+    '''
     path = run_dj_obj.path if run_dj_obj else path_name
     pipeline = Pipeline(
         name=run_dj_obj.name if run_dj_obj else name,
