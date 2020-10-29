@@ -279,14 +279,15 @@ The webserver is independent of `runpipeline` and you can use the website while 
 
 It is possible to launch the processing of a pipeline run by using the relevant option on the pipeline run detail page. This uses `DjangoQ` to schedule and process the runs and a cluster needs to be set up in order for the runs to process:
 
-1. Check the `Q_CLUSTER` options in `webinterface/settings.py`. Refer to the [DjangoQ docs](https://django-q.readthedocs.io/en/latest/index.html) if you are unsure on the meaning of any parameters.
+1. Check the `Q_CLUSTER` options in [`/webinterface/settings.py`](./webinterface/settings.py). Refer to the [DjangoQ docs](https://django-q.readthedocs.io/en/latest/index.html) if you are unsure on the meaning of any parameters.
 
 2. Launch the cluster using the following command, making sure you are in the pipeline environment:
 ```
 (pipeline_env)$ ./manage.py qcluster
 ````
 
-A warning that if you submit jobs before the cluster is set up, then these jobs will begin immediately once the cluster is initiated.
+If the pipeline is updated then the `qcluster` also needs to be be restarted.
+A warning that if you submit jobs before the cluster is set up, or is taken down, then these jobs will begin immediately once the cluster is back online.
 
 ## Production Deployment
 This section describes a simple deployment without using Docker containers, assuming the use of [WhiteNoise](http://whitenoise.evans.io/en/stable/) to serve the static files. It is possible to serve the static files using other methods (e.g. Nginx). And in the future it is possible to upgrade the deployment stack using Docker container and Docker compose (we foresee 3 main containers: Django, Dask and Traefik). We recommend in any case reading [Django deployment documentation](https://docs.djangoproject.com/en/3.1/howto/deployment/) for general knowledge.
