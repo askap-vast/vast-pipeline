@@ -2,7 +2,6 @@ import os
 import logging
 import glob
 import vaex
-vaex.multithreading.thread_count_default = 1
 import numpy as np
 import pandas as pd
 import astropy.units as u
