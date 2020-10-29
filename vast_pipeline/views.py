@@ -247,8 +247,22 @@ class RunViewSet(ModelViewSet):
 
     @rest_framework.decorators.action(detail=True, methods=['post'])
     def run(self, request, pk=None):
-        # this is used to launch the pipeline run (passing to the Django Q
-        # cluster).
+        """
+        Launches a pipeline run using a Django Q cluster. Includes a check
+        on ownership or admin stataus of the user to make sure processing
+        is allowed.
+
+        Args:
+            request (Request): Django REST Framework request object.
+            pk (int, optional): Run object primary key. Defaults to None.
+
+        Raises:
+            Http404: if a Source with the given `pk` cannot be found.
+
+        Returns:
+            Response: Returns to the orignal request page (the pipeline run
+            detail).
+        """
         if not pk:
             messages.error(
                 request,
@@ -262,16 +276,20 @@ class RunViewSet(ModelViewSet):
             messages.error(request, f'Error in config write: {e}')
             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-        if p_run.user != request.user.get_username():
-            if not request.user.is_staff:
-                msg = (
-                    'You do not have permission to process this pipeline run!'
-                )
-                messages.error(
-                    request,
-                    msg
-                )
-                return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+        # make sure that only the run creator or an admin can request the run
+        # to be processed.
+        if (
+            p_run.user != request.user.get_username()
+            and not request.user.is_staff
+        ):
+            msg = (
+                'You do not have permission to process this pipeline run!'
+            )
+            messages.error(
+                request,
+                msg
+            )
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
         if Run.objects.check_max_runs(settings.MAX_PIPELINE_RUNS):
             msg = (
@@ -308,14 +326,12 @@ class RunViewSet(ModelViewSet):
             with transaction.atomic():
                 p_run.status = 'ERR'
                 p_run.save()
-
             messages.error(request, f'Error in running pipeline: {e}')
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
         return HttpResponseRedirect(
             reverse('vast_pipeline:run_detail', args=[p_run.id])
         )
-
-        return Response(request)
 
 
 # Run detail

@@ -101,8 +101,6 @@ def run_pipe(name, path_name=None, run_dj_obj=None, cmd=True, debug=False):
     except Exception as e:
         # set the pipeline status as error
         pipeline.set_status(p_run, 'ERR')
-        if debug:
-            traceback.print_exc()
         logger.exception('Processing error:\n%s', e)
         raise CommandError(f'Processing error:\n{e}')
 
