@@ -297,7 +297,7 @@ class RunViewSet(ModelViewSet):
                 task_name=p_run.name, ack_failure=True
             )
             msg = (
-                f'{p_run.name} successfully started processing. Refresh the'
+                f'{p_run.name} successfully sent to the queue! Refresh the'
                 ' page to check the status.'
             )
             messages.success(

@@ -52,6 +52,15 @@ def run_pipe(name, path_name=None, run_dj_obj=None, cmd=True, debug=False):
         pipeline.set_status(run_dj_obj, 'ERR')
         raise CommandError(msg) if cmd else PipelineConfigError(msg)
 
+    if pipeline.config.CREATE_MEASUREMENTS_ARROW_FILE and cmd is False:
+        logger.warning(
+            'The creation of arrow files is currently unavailable when running'
+            ' through the UI. Please ask an admin to complete this step for'
+            ' you upon a successful completion.'
+        )
+        logger.warning("Setting 'CREATE_MEASUREMENTS_ARROW_FILE' to 'False'.")
+        pipeline.config.CREATE_MEASUREMENTS_ARROW_FILE = False
+
     if pipeline.config.SUPPRESS_ASTROPY_WARNINGS:
         warnings.simplefilter("ignore", category=AstropyWarning)
 
@@ -86,18 +95,16 @@ def run_pipe(name, path_name=None, run_dj_obj=None, cmd=True, debug=False):
         # run the pipeline
         pipeline.set_status(p_run, 'RUN')
         pipeline.process_pipeline(p_run)
+        # Create arrow file after success if selected.
+        if pipeline.config.CREATE_MEASUREMENTS_ARROW_FILE:
+            create_measurements_arrow_file(p_run)
     except Exception as e:
         # set the pipeline status as error
         pipeline.set_status(p_run, 'ERR')
-
         if debug:
             traceback.print_exc()
         logger.exception('Processing error:\n%s', e)
         raise CommandError(f'Processing error:\n{e}')
-
-    # Create arrow file after success if selected.
-    if pipeline.config.CREATE_MEASUREMENTS_ARROW_FILE:
-        create_measurements_arrow_file(p_run)
 
     # set the pipeline status as completed
     pipeline.set_status(p_run, 'END')
