@@ -159,7 +159,7 @@ CACHES = {
 Q_CLUSTER = {
     'name': 'VastPipeline',
     'workers': 3,
-    'timeout': 18000,
+    'timeout': 86400,
     'queue_limit': 6,
     'ack_failures': True,
     'bulk': 10,
@@ -167,7 +167,7 @@ Q_CLUSTER = {
     'label': 'Django Q tasks',
     'daemonize_workers': False,
     'recycle': 100,
-    'retry': 86400
+    'retry': 86402
 }
 
 # REST framework settings
@@ -335,6 +335,9 @@ PIPE_RUN_CONFIG_DEFAULTS = {
 
 # default max concurrent pipeline runs
 MAX_PIPELINE_RUNS = env('MAX_PIPELINE_RUNS', cast=int, default=3)
+
+# maximum number of images for non-admin runs
+MAX_PIPERUN_IMAGES = env('MAX_PIPERUN_IMAGES', cast=int, default=200)
 
 # pipeline maintainance message/banner
 PIPELINE_MAINTAINANCE_MESSAGE = env('PIPELINE_MAINTAINANCE_MESSAGE', cast=str, default=None)

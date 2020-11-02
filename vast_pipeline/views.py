@@ -312,7 +312,7 @@ class RunViewSet(ModelViewSet):
             async_task(
                 'vast_pipeline.management.commands.runpipeline.run_pipe',
                 p_run.name, p_run.path, p_run, False, debug_flag,
-                task_name=p_run.name, ack_failure=True
+                task_name=p_run.name, ack_failure=True, user=request.user
             )
             msg = (
                 f'{p_run.name} successfully sent to the queue! Refresh the'
@@ -1643,7 +1643,7 @@ class RunConfigSet(ViewSet):
 
         try:
             pipeline = Pipeline(name=p_run.name, config_path=path)
-            pipeline.validate_cfg()
+            pipeline.validate_cfg(user=request.user)
         except Exception as e:
             trace = traceback.format_exc().splitlines()
             trace = '\n'.join(trace[-4:])

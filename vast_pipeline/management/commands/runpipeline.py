@@ -4,6 +4,7 @@ import traceback
 import warnings
 
 from django.db import transaction
+from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand, CommandError
 from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
 from vast_pipeline.pipeline.main import Pipeline
@@ -19,7 +20,9 @@ from vast_pipeline.pipeline.errors import PipelineError, PipelineConfigError
 logger = logging.getLogger(__name__)
 
 
-def run_pipe(name, path_name=None, run_dj_obj=None, cmd=True, debug=False):
+def run_pipe(
+    name, path_name=None, run_dj_obj=None, cmd=True, debug=False, user=None
+):
     '''
     Main function to run the pipeline.
 
@@ -38,6 +41,8 @@ def run_pipe(name, path_name=None, run_dj_obj=None, cmd=True, debug=False):
     debug : bool, optional
         Flag to signify whether to enable debug verbosity to the logging
         output. Defaults to False.
+    user : User, optional
+        The User of the request if made through the UI. Defaults to None.
 
     Returns
     -------
@@ -65,7 +70,7 @@ def run_pipe(name, path_name=None, run_dj_obj=None, cmd=True, debug=False):
 
     # load and validate run configs
     try:
-        pipeline.validate_cfg()
+        pipeline.validate_cfg(user=user)
     except Exception as e:
         if debug:
             traceback.print_exc()
