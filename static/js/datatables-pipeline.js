@@ -128,7 +128,7 @@ $(document).ready(function() {
             "targets": 3,
             "data": "image",
             "render": function ( data, type, row, meta ) {
-              return '<a href="' + img_url + row[17] + '"target="_blank">' + row[3] + '</a>';
+              return '<a href="' + img_url + row[19] + '"target="_blank">' + row[3] + '</a>';
             }
           },
           {
@@ -168,48 +168,62 @@ $(document).ready(function() {
           },
           {
             "targets": 9,
-            "data": "flux_int",
+            "data": "flux_peak",
             "render": function ( data, type, row, meta ) {
                 return (row[9]).toFixed(3);
             }
           },
           {
             "targets": 10,
-            "data": "flux_int_err",
+            "data": "flux_peak_err",
             "render": function ( data, type, row, meta ) {
                 return (row[10]).toFixed(3);
             }
           },
           {
             "targets": 11,
-            "data": "flux_peak",
+            "data": "flux_peak_isl_ratio",
             "render": function ( data, type, row, meta ) {
-                return (row[11]).toFixed(3);
+                return (row[11]).toFixed(2);
             }
           },
           {
             "targets": 12,
-            "data": "flux_peak_err",
+            "data": "flux_int",
             "render": function ( data, type, row, meta ) {
                 return (row[12]).toFixed(3);
             }
           },
           {
             "targets": 13,
-            "data": "local_rms",
+            "data": "flux_int_err",
             "render": function ( data, type, row, meta ) {
-                return (row[13]).toFixed(2);
+                return (row[13]).toFixed(3);
             }
           },
           {
             "targets": 14,
-            "data": "snr",
+            "data": "flux_int_isl_ratio",
             "render": function ( data, type, row, meta ) {
                 return (row[14]).toFixed(2);
             }
           },
           {
-            "targets": 17,
+            "targets": 15,
+            "data": "local_rms",
+            "render": function ( data, type, row, meta ) {
+                return (row[15]).toFixed(2);
+            }
+          },
+          {
+            "targets": 16,
+            "data": "snr",
+            "render": function ( data, type, row, meta ) {
+                return (row[16]).toFixed(2);
+            }
+          },
+          {
+            "targets": 19,
             "searchable": false,
             "visible": false
           }
@@ -330,7 +344,7 @@ $(document).ready(function() {
     if (isl_ratio_min.value) {
       qry_url = qry_url + "&min_" + isl_ratio_flux_type.value + "=" + isl_ratio_min.value;
     };
-    if (max_flux_max.value) {
+    if (isl_ratio_max.value) {
       qry_url = qry_url + "&max_" + isl_ratio_flux_type.value + "=" + isl_ratio_max.value;
     };
     let var_v_type = document.getElementById("varVMetricSelect");

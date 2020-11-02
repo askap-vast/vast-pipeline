@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added new fields to detail pages and source and measurement tables [#406](https://github.com/askap-vast/vast-pipeline/pull/406).
 - Added new fields to source query page (island flux ratio, min and max fluxes) [#406](https://github.com/askap-vast/vast-pipeline/pull/406).
 - Added min, max flux values to sources and agg min island flux ratio field [#406](https://github.com/askap-vast/vast-pipeline/pull/406).
 - Added island flux ratio column to measurements, component flux divided by total island flux (peak and int) [#406](https://github.com/askap-vast/vast-pipeline/pull/406).
