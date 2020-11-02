@@ -376,8 +376,10 @@ def prep_skysrc_df(
         'weight_ns',
         'flux_int',
         'flux_int_err',
+        'flux_int_isl_ratio',
         'flux_peak',
         'flux_peak_err',
+        'flux_peak_isl_ratio',
         'forced',
         'compactness',
         'has_siblings',
@@ -568,7 +570,12 @@ def groupby_funcs(df):
     d['wavg_uncertainty_ns'] = 1. / np.sqrt(df['weight_ns'].sum())
     for col in ['avg_flux_int', 'avg_flux_peak']:
         d[col] = df[col.split('_', 1)[1]].mean()
-    d['max_flux_peak'] = df['flux_peak'].values.max()
+    for col in ['max_flux_peak', 'max_flux_int']:
+        d[col] = df[col.split('_', 1)[1]].max()
+    for col in ['min_flux_peak', 'min_flux_int']:
+        d[col] = df[col.split('_', 1)[1]].min()
+    for col in ['min_flux_peak_isl_ratio', 'min_flux_int_isl_ratio']:
+        d[col] = df[col.split('_', 1)[1]].min()
 
     for col in ['flux_int', 'flux_peak']:
         d[f'{col}_sq'] = (df[col]**2).mean()
@@ -608,6 +615,11 @@ def parallel_groupby(df):
         'avg_flux_int': 'f',
         'avg_flux_peak': 'f',
         'max_flux_peak': 'f',
+        'max_flux_int': 'f',
+        'min_flux_peak': 'f',
+        'min_flux_int': 'f',
+        'min_flux_peak_isl_ratio': 'f',
+        'min_flux_int_isl_ratio': 'f',
         'v_int': 'f',
         'v_peak': 'f',
         'eta_int': 'f',

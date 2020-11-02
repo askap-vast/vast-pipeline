@@ -99,10 +99,24 @@
               {{ source.wavg_b|floatformat:6 }}</span>
           </p>
           <p>
-            <strong>Avg. Int. Flux: </strong>{{ source.avg_flux_int|floatformat:3 }} mJy<br>
-            <strong>Avg. Peak Flux: </strong>{{ source.avg_flux_peak|floatformat:3 }} mJy/beam<br>
-            <strong>Max Peak Flux: </strong>{{ source.max_flux_peak|floatformat:3 }} mJy/beam
-          </p>
+            <div class="row">
+            <div class="col-xl">
+              <p>
+                <strong>Avg. Int. Flux: </strong>{{ source.avg_flux_int|floatformat:3 }} mJy<br>
+                <strong>Min. Int. Flux: </strong>{{ source.min_flux_int|floatformat:3 }} mJy<br>
+                <strong>Max Int. Flux: </strong>{{ source.max_flux_int|floatformat:3 }} mJy<br>
+                <strong>Min Int. Flux Isl. Ratio: </strong>{{ source.min_flux_int_isl_ratio|floatformat:2 }}
+              </p>
+            </div>
+            <div class="col-xl">
+              <p>
+                <strong>Avg. Peak Flux: </strong>{{ source.avg_flux_peak|floatformat:3 }} mJy/beam<br>
+                <strong>Min. Peak Flux: </strong>{{ source.min_flux_peak|floatformat:3 }} mJy/beam<br>
+                <strong>Max Peak Flux: </strong>{{ source.max_flux_peak|floatformat:3 }} mJy/beam<br>
+                <strong>Min Peak Flux Isl. Ratio: </strong>{{ source.min_flux_peak_isl_ratio|floatformat:2 }}
+              </p>
+            </div>
+          </div>
           <div class="row">
             <div class="col-xl">
               <p>

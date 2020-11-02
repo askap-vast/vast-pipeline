@@ -297,14 +297,41 @@ $(document).ready(function() {
     if (unit.value) {
         qry_url = qry_url + "&radiusunit=" + unit.value
     }
-    let flux_type = document.getElementById("aveFluxSelect");
-    let flux_min = document.getElementById("fluxMinSelect");
-    let flux_max = document.getElementById("fluxMaxSelect");
-    if (flux_min.value) {
-      qry_url = qry_url + "&min_" + flux_type.value + "=" + flux_min.value;
+    let avg_flux_type = document.getElementById("aveFluxSelect");
+    let avg_flux_min = document.getElementById("avgFluxMinSelect");
+    let avg_flux_max = document.getElementById("avgFluxMaxSelect");
+    if (avg_flux_min.value) {
+      qry_url = qry_url + "&min_" + avg_flux_type.value + "=" + avg_flux_min.value;
     };
-    if (flux_max.value) {
-      qry_url = qry_url + "&max_" + flux_type.value + "=" + flux_max.value;
+    if (avg_flux_max.value) {
+      qry_url = qry_url + "&max_" + avg_flux_type.value + "=" + avg_flux_max.value;
+    };
+    let min_flux_type = document.getElementById("minFluxSelect");
+    let min_flux_min = document.getElementById("fluxMinMinSelect");
+    let min_flux_max = document.getElementById("fluxMaxMinSelect");
+    if (min_flux_min.value) {
+      qry_url = qry_url + "&min_" + min_flux_type.value + "=" + min_flux_min.value;
+    };
+    if (min_flux_max.value) {
+      qry_url = qry_url + "&max_" + min_flux_type.value + "=" + min_flux_max.value;
+    };
+    let max_flux_type = document.getElementById("maxFluxSelect");
+    let max_flux_min = document.getElementById("fluxMinMaxSelect");
+    let max_flux_max = document.getElementById("fluxMaxMaxSelect");
+    if (max_flux_min.value) {
+      qry_url = qry_url + "&min_" + max_flux_type.value + "=" + max_flux_min.value;
+    };
+    if (max_flux_max.value) {
+      qry_url = qry_url + "&max_" + max_flux_type.value + "=" + max_flux_max.value;
+    };
+    let isl_ratio_flux_type = document.getElementById("fluxIslSelect");
+    let isl_ratio_min = document.getElementById("fluxIslMinSelect");
+    let isl_ratio_max = document.getElementById("fluxIslMaxSelect");
+    if (isl_ratio_min.value) {
+      qry_url = qry_url + "&min_" + isl_ratio_flux_type.value + "=" + isl_ratio_min.value;
+    };
+    if (max_flux_max.value) {
+      qry_url = qry_url + "&max_" + isl_ratio_flux_type.value + "=" + isl_ratio_max.value;
     };
     let var_v_type = document.getElementById("varVMetricSelect");
     let var_v_min = document.getElementById("varVMinSelect");
@@ -434,13 +461,15 @@ $(document).ready(function() {
       return this.defaultSelected
     });
     let inputs = [
-      'fluxMinSelect', 'fluxMaxSelect', 'varVMinSelect', 'varVMaxSelect',
+      'avgFluxMinSelect', 'avgFluxMaxSelect', 'varVMinSelect', 'varVMaxSelect',
+      'fluxIslMinSelect', 'fluxIslMaxSelect', 'fluxMinMinSelect', 'fluxMinMaxSelect',
       'varEtaMinSelect', 'varEtaMaxSelect', 'ForcedMinSelect', 'ForcedMaxSelect',
       'coordInput', 'radiusSelect', 'datapointMinSelect', 'datapointMaxSelect',
       'RelationsMinSelect', 'RelationsMaxSelect', 'SelavyMinSelect', 'SelavyMaxSelect',
       'NewSigmaMinSelect', 'NewSigmaMaxSelect', 'NeighbourMinSelect', 'NeighbourMaxSelect',
       'compactnessMinSelect', 'compactnessMaxSelect', 'objectNameInput', 'MinSnrMinSelect',
-      'MinSnrMaxSelect', 'MaxSnrMinSelect', 'MaxSnrMaxSelect',
+      'MinSnrMaxSelect', 'MaxSnrMinSelect', 'MaxSnrMaxSelect', 'fluxMaxMinSelect',
+      'fluxMaxMaxSelect',
       ];
     var input;
     for (input of inputs) {

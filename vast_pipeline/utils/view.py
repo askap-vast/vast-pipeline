@@ -75,6 +75,26 @@ FLOAT_FIELDS = {
         'precision': 3,
         'scale': 1,
     },
+    'min_flux_peak': {
+        'precision': 3,
+        'scale': 1,
+    },
+    'min_flux_int': {
+        'precision': 3,
+        'scale': 1,
+    },
+    'max_flux_int': {
+        'precision': 3,
+        'scale': 1,
+    },
+    'min_flux_int_isl_ratio': {
+        'precision': 2,
+        'scale': 1,
+    },
+    'min_flux_peak_isl_ratio': {
+        'precision': 2,
+        'scale': 1,
+    },
     'rms_median': {
         'precision': 3,
         'scale': 1,
