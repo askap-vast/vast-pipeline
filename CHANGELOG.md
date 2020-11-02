@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added a maximum number of images for runs through the UI [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
 - Added the ability to run a pipeline run through the UI [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
 - Added `Queued` status to the list of pipeline run statuses [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
 - Added the dependancy `django-q` that enables scheduled tasks to be processed [#404](https://github.com/askap-vast/vast-pipeline/pull/404).

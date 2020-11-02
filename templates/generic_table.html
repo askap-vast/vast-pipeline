@@ -102,10 +102,14 @@
           </div>
           <div id="pipeRunConfigForm" class="form-group">
             <h6 class="font-weight-bold text-primary">Images and Catalogue Selection</h6>
-            <label for="imagesFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select images files</label>
+            <p class="text-danger"><b>Warning! Current maximum number of images is {{ max_piperun_images }} <a href="#" data-toggle="tooltip" data-placement="top" title=
+              "If you wish to process more images than the current limit allows then please contact an administrator."
+            ><i class="fas fa-info-circle" style="color:red"></i></a></b></p>
+            <label for="imagesFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select images files
             <a href="#" data-toggle="tooltip" data-placement="top" title=
                 "The primary ASKAP FITS files to process."
             ><i class="fas fa-info-circle"></i></a>
+            </label>
             <select id="imagesFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-header="Choose image files" data-actions-box="true" name="image_files" data-selected-text-format="count > 5">
             </select>
             <label for="selavyFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select selavy files</label>

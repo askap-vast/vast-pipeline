@@ -210,7 +210,8 @@ def RunIndex(request):
                 ],
                 'search': True,
             },
-            'runconfig' : settings.PIPE_RUN_CONFIG_DEFAULTS
+            'runconfig' : settings.PIPE_RUN_CONFIG_DEFAULTS,
+            'max_piperun_images': settings.MAX_PIPERUN_IMAGES
         }
     )
 
