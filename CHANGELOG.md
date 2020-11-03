@@ -75,6 +75,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Increase request limit for gunicorn [#398](https://github.com/askap-vast/vast-pipeline/pull/398).
 - Fixed max source Vs metric to being an absolute value [#391](https://github.com/askap-vast/vast-pipeline/pull/391).
 - Fixed misalignment of lightcurve card header text and the flux type radio buttons [#386](https://github.com/askap-vast/vast-pipeline/pull/386).
 - Fixes incorrently named GitHub `social-auth` settings variable that prevented users from logging in with GitHub [#372](https://github.com/askap-vast/vast-pipeline/pull/372).
@@ -93,6 +94,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### List of PRs
 
 - [#393](https://github.com/askap-vast/vast-pipeline/pull/393) feat: Added measurement_pairs arrow export.
+- [#398](https://github.com/askap-vast/vast-pipeline/pull/398) fix: gunicorn request limit
 - [#399](https://github.com/askap-vast/vast-pipeline/pull/399) fix: Updated RACS HiPS path.
 - [#391](https://github.com/askap-vast/vast-pipeline/pull/391) fix: Vs metric fix and removed pipeline/plots.py.
 - [#387](https://github.com/askap-vast/vast-pipeline/pull/387) feat: Minor website updates.
