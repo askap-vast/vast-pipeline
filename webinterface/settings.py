@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'rest_framework_datatables',
     'social_django',
     'crispy_forms',
+    'tagulous',
     # pipeline app and others
     'vast_pipeline',
 ] + env('EXTRA_APPS', cast=list, default=[])
