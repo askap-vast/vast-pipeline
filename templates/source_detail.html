@@ -78,8 +78,9 @@
   </div>
 
   <div class="row">
+
+    <!-- Basic Card Example -->
     <div class="col-xl-4 col-lg-6 mb-4">
-      <!-- Basic Card Example -->
       <div class="card shadow mb-4 h-100">
         <div class="card-header py-3">
           <h6 class="m-0 font-weight-bold text-primary">Details</h6>
@@ -156,29 +157,8 @@
     </div>
 
     <div class="col-xl-4 col-lg-6 mb-4">
-      <!-- DataTable External Search Results -->
-      <div class="card shadow mb-4 h-100">
-        <div class="card-header py-3">
-          <h6 class="m-0 font-weight-bold text-primary">External Search Results (1 arcmin)</h6>
-        </div>
-        <div class="card-body small">
-          <div class="table-responsive">
-            <table class="table table-sm table-bordered table-striped table-hover" id="externalResultsTable"
-              width="100%" cellspacing="0" data-server-side="false"
-              data-ajax="{% url 'vast_pipeline:api_utils-simbad-ned-search' %}?coord={{ source.wavg_ra_hms }}{{ source.wavg_dec_dms }}&format=datatables&keep=otype_long,database">
-              <thead>
-                <tr>
-                  <th data-data="object_name">ID</th>
-                  <th data-data="separation_arcsec">Dist (arcsec)</th>
-                  <th data-data="otype">Type</th>
-                  <th data-data="ra_hms">RA (hms)</th>
-                  <th data-data="dec_dms">Dec (dms)</th>
-                </tr>
-              </thead>
-            </table>
-          </div>
-        </div>
-      </div>
+      <!-- Comments -->
+      {% include "comments_component.html" %}
     </div>
 
     <!-- Aladin viz tile -->
@@ -187,11 +167,13 @@
         <div id="aladinViz"></div>
       </div>
     </div>
-  </div>
+
+  </div> <!-- /.row -->
 
   <div class="row">
+
+    <!-- Area Chart -->
     <div class="col-xl-8 mb-4">
-      <!-- Area Chart -->
       <div class="card shadow h-100">
         <div class="card-header py-3 clearfix" id="lightcurveHeader">
           <h6 class="m-0 font-weight-bold text-primary float-left">Light Curve</h6>
@@ -218,10 +200,34 @@
         </div>
       </div>
     </div>
+
+    <!-- DataTable External Search Results -->
     <div class="col-xl-4 mb-4">
-      {% include "comments_component.html" %}
+      <div class="card shadow mb-4 h-100">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">External Search Results (1 arcmin)</h6>
+        </div>
+        <div class="card-body small">
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered table-striped table-hover" id="externalResultsTable"
+              width="100%" cellspacing="0" data-server-side="false"
+              data-ajax="{% url 'vast_pipeline:api_utils-simbad-ned-search' %}?coord={{ source.wavg_ra_hms }}{{ source.wavg_dec_dms }}&format=datatables&keep=otype_long,database">
+              <thead>
+                <tr>
+                  <th data-data="object_name">ID</th>
+                  <th data-data="separation_arcsec">Dist (arcsec)</th>
+                  <th data-data="otype">Type</th>
+                  <th data-data="ra_hms">RA (hms)</th>
+                  <th data-data="dec_dms">Dec (dms)</th>
+                </tr>
+              </thead>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
+
+  </div> <!-- /.row -->
 
   <!-- Postage stamps -->
   <div class="card shadow mb-4">
@@ -325,8 +331,7 @@
     <div id="alert_placeholder"></div>
   </div>
 
-</div>
-<!-- /.container-fluid -->
+</div> <!-- /.container-fluid -->
 
 {% endblock content %}
 

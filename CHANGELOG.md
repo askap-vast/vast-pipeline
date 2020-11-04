@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Added the ability to run a pipeline run through the UI [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
 - Added `Queued` status to the list of pipeline run statuses [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
 - Added the dependancy `django-q` that enables scheduled tasks to be processed [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
+- Added source tagging [#396](https://github.com/askap-vast/vast-pipeline/pull/396).
 - Added link to measurement table from the lightcurve to source detail page [#387](https://github.com/askap-vast/vast-pipeline/pull/387).
 - Added 'epoch based' parameter to pipeline run detail page [#387](https://github.com/askap-vast/vast-pipeline/pull/387).
 - Adds basic commenting functionality for sources, measurements, images, and runs [#368](https://github.com/askap-vast/vast-pipeline/pull/368).
@@ -54,6 +55,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Expanded `README.md` to include `DjangoQ` and UI job scheduling information [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
 - Shifted alerts location to the top right [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
 - Log file card now expanded by default on pipeline run detail page [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
+- Changed user comments on source detail pages to incorporate tagging feature [#396](https://github.com/askap-vast/vast-pipeline/pull/396).
 - Updated RACS HiPS URL in Aladin [#399](https://github.com/askap-vast/vast-pipeline/pull/399).
 - Changed home page changelog space to welcome/help messages [#387](https://github.com/askap-vast/vast-pipeline/pull/387).
 - The `comment` field in the Run model has been renamed to `description`. A `comment` many-to-many relationship was added to permit user comments on Run instances [#368](https://github.com/askap-vast/vast-pipeline/pull/368).
@@ -99,6 +101,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### List of PRs
 
 - [#404](https://github.com/askap-vast/vast-pipeline/pull/404) feat, dep, model: Completed schedule pipe run.
+- [#396](https://github.com/askap-vast/vast-pipeline/pull/396) feat: added source tagging.
 - [#398](https://github.com/askap-vast/vast-pipeline/pull/398) fix: gunicorn request limit
 - [#399](https://github.com/askap-vast/vast-pipeline/pull/399) fix: Updated RACS HiPS path.
 - [#391](https://github.com/askap-vast/vast-pipeline/pull/391) fix: Vs metric fix and removed pipeline/plots.py.

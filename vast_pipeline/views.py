@@ -59,7 +59,7 @@ from vast_pipeline.serializers import (
 from vast_pipeline.utils.utils import deg2dms, deg2hms, parse_coord, equ2gal
 from vast_pipeline.utils.view import generate_colsfields, get_skyregions_collection
 from vast_pipeline.management.commands.initpiperun import initialise_run
-from vast_pipeline.forms import PipelineRunForm, CommentForm
+from vast_pipeline.forms import PipelineRunForm, CommentForm, TagWithCommentsForm
 from vast_pipeline.pipeline.main import Pipeline
 from vast_pipeline.pipeline.utils import get_create_p_run
 
@@ -1060,6 +1060,12 @@ class SourceViewSet(ModelViewSet):
         if 'no_siblings' in self.request.query_params:
             qry_dict['n_sibl'] = 0
 
+        if 'tags_include' in self.request.query_params:
+            qry_dict['tags'] = self.request.query_params['tags_include']
+
+        if 'tags_exclude' in self.request.query_params:
+            qs = qs.exclude(tags=self.request.query_params['tags_exclude'])
+
         if qry_dict:
             qs = qs.filter(**qry_dict)
 
@@ -1357,10 +1363,52 @@ def SourceDetail(request, pk):
     if settings.BASE_URL and settings.BASE_URL != '':
         context['base_url'] = settings.BASE_URL.strip('/')
 
-    context["comment_form"], context["comments"] = _process_comment_form_get_comments(
-        request,
-        Source.objects.get(id=source["id"])
+    # process comments and tags
+    source_obj = Source.objects.get(id=source["id"])
+    if request.method == "POST":
+        tag_comment_form = TagWithCommentsForm(request.POST)
+        if tag_comment_form.is_valid():
+            comment_text = tag_comment_form.cleaned_data["comment"]
+
+            # process tags
+            tag_set = set(tag_comment_form.cleaned_data["tags"])
+            current_tag_set = set(source_obj.tags.get_tag_list())
+            new_tags = tag_set - current_tag_set
+            removed_tags = current_tag_set - tag_set
+            # create messages to be appended to any comments to record tag changes
+            new_tags_message = (
+                f"[Added {', '.join(new_tags)} tag{'s' if len(new_tags) > 1 else ''}]"
+                if new_tags
+                else ""
+            )
+            removed_tags_message = (
+                f"[Removed {', '.join(removed_tags)} tag{'s' if len(removed_tags) > 1 else ''}]"
+                if removed_tags
+                else ""
+            )
+            tags_message = " ".join([new_tags_message, removed_tags_message]).strip()
+            comment_text = f"{comment_text} {tags_message}".strip()
+
+            # create the Comment only if a comment was made or if tags were changed
+            if comment_text:
+                comment_obj = Comment(
+                    author=request.user, comment=comment_text, content_object=source_obj,
+                )
+                comment_obj.save()
+                source_obj.tags.set_tag_list(tag_set)
+                source_obj.save()
+
+    tag_comment_form = TagWithCommentsForm(
+        initial={"tags": source_obj.tags.get_tag_string()}
     )
+    comment_target_type = ContentType.objects.get_for_model(source_obj)
+    comments = Comment.objects.filter(
+        content_type__pk=comment_target_type.id, object_id=source_obj.id,
+    ).order_by("datetime")
+
+    context["comment_form"] = tag_comment_form
+    context["comments"] = comments
+
     return render(request, 'source_detail.html', context)
 
 

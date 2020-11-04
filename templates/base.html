@@ -172,7 +172,7 @@
                     {% if 'avatar_url' in ass.extra_data %}
                     <img class="img-profile rounded-circle" src="{{ ass.extra_data.avatar_url }}" alt="">
                     {% else %}
-                    <img class="img-profile rounded-circle" src="https://img.icons8.com/ios/50/000000/user-male-circle.png" alt="">
+                    <img class="img-profile rounded-circle" src="{% static 'img/user-32.png' %}" width="32" height="32" alt="">
                     {% endif %}
                   {% endif %}
 

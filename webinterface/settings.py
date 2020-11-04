@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'social_django',
     'crispy_forms',
     'django_q',
+    'tagulous',
     # pipeline app and others
     'vast_pipeline',
 ] + env('EXTRA_APPS', cast=list, default=[])
