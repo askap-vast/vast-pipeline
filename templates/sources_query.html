@@ -7,6 +7,7 @@
   <link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'vendor/datatables-buttons/buttons.bootstrap4.min.css' %}" />
   <link rel="stylesheet" href="{% static 'css/collapse-box.min.css' %}">
+  <link rel="stylesheet" href="{% static 'tagulous/lib/select2-4/css/select2.min.css' %}" type="text/css" media="all">
 {% endblock head %}
 
 {% block breadcrumb %}
@@ -406,6 +407,25 @@
           <div class="row align-items-center">
             <div class="col-lg-6">
               <div class="form-group form-row align-items-center">
+                <label for="includeTags" class="col-3 col-form-label font-weight-bold text-gray-800">Include Tags <a href="#" data-toggle="tooltip" data-placement="top" title="Only return sources that have the given tags."><i class="fas fa-info-circle"></i></a></label>
+                <div class="col">
+                  <input type="text" id="includeTags" data-tag-url="{% url 'vast_pipeline:source_tags_autocomplete' %}" data-tagulous="true" autocomplete="off">
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-6">
+              <div class="form-group form-row align-items-center">
+                <label for="excludeTags" class="col-3 col-form-label font-weight-bold text-gray-800">Exclude Tags <a href="#" data-toggle="tooltip" data-placement="top" title="Only return sources that do not have the given tags."><i class="fas fa-info-circle"></i></a></label>
+                <div class="col">
+                  <input type="text" id="excludeTags" data-tag-url="{% url 'vast_pipeline:source_tags_autocomplete' %}" data-tagulous="true" autocomplete="off">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row align-items-center">
+            <div class="col-lg-6">
+              <div class="form-group form-row align-items-center">
                 <label for="" class="col-3 col-form-label font-weight-bold text-gray-800">Source Type</label>
                 <div class="col">
                   <div class="form-check form-check-inline">
@@ -491,9 +511,33 @@
 <script src="{% static 'vendor/datatables-buttons/buttons.flash.min.js' %}"></script>
 <script src="{% static 'vendor/jszip/jszip.min.js' %}"></script>
 
+<script>
+  // configure the tag field options by setting the data-tag-options attribute
+  let tagFieldOptions = {
+    "case_sensitive": false,
+    "force_lowercase": false,
+    "max_count": 0,
+    "space_delimiter": false,
+    "tree": false,
+    "autocomplete_limit": 100,
+    "autocomplete_settings": {
+      "width": "100%"
+    },
+    "required": false
+  };
+  $("#includeTags").data("tag-options", tagFieldOptions);
+  $("#excludeTags").data("tag-options", tagFieldOptions);
+</script>
+
+<script src="{% static 'tagulous/lib/select2-4/js/select2.full.min.js' %}" type="text/javascript"></script>
+<script src="{% static 'tagulous/tagulous.js' %}" type="text/javascript"></script>
+<script src="{% static 'tagulous/adaptor/select2-4.js' %}" type="text/javascript"></script>
+
 <!-- Page level custom scripts -->
 {{ datatable|json_script:"datatable-conf" }}
 <script src="{% static 'js/datatables-pipeline.min.js' %}"></script>
+
+
 
 <script type='text/javascript'>
     let radio_buttons = [

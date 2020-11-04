@@ -9,6 +9,7 @@ import pandas as pd
 
 from django.conf import settings
 from django.db import transaction
+from django.contrib.auth.models import User
 
 from importlib.util import spec_from_file_location, module_from_spec
 
@@ -94,10 +95,19 @@ class Pipeline():
 
         return mod
 
-    def validate_cfg(self):
+    def validate_cfg(self, user=None):
         """
         validate a pipeline run configuration against default parameters and
         for different settings (e.g. force extraction)
+
+        Parameters
+        ----------
+        user : User, optional
+            The User of the request if made through the UI. Defaults to None.
+
+        Returns
+        -------
+        None
         """
         # validate every config from the config template
         config_keys = [k for k in dir(self.config) if k.isupper()]
@@ -117,13 +127,36 @@ class Pipeline():
                 )
 
         # do sanity checks
-        if (getattr(self.config, 'IMAGE_FILES') and
+        if (
+            getattr(self.config, 'IMAGE_FILES') and
             getattr(self.config, 'SELAVY_FILES') and
-            getattr(self.config, 'NOISE_FILES')):
+            getattr(self.config, 'NOISE_FILES')
+        ):
             img_f_list = getattr(self.config, 'IMAGE_FILES')
             img_f_list = [
                 item for sublist in img_f_list.values() for item in sublist
             ] # creates a flat list of all the dictionary value lists
+            len_img_f_list = len(img_f_list)
+            # maximum number of images check. If the user is `None` then it
+            # means the run was initiated through the command line hence no
+            # check is performed.
+            if (
+                user is not None
+                and len_img_f_list > settings.MAX_PIPERUN_IMAGES
+            ):
+                if user.is_staff:
+                    logger.warning(
+                        'Maximum number of images'
+                        f' ({settings.MAX_PIPERUN_IMAGES}) rule bypassed with'
+                        ' admin status.'
+                    )
+                else:
+                    raise PipelineConfigError(
+                        f'The number of images entered ({len_img_f_list})'
+                        ' exceeds the maximum number of images currently'
+                        f' allowed ({settings.MAX_PIPERUN_IMAGES}). Please ask'
+                        ' an administrator for advice on processing your run'
+                    )
             for lst in ['IMAGE_FILES', 'SELAVY_FILES', 'NOISE_FILES']:
                 cfg_list = getattr(self.config, lst)
                 cfg_list = [
@@ -135,7 +168,7 @@ class Pipeline():
                     raise PipelineConfigError(f'Duplicated files in: \n{lst}')
 
                 # check if nr of files match nr of images
-                if len(cfg_list) != len(img_f_list):
+                if len(cfg_list) != len_img_f_list:
                     raise PipelineConfigError(
                         f'Number of {lst} files not matching number of images'
                     )
@@ -184,7 +217,7 @@ class Pipeline():
                     'Duplicated files in: BACKGROUND_FILES list'
                 )
             # check if provided more background files than images
-            if len(backgrd_f_list) != len(img_f_list):
+            if len(backgrd_f_list) != len_img_f_list:
                 raise PipelineConfigError((
                     'Number of BACKGROUND_FILES different from number of'
                     ' IMAGE_FILES files'

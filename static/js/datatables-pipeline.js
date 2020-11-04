@@ -451,6 +451,16 @@ $(document).ready(function() {
     if (neighbourRadiusUnit.value) {
       qry_url = qry_url + "&NeighbourUnit=" + neighbourRadiusUnit.value;
     };
+
+    let tagsInclude = $("input#includeTags ~ select").select2("data");
+    if (tagsInclude.length > 0) {
+      qry_url += "&tags_include=" + tagsInclude.map(x => x.text).join(",");
+    }
+    let tagsExclude = $("input#excludeTags ~ select").select2("data");
+    if (tagsExclude.length > 0) {
+      qry_url += "&tags_exclude=" + tagsExclude.map(x => x.text).join(",");
+    }
+
     if (document.getElementById("newSourceSelect").checked) {
       qry_url = qry_url + "&newsrc";
     }
@@ -491,6 +501,12 @@ $(document).ready(function() {
     };
     document.getElementById("newSourceSelect").checked = false;
     document.getElementById("containsSiblingsSelect").checked = false;
+
+    // clear tag select2 elements
+    let select2Ids = ["includeTags", "excludeTags"];
+    for (const elementId of select2Ids) {
+      $("input#" + elementId + " ~ select").val(null).trigger("change");
+    }
     // clear validation classes
     $("#objectNameInput").removeClass(["is-valid", "is-invalid"]);
     $("#coordInput").removeClass(["is-valid", "is-invalid"]);

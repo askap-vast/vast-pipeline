@@ -8,6 +8,8 @@ dill==0.3.1.1
 django==3.0.7
 django-crispy-forms==1.9.2
 django-environ==0.4.5
+django-q==1.3.3
+django-tagulous @ git+https://github.com/marxide/django-tagulous.git@65cbbf703c4af9c1287681788a27217535c44921
 djangorestframework-datatables==0.5.1
 djangorestframework==3.11.0
 jinja2==2.11.2
