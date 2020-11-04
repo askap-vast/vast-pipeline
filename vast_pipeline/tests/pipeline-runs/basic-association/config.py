@@ -90,6 +90,18 @@ ASSOCIATION_RADIUS = 10.0  # arcsec, basic and advanced only
 ASSOCIATION_DE_RUITER_RADIUS = 5.68 # unitless, deruiter only
 ASSOCIATION_BEAMWIDTH_LIMIT = 1.5   # multiplicative factor, deruiter only
 
+# If ASSOCIATION_PARALLEL is set to 'True' then the input images will be split into
+# 'sky region groups' and association run on these groups in parallel and combined at the end.
+# Setting to 'True' is best used when you have a large dataset with multiple patches of the sky,
+# for smaller searches of only 3 or below sky regions it is recommened to keep as 'False'.
+ASSOCIATION_PARALLEL = False
+
+# If images have been submitted in epoch dictionaries then an attempt will be made by the pipeline to
+# remove duplicate sources. To do this a crossmatch is made between catalgoues to match 'the same'
+# measurements from different catalogues. This parameter governs the distance for which a match is made.
+# Default is 2.5 arcsec (which is typically 1 pixel in ASKAP images).
+ASSOCIATION_EPOCH_DUPLICATE_RADIUS = 2.5  # arcsec
+
 ###
 # OPTIONS THAT CONTROL THE NEW SOURCE ANALYSIS
 ###
