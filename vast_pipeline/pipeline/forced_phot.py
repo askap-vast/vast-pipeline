@@ -594,7 +594,7 @@ class ForcedPhot:
             (d * kernel / n**2).sum() /
             (kernel**2 / n**2).sum()
         )
-        flux_err = (n * kernel / n**2).sum() / (kernel**2 / n**2).sum()
+        flux_err = (n * kernel / n ** 2).sum() / (kernel / n ** 2).sum()
 
         chisq = (((d - kernel * flux) / n)**2).sum()
 
@@ -926,7 +926,7 @@ class ForcedPhot:
             (kernel**2 / ns**2).sum()
         )
         flux_err = (
-            (ns * kernel / ns**2).sum() / (kernel**2 / ns**2).sum()
+            (ns * kernel / ns ** 2).sum() / (kernel / ns ** 2).sum()
         )
         chisq = (((im.data - flux * kernel) / ns.data)**2).sum()
         dof = np.prod(xx.shape) - 1
