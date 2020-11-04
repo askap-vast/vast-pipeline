@@ -588,7 +588,7 @@ def groupby_funcs(df):
     ))
     d['related_list'] = list_uniq_related if list_uniq_related else -1
 
-    return pd.Series(d)
+    return pd.Series(d).fillna(value={"v_int": 0.0, "v_peak": 0.0})
 
 
 def parallel_groupby(df):

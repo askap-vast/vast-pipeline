@@ -141,10 +141,10 @@
                 </strong>{% if source.new %}{{ source.new_high_sigma|floatformat:2 }}{% else %}N/A{% endif %}
               </p>
               <p>
-                <strong>Max Vs metric (peak): </strong>{{ source.vs_max_peak|floatformat:2 }}<br>
-                <strong>Max Vs metric (int): </strong>{{ source.vs_max_int|floatformat:2 }}<br>
-                <strong>Max |m| metric (peak): </strong>{{ source.m_abs_max_peak|floatformat:2 }}<br>
-                <strong>Max |m| metric (int): </strong>{{ source.m_abs_max_int|floatformat:2 }}
+                <strong>Max Vs metric (peak): </strong>{{ source.vs_significant_max_peak|floatformat:2 }}<br>
+                <strong>Max Vs metric (int): </strong>{{ source.vs_significant_max_int|floatformat:2 }}<br>
+                <strong>Max |m| metric (peak): </strong>{{ source.m_abs_significant_max_peak|floatformat:2 }}<br>
+                <strong>Max |m| metric (int): </strong>{{ source.m_abs_significant_max_int|floatformat:2 }}
               </p>
               <p>
                 <a href="#lightcurveHeader">Lightcurve</a><br>
