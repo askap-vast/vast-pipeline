@@ -13,8 +13,8 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('contenttypes', '0002_remove_content_type_name'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ('contenttypes', '0002_remove_content_type_name'),
     ]
 
     operations = [
@@ -135,7 +135,7 @@ class Migration(migrations.Migration):
                 ('description', models.CharField(blank=True, help_text='A short description of the pipeline run.', max_length=240)),
                 ('time', models.DateTimeField(auto_now=True, help_text='Datetime of a pipeline run.')),
                 ('path', models.FilePathField(help_text='path to the pipeline run', max_length=200)),
-                ('status', models.CharField(choices=[('INI', 'Initialised'), ('RUN', 'Running'), ('END', 'Completed'), ('ERR', 'Error')], default='INI', help_text='Status of the pipeline run.', max_length=3)),
+                ('status', models.CharField(choices=[('INI', 'Initialised'), ('QUE', 'Queued'), ('RUN', 'Running'), ('END', 'Completed'), ('ERR', 'Error')], default='INI', help_text='Status of the pipeline run.', max_length=3)),
                 ('n_images', models.IntegerField(default=0, help_text='number of images processed in this run')),
                 ('n_sources', models.IntegerField(default=0, help_text='number of sources extracted in this run')),
                 ('n_selavy_measurements', models.IntegerField(default=0, help_text='number of selavy measurements in this run')),
