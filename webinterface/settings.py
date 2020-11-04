@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'rest_framework_datatables',
     'social_django',
     'crispy_forms',
+    'django_q',
+    'tagulous',
     # pipeline app and others
     'vast_pipeline',
 ] + env('EXTRA_APPS', cast=list, default=[])
@@ -144,6 +146,29 @@ CRISPY_TEMPLATE_PACK = "bootstrap4"
 
 DATABASES = {
     'default': env.db()
+}
+
+# Cache (necessary to run pipeline jobs from UI)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'pipeline_cache_table',
+    }
+}
+
+# Django Queue Cluster
+Q_CLUSTER = {
+    'name': 'VastPipeline',
+    'workers': 3,
+    'timeout': 86400,
+    'queue_limit': 6,
+    'ack_failures': True,
+    'bulk': 10,
+    'orm': 'default',# same as above in DATABASES but can be changed
+    'label': 'Django Q tasks',
+    'daemonize_workers': False,
+    'recycle': 100,
+    'retry': 86402
 }
 
 # REST framework settings
@@ -310,7 +335,10 @@ PIPE_RUN_CONFIG_DEFAULTS = {
 }
 
 # default max concurrent pipeline runs
-MAX_PIPELINE_RUNS = 3
+MAX_PIPELINE_RUNS = env('MAX_PIPELINE_RUNS', cast=int, default=3)
+
+# maximum number of images for non-admin runs
+MAX_PIPERUN_IMAGES = env('MAX_PIPERUN_IMAGES', cast=int, default=200)
 
 # pipeline maintainance message/banner
 PIPELINE_MAINTAINANCE_MESSAGE = env('PIPELINE_MAINTAINANCE_MESSAGE', cast=str, default=None)

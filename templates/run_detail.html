@@ -33,8 +33,27 @@
 <div class="container-fluid">
 
   <!-- Page Heading -->
-  <div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-2 text-gray-800">Pipeline Run: {{ p_run.name }}</h1>
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+      <div>
+        <h1 class="h3 mb-2 text-gray-800">Pipeline Run: {{ p_run.name }}</h1>
+      </div>
+      {% if user.get_username == p_run.user or user.is_staff %}
+        <a id="newPipeRunButton" class="btn btn-sm
+          {% if p_run.status == 'Completed' %}
+            btn-danger
+          {% else %}
+            btn-primary
+          {% endif %} btn-icon-split shadow-sm
+          {% if p_run.status == 'Running' or p_run.status == 'Queued' %}
+            disabled
+          {% endif %}" href="#" data-toggle="modal" data-target="#runPipeModal">
+          <span class="icon text-white-600">
+            <i class="fas fa-rocket"></i>
+          </span>
+          <span class="text">{% if p_run.status == 'Completed' %}Re-{% endif %}Run Pipeline</span>
+        </a>
+      {% endif %}
+
   </div>
 
   <div class="row">
@@ -55,7 +74,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Extracted Sources -->
     <div class="col-xl-3 col-md-6 mb-4">
       <div class="card border-left-info shadow h-100 py-2">
@@ -73,7 +92,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Nr sources -->
     <div class="col-xl-3 col-md-6 mb-4">
       <div class="card border-left-warning shadow h-100 py-2">
@@ -123,7 +142,7 @@
           {% if p_run.user %}
             {{ p_run.user }}
           {% else %}
-            None (executed from command line)
+            None (created from the command line)
           {% endif %}</p>
           <p><strong>Processing Datetime: </strong>{{ p_run.time }}</p>
           <p><strong>Epoch based: </strong>{{ p_run.epoch_based }}</p>
@@ -170,7 +189,7 @@
             </a>
             <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownRunConfig">
               <div class="dropdown-header">Actions:</div>
-              <a id="editConfig" class="dropdown-item" href="#">Toggle on/off Config Edit</a>
+              <a id="editConfig" class="dropdown-item" href="#configFile">Toggle on/off Config Edit</a>
               <a class="dropdown-item" href="#" data-toggle="modal" data-target="#feedbackModal">Validate Config</a>
               <form id="runConfigForm" action="{% url 'vast_pipeline:api_runcfg-write' p_run.id %}" method="post" novalidate>
                 {% csrf_token %}
@@ -181,7 +200,7 @@
           </div>
         </div>
         <div class="card-body">
-          <pre id="runConfigText" class="pre-scrollable" contenteditable="false"><code id="runConfigTextCode" class="language-python line-numbers" style="white-space: pre">{{ p_run.config_txt }}</code></pre>
+          <pre id="runConfigText" class="pre-scrollable" style="max-height: 50vh" contenteditable="false"><code id="runConfigTextCode" class="language-python line-numbers" style="white-space: pre">{{ p_run.config_txt }}</code></pre>
         </div>
       </div>
     </div>
@@ -190,18 +209,18 @@
       {% include "comments_component.html" %}
     </div>
   </div>
-  
+
   <div class="row">
     <div class="col-lg-12">
       <!-- log file card -->
       <div class="card shadow mb-4">
         <h6 class="card-header m-0 font-weight-bold text-primary" id="logFile">
-          <a data-toggle="collapse" href="#collapseLogCard" aria-expanded="true" aria-controls="collapseLogCard" id="logHeader" class="collapsed d-block">
+          <a data-toggle="collapse" href="#collapseLogCard" aria-expanded="true" aria-controls="collapseLogCard" id="logHeader" class="d-block">
             <i class="fa fa-chevron-down pull-right"></i>
             Log File
           </a>
         </h6>
-        <div class="collapse" id="collapseLogCard">
+        <div class="collapse show" id="collapseLogCard">
           <div class="card-body">
             <pre class="pre-scrollable"><code>{% if p_run.log_txt %}{{ p_run.log_txt }}{% else %}N/A{% endif %}</code></pre>
           </div>
@@ -209,7 +228,7 @@
       </div>
     </div>
   </div>
-  
+
   <!-- image table -->
   <div class="row">
     <div class="col">
@@ -246,7 +265,7 @@
       </div>
     </div>
   </div>
-  
+
   <!-- Measurements table -->
   <div class="row">
     <div class="col">
@@ -295,7 +314,7 @@
   <div id="feedbackModalDialog" class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Feedback</h5>
+        <h5 class="modal-title font-weight-bold" id="exampleModalLabel">Feedback</h5>
         <button class="close" type="button" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">×</span>
         </button>
@@ -308,7 +327,59 @@
     </div>
   </div>
 </div>
+
+<!-- Run pipeline modal-->
+<div class="modal fade" id="runPipeModal" tabindex="-1" role="dialog" aria-labelledby="runPipeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title font-weight-bold" id="runPipeModalLabel">Run {{ p_run.name }}</h5>
+        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="runPipeForm" action="{% url 'vast_pipeline:api_pipe_runs-run' p_run.id %}" method="post" novalidate>
+          {% csrf_token %}
+          <p>Are you sure you want to schedule '{{ p_run.name }}' to be processed?</p>
+          <p>
+            Note that, currently, 'arrow' files can not be generated by the pipeline when running through the UI.
+            If you have selected this option, please contact a pipeline admin to complete this step for you after a successful completion of your run.
+          </p>
+          {% if p_run.status == 'Completed' %}
+            <p><b>Warning! This run is marked as completed, all previous results will be removed.</b></p>
+          {% endif %}
+          Debug log output:
+          <div class="btn-group btn-group-toggle" data-toggle="buttons" style="margin-top: 1rem; margin-bottom: 1rem;">
+            <label class="btn btn-sm btn-primary">
+              <input type="radio" name="debug" id="debugOff" autocomplete="off" value='debugOff' checked> Off
+            </label>
+            <label class="btn btn-sm btn-primary ">
+              <input type="radio" name="debug" id="debugOn" autocomplete="off" value='debugOn'> On
+            </label>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary btn-icon-split" type="button" data-dismiss="modal">
+              <span class="icon">
+                <i class="fa fa-window-close"></i>
+              </span>
+              <span class="text">Cancel</span>
+            </button>
+            <button id="createPipeRun" class="btn btn-success btn-icon-split" type="submit">
+              <span class="icon">
+                <i class="fas fa-rocket fa-sm"></i>
+              </span>
+              <span class="text">Schedule Run</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock modal %}
+
 
 
 {% block custom_page_scripts %}

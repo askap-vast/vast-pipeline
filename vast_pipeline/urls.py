@@ -1,7 +1,9 @@
 from django.urls import include, path, re_path, register_converter
 from rest_framework.routers import DefaultRouter
+import tagulous.views
 
-from . import views, converters
+from vast_pipeline import views, converters
+from vast_pipeline.models import Source
 
 
 app_name = 'vast_pipeline'
@@ -38,6 +40,12 @@ urlpatterns = [
     path('sources/query/', views.SourceQuery, name='source_query'),
     path('sources/<int:pk>/', views.SourceDetail, name='source_detail'),
     path('sources/favs/', views.UserSourceFavsList, name='source_favs'),
+    path(
+        "sources/tags/autocomplete/",
+        tagulous.views.autocomplete_login,
+        kwargs={"tag_model": Source.tags.tag_model},
+        name="source_tags_autocomplete",
+    ),
     path('cutout/<str:measurement_name>/', views.ImageCutout.as_view(), name='cutout'),
     path('cutout/<str:measurement_name>/<str:size>/', views.ImageCutout.as_view(), name='cutout'),
     path(
