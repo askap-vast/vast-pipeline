@@ -52,6 +52,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Bumped some npm package versions to address dependabot security alerts [#411](https://github.com/askap-vast/vast-pipeline/pull/411).
 - Expanded `README.md` to include `DjangoQ` and UI job scheduling information [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
 - Shifted alerts location to the top right [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
 - Log file card now expanded by default on pipeline run detail page [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
@@ -101,6 +102,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#411](https://github.com/askap-vast/vast-pipeline/pull/411) fix: updated npm deps to fix security vulnerabilities.
 - [#402](https://github.com/askap-vast/vast-pipeline/pull/402) fix: Fixed rms value calculation in non-cluster forced extractions.
 - [#404](https://github.com/askap-vast/vast-pipeline/pull/404) feat, dep, model: Completed schedule pipe run.
 - [#396](https://github.com/askap-vast/vast-pipeline/pull/396) feat: added source tagging.
