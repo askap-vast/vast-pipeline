@@ -128,7 +128,7 @@ $(document).ready(function() {
             "targets": 3,
             "data": "image",
             "render": function ( data, type, row, meta ) {
-              return '<a href="' + img_url + row[17] + '"target="_blank">' + row[3] + '</a>';
+              return '<a href="' + img_url + row[19] + '"target="_blank">' + row[3] + '</a>';
             }
           },
           {
@@ -168,48 +168,62 @@ $(document).ready(function() {
           },
           {
             "targets": 9,
-            "data": "flux_int",
+            "data": "flux_peak",
             "render": function ( data, type, row, meta ) {
                 return (row[9]).toFixed(3);
             }
           },
           {
             "targets": 10,
-            "data": "flux_int_err",
+            "data": "flux_peak_err",
             "render": function ( data, type, row, meta ) {
                 return (row[10]).toFixed(3);
             }
           },
           {
             "targets": 11,
-            "data": "flux_peak",
+            "data": "flux_peak_isl_ratio",
             "render": function ( data, type, row, meta ) {
-                return (row[11]).toFixed(3);
+                return (row[11]).toFixed(2);
             }
           },
           {
             "targets": 12,
-            "data": "flux_peak_err",
+            "data": "flux_int",
             "render": function ( data, type, row, meta ) {
                 return (row[12]).toFixed(3);
             }
           },
           {
             "targets": 13,
-            "data": "local_rms",
+            "data": "flux_int_err",
             "render": function ( data, type, row, meta ) {
-                return (row[13]).toFixed(2);
+                return (row[13]).toFixed(3);
             }
           },
           {
             "targets": 14,
-            "data": "snr",
+            "data": "flux_int_isl_ratio",
             "render": function ( data, type, row, meta ) {
                 return (row[14]).toFixed(2);
             }
           },
           {
-            "targets": 17,
+            "targets": 15,
+            "data": "local_rms",
+            "render": function ( data, type, row, meta ) {
+                return (row[15]).toFixed(2);
+            }
+          },
+          {
+            "targets": 16,
+            "data": "snr",
+            "render": function ( data, type, row, meta ) {
+                return (row[16]).toFixed(2);
+            }
+          },
+          {
+            "targets": 19,
             "searchable": false,
             "visible": false
           }
@@ -297,14 +311,41 @@ $(document).ready(function() {
     if (unit.value) {
         qry_url = qry_url + "&radiusunit=" + unit.value
     }
-    let flux_type = document.getElementById("aveFluxSelect");
-    let flux_min = document.getElementById("fluxMinSelect");
-    let flux_max = document.getElementById("fluxMaxSelect");
-    if (flux_min.value) {
-      qry_url = qry_url + "&min_" + flux_type.value + "=" + flux_min.value;
+    let avg_flux_type = document.getElementById("aveFluxSelect");
+    let avg_flux_min = document.getElementById("avgFluxMinSelect");
+    let avg_flux_max = document.getElementById("avgFluxMaxSelect");
+    if (avg_flux_min.value) {
+      qry_url = qry_url + "&min_" + avg_flux_type.value + "=" + avg_flux_min.value;
     };
-    if (flux_max.value) {
-      qry_url = qry_url + "&max_" + flux_type.value + "=" + flux_max.value;
+    if (avg_flux_max.value) {
+      qry_url = qry_url + "&max_" + avg_flux_type.value + "=" + avg_flux_max.value;
+    };
+    let min_flux_type = document.getElementById("minFluxSelect");
+    let min_flux_min = document.getElementById("fluxMinMinSelect");
+    let min_flux_max = document.getElementById("fluxMaxMinSelect");
+    if (min_flux_min.value) {
+      qry_url = qry_url + "&min_" + min_flux_type.value + "=" + min_flux_min.value;
+    };
+    if (min_flux_max.value) {
+      qry_url = qry_url + "&max_" + min_flux_type.value + "=" + min_flux_max.value;
+    };
+    let max_flux_type = document.getElementById("maxFluxSelect");
+    let max_flux_min = document.getElementById("fluxMinMaxSelect");
+    let max_flux_max = document.getElementById("fluxMaxMaxSelect");
+    if (max_flux_min.value) {
+      qry_url = qry_url + "&min_" + max_flux_type.value + "=" + max_flux_min.value;
+    };
+    if (max_flux_max.value) {
+      qry_url = qry_url + "&max_" + max_flux_type.value + "=" + max_flux_max.value;
+    };
+    let isl_ratio_flux_type = document.getElementById("fluxIslSelect");
+    let isl_ratio_min = document.getElementById("fluxIslMinSelect");
+    let isl_ratio_max = document.getElementById("fluxIslMaxSelect");
+    if (isl_ratio_min.value) {
+      qry_url = qry_url + "&min_" + isl_ratio_flux_type.value + "=" + isl_ratio_min.value;
+    };
+    if (isl_ratio_max.value) {
+      qry_url = qry_url + "&max_" + isl_ratio_flux_type.value + "=" + isl_ratio_max.value;
     };
     let var_v_type = document.getElementById("varVMetricSelect");
     let var_v_min = document.getElementById("varVMinSelect");
@@ -410,6 +451,16 @@ $(document).ready(function() {
     if (neighbourRadiusUnit.value) {
       qry_url = qry_url + "&NeighbourUnit=" + neighbourRadiusUnit.value;
     };
+
+    let tagsInclude = $("input#includeTags ~ select").select2("data");
+    if (tagsInclude.length > 0) {
+      qry_url += "&tags_include=" + tagsInclude.map(x => x.text).join(",");
+    }
+    let tagsExclude = $("input#excludeTags ~ select").select2("data");
+    if (tagsExclude.length > 0) {
+      qry_url += "&tags_exclude=" + tagsExclude.map(x => x.text).join(",");
+    }
+
     if (document.getElementById("newSourceSelect").checked) {
       qry_url = qry_url + "&newsrc";
     }
@@ -442,13 +493,15 @@ $(document).ready(function() {
       return this.defaultSelected
     });
     let inputs = [
-      'fluxMinSelect', 'fluxMaxSelect', 'varVMinSelect', 'varVMaxSelect',
+      'avgFluxMinSelect', 'avgFluxMaxSelect', 'varVMinSelect', 'varVMaxSelect',
+      'fluxIslMinSelect', 'fluxIslMaxSelect', 'fluxMinMinSelect', 'fluxMinMaxSelect',
       'varEtaMinSelect', 'varEtaMaxSelect', 'ForcedMinSelect', 'ForcedMaxSelect',
       'coordInput', 'radiusSelect', 'datapointMinSelect', 'datapointMaxSelect',
       'RelationsMinSelect', 'RelationsMaxSelect', 'SelavyMinSelect', 'SelavyMaxSelect',
       'NewSigmaMinSelect', 'NewSigmaMaxSelect', 'NeighbourMinSelect', 'NeighbourMaxSelect',
       'compactnessMinSelect', 'compactnessMaxSelect', 'objectNameInput', 'MinSnrMinSelect',
-      'MinSnrMaxSelect', 'MaxSnrMinSelect', 'MaxSnrMaxSelect', 'sourceSelectionSelect',
+      'MinSnrMaxSelect', 'MaxSnrMinSelect', 'MaxSnrMaxSelect', 'fluxMaxMinSelect',
+      'fluxMaxMaxSelect', 'sourceSelectionSelect',
       ];
     var input;
     for (input of inputs) {
@@ -456,6 +509,12 @@ $(document).ready(function() {
     };
     document.getElementById("newSourceSelect").checked = false;
     document.getElementById("containsSiblingsSelect").checked = false;
+
+    // clear tag select2 elements
+    let select2Ids = ["includeTags", "excludeTags"];
+    for (const elementId of select2Ids) {
+      $("input#" + elementId + " ~ select").val(null).trigger("change");
+    }
     // clear validation classes
     $("#objectNameInput").removeClass(["is-valid", "is-invalid"]);
     $("#coordInput").removeClass(["is-valid", "is-invalid"]);

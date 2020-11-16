@@ -1,7 +1,9 @@
 from django import forms
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Field, Layout, Submit
-from vast_pipeline.models import Comment, Run
+import tagulous.forms
+import tagulous.models
+from vast_pipeline.models import Comment, Source, Run
 
 
 class PipelineRunForm(forms.Form):
@@ -27,7 +29,7 @@ class PipelineRunForm(forms.Form):
     flux_perc_error = forms.FloatField()
     selavy_local_rms_zero_fill_value = forms.FloatField()
     use_condon_errors = forms.BooleanField(required=False)
-    create_measurements_arrow_file = forms.BooleanField(required=False)
+    create_measurements_arrow_files = forms.BooleanField(required=False)
     suppress_astropy_warnings = forms.BooleanField(required=False)
 
 
@@ -43,3 +45,26 @@ class CommentForm(forms.ModelForm):
             Field("comment", rows=2),
         )
         self.helper.add_input(Submit("submit", "Submit"))
+
+
+class TagWithCommentsForm(forms.Form):
+    comment = forms.CharField(required=False, widget=forms.Textarea())
+    tags = tagulous.forms.TagField(
+        required=False,
+        tag_options=tagulous.models.TagOptions(**Source.tags.tag_options.items()),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.layout = Layout(
+            Field("tags"),
+            Field(
+                "comment",
+                rows=2,
+                placeholder=(
+                    "Optional. If changing the tags, you should provide justification here."
+                ),
+            ),
+            Submit("submit", "Submit", css_class="btn-block"),
+        )
