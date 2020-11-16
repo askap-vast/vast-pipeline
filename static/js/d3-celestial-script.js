@@ -10,7 +10,7 @@ var config = {
   orientationfixed: true,  // Keep orientation angle the same as center[2]
   geopos: null,       // optional initial geographic position [lat,lon] in degrees,
                       // overrides center
-  follow: "zenith",   // on which coordinates to center the map, default: zenith, if location enabled,
+  follow: "center",   // on which coordinates to center the map, default: zenith, if location enabled,
                       // otherwise center
   zoomlevel: null,    // initial zoom level 0...zoomextend; 0|null = default, 1 = 100%, 0 < x <= zoomextend
   zoomextend: 10,     // maximum zoom level
