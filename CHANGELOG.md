@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added new fields to detail pages and source and measurement tables [#406](https://github.com/askap-vast/vast-pipeline/pull/406).
+- Added new fields to source query page (island flux ratio, min and max fluxes) [#406](https://github.com/askap-vast/vast-pipeline/pull/406).
+- Added min, max flux values to sources and agg min island flux ratio field [#406](https://github.com/askap-vast/vast-pipeline/pull/406).
+- Added island flux ratio column to measurements, component flux divided by total island flux (peak and int) [#406](https://github.com/askap-vast/vast-pipeline/pull/406).
 - Added a maximum number of images for runs through the UI [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
 - Added the ability to run a pipeline run through the UI [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
 - Added `Queued` status to the list of pipeline run statuses [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
@@ -52,6 +56,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Naming of average flux query fields to account for other min max flux fields [#406](https://github.com/askap-vast/vast-pipeline/pull/406).
 - Expanded `README.md` to include `DjangoQ` and UI job scheduling information [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
 - Shifted alerts location to the top right [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
 - Log file card now expanded by default on pipeline run detail page [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
@@ -101,6 +106,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#406](https://github.com/askap-vast/vast-pipeline/pull/406) feat, model: Added island flux ratio columns.
 - [#402](https://github.com/askap-vast/vast-pipeline/pull/402) fix: Fixed rms value calculation in non-cluster forced extractions.
 - [#404](https://github.com/askap-vast/vast-pipeline/pull/404) feat, dep, model: Completed schedule pipe run.
 - [#396](https://github.com/askap-vast/vast-pipeline/pull/396) feat: added source tagging.
