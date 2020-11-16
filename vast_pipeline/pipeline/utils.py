@@ -1223,6 +1223,43 @@ def create_measurements_arrow_file(p_run: Run) -> None:
     measurements.export_arrow(outname)
 
 
+def create_measurement_pairs_arrow_file(p_run: Run) -> None:
+    """
+    Creates a measurement_pairs.arrow file using the parquet outputs
+    of a pipeline run. Vaex is used to do the exporting to arrow to
+    ensure compatibility with Vaex.
+
+    Parameters
+    ----------
+    p_run: Run
+        Pipeline model instance.
+
+    Returns
+    -------
+    None
+    """
+    logger.info('Creating measurement_pairs.arrow for run %s.', p_run.name)
+
+    measurement_pairs_df = pd.read_parquet(
+        os.path.join(
+            p_run.path,
+            'measurement_pairs.parquet'
+        )
+    )
+
+    logger.debug('Optimising dataframe.')
+    measurement_pairs_df = optimize_ints(optimize_floats(measurement_pairs_df))
+
+    # use vaex to export to arrow
+    logger.debug("Loading to vaex.")
+    measurement_pairs_df = vaex.from_pandas(measurement_pairs_df)
+
+    logger.debug("Exporting to arrow.")
+    outname = os.path.join(p_run.path, 'measurement_pairs.arrow')
+
+    measurement_pairs_df.export_arrow(outname)
+
+
 def calculate_vs_metric(
     flux_a: float, flux_b: float, flux_err_a: float, flux_err_b: float
 ) -> float:

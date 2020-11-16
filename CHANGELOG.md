@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added ability to export measurement_pairs.parqyet as an arrow file [#393](https://github.com/askap-vast/vast-pipeline/pull/393).
 - Added new fields to detail pages and source and measurement tables [#406](https://github.com/askap-vast/vast-pipeline/pull/406).
 - Added new fields to source query page (island flux ratio, min and max fluxes) [#406](https://github.com/askap-vast/vast-pipeline/pull/406).
 - Added min, max flux values to sources and agg min island flux ratio field [#406](https://github.com/askap-vast/vast-pipeline/pull/406).
@@ -56,6 +57,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Changed config argument `CREATE_MEASUREMENTS_ARROW_FILE` -> `CREATE_MEASUREMENTS_ARROW_FILES` [#393](https://github.com/askap-vast/vast-pipeline/pull/393).
 - Naming of average flux query fields to account for other min max flux fields [#406](https://github.com/askap-vast/vast-pipeline/pull/406).
 - Expanded `README.md` to include `DjangoQ` and UI job scheduling information [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
 - Shifted alerts location to the top right [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
@@ -106,6 +108,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#393](https://github.com/askap-vast/vast-pipeline/pull/393) feat: Added measurement_pairs arrow export.
 - [#406](https://github.com/askap-vast/vast-pipeline/pull/406) feat, model: Added island flux ratio columns.
 - [#402](https://github.com/askap-vast/vast-pipeline/pull/402) fix: Fixed rms value calculation in non-cluster forced extractions.
 - [#404](https://github.com/askap-vast/vast-pipeline/pull/404) feat, dep, model: Completed schedule pipe run.

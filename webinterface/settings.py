@@ -330,7 +330,7 @@ PIPE_RUN_CONFIG_DEFAULTS = {
     'flux_perc_error': 0,
     'use_condon_errors': True,
     'selavy_local_rms_zero_fill_value': 0.2,
-    'create_measurements_arrow_file': False,
+    'create_measurements_arrow_files': False,
     'suppress_astropy_warnings': True
 }
 
