@@ -79,7 +79,8 @@ def run_pipe(
         msg = f'Config error:\n{e}'
         # If the run is already created (e.g. through UI) then set status to
         # error
-        pipeline.set_status(run_dj_obj, 'ERR')
+        if run_dj_obj:
+            pipeline.set_status(run_dj_obj, 'ERR')
         raise CommandError(msg) if cmd else PipelineConfigError(msg)
 
     if pipeline.config.CREATE_MEASUREMENTS_ARROW_FILES and cmd is False:
