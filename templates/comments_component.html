@@ -1,24 +1,26 @@
 {% load crispy_forms_tags %}
-<div class="card shadow h-100">
+<div class="card shadow h-100 pb-4">
   <div class="card-header py-3">
     <h6 class="m-0 font-weight-bold text-primary">User Comments <span
         class="badge badge-pill badge-primary">{{ comments|length }}</span></h6>
   </div>
   <div class="d-flex flex-column card-body pb-0">
-    <dl class="comment-content">
+    <div class="comment-container">
       {% for comment in comments %}
-      <dt>{{ comment.author.get_full_name }} ({{ comment.author.get_username }}) -
-        {{ comment.datetime|date:"F d, Y, g:i a" }}</dt>
-      <dd>
-        <p>{{ comment.comment }}</p>
-      </dd>
+      <div class="media border bg-light mb-2 mr-3 p-2">
+        <img class="img-profile rounded-circle align-self-start mr-3" src="{{ comment.get_avatar_url }}" width="32" height="32" alt="">
+        <div class="media-body">
+          <strong>{{ comment.author.get_full_name|default:comment.author.username }}</strong><small class="ml-2">{{ comment.datetime }}</small>
+          <p class="mb-0">{{ comment.comment }}</p>
+        </div>
+      </div>
       {% empty %}
-      <dd class="text-center">
-        <i class="fas fa-comment-slash fa-2x"></i>
+      <div class="d-flex flex-column justify-content-center align-items-center h-100">
+        <p><i class="fas fa-comment-slash fa-2x"></i></p>
         <p>No comments</p>
-      </dd>
+      </div>
       {% endfor %}
-    </dl>
+    </div>
     <div class="mt-auto">
       {% crispy comment_form %}
     </div>

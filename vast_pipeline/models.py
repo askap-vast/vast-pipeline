@@ -5,6 +5,9 @@ from django.core.validators import RegexValidator
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
+from django.templatetags.static import static
+from social_django.models import UserSocialAuth
+from tagulous.models import TagField
 
 
 class Comment(models.Model):
@@ -14,6 +17,22 @@ class Comment(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
+
+    def get_avatar_url(self) -> str:
+        """Get the URL for the user's avatar from GitHub. If the user has no associated
+        GitHub account (e.g. a Django superuser), return the URL to the default user
+        avatar.
+
+        Returns
+        -------
+        str
+            The avatar URL.
+        """
+        social = UserSocialAuth.get_social_auth_for_user(self.author).first()
+        if social and "avatar_url" in social.extra_data:
+            return social.extra_data["avatar_url"]
+        else:
+            return static("img/user-32.png")
 
 
 class CommentableModel(models.Model):
@@ -186,6 +205,7 @@ class Run(CommentableModel):
     )
     STATUS_CHOICES = [
         ('INI', 'Initialised'),
+        ('QUE', 'Queued'),
         ('RUN', 'Running'),
         ('END', 'Completed'),
         ('ERR', 'Error'),
@@ -308,6 +328,11 @@ class Source(CommentableModel):
 
     name = models.CharField(max_length=100)
     new = models.BooleanField(default=False, help_text='New Source.')
+    tags = TagField(
+        space_delimiter=False,
+        autocomplete_view="vast_pipeline:source_tags_autocomplete",
+        autocomplete_settings={"width": "100%"},
+    )
 
     # average fields calculated from the source measurements
     wavg_ra = models.FloatField(
@@ -336,6 +361,21 @@ class Source(CommentableModel):
     )
     max_flux_peak = models.FloatField(
         help_text='The maximum peak flux value.'
+    )
+    min_flux_peak = models.FloatField(
+        help_text='The minimum peak flux value.'
+    )
+    max_flux_int = models.FloatField(
+        help_text='The maximum integrated flux value.'
+    )
+    min_flux_int = models.FloatField(
+        help_text='The minimum integrated flux value.'
+    )
+    min_flux_int_isl_ratio = models.FloatField(
+        help_text='The minimum integrated island flux ratio value.'
+    )
+    min_flux_peak_isl_ratio = models.FloatField(
+        help_text='The minimum peak island flux ratio value.'
     )
     avg_compactness = models.FloatField(
         help_text='The average compactness.'
@@ -641,8 +681,20 @@ class Measurement(CommentableModel):
 
     flux_int = models.FloatField()# mJy/beam
     flux_int_err = models.FloatField()# mJy/beam
+    flux_int_isl_ratio = models.FloatField(
+        help_text=(
+            'Ratio of the component integrated flux to the total'
+            ' island integrated flux.'
+        )
+    )
     flux_peak = models.FloatField()# mJy/beam
     flux_peak_err = models.FloatField()# mJy/beam
+    flux_peak_isl_ratio = models.FloatField(
+        help_text=(
+            'Ratio of the component peak flux to the total'
+            ' island peak flux.'
+        )
+    )
     chi_squared_fit = models.FloatField(
         db_column='chi2_fit',
         help_text='Chi-squared of the Guassian fit to the source.'
