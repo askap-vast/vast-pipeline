@@ -111,7 +111,7 @@ def one_to_many_basic(
 
     if duplicated_skyc2.empty:
         logger.debug('No one-to-many associations.')
-        return sources_df, skyc2_srcs
+        return skyc2_srcs, sources_df
 
     logger.info(
         'Detected #%i double matches, cleaning...',
