@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block head %}
+
+{% endblock head %}
+
+{% block content %}
+<!-- Begin Page Content -->
+<div class="container-fluid">
+
+  <!-- 404 Error Text -->
+  <div class="text-center">
+      <div class="error mx-auto" data-text="404">404</div>
+      <p class="lead text-gray-800 mb-5">Page Not Found</p>
+      <p class="text-gray-500 mb-0">It looks like you found a transient page...</p>
+      <p class="text-gray-500 mb-0">Please report this error if it is unexpected.</p>
+      <a href="{% url 'index' %}">&larr; Back to Home</a>
+  </div>
+
+</div>
+<!-- /.container-fluid -->
+
+{% endblock content %}
+
+{% block custom_page_scripts %}
+
+<!-- Chart scripts -->
+
+{% endblock custom_page_scripts %}
