@@ -115,12 +115,12 @@ class OneToManyAdvancedTest(TestCase):
         '''
         Read in data used in multiple tests
         '''
-        self.temp_srcs_simple = pd.read_csv(
+        self.temp_srcs_nodup = pd.read_csv(
             os.path.join(DATA_PATH, 'temp_srcs_nodup.csv'),
             header=0
         )
 
-        self.sources_df_simple = pd.read_csv(
+        self.sources_df_in = pd.read_csv(
             os.path.join(DATA_PATH, 'sources_df_in.csv'), 
             header=0
         )
@@ -132,8 +132,8 @@ class OneToManyAdvancedTest(TestCase):
         self.assertRaises(
             Exception, 
             one_to_many_advanced, 
-            self.temp_srcs_simple, 
-            self.sources_df_simple, 
+            self.temp_srcs_nodup, 
+            self.sources_df_in, 
             'non-existant-method'
         )
 
@@ -142,15 +142,19 @@ class OneToManyAdvancedTest(TestCase):
         Test if one_to_many_advanced will return the input dataframes unchanged
         when there are no duplicate sources in temp_srcs
         '''
+
+        temp_srcs = self.temp_srcs_nodup
+        sources_df = self.sources_df_in
+
         temp_srcs_out, sources_df_out = one_to_many_advanced(
-            self.temp_srcs_simple, 
-            self.sources_df_simple, 
+            temp_srcs, 
+            sources_df, 
             'advanced'
         )
 
         # if no duplicates, return inputs
-        assert temp_srcs_out.equals(self.temp_srcs_simple)
-        assert sources_df_out.equals(self.sources_df_simple)
+        assert temp_srcs_out.equals(temp_srcs)
+        assert sources_df_out.equals(sources_df)
 
     def test_method_advanced(self):
         '''
@@ -170,10 +174,7 @@ class OneToManyAdvancedTest(TestCase):
             os.path.join(DATA_PATH, 'temp_srcs_dup.csv'), 
             header=0
         )
-        sources_df = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_in.csv'), 
-            header=0
-        )
+        sources_df = self.sources_df_in
         sources_df_true = pd.read_csv(
             os.path.join(DATA_PATH, 'sources_df_out.csv'), 
             header=0
