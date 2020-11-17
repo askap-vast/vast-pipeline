@@ -8,7 +8,8 @@ from django.test import SimpleTestCase, TestCase
 
 from vast_pipeline.pipeline.association import (
     one_to_many_basic, 
-    one_to_many_advanced
+    one_to_many_advanced,
+    many_to_many_advanced
 )
 
 
@@ -34,7 +35,8 @@ class OneToManyBasicTest(TestCase):
     def test_duplicated_skyc2_empty(self):
         '''
         Test if one_to_many_basic will return the input dataframes unchanged 
-        when there are no duplicate sources in skyc2_srcs
+        when there are no duplicate sources in skyc2_srcs. Repeated values in
+        source are duplicates, ignoring -1 values. 
         '''
         skyc2_srcs = pd.read_csv(
             os.path.join(DATA_PATH, 'skyc2_srcs_nodup.csv'), 
@@ -76,11 +78,11 @@ class OneToManyBasicTest(TestCase):
         skyc2_srcs_out, sources_df_out = res
 
         # verify skyc2_srcs_out
-        out_source = skyc2_srcs_out.loc[:,'source']
+        out_source = skyc2_srcs_out['source']
         assert list(
-            skyc2_srcs.loc[:,'d2d'].values
+            skyc2_srcs['d2d'].values
         ) == list(
-            skyc2_srcs_out.loc[:,'d2d'].values
+            skyc2_srcs_out['d2d'].values
         ) # check values in other columns are retained
         # new source ids need to be unique
         assert len(set(out_source.values)) == 6 
@@ -140,7 +142,8 @@ class OneToManyAdvancedTest(TestCase):
     def test_duplicated_skyc1_empty(self):
         '''
         Test if one_to_many_advanced will return the input dataframes unchanged
-        when there are no duplicate sources in temp_srcs
+        when there are no duplicate sources in temp_srcs. Repeated values in 
+        source_skyc1 are duplicates. 
         '''
 
         temp_srcs = self.temp_srcs_nodup
@@ -184,23 +187,14 @@ class OneToManyAdvancedTest(TestCase):
         temp_srcs_out, sources_df_out = res
 
         # verify temp_srcs_out
-        out_source = temp_srcs_out.loc[:,'source_skyc1']
-        unchanged_temp_srcs = temp_srcs.loc[:, 
-                [
-                'index_old_skyc1', 'id_skyc1', 'd2d_skyc1', 
-                'index_old_skyc2', 'id_skyc2', 'source_skyc2', 
-                'd2d_skyc2', 'dr'
-                ]
-            ]
-        unchanged_temp_srcs_out = temp_srcs_out.loc[:, 
-                [
-                'index_old_skyc1', 'id_skyc1', 'd2d_skyc1', 
-                'index_old_skyc2', 'id_skyc2', 'source_skyc2', 
-                'd2d_skyc2', 'dr'
-                ]
-            ]
+        out_source = temp_srcs_out['source_skyc1']
+        unchanged_cols = [
+            'index_old_skyc1', 'id_skyc1', 'd2d_skyc1', 
+            'index_old_skyc2', 'id_skyc2', 'source_skyc2', 
+            'd2d_skyc2', 'dr'
+        ]
         # check values in other columns are unchanged
-        assert unchanged_temp_srcs.equals(unchanged_temp_srcs_out) 
+        assert temp_srcs_out[unchanged_cols].equals(temp_srcs[unchanged_cols]) 
         # new source ids need to be unique
         assert len(set(out_source.values)) == 6 
         # unique sources have no related source,
@@ -229,7 +223,66 @@ class OneToManyAdvancedTest(TestCase):
         # is only sorting, how to check? 
         pass
 
-class ManyToManyAdvancedTest(SimpleTestCase):
+class ManyToManyAdvancedTest(TestCase):
+    '''
+    Tests for many_to_many_advanced in association.py
+    '''
 
+    @classmethod
+    def setUpTestData(self):
+        '''
+        Read in data used in multiple tests
+        '''
+        self.temp_srcs_dup = pd.read_csv(
+            os.path.join(DATA_PATH, 'temp_srcs_dup.csv'),
+            header=0
+        ) 
+
+    # TODO: there's no check on the method, write one? 
+    
     def test_m_to_m_empty(self):
-        pass
+        '''
+        Test if many_to_many_advanced will return the input dataframe unchanged
+        when there are no duplicate sources in temp_srcs. Both index_old_skyc2
+        and souce_skyc1 need to be repeated for it to be a duplicate source.
+        '''
+        temp_srcs = pd.read_csv(
+            os.path.join(DATA_PATH, 'temp_srcs_nodup.csv'), 
+            header=0
+        )
+
+        temp_srcs_out = many_to_many_advanced(temp_srcs, method='advanced')
+
+        assert temp_srcs_out.equals(temp_srcs)
+
+    def test_method_advanced(self):
+        '''
+        Testing if many_to_many_advanced drops the correct rows for duplicate
+        sources. Duplicates are when both index_old_skyc2 and souce_skyc1 are 
+        repeated. The duplicate rows with larger d2d_skyc2 will be dropped.
+
+        This test assumes that the index of the dataframe doesn't matter. 
+        '''
+        temp_srcs = self.temp_srcs_dup
+        temp_srcs_true = pd.read_csv(os.path.join(DATA_PATH, 'temp_srcs_advanced_drop.csv'), header=0)
+
+        temp_srcs_out = many_to_many_advanced(temp_srcs, method='advanced')
+        temp_srcs_out.reset_index(drop=True, inplace=True)
+
+        assert temp_srcs_out.equals(temp_srcs_true)
+
+    def test_method_dr(self):
+        '''
+        Testing if many_to_many_advanced drops the correct rows for duplicate
+        sources. Duplicates are when both index_old_skyc2 and souce_skyc1 are 
+        repeated. The duplicate rows with larger dr will be dropped.
+
+        This test assumes that the index of the dataframe doesn't matter.
+        '''
+        temp_srcs = self.temp_srcs_dup
+        temp_srcs_true = pd.read_csv(os.path.join(DATA_PATH, 'temp_srcs_dr_drop.csv'), header=0)
+
+        temp_srcs_out = many_to_many_advanced(temp_srcs, method='dr')
+        temp_srcs_out.reset_index(drop=True, inplace=True)
+
+        assert temp_srcs_out.equals(temp_srcs_true)
