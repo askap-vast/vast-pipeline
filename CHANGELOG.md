@@ -90,6 +90,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed pipeline run DB loading in command line runpipeline command [#401](https://github.com/askap-vast/vast-pipeline/pull/401).
 - Fixed rms value calculation in non-cluster forced extractions [#402](https://github.com/askap-vast/vast-pipeline/pull/402).
 - Increase request limit for gunicorn [#398](https://github.com/askap-vast/vast-pipeline/pull/398).
 - Fixed max source Vs metric to being an absolute value [#391](https://github.com/askap-vast/vast-pipeline/pull/391).
