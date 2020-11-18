@@ -72,11 +72,10 @@ class OneToManyBasicTest(TestCase):
             header=0
         )
 
-        res = one_to_many_basic(skyc2_srcs, sources_df)
-        skyc2_srcs, sources_df = res
+        skyc2_srcs, sources_df = one_to_many_basic(skyc2_srcs, sources_df)
 
-        assert skyc2_srcs.equals(self.skyc2_srcs_nodup)
-        assert sources_df.equals(self.sources_df_in)
+        self.assertTrue(skyc2_srcs.equals(self.skyc2_srcs_nodup))
+        self.assertTrue(sources_df.equals(self.sources_df_in))
 
     def test_duplicated_skyc2_nonempty(self):
         '''
@@ -102,11 +101,10 @@ class OneToManyBasicTest(TestCase):
             header=0
         )
 
-        res = one_to_many_basic(skyc2_srcs, sources_df)
-        skyc2_srcs, sources_df = res
+        skyc2_srcs, sources_df = one_to_many_basic(skyc2_srcs, sources_df)
 
-        assert skyc2_srcs.equals(self.skyc2_srcs_out)
-        assert sources_df.equals(self.sources_df_out)
+        self.assertTrue(skyc2_srcs.equals(self.skyc2_srcs_out))
+        self.assertTrue(sources_df.equals(self.sources_df_out))
 
 
 class OneToManyAdvancedTest(TestCase):
@@ -179,12 +177,15 @@ class OneToManyAdvancedTest(TestCase):
             header=0
         )
 
-        res = one_to_many_advanced(temp_srcs, sources_df, method='advanced')
-        temp_srcs, sources_df = res
+        temp_srcs, sources_df = one_to_many_advanced(
+            temp_srcs, 
+            sources_df, 
+            method='advanced'
+        )
 
         # if no duplicates, return inputs
-        assert temp_srcs.equals(self.temp_srcs_nodup)
-        assert sources_df.equals(self.sources_df_in)
+        self.assertTrue(temp_srcs.equals(self.temp_srcs_nodup))
+        self.assertTrue(sources_df.equals(self.sources_df_in))
 
     def test_method_advanced(self):
         '''
@@ -210,11 +211,14 @@ class OneToManyAdvancedTest(TestCase):
             header=0
         )
 
-        res = one_to_many_advanced(temp_srcs, sources_df, method='advanced')
-        temp_srcs, sources_df = res
+        temp_srcs, sources_df = one_to_many_advanced(
+            temp_srcs, 
+            sources_df, 
+            method='advanced'
+        )
 
-        assert temp_srcs.equals(self.temp_srcs_advanced_out)
-        assert sources_df.equals(self.sources_df_out)
+        self.assertTrue(temp_srcs.equals(self.temp_srcs_advanced_out))
+        self.assertTrue(sources_df.equals(self.sources_df_out))
 
     def test_method_deruiter(self):
         '''
@@ -240,11 +244,14 @@ class OneToManyAdvancedTest(TestCase):
             header=0
         )
 
-        res = one_to_many_advanced(temp_srcs, sources_df, method='deruiter')
-        temp_srcs, sources_df = res
+        temp_srcs, sources_df = one_to_many_advanced(
+            temp_srcs, 
+            sources_df, 
+            method='deruiter'
+        )
 
-        assert temp_srcs.equals(self.temp_srcs_deruiter_out)
-        assert sources_df.equals(self.sources_df_out)
+        self.assertTrue(temp_srcs.equals(self.temp_srcs_deruiter_out))
+        self.assertTrue(sources_df.equals(self.sources_df_out))
 
 
 class ManyToManyAdvancedTest(TestCase):
@@ -285,7 +292,7 @@ class ManyToManyAdvancedTest(TestCase):
 
         temp_srcs = many_to_many_advanced(temp_srcs, method='advanced')
 
-        assert temp_srcs.equals(self.temp_srcs_nodup)
+        self.assertTrue(temp_srcs.equals(self.temp_srcs_nodup))
 
     def test_method_advanced(self):
         '''
@@ -304,7 +311,7 @@ class ManyToManyAdvancedTest(TestCase):
         temp_srcs = many_to_many_advanced(temp_srcs, method='advanced')
         temp_srcs.reset_index(drop=True, inplace=True)
 
-        assert temp_srcs.equals(self.temp_srcs_advanced_drop)
+        self.assertTrue(temp_srcs.equals(self.temp_srcs_advanced_drop))
 
     def test_method_deruiter(self):
         '''
@@ -323,7 +330,7 @@ class ManyToManyAdvancedTest(TestCase):
         temp_srcs = many_to_many_advanced(temp_srcs, method='deruiter')
         temp_srcs.reset_index(drop=True, inplace=True)
 
-        assert temp_srcs.equals(self.temp_srcs_deruiter_drop)
+        self.assertTrue(temp_srcs.equals(self.temp_srcs_deruiter_drop))
 
 
 class ManyToOneAdvancedTest(TestCase):
@@ -363,7 +370,7 @@ class ManyToOneAdvancedTest(TestCase):
 
         temp_srcs = many_to_one_advanced(temp_srcs)
 
-        assert temp_srcs.equals(self.temp_srcs_nodup)
+        self.assertTrue(temp_srcs.equals(self.temp_srcs_nodup))
 
     def test_many_to_one_advanced(self):
         '''
@@ -380,7 +387,7 @@ class ManyToOneAdvancedTest(TestCase):
 
         temp_srcs_out = many_to_one_advanced(temp_srcs)
 
-        assert temp_srcs_out.equals(self.temp_srcs_ind_rel)
+        self.assertTrue(temp_srcs_out.equals(self.temp_srcs_ind_rel))
 
 
 class BasicAssociationTest(SimpleTestCase):
