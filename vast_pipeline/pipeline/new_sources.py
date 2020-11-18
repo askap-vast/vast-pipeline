@@ -141,8 +141,8 @@ def get_image_rms_measurements(
     if group.empty:
         # early return if all sources failed range check
         logger.debug(
-            f'All sources out of range in new source rms measurement'
-            ' for image {image}.'
+            'All sources out of range in new source rms measurement'
+            f' for image {image}.'
         )
         group['img_diff_true_rms'] = np.nan
         return group
@@ -237,7 +237,7 @@ def parallel_get_rms_measurements(
             get_image_rms_measurements,
             edge_buffer=edge_buffer,
             meta=col_dtype
-        ).compute(num_workers=n_cpu, scheduler='single-threaded')
+        ).compute(num_workers=n_cpu, scheduler='processes')
     )
 
     df = df.merge(
