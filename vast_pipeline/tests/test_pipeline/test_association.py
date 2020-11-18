@@ -37,7 +37,7 @@ class OneToManyBasicTest(TestCase):
     @classmethod
     def setUpTestData(self):
         '''
-        Load in correct outputs so inplace operations are testsed.
+        Load in correct outputs so inplace operations are tested.
         '''
         self.skyc2_srcs_nodup = pd.read_csv(
             os.path.join(DATA_PATH, 'skyc2_srcs_nodup.csv'), 
@@ -117,7 +117,7 @@ class OneToManyAdvancedTest(TestCase):
     @classmethod
     def setUpTestData(self):
         '''
-        Load in correct outputs so inplace operations are testsed.
+        Load in correct outputs so inplace operations are tested.
         '''
         self.temp_srcs_nodup = pd.read_csv(
             os.path.join(DATA_PATH, 'temp_srcs_nodup.csv'),
@@ -255,7 +255,7 @@ class ManyToManyAdvancedTest(TestCase):
     @classmethod
     def setUpTestData(self):
         '''
-        Load in correct outputs so inplace operations are testsed.
+        Load in correct outputs so inplace operations are tested.
         '''
         self.temp_srcs_nodup = pd.read_csv(
             os.path.join(DATA_PATH, 'temp_srcs_nodup.csv'), 
@@ -265,8 +265,8 @@ class ManyToManyAdvancedTest(TestCase):
             os.path.join(DATA_PATH, 'temp_srcs_advanced_drop.csv'),
             header=0
         )
-        self.temp_srcs_dr_drop = pd.read_csv(
-            os.path.join(DATA_PATH, 'temp_srcs_dr_drop.csv'), 
+        self.temp_srcs_deruiter_drop = pd.read_csv(
+            os.path.join(DATA_PATH, 'temp_srcs_deruiter_drop.csv'), 
             header=0
         )
 
@@ -306,10 +306,10 @@ class ManyToManyAdvancedTest(TestCase):
 
         assert temp_srcs.equals(self.temp_srcs_advanced_drop)
 
-    def test_method_dr(self):
+    def test_method_deruiter(self):
         '''
         Testing if many_to_many_advanced drops the correct rows for duplicate
-        sources when method=dr. Duplicates are when both index_old_skyc2 and 
+        sources when method=deruiter. Duplicates are when both index_old_skyc2 and 
         souce_skyc1 are repeated. The duplicate rows with dr > min(dr) will be
         dropped.
 
@@ -320,10 +320,10 @@ class ManyToManyAdvancedTest(TestCase):
             header=0
         ) 
 
-        temp_srcs = many_to_many_advanced(temp_srcs, method='dr')
+        temp_srcs = many_to_many_advanced(temp_srcs, method='deruiter')
         temp_srcs.reset_index(drop=True, inplace=True)
 
-        assert temp_srcs.equals(self.temp_srcs_dr_drop)
+        assert temp_srcs.equals(self.temp_srcs_deruiter_drop)
 
 
 class ManyToOneAdvancedTest(TestCase):
@@ -334,7 +334,7 @@ class ManyToOneAdvancedTest(TestCase):
     @classmethod
     def setUpTestData(self):
         '''
-        Load in correct outputs so inplace operations are testsed.
+        Load in correct outputs so inplace operations are tested.
         '''
         self.temp_srcs_nodup = pd.read_csv(
             os.path.join(DATA_PATH, 'temp_srcs_nodup.csv'),

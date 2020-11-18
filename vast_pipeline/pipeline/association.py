@@ -598,7 +598,7 @@ def many_to_many_advanced(temp_srcs: pd.DataFrame, method: str) -> pd.DataFrame:
         The temporary associtation dataframe used through the advanced
         association process.
     method : str
-        Can be either 'advanced' or 'dr' to represent the advanced association
+        Can be either 'advanced' or 'deruiter' to represent the advanced association
         method being used.
 
     Returns
