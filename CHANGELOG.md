@@ -57,6 +57,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Images table on pipeline run detail page changed to order by datetime by default [#417](https://github.com/askap-vast/vast-pipeline/pull/417).
 - Changed config argument `CREATE_MEASUREMENTS_ARROW_FILE` -> `CREATE_MEASUREMENTS_ARROW_FILES` [#393](https://github.com/askap-vast/vast-pipeline/pull/393).
 - Naming of average flux query fields to account for other min max flux fields [#406](https://github.com/askap-vast/vast-pipeline/pull/406).
 - Expanded `README.md` to include `DjangoQ` and UI job scheduling information [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
@@ -89,6 +90,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed measuring rms values from selavy created NAXIS=3 FITS images [#417](https://github.com/askap-vast/vast-pipeline/pull/417).
 - Fixed rms value calculation in non-cluster forced extractions [#402](https://github.com/askap-vast/vast-pipeline/pull/402).
 - Increase request limit for gunicorn [#398](https://github.com/askap-vast/vast-pipeline/pull/398).
 - Fixed max source Vs metric to being an absolute value [#391](https://github.com/askap-vast/vast-pipeline/pull/391).

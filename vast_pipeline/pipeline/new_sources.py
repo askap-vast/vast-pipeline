@@ -94,13 +94,7 @@ def get_image_rms_measurements(
     with fits.open(image) as hdul:
         header = hdul[0].header
         wcs = WCS(header, naxis=2)
-
-        try:
-            # ASKAP tile images
-            data = hdul[0].data[0, 0, :, :]
-        except Exception as e:
-            # ASKAP SWarp images
-            data = hdul[0].data
+        data = hdul[0].data.squeeze()
 
     # Here we mimic the forced fits behaviour,
     # sources within 3 half BMAJ widths of the image
@@ -229,7 +223,7 @@ def parallel_get_rms_measurements(
             get_image_rms_measurements,
             edge_buffer=edge_buffer,
             meta=col_dtype
-        ).compute(num_workers=n_cpu, scheduler='processes')
+        ).compute(num_workers=n_cpu, scheduler='single-threaded')
     )
 
     df = df.merge(
