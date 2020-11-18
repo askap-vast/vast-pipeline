@@ -138,6 +138,15 @@ def get_image_rms_measurements(
 
     group = group.loc[valid_indexes]
 
+    if group.empty:
+        # early return if all sources failed range check
+        logger.debug(
+            f'All sources out of range in new source rms measurement'
+            ' for image {image}.'
+        )
+        group['img_diff_true_rms'] = np.nan
+        return group
+
     # Now we also need to check proximity to NaN values
     # as forced fits may also drop these values
     coords = SkyCoord(
@@ -165,15 +174,20 @@ def get_image_rms_measurements(
 
     valid_indexes = group[nan_valid].index.values
 
-    rms_values = data[
-        array_coords[0][nan_valid],
-        array_coords[1][nan_valid]
-    ]
+    if np.any(nan_valid):
+        # only run if there are actual values to measure
+        rms_values = data[
+            array_coords[0][nan_valid],
+            array_coords[1][nan_valid]
+        ]
 
-    # not matched ones will be NaN.
-    group.loc[
-        valid_indexes, 'img_diff_true_rms'
-    ] = rms_values.astype(np.float64) * 1.e3
+        # not matched ones will be NaN.
+        group.loc[
+            valid_indexes, 'img_diff_true_rms'
+        ] = rms_values.astype(np.float64) * 1.e3
+
+    else:
+        group['img_diff_true_rms'] = np.nan
 
     return group
 
