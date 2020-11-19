@@ -160,7 +160,10 @@ def RunIndex(request):
                 )
                 messages.success(
                     request,
-                    f'Pipeline run {p_run.name} initilialised successfully!'
+                    mark_safe(
+                        f'Pipeline run <b>{p_run.name}</b> '
+                        'initilialised successfully!'
+                    )
                 )
                 return redirect('vast_pipeline:run_detail', id=p_run.id)
             except Exception as e:
