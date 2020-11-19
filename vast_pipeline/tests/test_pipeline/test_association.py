@@ -5,7 +5,7 @@ import pytest
 
 from pathlib import Path
 
-from django.test import SimpleTestCase, TestCase
+from django.test import SimpleTestCase
 
 from vast_pipeline.pipeline.association import (
     one_to_many_basic, 
@@ -29,16 +29,17 @@ def parse_lists(x):
         return float('NaN')
 
 
-class OneToManyBasicTest(TestCase):
+class OneToManyBasicTest(SimpleTestCase):
     '''
     Tests for one_to_many_basic in association.py 
     '''
 
     @classmethod
-    def setUpTestData(self):
+    def setUpClass(self):
         '''
         Load in correct outputs so inplace operations are tested.
         '''
+        super().setUpClass()
         self.skyc2_srcs_nodup = pd.read_csv(
             os.path.join(DATA_PATH, 'skyc2_srcs_nodup.csv'), 
             header=0
@@ -107,16 +108,17 @@ class OneToManyBasicTest(TestCase):
         self.assertTrue(sources_df.equals(self.sources_df_out))
 
 
-class OneToManyAdvancedTest(TestCase):
+class OneToManyAdvancedTest(SimpleTestCase):
     '''
     Tests for one_to_many_advanced in association.py
     '''
 
     @classmethod
-    def setUpTestData(self):
+    def setUpClass(self):
         '''
         Load in correct outputs so inplace operations are tested.
         '''
+        super().setUpClass()
         self.temp_srcs_nodup = pd.read_csv(
             os.path.join(DATA_PATH, 'temp_srcs_nodup.csv'),
             header=0
@@ -254,16 +256,17 @@ class OneToManyAdvancedTest(TestCase):
         self.assertTrue(sources_df.equals(self.sources_df_out))
 
 
-class ManyToManyAdvancedTest(TestCase):
+class ManyToManyAdvancedTest(SimpleTestCase):
     '''
     Tests for many_to_many_advanced in association.py
     '''
 
     @classmethod
-    def setUpTestData(self):
+    def setUpClass(self):
         '''
         Load in correct outputs so inplace operations are tested.
         '''
+        super().setUpClass()
         self.temp_srcs_nodup = pd.read_csv(
             os.path.join(DATA_PATH, 'temp_srcs_nodup.csv'), 
             header=0
@@ -333,16 +336,17 @@ class ManyToManyAdvancedTest(TestCase):
         self.assertTrue(temp_srcs.equals(self.temp_srcs_deruiter_drop))
 
 
-class ManyToOneAdvancedTest(TestCase):
+class ManyToOneAdvancedTest(SimpleTestCase):
     '''
     Tests for many_to_one_advanced in association.py
     '''
 
     @classmethod
-    def setUpTestData(self):
+    def setUpClass(self):
         '''
         Load in correct outputs so inplace operations are tested.
         '''
+        super().setUpClass()
         self.temp_srcs_nodup = pd.read_csv(
             os.path.join(DATA_PATH, 'temp_srcs_nodup.csv'),
             header=0
