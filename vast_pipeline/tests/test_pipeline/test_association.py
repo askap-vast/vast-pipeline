@@ -414,6 +414,8 @@ class AssociationTest(SimpleTestCase):
     Tests for association in association.py
     '''
 
+    # this is painful to test. one of the inputs is the config file
+
     def test(self):
         pass
 
@@ -434,8 +436,8 @@ class CorrectParallelSourceIdsTest(SimpleTestCase):
             header=0,
             converters={'related': parse_lists}
         ) 
-        self.sources_df_in_2 = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_in_2.csv'),
+        self.sources_df_out_2 = pd.read_csv(
+            os.path.join(DATA_PATH, 'sources_df_out_2.csv'),
             header=0,
             converters={'related': parse_lists}
         ) 
@@ -468,13 +470,15 @@ class CorrectParallelSourceIdsTest(SimpleTestCase):
 
         df = _correct_parallel_source_ids(df, 2)
 
-        self.assertTrue(df.equals(self.sources_df_in_2))
+        self.assertTrue(df.equals(self.sources_df_out_2))
 
 
 class ParallelAssociation(SimpleTestCase):
     '''
     Tests for parallel_association in association.py
     '''
+
+    # this is painful to test. one of the inputs is the config file
 
     def test(self):
         pass
