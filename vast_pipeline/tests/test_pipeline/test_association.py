@@ -316,9 +316,9 @@ class ManyToManyAdvancedTest(TestCase):
     def test_method_deruiter(self):
         '''
         Testing if many_to_many_advanced drops the correct rows for duplicate
-        sources when method=deruiter. Duplicates are when both index_old_skyc2 and 
-        souce_skyc1 are repeated. The duplicate rows with dr > min(dr) will be
-        dropped.
+        sources when method=deruiter. Duplicates are when both index_old_skyc2 
+        and souce_skyc1 are repeated. The duplicate rows with dr > min(dr) will 
+        be dropped.
 
         This test assumes that the index of the dataframe doesn't matter.
         '''
@@ -345,10 +345,6 @@ class ManyToOneAdvancedTest(TestCase):
         '''
         self.temp_srcs_nodup = pd.read_csv(
             os.path.join(DATA_PATH, 'temp_srcs_nodup.csv'),
-            header=0
-        ) 
-        self.temp_srcs_dup = pd.read_csv(
-            os.path.join(DATA_PATH, 'temp_srcs_dup.csv'),
             header=0
         ) 
         self.temp_srcs_ind_rel = pd.read_csv(
