@@ -11,7 +11,8 @@ from vast_pipeline.pipeline.association import (
     one_to_many_basic, 
     one_to_many_advanced,
     many_to_many_advanced,
-    many_to_one_advanced
+    many_to_one_advanced,
+    _correct_parallel_source_ids
 )
 
 
@@ -422,8 +423,52 @@ class CorrectParallelSourceIdsTest(SimpleTestCase):
     Tests for _correct_parallel_souce_ids in association.py
     '''
 
-    def test(self):
-        pass
+    @classmethod
+    def setUpClass(self):
+        '''
+        Load in correct outputs so inplace operations are tested.
+        '''
+        super().setUpClass()
+        self.sources_df_in = pd.read_csv(
+            os.path.join(DATA_PATH, 'sources_df_in.csv'),
+            header=0,
+            converters={'related': parse_lists}
+        ) 
+        self.sources_df_in_2 = pd.read_csv(
+            os.path.join(DATA_PATH, 'sources_df_in_2.csv'),
+            header=0,
+            converters={'related': parse_lists}
+        ) 
+
+    def test_zero(self):
+        '''
+        Test _correct_parallel_source_ids doesn't change the input df when 
+        correction=0.
+        '''
+        df = pd.read_csv(
+            os.path.join(DATA_PATH, 'sources_df_in.csv'), 
+            header=0,
+            converters={'related': parse_lists}
+        )
+
+        df = _correct_parallel_source_ids(df, 0)
+
+        self.assertTrue(df.equals(self.sources_df_in))
+
+    def test_positive(self):
+        '''
+        Test _correct_parallel_source_ids increases the numbers in the source
+        and relate column by the correction amount.
+        '''
+        df = pd.read_csv(
+            os.path.join(DATA_PATH, 'sources_df_in.csv'), 
+            header=0, 
+            converters={'related': parse_lists}
+        )
+
+        df = _correct_parallel_source_ids(df, 2)
+
+        self.assertTrue(df.equals(self.sources_df_in_2))
 
 
 class ParallelAssociation(SimpleTestCase):

@@ -790,7 +790,7 @@ def basic_association(
 
     # must check for double matches in the acceptable matches just made
     # this would mean that multiple sources in skyc2 have been matched
-    #  to the same base source we want to keep closest match and move
+    # to the same base source we want to keep closest match and move
     # the other match(es) back to having a -1 src id
     skyc2_srcs, sources_df = one_to_many_basic(skyc2_srcs, sources_df)
 
