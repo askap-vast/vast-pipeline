@@ -455,7 +455,7 @@ class CorrectParallelSourceIdsTest(SimpleTestCase):
 
         self.assertTrue(df.equals(self.sources_df_in))
 
-    def test_positive(self):
+    def test_correct_parllel_source_ids(self):
         '''
         Test _correct_parallel_source_ids increases the numbers in the source
         and relate column by the correction amount.
