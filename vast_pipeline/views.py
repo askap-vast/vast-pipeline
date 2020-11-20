@@ -414,6 +414,7 @@ def RunDetail(request, id):
             'Beam PA (deg)'
         ],
         'search': True,
+        'order': [1, 'asc']
     }
 
     meas_fields = [
