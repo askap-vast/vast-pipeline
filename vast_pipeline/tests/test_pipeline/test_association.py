@@ -1,9 +1,11 @@
 import ast
 import os
 import pandas as pd
+from pathlib import Path
 import pytest
 
-from pathlib import Path
+from astropy.coordinates import SkyCoord
+from astropy.coordinates import Angle
 
 from django.test import SimpleTestCase
 
@@ -12,6 +14,7 @@ from vast_pipeline.pipeline.association import (
     one_to_many_advanced,
     many_to_many_advanced,
     many_to_one_advanced,
+    basic_association,
     _correct_parallel_source_ids
 )
 
@@ -396,25 +399,158 @@ class BasicAssociationTest(SimpleTestCase):
     Tests for basic_association in association.py
     '''
 
-    def test(self):
-        pass
+    @classmethod
+    def setUpClass(self):
+        '''
+        Load in correct outputs so inplace operations are tested.
+        '''
+        super().setUpClass()
+        self.sources_df_basic_out = pd.read_csv(
+            os.path.join(DATA_PATH, 'sources_df_basic_out.csv')
+        ) 
+        self.sources_df_basic_no_new = pd.read_csv(
+            os.path.join(DATA_PATH, 'sources_df_basic_no_new.csv')
+        ) 
+        self.sources_df_basic_all = pd.read_csv(
+            os.path.join(DATA_PATH, 'sources_df_basic_all.csv')
+        ) 
+        self.skyc1_srcs_basic_in = pd.read_csv(
+            os.path.join(DATA_PATH, 'skyc1_srcs_basic_in.csv'), 
+            header=0
+        )
+        self.skyc1_srcs_basic_out = pd.read_csv(
+            os.path.join(DATA_PATH, 'skyc1_srcs_basic_out.csv'),
+            header=0
+        )
+        self.skyc1_srcs_basic_all = pd.read_csv(
+            os.path.join(DATA_PATH, 'skyc1_srcs_basic_all.csv'),
+            header=0
+        )
+
+    def check(self, df1, df2, columns=['ra', 'dec', 'source', 'epoch']):
+            '''
+            Function which checks that certain columns of two DataFrames are
+            equal. Not testing related column, it is used in one_to_many_basic,
+            which is already tested. Note testing d2d column, it contains 
+            floats and is output from Astropy.
+            '''
+            for col in columns:
+                self.assertTrue(df1[col].equals(df2[col]))
+
+    def test_no_new_skyc2_srcs(self):
+        '''
+        Test basic_association returns skyc1_srcs unchanged and sources_df with
+        new same sources under new epoch when given skyc2_srcs with no new 
+        sources. 
+        '''
+        sources_df = pd.read_csv(
+            os.path.join(DATA_PATH, 'sources_df_basic_in.csv'), 
+            header=0
+        )
+        skyc1_srcs = pd.read_csv(
+            os.path.join(DATA_PATH, 'skyc1_srcs_basic_in.csv'), 
+            header=0
+        )
+        skyc1 = SkyCoord(
+            skyc1_srcs['ra'].tolist(), 
+            skyc1_srcs['dec'].tolist(), 
+            unit='deg'
+        )
+        skyc2_srcs = pd.read_csv(
+            os.path.join(DATA_PATH, 'skyc2_srcs_basic_no_new.csv'), 
+            header=0
+        )
+        skyc2 = SkyCoord(
+            skyc2_srcs['ra'].tolist(), 
+            skyc2_srcs['dec'].tolist(), 
+            unit='deg'
+        )
+        limit = Angle(10, unit='arcsec')
+
+        sources_df, skyc1_srcs = basic_association(
+            sources_df, skyc1_srcs, skyc1, skyc2_srcs, skyc2, limit
+        )
+
+        self.check(sources_df, self.sources_df_basic_no_new)
+        self.check(skyc1_srcs, self.skyc1_srcs_basic_in)
+
+    def test_zero_limit(self):
+        '''
+        Test basic_association returns all sources in skyc2_srcs as new sources
+        when the limit is zero. 
+        '''
+        sources_df = pd.read_csv(
+            os.path.join(DATA_PATH, 'sources_df_basic_in.csv'), 
+            header=0
+        )
+        skyc1_srcs = pd.read_csv(
+            os.path.join(DATA_PATH, 'skyc1_srcs_basic_in.csv'), 
+            header=0
+        )
+        skyc1 = SkyCoord(
+            skyc1_srcs['ra'].tolist(), 
+            skyc1_srcs['dec'].tolist(), 
+            unit='deg'
+        )
+        skyc2_srcs = pd.read_csv(
+            os.path.join(DATA_PATH, 'skyc2_srcs_basic_in.csv'), 
+            header=0
+        )
+        skyc2 = SkyCoord(
+            skyc2_srcs['ra'].tolist(), 
+            skyc2_srcs['dec'].tolist(), 
+            unit='deg'
+        )
+        limit = Angle(0, unit='arcsec')
+
+        sources_df, skyc1_srcs = basic_association(
+            sources_df, skyc1_srcs, skyc1, skyc2_srcs, skyc2, limit
+        )
+
+        self.check(sources_df, self.sources_df_basic_all)
+        self.check(skyc1_srcs, self.skyc1_srcs_basic_all)
+
+    def test_basic_association(self):
+        '''
+        Test basic_association correctly appends the sources in skyc2_srcs into
+        skyc1_srcs and sources_df.
+        '''
+        sources_df = pd.read_csv(
+            os.path.join(DATA_PATH, 'sources_df_basic_in.csv'), 
+            header=0
+        )
+        skyc1_srcs = pd.read_csv(
+            os.path.join(DATA_PATH, 'skyc1_srcs_basic_in.csv'), 
+            header=0
+        )
+        skyc1 = SkyCoord(
+            skyc1_srcs['ra'].tolist(), 
+            skyc1_srcs['dec'].tolist(), 
+            unit='deg'
+        )
+        skyc2_srcs = pd.read_csv(
+            os.path.join(DATA_PATH, 'skyc2_srcs_basic_in.csv'), 
+            header=0
+        )
+        skyc2 = SkyCoord(
+            skyc2_srcs['ra'].tolist(), 
+            skyc2_srcs['dec'].tolist(), 
+            unit='deg'
+        )
+        limit = Angle(10, unit='arcsec')
+
+        sources_df, skyc1_srcs = basic_association(
+            sources_df, skyc1_srcs, skyc1, skyc2_srcs, skyc2, limit
+        )
+
+        self.check(sources_df, self.sources_df_basic_out)
+        self.check(skyc1_srcs, self.skyc1_srcs_basic_out)
 
 
 class AdvancedAssociationTest(SimpleTestCase):
     '''
     Tests for advanced_association in association.py
     '''
-
-    def test(self):
-        pass
-
-
-class AssociationTest(SimpleTestCase):
-    '''
-    Tests for association in association.py
-    '''
-
-    # this is painful to test. one of the inputs is the config file
 
     def test(self):
         pass
@@ -471,15 +607,3 @@ class CorrectParallelSourceIdsTest(SimpleTestCase):
         df = _correct_parallel_source_ids(df, 2)
 
         self.assertTrue(df.equals(self.sources_df_out_2))
-
-
-class ParallelAssociation(SimpleTestCase):
-    '''
-    Tests for parallel_association in association.py
-    '''
-
-    # this is painful to test. one of the inputs is the config file
-
-    def test(self):
-        pass
-
