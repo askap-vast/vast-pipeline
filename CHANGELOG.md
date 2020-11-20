@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added custom 404.html and 500.html templates for error pages [#415](https://github.com/askap-vast/vast-pipeline/pull/415)
 - Added ability to export measurement_pairs.parqyet as an arrow file [#393](https://github.com/askap-vast/vast-pipeline/pull/393).
 - Added new fields to detail pages and source and measurement tables [#406](https://github.com/askap-vast/vast-pipeline/pull/406).
 - Added new fields to source query page (island flux ratio, min and max fluxes) [#406](https://github.com/askap-vast/vast-pipeline/pull/406).
@@ -58,6 +59,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### Changed
 
 - Changed alerts to use the Bootstrap toasts system [#419](https://github.com/askap-vast/vast-pipeline/pull/419).
+- Images table on pipeline run detail page changed to order by datetime by default [#417](https://github.com/askap-vast/vast-pipeline/pull/417).
 - Changed config argument `CREATE_MEASUREMENTS_ARROW_FILE` -> `CREATE_MEASUREMENTS_ARROW_FILES` [#393](https://github.com/askap-vast/vast-pipeline/pull/393).
 - Naming of average flux query fields to account for other min max flux fields [#406](https://github.com/askap-vast/vast-pipeline/pull/406).
 - Expanded `README.md` to include `DjangoQ` and UI job scheduling information [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
@@ -90,6 +92,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed new sources rms measurement returns when no measurements are valid [#417](https://github.com/askap-vast/vast-pipeline/pull/417).
+- Fixed measuring rms values from selavy created NAXIS=3 FITS images [#417](https://github.com/askap-vast/vast-pipeline/pull/417).
 - Fixed rms value calculation in non-cluster forced extractions [#402](https://github.com/askap-vast/vast-pipeline/pull/402).
 - Increase request limit for gunicorn [#398](https://github.com/askap-vast/vast-pipeline/pull/398).
 - Fixed max source Vs metric to being an absolute value [#391](https://github.com/askap-vast/vast-pipeline/pull/391).
@@ -110,6 +114,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### List of PRs
 
 - [#419](https://github.com/askap-vast/vast-pipeline/pull/419) feat: Update alerts to use toasts.
+- [#415](https://github.com/askap-vast/vast-pipeline/pull/415) feat: Added custom 404 and 500 templates.
 - [#393](https://github.com/askap-vast/vast-pipeline/pull/393) feat: Added measurement_pairs arrow export.
 - [#406](https://github.com/askap-vast/vast-pipeline/pull/406) feat, model: Added island flux ratio columns.
 - [#402](https://github.com/askap-vast/vast-pipeline/pull/402) fix: Fixed rms value calculation in non-cluster forced extractions.
