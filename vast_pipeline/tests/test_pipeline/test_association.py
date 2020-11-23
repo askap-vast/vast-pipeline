@@ -15,6 +15,7 @@ from vast_pipeline.pipeline.association import (
     many_to_many_advanced,
     many_to_one_advanced,
     basic_association,
+    advanced_association,
     _correct_parallel_source_ids
 )
 
@@ -283,8 +284,6 @@ class ManyToManyAdvancedTest(SimpleTestCase):
             os.path.join(DATA_PATH, 'temp_srcs_deruiter_drop.csv'), 
             header=0
         )
-
-    # TODO: there's no check on the method, write one? 
     
     def test_m_to_m_empty(self):
         '''
@@ -394,7 +393,25 @@ class ManyToOneAdvancedTest(SimpleTestCase):
         self.assertTrue(temp_srcs_out.equals(self.temp_srcs_ind_rel))
 
 
-class BasicAssociationTest(SimpleTestCase):
+class TestHelpers(SimpleTestCase):
+    '''
+    Class which has some helper functions for testing. 
+    '''
+
+    def check_col(self, df1, df2, columns=['ra', 'dec', 'source', 'epoch']):
+        '''
+        Function which checks that certain columns of two DataFrames are
+        equal for BasicAssociationTest and AdvancedAssociationTest.
+        
+        Not testing related column, it is used ione_to_many_basic, which is already 
+        tested. Note testing d2d column, it contains floats and is output from 
+        Astropy.
+        '''
+        for col in columns:
+            self.assertTrue(df1[col].equals(df2[col]))
+
+
+class BasicAssociationTest(TestHelpers):
     '''
     Tests for basic_association in association.py
     '''
@@ -408,34 +425,24 @@ class BasicAssociationTest(SimpleTestCase):
         self.sources_df_basic_out = pd.read_csv(
             os.path.join(DATA_PATH, 'sources_df_basic_out.csv')
         ) 
-        self.sources_df_basic_no_new = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_basic_no_new.csv')
+        self.sources_df_no_new = pd.read_csv(
+            os.path.join(DATA_PATH, 'sources_df_no_new.csv')
         ) 
-        self.sources_df_basic_all = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_basic_all.csv')
+        self.sources_df_all = pd.read_csv(
+            os.path.join(DATA_PATH, 'sources_df_all.csv')
         ) 
-        self.skyc1_srcs_basic_in = pd.read_csv(
-            os.path.join(DATA_PATH, 'skyc1_srcs_basic_in.csv'), 
+        self.skyc1_srcs_in = pd.read_csv(
+            os.path.join(DATA_PATH, 'skyc1_srcs_in.csv'), 
             header=0
         )
-        self.skyc1_srcs_basic_out = pd.read_csv(
-            os.path.join(DATA_PATH, 'skyc1_srcs_basic_out.csv'),
+        self.skyc1_srcs_out = pd.read_csv(
+            os.path.join(DATA_PATH, 'skyc1_srcs_out.csv'),
             header=0
         )
-        self.skyc1_srcs_basic_all = pd.read_csv(
-            os.path.join(DATA_PATH, 'skyc1_srcs_basic_all.csv'),
+        self.skyc1_srcs_all = pd.read_csv(
+            os.path.join(DATA_PATH, 'skyc1_srcs_all.csv'),
             header=0
         )
-
-    def check(self, df1, df2, columns=['ra', 'dec', 'source', 'epoch']):
-            '''
-            Function which checks that certain columns of two DataFrames are
-            equal. Not testing related column, it is used in one_to_many_basic,
-            which is already tested. Note testing d2d column, it contains 
-            floats and is output from Astropy.
-            '''
-            for col in columns:
-                self.assertTrue(df1[col].equals(df2[col]))
 
     def test_no_new_skyc2_srcs(self):
         '''
@@ -444,11 +451,11 @@ class BasicAssociationTest(SimpleTestCase):
         sources. 
         '''
         sources_df = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_basic_in.csv'), 
+            os.path.join(DATA_PATH, 'sources_df_ass_in.csv'), 
             header=0
         )
         skyc1_srcs = pd.read_csv(
-            os.path.join(DATA_PATH, 'skyc1_srcs_basic_in.csv'), 
+            os.path.join(DATA_PATH, 'skyc1_srcs_in.csv'), 
             header=0
         )
         skyc1 = SkyCoord(
@@ -457,7 +464,7 @@ class BasicAssociationTest(SimpleTestCase):
             unit='deg'
         )
         skyc2_srcs = pd.read_csv(
-            os.path.join(DATA_PATH, 'skyc2_srcs_basic_no_new.csv'), 
+            os.path.join(DATA_PATH, 'skyc2_srcs_no_new.csv'), 
             header=0
         )
         skyc2 = SkyCoord(
@@ -471,8 +478,8 @@ class BasicAssociationTest(SimpleTestCase):
             sources_df, skyc1_srcs, skyc1, skyc2_srcs, skyc2, limit
         )
 
-        self.check(sources_df, self.sources_df_basic_no_new)
-        self.check(skyc1_srcs, self.skyc1_srcs_basic_in)
+        self.check_col(sources_df, self.sources_df_no_new)
+        self.check_col(skyc1_srcs, self.skyc1_srcs_in)
 
     def test_zero_limit(self):
         '''
@@ -480,11 +487,11 @@ class BasicAssociationTest(SimpleTestCase):
         when the limit is zero. 
         '''
         sources_df = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_basic_in.csv'), 
+            os.path.join(DATA_PATH, 'sources_df_ass_in.csv'), 
             header=0
         )
         skyc1_srcs = pd.read_csv(
-            os.path.join(DATA_PATH, 'skyc1_srcs_basic_in.csv'), 
+            os.path.join(DATA_PATH, 'skyc1_srcs_in.csv'), 
             header=0
         )
         skyc1 = SkyCoord(
@@ -493,7 +500,7 @@ class BasicAssociationTest(SimpleTestCase):
             unit='deg'
         )
         skyc2_srcs = pd.read_csv(
-            os.path.join(DATA_PATH, 'skyc2_srcs_basic_in.csv'), 
+            os.path.join(DATA_PATH, 'skyc2_srcs_in.csv'), 
             header=0
         )
         skyc2 = SkyCoord(
@@ -507,8 +514,8 @@ class BasicAssociationTest(SimpleTestCase):
             sources_df, skyc1_srcs, skyc1, skyc2_srcs, skyc2, limit
         )
 
-        self.check(sources_df, self.sources_df_basic_all)
-        self.check(skyc1_srcs, self.skyc1_srcs_basic_all)
+        self.check_col(sources_df, self.sources_df_all)
+        self.check_col(skyc1_srcs, self.skyc1_srcs_all)
 
     def test_basic_association(self):
         '''
@@ -516,11 +523,11 @@ class BasicAssociationTest(SimpleTestCase):
         skyc1_srcs and sources_df.
         '''
         sources_df = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_basic_in.csv'), 
+            os.path.join(DATA_PATH, 'sources_df_ass_in.csv'), 
             header=0
         )
         skyc1_srcs = pd.read_csv(
-            os.path.join(DATA_PATH, 'skyc1_srcs_basic_in.csv'), 
+            os.path.join(DATA_PATH, 'skyc1_srcs_in.csv'), 
             header=0
         )
         skyc1 = SkyCoord(
@@ -529,7 +536,7 @@ class BasicAssociationTest(SimpleTestCase):
             unit='deg'
         )
         skyc2_srcs = pd.read_csv(
-            os.path.join(DATA_PATH, 'skyc2_srcs_basic_in.csv'), 
+            os.path.join(DATA_PATH, 'skyc2_srcs_in.csv'), 
             header=0
         )
         skyc2 = SkyCoord(
@@ -543,17 +550,194 @@ class BasicAssociationTest(SimpleTestCase):
             sources_df, skyc1_srcs, skyc1, skyc2_srcs, skyc2, limit
         )
 
-        self.check(sources_df, self.sources_df_basic_out)
-        self.check(skyc1_srcs, self.skyc1_srcs_basic_out)
+        self.check_col(sources_df, self.sources_df_basic_out)
+        self.check_col(skyc1_srcs, self.skyc1_srcs_out)
 
 
-class AdvancedAssociationTest(SimpleTestCase):
+class AdvancedAssociationTest(TestHelpers):
     '''
     Tests for advanced_association in association.py
     '''
 
-    def test(self):
-        pass
+    @classmethod
+    def setUpClass(self):
+        '''
+        Load in correct outputs so inplace operations are tested.
+        '''
+        super().setUpClass()
+        self.sources_df_advanced_out = pd.read_csv(
+            os.path.join(DATA_PATH, 'sources_df_advanced_out.csv')
+        ) 
+        self.sources_df_no_new = pd.read_csv(
+            os.path.join(DATA_PATH, 'sources_df_no_new.csv')
+        ) 
+        self.sources_df_all = pd.read_csv(
+            os.path.join(DATA_PATH, 'sources_df_all.csv')
+        ) 
+        self.skyc1_srcs_in = pd.read_csv(
+            os.path.join(DATA_PATH, 'skyc1_srcs_in.csv'), 
+            header=0
+        )
+        self.skyc1_srcs_out = pd.read_csv(
+            os.path.join(DATA_PATH, 'skyc1_srcs_out.csv'),
+            header=0
+        )
+        self.skyc1_srcs_all = pd.read_csv(
+            os.path.join(DATA_PATH, 'skyc1_srcs_all.csv'),
+            header=0
+        )
+
+    def test_no_new_skyc2_srcs(self):
+        '''
+        Test advanced_association returns skyc1_srcs unchanged and sources_df 
+        with new same sources under new epoch when given skyc2_srcs with no new 
+        sources. 
+        '''
+        sources_df = pd.read_csv(
+            os.path.join(DATA_PATH, 'sources_df_ass_in.csv'), 
+            header=0
+        )
+        skyc1_srcs = pd.read_csv(
+            os.path.join(DATA_PATH, 'skyc1_srcs_in.csv'), 
+            header=0
+        )
+        skyc1 = SkyCoord(
+            skyc1_srcs['ra'].tolist(), 
+            skyc1_srcs['dec'].tolist(), 
+            unit='deg'
+        )
+        skyc2_srcs = pd.read_csv(
+            os.path.join(DATA_PATH, 'skyc2_srcs_no_new.csv'), 
+            header=0
+        )
+        skyc2 = SkyCoord(
+            skyc2_srcs['ra'].tolist(), 
+            skyc2_srcs['dec'].tolist(), 
+            unit='deg'
+        )
+        dr_limit = 5.68
+        bw_max = Angle(10, unit='arcsec')
+
+        sources_df, skyc1_srcs = advanced_association(
+            'advanced', sources_df, skyc1_srcs, skyc1, 
+            skyc2_srcs, skyc2, dr_limit, bw_max
+        )
+
+        self.check_col(sources_df, self.sources_df_no_new)
+        self.check_col(skyc1_srcs, self.skyc1_srcs_in)
+
+    def test_zero_bw_max(self):
+        '''
+        Test advanced_association returns all sources in skyc2_srcs as new 
+        sources when the limit is zero. 
+        '''
+        sources_df = pd.read_csv(
+            os.path.join(DATA_PATH, 'sources_df_ass_in.csv'), 
+            header=0
+        )
+        skyc1_srcs = pd.read_csv(
+            os.path.join(DATA_PATH, 'skyc1_srcs_in.csv'), 
+            header=0
+        )
+        skyc1 = SkyCoord(
+            skyc1_srcs['ra'].tolist(), 
+            skyc1_srcs['dec'].tolist(), 
+            unit='deg'
+        )
+        skyc2_srcs = pd.read_csv(
+            os.path.join(DATA_PATH, 'skyc2_srcs_in.csv'), 
+            header=0
+        )
+        skyc2 = SkyCoord(
+            skyc2_srcs['ra'].tolist(), 
+            skyc2_srcs['dec'].tolist(), 
+            unit='deg'
+        )
+        dr_limit = 5.68
+        bw_max = Angle(0, unit='arcsec')
+
+        sources_df, skyc1_srcs = advanced_association(
+            'advanced', sources_df, skyc1_srcs, skyc1, 
+            skyc2_srcs, skyc2, dr_limit, bw_max
+        )
+
+        self.check_col(sources_df, self.sources_df_all)
+        self.check_col(skyc1_srcs, self.skyc1_srcs_all)
+
+    def test_advanced(self):
+        '''
+        Test advanced_association correctly appends the sources in skyc2_srcs 
+        into skyc1_srcs and sources_df for method=advanced.
+        '''
+        sources_df = pd.read_csv(
+            os.path.join(DATA_PATH, 'sources_df_ass_in.csv'), 
+            header=0
+        )
+        skyc1_srcs = pd.read_csv(
+            os.path.join(DATA_PATH, 'skyc1_srcs_in.csv'), 
+            header=0
+        )
+        skyc1 = SkyCoord(
+            skyc1_srcs['ra'].tolist(), 
+            skyc1_srcs['dec'].tolist(), 
+            unit='deg'
+        )
+        skyc2_srcs = pd.read_csv(
+            os.path.join(DATA_PATH, 'skyc2_srcs_in.csv'), 
+            header=0
+        )
+        skyc2 = SkyCoord(
+            skyc2_srcs['ra'].tolist(), 
+            skyc2_srcs['dec'].tolist(), 
+            unit='deg'
+        )
+        dr_limit = 5.68
+        bw_max = Angle(10, unit='arcsec')
+
+        sources_df, skyc1_srcs = advanced_association(
+            'advanced', sources_df, skyc1_srcs, skyc1, 
+            skyc2_srcs, skyc2, dr_limit, bw_max
+        ) 
+
+        self.check_col(sources_df, self.sources_df_advanced_out)
+        self.check_col(skyc1_srcs, self.skyc1_srcs_out)
+
+    def test_deruiter(self):
+        '''
+        Test advanced_association correctly appends the sources in skyc2_srcs 
+        into skyc1_srcs and sources_df for method=deruiter.
+        '''
+        sources_df = pd.read_csv(
+            os.path.join(DATA_PATH, 'sources_df_ass_in.csv'), 
+            header=0
+        )
+        skyc1_srcs = pd.read_csv(
+            os.path.join(DATA_PATH, 'skyc1_srcs_in.csv'), 
+            header=0
+        )
+        skyc1 = SkyCoord(
+            skyc1_srcs['ra'].tolist(), 
+            skyc1_srcs['dec'].tolist(), 
+            unit='deg'
+        )
+        skyc2_srcs = pd.read_csv(
+            os.path.join(DATA_PATH, 'skyc2_srcs_in.csv'), 
+            header=0
+        )
+        skyc2 = SkyCoord(
+            skyc2_srcs['ra'].tolist(), 
+            skyc2_srcs['dec'].tolist(), 
+            unit='deg'
+        )
+        dr_limit = 5.68
+        bw_max = Angle(10, unit='arcsec')
+
+        sources_df, skyc1_srcs = advanced_association(
+            'deruiter', sources_df, skyc1_srcs, skyc1, skyc2_srcs, skyc2, dr_limit, bw_max
+        )
+
+        self.check_col(sources_df, self.sources_df_advanced_out)
+        self.check_col(skyc1_srcs, self.skyc1_srcs_out)
 
 
 class CorrectParallelSourceIdsTest(SimpleTestCase):
