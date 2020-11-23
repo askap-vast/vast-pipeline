@@ -308,7 +308,7 @@ PIPE_RUN_CONFIG_DEFAULTS = {
     'selavy_local_rms_zero_fill_value': 0.2,
     'create_measurements_arrow_file': False,
     'suppress_astropy_warnings': True,
-    'source_aggregate_pair_metrics_min_vs': 4.3,
+    'source_aggregate_pair_metrics_min_abs_vs': 4.3,
 }
 
 # default max concurrent pipeline runs

@@ -24,10 +24,10 @@ def calculate_measurement_pair_aggregate_metrics(
     flux_type: str = "peak",
 ) -> pd.DataFrame:
     """Calculate the aggregate maximum measurement pair variability metrics to be stored
-    in `Source` objects. Only measurement pairs with a Vs metric >= `min_vs` are considered.
-    The measurement pairs are filtered on Vs metric >= `min_vs`, grouped by the source
-    ID column `source`, then the row index of the maximum abs(m) metric is found. The Vs
-    and m metric values from this row are returned for each source.
+    in `Source` objects. Only measurement pairs with abs(Vs metric) >= `min_vs` are considered.
+    The measurement pairs are filtered on abs(Vs metric) >= `min_vs`, grouped by the source
+    ID column `source`, then the row index of the maximum abs(m) metric is found. The
+    absolute Vs and m metric values from this row are returned for each source.
 
     Parameters
     ----------
@@ -45,19 +45,19 @@ def calculate_measurement_pair_aggregate_metrics(
     -------
     pd.DataFrame
         Measurement pair aggregate metrics indexed by the source ID, `source`. The metric
-        columns are named: `vs_significant_max_{flux_type}` and
+        columns are named: `vs_abs_significant_max_{flux_type}` and
         `m_abs_significant_max_{flux_type}`.
     """
     pair_agg_metrics = measurement_pairs_df.set_index("source").iloc[
-        measurement_pairs_df.query(f"vs_{flux_type} >= @min_vs")
+        measurement_pairs_df.query(f"abs(vs_{flux_type}) >= @min_vs")
         .groupby("source")
         .agg(m_abs_max_idx=(f"m_{flux_type}", lambda x: x.abs().idxmax()),)
         .astype(np.int32)["m_abs_max_idx"]  # cast row indices to int and select them
         .reset_index(drop=True)  # keep only the row indices
     ][[f"vs_{flux_type}", f"m_{flux_type}"]]
 
-    pair_agg_metrics = pair_agg_metrics.rename(columns={
-        f"vs_{flux_type}": f"vs_significant_max_{flux_type}",
+    pair_agg_metrics = pair_agg_metrics.abs().rename(columns={
+        f"vs_{flux_type}": f"vs_abs_significant_max_{flux_type}",
         f"m_{flux_type}": f"m_abs_significant_max_{flux_type}",
     })
     return pair_agg_metrics
@@ -67,7 +67,7 @@ def final_operations(
     sources_df: pd.DataFrame,
     p_run: Run,
     new_sources_df: pd.DataFrame,
-    source_aggregate_pair_metrics_min_vs: float,
+    source_aggregate_pair_metrics_min_abs_vs: float,
 ) -> int:
     """
     Performs the final operations of the pipeline:
@@ -87,7 +87,7 @@ def final_operations(
     new_sources_df : pd.DataFrame
         The new sources dataframe, only contains the 'new_source_high_sigma'
         column (source_id is the index).
-    source_aggregate_pair_metrics_min_vs : float
+    source_aggregate_pair_metrics_min_abs_vs : float
         Only measurement pairs where the Vs metric exceeds this value are selected for
         the aggregate pair metrics that are stored in `Source` objects.
 
@@ -141,10 +141,10 @@ def final_operations(
     # of the aggregate max of the abs(m) metric for each flux type.
     pair_agg_metrics = pd.merge(
         calculate_measurement_pair_aggregate_metrics(
-            measurement_pairs_df, source_aggregate_pair_metrics_min_vs, flux_type="peak",
+            measurement_pairs_df, source_aggregate_pair_metrics_min_abs_vs, flux_type="peak",
         ),
         calculate_measurement_pair_aggregate_metrics(
-            measurement_pairs_df, source_aggregate_pair_metrics_min_vs, flux_type="int",
+            measurement_pairs_df, source_aggregate_pair_metrics_min_abs_vs, flux_type="int",
         ),
         how="outer",
         left_index=True,
@@ -154,9 +154,9 @@ def final_operations(
     # join with sources and replace agg metrics NaNs with 0 as the DataTables API JSON
     # serialization doesn't like them
     srcs_df = srcs_df.join(pair_agg_metrics).fillna(value={
-        "vs_significant_max_peak": 0.0,
+        "vs_abs_significant_max_peak": 0.0,
         "m_abs_significant_max_peak": 0.0,
-        "vs_significant_max_int": 0.0,
+        "vs_abs_significant_max_int": 0.0,
         "m_abs_significant_max_int": 0.0,
     })
     logger.info("Measurement pair aggregate metrics time: %.2f seconds", timer.reset())

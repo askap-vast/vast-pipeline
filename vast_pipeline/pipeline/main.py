@@ -390,7 +390,7 @@ class Pipeline():
             sources_df,
             p_run,
             new_sources_df,
-            self.config.SOURCE_AGGREGATE_PAIR_METRICS_MIN_VS,
+            self.config.SOURCE_AGGREGATE_PAIR_METRICS_MIN_ABS_VS,
         )
 
         # calculate number processed images

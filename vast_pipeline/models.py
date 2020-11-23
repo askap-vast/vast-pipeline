@@ -393,11 +393,11 @@ class Source(CommentableModel):
     n_neighbour_dist = models.FloatField(
         help_text='Distance to the nearest neighbour (deg)'
     )
-    vs_significant_max_int = models.FloatField(
+    vs_abs_significant_max_int = models.FloatField(
         default=0.0,
         help_text=(
             'Maximum value of all measurement pair variability t-statistics for int '
-            'flux that exceed SOURCE_AGGREGATE_PAIR_METRICS_MIN_VS in the pipeline run '
+            'flux that exceed SOURCE_AGGREGATE_PAIR_METRICS_MIN_ABS_VS in the pipeline run '
             'configuration.'
         )
     )
@@ -405,23 +405,23 @@ class Source(CommentableModel):
         default=0.0,
         help_text=(
             'Maximum absolute value of all measurement pair modulation indices for int '
-            'flux that exceed SOURCE_AGGREGATE_PAIR_METRICS_MIN_VS in the pipeline run '
+            'flux that exceed SOURCE_AGGREGATE_PAIR_METRICS_MIN_ABS_VS in the pipeline run '
             'configuration.'
         )
     )
-    vs_significant_max_peak = models.FloatField(
+    vs_abs_significant_max_peak = models.FloatField(
         default=0.0,
         help_text=(
-            'Maximum value of all measurement pair variability t-statistics for peak '
-            'flux that exceed SOURCE_AGGREGATE_PAIR_METRICS_MIN_VS in the pipeline run '
-            'configuration.'
+            'Maximum absolute value of all measurement pair variability t-statistics for '
+            'peak flux that exceed SOURCE_AGGREGATE_PAIR_METRICS_MIN_ABS_VS in the pipeline '
+            'run configuration.'
         )
     )
     m_abs_significant_max_peak = models.FloatField(
         default=0.0,
         help_text=(
             'Maximum absolute value of all measurement pair modulation indices for '
-            'peak flux that exceed SOURCE_AGGREGATE_PAIR_METRICS_MIN_VS in the '
+            'peak flux that exceed SOURCE_AGGREGATE_PAIR_METRICS_MIN_ABS_VS in the '
             'pipeline run configuration.'
         )
     )
