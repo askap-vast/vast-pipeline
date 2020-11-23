@@ -147,27 +147,6 @@ class OneToManyAdvancedTest(SimpleTestCase):
             header=0
         )
 
-    def test_method_exception(self):
-        '''
-        Test that an exception is raised when a bad method is used
-        '''
-        temp_srcs = pd.read_csv(
-            os.path.join(DATA_PATH, 'temp_srcs_nodup.csv'),
-            header=0
-        )
-        sources_df = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_in.csv'), 
-            header=0
-        )
-
-        self.assertRaises(
-            Exception, 
-            one_to_many_advanced, 
-            temp_srcs, 
-            sources_df, 
-            method='non-existant-method'
-        )
-
     def test_duplicated_skyc1_empty(self):
         '''
         Test if one_to_many_advanced will return the input dataframes unchanged
@@ -706,6 +685,9 @@ class AdvancedAssociationTest(TestHelpers):
         '''
         Test advanced_association correctly appends the sources in skyc2_srcs 
         into skyc1_srcs and sources_df for method=deruiter.
+
+        Note: this test is redundant, method is already tested in other 
+        functions. Better test would be if dr_limit gives different result.
         '''
         sources_df = pd.read_csv(
             os.path.join(DATA_PATH, 'sources_df_ass_in.csv'), 

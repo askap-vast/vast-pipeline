@@ -328,10 +328,6 @@ def one_to_many_advanced(
         Updated temp_srcs and sources_df with all one_to_many relation
         information added.
     '''
-    if method not in ['advanced', 'deruiter']:
-        raise Exception(
-            f"Advanced association method '{method}' not recongised!"
-        )
     # use only these columns for easy debugging of the dataframe
     cols = [
         'index_old_skyc1', 'id_skyc1', 'source_skyc1', 'd2d_skyc1',
