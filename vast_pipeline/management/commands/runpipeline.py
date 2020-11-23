@@ -9,7 +9,8 @@ from django.core.management.base import BaseCommand, CommandError
 from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
 from vast_pipeline.pipeline.main import Pipeline
 from vast_pipeline.pipeline.utils import (
-    get_create_p_run, create_measurements_arrow_file
+    get_create_p_run, create_measurements_arrow_file,
+    create_measurement_pairs_arrow_file
 )
 from vast_pipeline.utils.utils import StopWatch
 from ..helpers import get_p_run_name
@@ -81,14 +82,14 @@ def run_pipe(
         pipeline.set_status(run_dj_obj, 'ERR')
         raise CommandError(msg) if cmd else PipelineConfigError(msg)
 
-    if pipeline.config.CREATE_MEASUREMENTS_ARROW_FILE and cmd is False:
+    if pipeline.config.CREATE_MEASUREMENTS_ARROW_FILES and cmd is False:
         logger.warning(
             'The creation of arrow files is currently unavailable when running'
             ' through the UI. Please ask an admin to complete this step for'
             ' you upon a successful completion.'
         )
-        logger.warning("Setting 'CREATE_MEASUREMENTS_ARROW_FILE' to 'False'.")
-        pipeline.config.CREATE_MEASUREMENTS_ARROW_FILE = False
+        logger.warning("Setting 'CREATE_MEASUREMENTS_ARROW_FILES' to 'False'.")
+        pipeline.config.CREATE_MEASUREMENTS_ARROW_FILES = False
 
     if pipeline.config.SUPPRESS_ASTROPY_WARNINGS:
         warnings.simplefilter("ignore", category=AstropyWarning)
@@ -125,8 +126,9 @@ def run_pipe(
         pipeline.set_status(p_run, 'RUN')
         pipeline.process_pipeline(p_run)
         # Create arrow file after success if selected.
-        if pipeline.config.CREATE_MEASUREMENTS_ARROW_FILE:
+        if pipeline.config.CREATE_MEASUREMENTS_ARROW_FILES:
             create_measurements_arrow_file(p_run)
+            create_measurement_pairs_arrow_file(p_run)
     except Exception as e:
         # set the pipeline status as error
         pipeline.set_status(p_run, 'ERR')
