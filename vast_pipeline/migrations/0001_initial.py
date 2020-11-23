@@ -13,8 +13,8 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('contenttypes', '0002_remove_content_type_name'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ('contenttypes', '0002_remove_content_type_name'),
     ]
 
     operations = [
@@ -102,8 +102,10 @@ class Migration(migrations.Migration):
                 ('uncertainty_ns', models.FloatField(help_text='Total north-south (Dec) uncertainty, quadratic sum of error_radius and ns_sys_err (Deg).')),
                 ('flux_int', models.FloatField()),
                 ('flux_int_err', models.FloatField()),
+                ('flux_int_isl_ratio', models.FloatField(help_text='Ratio of the component integrated flux to the total island integrated flux.')),
                 ('flux_peak', models.FloatField()),
                 ('flux_peak_err', models.FloatField()),
+                ('flux_peak_isl_ratio', models.FloatField(help_text='Ratio of the component peak flux to the total island peak flux.')),
                 ('chi_squared_fit', models.FloatField(db_column='chi2_fit', help_text='Chi-squared of the Guassian fit to the source.')),
                 ('spectral_index', models.FloatField(db_column='spectr_idx', help_text='In-band Selavy spectral index.')),
                 ('spectral_index_from_TT', models.BooleanField(db_column='spectr_idx_tt', default=False, help_text='True/False if the spectral index came from the taylor term.')),
@@ -135,7 +137,7 @@ class Migration(migrations.Migration):
                 ('description', models.CharField(blank=True, help_text='A short description of the pipeline run.', max_length=240)),
                 ('time', models.DateTimeField(auto_now=True, help_text='Datetime of a pipeline run.')),
                 ('path', models.FilePathField(help_text='path to the pipeline run', max_length=200)),
-                ('status', models.CharField(choices=[('INI', 'Initialised'), ('RUN', 'Running'), ('END', 'Completed'), ('ERR', 'Error')], default='INI', help_text='Status of the pipeline run.', max_length=3)),
+                ('status', models.CharField(choices=[('INI', 'Initialised'), ('QUE', 'Queued'), ('RUN', 'Running'), ('END', 'Completed'), ('ERR', 'Error')], default='INI', help_text='Status of the pipeline run.', max_length=3)),
                 ('n_images', models.IntegerField(default=0, help_text='number of images processed in this run')),
                 ('n_sources', models.IntegerField(default=0, help_text='number of sources extracted in this run')),
                 ('n_selavy_measurements', models.IntegerField(default=0, help_text='number of selavy measurements in this run')),
@@ -160,6 +162,11 @@ class Migration(migrations.Migration):
                 ('avg_flux_int', models.FloatField(help_text='The average integrated flux value.')),
                 ('avg_flux_peak', models.FloatField(help_text='The average peak flux value.')),
                 ('max_flux_peak', models.FloatField(help_text='The maximum peak flux value.')),
+                ('min_flux_peak', models.FloatField(help_text='The minimum peak flux value.')),
+                ('max_flux_int', models.FloatField(help_text='The maximum integrated flux value.')),
+                ('min_flux_int', models.FloatField(help_text='The minimum integrated flux value.')),
+                ('min_flux_int_isl_ratio', models.FloatField(help_text='The minimum integrated island flux ratio value.')),
+                ('min_flux_peak_isl_ratio', models.FloatField(help_text='The minimum peak island flux ratio value.')),
                 ('avg_compactness', models.FloatField(help_text='The average compactness.')),
                 ('min_snr', models.FloatField(help_text='The minimum signal-to-noise ratio value of the detections.')),
                 ('max_snr', models.FloatField(help_text='The maximum signal-to-noise ratio value of the detections.')),

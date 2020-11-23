@@ -4,7 +4,10 @@ import traceback
 import warnings
 
 from django.core.management.base import BaseCommand, CommandError
-from vast_pipeline.pipeline.utils import create_measurements_arrow_file
+from vast_pipeline.pipeline.utils import (
+    create_measurements_arrow_file,
+    create_measurement_pairs_arrow_file
+)
 from vast_pipeline.models import Run
 from ..helpers import get_p_run_name
 
@@ -14,11 +17,12 @@ logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     """
-    This command creates a measurements arrow file for a completed pipeline
-    run.
+    This command creates measurements and measurement_pairs arrow files for a
+    completed pipeline run.
     """
     help = (
-        'Create a `measurements.arrow` file for a completed pipeline run.'
+        'Create `measurements.arrow` and `measurement_pairs.arrow` files for a'
+        ' completed pipeline run.'
     )
 
     def add_arguments(self, parser):
@@ -61,6 +65,9 @@ class Command(BaseCommand):
             raise CommandError(f'Pipeline run {p_run_name} has not completed.')
 
         measurements_arrow = os.path.join(run_folder, 'measurements.arrow')
+        measurement_pairs_arrow = os.path.join(
+            run_folder, 'measurement_pairs.arrow'
+        )
 
         if os.path.isfile(measurements_arrow):
             if options['overwrite']:
@@ -72,6 +79,24 @@ class Command(BaseCommand):
                     ' and `--overwrite` has not been selected.'
                 )
 
+        if os.path.isfile(measurement_pairs_arrow):
+            if options['overwrite']:
+                logger.info(
+                    "Removing previous 'measurement_pairs.arrow' file."
+                )
+                os.remove(measurement_pairs_arrow)
+            else:
+                raise CommandError(
+                    'Measurement pairs arrow file already exists for'
+                    f' {p_run_name} and `--overwrite` has not been selected.'
+                )
+
         logger.info("Creating measurements arrow file for '%s'.", p_run_name)
 
         create_measurements_arrow_file(p_run)
+
+        logger.info(
+            "Creating measurement pairs arrow file for '%s'.", p_run_name
+        )
+
+        create_measurement_pairs_arrow_file(p_run)

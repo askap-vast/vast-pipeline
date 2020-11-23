@@ -12,7 +12,9 @@ from vast_pipeline.pipeline.loading import (
     make_upload_associations, make_upload_sources, make_upload_related_sources,
     make_upload_measurement_pairs,
 )
-from vast_pipeline.pipeline.utils import parallel_groupby, calculate_measurement_pair_metrics
+from vast_pipeline.pipeline.utils import (
+    parallel_groupby, calculate_measurement_pair_metrics
+)
 
 
 logger = logging.getLogger(__name__)
