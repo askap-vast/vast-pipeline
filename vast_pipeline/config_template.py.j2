@@ -121,3 +121,7 @@ CREATE_MEASUREMENTS_ARROW_FILES = {{ create_measurements_arrow_files }}
 
 # Hide astropy warnings
 SUPPRESS_ASTROPY_WARNINGS = {{ suppress_astropy_warnings }}
+
+# Only measurement pairs where the Vs metric exceeds this value are selected for the
+# aggregate pair metrics that are stored in Source objects.
+SOURCE_AGGREGATE_PAIR_METRICS_MIN_ABS_VS = {{ source_aggregate_pair_metrics_min_abs_vs }}
