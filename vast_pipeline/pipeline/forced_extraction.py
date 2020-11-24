@@ -507,6 +507,8 @@ def forced_extraction(
     extr_df['flag_c4'] = False
     extr_df['spectral_index_from_TT'] = False
     extr_df['has_siblings'] = False
+    extr_df['flux_int_isl_ratio'] = 1.0
+    extr_df['flux_peak_isl_ratio'] = 1.0
 
     col_order = read_schema(
         images_df.iloc[0]['measurements_path']

@@ -309,4 +309,21 @@ class SelavyImage(FitsImage):
         # Initialise the forced column as False
         df['forced'] = False
 
+        # Calculate island flux fractions
+        island_flux_totals = (
+            df[['island_id', 'flux_int', 'flux_peak']]
+            .groupby('island_id')
+            .agg('sum')
+        )
+
+        df['flux_int_isl_ratio'] =  (
+            df['flux_int'].values
+            / island_flux_totals.loc[df['island_id']]['flux_int'].values
+        )
+
+        df['flux_peak_isl_ratio'] =  (
+            df['flux_peak'].values
+            / island_flux_totals.loc[df['island_id']]['flux_peak'].values
+        )
+
         return df
