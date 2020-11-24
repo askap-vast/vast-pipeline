@@ -59,6 +59,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Bumped some npm package versions to address dependabot security alerts [#411](https://github.com/askap-vast/vast-pipeline/pull/411).
 - Images table on pipeline run detail page changed to order by datetime by default [#417](https://github.com/askap-vast/vast-pipeline/pull/417).
 - Changed config argument `CREATE_MEASUREMENTS_ARROW_FILE` -> `CREATE_MEASUREMENTS_ARROW_FILES` [#393](https://github.com/askap-vast/vast-pipeline/pull/393).
 - Naming of average flux query fields to account for other min max flux fields [#406](https://github.com/askap-vast/vast-pipeline/pull/406).
@@ -116,6 +117,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### List of PRs
 
 - [#407](https://github.com/askap-vast/vast-pipeline/pull/407) fix, model: modified 2-epoch metric calculation.
+- [#411](https://github.com/askap-vast/vast-pipeline/pull/411) fix: updated npm deps to fix security vulnerabilities.
 - [#415](https://github.com/askap-vast/vast-pipeline/pull/415) feat: Added custom 404 and 500 templates.
 - [#393](https://github.com/askap-vast/vast-pipeline/pull/393) feat: Added measurement_pairs arrow export.
 - [#406](https://github.com/askap-vast/vast-pipeline/pull/406) feat, model: Added island flux ratio columns.
