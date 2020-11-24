@@ -244,19 +244,19 @@
           <div class="row align-items-center">
             <div class="col-lg-6">
               <div class="form-group form-row align-items-center">
-                <label for="varMaxVsMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Max Vs Metric <a href="#" data-toggle="tooltip" data-placement="top" title=
+                <label for="varMaxVsMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Max |Vs| Metric <a href="#" data-toggle="tooltip" data-placement="top" title=
                   "The maximum two-epoch variability t-statistic value derived from the source. Peak or integrated flux can be selected."
               ><i class="fas fa-info-circle"></i></a></label>
                 <div class="col">
-                  <input id="varMaxVsMinSelect" name="min_vs" type="number" class="form-control" placeholder="Min" step="0.01" aria-label="Maximum Vs metric minimum">
+                  <input id="varMaxVsMinSelect" name="min_vs" type="number" class="form-control" placeholder="Min" step="0.01" aria-label="Maximum absolute Vs metric minimum">
                 </div>
                 <div class="col">
-                  <input id="varMaxVsMaxSelect" name="max_vs" type="number" class="form-control" placeholder="Max" step="0.01" aria-label="Maximum Vs metric maximum">
+                  <input id="varMaxVsMaxSelect" name="max_vs" type="number" class="form-control" placeholder="Max" step="0.01" aria-label="Maximum absolute Vs metric maximum">
                 </div>
                 <div class="col">
-                  <select id="varMaxVsMetricSelect" name="vs_flux_type" class="form-control" aria-label="Maximum Vs metric flux type">
-                    <option value="vs_max_int">Int Flux</option>
-                    <option value="vs_max_peak" selected>Peak Flux</option>
+                  <select id="varMaxVsMetricSelect" name="vs_flux_type" class="form-control" aria-label="Maximum absolute Vs metric flux type">
+                    <option value="vs_abs_significant_max_int">Int Flux</option>
+                    <option value="vs_abs_significant_max_peak" selected>Peak Flux</option>
                   </select>
                 </div>
               </div>
@@ -274,8 +274,8 @@
                 </div>
                 <div class="col">
                   <select id="varMaxAbsMMetricSelect" name="m_flux_type" class="form-control" aria-label="Maximum absolute m metric flux type">
-                    <option value="m_abs_max_int">Int Flux</option>
-                    <option value="m_abs_max_peak" selected>Peak Flux</option>
+                    <option value="m_abs_significant_max_int">Int Flux</option>
+                    <option value="m_abs_significant_max_peak" selected>Peak Flux</option>
                   </select>
                 </div>
               </div>
