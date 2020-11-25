@@ -1,11 +1,12 @@
 @import "sb-admin-2-custom/sb-admin-2-custom";
 
-.alert-wrapper {
+.toast-wrapper {
   position: fixed;
   right: 1rem;
   top: 1rem;
   display: grid;
   justify-content: flex-end;
+  z-index: 99999;
 }
 
 .modal-dialog-pipeconfig {

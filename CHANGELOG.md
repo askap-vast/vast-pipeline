@@ -121,8 +121,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### List of PRs
 
 - [#419](https://github.com/askap-vast/vast-pipeline/pull/419) feat: Update alerts to use toasts.
+<<<<<<< HEAD
 - [#408](https://github.com/askap-vast/vast-pipeline/pull/408) feat: use forced_phot dependency instead of copied code.
 - [#407](https://github.com/askap-vast/vast-pipeline/pull/407) fix, model: modified 2-epoch metric calculation.
+=======
+>>>>>>> 381c2a269ea04dba17bab187f4cf35a240949e7a
 - [#411](https://github.com/askap-vast/vast-pipeline/pull/411) fix: updated npm deps to fix security vulnerabilities.
 - [#415](https://github.com/askap-vast/vast-pipeline/pull/415) feat: Added custom 404 and 500 templates.
 - [#393](https://github.com/askap-vast/vast-pipeline/pull/393) feat: Added measurement_pairs arrow export.
