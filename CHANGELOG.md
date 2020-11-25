@@ -60,6 +60,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Renamed 'alert-wrapper' container to 'toast-wrapper' [#419](https://github.com/askap-vast/vast-pipeline/pull/419).
+- Changed alerts to use the Bootstrap toasts system [#419](https://github.com/askap-vast/vast-pipeline/pull/419).
 - Bumped some npm package versions to address dependabot security alerts [#411](https://github.com/askap-vast/vast-pipeline/pull/411).
 - Images table on pipeline run detail page changed to order by datetime by default [#417](https://github.com/askap-vast/vast-pipeline/pull/417).
 - Changed config argument `CREATE_MEASUREMENTS_ARROW_FILE` -> `CREATE_MEASUREMENTS_ARROW_FILES` [#393](https://github.com/askap-vast/vast-pipeline/pull/393).
@@ -118,6 +120,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#419](https://github.com/askap-vast/vast-pipeline/pull/419) feat: Update alerts to use toasts.
 - [#408](https://github.com/askap-vast/vast-pipeline/pull/408) feat: use forced_phot dependency instead of copied code.
 - [#407](https://github.com/askap-vast/vast-pipeline/pull/407) fix, model: modified 2-epoch metric calculation.
 - [#411](https://github.com/askap-vast/vast-pipeline/pull/411) fix: updated npm deps to fix security vulnerabilities.
