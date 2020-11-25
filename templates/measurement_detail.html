@@ -109,7 +109,9 @@
                 <strong>Has siblings: </strong>{{ measurement.has_siblings }}
                 {% if measurement.has_siblings %}
                 (<a href="#siblingHeader">Table</a>)
-                {% endif %}
+                {% endif %}<br>
+                <strong>Peak Flux Island Ratio: </strong>{{ measurement.flux_peak_isl_ratio|floatformat:2 }}<br>
+                <strong>Int. Flux Island Ratio: </strong>{{ measurement.flux_int_isl_ratio|floatformat:2 }}
               </p>
             </div>
             <div class="col-md">
@@ -117,7 +119,7 @@
                 <strong>Peak Flux: </strong>{{ measurement.flux_peak|floatformat:3 }} &plusmn;
                 {{ measurement.flux_peak_err|floatformat:3 }} mJy/beam<br>
                 <strong>Int. Flux: </strong>{{ measurement.flux_int|floatformat:3 }} &plusmn;
-                {{ measurement.flux_int_err|floatformat:3 }} mJy
+                {{ measurement.flux_int_err|floatformat:3 }} mJy<br>
               </p>
               <p>
                 <strong>SNR: </strong>{{ measurement.snr|floatformat:2 }}<br>
