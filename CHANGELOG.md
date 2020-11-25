@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added a check in the UI running that the job is not already running or queued [#421](https://github.com/askap-vast/vast-pipeline/pull/421).
+- Added the deletion of all parquet and arrow files upon a re-run [#421](https://github.com/askap-vast/vast-pipeline/pull/421).
 - Added [askap-vast/forced_phot](https://github.com/askap-vast/forced_phot) to pip requirements [#408](https://github.com/askap-vast/vast-pipeline/pull/408).
 - Added pipeline configuration parameter, `SOURCE_AGGREGATE_PAIR_METRICS_MIN_ABS_VS`, to filter measurement pairs before calculating aggregate metrics [#407](https://github.com/askap-vast/vast-pipeline/pull/407).
 - Added custom 404.html and 500.html templates for error pages [#415](https://github.com/askap-vast/vast-pipeline/pull/415)
@@ -118,6 +120,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#421](https://github.com/askap-vast/vast-pipeline/pull/421) feat: Delete output files on re-run & UI run check.
 - [#408](https://github.com/askap-vast/vast-pipeline/pull/408) feat: use forced_phot dependency instead of copied code.
 - [#407](https://github.com/askap-vast/vast-pipeline/pull/407) fix, model: modified 2-epoch metric calculation.
 - [#411](https://github.com/askap-vast/vast-pipeline/pull/411) fix: updated npm deps to fix security vulnerabilities.

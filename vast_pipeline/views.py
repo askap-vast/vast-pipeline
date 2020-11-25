@@ -292,6 +292,19 @@ class RunViewSet(ModelViewSet):
             )
             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
+        # check that it's not already running or queued
+        if p_run.status in ["RUN", "QUE"]:
+            msg = (
+                f'{p_run.name} is already running or is queued.'
+                ' Please wait for the run to complete before trying to'
+                ' submit again.'
+            )
+            messages.error(
+                request,
+                msg
+            )
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
         if Run.objects.check_max_runs(settings.MAX_PIPELINE_RUNS):
             msg = (
                 'The maximum number of simultaneous pipeline runs has been'

@@ -1,4 +1,5 @@
 import os
+import glob
 import logging
 import traceback
 import warnings
@@ -108,9 +109,15 @@ def run_pipe(
             logger.info(
                 'Cleaning up forced measurements before re-process data'
             )
-            forced_parquets = remove_forced_meas(p_run.path)
-            for parquet in forced_parquets:
-                os.remove(parquet)
+            _ = remove_forced_meas(p_run.path)
+
+        parquets = (
+            glob.glob(os.path.join(p_run.path, "*.parquet"))
+            + glob.glob(os.path.join(p_run.path, "*.arrow"))
+            # TODO Remove arrow when vaex support is dropped.
+        )
+        for parquet in parquets:
+            os.remove(parquet)
 
     logger.info("Source finder: %s", pipeline.config.SOURCE_FINDER)
     logger.info("Using pipeline run '%s'", pipeline.name)
