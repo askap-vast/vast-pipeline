@@ -414,6 +414,7 @@ def RunDetail(request, id):
             'Beam PA (deg)'
         ],
         'search': True,
+        'order': [1, 'asc']
     }
 
     meas_fields = [
@@ -1066,10 +1067,10 @@ class SourceViewSet(ModelViewSet):
             'v_peak',
             'eta_int',
             'eta_peak',
-            'vs_max_int',
-            'vs_max_peak',
-            'm_abs_max_int',
-            'm_abs_max_peak',
+            'vs_abs_significant_max_int',
+            'vs_abs_significant_max_peak',
+            'm_abs_significant_max_int',
+            'm_abs_significant_max_peak',
             'n_meas',
             'n_meas_sel',
             'n_meas_forced',
@@ -1199,10 +1200,10 @@ def SourceQuery(request):
         'eta_int',
         'v_peak',
         'eta_peak',
-        'vs_max_int',
-        'vs_max_peak',
-        'm_abs_max_int',
-        'm_abs_max_peak',
+        'vs_abs_significant_max_int',
+        'vs_abs_significant_max_peak',
+        'm_abs_significant_max_int',
+        'm_abs_significant_max_peak',
         'n_sibl',
         'new',
         'new_high_sigma'
@@ -1258,8 +1259,8 @@ def SourceQuery(request):
                     '\u03B7 int flux',
                     'V peak flux',
                     '\u03B7 peak flux',
-                    'Max Vs int',
-                    'Max Vs peak',
+                    'Max |Vs| int',
+                    'Max |Vs| peak',
                     'Max |m| int',
                     'Max |m| peak',
                     'Contains siblings',

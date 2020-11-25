@@ -159,19 +159,19 @@ FLOAT_FIELDS = {
         'precision': 2,
         'scale': 1,
     },
-    'vs_max_int': {
+    'vs_abs_significant_max_int': {
         'precision': 2,
         'scale': 1,
     },
-    'vs_max_peak': {
+    'vs_abs_significant_max_peak': {
         'precision': 2,
         'scale': 1,
     },
-    'm_abs_max_int': {
+    'm_abs_significant_max_int': {
         'precision': 2,
         'scale': 1,
     },
-    'm_abs_max_peak': {
+    'm_abs_significant_max_peak': {
         'precision': 2,
         'scale': 1,
     },

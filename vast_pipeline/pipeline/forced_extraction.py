@@ -18,7 +18,7 @@ from vast_pipeline.models import Image, Measurement
 from vast_pipeline.image.utils import on_sky_sep
 from vast_pipeline.pipeline.loading import make_upload_measurements
 
-from .forced_phot import ForcedPhot
+from forced_phot import ForcedPhot
 from .utils import (
     cross_join, parallel_groupby_coord
 )
@@ -127,7 +127,7 @@ def extract_from_image(
     )
 
     FP = ForcedPhot(image, background, noise)
-    flux, flux_err, chisq, DOF = FP.measure(
+    flux, flux_err, chisq, DOF, cluster_id = FP.measure(
         P_islands,
         cluster_threshold=cluster_threshold,
         allow_nan=allow_nan,

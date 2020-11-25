@@ -74,7 +74,16 @@ $(document).ready(function() {
         bFilter: dataConf.search,
         hover: true,
         serverSide: true,
-        ajax: dataConf.api,
+        ajax: {
+          url: dataConf.api,
+          data: function (data) {
+            for (var col of data.columns) {
+              delete col.name;
+              delete col.search;
+              delete col.searchable;
+            }
+          }
+        },
         columns: dataConf.colsFields,
         order: dataConf.order,
         searchDelay: 2000,
