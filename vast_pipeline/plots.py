@@ -21,18 +21,18 @@ from vast_pipeline.models import Measurement, Source
 
 def plot_lightcurve(
     source: Source,
-    vs_min: float = 4.3,
-    m_min: float = 0.26,
+    vs_abs_min: float = 4.3,
+    m_abs_min: float = 0.26,
     use_peak_flux: bool = True,
 ) -> Row:
     """Create the lightcurve and 2-epoch metric graph for a source with Bokeh.
 
     Args:
         source (Source): Source object.
-        vs_min (float, optional): MeasurementPair objects with a vs metric greater than
-            `vs_min` and m metric greater than `m_min` will be connected in the metric graph.
-            Defaults to 4.3.
-        m_min (float, optional): See `vs_min`. Defaults to 0.26.
+        vs_abs_min (float, optional): MeasurementPair objects with an absolute vs metric
+            greater than `vs_abs_min` and m metric greater than `m_abs_min` will be connected
+            in the metric graph. Defaults to 4.3.
+        m_abs_min (float, optional): See `vs_abs_min`. Defaults to 0.26.
         use_peak_flux (bool, optional): If True, use peak fluxes, otherwise use integrated
             fluxes. Defaults to True.
 
@@ -64,10 +64,10 @@ def plot_lightcurve(
     )
     candidate_measurement_pairs_qs = (
         source.measurementpair_set.annotate(
-            m_abs=Abs(f"m_{metric_suffix}"), vs=F(f"vs_{metric_suffix}")
+            m_abs=Abs(f"m_{metric_suffix}"), vs_abs=Abs(f"vs_{metric_suffix}")
         )
-        .filter(vs__gte=vs_min, m_abs__gte=m_min)
-        .values("measurement_a_id", "measurement_b_id", "vs", "m_abs")
+        .filter(vs_abs__gte=vs_abs_min, m_abs__gte=m_abs_min)
+        .values("measurement_a_id", "measurement_b_id", "vs_abs", "m_abs")
     )
     candidate_measurement_pairs_df = pd.DataFrame(candidate_measurement_pairs_qs)
 
