@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added test cases [#412](https://github.com/askap-vast/vast-pipeline/pull/412)
 - Added source tagging [#396](https://github.com/askap-vast/vast-pipeline/pull/396).
 - Added link to measurement table from the lightcurve to source detail page [#387](https://github.com/askap-vast/vast-pipeline/pull/387).
 - Added 'epoch based' parameter to pipeline run detail page [#387](https://github.com/askap-vast/vast-pipeline/pull/387).
@@ -45,7 +46,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Add links to number cards on webinterface [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 - Added home icon on hover on webinterface [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 - Added copy-to-clipboard functionality on coordinates on webinterface [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
-- Added test cases [#412](https://github.com/askap-vast/vast-pipeline/pull/412)
 
 #### Changed
 
