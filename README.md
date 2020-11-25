@@ -327,7 +327,7 @@ The following steps describes how to set up the Django side of the production de
 7. Set up a unit/systemd file as recommended in [Gunicorn docs](https://docs.gunicorn.org/en/latest/deploy.html#systemd) (feel free to use the socket or an IP and port). An example of command to write in the file is (assuming a virtual environment is installed in `venv` under the main pipeline folder):
 
   ```bash
-  ExecStart=/opt/vast-pipeline/venv/bin/gunicorn -w 3 -k gevent --worker-connections=1000 --timeout 120 --limit-request-line 6500 -b 127.0.0.1:8000 webinterface.wsgi
+  ExecStart=/opt/vast-pipeline/venv/bin/gunicorn -w 3 -k gevent --worker-connections=1000 --timeout 120 --limit-request-line 8000 -b 127.0.0.1:8000 webinterface.wsgi
   ```
   __NOTE__: (for future development) the `--limit-request-line` parameter needs to be adjusted for the actual request length as that might change if more parameters are added to the query.
 
