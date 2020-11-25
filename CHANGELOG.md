@@ -45,6 +45,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Add links to number cards on webinterface [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 - Added home icon on hover on webinterface [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
 - Added copy-to-clipboard functionality on coordinates on webinterface [#345](https://github.com/askap-vast/vast-pipeline/pull/345).
+- Added test cases [#412](https://github.com/askap-vast/vast-pipeline/pull/412)
 
 #### Changed
 
@@ -75,6 +76,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed nodejs version [#412](https://github.com/askap-vast/vast-pipeline/pull/412)
+- Fixed npm start failure [#412](https://github.com/askap-vast/vast-pipeline/pull/412)
 - Increase request limit for gunicorn [#398](https://github.com/askap-vast/vast-pipeline/pull/398).
 - Fixed max source Vs metric to being an absolute value [#391](https://github.com/askap-vast/vast-pipeline/pull/391).
 - Fixed misalignment of lightcurve card header text and the flux type radio buttons [#386](https://github.com/askap-vast/vast-pipeline/pull/386).
@@ -84,6 +87,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Removed
 
+- Removed/Disabled obsolete test cases[#412](https://github.com/askap-vast/vast-pipeline/pull/412)
 - Removed 'selavy' from homepage measurements count label [#391](https://github.com/askap-vast/vast-pipeline/pull/391).
 - Removed leftover `pipeline/plots.py` file [#391](https://github.com/askap-vast/vast-pipeline/pull/391).
 - Removed `static/css/pipeline.css`, this file is now produced by compiling the Sass (`scss/**/*.scss`) files with Gulp [#370](https://github.com/askap-vast/vast-pipeline/pull/370).
@@ -93,6 +97,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#412](https://github.com/askap-vast/vast-pipeline/pull/412) feat: added some unit tests.
 - [#396](https://github.com/askap-vast/vast-pipeline/pull/396) feat: added source tagging.
 - [#398](https://github.com/askap-vast/vast-pipeline/pull/398) fix: gunicorn request limit
 - [#399](https://github.com/askap-vast/vast-pipeline/pull/399) fix: Updated RACS HiPS path.

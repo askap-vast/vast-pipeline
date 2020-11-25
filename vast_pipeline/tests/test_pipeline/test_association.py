@@ -23,10 +23,21 @@ from vast_pipeline.pipeline.association import (
 BASE_PATH = Path(__file__).parent
 DATA_PATH = os.path.join(BASE_PATH, 'data')
 
-def parse_lists(x):
+# Used for reading in lists from csv into pandas DataFrame.
+def parse_or_nan(x):
     '''
-    Changes a string containing a list into the list type. Needed for reading
-    in lists from csv into pandas DataFrame.
+    Attempt to parse a string as a python literal, returning NaN if it couldn't be parsed.
+
+    Calls ast.literal_eval internally.
+
+    Parameters
+    ----------
+    s : str
+        String to parse.
+    
+    Returns
+    -------
+    The parsed string, or NaN if it couldn't be parsed.
     '''
     try:
         return ast.literal_eval(x)
@@ -52,7 +63,7 @@ class OneToManyBasicTest(SimpleTestCase):
         self.skyc2_srcs_out = pd.read_csv(
             os.path.join(DATA_PATH, 'skyc2_srcs_out.csv'), 
             header=0,
-            converters={'related': parse_lists}
+            converters={'related': parse_or_nan}
         )
         self.sources_df_in = pd.read_csv(
             os.path.join(DATA_PATH, 'sources_df_in.csv'), 
@@ -131,12 +142,12 @@ class OneToManyAdvancedTest(SimpleTestCase):
         self.temp_srcs_advanced_out = pd.read_csv(
             os.path.join(DATA_PATH, 'temp_srcs_advanced_out.csv'), 
             header=0,
-            converters={'related_skyc1': parse_lists}
+            converters={'related_skyc1': parse_or_nan}
         )
         self.temp_srcs_deruiter_out = pd.read_csv(
             os.path.join(DATA_PATH, 'temp_srcs_deruiter_out.csv'), 
             header=0,
-            converters={'related_skyc1': parse_lists}
+            converters={'related_skyc1': parse_or_nan}
         )
         self.sources_df_in = pd.read_csv(
             os.path.join(DATA_PATH, 'sources_df_in.csv'), 
@@ -336,7 +347,7 @@ class ManyToOneAdvancedTest(SimpleTestCase):
         self.temp_srcs_ind_rel = pd.read_csv(
             os.path.join(DATA_PATH, 'temp_srcs_ind_rel.csv'),
             header=0,
-            converters={'related_skyc1': parse_lists}
+            converters={'related_skyc1': parse_or_nan}
         )
 
     def test_duplicated_skyc2_empty(self):
@@ -382,9 +393,21 @@ class TestHelpers(SimpleTestCase):
         Function which checks that certain columns of two DataFrames are
         equal for BasicAssociationTest and AdvancedAssociationTest.
         
-        Not testing related column, it is used ione_to_many_basic, which is already 
-        tested. Note testing d2d column, it contains floats and is output from 
-        Astropy.
+        Not testing related column, it is used in one_to_many_basic, which is 
+        already tested. Not testing d2d column, it is output from Astropy.
+
+        Parameters
+        ----------
+        df1 : pd.DataFrame
+            Dataframe to be compared.
+        df2 : pd.DataFrame
+            Dataframe to be compared.
+        columns : List[str]
+            Column header of the dataframes to be compared.
+
+        Returns
+        -------
+        None
         '''
         for col in columns:
             self.assertTrue(df1[col].equals(df2[col]))
@@ -736,12 +759,12 @@ class CorrectParallelSourceIdsTest(SimpleTestCase):
         self.sources_df_in = pd.read_csv(
             os.path.join(DATA_PATH, 'sources_df_in.csv'),
             header=0,
-            converters={'related': parse_lists}
+            converters={'related': parse_or_nan}
         ) 
         self.sources_df_out_2 = pd.read_csv(
             os.path.join(DATA_PATH, 'sources_df_out_2.csv'),
             header=0,
-            converters={'related': parse_lists}
+            converters={'related': parse_or_nan}
         ) 
 
     def test_zero(self):
@@ -752,7 +775,7 @@ class CorrectParallelSourceIdsTest(SimpleTestCase):
         df = pd.read_csv(
             os.path.join(DATA_PATH, 'sources_df_in.csv'), 
             header=0,
-            converters={'related': parse_lists}
+            converters={'related': parse_or_nan}
         )
 
         df = _correct_parallel_source_ids(df, 0)
@@ -767,7 +790,7 @@ class CorrectParallelSourceIdsTest(SimpleTestCase):
         df = pd.read_csv(
             os.path.join(DATA_PATH, 'sources_df_in.csv'), 
             header=0, 
-            converters={'related': parse_lists}
+            converters={'related': parse_or_nan}
         )
 
         df = _correct_parallel_source_ids(df, 2)
