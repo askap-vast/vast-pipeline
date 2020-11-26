@@ -105,11 +105,10 @@ def run_pipe(
         logger.info('Cleaning up pipeline run before re-process data')
         p_run.image_set.clear()
 
-        if not pipeline.config.MONITOR:
-            logger.info(
-                'Cleaning up forced measurements before re-process data'
-            )
-            _ = remove_forced_meas(p_run.path)
+        logger.info(
+            'Cleaning up forced measurements before re-process data'
+        )
+        remove_forced_meas(p_run.path)
 
         parquets = (
             glob.glob(os.path.join(p_run.path, "*.parquet"))
