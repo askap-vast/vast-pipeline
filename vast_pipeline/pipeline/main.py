@@ -151,6 +151,12 @@ class Pipeline():
                 'No image and/or Selavy and/or noise file paths passed!'
             )
 
+        # need more than 1 image file to generate a lightcurve
+        if len(getattr(self.config, 'IMAGE_FILES')) < 2:
+            raise PipelineConfigError(
+                'Number of image files needs to be larger than 1!'
+        )
+
         source_finder_names = settings.SOURCE_FINDERS
         if getattr(self.config, 'SOURCE_FINDER') not in source_finder_names:
             raise PipelineConfigError((
@@ -196,6 +202,58 @@ class Pipeline():
                         raise PipelineConfigError(
                             f'file:\n{file}\ndoes not exists!'
                         )
+
+        # do type checks for the other configuration keys
+        def isnumber(x):
+            '''
+            Return if x is a float or int.
+            '''
+            return isinstance(x, float) or isinstance(x, int)
+
+        # number keys
+        keys = [
+            'MONITOR_MIN_SIGMA', 
+            'MONITOR_EDGE_BUFFER_SCALE', 
+            'MONITOR_CLUSTER_THRESHOLD',
+            'ASTROMETRIC_UNCERTAINTY_RA',
+            'ASTROMETRIC_UNCERTAINTY_DEC',
+            'ASSOCIATION_RADIUS',
+            'ASSOCIATION_DE_RUITER_RADIUS',
+            'ASSOCIATION_BEAMWIDTH_LIMIT',
+            'ASSOCIATION_EPOCH_DUPLICATE_RADIUS',
+            'NEW_SOURCE_MIN_SIGMA',
+            'FLUX_PERC_ERROR',
+            'SELAVY_LOCAL_RMS_ZERO_FILL_VALUE'
+        ]
+        for key in keys:
+            if not isnumber(getattr(self.config, key)):
+                raise PipelineConfigError(
+                    f'{key} must be a number!'
+            )
+        
+        # bool keys
+        keys = [
+            'MONITOR', 
+            'MONITOR_ALLOW_NAN',
+            'ASSOCIATION_PARALLEL',
+            'USE_CONDON_ERRORS',
+            'CREATE_MEASUREMENTS_ARROW_FILE',
+            'SUPPRESS_ASTROPY_WARNINGS'
+        ]
+        for key in keys:
+            if not isinstance(getattr(self.config, key), bool):
+                raise PipelineConfigError(
+                    f'{key} must be True or False!'
+            )
+
+        # other keys
+        #config_default_survey = getattr(self.config, 'DEFAULT_SURVEY')
+        #if not (config_default_survey is None or 
+        #        config_default_survey == 'NVSS'):
+        #    raise PipelineConfigError(
+        #        f'{key} must be None or "NVSS"'
+        #)
+
         pass
 
     def match_images_to_data(self):
@@ -359,6 +417,7 @@ class Pipeline():
             self.config.MONITOR_EDGE_BUFFER_SCALE,
             p_run
         )
+        #print(new_sources_df)
 
         # Drop column no longer required in missing_sources_df.
         missing_sources_df = (
