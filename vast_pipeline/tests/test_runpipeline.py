@@ -1,5 +1,4 @@
 import os
-from copy import copy
 
 from django.conf import settings as s
 from django.test import SimpleTestCase, TestCase, override_settings
@@ -9,7 +8,7 @@ from vast_pipeline.pipeline.main import Pipeline
 from vast_pipeline.pipeline.errors import PipelineConfigError
 
 
-TEST_ROOT = os.path.join(s.BASE_DIR, 'pipeline', 'tests')
+TEST_ROOT = os.path.join(s.BASE_DIR, 'vast_pipeline', 'tests')
 
 
 @override_settings(
@@ -17,7 +16,10 @@ TEST_ROOT = os.path.join(s.BASE_DIR, 'pipeline', 'tests')
     RAW_IMAGE_DIR=os.path.join(TEST_ROOT, 'data'),
 )
 class RunPipelineTest(TestCase):
-    basic_assoc_run = os.path.join(s.PIPELINE_WORKING_DIR, 'basic-association')
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.basic_assoc_run = os.path.join(s.PIPELINE_WORKING_DIR, 'basic-association')
 
     def setUp(self):
         # TODO: replace with a load images function and call 'runpipeline'
@@ -47,22 +49,56 @@ class CheckRunConfigValidationTest(SimpleTestCase):
         )
         self.config_path = config_path
 
-    def test_duplicated_files(self):
-        for key in ['IMAGE_FILES', 'SELAVY_FILES', 'NOISE_FILES']:
-            f_list = getattr(self.pipe_run.config, key)
-            f_list.append(f_list[0])
-            setattr(self.pipe_run.config, key, f_list)
-            with self.assertRaises(PipelineConfigError):
-                self.pipe_run.validate_cfg()
-            # restore old config
-            self.pipe_run.config = self.pipe_run.load_cfg(self.config_path)
+    def test_duplicated_files_image_files(self):
+        key = 'IMAGE_FILES'
+        f_list = getattr(self.pipe_run.config, key)
+        f_list.update({len(f_list): list(f_list.values())[0]})
+        setattr(self.pipe_run.config, key, f_list)
+        with self.assertRaises(PipelineConfigError):
+            self.pipe_run.validate_cfg()
 
-    def test_nr_files_differs(self):
-        for key in ['IMAGE_FILES', 'SELAVY_FILES', 'NOISE_FILES']:
-            f_list = getattr(self.pipe_run.config, key)
-            f_list.append(f_list[0].replace('04', '05'))
-            setattr(self.pipe_run.config, key, f_list)
-            with self.assertRaises(PipelineConfigError):
-                self.pipe_run.validate_cfg()
-            # restore old config
-            self.pipe_run.config = self.pipe_run.load_cfg(self.config_path)
+    def test_duplicated_files_selavy_files(self):
+        key = 'SELAVY_FILES'
+        f_list = getattr(self.pipe_run.config, key)
+        f_list.update({len(f_list): list(f_list.values())[0]})
+        setattr(self.pipe_run.config, key, f_list)
+        with self.assertRaises(PipelineConfigError):
+            self.pipe_run.validate_cfg()
+
+    def test_duplicated_files_noise_files(self):
+        key = 'NOISE_FILES'
+        f_list = getattr(self.pipe_run.config, key)
+        f_list.update({len(f_list): list(f_list.values())[0]})
+        setattr(self.pipe_run.config, key, f_list)
+        with self.assertRaises(PipelineConfigError):
+            self.pipe_run.validate_cfg()
+
+    def test_nr_files_differs_for_image_files(self):
+        key = 'IMAGE_FILES'
+        f_list = getattr(self.pipe_run.config, key)
+        new_value = list(f_list.values())[0][0]
+        new_value = new_value.replace('04', '05')
+        f_list.update({len(f_list): new_value})
+        setattr(self.pipe_run.config, key, f_list)
+        with self.assertRaises(PipelineConfigError):
+            self.pipe_run.validate_cfg()
+
+    def test_nr_files_differs_for_selavy_files(self):
+        key = 'SELAVY_FILES'
+        f_list = getattr(self.pipe_run.config, key)
+        new_value = list(f_list.values())[0][0]
+        new_value = new_value.replace('04', '05')
+        f_list.update({len(f_list): new_value})
+        setattr(self.pipe_run.config, key, f_list)
+        with self.assertRaises(PipelineConfigError):
+            self.pipe_run.validate_cfg()
+
+    def test_nr_files_differs_for_noise_files(self):
+        key = 'NOISE_FILES'
+        f_list = getattr(self.pipe_run.config, key)
+        new_value = list(f_list.values())[0][0]
+        new_value = new_value.replace('04', '05')
+        f_list.update({len(f_list): new_value})
+        setattr(self.pipe_run.config, key, f_list)
+        with self.assertRaises(PipelineConfigError):
+            self.pipe_run.validate_cfg()

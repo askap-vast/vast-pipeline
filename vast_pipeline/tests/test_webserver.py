@@ -6,7 +6,8 @@ from django.urls import reverse
 
 @override_settings(
     BASE_URL='shbsfggiush',
-    ROOT_URLCONF = 'vast_pipeline.tests.urls'
+    ROOT_URLCONF = 'vast_pipeline.tests.urls',
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage',
 )
 class WebServerTest(SimpleTestCase):
 

@@ -111,7 +111,7 @@ def one_to_many_basic(
 
     if duplicated_skyc2.empty:
         logger.debug('No one-to-many associations.')
-        return sources_df, skyc2_srcs
+        return skyc2_srcs, sources_df
 
     logger.info(
         'Detected #%i double matches, cleaning...',
@@ -328,10 +328,6 @@ def one_to_many_advanced(
         Updated temp_srcs and sources_df with all one_to_many relation
         information added.
     '''
-    if method not in ['advanced', 'deruiter']:
-        raise Exception(
-            f"Advanced association method '{method}' not recongised!"
-        )
     # use only these columns for easy debugging of the dataframe
     cols = [
         'index_old_skyc1', 'id_skyc1', 'source_skyc1', 'd2d_skyc1',
@@ -598,7 +594,7 @@ def many_to_many_advanced(temp_srcs: pd.DataFrame, method: str) -> pd.DataFrame:
         The temporary associtation dataframe used through the advanced
         association process.
     method : str
-        Can be either 'advanced' or 'dr' to represent the advanced association
+        Can be either 'advanced' or 'deruiter' to represent the advanced association
         method being used.
 
     Returns
@@ -790,7 +786,7 @@ def basic_association(
 
     # must check for double matches in the acceptable matches just made
     # this would mean that multiple sources in skyc2 have been matched
-    #  to the same base source we want to keep closest match and move
+    # to the same base source we want to keep closest match and move
     # the other match(es) back to having a -1 src id
     skyc2_srcs, sources_df = one_to_many_basic(skyc2_srcs, sources_df)
 

@@ -150,6 +150,41 @@ $ npm ci && npm start
 
 __NOTE__: make sure you are in the root of the repo, as shown above. That command "clean install" all the dependencies, copies files into the `static/vendor` folder and minified CSS and JS files. For more details of compilation of frontend assets (e.g. single tasks), and developement set up read the [Front End `README.md`](./static/README.md).
 
+__NOTE__: When `npm start` or `npm run start` was run in a Ubuntu(20.04 LTS) virtual environment, for some unknown
+reasons, both commands failed with the following error.
+
+```
+[12:48:19] 'js9Make' errored after 7.67 ms
+[12:48:19] Error: spawn make ENOENT
+    at Process.ChildProcess._handle.onexit (internal/child_process.js:267:19)
+    at onErrorNT (internal/child_process.js:469:16)
+    at processTicksAndRejections (internal/process/task_queues.js:84:21)
+[12:48:19] 'default' errored after 2.63 s
+npm ERR! code ELIFECYCLE
+npm ERR! errno 1
+npm ERR! vast-pipeline@99.99.99-dev start: `gulp default`
+npm ERR! Exit status 1
+npm ERR! 
+npm ERR! Failed at the vast-pipeline@99.99.99-dev start script.
+npm ERR! This is probably not a problem with npm. There is likely additional logging output above.
+
+npm ERR! A complete log of this run can be found in:
+npm ERR!     /home/vast/.npm/_logs/2020-10-06T01_48_19_215Z-debug.log
+
+```
+
+The way around for this issue is unorthodox. The following steps were followed to overcome the issue:
+
+```
+$ cd node_modules/js9/
+$ ./configure
+$ make
+$ make install
+$ cd ~/vast-pipeline/  ## (to comeback to the root folder of the project)
+$ npm install
+```
+That somehow solved the issue mentioned above.
+
 ---
 
 Done! Now open the [`README.md`](./README.md) file to see how to initialize and run the pipeline. Otherwise if you intend on developing the repo open the [`CONTRIBUTING.md`](./CONTRIBUTING.md) file for instructions on how to contribute to the repo.
