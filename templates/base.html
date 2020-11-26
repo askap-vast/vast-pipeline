@@ -90,21 +90,21 @@
           <span>Images</span>
         </a>
       </li>
-      
+
       <li class="nav-item">
         <a class="nav-link collapsed" target="_blank" href="https://github.com/askap-vast/vast-pipeline/issues/new">
           <i class="fab fa-fw fa-github"></i>
           <span>Pipeline Repository</span>
         </a>
       </li>
-      
+
       <li class="nav-item">
         <a class="nav-link collapsed" target="_blank" href="https://github.com/askap-vast/vast-pipeline/issues/new">
           <i class="fas fa-fw fa-exclamation"></i>
           <span>Raise Issue</span>
         </a>
       </li>
-      
+
       <li class="nav-item">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseLinks" aria-expanded="true" aria-controls="collapseLinks">
           <i class="fas fa-fw fa-link"></i>
@@ -201,30 +201,57 @@
         {% endblock content %}
 
         {% if messages %}
-        <div class="alert-wrapper">
+        <div class="toast-wrapper">
         {% for message in messages %}
         {% if message.tags == 'info' %}
-        <div class="alert alert-info alert-dismissible close" role="alert">
-          {{ message }}
-          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
+        <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-delay=6000>
+          <div class="toast-header bg-info text-white">
+            <span>
+              <i class="fas fa-info-circle"></i>
+            </span>
+            <strong class="mr-auto">&nbsp;VAST Pipeline</strong>
+            <small>just now</small>
+            <button type="button" class="ml-2 mb-1 close text-white" data-dismiss="toast" aria-label="Close">
+              <span aria-hidden="true">x</span>
+            </button>
+          </div>
+          <div class="toast-body">
+            {{ message }}
+          </div>
         </div>
         {% endif %}
         {% if message.tags == 'success' %}
-        <div class="alert alert-success alert-dismissible close" role="alert">
-          {{ message }}
-          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
+        <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-delay=6000>
+          <div class="toast-header bg-success text-white">
+            <span >
+              <i class="fas fa-check-circle"></i>
+            </span>
+            <strong class="mr-auto">&nbsp;VAST Pipeline</strong>
+            <small>just now</small>
+            <button type="button" class="ml-2 mb-1 close text-white" data-dismiss="toast" aria-label="Close">
+              <span aria-hidden="true">x</span>
+            </button>
+          </div>
+          <div class="toast-body">
+            {{ message }}
+          </div>
         </div>
         {% endif %}
         {% if message.tags == 'error' %}
-        <div class="alert alert-danger alert-dismissible close" role="alert">
-          {{ message }}
-          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
+        <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-delay=6000>
+          <div class="toast-header bg-danger text-white">
+            <span>
+              <i class="fas fa-exclamation-circle"></i>
+            </span>
+            <strong class="mr-auto">&nbsp;VAST Pipeline</strong>
+            <small>just now</small>
+            <button type="button" class="ml-2 mb-1 close text-white" data-dismiss="toast" aria-label="Close">
+              <span aria-hidden="true">x</span>
+            </button>
+          </div>
+          <div class="toast-body">
+            {{ message }}
+          </div>
         </div>
         {% endif %}
         {% endfor %}
@@ -269,8 +296,8 @@
   <!-- Custom scripts for all pages-->
   <script src="{% static 'js/sb-admin-2.min.js' %}"></script>
 
-  <!-- Alerts script for all pages-->
-  <script src="{% static 'js/alerts.min.js' %}"></script>
+  <!-- Toasts script for all pages-->
+  <script src="{% static 'js/toasts.min.js' %}"></script>
   {% endblock scripts %}
 
   {% block custom_page_scripts %}

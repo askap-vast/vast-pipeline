@@ -29,6 +29,7 @@ from django.db.models import F, Count, QuerySet
 from django.http import FileResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
+from django.utils.safestring import mark_safe
 
 from django_q.tasks import async_task
 
@@ -159,7 +160,10 @@ def RunIndex(request):
                 )
                 messages.success(
                     request,
-                    f'Pipeline run {p_run.name} initilialised successfully!'
+                    mark_safe(
+                        f'Pipeline run <b>{p_run.name}</b> '
+                        'initilialised successfully!'
+                    )
                 )
                 return redirect('vast_pipeline:run_detail', id=p_run.id)
             except Exception as e:
@@ -328,8 +332,8 @@ class RunViewSet(ModelViewSet):
                 p_run.name, p_run.path, p_run, False, debug_flag,
                 task_name=p_run.name, ack_failure=True, user=request.user
             )
-            msg = (
-                f'{p_run.name} successfully sent to the queue! Refresh the'
+            msg = mark_safe(
+                f'<b>{p_run.name}</b> successfully sent to the queue!<br><br>Refresh the'
                 ' page to check the status.'
             )
             messages.success(
@@ -1860,7 +1864,7 @@ class SourceFavViewSet(ModelViewSet):
             else:
                 fav = SourceFav(**data)
                 fav.save()
-                messages.info(request, 'Added to favourites successfully')
+                messages.success(request, 'Added to favourites successfully')
         except Exception as e:
             messages.error(
                 request,
@@ -1876,11 +1880,11 @@ class SourceFavViewSet(ModelViewSet):
                 qs.delete()
                 messages.success(
                     request,
-                    'Favourite source deleted successfully'
+                    'Favourite source deleted successfully.'
                 )
                 return Response({'message': 'ok'}, status=status.HTTP_200_OK)
             else:
-                messages.info(request, 'Not found')
+                messages.error(request, 'Not found')
                 return Response(
                     {'message': 'not found'},
                     status=status.HTTP_404_NOT_FOUND
