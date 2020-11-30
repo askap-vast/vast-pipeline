@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added source selection by name or ID on source query page [#401](https://github.com/askap-vast/vast-pipeline/pull/401).
 - Added test cases [#412](https://github.com/askap-vast/vast-pipeline/pull/412)
 - Added [askap-vast/forced_phot](https://github.com/askap-vast/forced_phot) to pip requirements [#408](https://github.com/askap-vast/vast-pipeline/pull/408).
 - Added pipeline configuration parameter, `SOURCE_AGGREGATE_PAIR_METRICS_MIN_ABS_VS`, to filter measurement pairs before calculating aggregate metrics [#407](https://github.com/askap-vast/vast-pipeline/pull/407).
@@ -97,6 +98,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed pipeline run DB loading in command line runpipeline command [#401](https://github.com/askap-vast/vast-pipeline/pull/401).
 - Fixed nodejs version [#412](https://github.com/askap-vast/vast-pipeline/pull/412)
 - Fixed npm start failure [#412](https://github.com/askap-vast/vast-pipeline/pull/412)
 - All queries using the 2-epoch metric `Vs` now operate on `abs(Vs)`. The original `Vs` stored in MeasurementPair objects is still signed [#407](https://github.com/askap-vast/vast-pipeline/pull/407).
@@ -124,6 +126,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#401](https://github.com/askap-vast/vast-pipeline/pull/401) feat: Added source selection by name or id to query page.
 - [#412](https://github.com/askap-vast/vast-pipeline/pull/412) feat: added some unit tests.
 - [#419](https://github.com/askap-vast/vast-pipeline/pull/419) feat: Update alerts to use toasts.
 - [#408](https://github.com/askap-vast/vast-pipeline/pull/408) feat: use forced_phot dependency instead of copied code.

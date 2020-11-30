@@ -484,6 +484,14 @@ $(document).ready(function() {
     if (newsigma_max.value) {
       qry_url = qry_url + "&max_new_high_sigma=" + newsigma_max.value;
     };
+    let source_selection = document.getElementById("sourceSelectionSelect");
+    let source_selection_type = document.getElementById("sourceSelectionTypeSelect");
+    if (source_selection.value) {
+      qry_url = qry_url + "&source_selection=" + source_selection.value;
+    };
+    if (source_selection_type.value) {
+      qry_url = qry_url + "&source_selection_type=" +source_selection_type.value;
+    };
     table.ajax.url(qry_url);
     table.ajax.reload();
   });
@@ -502,7 +510,7 @@ $(document).ready(function() {
       'NewSigmaMinSelect', 'NewSigmaMaxSelect', 'NeighbourMinSelect', 'NeighbourMaxSelect',
       'compactnessMinSelect', 'compactnessMaxSelect', 'objectNameInput', 'MinSnrMinSelect',
       'MinSnrMaxSelect', 'MaxSnrMinSelect', 'MaxSnrMaxSelect', 'fluxMaxMinSelect',
-      'fluxMaxMaxSelect',
+      'fluxMaxMaxSelect', 'sourceSelectionSelect',
       ];
     var input;
     for (input of inputs) {

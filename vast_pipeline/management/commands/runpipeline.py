@@ -69,6 +69,12 @@ def run_pipe(
         f_handler.setFormatter(root_logger.handlers[0].formatter)
         root_logger.addHandler(f_handler)
 
+    # Create the pipeline run in DB
+    p_run, flag_exist = get_create_p_run(
+        pipeline.name,
+        pipeline.config.PIPE_RUN_PATH
+    )
+
     # load and validate run configs
     try:
         pipeline.validate_cfg(user=user)
@@ -79,7 +85,7 @@ def run_pipe(
         msg = f'Config error:\n{e}'
         # If the run is already created (e.g. through UI) then set status to
         # error
-        pipeline.set_status(run_dj_obj, 'ERR')
+        pipeline.set_status(p_run, 'ERR')
         raise CommandError(msg) if cmd else PipelineConfigError(msg)
 
     if pipeline.config.CREATE_MEASUREMENTS_ARROW_FILES and cmd is False:
@@ -94,11 +100,6 @@ def run_pipe(
     if pipeline.config.SUPPRESS_ASTROPY_WARNINGS:
         warnings.simplefilter("ignore", category=AstropyWarning)
 
-    # Create the pipeline run in DB
-    p_run, flag_exist = get_create_p_run(
-        pipeline.name,
-        pipeline.config.PIPE_RUN_PATH
-    )
     # clean up pipeline images and forced measurements for re-runs
     if flag_exist:
         logger.info('Cleaning up pipeline run before re-process data')
