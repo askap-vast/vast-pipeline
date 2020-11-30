@@ -4,7 +4,9 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), with an added `List of PRs` section and links to the relevant PRs on the individal updates. This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/0.1.0...HEAD)
+## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/0.2.0...HEAD)
+
+## [0.2.0](https://github.com/askap-vast/vast-pipeline/releases/0.2.0) (2020/11/30)
 
 #### Added
 
