@@ -55,8 +55,6 @@ def remove_forced_meas(run_path):
                 )
                 logger.debug('(type, #deleted): %s', detail_del)
 
-    return path_glob
-
 
 def get_data_from_parquet(file: str) -> dict:
     '''
@@ -518,16 +516,6 @@ def forced_extraction(
     remaining = list(set(extr_df.columns) - set(col_order))
 
     extr_df = extr_df[col_order + remaining]
-
-    # Delete previous forced measurements and update new forced
-    # measurements in the db
-    # get the forced measurements ids for the current pipeline run
-    forced_parquets = remove_forced_meas(p_run.path)
-
-    # delete parquet files
-    logger.debug('Removing forced measurements parquet files')
-    for parquet in forced_parquets:
-        os.remove(parquet)
 
     # upload the measurements, a column 'id' is returned with the DB id
     extr_df = make_upload_measurements(extr_df)

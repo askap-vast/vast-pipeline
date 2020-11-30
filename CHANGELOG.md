@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added a check in the UI running that the job is not already running or queued [#421](https://github.com/askap-vast/vast-pipeline/pull/421).
+- Added the deletion of all parquet and arrow files upon a re-run [#421](https://github.com/askap-vast/vast-pipeline/pull/421).
 - Added source selection by name or ID on source query page [#401](https://github.com/askap-vast/vast-pipeline/pull/401).
 - Added test cases [#412](https://github.com/askap-vast/vast-pipeline/pull/412)
 - Added [askap-vast/forced_phot](https://github.com/askap-vast/forced_phot) to pip requirements [#408](https://github.com/askap-vast/vast-pipeline/pull/408).
@@ -126,6 +128,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#421](https://github.com/askap-vast/vast-pipeline/pull/421) feat: Delete output files on re-run & UI run check.
 - [#401](https://github.com/askap-vast/vast-pipeline/pull/401) feat: Added source selection by name or id to query page.
 - [#412](https://github.com/askap-vast/vast-pipeline/pull/412) feat: added some unit tests.
 - [#419](https://github.com/askap-vast/vast-pipeline/pull/419) feat: Update alerts to use toasts.
