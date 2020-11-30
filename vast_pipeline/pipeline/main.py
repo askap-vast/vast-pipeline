@@ -366,7 +366,6 @@ class Pipeline():
             self.config.MONITOR_EDGE_BUFFER_SCALE,
             p_run
         )
-        #print(new_sources_df)
 
         # Drop column no longer required in missing_sources_df.
         missing_sources_df = (
