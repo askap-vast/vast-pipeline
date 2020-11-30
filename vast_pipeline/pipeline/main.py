@@ -202,7 +202,6 @@ class Pipeline():
                         raise PipelineConfigError(
                             f'file:\n{file}\ndoes not exists!'
                         )
-
         pass
 
     def match_images_to_data(self):
