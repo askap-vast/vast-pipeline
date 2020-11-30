@@ -191,20 +191,32 @@ The remove completely the pipeline folder
 
 ## Run Tests
 
-Test are found under the folder [tests](./pipeline/tests/). Have a look and feel free to include new tests.
+Test are found under the folder [tests](./vast_pipeline/tests/). Have a look and feel free to include new tests.
 
 Run the tests with the following:
 
+To run all tests:
 ```bash
-(pipeline_env)$ ./manage.py test pipeline
+(pipeline_env)$ ./manage.py test
 ```
 
-Two example tests, currently working are run with the following:
-
+To run one test file or class, use:
 ```bash
-(pipeline_env)$ ./manage.py test pipeline.tests.test_runpipeline.CheckRunConfigValidationTest
+(pipeline_env)$ ./manage.py test <path/to/test>
+```
+for example, to run the test class `CheckRunConfigValidationTest` located in [`test_runpipeline.py`](./vast_pipeline/tests/test_runpipeline.py), use:
+```bash
+(pipeline_env)$ ./manage.py test vast_pipeline.tests.test_runpipeline.CheckRunConfigValidationTest
+```
+to run the tests located in [`test_webserver.py`](./vast_pipeline/tests/test_webserver.py), use:
+```bash
+(pipeline_env)$ ./manage.py test vast_pipeline.tests.test_webserver
 ```
 
+Regression tests located in [`test_regression.py`](./vast_pipeline/tests/test_regression.py) requires the use of the VAST_2118-06A field test dataset which is not a part of the repository. This data is downloadable at https://cloudstor.aarnet.edu.au/plus/s/rC6zRShsv42m2ih, use:
 ```bash
-(pipeline_env)$ ./manage.py test pipeline.tests.test_webserver
+wget https://cloudstor.aarnet.edu.au/plus/s/rC6zRShsv42m2ih
 ```
+place the VAST_2118-06A field test dataset in a folder named `regression-data` inside the [tests](./vast_pipeline/tests/) folder. These regression tests are skipped if the data folder containing the dataset is not present. 
+
+All tests should be run before pushing to master. Running all the tests takes a few minutes, so it is not recommended to run them for every change. 
