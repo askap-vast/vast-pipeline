@@ -12,37 +12,37 @@ PIPE_RUN_PATH = os.path.dirname(os.path.realpath(__file__))
 # IMAGE_FILES[0] image matches SELAVY_FILES[0] file
 IMAGE_FILES = [
     # insert images file path(s) here
-    './pipeline/tests/data/epoch01.fits',
-    './pipeline/tests/data/epoch02.fits',
-    './pipeline/tests/data/epoch03.fits',
-    './pipeline/tests/data/epoch04.fits',
+    './vast_pipeline/tests/data/epoch01.fits',
+    './vast_pipeline/tests/data/epoch02.fits',
+    './vast_pipeline/tests/data/epoch03.fits',
+    './vast_pipeline/tests/data/epoch04.fits',
 ]
 
 # Selavy catalogue files
 SELAVY_FILES = [
     # insert Selavy file path(s) here
-    './pipeline/tests/data/epoch01.selavy.components.txt',
-    './pipeline/tests/data/epoch02.selavy.components.txt',
-    './pipeline/tests/data/epoch03.selavy.components.txt',
-    './pipeline/tests/data/epoch04.selavy.components.txt',
+    './vast_pipeline/tests/data/epoch01.selavy.components.txt',
+    './vast_pipeline/tests/data/epoch02.selavy.components.txt',
+    './vast_pipeline/tests/data/epoch03.selavy.components.txt',
+    './vast_pipeline/tests/data/epoch04.selavy.components.txt',
 ]
 
 # Noise or RMS files
 NOISE_FILES = [
     # insert RMS file path(s) here
-    './pipeline/tests/data/epoch01.noiseMap.fits',
-    './pipeline/tests/data/epoch02.noiseMap.fits',
-    './pipeline/tests/data/epoch03.noiseMap.fits',
-    './pipeline/tests/data/epoch04.noiseMap.fits',
+    './vast_pipeline/tests/data/epoch01.noiseMap.fits',
+    './vast_pipeline/tests/data/epoch02.noiseMap.fits',
+    './vast_pipeline/tests/data/epoch03.noiseMap.fits',
+    './vast_pipeline/tests/data/epoch04.noiseMap.fits',
 ]
 
 # background map files
 BACKGROUND_FILES = [
     # insert background map file path(s) here
-    './pipeline/tests/data/epoch01.meanMap.fits',
-    './pipeline/tests/data/epoch02.meanMap.fits',
-    './pipeline/tests/data/epoch03.meanMap.fits',
-    './pipeline/tests/data/epoch04.meanMap.fits',
+    './vast_pipeline/tests/data/epoch01.meanMap.fits',
+    './vast_pipeline/tests/data/epoch02.meanMap.fits',
+    './vast_pipeline/tests/data/epoch03.meanMap.fits',
+    './vast_pipeline/tests/data/epoch04.meanMap.fits',
 ]
 
 ###
