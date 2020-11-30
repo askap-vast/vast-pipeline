@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - Added a check in the UI running that the job is not already running or queued [#421](https://github.com/askap-vast/vast-pipeline/pull/421).
 - Added the deletion of all parquet and arrow files upon a re-run [#421](https://github.com/askap-vast/vast-pipeline/pull/421).
+- Added source selection by name or ID on source query page [#401](https://github.com/askap-vast/vast-pipeline/pull/401).
+- Added test cases [#412](https://github.com/askap-vast/vast-pipeline/pull/412)
 - Added [askap-vast/forced_phot](https://github.com/askap-vast/forced_phot) to pip requirements [#408](https://github.com/askap-vast/vast-pipeline/pull/408).
 - Added pipeline configuration parameter, `SOURCE_AGGREGATE_PAIR_METRICS_MIN_ABS_VS`, to filter measurement pairs before calculating aggregate metrics [#407](https://github.com/askap-vast/vast-pipeline/pull/407).
 - Added custom 404.html and 500.html templates for error pages [#415](https://github.com/askap-vast/vast-pipeline/pull/415)
@@ -98,6 +100,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed pipeline run DB loading in command line runpipeline command [#401](https://github.com/askap-vast/vast-pipeline/pull/401).
+- Fixed nodejs version [#412](https://github.com/askap-vast/vast-pipeline/pull/412)
+- Fixed npm start failure [#412](https://github.com/askap-vast/vast-pipeline/pull/412)
 - All queries using the 2-epoch metric `Vs` now operate on `abs(Vs)`. The original `Vs` stored in MeasurementPair objects is still signed [#407](https://github.com/askap-vast/vast-pipeline/pull/407).
 - Changed aggregate 2-epoch metric calculation for Source objects to ensure they come from the same pair [#407](https://github.com/askap-vast/vast-pipeline/pull/407).
 - Fixed new sources rms measurement returns when no measurements are valid [#417](https://github.com/askap-vast/vast-pipeline/pull/417).
@@ -112,6 +117,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Removed
 
+- Removed/Disabled obsolete test cases[#412](https://github.com/askap-vast/vast-pipeline/pull/412)
 - Removed `vast_pipeline/pipeline/forced_phot.py` [#408](https://github.com/askap-vast/vast-pipeline/pull/408).
 - Removed 'selavy' from homepage measurements count label [#391](https://github.com/askap-vast/vast-pipeline/pull/391).
 - Removed leftover `pipeline/plots.py` file [#391](https://github.com/askap-vast/vast-pipeline/pull/391).
@@ -123,6 +129,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### List of PRs
 
 - [#421](https://github.com/askap-vast/vast-pipeline/pull/421) feat: Delete output files on re-run & UI run check.
+- [#401](https://github.com/askap-vast/vast-pipeline/pull/401) feat: Added source selection by name or id to query page.
+- [#412](https://github.com/askap-vast/vast-pipeline/pull/412) feat: added some unit tests.
 - [#419](https://github.com/askap-vast/vast-pipeline/pull/419) feat: Update alerts to use toasts.
 - [#408](https://github.com/askap-vast/vast-pipeline/pull/408) feat: use forced_phot dependency instead of copied code.
 - [#407](https://github.com/askap-vast/vast-pipeline/pull/407) fix, model: modified 2-epoch metric calculation.
