@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added basic regression tests [#425](https://github.com/askap-vast/vast-pipeline/pull/425)
+- Added image length validation for config [#425](https://github.com/askap-vast/vast-pipeline/pull/425)
 - Added test cases [#412](https://github.com/askap-vast/vast-pipeline/pull/412)
 - Added source tagging [#396](https://github.com/askap-vast/vast-pipeline/pull/396).
 - Added link to measurement table from the lightcurve to source detail page [#387](https://github.com/askap-vast/vast-pipeline/pull/387).
