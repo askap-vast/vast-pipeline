@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/0.2.0...HEAD)
 
+#### Added
+
+#### Changed
+
+#### Fixed
+
+- Fixed sources table on measurement detail page [#429](https://github.com/askap-vast/vast-pipeline/pull/429).
+
+#### Removed
+
+#### List of PRs
+
+- [#429](https://github.com/askap-vast/vast-pipeline/pull/429) fix: Fixed sources table on measurement detail page.
+
 ## [0.2.0](https://github.com/askap-vast/vast-pipeline/releases/0.2.0) (2020-11-30)
 
 #### Added
