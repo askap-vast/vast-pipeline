@@ -98,3 +98,7 @@ USE_CONDON_ERRORS = True
 # Sometimes the local rms for a source is reported as 0 by selavy.
 # Choose a value to use for the local rms in these cases
 SELAVY_LOCAL_RMS_ZERO_FILL_VALUE = 0.2  # mJy
+
+# Only measurement pairs where the Vs metric exceeds this value are selected for the
+# aggregate pair metrics that are stored in Source objects.
+SOURCE_AGGREGATE_PAIR_METRICS_MIN_ABS_VS = 4.3
