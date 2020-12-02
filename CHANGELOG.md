@@ -13,12 +13,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### Fixed
 
 - Fixed sources table on measurement detail page [#429](https://github.com/askap-vast/vast-pipeline/pull/429).
+- Fixed missing meta columns in parallel association [#427](https://github.com/askap-vast/vast-pipeline/pull/427).
 
 #### Removed
 
 #### List of PRs
 
 - [#429](https://github.com/askap-vast/vast-pipeline/pull/429) fix: Fixed sources table on measurement detail page.
+- [#427](https://github.com/askap-vast/vast-pipeline/pull/427) fix: Fixed missing meta columns in parallel association.
 
 ## [0.2.0](https://github.com/askap-vast/vast-pipeline/releases/0.2.0) (2020-11-30)
 
