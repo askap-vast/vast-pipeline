@@ -120,19 +120,60 @@
           <div class="row align-items-center">
             <div class="col-lg-6">
               <div class="form-group form-row align-items-center">
-                <label for="fluxMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Avg. Flux <a href="#" data-toggle="tooltip" data-placement="top" title=
+                <label for="fluxMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Min. Flux <a href="#" data-toggle="tooltip" data-placement="top" title=
+                  "The minimum flux of a source. Peak or integrated flux can be selected. Forced fits are included."
+              ><i class="fas fa-info-circle"></i></a></label>
+                <div class="col">
+                  <input id="fluxMinMinSelect" name="min_min_flux" type="number" class="form-control" placeholder="Min (mJy)" step="0.01" aria-label="Minimum flux minimum">
+                </div>
+                <div class="col">
+                  <input id="fluxMaxMinSelect" name="max_min_flux" type="number" class="form-control" placeholder="Max (mJy)" step="0.01" aria-label="Minimum flux maximum">
+                </div>
+                <div class="col">
+                  <select id="minFluxSelect" name="min_flux_type" class="form-control" aria-label="Average flux type">
+                    <option value="min_flux_int">Int Flux</option>
+                    <option value="min_flux_peak" selected>Peak Flux</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-6">
+              <div class="form-group form-row align-items-center">
+                <label for="fluxMaxSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Max Flux. <a href="#" data-toggle="tooltip" data-placement="top" title=
+                  "The maximum flux of a source. Peak or integrated flux can be selected. Forced fits are included."
+              ><i class="fas fa-info-circle"></i></a></label>
+                <div class="col">
+                  <input id="fluxMinMaxSelect" name="min_max_flux" type="number" class="form-control" placeholder="Min (mJy)" step="0.01" aria-label="Maximum flux minimum">
+                </div>
+                <div class="col">
+                  <input id="fluxMaxMaxSelect" name="max_max_flux" type="number" class="form-control" placeholder="Max (mJy)" step="0.01" aria-label="Maximum flux maximum">
+                </div>
+                <div class="col">
+                  <select id="maxFluxSelect" name="max_flux_type" class="form-control" aria-label="Maximum flux type">
+                    <option value="max_flux_int">Int Flux</option>
+                    <option value="max_flux_peak" selected>Peak Flux</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row align-items-center">
+            <div class="col-lg-6">
+              <div class="form-group form-row align-items-center">
+                <label for="avgFluxMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Avg. Flux <a href="#" data-toggle="tooltip" data-placement="top" title=
                   "The average flux of a source. Peak or integrated flux can be selected. Forced fits are included."
               ><i class="fas fa-info-circle"></i></a></label>
                 <div class="col">
-                  <input id="fluxMinSelect" name="min_avg_flux" type="number" class="form-control" placeholder="Min (mJy)" step="0.01" aria-label="Average flux minimum">
+                  <input id="avgFluxMinSelect" name="min_avg_flux" type="number" class="form-control" placeholder="Min (mJy)" step="0.01" aria-label="Average flux minimum">
                 </div>
                 <div class="col">
-                  <input id="fluxMaxSelect" name="max_avg_flux" type="number" class="form-control" placeholder="Max (mJy)" step="0.01" aria-label="Average flux maximum">
+                  <input id="avgFluxMaxSelect" name="max_avg_flux" type="number" class="form-control" placeholder="Max (mJy)" step="0.01" aria-label="Average flux maximum">
                 </div>
                 <div class="col">
                   <select id="aveFluxSelect" name="avg_flux_type" class="form-control" aria-label="Average flux type">
-                    <option value="avg_flux_int" selected>Int Flux</option>
-                    <option value="avg_flux_peak">Peak Flux</option>
+                    <option value="avg_flux_int">Int Flux</option>
+                    <option value="avg_flux_peak" selected>Peak Flux</option>
                   </select>
                 </div>
               </div>
@@ -173,8 +214,8 @@
                 </div>
                 <div class="col">
                   <select id="varVMetricSelect" name="v_flux_type" class="form-control" aria-label="V metric flux type">
-                    <option value="v_int" selected>Int Flux</option>
-                    <option value="v_peak">Peak Flux</option>
+                    <option value="v_int">Int Flux</option>
+                    <option value="v_peak" selected>Peak Flux</option>
                   </select>
                 </div>
               </div>
@@ -192,8 +233,8 @@
                 </div>
                 <div class="col">
                   <select id="varEtaMetricSelect" name="eta_flux_type" class="form-control" aria-label="Eta metric flux type">
-                    <option value="eta_int" selected>Int Flux</option>
-                    <option value="eta_peak">Peak Flux</option>
+                    <option value="eta_int">Int Flux</option>
+                    <option value="eta_peak" selected>Peak Flux</option>
                   </select>
                 </div>
               </div>
@@ -203,19 +244,19 @@
           <div class="row align-items-center">
             <div class="col-lg-6">
               <div class="form-group form-row align-items-center">
-                <label for="varMaxVsMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Max Vs Metric <a href="#" data-toggle="tooltip" data-placement="top" title=
+                <label for="varMaxVsMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Max |Vs| Metric <a href="#" data-toggle="tooltip" data-placement="top" title=
                   "The maximum two-epoch variability t-statistic value derived from the source. Peak or integrated flux can be selected."
               ><i class="fas fa-info-circle"></i></a></label>
                 <div class="col">
-                  <input id="varMaxVsMinSelect" name="min_vs" type="number" class="form-control" placeholder="Min" step="0.01" aria-label="Maximum Vs metric minimum">
+                  <input id="varMaxVsMinSelect" name="min_vs" type="number" class="form-control" placeholder="Min" step="0.01" aria-label="Maximum absolute Vs metric minimum">
                 </div>
                 <div class="col">
-                  <input id="varMaxVsMaxSelect" name="max_vs" type="number" class="form-control" placeholder="Max" step="0.01" aria-label="Maximum Vs metric maximum">
+                  <input id="varMaxVsMaxSelect" name="max_vs" type="number" class="form-control" placeholder="Max" step="0.01" aria-label="Maximum absolute Vs metric maximum">
                 </div>
                 <div class="col">
-                  <select id="varMaxVsMetricSelect" name="vs_flux_type" class="form-control" aria-label="Maximum Vs metric flux type">
-                    <option value="vs_max_int" selected>Int Flux</option>
-                    <option value="vs_max_peak">Peak Flux</option>
+                  <select id="varMaxVsMetricSelect" name="vs_flux_type" class="form-control" aria-label="Maximum absolute Vs metric flux type">
+                    <option value="vs_abs_significant_max_int">Int Flux</option>
+                    <option value="vs_abs_significant_max_peak" selected>Peak Flux</option>
                   </select>
                 </div>
               </div>
@@ -233,8 +274,8 @@
                 </div>
                 <div class="col">
                   <select id="varMaxAbsMMetricSelect" name="m_flux_type" class="form-control" aria-label="Maximum absolute m metric flux type">
-                    <option value="m_abs_max_int" selected>Int Flux</option>
-                    <option value="m_abs_max_peak">Peak Flux</option>
+                    <option value="m_abs_significant_max_int">Int Flux</option>
+                    <option value="m_abs_significant_max_peak" selected>Peak Flux</option>
                   </select>
                 </div>
               </div>
@@ -344,14 +385,20 @@
             </div>
             <div class="col-lg-6">
               <div class="form-group form-row align-items-center">
-                <label for="NewSigmaMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">New Source High Sigma <a href="#" data-toggle="tooltip" data-placement="top" title=
-                  "The highest signal-to-noise value the new source would have if placed in previous images in time where the source should have been seen."
+                <label for="fluxIslMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Min. Flux Isl. Ratio <a href="#" data-toggle="tooltip" data-placement="top" title=
+                  "The minimum value of the ratio of component flux / total island flux of any measurement in the source."
               ><i class="fas fa-info-circle"></i></a></label>
                 <div class="col">
-                  <input id="NewSigmaMinSelect" name="min_new_sigma" type="number" class="form-control" placeholder="Min" min="0" step="1" aria-label="New source high sigma minimum">
+                  <input id="fluxIslMinSelect" name="min_min_flux_isl_ratio" type="number" class="form-control" placeholder="Min" step="0.01" aria-label="Minimum flux island ratio minimum">
                 </div>
                 <div class="col">
-                  <input id="NewSigmaMaxSelect" name="max_new_sigma" type="number" class="form-control" placeholder="Max" min="0" step="1" aria-label="New source high sigma maximum">
+                  <input id="fluxIslMaxSelect" name="max_min_flux_isl_ratio" type="number" class="form-control" placeholder="Max" step="0.01" aria-label="Minimum flux island ratio maximum">
+                </div>
+                <div class="col">
+                  <select id="fluxIslSelect" name="min_flux_isl_ratio_type" class="form-control" aria-label="Minimum flux island ratio type">
+                    <option value="min_flux_int_isl_ratio">Int Flux</option>
+                    <option value="min_flux_peak_isl_ratio" selected>Peak Flux</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -394,7 +441,40 @@
                 </div>
               </div>
             </div>
+            <div class="col-lg-6">
+              <div class="form-group form-row align-items-center">
+                <label for="NewSigmaMinSelect" class="col-3 col-form-label font-weight-bold text-gray-800">New Source High Sigma <a href="#" data-toggle="tooltip" data-placement="top" title=
+                  "The highest signal-to-noise value the new source would have if placed in previous images in time where the source should have been seen."
+              ><i class="fas fa-info-circle"></i></a></label>
+                <div class="col">
+                  <input id="NewSigmaMinSelect" name="min_new_sigma" type="number" class="form-control" placeholder="Min" min="0" step="1" aria-label="New source high sigma minimum">
+                </div>
+                <div class="col">
+                  <input id="NewSigmaMaxSelect" name="max_new_sigma" type="number" class="form-control" placeholder="Max" min="0" step="1" aria-label="New source high sigma maximum">
+                </div>
+              </div>
+            </div>
           </div>
+          
+          <div class="row align-items-center">
+            <div class="col-lg-6">
+              <div class="form-group form-row align-items-center">
+                <label for="sourceSelectionSelect" class="col-3 col-form-label font-weight-bold text-gray-800">Source Selection <a href="#" data-toggle="tooltip" data-placement="top" title=
+                  "Select sources directly by either their Name or ID value. Must be entered as a comma separated list, e.g. 'ASKAP_002611.16-751830.46, ASKAP_013850.13-743544.66'."
+              ><i class="fas fa-info-circle"></i></a></label>
+                <div class="col">
+                  <textarea id="sourceSelectionSelect" name="source_selection" class="form-control" placeholder="Enter source names or ID numbers." aria-label="Source selection"></textarea>
+                </div>
+                <div class="col">
+                  <select id="sourceSelectionTypeSelect" name="source_selection_type" class="form-control" aria-label="Source selection type">
+                    <option value="name" selected>Name</option>
+                    <option value="id">ID</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+          
         </fieldset>
         <div class="card-corn-obj">
           <button type="button" id="resetSearch" class="btn btn-danger btn-circle" title="Reset Search" style="margin-right:0.5rem">

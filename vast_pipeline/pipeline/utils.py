@@ -376,8 +376,10 @@ def prep_skysrc_df(
         'weight_ns',
         'flux_int',
         'flux_int_err',
+        'flux_int_isl_ratio',
         'flux_peak',
         'flux_peak_err',
+        'flux_peak_isl_ratio',
         'forced',
         'compactness',
         'has_siblings',
@@ -568,7 +570,12 @@ def groupby_funcs(df):
     d['wavg_uncertainty_ns'] = 1. / np.sqrt(df['weight_ns'].sum())
     for col in ['avg_flux_int', 'avg_flux_peak']:
         d[col] = df[col.split('_', 1)[1]].mean()
-    d['max_flux_peak'] = df['flux_peak'].values.max()
+    for col in ['max_flux_peak', 'max_flux_int']:
+        d[col] = df[col.split('_', 1)[1]].max()
+    for col in ['min_flux_peak', 'min_flux_int']:
+        d[col] = df[col.split('_', 1)[1]].min()
+    for col in ['min_flux_peak_isl_ratio', 'min_flux_int_isl_ratio']:
+        d[col] = df[col.split('_', 1)[1]].min()
 
     for col in ['flux_int', 'flux_peak']:
         d[f'{col}_sq'] = (df[col]**2).mean()
@@ -588,7 +595,7 @@ def groupby_funcs(df):
     ))
     d['related_list'] = list_uniq_related if list_uniq_related else -1
 
-    return pd.Series(d)
+    return pd.Series(d).fillna(value={"v_int": 0.0, "v_peak": 0.0})
 
 
 def parallel_groupby(df):
@@ -608,6 +615,11 @@ def parallel_groupby(df):
         'avg_flux_int': 'f',
         'avg_flux_peak': 'f',
         'max_flux_peak': 'f',
+        'max_flux_int': 'f',
+        'min_flux_peak': 'f',
+        'min_flux_int': 'f',
+        'min_flux_peak_isl_ratio': 'f',
+        'min_flux_int_isl_ratio': 'f',
         'v_int': 'f',
         'v_peak': 'f',
         'eta_int': 'f',
@@ -1209,6 +1221,43 @@ def create_measurements_arrow_file(p_run: Run) -> None:
     outname = os.path.join(p_run.path, 'measurements.arrow')
 
     measurements.export_arrow(outname)
+
+
+def create_measurement_pairs_arrow_file(p_run: Run) -> None:
+    """
+    Creates a measurement_pairs.arrow file using the parquet outputs
+    of a pipeline run. Vaex is used to do the exporting to arrow to
+    ensure compatibility with Vaex.
+
+    Parameters
+    ----------
+    p_run: Run
+        Pipeline model instance.
+
+    Returns
+    -------
+    None
+    """
+    logger.info('Creating measurement_pairs.arrow for run %s.', p_run.name)
+
+    measurement_pairs_df = pd.read_parquet(
+        os.path.join(
+            p_run.path,
+            'measurement_pairs.parquet'
+        )
+    )
+
+    logger.debug('Optimising dataframe.')
+    measurement_pairs_df = optimize_ints(optimize_floats(measurement_pairs_df))
+
+    # use vaex to export to arrow
+    logger.debug("Loading to vaex.")
+    measurement_pairs_df = vaex.from_pandas(measurement_pairs_df)
+
+    logger.debug("Exporting to arrow.")
+    outname = os.path.join(p_run.path, 'measurement_pairs.arrow')
+
+    measurement_pairs_df.export_arrow(outname)
 
 
 def calculate_vs_metric(

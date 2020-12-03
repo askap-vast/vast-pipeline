@@ -1,5 +1,6 @@
 import os
 import logging
+import numpy as np
 import pandas as pd
 
 from astropy import units as u
@@ -11,14 +12,64 @@ from vast_pipeline.pipeline.loading import (
     make_upload_associations, make_upload_sources, make_upload_related_sources,
     make_upload_measurement_pairs,
 )
-from vast_pipeline.pipeline.utils import parallel_groupby, calculate_measurement_pair_metrics
+from vast_pipeline.pipeline.utils import (
+    parallel_groupby, calculate_measurement_pair_metrics
+)
 
 
 logger = logging.getLogger(__name__)
 
 
+def calculate_measurement_pair_aggregate_metrics(
+    measurement_pairs_df: pd.DataFrame,
+    min_vs: float,
+    flux_type: str = "peak",
+) -> pd.DataFrame:
+    """Calculate the aggregate maximum measurement pair variability metrics to be stored
+    in `Source` objects. Only measurement pairs with abs(Vs metric) >= `min_vs` are considered.
+    The measurement pairs are filtered on abs(Vs metric) >= `min_vs`, grouped by the source
+    ID column `source`, then the row index of the maximum abs(m) metric is found. The
+    absolute Vs and m metric values from this row are returned for each source.
+
+    Parameters
+    ----------
+    measurement_pairs_df : pd.DataFrame
+        The measurement pairs and their variability metrics. Must at least contain the
+        columns: source, vs_{flux_type}, m_{flux_type}.
+    min_vs : float
+        The minimum value of the Vs metric (i.e. column `vs_{flux_type}`) the measurement
+        pair must have to be included in the aggregate metric determination.
+    flux_type : str, optional
+        The flux type on which to perform the aggregation, either "peak" or "int".
+        Default is "peak".
+
+    Returns
+    -------
+    pd.DataFrame
+        Measurement pair aggregate metrics indexed by the source ID, `source`. The metric
+        columns are named: `vs_abs_significant_max_{flux_type}` and
+        `m_abs_significant_max_{flux_type}`.
+    """
+    pair_agg_metrics = measurement_pairs_df.set_index("source").iloc[
+        measurement_pairs_df.query(f"abs(vs_{flux_type}) >= @min_vs")
+        .groupby("source")
+        .agg(m_abs_max_idx=(f"m_{flux_type}", lambda x: x.abs().idxmax()),)
+        .astype(np.int32)["m_abs_max_idx"]  # cast row indices to int and select them
+        .reset_index(drop=True)  # keep only the row indices
+    ][[f"vs_{flux_type}", f"m_{flux_type}"]]
+
+    pair_agg_metrics = pair_agg_metrics.abs().rename(columns={
+        f"vs_{flux_type}": f"vs_abs_significant_max_{flux_type}",
+        f"m_{flux_type}": f"m_abs_significant_max_{flux_type}",
+    })
+    return pair_agg_metrics
+
+
 def final_operations(
-    sources_df: pd.DataFrame, p_run: Run, new_sources_df: pd.DataFrame
+    sources_df: pd.DataFrame,
+    p_run: Run,
+    new_sources_df: pd.DataFrame,
+    source_aggregate_pair_metrics_min_abs_vs: float,
 ) -> int:
     """
     Performs the final operations of the pipeline:
@@ -38,6 +89,9 @@ def final_operations(
     new_sources_df : pd.DataFrame
         The new sources dataframe, only contains the 'new_source_high_sigma'
         column (source_id is the index).
+    source_aggregate_pair_metrics_min_abs_vs : float
+        Only measurement pairs where the Vs metric exceeds this value are selected for
+        the aggregate pair metrics that are stored in `Source` objects.
 
     Returns
     -------
@@ -84,21 +138,30 @@ def final_operations(
     timer.reset()
     measurement_pairs_df = calculate_measurement_pair_metrics(sources_df)
     logger.info('Measurement pair metrics time: %.2f seconds', timer.reset())
-    # calculate 2-pair metric aggregates for sources
-    srcs_df = srcs_df.join(
-        measurement_pairs_df.groupby("source")
-        .agg(
-            vs_max_int=("vs_int", lambda x: x.abs().max()),
-            vs_max_peak=("vs_peak", lambda x: x.abs().max()),
-            m_abs_max_int=("m_int", lambda x: x.abs().max()),
-            m_abs_max_peak=("m_peak", lambda x: x.abs().max()),
-        )
-        .dropna(how="all"),
-    )
-    logger.info("Measurement pair aggregate metrics time: %.2f seconds", timer.reset())
 
-    # fill NaNs as resulted from calculated metrics with 0, the DataTables API doesn't like them
-    srcs_df = srcs_df.fillna(0.0)
+    # calculate measurement pair metric aggregates for sources by finding the row indices
+    # of the aggregate max of the abs(m) metric for each flux type.
+    pair_agg_metrics = pd.merge(
+        calculate_measurement_pair_aggregate_metrics(
+            measurement_pairs_df, source_aggregate_pair_metrics_min_abs_vs, flux_type="peak",
+        ),
+        calculate_measurement_pair_aggregate_metrics(
+            measurement_pairs_df, source_aggregate_pair_metrics_min_abs_vs, flux_type="int",
+        ),
+        how="outer",
+        left_index=True,
+        right_index=True,
+    )
+
+    # join with sources and replace agg metrics NaNs with 0 as the DataTables API JSON
+    # serialization doesn't like them
+    srcs_df = srcs_df.join(pair_agg_metrics).fillna(value={
+        "vs_abs_significant_max_peak": 0.0,
+        "m_abs_significant_max_peak": 0.0,
+        "vs_abs_significant_max_int": 0.0,
+        "m_abs_significant_max_int": 0.0,
+    })
+    logger.info("Measurement pair aggregate metrics time: %.2f seconds", timer.reset())
 
     # upload sources to DB, column 'id' with DB id is contained in return
     srcs_df = make_upload_sources(srcs_df, p_run)

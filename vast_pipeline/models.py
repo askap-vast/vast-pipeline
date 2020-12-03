@@ -205,6 +205,7 @@ class Run(CommentableModel):
     )
     STATUS_CHOICES = [
         ('INI', 'Initialised'),
+        ('QUE', 'Queued'),
         ('RUN', 'Running'),
         ('END', 'Completed'),
         ('ERR', 'Error'),
@@ -361,6 +362,21 @@ class Source(CommentableModel):
     max_flux_peak = models.FloatField(
         help_text='The maximum peak flux value.'
     )
+    min_flux_peak = models.FloatField(
+        help_text='The minimum peak flux value.'
+    )
+    max_flux_int = models.FloatField(
+        help_text='The maximum integrated flux value.'
+    )
+    min_flux_int = models.FloatField(
+        help_text='The minimum integrated flux value.'
+    )
+    min_flux_int_isl_ratio = models.FloatField(
+        help_text='The minimum integrated island flux ratio value.'
+    )
+    min_flux_peak_isl_ratio = models.FloatField(
+        help_text='The minimum peak island flux ratio value.'
+    )
     avg_compactness = models.FloatField(
         help_text='The average compactness.'
     )
@@ -393,21 +409,37 @@ class Source(CommentableModel):
     n_neighbour_dist = models.FloatField(
         help_text='Distance to the nearest neighbour (deg)'
     )
-    vs_max_int = models.FloatField(
-        null=True,
-        help_text='Maximum value of all measurement pair variability t-statistics for int flux.'
+    vs_abs_significant_max_int = models.FloatField(
+        default=0.0,
+        help_text=(
+            'Maximum value of all measurement pair variability t-statistics for int '
+            'flux that exceed SOURCE_AGGREGATE_PAIR_METRICS_MIN_ABS_VS in the pipeline run '
+            'configuration.'
+        )
     )
-    m_abs_max_int = models.FloatField(
-        null=True,
-        help_text='Maximum absolute value of all measurement pair modulation indices for int flux.'
+    m_abs_significant_max_int = models.FloatField(
+        default=0.0,
+        help_text=(
+            'Maximum absolute value of all measurement pair modulation indices for int '
+            'flux that exceed SOURCE_AGGREGATE_PAIR_METRICS_MIN_ABS_VS in the pipeline run '
+            'configuration.'
+        )
     )
-    vs_max_peak = models.FloatField(
-        null=True,
-        help_text='Maximum value of all measurement pair variability t-statistics for peak flux.'
+    vs_abs_significant_max_peak = models.FloatField(
+        default=0.0,
+        help_text=(
+            'Maximum absolute value of all measurement pair variability t-statistics for '
+            'peak flux that exceed SOURCE_AGGREGATE_PAIR_METRICS_MIN_ABS_VS in the pipeline '
+            'run configuration.'
+        )
     )
-    m_abs_max_peak = models.FloatField(
-        null=True,
-        help_text='Maximum absolute value of all measurement pair modulation indices for peak flux.'
+    m_abs_significant_max_peak = models.FloatField(
+        default=0.0,
+        help_text=(
+            'Maximum absolute value of all measurement pair modulation indices for '
+            'peak flux that exceed SOURCE_AGGREGATE_PAIR_METRICS_MIN_ABS_VS in the '
+            'pipeline run configuration.'
+        )
     )
 
 
@@ -665,8 +697,20 @@ class Measurement(CommentableModel):
 
     flux_int = models.FloatField()# mJy/beam
     flux_int_err = models.FloatField()# mJy/beam
+    flux_int_isl_ratio = models.FloatField(
+        help_text=(
+            'Ratio of the component integrated flux to the total'
+            ' island integrated flux.'
+        )
+    )
     flux_peak = models.FloatField()# mJy/beam
     flux_peak_err = models.FloatField()# mJy/beam
+    flux_peak_isl_ratio = models.FloatField(
+        help_text=(
+            'Ratio of the component peak flux to the total'
+            ' island peak flux.'
+        )
+    )
     chi_squared_fit = models.FloatField(
         db_column='chi2_fit',
         help_text='Chi-squared of the Guassian fit to the source.'

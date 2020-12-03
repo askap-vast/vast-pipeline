@@ -24,10 +24,14 @@ from bokeh.embed import json_item
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
+from django.db import transaction
 from django.db.models import F, Count, QuerySet
 from django.http import FileResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
+from django.utils.safestring import mark_safe
+
+from django_q.tasks import async_task
 
 from rest_framework import status
 import rest_framework.decorators
@@ -58,6 +62,7 @@ from vast_pipeline.utils.view import generate_colsfields, get_skyregions_collect
 from vast_pipeline.management.commands.initpiperun import initialise_run
 from vast_pipeline.forms import PipelineRunForm, CommentForm, TagWithCommentsForm
 from vast_pipeline.pipeline.main import Pipeline
+from vast_pipeline.pipeline.utils import get_create_p_run
 
 
 logger = logging.getLogger(__name__)
@@ -155,7 +160,10 @@ def RunIndex(request):
                 )
                 messages.success(
                     request,
-                    f'Pipeline run {p_run.name} initilialised successfully!'
+                    mark_safe(
+                        f'Pipeline run <b>{p_run.name}</b> '
+                        'initilialised successfully!'
+                    )
                 )
                 return redirect('vast_pipeline:run_detail', id=p_run.id)
             except Exception as e:
@@ -206,7 +214,8 @@ def RunIndex(request):
                 ],
                 'search': True,
             },
-            'runconfig' : settings.PIPE_RUN_CONFIG_DEFAULTS
+            'runconfig' : settings.PIPE_RUN_CONFIG_DEFAULTS,
+            'max_piperun_images': settings.MAX_PIPERUN_IMAGES
         }
     )
 
@@ -240,6 +249,107 @@ class RunViewSet(ModelViewSet):
 
         serializer = MeasurementSerializer(qs, many=True)
         return Response(serializer.data)
+
+    @rest_framework.decorators.action(detail=True, methods=['post'])
+    def run(self, request, pk=None):
+        """
+        Launches a pipeline run using a Django Q cluster. Includes a check
+        on ownership or admin stataus of the user to make sure processing
+        is allowed.
+
+        Args:
+            request (Request): Django REST Framework request object.
+            pk (int, optional): Run object primary key. Defaults to None.
+
+        Raises:
+            Http404: if a Source with the given `pk` cannot be found.
+
+        Returns:
+            Response: Returns to the orignal request page (the pipeline run
+            detail).
+        """
+        if not pk:
+            messages.error(
+                request,
+                'Error in config write: Run pk parameter null or not passed'
+            )
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        try:
+            p_run = get_object_or_404(self.queryset, pk=pk)
+        except Exception as e:
+            messages.error(request, f'Error in config write: {e}')
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        # make sure that only the run creator or an admin can request the run
+        # to be processed.
+        if (
+            p_run.user != request.user.get_username()
+            and not request.user.is_staff
+        ):
+            msg = (
+                'You do not have permission to process this pipeline run!'
+            )
+            messages.error(
+                request,
+                msg
+            )
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        # check that it's not already running or queued
+        if p_run.status in ["RUN", "QUE"]:
+            msg = (
+                f'{p_run.name} is already running or is queued.'
+                ' Please wait for the run to complete before trying to'
+                ' submit again.'
+            )
+            messages.error(
+                request,
+                msg
+            )
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        if Run.objects.check_max_runs(settings.MAX_PIPELINE_RUNS):
+            msg = (
+                'The maximum number of simultaneous pipeline runs has been'
+                f' reached ({settings.MAX_PIPELINE_RUNS})! Please try again'
+                ' when other jobs have finished.'
+            )
+            messages.error(
+                request,
+                msg
+            )
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        try:
+            with transaction.atomic():
+                p_run.status = 'QUE'
+                p_run.save()
+            debug_flag = request.POST.get('debug', 'debugOff')
+            debug_flag = True if debug_flag == 'debugOn' else False
+            async_task(
+                'vast_pipeline.management.commands.runpipeline.run_pipe',
+                p_run.name, p_run.path, p_run, False, debug_flag,
+                task_name=p_run.name, ack_failure=True, user=request.user
+            )
+            msg = mark_safe(
+                f'<b>{p_run.name}</b> successfully sent to the queue!<br><br>Refresh the'
+                ' page to check the status.'
+            )
+            messages.success(
+                request,
+                msg
+            )
+        except Exception as e:
+            with transaction.atomic():
+                p_run.status = 'ERR'
+                p_run.save()
+            messages.error(request, f'Error in running pipeline: {e}')
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        return HttpResponseRedirect(
+            reverse('vast_pipeline:run_detail', args=[p_run.id])
+        )
 
 
 # Run detail
@@ -321,6 +431,7 @@ def RunDetail(request, id):
             'Beam PA (deg)'
         ],
         'search': True,
+        'order': [1, 'asc']
     }
 
     meas_fields = [
@@ -331,10 +442,12 @@ def RunDetail(request, id):
         'dec',
         'dec_err',
         'uncertainty_ns',
-        'flux_int',
-        'flux_int_err',
         'flux_peak',
         'flux_peak_err',
+        'flux_peak_isl_ratio',
+        'flux_int',
+        'flux_int_err',
+        'flux_int_isl_ratio',
         'frequency',
         'compactness',
         'snr',
@@ -363,10 +476,12 @@ def RunDetail(request, id):
             'Dec (deg)',
             'Dec Error (arcsec)',
             'Uncertainty NS (arcsec)',
-            'Int. Flux (mJy)',
-            'Int. Flux Error (mJy)',
             'Peak Flux (mJy/beam)',
             'Peak Flux Error (mJy/beam)',
+            'Peak Flux Isl. Ratio',
+            'Int. Flux (mJy)',
+            'Int. Flux Error (mJy)',
+            'Int. Flux Isl. Ratio',
             'Frequency (MHz)',
             'Compactness',
             'SNR',
@@ -544,10 +659,12 @@ def ImageDetail(request, id, action=None):
         'dec',
         'dec_err',
         'uncertainty_ns',
-        'flux_int',
-        'flux_int_err',
         'flux_peak',
         'flux_peak_err',
+        'flux_peak_isl_ratio',
+        'flux_int',
+        'flux_int_err',
+        'flux_int_isl_ratio',
         'frequency',
         'compactness',
         'snr',
@@ -576,10 +693,12 @@ def ImageDetail(request, id, action=None):
             'Dec (deg)',
             'Dec Error (arcsec)',
             'Uncertainty NS (arcsec)',
-            'Int. Flux (mJy)',
-            'Int. Flux Error (mJy)',
             'Peak Flux (mJy/beam)',
             'Peak Flux Error (mJy/beam)',
+            'Peak Flux Isl. Ratio',
+            'Int. Flux (mJy)',
+            'Int. Flux Error (mJy)',
+            'Int. Flux Isl. Ratio',
             'Frequency (MHz)',
             'Compactness',
             'SNR',
@@ -640,10 +759,12 @@ def MeasurementIndex(request):
         'uncertainty_ew',
         'dec',
         'uncertainty_ns',
-        'flux_int',
-        'flux_int_err',
         'flux_peak',
         'flux_peak_err',
+        'flux_peak_isl_ratio',
+        'flux_int',
+        'flux_int_err',
+        'flux_int_isl_ratio',
         'frequency',
         'compactness',
         'snr',
@@ -678,10 +799,12 @@ def MeasurementIndex(request):
                     'RA Error (arcsec)',
                     'Dec (deg)',
                     'Dec Error (arcsec)',
-                    'Int. Flux (mJy)',
-                    'Int. Flux Error (mJy)',
                     'Peak Flux (mJy/beam)',
                     'Peak Flux Error (mJy/beam)',
+                    'Peak Flux Isl. Ratio',
+                    'Int. Flux (mJy)',
+                    'Int. Flux Error (mJy)',
+                    'Int. Flux Isl. Ratio',
                     'Frequency (MHz)',
                     'Compactness',
                     'SNR',
@@ -797,6 +920,9 @@ def MeasurementDetail(request, id, action=None):
     sibling_fields = [
         'name',
         'flux_peak',
+        'flux_peak_isl_ratio',
+        'flux_int',
+        'flux_int_isl_ratio',
         'island_id',
     ]
 
@@ -815,6 +941,9 @@ def MeasurementDetail(request, id, action=None):
         'colsNames': [
             'Name',
             'Peak Flux (mJy/beam)',
+            'Peak Flux Isl. Ratio',
+            'Int. Flux (mJy/beam)',
+            'Int. Flux Isl. Ratio',
             'Island ID'
         ],
         'search': True,
@@ -825,9 +954,14 @@ def MeasurementDetail(request, id, action=None):
         'run.name',
         'wavg_ra',
         'wavg_dec',
-        'avg_flux_int',
         'avg_flux_peak',
+        'min_flux_peak',
         'max_flux_peak',
+        'min_flux_peak_isl_ratio',
+        'avg_flux_int',
+        'min_flux_int',
+        'max_flux_int',
+        'min_flux_int_isl_ratio',
         'min_snr',
         'max_snr',
         'avg_compactness',
@@ -840,6 +974,10 @@ def MeasurementDetail(request, id, action=None):
         'eta_int',
         'v_peak',
         'eta_peak',
+        'vs_abs_significant_max_int',
+        'vs_abs_significant_max_peak',
+        'm_abs_significant_max_int',
+        'm_abs_significant_max_peak',
         'n_sibl',
         'new',
         'new_high_sigma'
@@ -867,9 +1005,14 @@ def MeasurementDetail(request, id, action=None):
             'Run',
             'W. Avg. RA',
             'W. Avg. Dec',
-            'Avg. Int. Flux (mJy)',
             'Avg. Peak Flux (mJy/beam)',
+            'Min Peak Flux (mJy/beam)',
             'Max Peak Flux (mJy/beam)',
+            'Min Peak Flux Isl. Ratio',
+            'Avg. Int. Flux (mJy)',
+            'Min Int. Flux (mJy)',
+            'Max Int. Flux (mJy)',
+            'Min Int. Flux Isl. Ratio',
             'Min SNR',
             'Max SNR',
             'Avg. Compactness',
@@ -882,6 +1025,10 @@ def MeasurementDetail(request, id, action=None):
             '\u03B7 int flux',
             'V peak flux',
             '\u03B7 peak flux',
+            'Max |Vs| int',
+            'Max |Vs| peak',
+            'Max |m| int',
+            'Max |m| peak',
             'Contains siblings',
             'New Source',
             'New High Sigma'
@@ -927,14 +1074,20 @@ class SourceViewSet(ModelViewSet):
         flux_qry_flds = [
             'avg_flux_int',
             'avg_flux_peak',
+            'min_flux_peak',
+            'max_flux_peak',
+            'min_flux_int',
+            'max_flux_int',
+            'min_flux_peak_isl_ratio',
+            'min_flux_int_isl_ratio',
             'v_int',
             'v_peak',
             'eta_int',
             'eta_peak',
-            'vs_max_int',
-            'vs_max_peak',
-            'm_abs_max_int',
-            'm_abs_max_peak',
+            'vs_abs_significant_max_int',
+            'vs_abs_significant_max_peak',
+            'm_abs_significant_max_int',
+            'm_abs_significant_max_peak',
             'n_meas',
             'n_meas_sel',
             'n_meas_forced',
@@ -943,7 +1096,9 @@ class SourceViewSet(ModelViewSet):
             'avg_compactness',
             'min_snr',
             'max_snr',
-            'n_neighbour_dist'
+            'n_neighbour_dist',
+            'source_selection',
+            'source_selection_type'
         ]
 
         neighbour_unit = self.request.query_params.get('NeighbourUnit')
@@ -960,6 +1115,24 @@ class SourceViewSet(ModelViewSet):
         measurements = self.request.query_params.get('meas')
         if measurements:
             qry_dict['measurements'] = measurements
+
+        if 'source_selection' in self.request.query_params:
+            selection_type = self.request.query_params['source_selection_type']
+            selection = (
+                self.request.query_params['source_selection']
+                .replace(" ", "")
+                .split(",")
+            )
+            if selection_type == 'name':
+                qry_dict['name__in'] = selection
+            else:
+                try:
+                    selection = [int(i) for i in selection]
+                    qry_dict['id__in'] = selection
+                except:
+                    # this avoids an error on the check if the user has
+                    # accidentally entered names with a 'id' selection type.
+                    qry_dict['id'] = -1
 
         if 'newsrc' in self.request.query_params:
             qry_dict['new'] = True
@@ -1024,9 +1197,14 @@ def SourceQuery(request):
         'run.name',
         'wavg_ra',
         'wavg_dec',
-        'avg_flux_int',
         'avg_flux_peak',
+        'min_flux_peak',
         'max_flux_peak',
+        'min_flux_peak_isl_ratio',
+        'avg_flux_int',
+        'min_flux_int',
+        'max_flux_int',
+        'min_flux_int_isl_ratio',
         'min_snr',
         'max_snr',
         'avg_compactness',
@@ -1039,10 +1217,10 @@ def SourceQuery(request):
         'eta_int',
         'v_peak',
         'eta_peak',
-        'vs_max_int',
-        'vs_max_peak',
-        'm_abs_max_int',
-        'm_abs_max_peak',
+        'vs_abs_significant_max_int',
+        'vs_abs_significant_max_peak',
+        'm_abs_significant_max_int',
+        'm_abs_significant_max_peak',
         'n_sibl',
         'new',
         'new_high_sigma'
@@ -1078,9 +1256,14 @@ def SourceQuery(request):
                     'Run',
                     'W. Avg. RA',
                     'W. Avg. Dec',
-                    'Avg. Int. Flux (mJy)',
                     'Avg. Peak Flux (mJy/beam)',
+                    'Min Peak Flux (mJy/beam)',
                     'Max Peak Flux (mJy/beam)',
+                    'Min Peak Flux Isl. Ratio',
+                    'Avg. Int. Flux (mJy)',
+                    'Min Int. Flux (mJy)',
+                    'Max Int. Flux (mJy)',
+                    'Min Int. Flux Isl. Ratio',
                     'Min SNR',
                     'Max SNR',
                     'Avg. Compactness',
@@ -1093,8 +1276,8 @@ def SourceQuery(request):
                     '\u03B7 int flux',
                     'V peak flux',
                     '\u03B7 peak flux',
-                    'Max Vs int',
-                    'Max Vs peak',
+                    'Max |Vs| int',
+                    'Max |Vs| peak',
                     'Max |m| int',
                     'Max |m| peak',
                     'Contains siblings',
@@ -1130,10 +1313,12 @@ def SourceDetail(request, pk):
         'ra_err',
         'dec',
         'dec_err',
-        'flux_int',
-        'flux_int_err',
         'flux_peak',
         'flux_peak_err',
+        'flux_peak_isl_ratio',
+        'flux_int',
+        'flux_int_err',
+        'flux_int_isl_ratio',
         'local_rms',
         'snr',
         'has_siblings',
@@ -1168,10 +1353,12 @@ def SourceDetail(request, pk):
             'RA Error (arcsec)',
             'Dec (deg)',
             'Dec Error (arcsec)',
-            'Int. Flux (mJy)',
-            'Int. Flux Error (mJy)',
             'Peak Flux (mJy/beam)',
             'Peak Flux Error (mJy/beam)',
+            'Peak Flux Isl. Ratio',
+            'Int. Flux (mJy)',
+            'Int. Flux Error (mJy)',
+            'Int. Flux Isl. Ratio',
             'Local RMS (mJy)',
             'SNR',
             'Has siblings',
@@ -1599,7 +1786,7 @@ class RunConfigSet(ViewSet):
 
         try:
             pipeline = Pipeline(name=p_run.name, config_path=path)
-            pipeline.validate_cfg()
+            pipeline.validate_cfg(user=request.user)
         except Exception as e:
             trace = traceback.format_exc().splitlines()
             trace = '\n'.join(trace[-4:])
@@ -1697,7 +1884,7 @@ class SourceFavViewSet(ModelViewSet):
             else:
                 fav = SourceFav(**data)
                 fav.save()
-                messages.info(request, 'Added to favourites successfully')
+                messages.success(request, 'Added to favourites successfully')
         except Exception as e:
             messages.error(
                 request,
@@ -1713,11 +1900,11 @@ class SourceFavViewSet(ModelViewSet):
                 qs.delete()
                 messages.success(
                     request,
-                    'Favourite source deleted successfully'
+                    'Favourite source deleted successfully.'
                 )
                 return Response({'message': 'ok'}, status=status.HTTP_200_OK)
             else:
-                messages.info(request, 'Not found')
+                messages.error(request, 'Not found')
                 return Response(
                     {'message': 'not found'},
                     status=status.HTTP_404_NOT_FOUND

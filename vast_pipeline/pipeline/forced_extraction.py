@@ -18,7 +18,7 @@ from vast_pipeline.models import Image, Measurement
 from vast_pipeline.image.utils import on_sky_sep
 from vast_pipeline.pipeline.loading import make_upload_measurements
 
-from .forced_phot import ForcedPhot
+from forced_phot import ForcedPhot
 from .utils import (
     cross_join, parallel_groupby_coord
 )
@@ -54,8 +54,6 @@ def remove_forced_meas(run_path):
                     n_del,
                 )
                 logger.debug('(type, #deleted): %s', detail_del)
-
-    return path_glob
 
 
 def get_data_from_parquet(file: str) -> dict:
@@ -127,7 +125,7 @@ def extract_from_image(
     )
 
     FP = ForcedPhot(image, background, noise)
-    flux, flux_err, chisq, DOF = FP.measure(
+    flux, flux_err, chisq, DOF, cluster_id = FP.measure(
         P_islands,
         cluster_threshold=cluster_threshold,
         allow_nan=allow_nan,
@@ -507,6 +505,8 @@ def forced_extraction(
     extr_df['flag_c4'] = False
     extr_df['spectral_index_from_TT'] = False
     extr_df['has_siblings'] = False
+    extr_df['flux_int_isl_ratio'] = 1.0
+    extr_df['flux_peak_isl_ratio'] = 1.0
 
     col_order = read_schema(
         images_df.iloc[0]['measurements_path']
@@ -516,16 +516,6 @@ def forced_extraction(
     remaining = list(set(extr_df.columns) - set(col_order))
 
     extr_df = extr_df[col_order + remaining]
-
-    # Delete previous forced measurements and update new forced
-    # measurements in the db
-    # get the forced measurements ids for the current pipeline run
-    forced_parquets = remove_forced_meas(p_run.path)
-
-    # delete parquet files
-    logger.debug('Removing forced measurements parquet files')
-    for parquet in forced_parquets:
-        os.remove(parquet)
 
     # upload the measurements, a column 'id' is returned with the DB id
     extr_df = make_upload_measurements(extr_df)
