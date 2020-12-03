@@ -53,7 +53,7 @@ class RegressionTest(TestCase):
     def test_most_relations(self):
         '''
         Test that the highest relation source is the same, and in general the 
-        top 10 sources with the most relations are correct.
+        top 12 sources with the most relations are correct.
         '''
         # get sources with highest number of relations
         relations = pd.read_parquet(
@@ -85,7 +85,8 @@ class RegressionTest(TestCase):
         highest_relations = (
             highest_relations.sort_values(
                 by=['relations', 'wavg_ra'], 
-                ascending=[False, True])
+                ascending=[False, True]
+            )
             .reset_index()
             .drop('from_source_id', axis=1)
         )
@@ -112,7 +113,7 @@ class RegressionTest(TestCase):
             highest_relations, 
             expected, 
             check_less_precise=4
-        ) 
+        )
 
     def test_known_source(self):
         '''
@@ -137,8 +138,8 @@ class RegressionTest(TestCase):
 
         # find PSR J2129-04 by matching coordinates in sources
         source_coords = SkyCoord(
-            sources.loc[:, 'wavg_ra'], 
-            sources.loc[:, 'wavg_dec'], 
+            sources['wavg_ra'], 
+            sources['wavg_dec'], 
             unit=('deg', 'deg')
         )
         id_match, *_ = match_coordinates_sky(coords, source_coords)
