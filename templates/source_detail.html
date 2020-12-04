@@ -100,10 +100,24 @@
               {{ source.wavg_b|floatformat:6 }}</span>
           </p>
           <p>
-            <strong>Avg. Int. Flux: </strong>{{ source.avg_flux_int|floatformat:3 }} mJy<br>
-            <strong>Avg. Peak Flux: </strong>{{ source.avg_flux_peak|floatformat:3 }} mJy/beam<br>
-            <strong>Max Peak Flux: </strong>{{ source.max_flux_peak|floatformat:3 }} mJy/beam
-          </p>
+            <div class="row">
+            <div class="col-xl">
+              <p>
+                <strong>Avg. Int. Flux: </strong>{{ source.avg_flux_int|floatformat:3 }} mJy<br>
+                <strong>Min. Int. Flux: </strong>{{ source.min_flux_int|floatformat:3 }} mJy<br>
+                <strong>Max Int. Flux: </strong>{{ source.max_flux_int|floatformat:3 }} mJy<br>
+                <strong>Min Int. Flux Isl. Ratio: </strong>{{ source.min_flux_int_isl_ratio|floatformat:2 }}
+              </p>
+            </div>
+            <div class="col-xl">
+              <p>
+                <strong>Avg. Peak Flux: </strong>{{ source.avg_flux_peak|floatformat:3 }} mJy/beam<br>
+                <strong>Min. Peak Flux: </strong>{{ source.min_flux_peak|floatformat:3 }} mJy/beam<br>
+                <strong>Max Peak Flux: </strong>{{ source.max_flux_peak|floatformat:3 }} mJy/beam<br>
+                <strong>Min Peak Flux Isl. Ratio: </strong>{{ source.min_flux_peak_isl_ratio|floatformat:2 }}
+              </p>
+            </div>
+          </div>
           <div class="row">
             <div class="col-xl">
               <p>
@@ -141,10 +155,10 @@
                 </strong>{% if source.new %}{{ source.new_high_sigma|floatformat:2 }}{% else %}N/A{% endif %}
               </p>
               <p>
-                <strong>Max Vs metric (peak): </strong>{{ source.vs_max_peak|floatformat:2 }}<br>
-                <strong>Max Vs metric (int): </strong>{{ source.vs_max_int|floatformat:2 }}<br>
-                <strong>Max |m| metric (peak): </strong>{{ source.m_abs_max_peak|floatformat:2 }}<br>
-                <strong>Max |m| metric (int): </strong>{{ source.m_abs_max_int|floatformat:2 }}
+                <strong>Max |Vs| metric (peak): </strong>{{ source.vs_abs_significant_max_peak|floatformat:2 }}<br>
+                <strong>Max |Vs| metric (int): </strong>{{ source.vs_abs_significant_max_int|floatformat:2 }}<br>
+                <strong>Max |m| metric (peak): </strong>{{ source.m_abs_significant_max_peak|floatformat:2 }}<br>
+                <strong>Max |m| metric (int): </strong>{{ source.m_abs_significant_max_int|floatformat:2 }}
               </p>
               <p>
                 <a href="#lightcurveHeader">Lightcurve</a><br>
@@ -388,8 +402,8 @@
 <!-- Custom scripts for all pages-->
 <script src="{% static 'js/sb-admin-2.min.js' %}"></script>
 
-<!-- Alerts script for all pages-->
-<script src="{% static 'js/alerts.min.js' %}"></script>
+<!-- Toasts script -->
+<script src="{% static 'js/toasts.min.js' %}"></script>
 {% endblock scripts %}
 
 

@@ -63,10 +63,11 @@ CREATE ROLE
 creating db 'vastdb'
 ```
 
-4. Create the database tables. Remember first to activate the Python environment as described in [`INSTALL.md`](./INSTALL.md).
+4. Create the database tables. Remember first to activate the Python environment as described in [`INSTALL.md`](./INSTALL.md). The `createcachetable` command below creates the cache tables required by DjangoQ.
 
 ```bash
 (pipeline_env)$ ./manage.py migrate
+(pipeline_env)$ ./manage.py createcachetable
 ```
 
 5. Create the directories listed at the bottom of `settings.py` and update the details on your setting configuration file `.env` (single name, e.g. `pipeline-runs` means path relative to `BASE_DIR`, so the main folder where you cloned the repo).
@@ -276,6 +277,20 @@ Make sure you installed and compiled correctly the frontend assets see [guide](.
 
 The webserver is independent of `runpipeline` and you can use the website while the pipeline commands are running.
 
+### Running a pipeline run via the web server
+
+It is possible to launch the processing of a pipeline run by using the relevant option on the pipeline run detail page. This uses `DjangoQ` to schedule and process the runs and a cluster needs to be set up in order for the runs to process:
+
+1. Check the `Q_CLUSTER` options in [`/webinterface/settings.py`](./webinterface/settings.py). Refer to the [DjangoQ docs](https://django-q.readthedocs.io/en/latest/index.html) if you are unsure on the meaning of any parameters.
+
+2. Launch the cluster using the following command, making sure you are in the pipeline environment:
+```
+(pipeline_env)$ ./manage.py qcluster
+````
+
+If the pipeline is updated then the `qcluster` also needs to be be restarted.
+A warning that if you submit jobs before the cluster is set up, or is taken down, then these jobs will begin immediately once the cluster is back online.
+
 ## Production Deployment
 This section describes a simple deployment without using Docker containers, assuming the use of [WhiteNoise](http://whitenoise.evans.io/en/stable/) to serve the static files. It is possible to serve the static files using other methods (e.g. Nginx). And in the future it is possible to upgrade the deployment stack using Docker container and Docker compose (we foresee 3 main containers: Django, Dask and Traefik). We recommend in any case reading [Django deployment documentation](https://docs.djangoproject.com/en/3.1/howto/deployment/) for general knowledge.
 
@@ -314,7 +329,7 @@ The following steps describes how to set up the Django side of the production de
 7. Set up a unit/systemd file as recommended in [Gunicorn docs](https://docs.gunicorn.org/en/latest/deploy.html#systemd) (feel free to use the socket or an IP and port). An example of command to write in the file is (assuming a virtual environment is installed in `venv` under the main pipeline folder):
 
   ```bash
-  ExecStart=/opt/vast-pipeline/venv/bin/gunicorn -w 3 -k gevent --worker-connections=1000 --timeout 120 --limit-request-line 6500 -b 127.0.0.1:8000 webinterface.wsgi
+  ExecStart=/opt/vast-pipeline/venv/bin/gunicorn -w 3 -k gevent --worker-connections=1000 --timeout 120 --limit-request-line 8000 -b 127.0.0.1:8000 webinterface.wsgi
   ```
   __NOTE__: (for future development) the `--limit-request-line` parameter needs to be adjusted for the actual request length as that might change if more parameters are added to the query.
 

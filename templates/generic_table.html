@@ -102,10 +102,14 @@
           </div>
           <div id="pipeRunConfigForm" class="form-group">
             <h6 class="font-weight-bold text-primary">Images and Catalogue Selection</h6>
-            <label for="imagesFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select images files</label>
+            <p class="text-danger"><b>Warning! Current maximum number of images is {{ max_piperun_images }} <a href="#" data-toggle="tooltip" data-placement="top" title=
+              "If you wish to process more images than the current limit allows then please contact an administrator."
+            ><i class="fas fa-info-circle" style="color:red"></i></a></b></p>
+            <label for="imagesFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select images files
             <a href="#" data-toggle="tooltip" data-placement="top" title=
                 "The primary ASKAP FITS files to process."
             ><i class="fas fa-info-circle"></i></a>
+            </label>
             <select id="imagesFilesDropDown" class="selectpicker form-control form-control-file" data-live-search="true" multiple data-header="Choose image files" data-actions-box="true" name="image_files" data-selected-text-format="count > 5">
             </select>
             <label for="selavyFilesDropDown" class="col-form-label font-weight-bold text-gray-800">Select selavy files</label>
@@ -169,7 +173,7 @@
                 <a href="#" data-toggle="tooltip" data-placement="top" title=
                   "Base astrometric RA uncertainty in arcseconds that will be added in quadrature to the fitting uncertainties."
                 ><i class="fas fa-info-circle"></i></a>
-              <input id="astroUncertRaSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.association_epoch_duplicate_radius }}" min="0" step="0.01" aria-label="assocDuplicateRadiusSelect" aria-describedby="basic-addon2" name="association_epoch_duplicate_radius">
+              <input id="assocDuplicateRadiusSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.association_epoch_duplicate_radius }}" min="0" step="0.01" aria-label="assocDuplicateRadiusSelect" aria-describedby="basic-addon2" name="association_epoch_duplicate_radius">
               </div>
             </div>
             <h6 class="font-weight-bold text-primary" style="margin-top: 1rem; margin-bottom: 1rem;">Monitoring Options</h6>
@@ -256,7 +260,7 @@
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="localRmsZeroFillSelect">Selavy Local RMS Zero Fill Value (mJy)</label>
                 <a href="#" data-toggle="tooltip" data-placement="top" title=
-                    "Rarely, a source in the selavy catalogue can have a local rms value of zero. This selects the default value to replace these zero values                     with to avoid errors."
+                    "Rarely, a source in the selavy catalogue can have a local rms value of zero. This selects the default value to replace these zero values with to avoid errors."
                 ><i class="fas fa-info-circle"></i></a>
                 <input id="localRmsZeroFillSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.selavy_local_rms_zero_fill_value }}" min="0" step="0.01" aria-label="localRmsZeroFillSearch" aria-describedby="basic-addon2" name="selavy_local_rms_zero_fill_value">
               </div>
@@ -268,6 +272,13 @@
                 <select id="surveySelect" class="form-control bg-light border-0" aria-label="surveySearch" aria-describedby="basic-addon2" name="default_survey" readonly>
                   <option value="{{ runconfig.default_survey }}" selected>None</option>
                 </select>
+              </div>
+            </div>
+            <div class="row align-items-center">
+              <div class="col">
+                <label class="col-form-label font-weight-bold text-gray-800" for="sourceAggPairMetricsMinVsInput">Source aggregate pair metrics minimum Vs</label>
+                <a href="#" data-toggle="tooltip" data-placement="top" title="Only measurement pairs where the Vs metric exceeds this value are selected for the aggregate pair metrics that are stored in Source objects."><i class="fas fa-info-circle"></i></a>
+                <input id="sourceAggPairMetricsMinVsInput" type="number" class="form-control bg-light border-0" value="{{ runconfig.source_aggregate_pair_metrics_min_abs_vs }}" min="0" step="0.01" aria-label="sourceAggPairMetricsMinVsInput" aria-describedby="basic-addon2" name="source_aggregate_pair_metrics_min_abs_vs">
               </div>
             </div>
             <div class="row align-items-center" style="margin-top: 1rem;">
@@ -282,10 +293,10 @@
               </div>
               <div class="col">
                 <div class="custom-control custom-switch">
-                  <input type="checkbox" class="custom-control-input" id="measurementsArrowSwitch" {% if runconfig.create_measurements_arrow_file %} checked="checked" {% endif %} name="create_measurements_arrow_file">
-                  <label class="custom-control-label font-weight-bold text-gray-800" for="measurementsArrowSwitch">Create Measurements Arrow File</label>
+                  <input type="checkbox" class="custom-control-input" id="measurementsArrowSwitch" {% if runconfig.create_measurements_arrow_file %} checked="checked" {% endif %} name="create_measurements_arrow_files">
+                  <label class="custom-control-label font-weight-bold text-gray-800" for="measurementsArrowSwitch">Create Measurements Arrow Files</label>
                   <a href="#" data-toggle="tooltip" data-placement="top" title=
-                      "The pipeline will create a `measurements.arrow` file alongside the parquet files in the run directory to allow easier exploration post analysis. Recommended for very large runs (millions of measurements)."
+                      "The pipeline will create `measurements.arrow` and `measurement_pairs.arrow` files alongside the parquet files in the run directory to allow easier exploration post analysis. Recommended for very large runs (millions of measurements)."
                   ><i class="fas fa-info-circle"></i></a>
                 </div>
               </div>

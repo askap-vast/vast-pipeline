@@ -4,13 +4,48 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), with an added `List of PRs` section and links to the relevant PRs on the individal updates. This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/0.1.0...HEAD)
+## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/0.2.0...HEAD)
 
 #### Added
 
 - Added basic regression tests [#425](https://github.com/askap-vast/vast-pipeline/pull/425)
 - Added image length validation for config [#425](https://github.com/askap-vast/vast-pipeline/pull/425)
+
+#### Changed
+
+#### Fixed
+
+- Fixed sources table on measurement detail page [#429](https://github.com/askap-vast/vast-pipeline/pull/429).
+- Fixed missing meta columns in parallel association [#427](https://github.com/askap-vast/vast-pipeline/pull/427).
+
+#### Removed
+
+#### List of PRs
+
+- [#425](https://github.com/askap-vast/vast-pipeline/pull/425) feat: Basic regression tests.
+- [#429](https://github.com/askap-vast/vast-pipeline/pull/429) fix: Fixed sources table on measurement detail page.
+- [#427](https://github.com/askap-vast/vast-pipeline/pull/427) fix: Fixed missing meta columns in parallel association.
+
+## [0.2.0](https://github.com/askap-vast/vast-pipeline/releases/0.2.0) (2020-11-30)
+
+#### Added
+
+- Added a check in the UI running that the job is not already running or queued [#421](https://github.com/askap-vast/vast-pipeline/pull/421).
+- Added the deletion of all parquet and arrow files upon a re-run [#421](https://github.com/askap-vast/vast-pipeline/pull/421).
+- Added source selection by name or ID on source query page [#401](https://github.com/askap-vast/vast-pipeline/pull/401).
 - Added test cases [#412](https://github.com/askap-vast/vast-pipeline/pull/412)
+- Added [askap-vast/forced_phot](https://github.com/askap-vast/forced_phot) to pip requirements [#408](https://github.com/askap-vast/vast-pipeline/pull/408).
+- Added pipeline configuration parameter, `SOURCE_AGGREGATE_PAIR_METRICS_MIN_ABS_VS`, to filter measurement pairs before calculating aggregate metrics [#407](https://github.com/askap-vast/vast-pipeline/pull/407).
+- Added custom 404.html and 500.html templates for error pages [#415](https://github.com/askap-vast/vast-pipeline/pull/415)
+- Added ability to export measurement_pairs.parqyet as an arrow file [#393](https://github.com/askap-vast/vast-pipeline/pull/393).
+- Added new fields to detail pages and source and measurement tables [#406](https://github.com/askap-vast/vast-pipeline/pull/406).
+- Added new fields to source query page (island flux ratio, min and max fluxes) [#406](https://github.com/askap-vast/vast-pipeline/pull/406).
+- Added min, max flux values to sources and agg min island flux ratio field [#406](https://github.com/askap-vast/vast-pipeline/pull/406).
+- Added island flux ratio column to measurements, component flux divided by total island flux (peak and int) [#406](https://github.com/askap-vast/vast-pipeline/pull/406).
+- Added a maximum number of images for runs through the UI [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
+- Added the ability to run a pipeline run through the UI [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
+- Added `Queued` status to the list of pipeline run statuses [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
+- Added the dependancy `django-q` that enables scheduled tasks to be processed [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
 - Added source tagging [#396](https://github.com/askap-vast/vast-pipeline/pull/396).
 - Added link to measurement table from the lightcurve to source detail page [#387](https://github.com/askap-vast/vast-pipeline/pull/387).
 - Added 'epoch based' parameter to pipeline run detail page [#387](https://github.com/askap-vast/vast-pipeline/pull/387).
@@ -51,6 +86,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Renamed 'alert-wrapper' container to 'toast-wrapper' [#419](https://github.com/askap-vast/vast-pipeline/pull/419).
+- Changed alerts to use the Bootstrap toasts system [#419](https://github.com/askap-vast/vast-pipeline/pull/419).
+- Bumped some npm package versions to address dependabot security alerts [#411](https://github.com/askap-vast/vast-pipeline/pull/411).
+- Images table on pipeline run detail page changed to order by datetime by default [#417](https://github.com/askap-vast/vast-pipeline/pull/417).
+- Changed config argument `CREATE_MEASUREMENTS_ARROW_FILE` -> `CREATE_MEASUREMENTS_ARROW_FILES` [#393](https://github.com/askap-vast/vast-pipeline/pull/393).
+- Naming of average flux query fields to account for other min max flux fields [#406](https://github.com/askap-vast/vast-pipeline/pull/406).
+- Expanded `README.md` to include `DjangoQ` and UI job scheduling information [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
+- Shifted alerts location to the top right [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
+- Log file card now expanded by default on pipeline run detail page [#404](https://github.com/askap-vast/vast-pipeline/pull/404).
 - Changed user comments on source detail pages to incorporate tagging feature [#396](https://github.com/askap-vast/vast-pipeline/pull/396).
 - Updated RACS HiPS URL in Aladin [#399](https://github.com/askap-vast/vast-pipeline/pull/399).
 - Changed home page changelog space to welcome/help messages [#387](https://github.com/askap-vast/vast-pipeline/pull/387).
@@ -78,8 +122,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed pipeline run DB loading in command line runpipeline command [#401](https://github.com/askap-vast/vast-pipeline/pull/401).
 - Fixed nodejs version [#412](https://github.com/askap-vast/vast-pipeline/pull/412)
 - Fixed npm start failure [#412](https://github.com/askap-vast/vast-pipeline/pull/412)
+- All queries using the 2-epoch metric `Vs` now operate on `abs(Vs)`. The original `Vs` stored in MeasurementPair objects is still signed [#407](https://github.com/askap-vast/vast-pipeline/pull/407).
+- Changed aggregate 2-epoch metric calculation for Source objects to ensure they come from the same pair [#407](https://github.com/askap-vast/vast-pipeline/pull/407).
+- Fixed new sources rms measurement returns when no measurements are valid [#417](https://github.com/askap-vast/vast-pipeline/pull/417).
+- Fixed measuring rms values from selavy created NAXIS=3 FITS images [#417](https://github.com/askap-vast/vast-pipeline/pull/417).
+- Fixed rms value calculation in non-cluster forced extractions [#402](https://github.com/askap-vast/vast-pipeline/pull/402).
 - Increase request limit for gunicorn [#398](https://github.com/askap-vast/vast-pipeline/pull/398).
 - Fixed max source Vs metric to being an absolute value [#391](https://github.com/askap-vast/vast-pipeline/pull/391).
 - Fixed misalignment of lightcurve card header text and the flux type radio buttons [#386](https://github.com/askap-vast/vast-pipeline/pull/386).
@@ -90,6 +140,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### Removed
 
 - Removed/Disabled obsolete test cases[#412](https://github.com/askap-vast/vast-pipeline/pull/412)
+- Removed `vast_pipeline/pipeline/forced_phot.py` [#408](https://github.com/askap-vast/vast-pipeline/pull/408).
 - Removed 'selavy' from homepage measurements count label [#391](https://github.com/askap-vast/vast-pipeline/pull/391).
 - Removed leftover `pipeline/plots.py` file [#391](https://github.com/askap-vast/vast-pipeline/pull/391).
 - Removed `static/css/pipeline.css`, this file is now produced by compiling the Sass (`scss/**/*.scss`) files with Gulp [#370](https://github.com/askap-vast/vast-pipeline/pull/370).
@@ -99,7 +150,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#421](https://github.com/askap-vast/vast-pipeline/pull/421) feat: Delete output files on re-run & UI run check.
+- [#401](https://github.com/askap-vast/vast-pipeline/pull/401) feat: Added source selection by name or id to query page.
 - [#412](https://github.com/askap-vast/vast-pipeline/pull/412) feat: added some unit tests.
+- [#419](https://github.com/askap-vast/vast-pipeline/pull/419) feat: Update alerts to use toasts.
+- [#408](https://github.com/askap-vast/vast-pipeline/pull/408) feat: use forced_phot dependency instead of copied code.
+- [#407](https://github.com/askap-vast/vast-pipeline/pull/407) fix, model: modified 2-epoch metric calculation.
+- [#411](https://github.com/askap-vast/vast-pipeline/pull/411) fix: updated npm deps to fix security vulnerabilities.
+- [#415](https://github.com/askap-vast/vast-pipeline/pull/415) feat: Added custom 404 and 500 templates.
+- [#393](https://github.com/askap-vast/vast-pipeline/pull/393) feat: Added measurement_pairs arrow export.
+- [#406](https://github.com/askap-vast/vast-pipeline/pull/406) feat, model: Added island flux ratio columns.
+- [#402](https://github.com/askap-vast/vast-pipeline/pull/402) fix: Fixed rms value calculation in non-cluster forced extractions.
+- [#404](https://github.com/askap-vast/vast-pipeline/pull/404) feat, dep, model: Completed schedule pipe run.
 - [#396](https://github.com/askap-vast/vast-pipeline/pull/396) feat: added source tagging.
 - [#398](https://github.com/askap-vast/vast-pipeline/pull/398) fix: gunicorn request limit
 - [#399](https://github.com/askap-vast/vast-pipeline/pull/399) fix: Updated RACS HiPS path.
@@ -124,7 +186,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [#305](https://github.com/askap-vast/vast-pipeline/pull/305) feat: 2 epoch metrics
 - [#345](https://github.com/askap-vast/vast-pipeline/pull/345) feat, fix: Website improvements.
 
-## [0.1.0](https://github.com/askap-vast/vast-pipeline/releases/0.1.0) (2020/09/27)
+## [0.1.0](https://github.com/askap-vast/vast-pipeline/releases/0.1.0) (2020-09-27)
 
 First release of the Vast Pipeline. This was able to process 707 images (EPOCH01 to EPOCH11x) on a machine with 64 GB of RAM.
 
