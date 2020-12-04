@@ -213,9 +213,9 @@ to run the tests located in [`test_webserver.py`](./vast_pipeline/tests/test_web
 (pipeline_env)$ ./manage.py test vast_pipeline.tests.test_webserver
 ```
 
-Regression tests located in [`test_regression.py`](./vast_pipeline/tests/test_regression.py) requires the use of the VAST_2118-06A field test dataset which is not a part of the repository. This data is downloadable at https://cloudstor.aarnet.edu.au/plus/s/rC6zRShsv42m2ih, use:
+Regression tests located in [`test_regression.py`](./vast_pipeline/tests/test_regression.py) requires the use of the VAST_2118-06A field test dataset which is not a part of the repository. This data is downloadable at https://cloudstor.aarnet.edu.au/plus/s/m2eRb27MIMNM7LM, use:
 ```bash
-wget https://cloudstor.aarnet.edu.au/plus/s/rC6zRShsv42m2ih/download
+wget https://cloudstor.aarnet.edu.au/plus/s/m2eRb27MIMNM7LM/download
 ```
 place the VAST_2118-06A field test dataset in a folder named `regression-data` inside the [tests](./vast_pipeline/tests/) folder. These regression tests are skipped if the data folder containing the dataset is not present. 
 
