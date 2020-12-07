@@ -184,6 +184,12 @@ class Pipeline():
                 'No image and/or Selavy and/or noise file paths passed!'
             )
 
+        # need more than 1 image file to generate a lightcurve
+        if len(getattr(self.config, 'IMAGE_FILES')) < 2:
+            raise PipelineConfigError(
+                'Number of image files needs to be larger than 1!'
+        )
+
         source_finder_names = settings.SOURCE_FINDERS
         if getattr(self.config, 'SOURCE_FINDER') not in source_finder_names:
             raise PipelineConfigError((
