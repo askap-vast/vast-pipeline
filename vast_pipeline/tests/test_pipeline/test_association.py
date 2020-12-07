@@ -2,7 +2,6 @@ import ast
 import os
 import pandas as pd
 from pathlib import Path
-import pytest
 
 from astropy.coordinates import SkyCoord
 from astropy.coordinates import Angle

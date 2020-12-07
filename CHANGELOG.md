@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/0.2.0...HEAD)
 
+#### Added
+
+- Added basic regression tests [#425](https://github.com/askap-vast/vast-pipeline/pull/425)
+- Added image length validation for config [#425](https://github.com/askap-vast/vast-pipeline/pull/425)
+
+#### Changed
+
+#### Fixed
+
+- Fixed sources table on measurement detail page [#429](https://github.com/askap-vast/vast-pipeline/pull/429).
+- Fixed missing meta columns in parallel association [#427](https://github.com/askap-vast/vast-pipeline/pull/427).
+
+#### Removed
+
+#### List of PRs
+
+- [#425](https://github.com/askap-vast/vast-pipeline/pull/425) feat: Basic regression tests.
+- [#429](https://github.com/askap-vast/vast-pipeline/pull/429) fix: Fixed sources table on measurement detail page.
+- [#427](https://github.com/askap-vast/vast-pipeline/pull/427) fix: Fixed missing meta columns in parallel association.
+
 ## [0.2.0](https://github.com/askap-vast/vast-pipeline/releases/0.2.0) (2020-11-30)
 
 #### Added
