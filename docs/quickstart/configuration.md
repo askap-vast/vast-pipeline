@@ -4,7 +4,7 @@ This section describe how to configure your downloaded VAST pipeline.
 
 ## Pipeline Configuration
 The following instructions, will get you started in setting up the database and pipeline configuration
-1. Copy the setting configuration file template, and fill it with your settings (see [defaults](./webinterface/.env.template))
+1. Copy the setting configuration file template, and fill it with your settings (see [defaults](https://github.com/askap-vast/vast-pipeline/blob/master/webinterface/.env.template))
 
 ```bash
 cp webinterface/.env.template webinterface/.env
@@ -16,7 +16,7 @@ cp webinterface/.env.template webinterface/.env
 DATABASE_URL=psql://FILLMYUSER:FILLMYPASSWORD@FILLMYHOST:FILLMYPORT/FILLMYDBNAME
 ```
 
-NOTE: the connection details (host and port) are the same that you setup in [`INSTALL.md`](./INSTALL.md). The database/user names must not contain any spaces or dashes, so use the underscore if you want, e.g. `this_is_my_db_name`.
+NOTE: the connection details (host and port) are the same that you setup during the [Installation](installation.md). The database/user names must not contain any spaces or dashes, so use the underscore if you want, e.g. `this_is_my_db_name`.
 
 3. Create the database user and database name, by running:
 
@@ -45,7 +45,7 @@ CREATE ROLE
 creating db 'vastdb'
 ```
 
-4. Create the database tables. Remember first to activate the Python environment as described in [`INSTALL.md`](./INSTALL.md). The `createcachetable` command below creates the cache tables required by DjangoQ.
+4. Create the database tables. Remember first to activate the Python environment as described in [Installation of Python Enviroment](installation.md#python-environment). The `createcachetable` command below creates the cache tables required by DjangoQ.
 
 ```bash
 (pipeline_env)$ ./manage.py migrate
@@ -62,7 +62,7 @@ PIPELINE_WORKING_DIR = env('PIPELINE_WORKING_DIR', cast=str, default=os.path.joi
 SURVEYS_WORKING_DIR = env('SURVEYS_WORKING_DIR', cast=str, default=os.path.join(BASE_DIR, 'reference-surveys'))
 ```
 
-The defaults values of the folders are pre-filled in your [`.env`](./webinterface/.env.template) file, and even if that variables are not present in such file, the settings assumed the default values, which are relative to the main repo folder. So create the folders with (Note: make sure you change BASE_DIR to `vast-pipeline`):
+The defaults values of the folders are pre-filled in your [`.env`](https://github.com/askap-vast/vast-pipeline/blob/master/webinterface/.env.template) file, and even if that variables are not present in such file, the settings assumed the default values, which are relative to the main repo folder. So create the folders with (Note: make sure you change BASE_DIR to `vast-pipeline`):
 
 ```bash
 cd BASE_DIR && mkdir pipeline-runs && mkdir reference-surveys
@@ -94,7 +94,7 @@ After creating the folders with the defaults values your directory tree should l
 ## Pipeline Login
 Currently the pipeline support only login via GitHub Team and/or as Django administrator.
 
-Please make sure to fill the `SOCIAL_AUTH_GITHUB_KEY, SOCIAL_AUTH_GITHUB_SECRET, SOCIAL_AUTH_GITHUB_TEAM_ID, SOCIAL_AUTH_GITHUB_TEAM_ADMIN` in your [`.env`](./webinterface/.env.template) file. Also be sure to be part of the GitHub team, if not ask @srggrs, @ajstewart or @marxide to be added.
+Please make sure to fill the `SOCIAL_AUTH_GITHUB_KEY, SOCIAL_AUTH_GITHUB_SECRET, SOCIAL_AUTH_GITHUB_TEAM_ID, SOCIAL_AUTH_GITHUB_TEAM_ADMIN` in your [`.env`](https://github.com/askap-vast/vast-pipeline/blob/master/webinterface/.env.template) file. Also be sure to be part of the GitHub team, if not ask @srggrs, @ajstewart or @marxide to be added.
 
 You can also login on your __local__ version for doing some develpment by creating an admin user:
 

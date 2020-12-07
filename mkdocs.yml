@@ -48,10 +48,12 @@ nav:
   - Usage:
       - CLI: usage/cli.md
       - Web App: usage/app.md
-  - Developing:
-  #   - Intro: developing/intro.md
-    - Contributing: developing/contributing.md
-    # - Front-end Assets: developing/frontend.md
+  - Contributing and Developing:
+    - Intro: developing/intro.md
+    - GitHub Platform: developing/github.md
+    - Local Development Environment: developing/localdevenv.md
+    - Tests: developing/tests.md
+    - Docs: developing/docsdev.md
     - Bechmarks: developing/profiling.md
   #   - Tips: developing/tips.md like this https://stackoverflow.com/questions/60160823/how-to-properly-parallelize-generic-code-with-numba-dask
   # - Reference:

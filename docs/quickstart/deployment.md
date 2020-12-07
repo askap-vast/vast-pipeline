@@ -13,7 +13,7 @@ The following steps describes how to set up the Django side of the production de
   $ cd /opt && sudo git clone https://github.com/askap-vast/vast-pipeline
   ```
 
-2. Follow the installation instructions in [`INSTALL.md`](./INSTALL.md). We recommend installing the Python virtual environment under the pipeline folder.
+2. Follow the [Installation Instructions](installation.md). We recommend installing the Python virtual environment under the pipeline folder.
 
   ```bash
   $ cd /opt/vast-pipeline && virtualenv -p python3 pipeline_env

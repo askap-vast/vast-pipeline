@@ -8,7 +8,7 @@ This repository holds the code of the Radio Transient detection pipeline for the
 
 [![VAST Pipeline Login](https://github.com/askap-vast/vast-pipeline/blob/issue-385-mkdocs-doc/docs/img/login.png)](https://github.com/askap-vast/vast-pipeline/blob/issue-385-mkdocs-doc/docs/img/login.png)
 
-Please read the [installation instructions](./quickstart/installation.md). If you intend to contribute to/develop the code base please read and follow the [contributing guidelines](./contributing.md).
+Please read the [Installation Instructions](https://vast-survey.org/vast-pipeline/quickstart/installation/). If you intend to contribute to/develop the code base please read and follow the [Contributing and Developing Guidelines](https://vast-survey.org/vast-pipeline/developing/intro/).
 
 ## Features
 

@@ -4,7 +4,7 @@ This section describes how to run the pipeline Django web app/server.
 
 ## Starting the Pipeline Web App
 
-Make sure you installed and compiled correctly the frontend assets see [guide](./INSTALL.md#pipeline-front-end-assets-quickstart)
+Make sure you installed and compiled correctly the frontend assets see [guide](../quickstart/installation.md#front-end-assets-quickstart)
 
 1. Start the Django development web server:
 
@@ -20,7 +20,7 @@ The webserver is independent of `runpipeline` and you can use the website while 
 
 It is possible to launch the processing of a pipeline run by using the relevant option on the pipeline run detail page. This uses `DjangoQ` to schedule and process the runs and a cluster needs to be set up in order for the runs to process:
 
-1. Check the `Q_CLUSTER` options in [`/webinterface/settings.py`](./webinterface/settings.py). Refer to the [DjangoQ docs](https://django-q.readthedocs.io/en/latest/index.html) if you are unsure on the meaning of any parameters.
+1. Check the `Q_CLUSTER` options in [`./webinterface/settings.py`](https://github.com/askap-vast/vast-pipeline/blob/master/webinterface/settings.py). Refer to the [DjangoQ docs](https://django-q.readthedocs.io/en/latest/index.html) if you are unsure on the meaning of any parameters.
 
 2. Launch the cluster using the following command, making sure you are in the pipeline environment:
 ```

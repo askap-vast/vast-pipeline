@@ -14,8 +14,10 @@ Output:
 ```bash
  ...
 
-[pipeline]
+[vast_pipeline]
   clearpiperun
+  createmeasarrow
+  debugrun
   importsurvey
   initpiperun
   runpipeline
@@ -28,7 +30,7 @@ There are 4 commands, described in detail below.
 ### Initialise a Pipeline Run
 In order to process the images in the pipeline, you must create/initialise a pipeline run first.
 
-The pipeline run creation is done using the `initpiperun` django command, which requires a pipeline run folder. The command creates a folder with the pipeline run name under the settings `PROJECT_WORKING_DIR` defined in [settings](./webinterface/settings.template.py).
+The pipeline run creation is done using the `initpiperun` django command, which requires a pipeline run folder. The command creates a folder with the pipeline run name under the settings `PROJECT_WORKING_DIR` defined in [settings](https://github.com/askap-vast/vast-pipeline/blob/master/webinterface/settings.template.py).
 
 ```bash
 (pipeline_env)$ ./manage.py initpiperun --help
@@ -125,7 +127,7 @@ General usage:
 
 ### Resetting a Pipeline Run
 
-Detailed commands for resetting the database can be found in [`CONTRIBUTING.md`](./CONTRIBUTING.md).
+Detailed commands for resetting the database can be found in [Contributing and Developing Guidelines](../developing/localdevenv.md#reset-the-database).
 
 Resetting a pipeline run can be done using the `clearpiperun` command: it will delete all images (and related objects such as sources) associated with that pipeline run, if that images does not belong to another pipeline run. It will deleted all the sources associated with that pipeline run.
 ```bash
@@ -134,7 +136,7 @@ Resetting a pipeline run can be done using the `clearpiperun` command: it will d
 (pipeline_env)$ ./manage.py clearpiperun my_pipe_run
 ```
 
-More details on the `clearpiperun` command can be found in the [Contributing guidelines](./CONTRIBUTING.md#clearing-run-data).
+More details on the `clearpiperun` command can be found in the [Contributing and Developing Guidelines](../developing/localdevenv.md#clearing-run-data).
 
 ### Import survey data
 

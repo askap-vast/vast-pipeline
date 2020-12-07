@@ -162,8 +162,8 @@ $ pwd
 $ npm ci && npm start
 ```
 
-__NOTE__: make sure you are in the root of the repo, as shown above. That command "clean install" all the dependencies, copies files into the `static/vendor` folder and minified CSS and JS files. For more details of compilation of front-end assets (e.g. single tasks), and developement set up read the [Front End `README.md`](./static/README.md).
+__NOTE__: make sure you are in the root of the repo, as shown above. That command "clean install" all the dependencies, copies files into the `static/vendor` folder and minified CSS and JS files. For more details of compilation of front-end assets (e.g. single tasks), and development set up read the [Front End Developing Guidelines](../developing/localdevenv.md#frontend-assets-management-and-guidelines).
 
 ---
 
-Done! Now open the [`README.md`](./README.md) file to see how to initialize and run the pipeline. Otherwise if you intend on developing the repo open the [`CONTRIBUTING.md`](./CONTRIBUTING.md) file for instructions on how to contribute to the repo.
+Done! Now go to [Vast Pipeline Configuration](configuration.md) file to see how to initialize and run the pipeline. Otherwise if you intend on developing the repo open the [Contributing and Developing Guidelines](../developing/intro.md) file for instructions on how to contribute to the repo.
