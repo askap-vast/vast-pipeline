@@ -1,0 +1,15 @@
+:root {
+  --md-primary-fg-color: #4e73df;
+}
+
+#gototop {
+  position: relative;
+  left: 13px;
+  z-index: 99;
+  top: 15px;
+}
+
+#gototop:hover {
+  color: #4e73df;
+}
+

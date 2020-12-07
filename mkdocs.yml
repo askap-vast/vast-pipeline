@@ -1,0 +1,87 @@
+site_name: VAST Pipeline
+site_description: >-
+  VAST Pipeline platform to enable processing of astronomical sources
+  extracted from the ASKAP telescope for radio transient detection science
+site_author: VAST Development Team
+copyright: Copyright &copy; 2020 - 2025 Vast Development Team, University of Sydney - all right reserved
+
+repo_url: https://github.com/askap-vast/vast-pipeline
+repo_name: askap-vast/vast-pipeline
+edit_uri: ""
+dev_addr: localhost:8008
+
+docs_dir: docs
+site_dir: docs_build
+
+theme:
+  name: material
+  favicon: img/favicon.png
+  logo: img/vast.png
+  features:
+    - navigation.instant
+
+# Extensions
+extra_css:
+  - theme/css/extra.css
+extra_javascript:
+  - theme/js/extra.js
+markdown_extensions:
+  - attr_list
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      linenums: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - toc:
+      toc_depth: 4
+      permalink: true
+
+
+nav:
+  - Home: README.md
+  - Quickstart:
+    - Installation: quickstart/installation.md
+    - Configuration: quickstart/configuration.md
+    - Deployment: quickstart/deployment.md
+  - Usage:
+      - CLI: usage/cli.md
+      - Web App: usage/app.md
+  - Developing:
+  #   - Intro: developing/intro.md
+    - Contributing: developing/contributing.md
+    # - Front-end Assets: developing/frontend.md
+    - Bechmarks: developing/profiling.md
+  #   - Tips: developing/tips.md like this https://stackoverflow.com/questions/60160823/how-to-properly-parallelize-generic-code-with-numba-dask
+  # - Reference:
+  #   - Association Logic: reference/association.md
+  #   - Configuration: reference/configuration.md
+  - Architecture:
+    - Architecture Intro: architecture/intro.md
+    - Database Schema: architecture/database.md
+    # - Production: architecture/nimbus.md
+  - Changelog: changelog.md
+  - Code of Conduct: code_of_conduct.md
+  - License: license.md
+
+plugins:
+  - search
+  - minify:
+      minify_html: true
+      minify_js: true
+      htmlmin_opts:
+        remove_comments: true
+      js_files:
+        - theme/js/extra.js
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/askap-vast/vast-pipeline
+    - icon: fontawesome/brands/slack
+      link: https://askap-vast.slack.com/
+    - icon: fontawesome/solid/paper-plane
+      link: mailto:transients@mailman.sydney.edu.au
+    - icon: fontawesome/solid/globe
+      link: https://vast-survey.org
