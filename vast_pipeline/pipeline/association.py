@@ -1,7 +1,7 @@
 import logging
 import numpy as np
 import pandas as pd
-from typing import Tuple
+from typing import Tuple, Dict
 import dask.dataframe as dd
 from psutil import cpu_count
 
@@ -12,7 +12,8 @@ from astropy.coordinates import Angle
 from .utils import (
     prep_skysrc_df,
     add_new_one_to_many_relations,
-    add_new_many_to_one_relations
+    add_new_many_to_one_relations,
+    reconstruct_associtaion_dfs
 )
 from vast_pipeline.models import Association
 from vast_pipeline.utils.utils import StopWatch
@@ -937,7 +938,7 @@ def advanced_association(
 
 
 def association(images_df, limit, dr_limit, bw_limit,
-    duplicate_limit, config):
+    duplicate_limit, config, add_mode, previous_parquets, done_images_df):
     '''
     The main association function that does the common tasks between basic
     and advanced modes.
@@ -948,6 +949,7 @@ def association(images_df, limit, dr_limit, bw_limit,
         skyreg_group = images_df['skyreg_group'].iloc[0]
         skyreg_tag = " (sky region group %s)" % skyreg_group
     else:
+        skyreg_group = -1
         skyreg_tag = ""
 
     method = config.ASSOCIATION_METHOD
@@ -955,34 +957,48 @@ def association(images_df, limit, dr_limit, bw_limit,
     logger.info('Starting association%s.', skyreg_tag)
     logger.info('Association mode selected: %s.', method)
 
-    # if isinstance(images, pd.DataFrame):
-    #     images = images['image'].to_list()
     unique_epochs = images_df.sort_values(by='epoch')['epoch'].unique()
 
-    first_images = (
-        images_df
-        .loc[images_df['epoch'] == unique_epochs[0], 'image_dj']
-        .to_list()
-    )
+    if add_mode:
+        # Here the skyc1_srcs and sources_df are recreated and the done images
+        # are filtered out.
+        image_mask = images_df['image_name'].isin(done_images_df['name'])
+        images_df_done = images_df.loc[image_mask].copy()
+        images_df = images_df.loc[~image_mask]
+        logger.info(f'Found {images_df.shape[0]} images to add to the run.')
+        # re-get the unique epochs
+        unique_epochs = images_df.sort_values(by='epoch')['epoch'].unique()
+        sources_df, skyc1_srcs = reconstruct_associtaion_dfs(images_df_done,
+            previous_parquets)
+        start_epoch = 0
+    else:
+        # Do full set up for a new run.
+        first_images = (
+            images_df
+            .loc[images_df['epoch'] == unique_epochs[0], 'image_dj']
+            .to_list()
+        )
 
-    # initialise sky source dataframe
-    skyc1_srcs = prep_skysrc_df(
-        first_images,
-        config.FLUX_PERC_ERROR,
-        duplicate_limit,
-        ini_df=True
-    )
-    skyc1_srcs['epoch'] = unique_epochs[0]
-    # create base catalogue
+        # initialise sky source dataframe
+        skyc1_srcs = prep_skysrc_df(
+            first_images,
+            config.FLUX_PERC_ERROR,
+            duplicate_limit,
+            ini_df=True
+        )
+        skyc1_srcs['epoch'] = unique_epochs[0]
+        # create base catalogue
+        # initialise the sources dataframe using first image as base
+        sources_df = skyc1_srcs.copy()
+        start_epoch = 1
+
     skyc1 = SkyCoord(
         skyc1_srcs['ra'].values,
         skyc1_srcs['dec'].values,
         unit=(u.deg, u.deg)
     )
-    # initialise the sources dataframe using first image as base
-    sources_df = skyc1_srcs.copy()
 
-    for it, epoch in enumerate(unique_epochs[1:]):
+    for it, epoch in enumerate(unique_epochs[start_epoch:]):
         logger.info('Association iteration: #%i%s', it + 1, skyreg_tag)
         # load skyc2 source measurements and create SkyCoord
         images = (
@@ -1148,6 +1164,8 @@ def association(images_df, limit, dr_limit, bw_limit,
         timer.reset_init(),
         skyreg_tag
     )
+    import ipdb
+    ipdb.set_trace()
     return sources_df
 
 
@@ -1196,7 +1214,10 @@ def parallel_association(
     duplicate_limit: Angle,
     # TODO update config typing.
     config, # a 'module` typing.
-    n_skyregion_groups: int
+    n_skyregion_groups: int,
+    add_mode: bool,
+    prev_parquets: Dict[str, str],
+    done_images_df: pd.DataFrame
 ) -> pd.DataFrame:
     """
     Launches association on different sky region groups in parallel using Dask.
@@ -1274,6 +1295,8 @@ def parallel_association(
             bw_limit=bw_limit,
             duplicate_limit=duplicate_limit,
             config=config,
+            add_mode=add_mode,
+            prev_parquets=prev_parquets,
             meta=meta
         ).compute(n_workers=n_cpu, scheduler='processes')
     )

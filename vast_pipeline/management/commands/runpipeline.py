@@ -1,5 +1,6 @@
 import os
 import glob
+import shutil
 import logging
 import traceback
 import warnings
@@ -11,7 +12,7 @@ from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
 from vast_pipeline.pipeline.main import Pipeline
 from vast_pipeline.pipeline.utils import (
     get_create_p_run, create_measurements_arrow_file,
-    create_measurement_pairs_arrow_file
+    create_measurement_pairs_arrow_file, backup_parquets
 )
 from vast_pipeline.utils.utils import StopWatch
 from ..helpers import get_p_run_name
@@ -23,7 +24,8 @@ logger = logging.getLogger(__name__)
 
 
 def run_pipe(
-    name, path_name=None, run_dj_obj=None, cmd=True, debug=False, user=None
+    name, path_name=None, run_dj_obj=None, cmd=True, debug=False, user=None,
+    complete_rerun=False
 ):
     '''
     Main function to run the pipeline.
@@ -45,6 +47,9 @@ def run_pipe(
         output. Defaults to False.
     user : User, optional
         The User of the request if made through the UI. Defaults to None.
+    complete_rerun : bool, optional
+        If the run already exists, a complete rerun will be performed which
+        will remove and replace all the previous results.
 
     Returns
     -------
@@ -89,6 +94,66 @@ def run_pipe(
         pipeline.set_status(p_run, 'ERR')
         raise CommandError(msg) if cmd else PipelineConfigError(msg)
 
+    # clean up pipeline images and forced measurements for re-runs
+    # Scenarios:
+    # A. Complete Re-run: If the job is marked as successful then backup
+    # old parquets and proceed to remove parquets along with forced
+    # extractions from the database.
+    # B. Additional Run on successful run: Backup parquets, remove current
+    # parquets and proceed.
+    # C. Additional Run on errored run: Do not backup parquets, just delete
+    # current.
+
+    # Flag on the pipeline object on whether the addition mode is on or off.
+    pipeline.add_mode = False
+    pipeline.previous_parquets = {}
+
+    if flag_exist:
+        p_run_status = p_run.status
+        parquets = (
+            glob.glob(os.path.join(p_run.path, "*.parquet"))
+            # TODO Remove arrow when vaex support is dropped.
+            + glob.glob(os.path.join(p_run.path, "*.arrow"))
+        )
+
+        if complete_rerun:
+            if p_run_status == 'END':
+                backup_parquets(p_run.path)
+            logger.info('Cleaning up pipeline run before re-process data')
+            p_run.image_set.clear()
+
+            logger.info(
+                'Cleaning up forced measurements before re-process data'
+            )
+            remove_forced_meas(p_run.path)
+
+            for parquet in parquets:
+                os.remove(parquet)
+        else:
+            # Before parquets are started to be copied and backed up, a check
+            # is run to see if anything has actually changed in the config
+            config_diff = pipeline.check_prev_config_diff(p_run.path)
+            if config_diff:
+                logger.info(
+                    "The config file has either not changed since the"
+                    " previous run or other settings have changed such that a"
+                    " new or complete re-run should be performed instead. "
+                    "Performing no actions. Exiting.")
+                return True
+
+            if p_run_status == 'END':
+                backup_parquets(p_run.path)
+
+            pipeline.add_mode = True
+            pipeline.previous_parquets['images'] = os.path.join(
+                p_run.path, 'images.parquet.backup')
+            pipeline.previous_parquets['associations'] = os.path.join(
+                p_run.path, 'associations.parquet.backup')
+            pipeline.previous_parquets['sources'] = os.path.join(
+                p_run.path, 'sources.parquet.backup')
+            pipeline.previous_parquets['relations'] = os.path.join(
+                p_run.path, 'relations.parquet.backup')
+
     if pipeline.config.CREATE_MEASUREMENTS_ARROW_FILES and cmd is False:
         logger.warning(
             'The creation of arrow files is currently unavailable when running'
@@ -100,24 +165,6 @@ def run_pipe(
 
     if pipeline.config.SUPPRESS_ASTROPY_WARNINGS:
         warnings.simplefilter("ignore", category=AstropyWarning)
-
-    # clean up pipeline images and forced measurements for re-runs
-    if flag_exist:
-        logger.info('Cleaning up pipeline run before re-process data')
-        p_run.image_set.clear()
-
-        logger.info(
-            'Cleaning up forced measurements before re-process data'
-        )
-        remove_forced_meas(p_run.path)
-
-        parquets = (
-            glob.glob(os.path.join(p_run.path, "*.parquet"))
-            + glob.glob(os.path.join(p_run.path, "*.arrow"))
-            # TODO Remove arrow when vaex support is dropped.
-        )
-        for parquet in parquets:
-            os.remove(parquet)
 
     logger.info("Source finder: %s", pipeline.config.SOURCE_FINDER)
     logger.info("Using pipeline run '%s'", pipeline.name)
@@ -141,6 +188,23 @@ def run_pipe(
         pipeline.set_status(p_run, 'ERR')
         logger.exception('Processing error:\n%s', e)
         raise CommandError(f'Processing error:\n{e}')
+
+    # copy across config file now that it is successful
+    logger.debug("Copying config file.")
+    shutil.copyfile(
+        os.path.join(p_run.path, 'config.py'),
+        os.path.join(p_run.path, 'config_prev.py'))
+
+    old_backup_parquets = (
+        glob.glob(os.path.join(p_run.path, "*.parquet.backup.backup"))
+        # TODO Remove arrow when vaex support is dropped.
+        + glob.glob(os.path.join(p_run.path, "*.arrow.backup.backup"))
+    )
+
+    if old_backup_parquets:
+        logger.debug("Removing old backup parquet and arrow files.")
+        for i in old_backup_parquets:
+            os.remove(i)
 
     # set the pipeline status as completed
     pipeline.set_status(p_run, 'END')
@@ -166,6 +230,16 @@ class Command(BaseCommand):
             'piperun',
             type=str,
             help='Path or name of the pipeline run.'
+        )
+
+        parser.add_argument(
+            '--complete-rerun',
+            required=False,
+            default=False,
+            action='store_true',
+            help=(
+                'Flag to signify that a full re-run is requested.'
+                ' Old data is completely removed and replaced.')
         )
 
     def handle(self, *args, **options):
@@ -197,6 +271,7 @@ class Command(BaseCommand):
 
         debug_flag = True if options['verbosity'] > 1 else False
 
-        done = run_pipe(p_run_name, path_name=run_folder, debug=debug_flag)
+        done = run_pipe(p_run_name, path_name=run_folder,
+            debug=debug_flag, complete_rerun=options['complete_rerun'])
 
         self.stdout.write(self.style.SUCCESS('Finished'))
