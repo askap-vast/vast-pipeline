@@ -1,7 +1,9 @@
 import os
 import logging
+import numpy as np
 import pandas as pd
 
+from django.db import connection
 from django.db import transaction
 from itertools import islice
 
@@ -210,3 +212,82 @@ def make_upload_measurement_pairs(measurement_pairs_df):
     )
     measurement_pairs_df["id"] = meas_pair_dj_ids
     return measurement_pairs_df
+
+
+def SQL_update(df, model, index=None, columns=None, chunk_size=100000):
+    '''
+    Update database using SQL code. This function opens one connection to the
+    database, and closes it after the update is done. 
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        DataFrame containing the new data to be uploaded to the database. The
+        columns to be updated need to have the same headers between the df and
+        the table in the database.
+    model : Model
+        The model that is being updated. 
+    index : str
+        Header of the column to join on, determines which rows in the different
+        tables match. If None, then use the primary key column. 
+    columns : List[str] or None
+        The column headers of the columns to be updated. If None, updates all 
+        columns except the index column.
+    chunk_size : int
+        The df rows are broken into chunks, each chunk is executed in a 
+        separate SQL command, chunk determines the maximum size of the chunk.
+
+    Returns
+    -------
+    None
+    '''
+    chunks = np.ceil(len(df)/chunk_size)
+    dfs = np.array_split(df, chunks)
+    with connection.cursor() as cursor:
+        for df_chunk in dfs:
+            SQL_comm = SQL_update_comm(df_chunk, model, index, columns=columns)
+            cursor.execute(SQL_comm)
+
+
+def SQL_update_comm(df, model, index=None, columns=None):
+    '''
+    Update database using SQL code. For more details on the input parameters, 
+    see SQL_update. 
+
+    Returns
+    -------
+    SQL_comm : str
+        The SQL command to update the database. 
+    '''
+    # set index and columns if None
+    if index is None:
+        index = model._meta.pk.name
+    if columns is None:
+        columns = df.columns.tolist()
+        columns.remove(index)
+
+    # get names 
+    table = model._meta.db_table
+    new_columns = ', '.join('new_'+c for c in columns)
+    set_columns = ', '.join(c+'=new_'+c for c in columns)
+
+    # get index values and new values
+    column_headers = [index]
+    column_headers.extend(columns)
+    data_arr = df.loc[:, column_headers].to_numpy()
+    values = []
+    for row in data_arr:
+        val_row = '(' + ', '.join(f'{val}' for val in row) + ')'
+        values.append(val_row)
+    values = ', '.join(values)
+
+    # update database
+    SQL_comm = f"""
+        UPDATE {table}
+        SET {set_columns}
+        FROM (VALUES {values})
+        AS new_values (index_col, {new_columns})
+        WHERE {index}=index_col;
+    """
+    
+    return SQL_comm
