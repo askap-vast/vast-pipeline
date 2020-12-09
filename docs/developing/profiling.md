@@ -12,3 +12,33 @@ _performance:_ ~30% goes to pipeline (about 9% of this is `pickle`), ~11% goes t
 _memory:_ 30% memory is spent on `django`, 20% is spent on `astropy/coordinates/matrix_utilities`, 10% on importing other modules, rest is fragmented quite small
 
 Note that I didn't include the generation of the `images/*/measurements.parquet` or other files in these profiles.
+
+## Update Database
+Delete and reupload (in seconds)
+```
+columns\rows   1e3    1e4    1e5
+    4         0.15   1.24    12.95
+    8         0.26   1.64    19.11
+    12        0.31   2.18    21.49
+```
+Per cell, 1e3 rows is slower than 1e4 and 1e5 rows, possibly due to overhead. Best to avoid uploading 1e3 rows each bulk_create call.
+
+Django bulk_update
+```
+columns\rows   1e3    1e4    1e5
+    4         3.39      
+    8         4.38       
+    12        5.50   
+```    
+I don't think there's any point testing 1e4 or 1e5 rows, it's obviously the worst performing function, and I've already had to force quit the terminal twice because keyboard interrupt didn't work.
+
+SQL join as
+```
+columns\rows   1e3    1e4    1e5
+    4         0.016   0.11   3.08
+    8         0.019   0.32   4.31
+    12        0.027   0.38   5.39
+```
+1e5 is slower per cell than 1e4 and 1e3, not sure why. Recommend updating 1e4 rows each time.
+
+This timing info does vary a bit on randomness. Sometimes the SQL join as takes as long as 1 second to complete 1e3 rows, I'm not sure what's causing this.
