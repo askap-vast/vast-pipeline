@@ -186,7 +186,7 @@ def final_operations(
             f"Updating {srcs_df_update.shape[0]} sources with new metrics.")
         srcs_df = update_sources(srcs_df_update, p_run, batch_size=1000)
         # Add back together
-        srcs_df = srcs_df.append(srcs_df_upload)
+        srcs_df = srcs_df.append(srcs_df_upload, ignore_index=True)
     else:
         srcs_df = make_upload_sources(srcs_df, p_run, add_mode)
 
@@ -224,8 +224,12 @@ def final_operations(
         old_relations = (
             pd.read_parquet(previous_parquets['relations'])
         )
-        related_df = related_df.append(old_relations).drop_duplicates(
-            keep=False)
+        # import ipdb
+        # ipdb.set_trace()
+        related_df = (
+            related_df.append(old_relations, ignore_index=True)
+            .drop_duplicates(keep=False)
+        )
         logger.debug(f'Add mode: #{related_df.shape[0]} relations to upload.')
 
     make_upload_related_sources(related_df)
@@ -251,7 +255,8 @@ def final_operations(
             pd.read_parquet(previous_parquets['associations'])
             .rename(columns={'meas_id': 'id'})
         )
-        sources_df_upload = sources_df.append(old_assoications)
+        sources_df_upload = sources_df.append(
+            old_assoications, ignore_index=True)
         sources_df_upload = sources_df_upload.drop_duplicates(
             ['source_id', 'id', 'd2d', 'dr'], keep=False
         )
@@ -280,7 +285,7 @@ def final_operations(
         ).rename(columns={'meas_id_a': 'id_a', 'meas_id_b': 'id_b'})
 
         measurement_pairs_df_upload = measurement_pairs_df.append(
-            old_measurement_pairs)
+            old_measurement_pairs, ignore_index=True)
 
         measurement_pairs_df_upload = (
             measurement_pairs_df_upload.drop_duplicates(

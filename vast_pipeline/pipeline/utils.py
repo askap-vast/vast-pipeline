@@ -1148,6 +1148,10 @@ def get_parallel_assoc_image_df(
         right_index=True
     )
 
+    images_df['image_name'] = images_df['image_dj'].apply(
+        lambda x: x.name
+    )
+
     return images_df
 
 
@@ -1541,7 +1545,7 @@ def reconstruct_associtaion_dfs(images_df_done, previous_parquet_paths):
         'flux_int', 'flux_int_err', 'flux_int_isl_ratio', 'flux_peak',
         'flux_peak_err', 'flux_peak_isl_ratio', 'forced', 'compactness',
         'has_siblings', 'snr', 'image', 'datetime', 'source', 'ra', 'dec',
-        'd2d', 'dr', 'related', 'epoch', 'ra_source', 'dec_source',
+        'ra_source', 'dec_source', 'd2d', 'dr', 'related', 'epoch',
         'uncertainty_ew_source', 'uncertainty_ns_source'
     ]]
 
@@ -1565,7 +1569,6 @@ def reconstruct_associtaion_dfs(images_df_done, previous_parquet_paths):
 
     # Drop not needed columns for the sources_df.
     sources_df = sources_df.drop([
-        'ra_source', 'dec_source',
         'uncertainty_ew_source', 'uncertainty_ns_source'
     ], axis=1)
 

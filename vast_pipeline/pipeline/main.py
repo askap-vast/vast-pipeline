@@ -408,7 +408,8 @@ class Pipeline():
                 n_skyregion_groups,
                 self.add_mode,
                 self.previous_parquets,
-                done_images_df
+                done_images_df,
+                done_source_ids
             )
         else:
             images_df = pd.DataFrame.from_dict(
