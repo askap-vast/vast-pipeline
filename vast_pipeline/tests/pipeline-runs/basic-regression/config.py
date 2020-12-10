@@ -7,6 +7,9 @@ import os
 # path of the pipeline run
 PIPE_RUN_PATH = os.path.dirname(os.path.realpath(__file__))
 data_path = './vast_pipeline/tests/regression-data'
+epochs = ['01', '01', '02', '03x', '05x', '06x']
+fields = ['+00']
+fields.extend(['-06' for _ in range(5)])
 
 # Images settings
 # NOTE: all the paths !!!MUST!!! match with each other, e.g.
@@ -14,47 +17,47 @@ data_path = './vast_pipeline/tests/regression-data'
 image_path = 'COMBINED/STOKESI_IMAGES'
 IMAGE_FILES = [
     # insert images file path(s) here
-    os.path.join(data_path, 'EPOCH01', image_path, 'VAST_2118+00A.EPOCH01.I.fits'),
-    os.path.join(data_path, 'EPOCH01', image_path, 'VAST_2118-06A.EPOCH01.I.fits'),
-    os.path.join(data_path, 'EPOCH02', image_path, 'VAST_2118-06A.EPOCH02.I.fits'),
-    os.path.join(data_path, 'EPOCH03x', image_path, 'VAST_2118-06A.EPOCH03x.I.fits'),
-    os.path.join(data_path, 'EPOCH05x', image_path, 'VAST_2118-06A.EPOCH05x.I.fits'),
-    os.path.join(data_path, 'EPOCH06x', image_path, 'VAST_2118-06A.EPOCH06x.I.fits')
+    os.path.join(
+        data_path, 
+        'EPOCH' + epoch, 
+        image_path, 
+        'VAST_2118' + field + 'A.EPOCH' + epoch + '.I.fits'
+    ) for epoch, field in zip(epochs, fields)
 ]
 
 # Selavy catalogue files
 selavy_path = 'COMBINED/STOKESI_SELAVY'
 SELAVY_FILES = [
     # insert Selavy file path(s) here
-    os.path.join(data_path, 'EPOCH01', selavy_path, 'VAST_2118+00A.EPOCH01.I.selavy.components.txt'),
-    os.path.join(data_path, 'EPOCH01', selavy_path, 'VAST_2118-06A.EPOCH01.I.selavy.components.txt'),
-    os.path.join(data_path, 'EPOCH02', selavy_path, 'VAST_2118-06A.EPOCH02.I.selavy.components.txt'),
-    os.path.join(data_path, 'EPOCH03x', selavy_path, 'VAST_2118-06A.EPOCH03x.I.selavy.components.txt'),
-    os.path.join(data_path, 'EPOCH05x', selavy_path, 'VAST_2118-06A.EPOCH05x.I.selavy.components.txt'),
-    os.path.join(data_path, 'EPOCH06x', selavy_path, 'VAST_2118-06A.EPOCH06x.I.selavy.components.txt')
+    os.path.join(
+        data_path, 
+        'EPOCH' + epoch, 
+        selavy_path, 
+        'VAST_2118' + field + 'A.EPOCH' + epoch + '.I.selavy.components.txt'
+    ) for epoch, field in zip(epochs, fields)
 ]
 
 # Noise or RMS files
 maps_path = 'COMBINED/STOKESI_RMSMAPS'
 NOISE_FILES = [
     # insert RMS file path(s) here
-    os.path.join(data_path, 'EPOCH01', maps_path, 'VAST_2118+00A.EPOCH01.I_rms.fits'),
-    os.path.join(data_path, 'EPOCH01', maps_path, 'VAST_2118-06A.EPOCH01.I_rms.fits'),
-    os.path.join(data_path, 'EPOCH02', maps_path, 'VAST_2118-06A.EPOCH02.I_rms.fits'),
-    os.path.join(data_path, 'EPOCH03x', maps_path, 'VAST_2118-06A.EPOCH03x.I_rms.fits'),
-    os.path.join(data_path, 'EPOCH05x', maps_path, 'VAST_2118-06A.EPOCH05x.I_rms.fits'),
-    os.path.join(data_path, 'EPOCH06x', maps_path, 'VAST_2118-06A.EPOCH06x.I_rms.fits')
+    os.path.join(
+        data_path, 
+        'EPOCH' + epoch, 
+        maps_path, 
+        'VAST_2118' + field + 'A.EPOCH' + epoch + '.I_rms.fits'
+    ) for epoch, field in zip(epochs, fields)
 ]
 
 # background map files
 BACKGROUND_FILES = [
     # insert background map file path(s) here
-    os.path.join(data_path, 'EPOCH01', maps_path, 'VAST_2118+00A.EPOCH01.I_bkg.fits'),
-    os.path.join(data_path, 'EPOCH01', maps_path, 'VAST_2118-06A.EPOCH01.I_bkg.fits'),
-    os.path.join(data_path, 'EPOCH02', maps_path, 'VAST_2118-06A.EPOCH02.I_bkg.fits'),
-    os.path.join(data_path, 'EPOCH03x', maps_path, 'VAST_2118-06A.EPOCH03x.I_bkg.fits'),
-    os.path.join(data_path, 'EPOCH05x', maps_path, 'VAST_2118-06A.EPOCH05x.I_bkg.fits'),
-    os.path.join(data_path, 'EPOCH06x', maps_path, 'VAST_2118-06A.EPOCH06x.I_bkg.fits')
+    os.path.join(
+        data_path, 
+        'EPOCH' + epoch, 
+        maps_path, 
+        'VAST_2118' + field + 'A.EPOCH' + epoch + '.I_bkg.fits'
+    ) for epoch, field in zip(epochs, fields)
 ]
 
 ###
