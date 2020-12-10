@@ -142,8 +142,13 @@ USE_CONDON_ERRORS = True
 # Choose a value to use for the local rms in these cases
 SELAVY_LOCAL_RMS_ZERO_FILL_VALUE = 0.2  # mJy
 
-# Create a measurements.arrow file at the end of a successful run
-CREATE_MEASUREMENTS_ARROW_FILE = False
+# Create 'measurements.arrow' and 'measurement_pairs.arrow' files at the end of 
+# a successful run
+CREATE_MEASUREMENTS_ARROW_FILES = False
 
 # Hide astropy warnings
 SUPPRESS_ASTROPY_WARNINGS = True
+
+# Only measurement pairs where the Vs metric exceeds this value are selected for the
+# aggregate pair metrics that are stored in Source objects.
+SOURCE_AGGREGATE_PAIR_METRICS_MIN_ABS_VS = 4.3

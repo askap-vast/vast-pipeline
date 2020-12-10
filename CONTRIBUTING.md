@@ -219,4 +219,6 @@ wget https://cloudstor.aarnet.edu.au/plus/s/m2eRb27MIMNM7LM/download
 ```
 place the VAST_2118-06A field test dataset in a folder named `regression-data` inside the [tests](./vast_pipeline/tests/) folder. These regression tests are skipped if the data folder containing the dataset is not present. 
 
-All tests should be run before pushing to master. Running all the tests takes a few minutes, so it is not recommended to run them for every change. 
+All tests should be run before pushing to master. Running all the tests takes a few minutes, so it is not recommended to run them for every change.
+
+__NOTE__: if changes are made to the default config keys, these changes need to be propagated to the test config files.
