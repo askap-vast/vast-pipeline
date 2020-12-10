@@ -56,7 +56,8 @@ def remove_forced_meas(run_path):
                 logger.debug('(type, #deleted): %s', detail_del)
 
 
-def get_data_from_parquet(file: str) -> dict:
+def get_data_from_parquet(
+    file: str, p_run_path: str, add_mode: bool=False,) -> dict:
     '''
     Get the prefix, max id and image id from the measurements parquets
 
@@ -64,6 +65,11 @@ def get_data_from_parquet(file: str) -> dict:
     ----------
     file : str
         a string with the path of the measurements parquet file
+    p_run_path : str
+        Pipeline run path to get forced parquet in case of add mode.
+    add_mode: bool
+        Whether image add mode is being used where the forced parquet needs to
+        be used instead.
 
     Returns
     -------
@@ -71,6 +77,14 @@ def get_data_from_parquet(file: str) -> dict:
         dictionary with prefix string, an interger max_id and a string with the
         id of the image
     '''
+    if add_mode:
+        image_name = file.split("/")[-2]
+        forced_parquet = os.path.join(
+            p_run_path,
+            f"forced_measurements_{image_name}.parquet"
+        )
+        if os.path.isfile(forced_parquet):
+            file = forced_parquet
     # get max component id from parquet file
     df = pd.read_parquet(file, columns=['island_id', 'image_id'])
     prefix = df['island_id'].iloc[0].rsplit('_', maxsplit=1)[0] + '_'
@@ -201,7 +215,7 @@ def finalise_forced_dfs(
 def parallel_extraction(
     df: pd.DataFrame, df_images: pd.DataFrame, df_sources: pd.DataFrame,
     min_sigma: float, edge_buffer: float, cluster_threshold: float,
-    allow_nan: bool
+    allow_nan: bool, add_mode: bool, p_run_path: str
     ) -> pd.DataFrame:
     """
     Parallelize forced extraction with Dask
@@ -236,9 +250,7 @@ def parallel_extraction(
     """
     # explode the lists in 'img_diff' column (this will make a copy of the df)
     out = (
-        df.explode('img_diff')
-        .reset_index()
-        .rename(columns={'img_diff':'image', 'source':'source_tmp_id'})
+        df.rename(columns={'img_diff':'image', 'source':'source_tmp_id'})
         # merge the rms_min column from df_images
         .merge(
             df_images[['rms_min']],
@@ -306,7 +318,7 @@ def parallel_extraction(
             list_meas_parquets,
             npartitions=len(list_meas_parquets)
         )
-        .map(get_data_from_parquet)
+        .map(get_data_from_parquet, p_run_path, add_mode)
         .compute()
     )
     mapping = pd.DataFrame(mapping)
@@ -361,20 +373,22 @@ def parallel_extraction(
     return df_out
 
 
-def write_group_to_parquet(df, fname):
+def write_group_to_parquet(df, fname, add_mode):
     '''
     write a dataframe correpondent to a single group/image
     to a parquet file
     '''
-    (
-        df.drop(['d2d', 'dr', 'source', 'image'], axis=1)
-        .to_parquet(fname, index=False)
-    )
+    df = df.drop(['d2d', 'dr', 'source', 'image'], axis=1)
+    if os.path.isfile(fname) and add_mode:
+        exist_df = pd.read_parquet(fname)
+        df = exist_df.append(df)
+
+    df.to_parquet(fname, index=False)
 
     pass
 
 
-def parallel_write_parquet(df, run_path):
+def parallel_write_parquet(df, run_path, add_mode=False):
     '''
     parallelize writing parquet files for forced measurements
     '''
@@ -388,7 +402,8 @@ def parallel_write_parquet(df, run_path):
 
     # writing parquets using Dask bag
     bags = db.from_sequence(dfs)
-    bags = bags.starmap(lambda df, fname: write_group_to_parquet(df, fname))
+    bags = bags.starmap(
+        lambda df, fname: write_group_to_parquet(df, fname, add_mode))
     bags.compute(num_workers=n_cpu)
 
     pass
@@ -396,7 +411,8 @@ def parallel_write_parquet(df, run_path):
 
 def forced_extraction(
         sources_df, cfg_err_ra, cfg_err_dec, p_run, extr_df,
-        min_sigma, edge_buffer, cluster_threshold, allow_nan
+        min_sigma, edge_buffer, cluster_threshold, allow_nan,
+        add_mode, done_images_df, done_source_ids
     ):
     """
     check and extract expected measurements, and associated them with the
@@ -439,10 +455,39 @@ def forced_extraction(
 # | VAST_2118-06A.EPOCH03x.I.fits |  0.165395 | 2019-10-29 10:01:20.500000+00:00 |             319.652 |              -6.2989 |               6.7401 |
 # | VAST_2118-06A.EPOCH02.I.fits  |  0.16323  | 2019-10-30 08:31:20.200000+00:00 |             319.652 |              -6.2989 |               6.7401 |
 
+    # Explode out the img_diff column.
+    extr_df = extr_df.explode('img_diff').reset_index()
+    total_to_extract = extr_df.shape[0]
+
+    if add_mode:
+        # If we are adding images to the run we assume that monitoring was
+        # also performed before (enforced by the pre-run checks) so now we
+        # only want to force extract in three situations:
+        # 1. Any force extraction in a new image.
+        # 2. The forced extraction is attached to a new source from the new
+        # images.
+        # 3. A new relation has been created and they need the forced
+        # measuremnts filled in (actually covered by 2.)
+
+        extr_df = (
+            extr_df[~extr_df['img_diff'].isin(done_images_df.name)]
+            .append(extr_df[
+                (~extr_df.source.isin(done_source_ids))
+                & (extr_df.img_diff.isin(done_images_df.name))
+            ])
+            .sort_index()
+        )
+
+        logger.info(
+            f"{extr_df.shape[0]} new measurements to force extract"
+            f" (from {total_to_extract} total)"
+        )
+
     timer.reset()
     extr_df = parallel_extraction(
         extr_df, images_df, sources_df[['source', 'image', 'flux_peak']],
-        min_sigma, edge_buffer, cluster_threshold, allow_nan
+        min_sigma, edge_buffer, cluster_threshold, allow_nan, add_mode,
+        p_run.path
     )
     logger.info(
         'Force extraction step time: %.2f seconds', timer.reset()
@@ -526,7 +571,7 @@ def forced_extraction(
     logger.info(
         'Saving forced measurements to specific parquet file...'
     )
-    parallel_write_parquet(extr_df, p_run.path)
+    parallel_write_parquet(extr_df, p_run.path, add_mode)
 
     # append new meas into main df and proceed with source groupby etc
     sources_df = sources_df.append(
@@ -535,7 +580,17 @@ def forced_extraction(
     )
 
     # get the number of forced extractions for the run
-    n_forced = extr_df.shape[0]
+    forced_parquets = glob(
+        os.path.join(p_run.path, "forced_measurements*.parquet"))
+    if forced_parquets:
+        n_forced = (
+            dd.read_parquet(forced_parquets, columns=['id'])
+            .count()
+            .compute()
+            .values[0]
+        )
+    else:
+        n_forced = 0
 
     logger.info(
         'Total forced extraction time: %.2f seconds', timer.reset_init()

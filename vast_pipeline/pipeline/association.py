@@ -965,7 +965,8 @@ def association(images_df, limit, dr_limit, bw_limit,
         image_mask = images_df['image_name'].isin(done_images_df['name'])
         images_df_done = images_df.loc[image_mask].copy()
         images_df = images_df.loc[~image_mask]
-        logger.info(f'Found {images_df.shape[0]} images to add to the run.')
+        logger.info(
+            f'Found {images_df.shape[0]} images to add to the run{skyreg_tag}.')
         # re-get the unique epochs
         unique_epochs = images_df.sort_values(by='epoch')['epoch'].unique()
         sources_df, skyc1_srcs = reconstruct_associtaion_dfs(images_df_done,
@@ -1164,8 +1165,7 @@ def association(images_df, limit, dr_limit, bw_limit,
         timer.reset_init(),
         skyreg_tag
     )
-    import ipdb
-    ipdb.set_trace()
+
     return sources_df
 
 
@@ -1297,6 +1297,7 @@ def parallel_association(
             config=config,
             add_mode=add_mode,
             prev_parquets=prev_parquets,
+            done_images_df=done_images_df,
             meta=meta
         ).compute(n_workers=n_cpu, scheduler='processes')
     )

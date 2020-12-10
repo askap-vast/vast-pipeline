@@ -58,7 +58,6 @@ class Pipeline():
         # dictionaries if so
         self.config, self.epoch_based = self.check_for_epoch_based(self.config)
 
-
     @staticmethod
     def load_cfg(cfg):
         """
@@ -385,8 +384,12 @@ class Pipeline():
         if self.add_mode:
             done_images_df = pd.read_parquet(
                 self.previous_parquets['images'], columns=['id', 'name'])
+            done_source_ids = pd.read_parquet(
+                self.previous_parquets['sources'],
+                columns=['wavg_ra']).index.tolist()
         else:
             done_images_df = None
+            done_source_ids = None
 
         # 2.2 Associate with other measurements
         if self.config.ASSOCIATION_PARALLEL and n_skyregion_groups > 1:
@@ -483,7 +486,10 @@ class Pipeline():
                 self.config.MONITOR_MIN_SIGMA,
                 self.config.MONITOR_EDGE_BUFFER_SCALE,
                 self.config.MONITOR_CLUSTER_THRESHOLD,
-                self.config.MONITOR_ALLOW_NAN
+                self.config.MONITOR_ALLOW_NAN,
+                self.add_mode,
+                done_images_df,
+                done_source_ids
             )
 
         del missing_sources_df
@@ -495,6 +501,9 @@ class Pipeline():
             p_run,
             new_sources_df,
             self.config.SOURCE_AGGREGATE_PAIR_METRICS_MIN_ABS_VS,
+            self.add_mode,
+            done_source_ids,
+            self.previous_parquets
         )
 
         # calculate number processed images

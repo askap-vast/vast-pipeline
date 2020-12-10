@@ -1332,9 +1332,13 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
         11128   0   6216  23534
     """
     measurement_combinations = (
-        dd.from_pandas(df.sort_values(["source", "datetime"]), n_cpu)
+        dd.from_pandas(df.sort_values(
+            ["source", "datetime"]
+        ).reset_index(drop=True), n_cpu)
         .groupby("source")["id"]
-        .apply(lambda x: pd.DataFrame(list(combinations(x, 2))), meta={0: "i", 1: "i"},)
+        .apply(
+            lambda x: pd.DataFrame(list(combinations(x, 2))
+        ), meta={0: "i", 1: "i"},)
         .compute(num_workers=n_cpu, scheduler="processes")
     )
 
@@ -1409,7 +1413,7 @@ def backup_parquets(p_run_path):
     for i in parquets:
         backup_name = i + '.backup'
         if os.path.isfile(backup_name):
-            logger.debug('Removing old backup file.')
+            logger.debug(f'Removing old backup file: {backup_name}.')
             os.remove(backup_name)
         shutil.copyfile(i, backup_name)
 
@@ -1502,8 +1506,12 @@ def reconstruct_associtaion_dfs(images_df_done, previous_parquet_paths):
 
     # Load up the previous unique sources.
     prev_sources = pd.read_parquet(
-        previous_parquet_paths['sources'], columns=['wavg_ra', 'wavg_dec']
-    )
+        previous_parquet_paths['sources'], columns=[
+            'wavg_ra', 'wavg_dec', 'wavg_uncertainty_ew', 'wavg_uncertainty_ns']
+    ).rename(columns={
+        'wavg_uncertainty_ew': 'uncertainty_ew_source',
+        'wavg_uncertainty_ns': 'uncertainty_ns_source'
+    })
 
     # Merge the wavg ra and dec to the sources_df
     sources_df = (
@@ -1533,7 +1541,8 @@ def reconstruct_associtaion_dfs(images_df_done, previous_parquet_paths):
         'flux_int', 'flux_int_err', 'flux_int_isl_ratio', 'flux_peak',
         'flux_peak_err', 'flux_peak_isl_ratio', 'forced', 'compactness',
         'has_siblings', 'snr', 'image', 'datetime', 'source', 'ra', 'dec',
-        'd2d', 'dr', 'related', 'epoch', 'ra_source', 'dec_source'
+        'd2d', 'dr', 'related', 'epoch', 'ra_source', 'dec_source',
+        'uncertainty_ew_source', 'uncertainty_ns_source'
     ]]
 
     # Create the unique skyc1_srcs dataframe.
@@ -1542,6 +1551,8 @@ def reconstruct_associtaion_dfs(images_df_done, previous_parquet_paths):
     # Update the ra and dec to be the source averages.
     skyc1_srcs['ra'] = skyc1_srcs['ra_source']
     skyc1_srcs['dec'] = skyc1_srcs['dec_source']
+    skyc1_srcs['uncertainty_ew'] = skyc1_srcs['uncertainty_ew_source']
+    skyc1_srcs['uncertainty_ns'] = skyc1_srcs['uncertainty_ns_source']
 
     # Reorder so we don't mess up the dask metas.
     skyc1_srcs = skyc1_srcs[[
@@ -1553,6 +1564,9 @@ def reconstruct_associtaion_dfs(images_df_done, previous_parquet_paths):
     ]].reset_index(drop=True)
 
     # Drop not needed columns for the sources_df.
-    sources_df = sources_df.drop(['ra_source', 'dec_source'], axis=1)
+    sources_df = sources_df.drop([
+        'ra_source', 'dec_source',
+        'uncertainty_ew_source', 'uncertainty_ns_source'
+    ], axis=1)
 
     return sources_df, skyc1_srcs

@@ -81,6 +81,12 @@ def run_pipe(
         pipeline.config.PIPE_RUN_PATH
     )
 
+    # copy across config file now that it is successful
+    logger.debug("Copying temp config file.")
+    shutil.copyfile(
+        os.path.join(p_run.path, 'config.py'),
+        os.path.join(p_run.path, 'config_temp.py'))
+
     # load and validate run configs
     try:
         pipeline.validate_cfg(user=user)
@@ -139,6 +145,15 @@ def run_pipe(
                     " previous run or other settings have changed such that a"
                     " new or complete re-run should be performed instead. "
                     "Performing no actions. Exiting.")
+                os.remove(os.path.join(p_run.path, 'config_temp.py'))
+                return True
+
+            if pipeline.epoch_based != p_run.epoch_based:
+                logger.info(
+                    "The 'epoch based' setting has changed since the previous"
+                    " run. A complete re-run is required if changing to"
+                    " epoch based mode or vice versa.")
+                os.remove(os.path.join(p_run.path, 'config_temp.py'))
                 return True
 
             if p_run_status == 'END':
@@ -153,6 +168,8 @@ def run_pipe(
                 p_run.path, 'sources.parquet.backup')
             pipeline.previous_parquets['relations'] = os.path.join(
                 p_run.path, 'relations.parquet.backup')
+            pipeline.previous_parquets['measurement_pairs'] = os.path.join(
+                p_run.path, 'measurement_pairs.parquet.backup')
 
     if pipeline.config.CREATE_MEASUREMENTS_ARROW_FILES and cmd is False:
         logger.warning(
@@ -190,21 +207,11 @@ def run_pipe(
         raise CommandError(f'Processing error:\n{e}')
 
     # copy across config file now that it is successful
-    logger.debug("Copying config file.")
+    logger.debug("Copying and cleaning temp config file.")
     shutil.copyfile(
-        os.path.join(p_run.path, 'config.py'),
+        os.path.join(p_run.path, 'config_temp.py'),
         os.path.join(p_run.path, 'config_prev.py'))
-
-    old_backup_parquets = (
-        glob.glob(os.path.join(p_run.path, "*.parquet.backup.backup"))
-        # TODO Remove arrow when vaex support is dropped.
-        + glob.glob(os.path.join(p_run.path, "*.arrow.backup.backup"))
-    )
-
-    if old_backup_parquets:
-        logger.debug("Removing old backup parquet and arrow files.")
-        for i in old_backup_parquets:
-            os.remove(i)
+    os.remove(os.path.join(p_run.path, 'config_temp.py'))
 
     # set the pipeline status as completed
     pipeline.set_status(p_run, 'END')

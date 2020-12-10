@@ -47,6 +47,30 @@ def bulk_upload_model(djmodel, generator, batch_size=10_000, return_ids=False):
         return bulk_ids
 
 
+@transaction.atomic
+def bulk_upload_model(djmodel, generator, batch_size=10_000, return_ids=False):
+    '''
+    bulk upload a pandas series of django models to db
+    djmodel: django.model
+    generator: generator
+    batch_size: int
+    return_ids: bool
+    '''
+    bulk_ids = []
+    while True:
+        items = list(islice(generator, batch_size))
+        if not items:
+            break
+        out_bulk = djmodel.objects.bulk_create(items)
+        logger.info('Bulk created #%i %s', len(out_bulk), djmodel.__name__)
+        # save the DB ids to return
+        if return_ids:
+            bulk_ids.extend(list(map(lambda i: i.id, out_bulk)))
+
+    if return_ids:
+        return bulk_ids
+
+
 def make_upload_images(paths, config, pipeline_run):
     '''
     carry the first part of the pipeline, by uploading all the images
@@ -149,14 +173,15 @@ def make_upload_images(paths, config, pipeline_run):
     return images, skyregs_df
 
 
-def make_upload_sources(sources_df, pipeline_run):
+def make_upload_sources(sources_df, pipeline_run, add_mode=False):
     '''
     delete previous sources for given pipeline run and bulk upload
     new found sources as well as related sources
     '''
     # create sources in DB
     with transaction.atomic():
-        if Source.objects.filter(run=pipeline_run).exists():
+        if (add_mode is False and
+                Source.objects.filter(run=pipeline_run).exists()):
             logger.info('Removing objects from previous pipeline run')
             n_del, detail_del = (
                 Source.objects.filter(run=pipeline_run).delete()
@@ -175,6 +200,54 @@ def make_upload_sources(sources_df, pipeline_run):
     )
 
     sources_df['id'] = src_dj_ids
+
+    return sources_df
+
+
+def update_sources(sources_df, pipeline_run, batch_size=10_000):
+    Sources = Source.objects.filter(id__in=sources_df.index.values).only(
+        'new', 'wavg_ra', 'wavg_dec', 'wavg_uncertainty_ew',
+        'wavg_uncertainty_ns', 'avg_flux_int', 'avg_flux_peak',
+        'max_flux_peak', 'min_flux_peak', 'max_flux_int', 'min_flux_int',
+        'min_flux_int_isl_ratio', 'min_flux_peak_isl_ratio', 'avg_compactness',
+        'min_snr', 'max_snr', 'v_int', 'v_peak', 'eta_int', 'eta_peak',
+        'new_high_sigma', 'n_neighbour_dist', 'vs_abs_significant_max_int',
+        'm_abs_significant_max_int', 'vs_abs_significant_max_peak',
+        'm_abs_significant_max_peak', 'n_meas', 'n_meas_sel', 'n_meas_forced',
+        'n_rel', 'n_sibl'
+    )
+    chunk = []
+    fields = [
+        'new', 'wavg_ra', 'wavg_dec', 'wavg_uncertainty_ew',
+        'wavg_uncertainty_ns', 'avg_flux_int', 'avg_flux_peak',
+        'max_flux_peak', 'min_flux_peak', 'max_flux_int', 'min_flux_int',
+        'min_flux_int_isl_ratio', 'min_flux_peak_isl_ratio', 'avg_compactness',
+        'min_snr', 'max_snr', 'v_int', 'v_peak', 'eta_int', 'eta_peak',
+        'new_high_sigma', 'n_neighbour_dist', 'vs_abs_significant_max_int',
+        'm_abs_significant_max_int', 'vs_abs_significant_max_peak',
+        'm_abs_significant_max_peak', 'n_meas', 'n_meas_sel', 'n_meas_forced',
+        'n_rel', 'n_sibl'
+    ]
+    # Use iterator to save memory
+    for i, src in enumerate(Sources.iterator(chunk_size=batch_size)):
+        src_series = sources_df.loc[src.id]
+        for fld in fields:
+            setattr(src, fld, src_series[fld])
+        chunk.append(src)
+        # Every 10000 events run bulk_update
+        if i != 0 and i % batch_size == 0 and chunk:
+            with transaction.atomic():
+                Source.objects.bulk_update(chunk, fields)
+                logger.info(f'Bulk updated #{batch_size} sources')
+            chunk = []
+    if chunk:
+        with transaction.atomic():
+            Source.objects.bulk_update(chunk, fields)
+            logger.info('Bulk updated #%i sources', len(chunk))
+
+    del chunk
+
+    sources_df['id'] = sources_df.index.values
 
     return sources_df
 
