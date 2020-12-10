@@ -208,3 +208,5 @@ Two example tests, currently working are run with the following:
 ```bash
 (pipeline_env)$ ./manage.py test pipeline.tests.test_webserver
 ```
+
+__NOTE__: if changes are made to the default config keys, these changes need to be propagated to the test config files.
