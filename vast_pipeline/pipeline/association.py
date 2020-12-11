@@ -1,7 +1,7 @@
 import logging
 import numpy as np
 import pandas as pd
-from typing import Tuple
+from typing import Tuple, Dict, List
 import dask.dataframe as dd
 from psutil import cpu_count
 
@@ -12,7 +12,8 @@ from astropy.coordinates import Angle
 from .utils import (
     prep_skysrc_df,
     add_new_one_to_many_relations,
-    add_new_many_to_one_relations
+    add_new_many_to_one_relations,
+    reconstruct_associtaion_dfs
 )
 from vast_pipeline.models import Association
 from vast_pipeline.utils.utils import StopWatch
@@ -63,7 +64,7 @@ def calc_de_ruiter(df):
 
 
 def one_to_many_basic(
-    skyc2_srcs: pd.DataFrame, sources_df: pd.DataFrame
+    skyc2_srcs: pd.DataFrame, sources_df: pd.DataFrame, new_src_buffer: int=0
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     '''
     Finds and processes the one-to-many associations in the basic
@@ -84,6 +85,9 @@ def one_to_many_basic(
     sources_df : pd.DataFrame
         The sources_df produced by each step of association holding the current
         'sources'.
+    new_src_buffer : int
+        A buffer value to add to new source ids when creating them. Mainly
+        useful for add mode with parallel association
 
     Returns
     -------
@@ -135,7 +139,7 @@ def one_to_many_basic(
     duplicated_skyc2['new_source_id'] = duplicated_skyc2['source']
 
     # Define the range of new source ids
-    start_new_src_id = sources_df['source'].values.max() + 1
+    start_new_src_id = sources_df['source'].values.max() + 1 + new_src_buffer
 
     new_source_ids = np.arange(
         start_new_src_id,
@@ -297,7 +301,8 @@ def one_to_many_basic(
 def one_to_many_advanced(
     temp_srcs: pd.DataFrame,
     sources_df: pd.DataFrame,
-    method: str
+    method: str,
+    new_src_buffer: int=0
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     '''
     Finds and processes the one-to-many associations in the advanced
@@ -321,6 +326,9 @@ def one_to_many_advanced(
     method : str
         Can be either 'advanced' or 'deruiter' to represent the advanced
         association method being used.
+    new_src_buffer : int
+        A buffer value to add to new source ids when creating them. Mainly
+        useful for add mode with parallel association
 
     Returns
     -------
@@ -413,7 +421,7 @@ def one_to_many_advanced(
     # +-----------------+
 
     # Define the range of new source ids
-    start_new_src_id = sources_df['source'].values.max() + 1
+    start_new_src_id = sources_df['source'].values.max() + 1 + new_src_buffer
 
     # Create an arange to use to change the ones that need to be changed.
     new_source_ids = np.arange(
@@ -766,7 +774,8 @@ def many_to_one_advanced(temp_srcs: pd.DataFrame) -> pd.DataFrame:
 
 
 def basic_association(
-        sources_df, skyc1_srcs, skyc1, skyc2_srcs, skyc2, limit
+        sources_df, skyc1_srcs, skyc1, skyc2_srcs, skyc2, limit,
+        new_src_buffer
     ):
     '''
     The loop for basic source association that uses the astropy
@@ -788,12 +797,13 @@ def basic_association(
     # this would mean that multiple sources in skyc2 have been matched
     # to the same base source we want to keep closest match and move
     # the other match(es) back to having a -1 src id
-    skyc2_srcs, sources_df = one_to_many_basic(skyc2_srcs, sources_df)
+    skyc2_srcs, sources_df = one_to_many_basic(
+        skyc2_srcs, sources_df, new_src_buffer)
 
     logger.info('Updating sources catalogue with new sources...')
     # update the src numbers for those sources in skyc2 with no match
     # using the max current src as the start and incrementing by one
-    start_elem = sources_df['source'].values.max() + 1
+    start_elem = sources_df['source'].values.max() + 1 + new_src_buffer
     nan_sel = (skyc2_srcs['source'] == -1).values
     skyc2_srcs.loc[nan_sel, 'source'] = (
         np.arange(
@@ -820,7 +830,7 @@ def basic_association(
 
 def advanced_association(
         method, sources_df, skyc1_srcs, skyc1,
-        skyc2_srcs, skyc2, dr_limit, bw_max
+        skyc2_srcs, skyc2, dr_limit, bw_max, new_src_buffer
     ):
     '''
     The loop for advanced source association that uses the astropy
@@ -873,7 +883,7 @@ def advanced_association(
     # Next one-to-many
     # Get the sources which are doubled
     temp_srcs, sources_df = one_to_many_advanced(
-        temp_srcs, sources_df, method
+        temp_srcs, sources_df, method, new_src_buffer
     )
 
     # Finally many-to-one associations, the opposite of above but we
@@ -903,7 +913,7 @@ def advanced_association(
     ].reset_index(drop=True)
     # update the src numbers for those sources in skyc2 with no match
     # using the max current src as the start and incrementing by one
-    start_elem = sources_df['source'].values.max() + 1
+    start_elem = sources_df['source'].values.max() + 1 + new_src_buffer
     new_sources['source'] = np.arange(
         start_elem,
         start_elem + new_sources.shape[0],
@@ -937,17 +947,22 @@ def advanced_association(
 
 
 def association(images_df, limit, dr_limit, bw_limit,
-    duplicate_limit, config):
+    duplicate_limit, config, add_mode, previous_parquets, done_images_df,
+    new_src_buffer=0):
     '''
     The main association function that does the common tasks between basic
     and advanced modes.
     '''
     timer = StopWatch()
 
+    if images_df.empty:
+        return
+
     if 'skyreg_group' in images_df.columns:
         skyreg_group = images_df['skyreg_group'].iloc[0]
         skyreg_tag = " (sky region group %s)" % skyreg_group
     else:
+        skyreg_group = -1
         skyreg_tag = ""
 
     method = config.ASSOCIATION_METHOD
@@ -955,34 +970,54 @@ def association(images_df, limit, dr_limit, bw_limit,
     logger.info('Starting association%s.', skyreg_tag)
     logger.info('Association mode selected: %s.', method)
 
-    # if isinstance(images, pd.DataFrame):
-    #     images = images['image'].to_list()
     unique_epochs = images_df.sort_values(by='epoch')['epoch'].unique()
 
-    first_images = (
-        images_df
-        .loc[images_df['epoch'] == unique_epochs[0], 'image_dj']
-        .to_list()
-    )
+    if add_mode:
+        # Here the skyc1_srcs and sources_df are recreated and the done images
+        # are filtered out.
+        image_mask = images_df['image_name'].isin(done_images_df['name'])
+        images_df_done = images_df.loc[image_mask].copy()
+        images_df = images_df.loc[~image_mask]
+        if images_df.empty:
+            logger.info(
+                'No new images found, stopping association%s.', skyreg_tag
+            )
+            return
+        logger.info(
+            f'Found {images_df.shape[0]} images to add to the run{skyreg_tag}.')
+        # re-get the unique epochs
+        unique_epochs = images_df.sort_values(by='epoch')['epoch'].unique()
+        sources_df, skyc1_srcs = reconstruct_associtaion_dfs(images_df_done,
+            previous_parquets)
+        start_epoch = 0
+    else:
+        # Do full set up for a new run.
+        first_images = (
+            images_df
+            .loc[images_df['epoch'] == unique_epochs[0], 'image_dj']
+            .to_list()
+        )
 
-    # initialise sky source dataframe
-    skyc1_srcs = prep_skysrc_df(
-        first_images,
-        config.FLUX_PERC_ERROR,
-        duplicate_limit,
-        ini_df=True
-    )
-    skyc1_srcs['epoch'] = unique_epochs[0]
-    # create base catalogue
+        # initialise sky source dataframe
+        skyc1_srcs = prep_skysrc_df(
+            first_images,
+            config.FLUX_PERC_ERROR,
+            duplicate_limit,
+            ini_df=True
+        )
+        skyc1_srcs['epoch'] = unique_epochs[0]
+        # create base catalogue
+        # initialise the sources dataframe using first image as base
+        sources_df = skyc1_srcs.copy()
+        start_epoch = 1
+
     skyc1 = SkyCoord(
         skyc1_srcs['ra'].values,
         skyc1_srcs['dec'].values,
         unit=(u.deg, u.deg)
     )
-    # initialise the sources dataframe using first image as base
-    sources_df = skyc1_srcs.copy()
 
-    for it, epoch in enumerate(unique_epochs[1:]):
+    for it, epoch in enumerate(unique_epochs[start_epoch:]):
         logger.info('Association iteration: #%i%s', it + 1, skyreg_tag)
         # load skyc2 source measurements and create SkyCoord
         images = (
@@ -998,6 +1033,7 @@ def association(images_df, limit, dr_limit, bw_limit,
             config.FLUX_PERC_ERROR,
             duplicate_limit
         )
+
         skyc2_srcs['epoch'] = epoch
         skyc2 = SkyCoord(
             ra=skyc2_srcs['ra'].values * u.degree,
@@ -1012,6 +1048,7 @@ def association(images_df, limit, dr_limit, bw_limit,
                 skyc2_srcs,
                 skyc2,
                 limit,
+                new_src_buffer
             )
 
         elif method in ['advanced', 'deruiter']:
@@ -1029,9 +1066,9 @@ def association(images_df, limit, dr_limit, bw_limit,
                 skyc2_srcs,
                 skyc2,
                 dr_limit,
-                bw_max
+                bw_max,
+                new_src_buffer
             )
-
         else:
             raise Exception('association method not implemented!')
 
@@ -1138,7 +1175,7 @@ def association(images_df, limit, dr_limit, bw_limit,
     # calculation and use ra_source and dec_source columns
     sources_df = (
         sources_df.drop(['ra', 'dec'], axis=1)
-        .rename(columns={'ra_source':'ra', 'dec_source':'dec'})
+        .rename(columns={'ra_source': 'ra', 'dec_source': 'dec'})
     )
 
     del skyc1_srcs, skyc2_srcs
@@ -1148,16 +1185,19 @@ def association(images_df, limit, dr_limit, bw_limit,
         timer.reset_init(),
         skyreg_tag
     )
+
     return sources_df
 
 
 def _correct_parallel_source_ids(
-    df: pd.DataFrame, correction: int
-) -> pd.DataFrame:
+    df: pd.DataFrame, correction: int) -> pd.DataFrame:
     """
     This function is to correct the source ids after the combination of
     the associaiton dataframes produced by parallel association - as source
     ids will be duplicated if left.
+
+    When add mode is being used the 'old' sources require the ID to remain
+    the same with only the new ones being changed.
 
     Parameters
     ----------
@@ -1166,6 +1206,10 @@ def _correct_parallel_source_ids(
         association step (sources_df).
     correction : int
         The value to add to the source ids.
+    add_mode : bool
+        Whether add mode is being used.
+    done_source_ids : List[int]
+        A list of the 'old' source ids that need to remain the same.
 
     Returns
     -------
@@ -1188,6 +1232,49 @@ def _correct_parallel_source_ids(
     return df
 
 
+def _correct_parallel_source_ids_add_mode(df, done_source_ids):
+    # When using add_mode the correction becomes easier with the buffer
+    # as there's a clear difference between old and new.
+    # old ones do not need to be corrected
+
+    # create a new column for the new id
+    df['new_source'] = df['source']
+    # get a mask of those that need to be corrected
+    to_correct_mask = ~(df['source'].isin(done_source_ids))
+    # how many unique new sources
+    to_correct_source_ids = df['source'][to_correct_mask].unique()
+    # form new ids by starting with the old ones + 1
+    start_elem = max(done_source_ids) + 1
+    # create the range
+    new_ids = list(
+        range(start_elem, start_elem + to_correct_source_ids.shape[0]))
+    # create a map of old source to new source
+    source_id_map = dict(zip(to_correct_source_ids, new_ids))
+    # get and apply the new ids to the new column
+    df.loc[to_correct_mask, 'new_source'] = (
+        df.loc[to_correct_mask]['new_source'].map(source_id_map)
+    )
+    # regenrate the map
+    source_id_map = dict(zip(df.source.values, df.new_source.values))
+    # get mask of non-nan relations
+    related_mask = ~(df['related'].isna())
+    # get the relations
+    new_relations = df.loc[related_mask, 'related'].explode()
+    # map the new values
+    new_relations = new_relations.map(source_id_map)
+    # group them back and form lists again
+    new_relations = new_relations.groupby(level=[0,1]).apply(
+        lambda x: x.values.tolist())
+    import ipdb
+    ipdb.set_trace()
+    # apply corrected relations to results
+    df.loc[df[related_mask].index.values, 'related'] = new_relations
+    # drop the old sources and replace
+    df = df.drop('source', axis=1).rename(columns={'new_source': 'source'})
+
+    return df
+
+
 def parallel_association(
     images_df: pd.DataFrame,
     limit: Angle,
@@ -1196,7 +1283,11 @@ def parallel_association(
     duplicate_limit: Angle,
     # TODO update config typing.
     config, # a 'module` typing.
-    n_skyregion_groups: int
+    n_skyregion_groups: int,
+    add_mode: bool,
+    previous_parquets: Dict[str, str],
+    done_images_df: pd.DataFrame,
+    done_source_ids: List[int]
 ) -> pd.DataFrame:
     """
     Launches association on different sky region groups in parallel using Dask.
@@ -1261,6 +1352,10 @@ def parallel_association(
         'interim_ns': 'f',
     }
 
+    # Add a buffer to any new source values when using add_mode to avoid
+    # getting duplicates in the result laater
+    new_src_buffer = max(done_source_ids) if add_mode else 0
+
     n_cpu = cpu_count() - 1
 
     # pass each skyreg_group through the normal association process.
@@ -1274,6 +1369,10 @@ def parallel_association(
             bw_limit=bw_limit,
             duplicate_limit=duplicate_limit,
             config=config,
+            add_mode=add_mode,
+            previous_parquets=previous_parquets,
+            done_images_df=done_images_df,
+            new_src_buffer=new_src_buffer,
             meta=meta
         ).compute(n_workers=n_cpu, scheduler='processes')
     )
@@ -1306,27 +1405,32 @@ def parallel_association(
     #              46978  54161
     #              46979  54164
 
+    if add_mode:
+        results = _correct_parallel_source_ids_add_mode(results,
+            done_source_ids)
+    else:
     # obtain the top level skyreg_group indexes.
-    indexes = results.index.levels[0].values
+        indexes = results.index.levels[0].values
 
-    # The first index acts as the base, so the others are looped over and
-    # corrected.
-    for i in indexes[1:]:
-        # Get the maximum source ID from the previous group.
-        max_id = results.loc[i - 1].source.max()
-        # Run through the correction function, only the 'source' and 'related'
-        # columns are passed and returned (corrected).
-        corr_df = _correct_parallel_source_ids(
-            results.loc[i][['source', 'related']],
-            max_id
-        )
-        # replace the values in the results with the corrected source and
-        # related values
-        results.loc[
-            (i, slice(None)), ['source', 'related']
-        ] = corr_df.values
+        # The first index acts as the base, so the others are looped over and
+        # corrected.
+        for i in indexes[1:]:
+            # Get the maximum source ID from the previous group.
+            max_id = results.loc[i - 1].source.max()
+            # Run through the correction function, only the 'source' and
+            # 'related'
+            # columns are passed and returned (corrected).
+            corr_df = _correct_parallel_source_ids(
+                results.loc[i][['source', 'related']],
+                max_id
+            )
+            # replace the values in the results with the corrected source and
+            # related values
+            results.loc[
+                (i, slice(None)), ['source', 'related']
+            ] = corr_df.values
 
-        del corr_df
+            del corr_df
 
     # reset the indeex of the final corrected and collapsed result
     results = results.reset_index(drop=True)

@@ -5,12 +5,13 @@ import pandas as pd
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from typing import List, Dict
 
 from vast_pipeline.models import Run
 from vast_pipeline.utils.utils import StopWatch, optimize_floats, optimize_ints
 from vast_pipeline.pipeline.loading import (
     make_upload_associations, make_upload_sources, make_upload_related_sources,
-    make_upload_measurement_pairs,
+    make_upload_measurement_pairs, update_sources
 )
 from vast_pipeline.pipeline.utils import (
     parallel_groupby, calculate_measurement_pair_metrics
@@ -70,6 +71,9 @@ def final_operations(
     p_run: Run,
     new_sources_df: pd.DataFrame,
     source_aggregate_pair_metrics_min_abs_vs: float,
+    add_mode: bool,
+    done_source_ids: List[int],
+    previous_parquets: Dict[str, str]
 ) -> int:
     """
     Performs the final operations of the pipeline:
@@ -92,6 +96,11 @@ def final_operations(
     source_aggregate_pair_metrics_min_abs_vs : float
         Only measurement pairs where the Vs metric exceeds this value are selected for
         the aggregate pair metrics that are stored in `Source` objects.
+    add_mode : float
+        Whether the pipeline is running in add mode.
+    done_source_ids : List[int]
+        A list containing the source ids that have already been uploaded in the
+        previous run in add mode.
 
     Returns
     -------
@@ -164,7 +173,22 @@ def final_operations(
     logger.info("Measurement pair aggregate metrics time: %.2f seconds", timer.reset())
 
     # upload sources to DB, column 'id' with DB id is contained in return
-    srcs_df = make_upload_sources(srcs_df, p_run)
+    if add_mode:
+        # if add mode is being used some sources need to updated where as some
+        # need to be newly uploaded.
+        # upload new ones first (new id's are fetched)
+        src_done_mask = srcs_df.index.isin(done_source_ids)
+        srcs_df_upload = srcs_df.loc[~src_done_mask].copy()
+        srcs_df_upload = make_upload_sources(srcs_df_upload, p_run, add_mode)
+        # And now update
+        srcs_df_update = srcs_df.loc[src_done_mask].copy()
+        logger.info(
+            f"Updating {srcs_df_update.shape[0]} sources with new metrics.")
+        srcs_df = update_sources(srcs_df_update, p_run, batch_size=1000)
+        # Add back together
+        srcs_df = srcs_df.append(srcs_df_upload, ignore_index=True)
+    else:
+        srcs_df = make_upload_sources(srcs_df, p_run, add_mode)
 
     # gather the related df, upload to db and save to parquet file
     # the df will look like
@@ -186,13 +210,28 @@ def final_operations(
     related_df["to_source_id"] = related_df["to_source_id"].map(srcs_df["id"].to_dict())
     # drop relationships with the same source
     related_df = related_df[related_df["from_source_id"] != related_df["to_source_id"]]
+
     # write symmetrical relations to parquet
     related_df.to_parquet(
         os.path.join(p_run.path, 'relations.parquet'),
         index=False
     )
 
-    # upload the relations to DB.
+    # upload the relations to DB
+    # check for add_mode first
+    if add_mode:
+        # Load old relations so the already uploaded ones can be removed
+        old_relations = (
+            pd.read_parquet(previous_parquets['relations'])
+        )
+        # import ipdb
+        # ipdb.set_trace()
+        related_df = (
+            related_df.append(old_relations, ignore_index=True)
+            .drop_duplicates(keep=False)
+        )
+        logger.debug(f'Add mode: #{related_df.shape[0]} relations to upload.')
+
     make_upload_related_sources(related_df)
 
     del related_df
@@ -210,8 +249,24 @@ def final_operations(
         .merge(srcs_df.rename(columns={'id': 'source_id'}), on='source')
     )
 
+    if add_mode:
+        # Load old associations so the already uploaded ones can be removed
+        old_assoications = (
+            pd.read_parquet(previous_parquets['associations'])
+            .rename(columns={'meas_id': 'id'})
+        )
+        sources_df_upload = sources_df.append(
+            old_assoications, ignore_index=True)
+        sources_df_upload = sources_df_upload.drop_duplicates(
+            ['source_id', 'id', 'd2d', 'dr'], keep=False
+        )
+        logger.debug(
+            f'Add mode: #{sources_df_upload.shape[0]} associations to upload.')
+    else:
+        sources_df_upload = sources_df
+
     # upload associations into DB
-    make_upload_associations(sources_df)
+    make_upload_associations(sources_df_upload)
 
     # write associations to parquet file
     sources_df.rename(columns={'id': 'meas_id'})[
@@ -222,8 +277,33 @@ def final_operations(
     measurement_pairs_df = measurement_pairs_df.join(
         srcs_df.id.rename("source_id"), on="source"
     )
+
+    if add_mode:
+        # Load old associations so the already uploaded ones can be removed
+        old_measurement_pairs = (
+            pd.read_parquet(previous_parquets['measurement_pairs'])
+        ).rename(columns={'meas_id_a': 'id_a', 'meas_id_b': 'id_b'})
+
+        measurement_pairs_df_upload = measurement_pairs_df.append(
+            old_measurement_pairs, ignore_index=True)
+
+        measurement_pairs_df_upload = (
+            measurement_pairs_df_upload.drop_duplicates(
+                ['id_a', 'id_b', 'source_id'], keep=False)
+        )
+        logger.debug(
+            f'Add mode: #{measurement_pairs_df_upload.shape[0]}'
+            ' measurement pairs to upload.'
+        )
+    else:
+        measurement_pairs_df_upload = measurement_pairs_df
     # create the measurement pair objects and upload to DB
-    measurement_pairs_df = make_upload_measurement_pairs(measurement_pairs_df)
+    measurement_pairs_df = make_upload_measurement_pairs(
+        measurement_pairs_df_upload)
+
+    if add_mode:
+        measurement_pairs_df = old_measurement_pairs.append(
+            measurement_pairs_df)
 
     # optimize measurement pair DataFrame and save to parquet file
     measurement_pairs_df = optimize_ints(
