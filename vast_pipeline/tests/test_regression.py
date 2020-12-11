@@ -6,7 +6,7 @@ import unittest
 from astropy.coordinates import SkyCoord, match_coordinates_sky
 
 from django.conf import settings as s
-from django.test import SimpleTestCase, TestCase, override_settings
+from django.test import TestCase, override_settings
 from django.core.management import call_command
 
 from vast_pipeline.pipeline.main import Pipeline
