@@ -1336,20 +1336,13 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
         11128   0   6216  23534
     """
     measurement_combinations = (
-        dd.from_pandas(df.sort_values(
-            ["source", "datetime"]
-        ).reset_index(drop=True), n_cpu)
+        dd.from_pandas(df, n_cpu)
         .groupby("source")["id"]
         .apply(
             lambda x: pd.DataFrame(list(combinations(x, 2))
         ), meta={0: "i", 1: "i"},)
         .compute(num_workers=n_cpu, scheduler="processes")
     )
-
-    mask = measurement_combinations[0] > measurement_combinations[1]
-    indicies = measurement_combinations.index[mask]
-    for ind in indicies:
-        measurement_combinations.loc[ind,0], measurement_combinations.loc[ind,1] = measurement_combinations.loc[ind,1], measurement_combinations.loc[ind,0]
 
     """Drop the RangeIndex from the MultiIndex as it isn't required and rename the columns.
     Example resultant DataFrame:
@@ -1370,6 +1363,37 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
     measurement_combinations = measurement_combinations.reset_index(
         level=1, drop=True
     ).rename(columns={0: "id_a", 1: "id_b"}).astype(int).reset_index()
+
+    # Dask has a tendency to swap which order the measurement pairs are
+    # defined in, even if the dataframe is pre-sorted. We want the pairs to be
+    # in date order (a < b) so the code below corrects any that are not.
+    measurement_combinations = measurement_combinations.merge(
+        df[['id', 'datetime']], left_on='id_a', right_on='id'
+    )
+
+    measurement_combinations = measurement_combinations.merge(
+        df[['id', 'datetime']], left_on='id_b', right_on='id',
+        suffixes=('_x', '_y')
+    )
+
+    to_correct_mask = (
+        measurement_combinations['datetime_x']
+        > measurement_combinations['datetime_y']
+    )
+
+    if np.any(to_correct_mask):
+        logger.debug('Correcting measurement pairs order')
+        (
+            measurement_combinations.loc[to_correct_mask, 'id_a'],
+            measurement_combinations.loc[to_correct_mask, 'id_b']
+        ) = np.array([
+            measurement_combinations.loc[to_correct_mask, 'id_b'].values,
+            measurement_combinations.loc[to_correct_mask, 'id_a'].values
+        ])
+
+    measurement_combinations = measurement_combinations.drop(
+        ['datetime_x', 'datetime_y', 'id_x', 'id_y'], axis=1
+    )
 
     # add the measurement fluxes and errors
     association_fluxes = df.set_index(["source", "id"])[
