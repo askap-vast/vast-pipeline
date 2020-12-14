@@ -287,7 +287,7 @@ def make_upload_measurement_pairs(measurement_pairs_df):
     return measurement_pairs_df
 
 
-def SQL_update(df, model, index=None, columns=None, chunk_size=100000):
+def SQL_update(df, model, index=None, columns=None, batch_size=10_000):
     '''
     Update database using SQL code. This function opens one connection to the
     database, and closes it after the update is done. 
@@ -306,7 +306,7 @@ def SQL_update(df, model, index=None, columns=None, chunk_size=100000):
     columns : List[str] or None
         The column headers of the columns to be updated. If None, updates all 
         columns except the index column.
-    chunk_size : int
+    batch_size : int
         The df rows are broken into chunks, each chunk is executed in a 
         separate SQL command, chunk determines the maximum size of the chunk.
 
@@ -314,7 +314,7 @@ def SQL_update(df, model, index=None, columns=None, chunk_size=100000):
     -------
     None
     '''
-    chunks = np.ceil(len(df)/chunk_size)
+    chunks = np.ceil(len(df)/batch_size)
     dfs = np.array_split(df, chunks)
     with connection.cursor() as cursor:
         for df_chunk in dfs:
