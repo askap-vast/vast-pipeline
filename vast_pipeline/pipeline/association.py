@@ -775,7 +775,7 @@ def many_to_one_advanced(temp_srcs: pd.DataFrame) -> pd.DataFrame:
 
 def basic_association(
         sources_df, skyc1_srcs, skyc1, skyc2_srcs, skyc2, limit,
-        new_src_buffer
+        new_src_buffer=0
     ):
     '''
     The loop for basic source association that uses the astropy
@@ -830,7 +830,7 @@ def basic_association(
 
 def advanced_association(
         method, sources_df, skyc1_srcs, skyc1,
-        skyc2_srcs, skyc2, dr_limit, bw_max, new_src_buffer
+        skyc2_srcs, skyc2, dr_limit, bw_max, new_src_buffer=0
     ):
     '''
     The loop for advanced source association that uses the astropy

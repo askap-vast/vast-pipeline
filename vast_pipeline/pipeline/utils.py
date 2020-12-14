@@ -1346,6 +1346,11 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
         .compute(num_workers=n_cpu, scheduler="processes")
     )
 
+    mask = measurement_combinations[0] > measurement_combinations[1]
+    indicies = measurement_combinations.index[mask]
+    for ind in indicies:
+        measurement_combinations.loc[ind,0], measurement_combinations.loc[ind,1] = measurement_combinations.loc[ind,1], measurement_combinations.loc[ind,0]
+
     """Drop the RangeIndex from the MultiIndex as it isn't required and rename the columns.
     Example resultant DataFrame:
                source   id_a   id_b

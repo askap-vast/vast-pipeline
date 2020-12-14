@@ -186,7 +186,8 @@ def final_operations(
             f"Updating {srcs_df_update.shape[0]} sources with new metrics.")
         srcs_df = update_sources(srcs_df_update, p_run, batch_size=1000)
         # Add back together
-        srcs_df = srcs_df.append(srcs_df_upload, ignore_index=True)
+        if not srcs_df_upload.empty:
+            srcs_df = srcs_df.append(srcs_df_upload)
     else:
         srcs_df = make_upload_sources(srcs_df, p_run, add_mode)
 
