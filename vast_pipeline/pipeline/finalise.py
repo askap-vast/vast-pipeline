@@ -184,7 +184,7 @@ def final_operations(
         srcs_df_update = srcs_df.loc[src_done_mask].copy()
         logger.info(
             f"Updating {srcs_df_update.shape[0]} sources with new metrics.")
-        srcs_df = update_sources(srcs_df_update, p_run, batch_size=1000)
+        srcs_df = update_sources(srcs_df_update, batch_size=1000)
         # Add back together
         if not srcs_df_upload.empty:
             srcs_df = srcs_df.append(srcs_df_upload)
