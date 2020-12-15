@@ -206,56 +206,6 @@ def make_upload_sources(sources_df, pipeline_run, add_mode=False):
     return sources_df
 
 
-def update_sources2(sources_df, pipeline_run, batch_size=10_000):
-    Sources = Source.objects.filter(id__in=sources_df.index.values).only(
-        'new', 'wavg_ra', 'wavg_dec', 'wavg_uncertainty_ew',
-        'wavg_uncertainty_ns', 'avg_flux_int', 'avg_flux_peak',
-        'max_flux_peak', 'min_flux_peak', 'max_flux_int', 'min_flux_int',
-        'min_flux_int_isl_ratio', 'min_flux_peak_isl_ratio', 'avg_compactness',
-        'min_snr', 'max_snr', 'v_int', 'v_peak', 'eta_int', 'eta_peak',
-        'new_high_sigma', 'n_neighbour_dist', 'vs_abs_significant_max_int',
-        'm_abs_significant_max_int', 'vs_abs_significant_max_peak',
-        'm_abs_significant_max_peak', 'n_meas', 'n_meas_sel', 'n_meas_forced',
-        'n_rel', 'n_sibl'
-    )
-    chunk = []
-    fields = [
-        'new', 'wavg_ra', 'wavg_dec', 'wavg_uncertainty_ew',
-        'wavg_uncertainty_ns', 'avg_flux_int', 'avg_flux_peak',
-        'max_flux_peak', 'min_flux_peak', 'max_flux_int', 'min_flux_int',
-        'min_flux_int_isl_ratio', 'min_flux_peak_isl_ratio', 'avg_compactness',
-        'min_snr', 'max_snr', 'v_int', 'v_peak', 'eta_int', 'eta_peak',
-        'new_high_sigma', 'n_neighbour_dist', 'vs_abs_significant_max_int',
-        'm_abs_significant_max_int', 'vs_abs_significant_max_peak',
-        'm_abs_significant_max_peak', 'n_meas', 'n_meas_sel', 'n_meas_forced',
-        'n_rel', 'n_sibl'
-    ]
-    # Use iterator to save memory
-    for i, src in enumerate(Sources.iterator(chunk_size=batch_size)):
-        #('bleh', src)
-        src_series = sources_df.loc[src.id]
-        #print('what', src_series)
-        for fld in fields:
-            setattr(src, fld, src_series[fld])
-        chunk.append(src)
-        # Every 10000 events run bulk_update
-        if i != 0 and i % batch_size == 0 and chunk:
-            with transaction.atomic():
-                Source.objects.bulk_update(chunk, fields)
-                logger.info(f'Bulk updated #{batch_size} sources')
-            chunk = []
-    if chunk:
-        with transaction.atomic():
-            Source.objects.bulk_update(chunk, fields)
-            logger.info('Bulk updated #%i sources', len(chunk))
-
-    del chunk
-
-    sources_df['id'] = sources_df.index.values
-
-    return sources_df
-
-
 def make_upload_related_sources(related_df):
     logger.info('Populate "related" field of sources...')
     bulk_upload_model(RelatedSource, related_models_generator(related_df))
@@ -289,7 +239,7 @@ def make_upload_measurement_pairs(measurement_pairs_df):
     return measurement_pairs_df
 
 
-def update_sources(sources_df, pipeline_run, batch_size=10_000):
+def update_sources(sources_df, batch_size=10_000):
     '''
     Update database using SQL code. This function opens one connection to the
     database, and closes it after the update is done. 
