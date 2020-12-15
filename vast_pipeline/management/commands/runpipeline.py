@@ -115,19 +115,25 @@ def run_pipe(
     pipeline.previous_parquets = {}
 
     if flag_exist:
-        p_run_status = p_run.status
-
         # Check if the status is already running or queued. Exit if this is the
         # case.
-        if p_run_status in ['QUE', 'RUN']:
+        if p_run.status in ['QUE', 'RUN']:
             logger.error(
                 "The pipeline run requested to process already has a running"
                 "status or is queued to run! Performing no actions. Exiting.")
             return True
 
+        # Check for an error status and whether any previous config file
+        # exists - if it doesn't exist it means the run has failed during
+        # the first run. In this case we want to clear anything that has gone
+        # one before so to do that `complete-rerun` mode is activated.
+        if p_run.status == 'ERR' and not os.path.isfile(
+            os.path.join(p_run.path, 'config_prev.py')):
+            complete_rerun = True
+
         # Check if the run has only been initialised, if so we don't want to do
         # any previous run checks or cleaning.
-        if p_run_status != 'INI':
+        if p_run.status != 'INI':
             parquets = (
                 glob.glob(os.path.join(p_run.path, "*.parquet"))
                 # TODO Remove arrow when vaex support is dropped.
@@ -135,7 +141,7 @@ def run_pipe(
             )
 
             if complete_rerun:
-                if p_run_status == 'END':
+                if p_run.status == 'END':
                     backup_parquets(p_run.path)
                 logger.info('Cleaning up pipeline run before re-process data')
                 p_run.image_set.clear()
@@ -169,7 +175,7 @@ def run_pipe(
                     os.remove(os.path.join(p_run.path, 'config_temp.py'))
                     return True
 
-                if p_run_status == 'END':
+                if p_run.status == 'END':
                     backup_parquets(p_run.path)
 
                 pipeline.add_mode = True

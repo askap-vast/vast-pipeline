@@ -1558,16 +1558,18 @@ def reconstruct_associtaion_dfs(images_df_done, previous_parquet_paths):
     prev_relations = pd.read_parquet(previous_parquet_paths['relations'])
 
     # Form relation lists to merge in.
-    prev_relations = (
+    prev_relations = pd.DataFrame(
         prev_relations
         .groupby('from_source_id')['to_source_id']
         .apply(lambda x: x.values.tolist())
-        .reindex(sources_df['source'].values)
         .replace({np.nan: None})
-    )
+    ).rename(columns={'to_source_id': 'related'})
 
     # Create the related column.
-    sources_df['related'] = prev_relations.values
+    sources_df = sources_df.merge(
+        prev_relations, how='left', left_on='source',
+        right_index=True
+    )
 
     # Reorder so we don't mess up the dask metas.
     sources_df = sources_df[[
