@@ -366,7 +366,9 @@ def parallel_extraction(
     df_out = (
         pd.concat(intermediate_df, axis=0, sort=False)
         .rename(
-            columns={'wavg_ra':'ra', 'wavg_dec':'dec', 'image_name': 'image'}
+            columns={
+                'wavg_ra':'ra', 'wavg_dec':'dec', 'image_name': 'image'
+            }
         )
     )
 
@@ -565,13 +567,16 @@ def forced_extraction(
     # upload the measurements, a column 'id' is returned with the DB id
     extr_df = make_upload_measurements(extr_df)
 
-    extr_df = extr_df.rename(columns={'source_tmp_id':'source'})
+    extr_df = extr_df.rename(columns={'source_tmp_id': 'source'})
 
     # write forced measurements to specific parquet
     logger.info(
         'Saving forced measurements to specific parquet file...'
     )
     parallel_write_parquet(extr_df, p_run.path, add_mode)
+
+    # Required to rename this column for the image add mode.
+    extr_df = extr_df.rename(columns={'time': 'datetime'})
 
     # append new meas into main df and proceed with source groupby etc
     sources_df = sources_df.append(

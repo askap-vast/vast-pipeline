@@ -1466,15 +1466,19 @@ def reconstruct_associtaion_dfs(images_df_done, previous_parquet_paths):
 
     # Obtain the pipeline run path in order to fetch forced measurements.
     run_path = previous_parquet_paths['sources'].replace(
-        'source.parquet.backup', "")
+        'sources.parquet.backup', "")
 
     # Get the forced measurement paths.
-    img_fmeas_paths = [
-        "forced_measurements_{}.parquet".format(i.replace(".fits", "_fits"))
-        for i in images_df_done.image_name.values if os.path.isfile(
-            "forced_measurements_{}.parquet".format(i.replace(".fits", "_fits"))
+    img_fmeas_paths = []
+
+    for i in images_df_done.image_name.values:
+        forced_parquet = os.path.join(
+            run_path, "forced_measurements_{}.parquet".format(
+                i.replace(".", "_")
+            )
         )
-    ]
+        if os.path.isfile(forced_parquet):
+            img_fmeas_paths.append(forced_parquet)
 
     # Create union of paths.
     img_meas_paths += img_fmeas_paths
