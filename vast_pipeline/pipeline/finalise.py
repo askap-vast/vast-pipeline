@@ -225,8 +225,7 @@ def final_operations(
         old_relations = (
             pd.read_parquet(previous_parquets['relations'])
         )
-        # import ipdb
-        # ipdb.set_trace()
+
         related_df = (
             related_df.append(old_relations, ignore_index=True)
             .drop_duplicates(keep=False)

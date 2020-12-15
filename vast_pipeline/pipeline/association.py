@@ -948,7 +948,7 @@ def advanced_association(
 
 def association(images_df, limit, dr_limit, bw_limit,
     duplicate_limit, config, add_mode, previous_parquets, done_images_df,
-    new_src_buffer=0):
+    new_src_buffer=0, parallel=False):
     '''
     The main association function that does the common tasks between basic
     and advanced modes.
@@ -977,18 +977,28 @@ def association(images_df, limit, dr_limit, bw_limit,
         # are filtered out.
         image_mask = images_df['image_name'].isin(done_images_df['name'])
         images_df_done = images_df.loc[image_mask].copy()
+        sources_df, skyc1_srcs = reconstruct_associtaion_dfs(images_df_done,
+            previous_parquets)
         images_df = images_df.loc[~image_mask]
         if images_df.empty:
             logger.info(
                 'No new images found, stopping association%s.', skyreg_tag
             )
-            return
+            sources_df['interim_ew'] = (
+                sources_df['ra_source'].values * sources_df['weight_ew'].values
+            )
+            sources_df['interim_ns'] = (
+                sources_df['dec_source'].values * sources_df['weight_ns'].values
+            )
+            return (
+                sources_df
+                .drop(['ra', 'dec'], axis=1)
+                .rename(columns={'ra_source': 'ra', 'dec_source': 'dec'})
+            )
         logger.info(
             f'Found {images_df.shape[0]} images to add to the run{skyreg_tag}.')
         # re-get the unique epochs
         unique_epochs = images_df.sort_values(by='epoch')['epoch'].unique()
-        sources_df, skyc1_srcs = reconstruct_associtaion_dfs(images_df_done,
-            previous_parquets)
         start_epoch = 0
     else:
         # Do full set up for a new run.
@@ -1265,8 +1275,6 @@ def _correct_parallel_source_ids_add_mode(df, done_source_ids):
     # group them back and form lists again
     new_relations = new_relations.groupby(level=[0,1]).apply(
         lambda x: x.values.tolist())
-    import ipdb
-    ipdb.set_trace()
     # apply corrected relations to results
     df.loc[df[related_mask].index.values, 'related'] = new_relations
     # drop the old sources and replace
@@ -1373,8 +1381,9 @@ def parallel_association(
             previous_parquets=previous_parquets,
             done_images_df=done_images_df,
             new_src_buffer=new_src_buffer,
+            parallel=True,
             meta=meta
-        ).compute(n_workers=n_cpu, scheduler='processes')
+        ).compute(n_workers=n_cpu, scheduler='single-threaded')
     )
 
     # results are the normal dataframe of results with the columns:
