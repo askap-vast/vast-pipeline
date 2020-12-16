@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 def run_pipe(
     name, path_name=None, run_dj_obj=None, cmd=True, debug=False, user=None,
-    complete_rerun=False
+    complete_rerun=False, prev_ui_status='END'
 ):
     '''
     Main function to run the pipeline.
@@ -117,10 +117,10 @@ def run_pipe(
     if flag_exist:
         # Check if the status is already running or queued. Exit if this is the
         # case.
-        if p_run.status in ['QUE', 'RUN']:
+        if p_run.status == 'RUN':
             logger.error(
                 "The pipeline run requested to process already has a running"
-                "status or is queued to run! Performing no actions. Exiting.")
+                "status! Performing no actions. Exiting.")
             return True
 
         # Check for an error status and whether any previous config file
@@ -169,6 +169,8 @@ def run_pipe(
                         " a new or complete re-run should be performed"
                         " instead. Performing no actions. Exiting.")
                     os.remove(os.path.join(p_run.path, 'config_temp.py'))
+                    pipeline.set_status(p_run, 'END')
+
                     return True
 
                 if pipeline.epoch_based != p_run.epoch_based:
@@ -177,9 +179,12 @@ def run_pipe(
                         " previous run. A complete re-run is required if"
                         " changing to epoch based mode or vice versa.")
                     os.remove(os.path.join(p_run.path, 'config_temp.py'))
+                    pipeline.set_status(p_run, 'END')
                     return True
 
-                if p_run.status == 'END':
+                if cmd and p_run.status == 'END':
+                    backup_parquets(p_run.path)
+                elif not cmd and prev_ui_status == 'END':
                     backup_parquets(p_run.path)
 
                 pipeline.add_mode = True

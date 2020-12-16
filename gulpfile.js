@@ -188,6 +188,12 @@ function modules() {
     './node_modules/startbootstrap-sb-admin-2/css/*.css'
   ]).pipe(gulp.dest(paths.vendor + '/startbootstrap-sb-admin-2'));
 
+  // Bootstrap4 toggle
+  var bootstrap4toggle = gulp.src([
+    './node_modules/bootstrap4-toggle/js/*.js',
+    './node_modules/bootstrap4-toggle/css/*.css'
+  ]).pipe(gulp.dest(paths.vendor + '/bootstrap4-toggle'));
+
   // dataTables
   var dataTables = gulp.src([
     './node_modules/datatables.net/js/*.js',
