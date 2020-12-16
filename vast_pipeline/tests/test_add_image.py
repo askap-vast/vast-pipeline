@@ -103,6 +103,7 @@ class AddImageTest(TestCase):
         sources_all = pd.read_parquet(
             os.path.join(self.add_image_run, 'sources.parquet')
         )
+        
         # run with 2 images, then add 1 image
         self.run_base()
         sources_add = pd.read_parquet(
@@ -128,6 +129,7 @@ class AddImageTest(TestCase):
         relations_all = pd.read_parquet(
             os.path.join(self.add_image_run, 'relations.parquet')
         )
+
         # run with 2 images, then add 1 image
         self.run_base()
         relations_add = pd.read_parquet(
