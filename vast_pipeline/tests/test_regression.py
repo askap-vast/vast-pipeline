@@ -43,7 +43,9 @@ class RegressionTest(TestCase):
         '''
         Test the number of overall sources identified is correct. 
         '''
-        sources = pd.read_parquet(os.path.join(s.PIPELINE_WORKING_DIR, 'basic-regression', 'sources.parquet'))
+        sources = pd.read_parquet(
+            os.path.join(self.basic_assoc_run, 'sources.parquet')
+        )
         
         self.assertTrue(len(sources.index) == 17165)
 
@@ -55,9 +57,7 @@ class RegressionTest(TestCase):
         # get sources with highest number of relations
         relations = pd.read_parquet(
             os.path.join(
-                s.PIPELINE_WORKING_DIR, 
-                'basic-regression', 
-                'relations.parquet'
+                self.basic_assoc_run, 'relations.parquet'
             )
         )
         relations = (
@@ -70,9 +70,7 @@ class RegressionTest(TestCase):
         # get ra and dec of highest relations sources
         sources = pd.read_parquet(
             os.path.join(
-                s.PIPELINE_WORKING_DIR, 
-                'basic-regression', 
-                'sources.parquet'
+                self.basic_assoc_run, 'sources.parquet'
             )
         )
         sources = sources.loc[relations.index, ['wavg_ra', 'wavg_dec']]
@@ -126,9 +124,7 @@ class RegressionTest(TestCase):
 
         sources = pd.read_parquet(
             os.path.join(
-                s.PIPELINE_WORKING_DIR, 
-                'basic-regression', 
-                'sources.parquet'
+                self.basic_assoc_run, 'sources.parquet'
             )
         )
         sources.reset_index(inplace=True)
