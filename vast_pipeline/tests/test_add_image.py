@@ -60,25 +60,14 @@ class AddImageTest(TestCase):
         ass_backup = pd.read_parquet(
             os.path.join(self.add_image_run, 'associations.parquet')
         )
+
         # add image run
         self.run_add_image()
         ass = pd.read_parquet(
             os.path.join(self.add_image_run, 'associations.parquet')
         )
+
         self.assertTrue(len(ass) > len(ass_backup))
-
-    def test_unique_assoc(self):
-        '''
-        Test that meas_id in associations are unique.
-        '''
-        self.run_base()
-        self.run_add_image()
-        
-        ass = pd.read_parquet(
-            os.path.join(self.add_image_run, 'associations.parquet')
-        )
-
-        self.assertTrue(ass['meas_id'].is_unique)
 
     def test_update_source(self):
         '''
@@ -93,6 +82,7 @@ class AddImageTest(TestCase):
             n_meas_db = Source.objects.get(id=ind).n_meas
             n_meas_pd = source_backup.loc[ind, 'n_meas']
             self.assertTrue(n_meas_db == n_meas_pd)
+
         # check source database and file is the same after adding an image
         self.run_add_image()
         source = pd.read_parquet(
@@ -102,3 +92,66 @@ class AddImageTest(TestCase):
             n_meas_db = Source.objects.get(id=ind).n_meas
             n_meas_pd = source.loc[ind, 'n_meas']
             self.assertTrue(n_meas_db == n_meas_pd)
+
+    def test_sources(self):
+        '''
+        Test that the sources and total relations from one run with all images 
+        and another with added image returns the same results.
+        '''
+        # run with 3 images
+        self.run_add_image()
+        sources_all = pd.read_parquet(
+            os.path.join(self.add_image_run, 'sources.parquet')
+        )
+        # run with 2 images, then add 1 image
+        self.run_base()
+        sources_add = pd.read_parquet(
+            os.path.join(self.add_image_run, 'sources.parquet')
+        )
+
+        # compare sources
+        sources_all.sort_values(by=['ra', 'dec'], inplace=True)
+        sources_add.sort_values(by=['ra', 'dec'], inplace=True)
+        pd.testing.assert_frame_equal(
+            sources_all, 
+            sources_add, 
+            check_less_precise=4
+        )
+
+    def test_relations(self):
+        '''
+        Test that the number relations are the same from one run with all 
+        images and another with added image returns the same results.
+        '''
+        # run with 3 images
+        self.run_add_image()
+        relations_all = pd.read_parquet(
+            os.path.join(self.add_image_run, 'relations.parquet')
+        )
+        # run with 2 images, then add 1 image
+        self.run_base()
+        relations_add = pd.read_parquet(
+            os.path.join(self.add_image_run, 'relations.parquet')
+        )
+
+        # compare number of relations per source
+        relations_all = (
+            relations_all.pivot_table(index=['from_source_id'], aggfunc='size')
+            .sort_values(ascending=False)
+            .to_frame('relations')
+        )
+        relations_all = pd.read_parquet(
+            os.path.join(
+                self.add_image_run, 'relations.parquet'
+            )
+        )
+        relations_add = (
+            relations_add.pivot_table(index=['from_source_id'], aggfunc='size')
+            .sort_values(ascending=False)
+            .to_frame('relations')
+        )
+        pd.testing.assert_frame_equal(
+            relations_all, 
+            relations_add, 
+            check_less_precise=4
+        )
