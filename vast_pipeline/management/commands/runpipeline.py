@@ -126,7 +126,7 @@ def run_pipe(
         # Check for an error status and whether any previous config file
         # exists - if it doesn't exist it means the run has failed during
         # the first run. In this case we want to clear anything that has gone
-        # one before so to do that `complete-rerun` mode is activated.
+        # on before so to do that `complete-rerun` mode is activated.
         if p_run.status == 'ERR' and not os.path.isfile(
             os.path.join(p_run.path, 'config_prev.py')):
             complete_rerun = True
@@ -153,6 +153,10 @@ def run_pipe(
 
                 for parquet in parquets:
                     os.remove(parquet)
+
+                # remove previous config if it exists
+                if os.path.isfile(os.path.join(p_run.path, 'config_prev.py')):
+                    os.remove(os.path.join(p_run.path, 'config_prev.py'))
             else:
                 # Before parquets are started to be copied and backed up, a
                 # check is run to see if anything has actually changed in the

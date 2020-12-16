@@ -291,6 +291,7 @@ def final_operations(
             measurement_pairs_df_upload.drop_duplicates(
                 ['id_a', 'id_b', 'source_id'], keep=False)
         )
+
         logger.debug(
             f'Add mode: #{measurement_pairs_df_upload.shape[0]}'
             ' measurement pairs to upload.'

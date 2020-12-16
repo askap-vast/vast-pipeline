@@ -1383,7 +1383,7 @@ def parallel_association(
             new_src_buffer=new_src_buffer,
             parallel=True,
             meta=meta
-        ).compute(n_workers=n_cpu, scheduler='single-threaded')
+        ).compute(n_workers=n_cpu, scheduler='processes')
     )
 
     # results are the normal dataframe of results with the columns:
