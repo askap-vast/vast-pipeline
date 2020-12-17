@@ -818,15 +818,8 @@ def basic_association(
         skyc2_srcs, ignore_index=True
     ).reset_index(drop=True)
 
-    # update skyc1 and df for next association iteration first with the new
-    # sources
-    skyc1_srcs = (
-        skyc1_srcs.append(skyc2_srcs[nan_sel], ignore_index=True)
-        .reset_index(drop=True)
-    )
-
     # and update skyc1 with the sources that were created from the one
-    # to many relations
+    # to many relations and any new sources.
     skyc1_srcs = skyc1_srcs.append(
         skyc2_srcs.loc[
             ~skyc2_srcs.source.isin(skyc1_srcs.source)
