@@ -298,6 +298,7 @@ def final_operations(
         )
     else:
         measurement_pairs_df_upload = measurement_pairs_df
+
     # create the measurement pair objects and upload to DB
     measurement_pairs_df = make_upload_measurement_pairs(
         measurement_pairs_df_upload)
