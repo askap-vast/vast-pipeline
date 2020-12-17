@@ -1028,6 +1028,8 @@ def association(images_df, limit, dr_limit, bw_limit,
     )
 
     for it, epoch in enumerate(unique_epochs[start_epoch:]):
+        import ipdb
+        ipdb.set_trace()
         logger.info('Association iteration: #%i%s', it + 1, skyreg_tag)
         # load skyc2 source measurements and create SkyCoord
         images = (

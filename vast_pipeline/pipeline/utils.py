@@ -1538,7 +1538,11 @@ def reconstruct_associtaion_dfs(images_df_done, previous_parquet_paths):
         prev_associations.merge(
             measurements, left_on='meas_id', right_index=True)
         .rename(columns={
-            'source_id': 'source', 'time': 'datetime', 'meas_id': 'id'
+            'source_id': 'source', 'time': 'datetime', 'meas_id': 'id',
+            'ra': 'ra_source', 'dec': 'dec_source',
+            'uncertainty_ew': 'uncertainty_ew_source',
+            'uncertainty_ns': 'uncertainty_ns_source',
+
         })
     )
 
@@ -1546,16 +1550,17 @@ def reconstruct_associtaion_dfs(images_df_done, previous_parquet_paths):
     prev_sources = pd.read_parquet(
         previous_parquet_paths['sources'], columns=[
             'wavg_ra', 'wavg_dec', 'wavg_uncertainty_ew', 'wavg_uncertainty_ns']
-    ).rename(columns={
-        'wavg_uncertainty_ew': 'uncertainty_ew_source',
-        'wavg_uncertainty_ns': 'uncertainty_ns_source'
-    })
+    )
 
     # Merge the wavg ra and dec to the sources_df
     sources_df = (
         sources_df.merge(
             prev_sources, left_on='source', right_index=True)
-        .rename(columns={'wavg_ra': 'ra_source', 'wavg_dec': 'dec_source'})
+        .rename(columns={
+            'wavg_ra': 'ra', 'wavg_dec': 'dec',
+            'wavg_uncertainty_ew': 'uncertainty_ew',
+            'wavg_uncertainty_ns': 'uncertainty_ns',
+        })
     )
 
     # Load the previous relations
@@ -1587,12 +1592,6 @@ def reconstruct_associtaion_dfs(images_df_done, previous_parquet_paths):
 
     # Create the unique skyc1_srcs dataframe.
     skyc1_srcs = sources_df.sort_values(by='id').drop_duplicates('source')
-
-    # Update the ra and dec to be the source averages.
-    skyc1_srcs['ra'] = skyc1_srcs['ra_source']
-    skyc1_srcs['dec'] = skyc1_srcs['dec_source']
-    skyc1_srcs['uncertainty_ew'] = skyc1_srcs['uncertainty_ew_source']
-    skyc1_srcs['uncertainty_ns'] = skyc1_srcs['uncertainty_ns_source']
 
     # Reorder so we don't mess up the dask metas.
     skyc1_srcs = skyc1_srcs[[
