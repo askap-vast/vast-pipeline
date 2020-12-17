@@ -823,8 +823,8 @@ def basic_association(
     skyc1_srcs = skyc1_srcs.append(
         skyc2_srcs.loc[
             ~skyc2_srcs.source.isin(skyc1_srcs.source)
-        ]
-    )
+        ], ignore_index=True
+    ).reset_index(drop=True)
 
     return sources_df, skyc1_srcs
 
