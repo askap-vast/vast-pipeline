@@ -818,11 +818,19 @@ def basic_association(
         skyc2_srcs, ignore_index=True
     ).reset_index(drop=True)
 
-    # update skyc1 and df for next association iteration
-    # calculate average angles for skyc1
+    # update skyc1 and df for next association iteration first with the new
+    # sources
     skyc1_srcs = (
         skyc1_srcs.append(skyc2_srcs[nan_sel], ignore_index=True)
         .reset_index(drop=True)
+    )
+
+    # and update skyc1 with the sources that were created from the one
+    # to many relations
+    skyc1_srcs = skyc1_srcs.append(
+        skyc2_srcs.loc[
+            ~skyc2_srcs.source.isin(skyc1_srcs.source)
+        ]
     )
 
     return sources_df, skyc1_srcs
@@ -1028,8 +1036,6 @@ def association(images_df, limit, dr_limit, bw_limit,
     )
 
     for it, epoch in enumerate(unique_epochs[start_epoch:]):
-        import ipdb
-        ipdb.set_trace()
         logger.info('Association iteration: #%i%s', it + 1, skyreg_tag)
         # load skyc2 source measurements and create SkyCoord
         images = (
