@@ -7,7 +7,9 @@ import os
 # path of the pipeline run
 PIPE_RUN_PATH = os.path.dirname(os.path.realpath(__file__))
 data_path = './vast_pipeline/tests/regression-data'
-epochs = ['01', '03x']
+epochs = ['01', '01', '02', '05x']
+fields = ['+00']
+fields.extend(['-06' for _ in range(3)])
 
 # Images settings
 # NOTE: all the paths !!!MUST!!! match with each other, e.g.
@@ -17,10 +19,10 @@ IMAGE_FILES = [
     # insert images file path(s) here
     os.path.join(
         data_path, 
-        'EPOCH' + epoch,
+        'EPOCH' + epoch, 
         image_path, 
-        'VAST_2118-06A.EPOCH' + epoch + '.I.fits'
-    ) for epoch in epochs
+        'VAST_2118' + field + 'A.EPOCH' + epoch + '.I.fits'
+    ) for epoch, field in zip(epochs, fields)
 ]
 
 # Selavy catalogue files
@@ -31,8 +33,8 @@ SELAVY_FILES = [
         data_path, 
         'EPOCH' + epoch, 
         selavy_path, 
-        'VAST_2118-06A.EPOCH' + epoch + '.I.selavy.components.txt'
-    ) for epoch in epochs
+        'VAST_2118' + field + 'A.EPOCH' + epoch + '.I.selavy.components.txt'
+    ) for epoch, field in zip(epochs, fields)
 ]
 
 # Noise or RMS files
@@ -43,8 +45,8 @@ NOISE_FILES = [
         data_path, 
         'EPOCH' + epoch, 
         maps_path, 
-        'VAST_2118-06A.EPOCH' + epoch + '.I_rms.fits'
-    ) for epoch in epochs
+        'VAST_2118' + field + 'A.EPOCH' + epoch + '.I_bkg.fits'
+    ) for epoch, field in zip(epochs, fields)
 ]
 
 # background map files
@@ -54,8 +56,8 @@ BACKGROUND_FILES = [
         data_path, 
         'EPOCH' + epoch, 
         maps_path, 
-        'VAST_2118-06A.EPOCH' + epoch + '.I_bkg.fits'
-    ) for epoch in epochs
+        'VAST_2118' + field + 'A.EPOCH' + epoch + '.I_bkg.fits'
+    ) for epoch, field in zip(epochs, fields)
 ]
 
 ###

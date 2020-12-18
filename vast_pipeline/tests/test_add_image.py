@@ -32,7 +32,7 @@ class AddImageTest(TestCase):
         '''
         Set up directory to test data.
         '''
-        self.all_image_run = os.path.join(s.PIPELINE_WORKING_DIR, 'all-image')
+        self.all_image_run = os.path.join(s.PIPELINE_WORKING_DIR, 'basic-regression')
         self.add_image_run = os.path.join(s.PIPELINE_WORKING_DIR, 'add-image')
         self.config_base = os.path.join(self.add_image_run, 'config_base.py')
         self.config_add = os.path.join(self.add_image_run, 'config_add.py')
@@ -113,8 +113,8 @@ class AddImageTest(TestCase):
         Test that the sources and total relations from one run with all images 
         and another with added image returns the same results.
         '''
-        sources_all = self.sources_all.sort_values(by=['wavg_ra', 'wavg_dec'])
-        sources_add = self.sources_add.sort_values(by=['wavg_ra', 'wavg_dec'])
+        sources_all = self.sources_all.sort_values(by=['wavg_ra', 'wavg_dec']).reset_index(drop=True)
+        sources_add = self.sources_add.sort_values(by=['wavg_ra', 'wavg_dec']).reset_index(drop=True)
 
         pd.testing.assert_frame_equal(
             sources_all, 
