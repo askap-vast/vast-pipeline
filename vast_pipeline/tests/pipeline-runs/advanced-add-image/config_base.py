@@ -7,9 +7,9 @@ import os
 # path of the pipeline run
 PIPE_RUN_PATH = os.path.dirname(os.path.realpath(__file__))
 data_path = './vast_pipeline/tests/regression-data'
-epochs = ['01', '01', '02', '03x', '05x', '06x']
+epochs = ['01', '01', '02', '05x']
 fields = ['+00']
-fields.extend(['-06' for _ in range(5)])
+fields.extend(['-06' for _ in range(3)])
 
 # Images settings
 # NOTE: all the paths !!!MUST!!! match with each other, e.g.
@@ -96,7 +96,7 @@ ASTROMETRIC_UNCERTAINTY_DEC = 1  # arcsec
 ###
 # OPTIONS THAT CONTROL THE SOURCE ASSOCIATION
 ###
-ASSOCIATION_METHOD = 'basic' # 'basic', 'advanced' or 'deruiter'
+ASSOCIATION_METHOD = 'advanced' # 'basic', 'advanced' or 'deruiter'
 
 # options that apply to basic and advanced association
 ASSOCIATION_RADIUS = 10.0 # arcsec, basic and advanced only

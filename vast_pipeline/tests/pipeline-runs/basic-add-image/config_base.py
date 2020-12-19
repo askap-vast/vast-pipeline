@@ -45,7 +45,7 @@ NOISE_FILES = [
         data_path, 
         'EPOCH' + epoch, 
         maps_path, 
-        'VAST_2118' + field + 'A.EPOCH' + epoch + '.I_bkg.fits'
+        'VAST_2118' + field + 'A.EPOCH' + epoch + '.I_rms.fits'
     ) for epoch, field in zip(epochs, fields)
 ]
 

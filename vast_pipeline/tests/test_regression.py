@@ -21,9 +21,9 @@ no_data = not os.path.exists(os.path.join(TEST_ROOT, 'regression-data'))
 @override_settings(
     PIPELINE_WORKING_DIR=os.path.join(TEST_ROOT, 'pipeline-runs'),
 )
-class RegressionTest(TestCase):
+class BasicRegressionTest(TestCase):
     '''
-    Test pipeline returns expected results.
+    Test pipeline under basic association method returns expected results.
     '''
 
     @classmethod
@@ -31,20 +31,57 @@ class RegressionTest(TestCase):
         '''
         Set up directory to test data.
         '''
-        self.basic_assoc_run = os.path.join(s.PIPELINE_WORKING_DIR, 'basic-regression')
+        self.basic_run = os.path.join(s.PIPELINE_WORKING_DIR, 'basic-regression')
 
     def setUp(self):
         '''
         Run the pipeline with the test data.
         '''
-        call_command('runpipeline', self.basic_assoc_run)
+        call_command('runpipeline', self.basic_run)
 
     def test_num_sources(self):
         '''
         Test the number of overall sources identified is correct. 
         '''
         sources = pd.read_parquet(
-            os.path.join(self.basic_assoc_run, 'sources.parquet')
+            os.path.join(self.basic_run, 'sources.parquet')
+        )
+        
+        self.assertTrue(len(sources.index) == 16886)
+
+
+no_data = not os.path.exists(os.path.join(TEST_ROOT, 'regression-data'))
+@unittest.skipIf(
+    no_data, 
+    'The regression test data is missing, skipping regression tests'
+)
+@override_settings(
+    PIPELINE_WORKING_DIR=os.path.join(TEST_ROOT, 'pipeline-runs'),
+)
+class AdvancedRegressionTest(TestCase):
+    '''
+    Test pipeline under advanced association method returns expected results.
+    '''
+
+    @classmethod
+    def setUpTestData(self):
+        '''
+        Set up directory to test data.
+        '''
+        self.advanced_run = os.path.join(s.PIPELINE_WORKING_DIR, 'advanced-regression')
+
+    def setUp(self):
+        '''
+        Run the pipeline with the test data.
+        '''
+        call_command('runpipeline', self.advanced_run)
+
+    def test_num_sources(self):
+        '''
+        Test the number of overall sources identified is correct. 
+        '''
+        sources = pd.read_parquet(
+            os.path.join(self.advanced_run, 'sources.parquet')
         )
         
         self.assertTrue(len(sources.index) == 17165)
@@ -57,7 +94,7 @@ class RegressionTest(TestCase):
         # get sources with highest number of relations
         relations = pd.read_parquet(
             os.path.join(
-                self.basic_assoc_run, 'relations.parquet'
+                self.advanced_run, 'relations.parquet'
             )
         )
         relations = (
@@ -70,7 +107,7 @@ class RegressionTest(TestCase):
         # get ra and dec of highest relations sources
         sources = pd.read_parquet(
             os.path.join(
-                self.basic_assoc_run, 'sources.parquet'
+                self.advanced_run, 'sources.parquet'
             )
         )
         sources = sources.loc[relations.index, ['wavg_ra', 'wavg_dec']]
@@ -124,7 +161,7 @@ class RegressionTest(TestCase):
 
         sources = pd.read_parquet(
             os.path.join(
-                self.basic_assoc_run, 'sources.parquet'
+                self.advanced_run, 'sources.parquet'
             )
         )
         sources.reset_index(inplace=True)
