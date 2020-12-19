@@ -7,7 +7,7 @@ import os
 # path of the pipeline run
 PIPE_RUN_PATH = os.path.dirname(os.path.realpath(__file__))
 data_path = './vast_pipeline/tests/regression-data'
-epochs = ['01', '01', '02', '05x']
+epochs = ['01', '01', '02', '03x']
 fields = ['+00']
 fields.extend(['-06' for _ in range(3)])
 

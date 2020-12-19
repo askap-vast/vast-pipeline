@@ -47,7 +47,7 @@ class BasicRegressionTest(TestCase):
             os.path.join(self.basic_run, 'sources.parquet')
         )
         
-        self.assertTrue(len(sources.index) == 16886)
+        self.assertTrue(len(sources.index) == 16880)
 
 
 no_data = not os.path.exists(os.path.join(TEST_ROOT, 'regression-data'))
