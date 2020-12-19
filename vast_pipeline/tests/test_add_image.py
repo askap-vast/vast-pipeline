@@ -30,7 +30,7 @@ class BasicAddImageTest(TestCase):
     @classmethod
     def setUpTestData(self):
         '''
-        Set up directory to test data.
+        Set up directories to test data, run the pipeline, and read the files.
         '''
         self.all_image_run = os.path.join(s.PIPELINE_WORKING_DIR, 'basic-regression')
         self.add_image_run = os.path.join(s.PIPELINE_WORKING_DIR, 'basic-add-image')
@@ -38,10 +38,6 @@ class BasicAddImageTest(TestCase):
         self.config_add = os.path.join(self.add_image_run, 'config_add.py')
         self.config = os.path.join(self.add_image_run, 'config.py')
 
-    def setUp(self):
-        '''
-        Run the pipeline and read in files
-        '''
         # run with all images
         call_command('runpipeline', self.all_image_run)
         self.sources_all = pd.read_parquet(
@@ -158,7 +154,7 @@ class AdvancedAddImageTest(TestCase):
     @classmethod
     def setUpTestData(self):
         '''
-        Set up directory to test data.
+        Set up directories to test data, run the pipeline, and read files.
         '''
         self.all_image_run = os.path.join(s.PIPELINE_WORKING_DIR, 'advanced-regression')
         self.add_image_run = os.path.join(s.PIPELINE_WORKING_DIR, 'advanced-add-image')
@@ -166,10 +162,6 @@ class AdvancedAddImageTest(TestCase):
         self.config_add = os.path.join(self.add_image_run, 'config_add.py')
         self.config = os.path.join(self.add_image_run, 'config.py')
 
-    def setUp(self):
-        '''
-        Run the pipeline and read in files
-        '''
         # run with all images
         call_command('runpipeline', self.all_image_run)
         self.sources_all = pd.read_parquet(

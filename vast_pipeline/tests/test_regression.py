@@ -29,14 +29,9 @@ class BasicRegressionTest(TestCase):
     @classmethod
     def setUpTestData(self):
         '''
-        Set up directory to test data.
+        Set up directory to test data and run the pipeline.
         '''
         self.basic_run = os.path.join(s.PIPELINE_WORKING_DIR, 'basic-regression')
-
-    def setUp(self):
-        '''
-        Run the pipeline with the test data.
-        '''
         call_command('runpipeline', self.basic_run)
 
     def test_num_sources(self):
@@ -66,14 +61,9 @@ class AdvancedRegressionTest(TestCase):
     @classmethod
     def setUpTestData(self):
         '''
-        Set up directory to test data.
+        Set up directory to test data and run the pipeline.
         '''
         self.advanced_run = os.path.join(s.PIPELINE_WORKING_DIR, 'advanced-regression')
-
-    def setUp(self):
-        '''
-        Run the pipeline with the test data.
-        '''
         call_command('runpipeline', self.advanced_run)
 
     def test_num_sources(self):
