@@ -1,8 +1,6 @@
 name: test-suite
 
-on:
-  push:
-    branches: [ iss445-CICD ]
+on: [pull_request]
 
 env:
   db_password: 'postgres'
