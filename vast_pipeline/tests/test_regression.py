@@ -42,7 +42,7 @@ class BasicRegressionTest(TestCase):
             os.path.join(self.basic_run, 'sources.parquet')
         )
         
-        self.assertTrue(len(sources.index) == 16880)
+        self.assertTrue(len(sources.index) == 10557)
 
 
 no_data = not os.path.exists(os.path.join(TEST_ROOT, 'regression-data'))
@@ -74,12 +74,12 @@ class AdvancedRegressionTest(TestCase):
             os.path.join(self.advanced_run, 'sources.parquet')
         )
         
-        self.assertTrue(len(sources.index) == 17165)
+        self.assertTrue(len(sources.index) == 10620)
 
     def test_most_relations(self):
         '''
         Test that the highest relation source is the same, and in general the 
-        top 12 sources with the most relations are correct.
+        top sources with the most relations are correct.
         '''
         # get sources with highest number of relations
         relations = pd.read_parquet(
@@ -90,7 +90,7 @@ class AdvancedRegressionTest(TestCase):
         relations = (
             relations.pivot_table(index=['from_source_id'], aggfunc='size')
             .sort_values(ascending=False)
-            .iloc[:12]
+            .iloc[:10]
             .to_frame('relations')
         )
 
@@ -115,18 +115,16 @@ class AdvancedRegressionTest(TestCase):
 
         # this is the expected highest relation sources
         expected = pd.DataFrame(
-            [[320.503875, -2.682186, 50],
-             [320.503987, -2.681935, 49],
-             [320.503995, -2.681944, 49],
-             [320.504224, -2.681775, 48],
-             [320.504333, -2.681529, 48],
-             [320.504340, -2.681538, 48],
-             [320.504448, -2.681296, 47],
-             [320.503663, -2.682327, 45],
-             [320.503671, -2.682336, 45],
-             [320.503903, -2.682164, 45],
-             [320.504016, -2.681913, 45],
-             [320.504023, -2.681921, 45]], 
+            [[316.957784, -8.760198, 6],
+             [316.957857, -8.759544, 6],
+             [316.957890, -8.759474, 6],
+             [316.957962, -8.758825, 6],
+             [316.046641, -9.531143, 5],
+             [316.047051, -9.531722, 5],
+             [316.047060, -9.531706, 5],
+             [319.735914, -1.940421, 5],
+             [319.736540, -1.941091, 5],
+             [319.736700, -1.941196, 5]], 
              columns = ['wavg_ra', 'wavg_dec', 'relations']
         )
 
@@ -167,5 +165,5 @@ class AdvancedRegressionTest(TestCase):
         # check new and has correct new_high_sigma to 2 decimal places
         self.assertTrue(sources.loc[id_match, 'new'])
         self.assertTrue(
-            abs(sources.loc[id_match, 'new_high_sigma'] - 12.380) < 1e-2
+            abs(sources.loc[id_match, 'new_high_sigma'] - 12.857) < 1e-3
         )
