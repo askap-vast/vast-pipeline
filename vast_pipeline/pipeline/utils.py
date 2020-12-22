@@ -1549,10 +1549,14 @@ def reconstruct_associtaion_dfs(images_df_done, previous_parquet_paths):
     # Load up the previous unique sources.
     prev_sources = pd.read_parquet(
         previous_parquet_paths['sources'], columns=[
-            'wavg_ra', 'wavg_dec', 'wavg_uncertainty_ew', 'wavg_uncertainty_ns']
+            'wavg_ra', 'wavg_dec',
+            'wavg_uncertainty_ew', 'wavg_uncertainty_ns'
+        ]
     )
 
-    # Merge the wavg ra and dec to the sources_df
+    # Merge the wavg ra and dec to the sources_df - this is required to
+    # create the skyc1_srcs below (but MUST be converted back to the source
+    # ra and dec)
     sources_df = (
         sources_df.merge(
             prev_sources, left_on='source', right_index=True)
@@ -1606,5 +1610,10 @@ def reconstruct_associtaion_dfs(images_df_done, previous_parquet_paths):
     sources_df = sources_df.drop([
         'uncertainty_ew_source', 'uncertainty_ns_source'
     ], axis=1)
+
+    # Finally move the source ra and dec back to the sources_df ra and dec
+    # columns
+    sources_df['ra'] = sources_df['ra_source']
+    sources_df['dec'] = sources_df['dec_source']
 
     return sources_df, skyc1_srcs

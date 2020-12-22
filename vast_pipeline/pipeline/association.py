@@ -1171,7 +1171,7 @@ def association(images_df, limit, dr_limit, bw_limit,
             ], axis=1
         )
 
-        #generate new sky coord ready for next iteration
+        # generate new sky coord ready for next iteration
         skyc1 = SkyCoord(
             ra=skyc1_srcs['ra'].values,
             dec=skyc1_srcs['dec'].values,
