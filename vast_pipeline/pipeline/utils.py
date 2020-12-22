@@ -1606,14 +1606,16 @@ def reconstruct_associtaion_dfs(images_df_done, previous_parquet_paths):
         'ra_source', 'dec_source', 'd2d', 'dr', 'related', 'epoch'
     ]].reset_index(drop=True)
 
-    # Drop not needed columns for the sources_df.
-    sources_df = sources_df.drop([
-        'uncertainty_ew_source', 'uncertainty_ns_source'
-    ], axis=1)
-
     # Finally move the source ra and dec back to the sources_df ra and dec
     # columns
     sources_df['ra'] = sources_df['ra_source']
     sources_df['dec'] = sources_df['dec_source']
+    sources_df['uncertainty_ew'] = sources_df['uncertainty_ew_source']
+    sources_df['uncertainty_ns'] = sources_df['uncertainty_ns_source']
+
+    # Drop not needed columns for the sources_df.
+    sources_df = sources_df.drop([
+        'uncertainty_ew_source', 'uncertainty_ns_source'
+    ], axis=1)
 
     return sources_df, skyc1_srcs
