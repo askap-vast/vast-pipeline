@@ -344,7 +344,7 @@ def one_to_many_advanced(
     ]
     duplicated_skyc1 = temp_srcs.loc[
         temp_srcs['source_skyc1'].duplicated(keep=False), cols
-    ].copy(deep=True)
+    ].copy()
 
     # duplicated_skyc1
     # +-----+-------------------+------------+----------------+-------------+
@@ -846,8 +846,6 @@ def advanced_association(
     idx_skyc1, idx_skyc2, d2d, d3d = skyc2.search_around_sky(
         skyc1, bw_max
     )
-
-    # skyc2_srcs.loc[idx_skyc2[sel], 'd2d'] = d2d[sel].arcsec
 
     # Step 2: merge the candidates so the de ruiter can be calculated
     temp_skyc1_srcs = (
