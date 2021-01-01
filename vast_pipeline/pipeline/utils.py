@@ -453,7 +453,8 @@ def add_new_one_to_many_relations(
     # this is the not_original case where the original source id is appended.
     if source_ids.empty:
         if isinstance(row[related_col], list):
-            out = row[related_col].append(row[source_col])
+            out = row[related_col]
+            out.append(row[source_col])
         else:
             out = [row[source_col],]
 
@@ -488,9 +489,9 @@ def add_new_many_to_one_relations(row: pd.Series) -> List[int]:
         appended ids.
     """
     if isinstance(row['related_skyc1'], list):
-        out = row['related_skyc1'] + row['new_relations']
+        out = row['related_skyc1'].copy() + row['new_relations']
     else:
-        out = row['new_relations']
+        out = row['new_relations'].copy()
 
     return out
 
@@ -1578,10 +1579,17 @@ def reconstruct_associtaion_dfs(images_df_done, previous_parquet_paths):
         .replace({np.nan: None})
     ).rename(columns={'to_source_id': 'related'})
 
-    # Create the related column.
-    sources_df = sources_df.merge(
-        prev_relations, how='left', left_on='source',
-        right_index=True
+    # Append the relations to only the last instance of each source
+    # First get the ids of the sources
+    relation_ids = sources_df[
+        sources_df.source.isin(prev_relations.index.values)].drop_duplicates(
+            'source', keep='last'
+        ).index.values
+    # Make sure we attach the correct source id
+    source_ids = sources_df.loc[relation_ids].source.values
+    sources_df['related'] = np.nan
+    sources_df.loc[relation_ids, 'related'] = (
+        prev_relations.loc[source_ids].values
     )
 
     # Reorder so we don't mess up the dask metas.
@@ -1595,7 +1603,24 @@ def reconstruct_associtaion_dfs(images_df_done, previous_parquet_paths):
     ]]
 
     # Create the unique skyc1_srcs dataframe.
-    skyc1_srcs = sources_df.sort_values(by='id').drop_duplicates('source')
+    skyc1_srcs = (
+        sources_df.sort_values(by='id')
+        .drop('related', axis=1)
+        .drop_duplicates('source')
+    ).copy(deep=True)
+
+
+    # Get relations into the skyc1_srcs (as we only keep the first instance
+    # which does not have the relation information)
+    skyc1_srcs = skyc1_srcs.merge(
+        prev_relations, how='left', left_on='source', right_index=True)
+
+    # Need to break the pointer relationship between the related sources (
+    # deep=True copy does not truly copy mutable type objects)
+    relation_mask = skyc1_srcs.related.isna()
+    relation_vals = skyc1_srcs.loc[~relation_mask]['related'].to_list()
+    new_relation_vals = [x.copy() for x in relation_vals]
+    skyc1_srcs.loc[~relation_mask, 'related'] = new_relation_vals
 
     # Reorder so we don't mess up the dask metas.
     skyc1_srcs = skyc1_srcs[[
@@ -1616,6 +1641,6 @@ def reconstruct_associtaion_dfs(images_df_done, previous_parquet_paths):
     # Drop not needed columns for the sources_df.
     sources_df = sources_df.drop([
         'uncertainty_ew_source', 'uncertainty_ns_source'
-    ], axis=1)
+    ], axis=1).reset_index(drop=True)
 
     return sources_df, skyc1_srcs
