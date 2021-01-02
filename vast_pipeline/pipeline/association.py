@@ -344,7 +344,7 @@ def one_to_many_advanced(
     ]
     duplicated_skyc1 = temp_srcs.loc[
         temp_srcs['source_skyc1'].duplicated(keep=False), cols
-    ]
+    ].copy()
 
     # duplicated_skyc1
     # +-----+-------------------+------------+----------------+-------------+
@@ -618,6 +618,7 @@ def many_to_many_advanced(temp_srcs: pd.DataFrame, method: str) -> pd.DataFrame:
         temp_srcs['index_old_skyc2'].duplicated(keep=False) &
         temp_srcs['source_skyc1'].duplicated(keep=False)
     )].copy()
+
     if m_to_m.empty:
         logger.debug('No many-to-many assocations.')
         return temp_srcs
@@ -845,29 +846,31 @@ def advanced_association(
     idx_skyc1, idx_skyc2, d2d, d3d = skyc2.search_around_sky(
         skyc1, bw_max
     )
-    # Step 2: Apply the beamwidth limit
-    sel = d2d <= bw_max
 
-    skyc2_srcs.loc[idx_skyc2[sel], 'd2d'] = d2d[sel].arcsec
-
-    # Step 3: merge the candidates so the de ruiter can be calculated
+    # Step 2: merge the candidates so the de ruiter can be calculated
     temp_skyc1_srcs = (
-        skyc1_srcs.loc[idx_skyc1[sel]]
+        skyc1_srcs.loc[idx_skyc1]
         .reset_index()
         .rename(columns={'index': 'index_old'})
     )
     temp_skyc2_srcs = (
-        skyc2_srcs.loc[idx_skyc2[sel]]
+        skyc2_srcs.loc[idx_skyc2]
         .reset_index()
         .rename(columns={'index': 'index_old'})
     )
+
+    temp_skyc2_srcs['d2d'] = d2d.arcsec
     temp_srcs = temp_skyc1_srcs.merge(
         temp_skyc2_srcs,
         left_index=True,
         right_index=True,
         suffixes=('_skyc1', '_skyc2')
     )
+
     del temp_skyc1_srcs, temp_skyc2_srcs
+
+    # Step 3: Apply the beamwidth limit
+    temp_srcs = temp_srcs.loc[d2d <= bw_max].copy()
 
     # Step 4: Calculate and perform De Ruiter radius cut
     if method == 'deruiter':
@@ -1001,6 +1004,7 @@ def association(images_df, limit, dr_limit, bw_limit,
         # re-get the unique epochs
         unique_epochs = images_df.sort_values(by='epoch')['epoch'].unique()
         start_epoch = 0
+
     else:
         # Do full set up for a new run.
         first_images = (
@@ -1047,8 +1051,9 @@ def association(images_df, limit, dr_limit, bw_limit,
 
         skyc2_srcs['epoch'] = epoch
         skyc2 = SkyCoord(
-            ra=skyc2_srcs['ra'].values * u.degree,
-            dec=skyc2_srcs['dec'].values * u.degree
+            skyc2_srcs['ra'].values,
+            skyc2_srcs['dec'].values,
+            unit=(u.deg, u.deg)
         )
 
         if method == 'basic':
@@ -1173,10 +1178,24 @@ def association(images_df, limit, dr_limit, bw_limit,
 
         # generate new sky coord ready for next iteration
         skyc1 = SkyCoord(
-            ra=skyc1_srcs['ra'].values,
-            dec=skyc1_srcs['dec'].values,
+            skyc1_srcs['ra'].values,
+            skyc1_srcs['dec'].values,
             unit=(u.deg, u.deg)
         )
+
+        # and update relations in skyc1
+        skyc1_srcs = skyc1_srcs.drop('related', axis=1)
+        relations_unique = pd.DataFrame(
+            sources_df[~sources_df.related.isna()]
+            .explode('related')
+            .groupby('source')['related']
+            .apply(lambda x: x.unique().tolist())
+        )
+
+        skyc1_srcs = skyc1_srcs.merge(
+            relations_unique, how='left', left_on='source', right_index=True
+        )
+
         logger.info(
             'Association iteration #%i complete%s.', it + 1, skyreg_tag
         )
