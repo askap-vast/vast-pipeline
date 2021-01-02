@@ -213,7 +213,7 @@ to run the tests located in [`test_webserver.py`](./vast_pipeline/tests/test_web
 (pipeline_env)$ ./manage.py test vast_pipeline.tests.test_webserver
 ```
 
-Regression tests located in [`test_regression.py`](./vast_pipeline/tests/test_regression.py) requires the use of the VAST_2118-06A field test dataset which is not a part of the repository. This data is downloadable at https://cloudstor.aarnet.edu.au/plus/s/m2eRb27MIMNM7LM, use:
+Regression tests located in [`test_regression.py`](./vast_pipeline/tests/test_regression.py) requires the use of EPOCH03x, EPOCH02, and EPOCH05x of the VAST_2118-06A field test dataset which is not a part of the repository. This data is downloadable at https://cloudstor.aarnet.edu.au/plus/s/m2eRb27MIMNM7LM, use:
 ```bash
 wget https://cloudstor.aarnet.edu.au/plus/s/m2eRb27MIMNM7LM/download
 ```

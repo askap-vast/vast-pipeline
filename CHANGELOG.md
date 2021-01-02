@@ -8,13 +8,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added add image to existing run feature [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
 - Added basic regression tests [#425](https://github.com/askap-vast/vast-pipeline/pull/425)
 - Added image length validation for config [#425](https://github.com/askap-vast/vast-pipeline/pull/425)
 
 #### Changed
 
+- Changed tests to run on 3 images instead of 6 [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
+
 #### Fixed
 
+- Fixed tests running pipeline multiple times [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
 - Fixed config files in tests [#430](https://github.com/askap-vast/vast-pipeline/pull/430)
 - Fixed sources table on measurement detail page [#429](https://github.com/askap-vast/vast-pipeline/pull/429).
 - Fixed missing meta columns in parallel association [#427](https://github.com/askap-vast/vast-pipeline/pull/427).

@@ -83,10 +83,11 @@ class BasicAddImageTest(TestCase):
 
     def test_inc_assoc(self):
         '''
-        Test that the number of associations increased with added images.
+        Test that the number of associations increased or equal with added 
+        images.
         '''
 
-        self.assertTrue(len(self.ass_add) > len(self.ass_backup))
+        self.assertTrue(len(self.ass_add) >= len(self.ass_backup))
 
     def test_update_source(self):
         '''
@@ -207,10 +208,11 @@ class AdvancedAddImageTest(TestCase):
 
     def test_inc_assoc(self):
         '''
-        Test that the number of associations increased with added images.
+        Test that the number of associations increased or is equal with added
+        images.
         '''
 
-        self.assertTrue(len(self.ass_add) > len(self.ass_backup))
+        self.assertTrue(len(self.ass_add) >= len(self.ass_backup))
 
     def test_sources(self):
         '''
