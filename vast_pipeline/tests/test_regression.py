@@ -5,6 +5,8 @@ import unittest
 
 from astropy.coordinates import SkyCoord, match_coordinates_sky
 
+from vast_pipeline.models import Run, Source
+
 from django.conf import settings as s
 from django.test import TestCase, override_settings
 from django.core.management import call_command
@@ -74,7 +76,7 @@ class AdvancedRegressionTest(TestCase):
             os.path.join(self.advanced_run, 'sources.parquet')
         )
         
-        self.assertTrue(len(sources.index) == 10620)
+        self.assertTrue(len(sources.index) == 10590)
 
     def test_most_relations(self):
         '''
@@ -90,7 +92,7 @@ class AdvancedRegressionTest(TestCase):
         relations = (
             relations.pivot_table(index=['from_source_id'], aggfunc='size')
             .sort_values(ascending=False)
-            .iloc[:10]
+            .iloc[:2]
             .to_frame('relations')
         )
 
@@ -115,16 +117,8 @@ class AdvancedRegressionTest(TestCase):
 
         # this is the expected highest relation sources
         expected = pd.DataFrame(
-            [[316.957784, -8.760198, 6],
-             [316.957857, -8.759544, 6],
-             [316.957890, -8.759474, 6],
-             [316.957962, -8.758825, 6],
-             [316.046641, -9.531143, 5],
-             [316.047051, -9.531722, 5],
-             [316.047060, -9.531706, 5],
-             [319.735914, -1.940421, 5],
-             [319.736540, -1.941091, 5],
-             [319.736700, -1.941196, 5]], 
+            [[321.581024, -6.901976, 3],
+             [321.581885, -6.902789, 3]], 
              columns = ['wavg_ra', 'wavg_dec', 'relations']
         )
 
