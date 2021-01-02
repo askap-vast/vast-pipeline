@@ -32,8 +32,12 @@ class BasicAddImageTest(TestCase):
         '''
         Set up directories to test data, run the pipeline, and read the files.
         '''
-        self.all_image_run = os.path.join(s.PIPELINE_WORKING_DIR, 'basic-regression')
-        self.add_image_run = os.path.join(s.PIPELINE_WORKING_DIR, 'basic-add-image')
+        self.all_image_run = os.path.join(
+            s.PIPELINE_WORKING_DIR, 'basic-regression'
+        )
+        self.add_image_run = os.path.join(
+            s.PIPELINE_WORKING_DIR, 'basic-add-image'
+        )
         self.config_base = os.path.join(self.add_image_run, 'config_base.py')
         self.config_add = os.path.join(self.add_image_run, 'config_add.py')
         self.config = os.path.join(self.add_image_run, 'config.py')
@@ -110,8 +114,14 @@ class BasicAddImageTest(TestCase):
         Test that the sources and total relations from one run with all images 
         and another with added image returns the same results.
         '''
-        sources_all = self.sources_all.sort_values(by=['wavg_ra', 'wavg_dec']).reset_index(drop=True)
-        sources_add = self.sources_add.sort_values(by=['wavg_ra', 'wavg_dec']).reset_index(drop=True)
+        sources_all = (
+            self.sources_all.sort_values(by=['wavg_ra', 'wavg_dec'])
+            .reset_index(drop=True)
+        )
+        sources_add = (
+            self.sources_add.sort_values(by=['wavg_ra', 'wavg_dec'])
+            .reset_index(drop=True)
+        )
 
         pd.testing.assert_frame_equal(
             sources_all, 
@@ -126,12 +136,16 @@ class BasicAddImageTest(TestCase):
         '''
         # compare number of relations per source
         relations_all = (
-            self.relations_all.pivot_table(index=['from_source_id'], aggfunc='size')
+            self.relations_all.pivot_table(
+                index=['from_source_id'], aggfunc='size'
+            )
             .to_frame('relations')
             .sort_index()
         )
         relations_add = (
-            self.relations_add.pivot_table(index=['from_source_id'], aggfunc='size')
+            self.relations_add.pivot_table(
+                index=['from_source_id'], aggfunc='size'
+            )
             .to_frame('relations')
             .sort_index()
         )
@@ -157,8 +171,12 @@ class AdvancedAddImageTest(TestCase):
         '''
         Set up directories to test data, run the pipeline, and read files.
         '''
-        self.all_image_run = os.path.join(s.PIPELINE_WORKING_DIR, 'advanced-regression')
-        self.add_image_run = os.path.join(s.PIPELINE_WORKING_DIR, 'advanced-add-image')
+        self.all_image_run = os.path.join(
+            s.PIPELINE_WORKING_DIR, 'advanced-regression'
+        )
+        self.add_image_run = os.path.join(
+            s.PIPELINE_WORKING_DIR, 'advanced-add-image'
+        )
         self.config_base = os.path.join(self.add_image_run, 'config_base.py')
         self.config_add = os.path.join(self.add_image_run, 'config_add.py')
         self.config = os.path.join(self.add_image_run, 'config.py')
@@ -219,8 +237,14 @@ class AdvancedAddImageTest(TestCase):
         Test that the sources and total relations from one run with all images 
         and another with added image returns the same results.
         '''
-        sources_all = self.sources_all.sort_values(by=['wavg_ra', 'wavg_dec']).reset_index(drop=True)
-        sources_add = self.sources_add.sort_values(by=['wavg_ra', 'wavg_dec']).reset_index(drop=True)
+        sources_all = (
+            self.sources_all.sort_values(by=['wavg_ra', 'wavg_dec'])
+            .reset_index(drop=True)
+        )
+        sources_add = (
+            self.sources_add.sort_values(by=['wavg_ra', 'wavg_dec'])
+            .reset_index(drop=True)
+        )
 
         pd.testing.assert_frame_equal(
             sources_all, 
@@ -235,12 +259,16 @@ class AdvancedAddImageTest(TestCase):
         '''
         # compare number of relations per source
         relations_all = (
-            self.relations_all.pivot_table(index=['from_source_id'], aggfunc='size')
+            self.relations_all.pivot_table(
+                index=['from_source_id'], aggfunc='size'
+            )
             .to_frame('relations')
             .sort_index()
         )
         relations_add = (
-            self.relations_add.pivot_table(index=['from_source_id'], aggfunc='size')
+            self.relations_add.pivot_table(
+                index=['from_source_id'], aggfunc='size'
+            )
             .to_frame('relations')
             .sort_index()
         )
