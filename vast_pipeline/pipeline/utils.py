@@ -1592,6 +1592,7 @@ def reconstruct_associtaion_dfs(images_df_done, previous_parquet_paths):
     relations_to_update = np.reshape(
         relations_to_update, relations_to_update.shape[0])
     sources_df.loc[relation_ids, 'related'] = relations_to_update
+
     # Reorder so we don't mess up the dask metas.
     sources_df = sources_df[[
         'id', 'uncertainty_ew', 'weight_ew', 'uncertainty_ns', 'weight_ns',
