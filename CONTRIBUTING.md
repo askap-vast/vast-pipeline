@@ -27,7 +27,7 @@ A very exahustive set of general guidelines can be follow [here](https://github.
 First consider
 >opening an issue before creating/issuing the PR.
 
-So we can separe problems from solutions.
+So we can separate problems from solutions.
 
 1. Open an issue (e.g. `My issue blah`, GitHub will assign a id e.g. `#123`).
 2. Branch off `master` by naming your branch `fix-#123-my-issue-blah` (keep it short please).
