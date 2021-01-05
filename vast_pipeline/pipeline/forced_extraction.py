@@ -496,8 +496,7 @@ def forced_extraction(
     )
 
     # make measurement names unique for db constraint
-    #now = pd.Timestamp('now').strftime('%Y%m%dT%H%M')
-    extr_df['name'] = extr_df['name'] + f'_f_run{p_run.id:06d}' #f'_f{now}'
+    extr_df['name'] = extr_df['name'] + f'_f_run{p_run.id:06d}'
 
     # select sensible flux values and set the columns with fix values
     values = {
