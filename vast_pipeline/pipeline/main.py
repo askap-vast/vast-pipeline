@@ -459,6 +459,9 @@ class Pipeline():
             'source', 'datetime', 'image', 'epoch',
             'interim_ew', 'weight_ew', 'interim_ns', 'weight_ns'
         ]
+        # need to make sure no forced measurments are being passed which
+        # could happen in add mode, otherwise the wrong detection image is
+        # assigned.
         missing_sources_df = get_src_skyregion_merged_df(
             sources_df.loc[sources_df.forced == False, missing_source_cols],
             images_df,
