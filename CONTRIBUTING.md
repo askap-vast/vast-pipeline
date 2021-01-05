@@ -113,7 +113,7 @@ Run 'python manage.py migrate' to apply them.
 
 Solutions to such scenario:
 
-If you don't mind losing all the data in your database just follow the [Reset the database](#reset-the-database) instructions to drop all the data. But if you want to keep your data, you have to fix these changes by trying running `makemigrations` and `migrate`. But ideally you should follow the following steps:
+If you don't mind losing all the data in your database just follow the [Reset the database](#reset-the-database) instructions to drop all the data. But if you want to keep your data, you have to fix these changes by trying to run `makemigrations` and `migrate`. But ideally you should follow the following steps:
 
 1. Identify the previous commit before pulling the changes (when your migration and model files were working):
 
