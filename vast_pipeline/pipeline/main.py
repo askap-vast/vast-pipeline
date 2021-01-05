@@ -460,7 +460,7 @@ class Pipeline():
             'interim_ew', 'weight_ew', 'interim_ns', 'weight_ns'
         ]
         missing_sources_df = get_src_skyregion_merged_df(
-            sources_df[missing_source_cols],
+            sources_df.loc[sources_df.forced == False, missing_source_cols],
             images_df,
             skyregs_df,
         )
