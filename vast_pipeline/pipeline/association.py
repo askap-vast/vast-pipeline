@@ -1027,11 +1027,11 @@ def association(images_df, limit, dr_limit, bw_limit,
         start_epoch = 1
 
     if len(unique_epochs) == 1:
-        # This means only one image is present - so the same approach as above
-        # in add mode where there are no images to be added, the interim needs
-        # to be calculated and skyc1_srcs can just be returned as sources_df.
-        # ra_source and dec_source can just be dropped as the ra and dec are
-        # already the average values.
+        # This means only one image is present - or one group of images (epoch
+        # mode) - so the same approach as above in add mode where there are no
+        # images to be added, the interim needs to be calculated and skyc1_srcs
+        # can just be returned as sources_df. ra_source and dec_source can just
+        # be dropped as the ra and dec are already the average values.
         logger.warning(
             'No images to associate with!%s.', skyreg_tag
         )
