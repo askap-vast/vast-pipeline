@@ -157,6 +157,11 @@ def run_pipe(
                 # remove previous config if it exists
                 if os.path.isfile(os.path.join(p_run.path, 'config_prev.py')):
                     os.remove(os.path.join(p_run.path, 'config_prev.py'))
+
+                # reset epoch_based flag
+                with transaction.atomic():
+                    p_run.epoch_based = False
+                    p_run.save()
             else:
                 # Before parquets are started to be copied and backed up, a
                 # check is run to see if anything has actually changed in the

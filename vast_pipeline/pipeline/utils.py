@@ -8,7 +8,7 @@ import pandas as pd
 import astropy.units as u
 import dask.dataframe as dd
 
-from typing import List, Optional
+from typing import List, Optional, Dict
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
@@ -1436,9 +1436,19 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
     return measurement_combinations
 
 
-def backup_parquets(p_run_path):
+def backup_parquets(p_run_path: str) -> None:
     """
-    Docstring
+    Backups up all the existing parquet files in a pipeline run directory.
+    Backups are named with a '.backup' suffix in the pipeline run directory.
+
+    Parameters
+    ----------
+    p_run_path : str
+        The path of the pipeline run where the parquets are stored.
+
+    Returns
+    -------
+    None
     """
     parquets = (
         glob.glob(os.path.join(p_run_path, "*.parquet"))
@@ -1453,9 +1463,27 @@ def backup_parquets(p_run_path):
         shutil.copyfile(i, backup_name)
 
 
-def reconstruct_associtaion_dfs(images_df_done, previous_parquet_paths):
+def reconstruct_associtaion_dfs(
+    images_df_done: pd.DataFrame,
+    previous_parquet_paths: Dict[str, str]) -> (pd.DataFrame, pd.DataFrame):
     """
-    Docstring
+    This function is used with add mode and performs the necessary
+    manipulations to reconstruct the sources_df and skyc1_srcs required by
+    association.
+
+    Parameters
+    ----------
+    images_df_done : pd.DataFrame
+        The images_df output from the existing run (from the parquet).
+    previous_parquet_paths : Dict[str, str]
+        Dictionary that contains the paths for the previous run parquet files.
+        Keys are 'images', 'associations', 'sources', 'relations' and
+        'measurement_pairs'.
+
+    Returns
+    -------
+    sources_df, skyc1_srcs : pd.DataFrame, pd.DataFrame.
+        The reconstructed sources_df and skyc1_srs dataframes.
     """
     prev_associations = pd.read_parquet(previous_parquet_paths['associations'])
 

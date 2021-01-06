@@ -77,7 +77,20 @@ class Pipeline():
         return mod
 
     @staticmethod
-    def _get_valid_keys(upper=False):
+    def _get_valid_keys(upper: bool=False) -> List[str]:
+        """
+        Obtains the valid config keys from the template config.
+
+        Parameters
+        ----------
+        upper : bool
+            Return all the keys in upper formatt.
+
+        Returns
+        -------
+        valid_keys : List[str]
+            List of valid keys.
+        """
         valid_keys = settings.PIPE_RUN_CONFIG_DEFAULTS.keys()
         if upper:
             valid_keys = [i.upper() for i in valid_keys]
@@ -87,7 +100,21 @@ class Pipeline():
     @staticmethod
     def check_for_epoch_based(cfg):
         """
-        Docstring
+        Checks whether the images have been provided in a Dictionary format
+        which means that epoch_based has been requested. If they have been
+        provided with just lists then the inputs are converted to dictionaries
+        with an epoch defined for each individual image.
+
+        Parameters
+        ----------
+        cfg : self.config
+            The config object.
+
+        Returns
+        -------
+        cfg, epoch_based : self.config, bool.
+            The config (with converted List -> Dict inputs if required) and
+            epoch_based boolean flag.
         """
         epoch_based = False
 
@@ -112,9 +139,23 @@ class Pipeline():
 
         return cfg, epoch_based
 
-    def check_prev_config_diff(self, p_run_path):
+    def check_prev_config_diff(self, p_run_path: str) -> bool:
         """
-        Docstring
+        Checks if the previous config file differs from the current config
+        file. Used in add mode. Only returns true if the images are different
+        and the other general settings are the same (the requirement for add
+        mode). Otherwise False is returned.
+
+        Parameters
+        ----------
+        p_run_path : str
+            The path of the pipeline run where the parquets are stored.
+
+        Returns
+        -------
+        bool : bool
+            True if images are different but general settings are the same.
+            Otherwise False is returned.
         """
         valid_keys = self._get_valid_keys(upper=True)
 
