@@ -1,6 +1,7 @@
 import os
 import operator
 import logging
+from typing import List
 
 from astropy import units as u
 from astropy.coordinates import Angle
