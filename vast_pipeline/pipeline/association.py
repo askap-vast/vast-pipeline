@@ -1026,6 +1026,35 @@ def association(images_df, limit, dr_limit, bw_limit,
         sources_df = skyc1_srcs.copy()
         start_epoch = 1
 
+    if len(unique_epochs) == 1:
+        # This means only one image is present - or one group of images (epoch
+        # mode) - so the same approach as above in add mode where there are no
+        # images to be added, the interim needs to be calculated and skyc1_srcs
+        # can just be returned as sources_df. ra_source and dec_source can just
+        # be dropped as the ra and dec are already the average values.
+        logger.warning(
+            'No images to associate with!%s.', skyreg_tag
+        )
+        logger.info(
+            'Returning base sources only%s.', skyreg_tag
+        )
+        # reorder the columns to match Dask expectations (parallel)
+        skyc1_srcs = skyc1_srcs[[
+            'id', 'uncertainty_ew', 'weight_ew', 'uncertainty_ns', 'weight_ns',
+            'flux_int', 'flux_int_err', 'flux_int_isl_ratio', 'flux_peak',
+            'flux_peak_err', 'flux_peak_isl_ratio', 'forced', 'compactness',
+            'has_siblings', 'snr', 'image', 'datetime', 'source', 'ra', 'dec',
+            'ra_source', 'dec_source', 'd2d', 'dr', 'related', 'epoch',
+        ]]
+        skyc1_srcs['interim_ew'] = (
+            skyc1_srcs['ra'].values * skyc1_srcs['weight_ew'].values
+        )
+        skyc1_srcs['interim_ns'] = (
+            skyc1_srcs['dec'].values * skyc1_srcs['weight_ns'].values
+        )
+
+        return skyc1_srcs.drop(['ra_source', 'dec_source'], axis=1)
+
     skyc1 = SkyCoord(
         skyc1_srcs['ra'].values,
         skyc1_srcs['dec'].values,
