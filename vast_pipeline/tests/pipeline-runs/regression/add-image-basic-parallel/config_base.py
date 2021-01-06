@@ -7,44 +7,46 @@ import os
 # path of the pipeline run
 PIPE_RUN_PATH = os.path.dirname(os.path.realpath(__file__))
 data_path = './vast_pipeline/tests/regression-data'
-epochs = ['03x', '02', '05x']
+# create list of observations to use
+epochs = ['01', '03x', '02']
+fields = ['VAST_2118-06A', 'VAST_2118+00A']
+obs = [
+    os.path.join(
+        'EPOCH' + epoch, 
+        field + '.EPOCH' + epoch
+    ) for field in fields for epoch in epochs
+]
+# 0127 only exists in 3 epochs
+for epoch in ['01']:
+    obs.append(os.path.join('EPOCH' + epoch, 'VAST_0127-73A.EPOCH' + epoch))
 
 # Images settings
 # NOTE: all the paths !!!MUST!!! match with each other, e.g.
 # IMAGE_FILES[0] image matches SELAVY_FILES[0] file
-image_path = 'COMBINED/STOKESI_IMAGES'
 IMAGE_FILES = [
     # insert images file path(s) here
     os.path.join(
         data_path, 
-        'EPOCH' + epoch, 
-        image_path, 
-        'VAST_2118-06A.EPOCH' + epoch + '.I.fits'
-    ) for epoch in epochs
+        o + '.I.cutout.fits'
+    ) for o in obs
 ]
 
 # Selavy catalogue files
-selavy_path = 'COMBINED/STOKESI_SELAVY'
 SELAVY_FILES = [
     # insert Selavy file path(s) here
     os.path.join(
         data_path, 
-        'EPOCH' + epoch, 
-        selavy_path, 
-        'VAST_2118-06A.EPOCH' + epoch + '.I.selavy.components.txt'
-    ) for epoch in epochs
+        o + '.I.cutout.components.txt'
+    ) for o in obs
 ]
 
 # Noise or RMS files
-maps_path = 'COMBINED/STOKESI_RMSMAPS'
 NOISE_FILES = [
     # insert RMS file path(s) here
     os.path.join(
         data_path, 
-        'EPOCH' + epoch, 
-        maps_path, 
-        'VAST_2118-06A.EPOCH' + epoch + '.I_rms.fits'
-    ) for epoch in epochs
+        o + '.I.cutout_rms.fits'
+    ) for o in obs
 ]
 
 # background map files
@@ -52,10 +54,8 @@ BACKGROUND_FILES = [
     # insert background map file path(s) here
     os.path.join(
         data_path, 
-        'EPOCH' + epoch, 
-        maps_path, 
-        'VAST_2118-06A.EPOCH' + epoch + '.I_bkg.fits'
-    ) for epoch in epochs
+        o + '.I.cutout_bkg.fits'
+    ) for o in obs
 ]
 
 ###
@@ -107,7 +107,7 @@ ASSOCIATION_BEAMWIDTH_LIMIT = 1.5   # multiplicative factor, deruiter only
 # 'sky region groups' and association run on these groups in parallel and combined at the end.
 # Setting to 'True' is best used when you have a large dataset with multiple patches of the sky, 
 # for smaller searches of only 3 or below sky regions it is recommened to keep as 'False'.
-ASSOCIATION_PARALLEL =  False
+ASSOCIATION_PARALLEL =  True
 
 # If images have been submitted in epoch dictionaries then an attempt will be made by the pipeline to
 # remove duplicate sources. To do this a crossmatch is made between catalgoues to match 'the same'

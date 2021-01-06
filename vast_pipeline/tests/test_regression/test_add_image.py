@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import unittest
 
-from astropy.coordinates import SkyCoord, match_coordinates_sky
+from vast_pipeline.tests.test_regression import compare_runs
 
 from django.conf import settings as s
 from django.test import TestCase, override_settings
@@ -33,10 +33,10 @@ class BasicAddImageTest(TestCase):
         Set up directories to test data, run the pipeline, and read the files.
         '''
         self.all_image_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'basic-regression'
+            s.PIPELINE_WORKING_DIR, 'regression', 'normal-basic'
         )
         self.add_image_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'basic-add-image'
+            s.PIPELINE_WORKING_DIR, 'regression', 'add-image-basic'
         )
         self.config_base = os.path.join(self.add_image_run, 'config_base.py')
         self.config_add = os.path.join(self.add_image_run, 'config_add.py')
@@ -87,70 +87,31 @@ class BasicAddImageTest(TestCase):
 
     def test_inc_assoc(self):
         '''
-        Test that the number of associations increased or equal with added 
-        images.
+        See documentation for test_inc_associ in compare_runs.
         '''
-
-        self.assertTrue(len(self.ass_add) >= len(self.ass_backup))
+        compare_runs.test_inc_assoc(self, self.ass_add, self.ass_backup)
 
     def test_update_source(self):
         '''
-        Test that the sources are correctly updated in the database.
+        See documentation for test_update_sources in compare_runs.
         '''
-        # check source database and file is the same after original run
-        for ind in self.sources_backup.index:
-            n_meas_db = self.sources_backup_db.loc[ind, 'n_meas']
-            n_meas_pd = self.sources_backup.loc[ind, 'n_meas']
-            self.assertTrue(n_meas_db == n_meas_pd)
-
-        # check source database and file is the same after adding an image
-        for ind in self.sources_add.index:
-            n_meas_db = self.sources_add_db.loc[ind, 'n_meas']
-            n_meas_pd = self.sources_add.loc[ind, 'n_meas']
-            self.assertTrue(n_meas_db == n_meas_pd)
+        compare_runs.test_update_source(
+            self, 
+            self.sources_backup, self.sources_backup_db, 
+            self.sources_add, self.sources_add_db
+        )
 
     def test_sources(self):
         '''
-        Test that the sources and total relations from one run with all images 
-        and another with added image returns the same results.
+        See documentation for test_sources in compare_runs.
         '''
-        sources_all = (
-            self.sources_all.sort_values(by=['wavg_ra', 'wavg_dec'])
-            .reset_index(drop=True)
-        )
-        sources_add = (
-            self.sources_add.sort_values(by=['wavg_ra', 'wavg_dec'])
-            .reset_index(drop=True)
-        )
-
-        pd.testing.assert_frame_equal(
-            sources_all, 
-            sources_add, 
-            check_less_precise=4
-        )
+        compare_runs.test_sources(self.sources_all, self.sources_add)
 
     def test_relations(self):
         '''
-        Test that the number relations are the same from one run with all 
-        images and another with added image returns the same results.
+        See documentation for test_relations in comapre_runs.
         '''
-        # compare number of relations per source
-        relations_all = (
-            self.relations_all.pivot_table(
-                index=['from_source_id'], aggfunc='size'
-            )
-            .to_frame('relations')
-            .sort_index()
-        )
-        relations_add = (
-            self.relations_add.pivot_table(
-                index=['from_source_id'], aggfunc='size'
-            )
-            .to_frame('relations')
-            .sort_index()
-        )
-
-        self.assertTrue(len(relations_all) == len(relations_add))
+        compare_runs.test_relations(self, self.relations_all, self.relations_add)
 
 
 no_data = not os.path.exists(os.path.join(TEST_ROOT, 'regression-data'))
@@ -172,10 +133,10 @@ class AdvancedAddImageTest(TestCase):
         Set up directories to test data, run the pipeline, and read files.
         '''
         self.all_image_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'advanced-regression'
+            s.PIPELINE_WORKING_DIR, 'regression', 'normal-advanced'
         )
         self.add_image_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'advanced-add-image'
+            s.PIPELINE_WORKING_DIR, 'regression', 'add-image-advanced'
         )
         self.config_base = os.path.join(self.add_image_run, 'config_base.py')
         self.config_add = os.path.join(self.add_image_run, 'config_add.py')
@@ -226,51 +187,18 @@ class AdvancedAddImageTest(TestCase):
 
     def test_inc_assoc(self):
         '''
-        Test that the number of associations increased or is equal with added
-        images.
+        See documentation for test_inc_assoc in compare_runs.
         '''
-
-        self.assertTrue(len(self.ass_add) >= len(self.ass_backup))
+        compare_runs.test_inc_assoc(self, self.ass_add, self.ass_backup)
 
     def test_sources(self):
         '''
-        Test that the sources and total relations from one run with all images 
-        and another with added image returns the same results.
+        See documentation for test_sources in compare_runs.
         '''
-        sources_all = (
-            self.sources_all.sort_values(by=['wavg_ra', 'wavg_dec'])
-            .reset_index(drop=True)
-        )
-        sources_add = (
-            self.sources_add.sort_values(by=['wavg_ra', 'wavg_dec'])
-            .reset_index(drop=True)
-        )
-
-        pd.testing.assert_frame_equal(
-            sources_all, 
-            sources_add, 
-            check_less_precise=4
-        )
+        compare_runs.test_sources(self.sources_all, self.sources_add)
 
     def test_relations(self):
         '''
-        Test that the number relations are the same from one run with all 
-        images and another with added image returns the same results.
+        See documentation for test_relations in compare_runs.
         '''
-        # compare number of relations per source
-        relations_all = (
-            self.relations_all.pivot_table(
-                index=['from_source_id'], aggfunc='size'
-            )
-            .to_frame('relations')
-            .sort_index()
-        )
-        relations_add = (
-            self.relations_add.pivot_table(
-                index=['from_source_id'], aggfunc='size'
-            )
-            .to_frame('relations')
-            .sort_index()
-        )
-
-        self.assertTrue(len(relations_all) == len(relations_add))
+        compare_runs.test_relations(self, self.relations_all, self.relations_add)

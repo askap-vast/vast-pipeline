@@ -7,44 +7,46 @@ import os
 # path of the pipeline run
 PIPE_RUN_PATH = os.path.dirname(os.path.realpath(__file__))
 data_path = './vast_pipeline/tests/regression-data'
-epochs = ['03x', '02']
+# create list of observations to use
+epochs = ['01', '03x', '02', '05x', '06x']
+fields = ['VAST_2118-06A', 'VAST_2118+00A']
+obs = [
+    os.path.join(
+        'EPOCH' + epoch, 
+        field + '.EPOCH' + epoch
+    ) for field in fields for epoch in epochs
+]
+# 0127 only exists in 3 epochs
+for epoch in ['01', '05x', '06x']:
+    obs.append(os.path.join('EPOCH' + epoch, 'VAST_0127-73A.EPOCH' + epoch))
 
 # Images settings
 # NOTE: all the paths !!!MUST!!! match with each other, e.g.
 # IMAGE_FILES[0] image matches SELAVY_FILES[0] file
-image_path = 'COMBINED/STOKESI_IMAGES'
 IMAGE_FILES = [
     # insert images file path(s) here
     os.path.join(
         data_path, 
-        'EPOCH' + epoch, 
-        image_path, 
-        'VAST_2118-06A.EPOCH' + epoch + '.I.fits'
-    ) for epoch in epochs
+        o + '.I.cutout.fits'
+    ) for o in obs
 ]
 
 # Selavy catalogue files
-selavy_path = 'COMBINED/STOKESI_SELAVY'
 SELAVY_FILES = [
     # insert Selavy file path(s) here
     os.path.join(
         data_path, 
-        'EPOCH' + epoch, 
-        selavy_path, 
-        'VAST_2118-06A.EPOCH' + epoch + '.I.selavy.components.txt'
-    ) for epoch in epochs
+        o + '.I.cutout.components.txt'
+    ) for o in obs
 ]
 
 # Noise or RMS files
-maps_path = 'COMBINED/STOKESI_RMSMAPS'
 NOISE_FILES = [
     # insert RMS file path(s) here
     os.path.join(
         data_path, 
-        'EPOCH' + epoch, 
-        maps_path, 
-        'VAST_2118-06A.EPOCH' + epoch + '.I_rms.fits'
-    ) for epoch in epochs
+        o + '.I.cutout_rms.fits'
+    ) for o in obs
 ]
 
 # background map files
@@ -52,10 +54,8 @@ BACKGROUND_FILES = [
     # insert background map file path(s) here
     os.path.join(
         data_path, 
-        'EPOCH' + epoch, 
-        maps_path, 
-        'VAST_2118-06A.EPOCH' + epoch + '.I_bkg.fits'
-    ) for epoch in epochs
+        o + '.I.cutout_bkg.fits'
+    ) for o in obs
 ]
 
 ###
@@ -94,7 +94,7 @@ ASTROMETRIC_UNCERTAINTY_DEC = 1  # arcsec
 ###
 # OPTIONS THAT CONTROL THE SOURCE ASSOCIATION
 ###
-ASSOCIATION_METHOD = 'advanced' # 'basic', 'advanced' or 'deruiter'
+ASSOCIATION_METHOD = 'basic' # 'basic', 'advanced' or 'deruiter'
 
 # options that apply to basic and advanced association
 ASSOCIATION_RADIUS = 10.0 # arcsec, basic and advanced only
