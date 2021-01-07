@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 
@@ -61,12 +62,12 @@ def test_sources(sources_1, sources_2):
         The sources found in a different run.
     '''
     sources_1 = (
-        sources_1  # [self.sources_all['n_meas_forced'] == 0]
+        sources_1  
         .sort_values(by=['wavg_ra', 'wavg_dec'])
         .reset_index(drop=True)
     )
     sources_2 = (
-        sources_2  # [self.sources_add['n_meas_forced'] == 0]
+        sources_2  
         .sort_values(by=['wavg_ra', 'wavg_dec'])
         .reset_index(drop=True)
     )
@@ -107,3 +108,19 @@ def test_relations(testcase, relations_1, relations_2):
     )
 
     testcase.assertEqual(len(relations_1), len(relations_2))
+
+def test_forced_num(testcase, forced_1, forced_2):
+    '''
+    Test the number of forced extractions are correct.
+
+    Parameters
+    ----------
+    testcase : class
+        Test class.
+    forced1 : dict
+        The forced files in one run.
+    forced_2 : dict
+        The forced files in a different run.
+    '''
+    count = lambda x: np.sum([len(f.index) for f in x.values()])
+    testcase.assertEqual(count(forced_1), count(forced_2))

@@ -37,7 +37,7 @@ class BasicParallelAddImageTest(TestCase):
             s.PIPELINE_WORKING_DIR, 'regression', 'normal-basic'
         )
         self.para_add_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'add-image-basic-parallel'
+            s.PIPELINE_WORKING_DIR, 'regression', 'add-image-parallel-basic'
         )
         self.config_base = os.path.join(self.para_add_run, 'config_base.py')
         self.config_add = os.path.join(self.para_add_run, 'config_add.py')
@@ -58,15 +58,6 @@ class BasicParallelAddImageTest(TestCase):
         self.ass_backup = pd.read_parquet(
             os.path.join(self.para_add_run, 'associations.parquet')
         )
-        self.sources_backup = pd.read_parquet(
-            os.path.join(self.para_add_run, 'sources.parquet')
-        )
-        index = self.sources_backup.index
-        self.sources_backup_db = pd.DataFrame(
-            [Source.objects.get(id=ind).n_meas for ind in index], 
-            index=index, 
-            columns = ['n_meas']
-        )
 
         os.system(f'cp {self.config_add} {self.config}')
         call_command('runpipeline', self.para_add_run)
@@ -75,12 +66,6 @@ class BasicParallelAddImageTest(TestCase):
         )
         self.sources_add = pd.read_parquet(
             os.path.join(self.para_add_run, 'sources.parquet')
-        )
-        index = self.sources_add.index
-        self.sources_add_db = pd.DataFrame(
-            [Source.objects.get(id=ind).n_meas for ind in index], 
-            index=index, 
-            columns = ['n_meas']
         )
         self.relations_add = pd.read_parquet(
             os.path.join(self.para_add_run, 'relations.parquet')
@@ -91,16 +76,6 @@ class BasicParallelAddImageTest(TestCase):
         See documentation for test_inc_associ in compare_runs.
         '''
         compare_runs.test_inc_assoc(self, self.ass_add, self.ass_backup)
-
-    def test_update_source(self):
-        '''
-        See documentation for test_update_sources in compare_runs.
-        '''
-        compare_runs.test_update_source(
-            self, 
-            self.sources_backup, self.sources_backup_db, 
-            self.sources_add, self.sources_add_db
-        )
 
     def test_sources(self):
         '''
@@ -117,7 +92,6 @@ class BasicParallelAddImageTest(TestCase):
         )
 
 
-"""
 no_data = not os.path.exists(os.path.join(TEST_ROOT, 'regression-data'))
 @unittest.skipIf(
     no_data, 
@@ -141,7 +115,7 @@ class AdvancedParallelAddImageTest(TestCase):
             s.PIPELINE_WORKING_DIR, 'regression', 'normal-advanced'
         )
         self.para_add_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'add-image-advanced-parallel'
+            s.PIPELINE_WORKING_DIR, 'regression', 'add-image-parallel-advanced'
         )
         self.config_base = os.path.join(self.para_add_run, 'config_base.py')
         self.config_add = os.path.join(self.para_add_run, 'config_add.py')
@@ -162,15 +136,6 @@ class AdvancedParallelAddImageTest(TestCase):
         self.ass_backup = pd.read_parquet(
             os.path.join(self.para_add_run, 'associations.parquet')
         )
-        self.sources_backup = pd.read_parquet(
-            os.path.join(self.para_add_run, 'sources.parquet')
-        )
-        index = self.sources_backup.index
-        self.sources_backup_db = pd.DataFrame(
-            [Source.objects.get(id=ind).n_meas for ind in index], 
-            index=index, 
-            columns = ['n_meas']
-        )
 
         os.system(f'cp {self.config_add} {self.config}')
         call_command('runpipeline', self.para_add_run)
@@ -179,12 +144,6 @@ class AdvancedParallelAddImageTest(TestCase):
         )
         self.sources_add = pd.read_parquet(
             os.path.join(self.para_add_run, 'sources.parquet')
-        )
-        index = self.sources_add.index
-        self.sources_add_db = pd.DataFrame(
-            [Source.objects.get(id=ind).n_meas for ind in index], 
-            index=index, 
-            columns = ['n_meas']
         )
         self.relations_add = pd.read_parquet(
             os.path.join(self.para_add_run, 'relations.parquet')
@@ -209,4 +168,3 @@ class AdvancedParallelAddImageTest(TestCase):
         compare_runs.test_relations(
             self, self.relations_all, self.relations_add
         )
-"""

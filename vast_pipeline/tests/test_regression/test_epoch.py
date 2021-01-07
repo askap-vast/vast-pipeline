@@ -96,7 +96,7 @@ no_data = not os.path.exists(os.path.join(TEST_ROOT, 'regression-data'))
 @override_settings(
     PIPELINE_WORKING_DIR=os.path.join(TEST_ROOT, 'pipeline-runs'),
 )
-class AdvancedRegressionTest(TestCase):
+class AdvancedEpochTest(TestCase):
     '''
     Test pipeline under epoch based advanced association method returns 
     expected results.
@@ -108,7 +108,7 @@ class AdvancedRegressionTest(TestCase):
         Set up directory to test data and run the pipeline.
         '''
         self.advanced_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'normal-advanced'
+            s.PIPELINE_WORKING_DIR, 'regression', 'epoch-advanced'
         )
         call_command('runpipeline', self.advanced_run)
 
@@ -125,7 +125,7 @@ class AdvancedRegressionTest(TestCase):
         '''
         See documentation for test_num_sources in property_check.
         '''
-        property_check.test_num_sources(self, self.sources, 621)
+        property_check.test_num_sources(self, self.sources, 624)
 
     def test_most_relations(self):
         '''
@@ -133,14 +133,12 @@ class AdvancedRegressionTest(TestCase):
         '''
         # this is the expected highest relation sources
         expected = pd.DataFrame(
-            [[321.899747, -4.201875, 4],
-             [321.900237, -4.201482, 4],
-             [321.898668, -4.202589, 3],
-             [321.900885, -4.200907, 3]],
+            [[321.899517, -4.201971, 3],
+             [321.900505, -4.201181, 3]],
              columns = ['wavg_ra', 'wavg_dec', 'relations']
         )
 
-        property_check.test_most_relations(self.relations, self.sources, 4, expected)
+        property_check.test_most_relations(self.relations, self.sources, 2, expected)
 
     def test_known_source(self):
         '''

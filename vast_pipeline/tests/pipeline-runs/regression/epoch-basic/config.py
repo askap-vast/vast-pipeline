@@ -29,30 +29,12 @@ for epoch in obs.keys():
     for image in obs[epoch]:
         IMAGE_FILES[epoch].append(os.path.join(data_path, image + '.I.cutout.fits'))
 
-'''IMAGE_FILES = {
-    # insert images file path(s) here
-    os.path.join(
-        data_path, 
-        o + '.I.cutout.fits'
-    ) for o in obs
-}
-'''
-
 # Selavy catalogue files
 SELAVY_FILES = {}
 for epoch in obs.keys():
     SELAVY_FILES[epoch] = []
     for selavy in obs[epoch]:
         SELAVY_FILES[epoch].append(os.path.join(data_path, selavy + '.I.cutout.components.txt'))
-'''
-SELAVY_FILES = [
-    # insert Selavy file path(s) here
-    os.path.join(
-        data_path, 
-        o + '.I.cutout.components.txt'
-    ) for o in obs
-]
-'''
 
 # Noise or RMS files
 NOISE_FILES = {}
@@ -60,15 +42,6 @@ for epoch in obs.keys():
     NOISE_FILES[epoch] = []
     for noise in obs[epoch]:
         NOISE_FILES[epoch].append(os.path.join(data_path, noise + '.I.cutout_rms.fits'))
-'''
-NOISE_FILES = [
-    # insert RMS file path(s) here
-    os.path.join(
-        data_path, 
-        o + '.I.cutout_rms.fits'
-    ) for o in obs
-]
-'''
 
 # background map files
 BACKGROUND_FILES = {}
@@ -76,15 +49,6 @@ for epoch in obs.keys():
     BACKGROUND_FILES[epoch] = []
     for background in obs[epoch]:
         BACKGROUND_FILES[epoch].append(os.path.join(data_path, background + '.I.cutout.fits'))
-'''
-BACKGROUND_FILES = [
-    # insert background map file path(s) here
-    os.path.join(
-        data_path, 
-        o + '.I.cutout_bkg.fits'
-    ) for o in obs
-]
-'''
 
 ###
 # SOURCE FINDER OPTIONS
