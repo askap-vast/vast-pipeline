@@ -1153,6 +1153,10 @@ def get_parallel_assoc_image_df(
         lambda x: x.name
     )
 
+    images_df['image_datetime'] = images_df['image_dj'].apply(
+        lambda x: x.datetime
+    )
+
     return images_df
 
 
@@ -1579,7 +1583,7 @@ def reconstruct_associtaion_dfs(
     prev_sources = pd.read_parquet(
         previous_parquet_paths['sources'], columns=[
             'wavg_ra', 'wavg_dec',
-            'wavg_uncertainty_ew', 'wavg_uncertainty_ns'
+            'wavg_uncertainty_ew', 'wavg_uncertainty_ns',
         ]
     )
 
@@ -1633,11 +1637,11 @@ def reconstruct_associtaion_dfs(
 
     # Create the unique skyc1_srcs dataframe.
     skyc1_srcs = (
-        sources_df.sort_values(by='id')
+        sources_df.loc[sources_df.forced == False]
+        .sort_values(by='id')
         .drop('related', axis=1)
         .drop_duplicates('source')
     ).copy(deep=True)
-
 
     # Get relations into the skyc1_srcs (as we only keep the first instance
     # which does not have the relation information)

@@ -962,6 +962,12 @@ def association(images_df, limit, dr_limit, bw_limit,
     if images_df.empty:
         return
 
+    if parallel:
+        images_df = (
+            images_df.sort_values(by='image_datetime')
+            .drop('image_datetime', axis=1)
+        )
+
     if 'skyreg_group' in images_df.columns:
         skyreg_group = images_df['skyreg_group'].iloc[0]
         skyreg_tag = " (sky region group %s)" % skyreg_group
@@ -1139,11 +1145,14 @@ def association(images_df, limit, dr_limit, bw_limit,
         sources_df = sources_df.drop(['ra_wrap'], axis=1)
 
         tmp_srcs_df = (
-            sources_df.loc[sources_df['source'] != -1, [
-                'ra', 'dec', 'uncertainty_ew', 'uncertainty_ns',
-                'source', 'interim_ew', 'interim_ns', 'weight_ew',
-                'weight_ns'
-            ]]
+            sources_df.loc[
+                (sources_df['source'] != -1) & (sources_df['forced'] == False),
+                [
+                    'ra', 'dec', 'uncertainty_ew', 'uncertainty_ns',
+                    'source', 'interim_ew', 'interim_ns', 'weight_ew',
+                    'weight_ns'
+                ]
+            ]
             .groupby('source')
         )
 
@@ -1255,9 +1264,6 @@ def _correct_parallel_source_ids(
     the associaiton dataframes produced by parallel association - as source
     ids will be duplicated if left.
 
-    When add mode is being used the 'old' sources require the ID to remain
-    the same with only the new ones being changed.
-
     Parameters
     ----------
     df : pd.DataFrame
@@ -1265,15 +1271,11 @@ def _correct_parallel_source_ids(
         association step (sources_df).
     correction : int
         The value to add to the source ids.
-    add_mode : bool
-        Whether add mode is being used.
-    done_source_ids : List[int]
-        A list of the 'old' source ids that need to remain the same.
 
     Returns
     -------
     df : pd.DataFrame
-        The input df with correct source ids.
+        The input df with corrected source ids and relations.
     """
     df['source'] = df['source'].values + correction
     related_mask = ~(df['related'].isna())
@@ -1291,20 +1293,45 @@ def _correct_parallel_source_ids(
     return df
 
 
-def _correct_parallel_source_ids_add_mode(df, done_source_ids):
+def _correct_parallel_source_ids_add_mode(
+    df: pd.DataFrame, done_source_ids: List[int],
+    start_elem: int) -> (pd.DataFrame, int):
+    """
+    This function is to correct the source ids after the combination of
+    the associaiton dataframes produced by parallel association - as source
+    ids will be duplicated if left - specifically for add mode.
+
+    When add mode is being used the 'old' sources require the ID to remain
+    the same with only the new ones being changed. The next start elem also
+    needs to be dynamically updated with every skyreg_group loop.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Holds the measurements associated into sources. The output of of the
+        association step (sources_df).
+    done_source_ids : List[int]
+        A list of the 'old' source ids that need to remain the same.
+    start_elem : int
+        The start elem number for the new source ids.
+
+    Returns
+    -------
+    df, new_start_elem : pd.DataFrame, int
+        The input df with corrected source ids and relations, and the new
+        start elem for the next group.
+    """
     # When using add_mode the correction becomes easier with the buffer
     # as there's a clear difference between old and new.
     # old ones do not need to be corrected
-
     # create a new column for the new id
     df['new_source'] = df['source']
+
     # get a mask of those that need to be corrected
     to_correct_mask = ~(df['source'].isin(done_source_ids))
     # how many unique new sources
     to_correct_source_ids = df['source'][to_correct_mask].unique()
-    # form new ids by starting with the old ones + 1
-    start_elem = max(done_source_ids) + 1
-    # create the range
+    # create the range of new ids
     new_ids = list(
         range(start_elem, start_elem + to_correct_source_ids.shape[0]))
     # create a map of old source to new source
@@ -1322,14 +1349,16 @@ def _correct_parallel_source_ids_add_mode(df, done_source_ids):
     # map the new values
     new_relations = new_relations.map(source_id_map)
     # group them back and form lists again
-    new_relations = new_relations.groupby(level=[0,1]).apply(
+    new_relations = new_relations.groupby(level=0).apply(
         lambda x: x.values.tolist())
     # apply corrected relations to results
     df.loc[df[related_mask].index.values, 'related'] = new_relations
     # drop the old sources and replace
     df = df.drop('source', axis=1).rename(columns={'new_source': 'source'})
+    # define what the next start elem will be
+    next_start_elem = new_ids[-1] + 1
 
-    return df
+    return df[['source', 'related']], next_start_elem
 
 
 def parallel_association(
@@ -1432,7 +1461,7 @@ def parallel_association(
             new_src_buffer=new_src_buffer,
             parallel=True,
             meta=meta
-        ).compute(n_workers=n_cpu, scheduler='processes')
+        ).compute(n_workers=n_cpu, scheduler='single-threaded')
     )
 
     # results are the normal dataframe of results with the columns:
@@ -1463,12 +1492,19 @@ def parallel_association(
     #              46978  54161
     #              46979  54164
 
+    indexes = results.index.levels[0].values
     if add_mode:
-        results = _correct_parallel_source_ids_add_mode(results,
-            done_source_ids)
+
+        max_id = max(done_source_ids) + 1
+        for i in indexes[1:]:
+
+            corr_df, max_id = _correct_parallel_source_ids_add_mode(
+                results.loc[i][['source', 'related']], done_source_ids, max_id)
+            results.loc[
+                (i, slice(None)), ['source', 'related']
+            ] = corr_df.values
     else:
     # obtain the top level skyreg_group indexes.
-        indexes = results.index.levels[0].values
 
         # The first index acts as the base, so the others are looped over and
         # corrected.
