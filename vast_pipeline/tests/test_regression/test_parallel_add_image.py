@@ -159,8 +159,6 @@ class AdvancedParallelAddImageTest(TestCase):
         '''
         See documentation for test_sources in compare_runs.
         '''
-        print(self.sources_all)
-        print(self.sources_add)
         compare_runs.test_sources(self.sources_all, self.sources_add)
 
     def test_relations(self):

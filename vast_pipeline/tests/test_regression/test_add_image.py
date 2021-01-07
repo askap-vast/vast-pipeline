@@ -157,15 +157,6 @@ class AdvancedAddImageTest(TestCase):
         self.ass_backup = pd.read_parquet(
             os.path.join(self.add_image_run, 'associations.parquet')
         )
-        self.sources_backup = pd.read_parquet(
-            os.path.join(self.add_image_run, 'sources.parquet')
-        )
-        index = self.sources_backup.index
-        self.sources_backup_db = pd.DataFrame(
-            [Source.objects.get(id=ind).n_meas for ind in index], 
-            index=index, 
-            columns = ['n_meas']
-        )
 
         os.system(f'cp {self.config_add} {self.config}')
         call_command('runpipeline', self.add_image_run)
@@ -174,12 +165,6 @@ class AdvancedAddImageTest(TestCase):
         )
         self.sources_add = pd.read_parquet(
             os.path.join(self.add_image_run, 'sources.parquet')
-        )
-        index = self.sources_add.index
-        self.sources_add_db = pd.DataFrame(
-            [Source.objects.get(id=ind).n_meas for ind in index], 
-            index=index, 
-            columns = ['n_meas']
         )
         self.relations_add = pd.read_parquet(
             os.path.join(self.add_image_run, 'relations.parquet')
