@@ -1461,7 +1461,7 @@ def parallel_association(
             new_src_buffer=new_src_buffer,
             parallel=True,
             meta=meta
-        ).compute(n_workers=n_cpu, scheduler='single-threaded')
+        ).compute(n_workers=n_cpu, scheduler='processes')
     )
 
     # results are the normal dataframe of results with the columns:
@@ -1492,20 +1492,20 @@ def parallel_association(
     #              46978  54161
     #              46979  54164
 
+    # Get the indexes (skyreg_groups) to loop over for source id correction
     indexes = results.index.levels[0].values
+
     if add_mode:
-
-        max_id = max(done_source_ids) + 1
+        # Need to correct all skyreg_groups.
+        # First get the starting id for new sources.
+        new_id = max(done_source_ids) + 1
         for i in indexes[1:]:
-
-            corr_df, max_id = _correct_parallel_source_ids_add_mode(
-                results.loc[i][['source', 'related']], done_source_ids, max_id)
+            corr_df, new_id = _correct_parallel_source_ids_add_mode(
+                results.loc[i][['source', 'related']], done_source_ids, new_id)
             results.loc[
                 (i, slice(None)), ['source', 'related']
             ] = corr_df.values
     else:
-    # obtain the top level skyreg_group indexes.
-
         # The first index acts as the base, so the others are looped over and
         # corrected.
         for i in indexes[1:]:

@@ -491,8 +491,6 @@ class Pipeline():
         if SurveySource.objects.exists():
             pass
 
-        import ipdb
-        # ipdb.set_trace()
         # Obtain the number of selavy measurements for the run
         # n_selavy_measurements = sources_df.
         nr_selavy_measurements = sources_df['id'].unique().shape[0]
