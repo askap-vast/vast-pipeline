@@ -88,7 +88,7 @@ ASTROMETRIC_UNCERTAINTY_DEC = 1  # arcsec
 ###
 # OPTIONS THAT CONTROL THE SOURCE ASSOCIATION
 ###
-ASSOCIATION_METHOD = 'basic' # 'basic', 'advanced' or 'deruiter'
+ASSOCIATION_METHOD = 'advanced' # 'basic', 'advanced' or 'deruiter'
 
 # options that apply to basic and advanced association
 ASSOCIATION_RADIUS = 10.0 # arcsec, basic and advanced only

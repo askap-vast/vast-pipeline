@@ -2,7 +2,6 @@
 # You should review these settings before processing any images - some of the default
 # values will probably not be appropriate.
 
-from collections import defaultdict
 import os
 
 # path of the pipeline run
@@ -10,47 +9,54 @@ PIPE_RUN_PATH = os.path.dirname(os.path.realpath(__file__))
 data_path = './vast_pipeline/tests/regression-data'
 # create list of observations to use
 epochs = ['01', '03x', '02', '05x', '06x']
-obs = defaultdict(list)
 fields = ['VAST_2118-06A', 'VAST_2118+00A']
-for epoch in epochs:
-    for field in fields:
-        obs[epoch].append(os.path.join('EPOCH' + epoch, field + '.EPOCH' + epoch))
+obs = [
+    os.path.join(
+        'EPOCH' + epoch, 
+        field + '.EPOCH' + epoch
+    ) for field in fields for epoch in epochs
+]
 # 0127 only exists in 3 epochs
 for epoch in ['01', '05x', '06x']:
-    obs[epoch].append(os.path.join('EPOCH' + epoch, 'VAST_0127-73A.EPOCH' + epoch))
-
+    obs.append(os.path.join('EPOCH' + epoch, 'VAST_0127-73A.EPOCH' + epoch))
 
 # Images settings
 # NOTE: all the paths !!!MUST!!! match with each other, e.g.
 # IMAGE_FILES[0] image matches SELAVY_FILES[0] file
-IMAGE_FILES = {}
-for epoch in obs.keys():
-    IMAGE_FILES[epoch] = []
-    for image in obs[epoch]:
-        IMAGE_FILES[epoch].append(os.path.join(data_path, image + '.I.cutout.fits'))
+IMAGE_FILES = [
+    # insert images file path(s) here
+    os.path.join(
+        data_path, 
+        o + '.I.cutout.fits'
+    ) for o in obs
+]
 
 # Selavy catalogue files
-SELAVY_FILES = {}
-for epoch in obs.keys():
-    SELAVY_FILES[epoch] = []
-    for selavy in obs[epoch]:
-        SELAVY_FILES[epoch].append(os.path.join(data_path, selavy + '.I.cutout.components.txt'))
+SELAVY_FILES = [
+    # insert Selavy file path(s) here
+    os.path.join(
+        data_path, 
+        o + '.I.cutout.components.txt'
+    ) for o in obs
+]
 
 # Noise or RMS files
-NOISE_FILES = {}
-for epoch in obs.keys():
-    NOISE_FILES[epoch] = []
-    for noise in obs[epoch]:
-        NOISE_FILES[epoch].append(os.path.join(data_path, noise + '.I.cutout_rms.fits'))
+NOISE_FILES = [
+    # insert RMS file path(s) here
+    os.path.join(
+        data_path, 
+        o + '.I.cutout_rms.fits'
+    ) for o in obs
+]
 
 # background map files
-BACKGROUND_FILES = {}
-for epoch in obs.keys():
-    BACKGROUND_FILES[epoch] = []
-    for background in obs[epoch]:
-        BACKGROUND_FILES[epoch].append(
-            os.path.join(data_path, background + '.I.cutout_bkg.fits')
-        )
+BACKGROUND_FILES = [
+    # insert background map file path(s) here
+    os.path.join(
+        data_path, 
+        o + '.I.cutout_bkg.fits'
+    ) for o in obs
+]
 
 ###
 # SOURCE FINDER OPTIONS
@@ -63,7 +69,7 @@ SOURCE_FINDER = 'selavy'
 ###
 # Source monitoring can be done both forward and backward in 'time'.
 # Monitoring backward means re-opening files that were previously processed and can be slow.
-MONITOR = False
+MONITOR = True
 # MONITOR_MIN_SIGMA defines the minimum SNR ratio a source has to be if it was placed in the
 # area of minimum rms in the image from which it is to be extracted from. If lower than this
 # value it is skipped
@@ -101,7 +107,7 @@ ASSOCIATION_BEAMWIDTH_LIMIT = 1.5   # multiplicative factor, deruiter only
 # 'sky region groups' and association run on these groups in parallel and combined at the end.
 # Setting to 'True' is best used when you have a large dataset with multiple patches of the sky, 
 # for smaller searches of only 3 or below sky regions it is recommened to keep as 'False'.
-ASSOCIATION_PARALLEL =  False
+ASSOCIATION_PARALLEL =  True
 
 # If images have been submitted in epoch dictionaries then an attempt will be made by the pipeline to
 # remove duplicate sources. To do this a crossmatch is made between catalgoues to match 'the same'

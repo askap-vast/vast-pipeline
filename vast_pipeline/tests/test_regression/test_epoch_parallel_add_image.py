@@ -22,10 +22,10 @@ no_data = not os.path.exists(os.path.join(TEST_ROOT, 'regression-data'))
 @override_settings(
     PIPELINE_WORKING_DIR=os.path.join(TEST_ROOT, 'pipeline-runs'),
 )
-class BasicParallelAddImageTest(TestCase):
+class BasicEpochParallelAddImageTest(TestCase):
     '''
-    Test pipeline runs when in parallel and adding an image for basic 
-    association method.
+    Test pipeline runs when in epoch based parallel and adding an image for 
+    basic association method.
     '''
 
     @classmethod
@@ -34,10 +34,10 @@ class BasicParallelAddImageTest(TestCase):
         Set up directories to test data, run the pipeline, and read the files.
         '''
         self.normal_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'normal-basic'
+            s.PIPELINE_WORKING_DIR, 'regression', 'epoch-basic'
         )
         self.para_add_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'add-image-parallel-basic'
+            s.PIPELINE_WORKING_DIR, 'regression', 'epoch-add-image-parallel-basic'
         )
         self.config_base = os.path.join(self.para_add_run, 'config_base.py')
         self.config_add = os.path.join(self.para_add_run, 'config_add.py')
@@ -100,10 +100,10 @@ no_data = not os.path.exists(os.path.join(TEST_ROOT, 'regression-data'))
 @override_settings(
     PIPELINE_WORKING_DIR=os.path.join(TEST_ROOT, 'pipeline-runs'),
 )
-class AdvancedParallelAddImageTest(TestCase):
+class AdvancedEpochParallelAddImageTest(TestCase):
     '''
-    Test pipeline runs when in parallel and adding an image for advanced 
-    association method.
+    Test pipeline runs when in epoch based parallel and adding an image for 
+    advanced association method.
     '''
 
     @classmethod
@@ -112,10 +112,10 @@ class AdvancedParallelAddImageTest(TestCase):
         Set up directories to test data, run the pipeline, and read files.
         '''
         self.normal_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'normal-advanced'
+            s.PIPELINE_WORKING_DIR, 'regression', 'epoch-advanced'
         )
         self.para_add_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'add-image-parallel-advanced'
+            s.PIPELINE_WORKING_DIR, 'regression', 'epoch-add-image-parallel-advanced'
         )
         self.config_base = os.path.join(self.para_add_run, 'config_base.py')
         self.config_add = os.path.join(self.para_add_run, 'config_add.py')
@@ -159,8 +159,6 @@ class AdvancedParallelAddImageTest(TestCase):
         '''
         See documentation for test_sources in compare_runs.
         '''
-        print(self.sources_all)
-        print(self.sources_add)
         compare_runs.test_sources(self.sources_all, self.sources_add)
 
     def test_relations(self):

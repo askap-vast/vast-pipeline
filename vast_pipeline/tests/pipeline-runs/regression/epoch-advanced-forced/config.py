@@ -9,15 +9,19 @@ import os
 PIPE_RUN_PATH = os.path.dirname(os.path.realpath(__file__))
 data_path = './vast_pipeline/tests/regression-data'
 # create list of observations to use
-epochs = ['01', '03x', '02', '05x', '06x']
 obs = defaultdict(list)
-fields = ['VAST_2118-06A', 'VAST_2118+00A']
-for epoch in epochs:
-    for field in fields:
-        obs[epoch].append(os.path.join('EPOCH' + epoch, field + '.EPOCH' + epoch))
+# -06A
+for epoch in ['01', '03x', '02', '05x', '06x', '12']:
+    obs[epoch].append(os.path.join(
+        'EPOCH' + epoch, 'VAST_2118-06A.EPOCH' + epoch))
+# +00A
+for epoch in ['01', '03x', '02', '05x', '06x']:
+    obs[epoch].append(os.path.join(
+        'EPOCH' + epoch, 'VAST_2118+00A.EPOCH' + epoch))
 # 0127 only exists in 3 epochs
 for epoch in ['01', '05x', '06x']:
-    obs[epoch].append(os.path.join('EPOCH' + epoch, 'VAST_0127-73A.EPOCH' + epoch))
+    obs[epoch].append(os.path.join(
+        'EPOCH' + epoch, 'VAST_0127-73A.EPOCH' + epoch))
 
 
 # Images settings
@@ -48,9 +52,7 @@ BACKGROUND_FILES = {}
 for epoch in obs.keys():
     BACKGROUND_FILES[epoch] = []
     for background in obs[epoch]:
-        BACKGROUND_FILES[epoch].append(
-            os.path.join(data_path, background + '.I.cutout_bkg.fits')
-        )
+        BACKGROUND_FILES[epoch].append(os.path.join(data_path, background + '.I.cutout_bkg.fits'))
 
 ###
 # SOURCE FINDER OPTIONS
@@ -63,7 +65,7 @@ SOURCE_FINDER = 'selavy'
 ###
 # Source monitoring can be done both forward and backward in 'time'.
 # Monitoring backward means re-opening files that were previously processed and can be slow.
-MONITOR = False
+MONITOR = True
 # MONITOR_MIN_SIGMA defines the minimum SNR ratio a source has to be if it was placed in the
 # area of minimum rms in the image from which it is to be extracted from. If lower than this
 # value it is skipped
@@ -88,7 +90,7 @@ ASTROMETRIC_UNCERTAINTY_DEC = 1  # arcsec
 ###
 # OPTIONS THAT CONTROL THE SOURCE ASSOCIATION
 ###
-ASSOCIATION_METHOD = 'basic' # 'basic', 'advanced' or 'deruiter'
+ASSOCIATION_METHOD = 'advanced' # 'basic', 'advanced' or 'deruiter'
 
 # options that apply to basic and advanced association
 ASSOCIATION_RADIUS = 10.0 # arcsec, basic and advanced only

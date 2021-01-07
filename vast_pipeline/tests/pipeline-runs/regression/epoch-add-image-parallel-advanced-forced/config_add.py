@@ -9,15 +9,19 @@ import os
 PIPE_RUN_PATH = os.path.dirname(os.path.realpath(__file__))
 data_path = './vast_pipeline/tests/regression-data'
 # create list of observations to use
-epochs = ['01', '03x', '02', '05x', '06x']
 obs = defaultdict(list)
-fields = ['VAST_2118-06A', 'VAST_2118+00A']
-for epoch in epochs:
-    for field in fields:
-        obs[epoch].append(os.path.join('EPOCH' + epoch, field + '.EPOCH' + epoch))
+# -06A
+for epoch in ['01', '03x', '02', '05x', '06x', '12']:
+    obs[epoch].append(os.path.join(
+        'EPOCH' + epoch, 'VAST_2118-06A.EPOCH' + epoch))
+# +00A
+for epoch in ['01', '03x', '02', '05x', '06x']:
+    obs[epoch].append(os.path.join(
+        'EPOCH' + epoch, 'VAST_2118+00A.EPOCH' + epoch))
 # 0127 only exists in 3 epochs
 for epoch in ['01', '05x', '06x']:
-    obs[epoch].append(os.path.join('EPOCH' + epoch, 'VAST_0127-73A.EPOCH' + epoch))
+    obs[epoch].append(os.path.join(
+        'EPOCH' + epoch, 'VAST_0127-73A.EPOCH' + epoch))
 
 
 # Images settings
@@ -27,21 +31,24 @@ IMAGE_FILES = {}
 for epoch in obs.keys():
     IMAGE_FILES[epoch] = []
     for image in obs[epoch]:
-        IMAGE_FILES[epoch].append(os.path.join(data_path, image + '.I.cutout.fits'))
+        IMAGE_FILES[epoch].append(os.path.join(
+            data_path, image + '.I.cutout.fits'))
 
 # Selavy catalogue files
 SELAVY_FILES = {}
 for epoch in obs.keys():
     SELAVY_FILES[epoch] = []
     for selavy in obs[epoch]:
-        SELAVY_FILES[epoch].append(os.path.join(data_path, selavy + '.I.cutout.components.txt'))
+        SELAVY_FILES[epoch].append(os.path.join(
+            data_path, selavy + '.I.cutout.components.txt'))
 
 # Noise or RMS files
 NOISE_FILES = {}
 for epoch in obs.keys():
     NOISE_FILES[epoch] = []
     for noise in obs[epoch]:
-        NOISE_FILES[epoch].append(os.path.join(data_path, noise + '.I.cutout_rms.fits'))
+        NOISE_FILES[epoch].append(os.path.join(
+            data_path, noise + '.I.cutout_rms.fits'))
 
 # background map files
 BACKGROUND_FILES = {}
@@ -63,7 +70,7 @@ SOURCE_FINDER = 'selavy'
 ###
 # Source monitoring can be done both forward and backward in 'time'.
 # Monitoring backward means re-opening files that were previously processed and can be slow.
-MONITOR = False
+MONITOR = True
 # MONITOR_MIN_SIGMA defines the minimum SNR ratio a source has to be if it was placed in the
 # area of minimum rms in the image from which it is to be extracted from. If lower than this
 # value it is skipped
@@ -88,7 +95,7 @@ ASTROMETRIC_UNCERTAINTY_DEC = 1  # arcsec
 ###
 # OPTIONS THAT CONTROL THE SOURCE ASSOCIATION
 ###
-ASSOCIATION_METHOD = 'basic' # 'basic', 'advanced' or 'deruiter'
+ASSOCIATION_METHOD = 'advanced' # 'basic', 'advanced' or 'deruiter'
 
 # options that apply to basic and advanced association
 ASSOCIATION_RADIUS = 10.0 # arcsec, basic and advanced only
@@ -101,7 +108,7 @@ ASSOCIATION_BEAMWIDTH_LIMIT = 1.5   # multiplicative factor, deruiter only
 # 'sky region groups' and association run on these groups in parallel and combined at the end.
 # Setting to 'True' is best used when you have a large dataset with multiple patches of the sky, 
 # for smaller searches of only 3 or below sky regions it is recommened to keep as 'False'.
-ASSOCIATION_PARALLEL =  False
+ASSOCIATION_PARALLEL =  True
 
 # If images have been submitted in epoch dictionaries then an attempt will be made by the pipeline to
 # remove duplicate sources. To do this a crossmatch is made between catalgoues to match 'the same'
