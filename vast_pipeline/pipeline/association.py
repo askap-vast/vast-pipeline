@@ -1032,8 +1032,7 @@ def association(images_df, limit, dr_limit, bw_limit,
         sources_df = skyc1_srcs.copy()
         start_epoch = 1
 
-    if ((len(unique_epochs) == 1 and not add_mode) or
-        (len(unique_epochs) == 0 and add_mode)):
+    if len(unique_epochs) == 1 and not add_mode:
         # This means only one image is present - or one group of images (epoch
         # mode) - so the same approach as above in add mode where there are no
         # images to be added, the interim needs to be calculated and skyc1_srcs
