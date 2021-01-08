@@ -47,18 +47,18 @@ class BasicForcedTest(TestCase):
         # normal run
         call_command('runpipeline', self.base_run)
 
-        self.forced_files = {}
+        self.forced_base = {}
         for f in os.listdir(self.base_run):
             if f[:6] == 'forced':
-                self.forced_files[f] = pd.read_parquet(
+                self.forced_base[f] = pd.read_parquet(
                     os.path.join(self.base_run, f)
                 )
-        self.sources = pd.read_parquet(
+        self.sources_norm = pd.read_parquet(
             os.path.join(
                 self.base_run, 'sources.parquet'
             )
         )
-        self.associations = pd.read_parquet(
+        self.ass_norm = pd.read_parquet(
             os.path.join(
                 self.base_run, 'associations.parquet'
             )
@@ -70,18 +70,18 @@ class BasicForcedTest(TestCase):
         os.system(f'cp {self.config_add} {self.config}')
         call_command('runpipeline', self.compare_run)
 
-        self.forced_files_add = {}
+        self.forced_compare = {}
         for f in os.listdir(self.compare_run):
             if f[:6] == 'forced' and f[-6:] != 'backup':
-                self.forced_files_add[f] = pd.read_parquet(
+                self.forced_compare[f] = pd.read_parquet(
                     os.path.join(self.compare_run, f)
                 )
-        self.sources_add = pd.read_parquet(
+        self.sources_compare = pd.read_parquet(
             os.path.join(
                 self.compare_run, 'sources.parquet'
             )
         )
-        self.associations_add = pd.read_parquet(
+        self.ass_compare = pd.read_parquet(
             os.path.join(
                 self.compare_run, 'associations.parquet'
             )
@@ -92,7 +92,7 @@ class BasicForcedTest(TestCase):
         See documentation for test_forced_num in property check.
         '''
         compare_runs.test_forced_num(
-            self, self.forced_files, self.forced_files_add
+            self, self.forced_base, self.forced_compare
         )
 
     def test_known_in_forced(self):
@@ -106,9 +106,9 @@ class BasicForcedTest(TestCase):
         }
 
         for forced, sources, ass in zip(
-            [self.forced_files, self.forced_files_add], 
-            [self.sources, self.sources_add], 
-            [self.associations, self.associations_add]
+            [self.forced_base, self.forced_compare], 
+            [self.sources_norm, self.sources_compare], 
+            [self.ass_norm, self.ass_compare]
         ):
             property_check.test_known_in_forced(
                 self, forced, sources, ass, 10, exp_forced
@@ -148,18 +148,18 @@ class AdvancedForcedTest(TestCase):
         # normal run
         call_command('runpipeline', self.advanced_run)
 
-        self.forced_files = {}
+        self.forced_base = {}
         for f in os.listdir(self.advanced_run):
             if f[:6] == 'forced':
-                self.forced_files[f] = pd.read_parquet(
+                self.forced_base[f] = pd.read_parquet(
                     os.path.join(self.advanced_run, f)
                 )
-        self.sources = pd.read_parquet(
+        self.sources_norm = pd.read_parquet(
             os.path.join(
                 self.advanced_run, 'sources.parquet'
             )
         )
-        self.associations = pd.read_parquet(
+        self.ass_norm = pd.read_parquet(
             os.path.join(
                 self.advanced_run, 'associations.parquet'
             )
@@ -171,18 +171,18 @@ class AdvancedForcedTest(TestCase):
         os.system(f'cp {self.config_add} {self.config}')
         call_command('runpipeline', self.compare_run)
 
-        self.forced_files_add = {}
+        self.forced_compare = {}
         for f in os.listdir(self.compare_run):
             if f[:6] == 'forced' and f[-6:] != 'backup':
-                self.forced_files_add[f] = pd.read_parquet(
+                self.forced_compare[f] = pd.read_parquet(
                     os.path.join(self.compare_run, f)
                 )
-        self.sources_add = pd.read_parquet(
+        self.sources_compare = pd.read_parquet(
             os.path.join(
                 self.compare_run, 'sources.parquet'
             )
         )
-        self.associations_add = pd.read_parquet(
+        self.ass_compare = pd.read_parquet(
             os.path.join(
                 self.compare_run, 'associations.parquet'
             )
@@ -193,7 +193,7 @@ class AdvancedForcedTest(TestCase):
         See documentation for test_forced_num in property_check.
         '''
         compare_runs.test_forced_num(
-            self, self.forced_files, self.forced_files_add
+            self, self.forced_base, self.forced_compare
         )
 
 
@@ -230,18 +230,18 @@ class DeruiterForcedTest(TestCase):
         # normal run
         call_command('runpipeline', self.advanced_run)
 
-        self.forced_files = {}
+        self.forced_base = {}
         for f in os.listdir(self.advanced_run):
             if f[:6] == 'forced':
-                self.forced_files[f] = pd.read_parquet(
+                self.forced_base[f] = pd.read_parquet(
                     os.path.join(self.advanced_run, f)
                 )
-        self.sources = pd.read_parquet(
+        self.sources_norm = pd.read_parquet(
             os.path.join(
                 self.advanced_run, 'sources.parquet'
             )
         )
-        self.associations = pd.read_parquet(
+        self.ass_norm = pd.read_parquet(
             os.path.join(
                 self.advanced_run, 'associations.parquet'
             )
@@ -253,18 +253,18 @@ class DeruiterForcedTest(TestCase):
         os.system(f'cp {self.config_add} {self.config}')
         call_command('runpipeline', self.compare_run)
 
-        self.forced_files_add = {}
+        self.forced_compare = {}
         for f in os.listdir(self.compare_run):
             if f[:6] == 'forced' and f[-6:] != 'backup':
-                self.forced_files_add[f] = pd.read_parquet(
+                self.forced_compare[f] = pd.read_parquet(
                     os.path.join(self.compare_run, f)
                 )
-        self.sources_add = pd.read_parquet(
+        self.sources_compare = pd.read_parquet(
             os.path.join(
                 self.compare_run, 'sources.parquet'
             )
         )
-        self.associations_add = pd.read_parquet(
+        self.ass_compare = pd.read_parquet(
             os.path.join(
                 self.compare_run, 'associations.parquet'
             )
@@ -275,5 +275,5 @@ class DeruiterForcedTest(TestCase):
         See documentation for test_forced_num in property_check.
         '''
         compare_runs.test_forced_num(
-            self, self.forced_files, self.forced_files_add
+            self, self.forced_base, self.forced_compare
         )

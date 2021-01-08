@@ -45,10 +45,10 @@ class BasicParallelAddImageTest(TestCase):
 
         # run with all images
         call_command('runpipeline', self.base_run)
-        self.sources_all = pd.read_parquet(
+        self.sources_base = pd.read_parquet(
             os.path.join(self.base_run, 'sources.parquet')
         )
-        self.relations_all = pd.read_parquet(
+        self.relations_base = pd.read_parquet(
             os.path.join(self.base_run, 'relations.parquet')
         )
 
@@ -61,13 +61,13 @@ class BasicParallelAddImageTest(TestCase):
 
         os.system(f'cp {self.config_add} {self.config}')
         call_command('runpipeline', self.compare_run)
-        self.ass_add = pd.read_parquet(
+        self.ass_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'associations.parquet')
         )
-        self.sources_add = pd.read_parquet(
+        self.sources_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'sources.parquet')
         )
-        self.relations_add = pd.read_parquet(
+        self.relations_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'relations.parquet')
         )
 
@@ -75,20 +75,20 @@ class BasicParallelAddImageTest(TestCase):
         '''
         See documentation for test_inc_associ in compare_runs.
         '''
-        compare_runs.test_inc_assoc(self, self.ass_add, self.ass_backup)
+        compare_runs.test_inc_assoc(self, self.ass_compare, self.ass_backup)
 
     def test_sources(self):
         '''
         See documentation for test_sources in compare_runs.
         '''
-        compare_runs.test_sources(self.sources_all, self.sources_add)
+        compare_runs.test_sources(self.sources_base, self.sources_compare)
 
     def test_relations(self):
         '''
         See documentation for test_relations in comapre_runs.
         '''
         compare_runs.test_relations(
-            self, self.relations_all, self.relations_add
+            self, self.relations_base, self.relations_compare
         )
 
 
@@ -122,10 +122,10 @@ class AdvancedParallelAddImageTest(TestCase):
 
         # run with all images
         call_command('runpipeline', self.base_run)
-        self.sources_all = pd.read_parquet(
+        self.sources_base = pd.read_parquet(
             os.path.join(self.base_run, 'sources.parquet')
         )
-        self.relations_all = pd.read_parquet(
+        self.relations_base = pd.read_parquet(
             os.path.join(self.base_run, 'relations.parquet')
         )
 
@@ -138,13 +138,13 @@ class AdvancedParallelAddImageTest(TestCase):
 
         os.system(f'cp {self.config_add} {self.config}')
         call_command('runpipeline', self.compare_run)
-        self.ass_add = pd.read_parquet(
+        self.ass_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'associations.parquet')
         )
-        self.sources_add = pd.read_parquet(
+        self.sources_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'sources.parquet')
         )
-        self.relations_add = pd.read_parquet(
+        self.relations_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'relations.parquet')
         )
 
@@ -152,20 +152,20 @@ class AdvancedParallelAddImageTest(TestCase):
         '''
         See documentation for test_inc_assoc in compare_runs.
         '''
-        compare_runs.test_inc_assoc(self, self.ass_add, self.ass_backup)
+        compare_runs.test_inc_assoc(self, self.ass_compare, self.ass_backup)
 
     def test_sources(self):
         '''
         See documentation for test_sources in compare_runs.
         '''
-        compare_runs.test_sources(self.sources_all, self.sources_add)
+        compare_runs.test_sources(self.sources_base, self.sources_compare)
 
     def test_relations(self):
         '''
         See documentation for test_relations in compare_runs.
         '''
         compare_runs.test_relations(
-            self, self.relations_all, self.relations_add
+            self, self.relations_base, self.relations_compare
         )
 
 
@@ -199,10 +199,10 @@ class DeruiterParallelAddImageTest(TestCase):
 
         # run with all images
         call_command('runpipeline', self.base_run)
-        self.sources_all = pd.read_parquet(
+        self.sources_base = pd.read_parquet(
             os.path.join(self.base_run, 'sources.parquet')
         )
-        self.relations_all = pd.read_parquet(
+        self.relations_base = pd.read_parquet(
             os.path.join(self.base_run, 'relations.parquet')
         )
 
@@ -215,13 +215,13 @@ class DeruiterParallelAddImageTest(TestCase):
 
         os.system(f'cp {self.config_add} {self.config}')
         call_command('runpipeline', self.compare_run)
-        self.ass_add = pd.read_parquet(
+        self.ass_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'associations.parquet')
         )
-        self.sources_add = pd.read_parquet(
+        self.sources_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'sources.parquet')
         )
-        self.relations_add = pd.read_parquet(
+        self.relations_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'relations.parquet')
         )
 
@@ -229,18 +229,18 @@ class DeruiterParallelAddImageTest(TestCase):
         '''
         See documentation for test_inc_assoc in compare_runs.
         '''
-        compare_runs.test_inc_assoc(self, self.ass_add, self.ass_backup)
+        compare_runs.test_inc_assoc(self, self.ass_compare, self.ass_backup)
 
     def test_sources(self):
         '''
         See documentation for test_sources in compare_runs.
         '''
-        compare_runs.test_sources(self.sources_all, self.sources_add)
+        compare_runs.test_sources(self.sources_base, self.sources_compare)
 
     def test_relations(self):
         '''
         See documentation for test_relations in compare_runs.
         '''
         compare_runs.test_relations(
-            self, self.relations_all, self.relations_add
+            self, self.relations_base, self.relations_compare
         )

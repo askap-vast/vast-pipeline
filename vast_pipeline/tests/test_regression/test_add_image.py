@@ -44,10 +44,10 @@ class BasicAddImageTest(TestCase):
 
         # run with all images
         call_command('runpipeline', self.base_run)
-        self.sources_all = pd.read_parquet(
+        self.sources_base = pd.read_parquet(
             os.path.join(self.base_run, 'sources.parquet')
         )
-        self.relations_all = pd.read_parquet(
+        self.relations_base = pd.read_parquet(
             os.path.join(self.base_run, 'relations.parquet')
         )
 
@@ -57,11 +57,11 @@ class BasicAddImageTest(TestCase):
         self.ass_backup = pd.read_parquet(
             os.path.join(self.compare_run, 'associations.parquet')
         )
-        self.sources_backup = pd.read_parquet(
+        self.sources_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'sources.parquet')
         )
-        index = self.sources_backup.index
-        self.sources_backup_db = pd.DataFrame(
+        index = self.sources_compare.index
+        self.sources_compare_db = pd.DataFrame(
             [Source.objects.get(id=ind).n_meas for ind in index], 
             index=index, 
             columns = ['n_meas']
@@ -69,19 +69,19 @@ class BasicAddImageTest(TestCase):
 
         os.system(f'cp {self.config_add} {self.config}')
         call_command('runpipeline', self.compare_run)
-        self.ass_add = pd.read_parquet(
+        self.ass_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'associations.parquet')
         )
-        self.sources_add = pd.read_parquet(
+        self.sources_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'sources.parquet')
         )
-        index = self.sources_add.index
-        self.sources_add_db = pd.DataFrame(
+        index = self.sources_compare.index
+        self.sources_compare_db = pd.DataFrame(
             [Source.objects.get(id=ind).n_meas for ind in index], 
             index=index, 
             columns = ['n_meas']
         )
-        self.relations_add = pd.read_parquet(
+        self.relations_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'relations.parquet')
         )
 
@@ -89,7 +89,7 @@ class BasicAddImageTest(TestCase):
         '''
         See documentation for test_inc_associ in compare_runs.
         '''
-        compare_runs.test_inc_assoc(self, self.ass_add, self.ass_backup)
+        compare_runs.test_inc_assoc(self, self.ass_compare, self.ass_backup)
 
     def test_update_source(self):
         '''
@@ -97,21 +97,21 @@ class BasicAddImageTest(TestCase):
         '''
         compare_runs.test_update_source(
             self, 
-            self.sources_backup, self.sources_backup_db, 
-            self.sources_add, self.sources_add_db
+            self.sources_compare, self.sources_compare_db, 
+            self.sources_compare, self.sources_compare_db
         )
 
     def test_sources(self):
         '''
         See documentation for test_sources in compare_runs.
         '''
-        compare_runs.test_sources(self.sources_all, self.sources_add)
+        compare_runs.test_sources(self.sources_base, self.sources_compare)
 
     def test_relations(self):
         '''
         See documentation for test_relations in comapre_runs.
         '''
-        compare_runs.test_relations(self, self.relations_all, self.relations_add)
+        compare_runs.test_relations(self, self.relations_base, self.relations_compare)
 
 
 @unittest.skipIf(
@@ -143,10 +143,10 @@ class AdvancedAddImageTest(TestCase):
 
         # run with all images
         call_command('runpipeline', self.base_run)
-        self.sources_all = pd.read_parquet(
+        self.sources_base = pd.read_parquet(
             os.path.join(self.base_run, 'sources.parquet')
         )
-        self.relations_all = pd.read_parquet(
+        self.relations_base = pd.read_parquet(
             os.path.join(self.base_run, 'relations.parquet')
         )
 
@@ -159,13 +159,13 @@ class AdvancedAddImageTest(TestCase):
 
         os.system(f'cp {self.config_add} {self.config}')
         call_command('runpipeline', self.compare_run)
-        self.ass_add = pd.read_parquet(
+        self.ass_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'associations.parquet')
         )
-        self.sources_add = pd.read_parquet(
+        self.sources_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'sources.parquet')
         )
-        self.relations_add = pd.read_parquet(
+        self.relations_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'relations.parquet')
         )
 
@@ -173,19 +173,19 @@ class AdvancedAddImageTest(TestCase):
         '''
         See documentation for test_inc_assoc in compare_runs.
         '''
-        compare_runs.test_inc_assoc(self, self.ass_add, self.ass_backup)
+        compare_runs.test_inc_assoc(self, self.ass_compare, self.ass_backup)
 
     def test_sources(self):
         '''
         See documentation for test_sources in compare_runs.
         '''
-        compare_runs.test_sources(self.sources_all, self.sources_add)
+        compare_runs.test_sources(self.sources_base, self.sources_compare)
 
     def test_relations(self):
         '''
         See documentation for test_relations in compare_runs.
         '''
-        compare_runs.test_relations(self, self.relations_all, self.relations_add)
+        compare_runs.test_relations(self, self.relations_base, self.relations_compare)
 
 
 @unittest.skipIf(
@@ -217,10 +217,10 @@ class DeruiterAddImageTest(TestCase):
 
         # run with all images
         call_command('runpipeline', self.base_run)
-        self.sources_all = pd.read_parquet(
+        self.sources_base = pd.read_parquet(
             os.path.join(self.base_run, 'sources.parquet')
         )
-        self.relations_all = pd.read_parquet(
+        self.relations_base = pd.read_parquet(
             os.path.join(self.base_run, 'relations.parquet')
         )
 
@@ -233,13 +233,13 @@ class DeruiterAddImageTest(TestCase):
 
         os.system(f'cp {self.config_add} {self.config}')
         call_command('runpipeline', self.compare_run)
-        self.ass_add = pd.read_parquet(
+        self.ass_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'associations.parquet')
         )
-        self.sources_add = pd.read_parquet(
+        self.sources_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'sources.parquet')
         )
-        self.relations_add = pd.read_parquet(
+        self.relations_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'relations.parquet')
         )
 
@@ -247,17 +247,17 @@ class DeruiterAddImageTest(TestCase):
         '''
         See documentation for test_inc_assoc in compare_runs.
         '''
-        compare_runs.test_inc_assoc(self, self.ass_add, self.ass_backup)
+        compare_runs.test_inc_assoc(self, self.ass_compare, self.ass_backup)
 
     def test_sources(self):
         '''
         See documentation for test_sources in compare_runs.
         '''
-        compare_runs.test_sources(self.sources_all, self.sources_add)
+        compare_runs.test_sources(self.sources_base, self.sources_compare)
 
     def test_relations(self):
         '''
         See documentation for test_relations in compare_runs.
         '''
         compare_runs.test_relations(
-            self, self.relations_all, self.relations_add)
+            self, self.relations_base, self.relations_compare)

@@ -41,19 +41,19 @@ class BasicParallelTest(TestCase):
 
         # normal run
         call_command('runpipeline', self.base_run)
-        self.sources_norm = pd.read_parquet(
+        self.sources_base = pd.read_parquet(
             os.path.join(self.base_run, 'sources.parquet')
         )
-        self.relations_norm = pd.read_parquet(
+        self.relations_base = pd.read_parquet(
             os.path.join(self.base_run, 'relations.parquet')
         )
 
         # parallel run
         call_command('runpipeline', self.compare_run)
-        self.sources_parallel = pd.read_parquet(
+        self.sources_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'sources.parquet')
         )
-        self.relations_parallel = pd.read_parquet(
+        self.relations_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'relations.parquet')
         )
 
@@ -61,13 +61,13 @@ class BasicParallelTest(TestCase):
         '''
         See documentation for test_sources in comapre_runs.
         '''
-        compare_runs.test_sources(self.sources_norm, self.sources_parallel)
+        compare_runs.test_sources(self.sources_base, self.sources_compare)
 
     def test_relations(self):
         '''
         See documentation for test_relations under compare_runs.
         '''
-        compare_runs.test_relations(self, self.relations_norm, self.relations_parallel)
+        compare_runs.test_relations(self, self.relations_base, self.relations_compare)
 
 
 @unittest.skipIf(
@@ -96,19 +96,19 @@ class AdvancedParallelTest(TestCase):
 
         # run with normal
         call_command('runpipeline', self.base_run)
-        self.sources_norm = pd.read_parquet(
+        self.sources_base = pd.read_parquet(
             os.path.join(self.base_run, 'sources.parquet')
         )
-        self.relations_norm = pd.read_parquet(
+        self.relations_base = pd.read_parquet(
             os.path.join(self.base_run, 'relations.parquet')
         )
 
         # run with parallel
         call_command('runpipeline', self.compare_run)
-        self.sources_parallel = pd.read_parquet(
+        self.sources_compare = pd.read_parquet(
             os.path.join(self.base_run, 'sources.parquet')
         )
-        self.relations_parallel = pd.read_parquet(
+        self.relations_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'relations.parquet')
         )
 
@@ -116,13 +116,13 @@ class AdvancedParallelTest(TestCase):
         '''
         See documentation for test_sources in compare_runs.
         '''
-        compare_runs.test_sources(self.sources_norm, self.sources_parallel)
+        compare_runs.test_sources(self.sources_base, self.sources_compare)
 
     def test_relations(self):
         '''
         See documentation for test_relations in compare_runs.
         '''
-        compare_runs.test_relations(self, self.relations_norm, self.relations_parallel)
+        compare_runs.test_relations(self, self.relations_base, self.relations_compare)
 
 
 @unittest.skipIf(
@@ -151,19 +151,19 @@ class DeruiterParallelTest(TestCase):
 
         # run with normal
         call_command('runpipeline', self.base_run)
-        self.sources_norm = pd.read_parquet(
+        self.sources_base = pd.read_parquet(
             os.path.join(self.base_run, 'sources.parquet')
         )
-        self.relations_norm = pd.read_parquet(
+        self.relations_base = pd.read_parquet(
             os.path.join(self.base_run, 'relations.parquet')
         )
 
         # run with parallel
         call_command('runpipeline', self.compare_run)
-        self.sources_parallel = pd.read_parquet(
+        self.sources_compare = pd.read_parquet(
             os.path.join(self.base_run, 'sources.parquet')
         )
-        self.relations_parallel = pd.read_parquet(
+        self.relations_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'relations.parquet')
         )
 
@@ -171,11 +171,11 @@ class DeruiterParallelTest(TestCase):
         '''
         See documentation for test_sources in compare_runs.
         '''
-        compare_runs.test_sources(self.sources_norm, self.sources_parallel)
+        compare_runs.test_sources(self.sources_base, self.sources_compare)
 
     def test_relations(self):
         '''
         See documentation for test_relations in compare_runs.
         '''
         compare_runs.test_relations(
-            self, self.relations_norm, self.relations_parallel)
+            self, self.relations_base, self.relations_compare)
