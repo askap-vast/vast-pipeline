@@ -33,42 +33,42 @@ class BasicParallelAddImageTest(TestCase):
         '''
         Set up directories to test data, run the pipeline, and read the files.
         '''
-        self.normal_run = os.path.join(
+        self.base_run = os.path.join(
             s.PIPELINE_WORKING_DIR, 'regression', 'normal-basic'
         )
-        self.para_add_run = os.path.join(
+        self.compare_run = os.path.join(
             s.PIPELINE_WORKING_DIR, 'regression', 'add-image-parallel-basic'
         )
-        self.config_base = os.path.join(self.para_add_run, 'config_base.py')
-        self.config_add = os.path.join(self.para_add_run, 'config_add.py')
-        self.config = os.path.join(self.para_add_run, 'config.py')
+        self.config_base = os.path.join(self.compare_run, 'config_base.py')
+        self.config_add = os.path.join(self.compare_run, 'config_add.py')
+        self.config = os.path.join(self.compare_run, 'config.py')
 
         # run with all images
-        call_command('runpipeline', self.normal_run)
+        call_command('runpipeline', self.base_run)
         self.sources_all = pd.read_parquet(
-            os.path.join(self.normal_run, 'sources.parquet')
+            os.path.join(self.base_run, 'sources.parquet')
         )
         self.relations_all = pd.read_parquet(
-            os.path.join(self.normal_run, 'relations.parquet')
+            os.path.join(self.base_run, 'relations.parquet')
         )
 
         # run with add image
         os.system(f'cp {self.config_base} {self.config}')
-        call_command('runpipeline', self.para_add_run)
+        call_command('runpipeline', self.compare_run)
         self.ass_backup = pd.read_parquet(
-            os.path.join(self.para_add_run, 'associations.parquet')
+            os.path.join(self.compare_run, 'associations.parquet')
         )
 
         os.system(f'cp {self.config_add} {self.config}')
-        call_command('runpipeline', self.para_add_run)
+        call_command('runpipeline', self.compare_run)
         self.ass_add = pd.read_parquet(
-            os.path.join(self.para_add_run, 'associations.parquet')
+            os.path.join(self.compare_run, 'associations.parquet')
         )
         self.sources_add = pd.read_parquet(
-            os.path.join(self.para_add_run, 'sources.parquet')
+            os.path.join(self.compare_run, 'sources.parquet')
         )
         self.relations_add = pd.read_parquet(
-            os.path.join(self.para_add_run, 'relations.parquet')
+            os.path.join(self.compare_run, 'relations.parquet')
         )
 
     def test_inc_assoc(self):
@@ -92,7 +92,6 @@ class BasicParallelAddImageTest(TestCase):
         )
 
 
-no_data = not os.path.exists(os.path.join(TEST_ROOT, 'regression-data'))
 @unittest.skipIf(
     no_data, 
     'The regression test data is missing, skipping parallel add image tests'
@@ -111,42 +110,119 @@ class AdvancedParallelAddImageTest(TestCase):
         '''
         Set up directories to test data, run the pipeline, and read files.
         '''
-        self.normal_run = os.path.join(
+        self.base_run = os.path.join(
             s.PIPELINE_WORKING_DIR, 'regression', 'normal-advanced'
         )
-        self.para_add_run = os.path.join(
+        self.compare_run = os.path.join(
             s.PIPELINE_WORKING_DIR, 'regression', 'add-image-parallel-advanced'
         )
-        self.config_base = os.path.join(self.para_add_run, 'config_base.py')
-        self.config_add = os.path.join(self.para_add_run, 'config_add.py')
-        self.config = os.path.join(self.para_add_run, 'config.py')
+        self.config_base = os.path.join(self.compare_run, 'config_base.py')
+        self.config_add = os.path.join(self.compare_run, 'config_add.py')
+        self.config = os.path.join(self.compare_run, 'config.py')
 
         # run with all images
-        call_command('runpipeline', self.normal_run)
+        call_command('runpipeline', self.base_run)
         self.sources_all = pd.read_parquet(
-            os.path.join(self.normal_run, 'sources.parquet')
+            os.path.join(self.base_run, 'sources.parquet')
         )
         self.relations_all = pd.read_parquet(
-            os.path.join(self.normal_run, 'relations.parquet')
+            os.path.join(self.base_run, 'relations.parquet')
         )
 
         # run with add image
         os.system(f'cp {self.config_base} {self.config}')
-        call_command('runpipeline', self.para_add_run)
+        call_command('runpipeline', self.compare_run)
         self.ass_backup = pd.read_parquet(
-            os.path.join(self.para_add_run, 'associations.parquet')
+            os.path.join(self.compare_run, 'associations.parquet')
         )
 
         os.system(f'cp {self.config_add} {self.config}')
-        call_command('runpipeline', self.para_add_run)
+        call_command('runpipeline', self.compare_run)
         self.ass_add = pd.read_parquet(
-            os.path.join(self.para_add_run, 'associations.parquet')
+            os.path.join(self.compare_run, 'associations.parquet')
         )
         self.sources_add = pd.read_parquet(
-            os.path.join(self.para_add_run, 'sources.parquet')
+            os.path.join(self.compare_run, 'sources.parquet')
         )
         self.relations_add = pd.read_parquet(
-            os.path.join(self.para_add_run, 'relations.parquet')
+            os.path.join(self.compare_run, 'relations.parquet')
+        )
+
+    def test_inc_assoc(self):
+        '''
+        See documentation for test_inc_assoc in compare_runs.
+        '''
+        compare_runs.test_inc_assoc(self, self.ass_add, self.ass_backup)
+
+    def test_sources(self):
+        '''
+        See documentation for test_sources in compare_runs.
+        '''
+        compare_runs.test_sources(self.sources_all, self.sources_add)
+
+    def test_relations(self):
+        '''
+        See documentation for test_relations in compare_runs.
+        '''
+        compare_runs.test_relations(
+            self, self.relations_all, self.relations_add
+        )
+
+
+@unittest.skipIf(
+    no_data,
+    'The regression test data is missing, skipping parallel add image tests'
+)
+@override_settings(
+    PIPELINE_WORKING_DIR=os.path.join(TEST_ROOT, 'pipeline-runs'),
+)
+class DeruiterParallelAddImageTest(TestCase):
+    '''
+    Test pipeline runs when in parallel and adding an image for deruiter 
+    association method.
+    '''
+
+    @classmethod
+    def setUpTestData(self):
+        '''
+        Set up directories to test data, run the pipeline, and read files.
+        '''
+        self.base_run = os.path.join(
+            s.PIPELINE_WORKING_DIR, 'regression', 'normal-deruiter'
+        )
+        self.compare_run = os.path.join(
+            s.PIPELINE_WORKING_DIR, 'regression', 'add-image-parallel-deruiter'
+        )
+        self.config_base = os.path.join(self.compare_run, 'config_base.py')
+        self.config_add = os.path.join(self.compare_run, 'config_add.py')
+        self.config = os.path.join(self.compare_run, 'config.py')
+
+        # run with all images
+        call_command('runpipeline', self.base_run)
+        self.sources_all = pd.read_parquet(
+            os.path.join(self.base_run, 'sources.parquet')
+        )
+        self.relations_all = pd.read_parquet(
+            os.path.join(self.base_run, 'relations.parquet')
+        )
+
+        # run with add image
+        os.system(f'cp {self.config_base} {self.config}')
+        call_command('runpipeline', self.compare_run)
+        self.ass_backup = pd.read_parquet(
+            os.path.join(self.compare_run, 'associations.parquet')
+        )
+
+        os.system(f'cp {self.config_add} {self.config}')
+        call_command('runpipeline', self.compare_run)
+        self.ass_add = pd.read_parquet(
+            os.path.join(self.compare_run, 'associations.parquet')
+        )
+        self.sources_add = pd.read_parquet(
+            os.path.join(self.compare_run, 'sources.parquet')
+        )
+        self.relations_add = pd.read_parquet(
+            os.path.join(self.compare_run, 'relations.parquet')
         )
 
     def test_inc_assoc(self):
