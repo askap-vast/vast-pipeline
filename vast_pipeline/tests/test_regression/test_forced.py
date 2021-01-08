@@ -32,56 +32,58 @@ class BasicForcedTest(TestCase):
         '''
         Set up directory to test data and run the pipeline.
         '''
-        self.basic_run = os.path.join(
+        self.base_run = os.path.join(
             s.PIPELINE_WORKING_DIR, 'regression', 'normal-basic-forced'
         )
-        self.add_image_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'add-image-parallel-basic-forced'
+        self.compare_run = os.path.join(
+            s.PIPELINE_WORKING_DIR, 
+            'regression', 
+            'add-image-parallel-basic-forced'
         )
-        self.config_base = os.path.join(self.add_image_run, 'config_base.py')
-        self.config_add = os.path.join(self.add_image_run, 'config_add.py')
-        self.config = os.path.join(self.add_image_run, 'config.py')
+        self.config_base = os.path.join(self.compare_run, 'config_base.py')
+        self.config_add = os.path.join(self.compare_run, 'config_add.py')
+        self.config = os.path.join(self.compare_run, 'config.py')
 
         # normal run
-        call_command('runpipeline', self.basic_run)
+        call_command('runpipeline', self.base_run)
 
         self.forced_files = {}
-        for f in os.listdir(self.basic_run):
+        for f in os.listdir(self.base_run):
             if f[:6] == 'forced':
                 self.forced_files[f] = pd.read_parquet(
-                    os.path.join(self.basic_run, f)
+                    os.path.join(self.base_run, f)
                 )
         self.sources = pd.read_parquet(
             os.path.join(
-                self.basic_run, 'sources.parquet'
+                self.base_run, 'sources.parquet'
             )
         )
         self.associations = pd.read_parquet(
             os.path.join(
-                self.basic_run, 'associations.parquet'
+                self.base_run, 'associations.parquet'
             )
         )
 
         # add image run
         os.system(f'cp {self.config_base} {self.config}')
-        call_command('runpipeline', self.add_image_run)
+        call_command('runpipeline', self.compare_run)
         os.system(f'cp {self.config_add} {self.config}')
-        call_command('runpipeline', self.add_image_run)
+        call_command('runpipeline', self.compare_run)
 
         self.forced_files_add = {}
-        for f in os.listdir(self.add_image_run):
+        for f in os.listdir(self.compare_run):
             if f[:6] == 'forced' and f[-6:] != 'backup':
                 self.forced_files_add[f] = pd.read_parquet(
-                    os.path.join(self.add_image_run, f)
+                    os.path.join(self.compare_run, f)
                 )
         self.sources_add = pd.read_parquet(
             os.path.join(
-                self.add_image_run, 'sources.parquet'
+                self.compare_run, 'sources.parquet'
             )
         )
         self.associations_add = pd.read_parquet(
             os.path.join(
-                self.add_image_run, 'associations.parquet'
+                self.compare_run, 'associations.parquet'
             )
         )
 
@@ -89,7 +91,9 @@ class BasicForcedTest(TestCase):
         '''
         See documentation for test_forced_num in property check.
         '''
-        compare_runs.test_forced_num(self, self.forced_files, self.forced_files_add)
+        compare_runs.test_forced_num(
+            self, self.forced_files, self.forced_files_add
+        )
 
     def test_known_in_forced(self):
         '''
@@ -106,10 +110,11 @@ class BasicForcedTest(TestCase):
             [self.sources, self.sources_add], 
             [self.associations, self.associations_add]
         ):
-            property_check.test_known_in_forced(self, forced, sources, ass, 10, exp_forced)
+            property_check.test_known_in_forced(
+                self, forced, sources, ass, 10, exp_forced
+            )
 
 
-no_data = not os.path.exists(os.path.join(TEST_ROOT, 'regression-data'))
 @unittest.skipIf(
     no_data, 
     'The regression test data is missing, skipping regression tests'
@@ -131,12 +136,14 @@ class AdvancedForcedTest(TestCase):
         self.advanced_run = os.path.join(
             s.PIPELINE_WORKING_DIR, 'regression', 'normal-advanced-forced'
         )
-        self.add_image_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'add-image-parallel-advanced-forced'
+        self.compare_run = os.path.join(
+            s.PIPELINE_WORKING_DIR, 
+            'regression', 
+            'add-image-parallel-advanced-forced'
         )
-        self.config_base = os.path.join(self.add_image_run, 'config_base.py')
-        self.config_add = os.path.join(self.add_image_run, 'config_add.py')
-        self.config = os.path.join(self.add_image_run, 'config.py')
+        self.config_base = os.path.join(self.compare_run, 'config_base.py')
+        self.config_add = os.path.join(self.compare_run, 'config_add.py')
+        self.config = os.path.join(self.compare_run, 'config.py')
 
         # normal run
         call_command('runpipeline', self.advanced_run)
@@ -160,24 +167,24 @@ class AdvancedForcedTest(TestCase):
 
         # add image run
         os.system(f'cp {self.config_base} {self.config}')
-        call_command('runpipeline', self.add_image_run)
+        call_command('runpipeline', self.compare_run)
         os.system(f'cp {self.config_add} {self.config}')
-        call_command('runpipeline', self.add_image_run)
+        call_command('runpipeline', self.compare_run)
 
         self.forced_files_add = {}
-        for f in os.listdir(self.add_image_run):
+        for f in os.listdir(self.compare_run):
             if f[:6] == 'forced' and f[-6:] != 'backup':
                 self.forced_files_add[f] = pd.read_parquet(
-                    os.path.join(self.add_image_run, f)
+                    os.path.join(self.compare_run, f)
                 )
         self.sources_add = pd.read_parquet(
             os.path.join(
-                self.add_image_run, 'sources.parquet'
+                self.compare_run, 'sources.parquet'
             )
         )
         self.associations_add = pd.read_parquet(
             os.path.join(
-                self.add_image_run, 'associations.parquet'
+                self.compare_run, 'associations.parquet'
             )
         )  
 
@@ -185,4 +192,88 @@ class AdvancedForcedTest(TestCase):
         '''
         See documentation for test_forced_num in property_check.
         '''
-        compare_runs.test_forced_num(self, self.forced_files, self.forced_files_add)
+        compare_runs.test_forced_num(
+            self, self.forced_files, self.forced_files_add
+        )
+
+
+@unittest.skipIf(
+    no_data,
+    'The regression test data is missing, skipping regression tests'
+)
+@override_settings(
+    PIPELINE_WORKING_DIR=os.path.join(TEST_ROOT, 'pipeline-runs'),
+)
+class DeruiterForcedTest(TestCase):
+    '''
+    Test pipeline under forced advanced association method returns expected
+    results.
+    '''
+
+    @classmethod
+    def setUpTestData(self):
+        '''
+        Set up directory to test data and run the pipeline.
+        '''
+        self.advanced_run = os.path.join(
+            s.PIPELINE_WORKING_DIR, 'regression', 'normal-deruiter-forced'
+        )
+        self.compare_run = os.path.join(
+            s.PIPELINE_WORKING_DIR, 
+            'regression', 
+            'add-image-parallel-deruiter-forced'
+        )
+        self.config_base = os.path.join(self.compare_run, 'config_base.py')
+        self.config_add = os.path.join(self.compare_run, 'config_add.py')
+        self.config = os.path.join(self.compare_run, 'config.py')
+
+        # normal run
+        call_command('runpipeline', self.advanced_run)
+
+        self.forced_files = {}
+        for f in os.listdir(self.advanced_run):
+            if f[:6] == 'forced':
+                self.forced_files[f] = pd.read_parquet(
+                    os.path.join(self.advanced_run, f)
+                )
+        self.sources = pd.read_parquet(
+            os.path.join(
+                self.advanced_run, 'sources.parquet'
+            )
+        )
+        self.associations = pd.read_parquet(
+            os.path.join(
+                self.advanced_run, 'associations.parquet'
+            )
+        )
+
+        # add image run
+        os.system(f'cp {self.config_base} {self.config}')
+        call_command('runpipeline', self.compare_run)
+        os.system(f'cp {self.config_add} {self.config}')
+        call_command('runpipeline', self.compare_run)
+
+        self.forced_files_add = {}
+        for f in os.listdir(self.compare_run):
+            if f[:6] == 'forced' and f[-6:] != 'backup':
+                self.forced_files_add[f] = pd.read_parquet(
+                    os.path.join(self.compare_run, f)
+                )
+        self.sources_add = pd.read_parquet(
+            os.path.join(
+                self.compare_run, 'sources.parquet'
+            )
+        )
+        self.associations_add = pd.read_parquet(
+            os.path.join(
+                self.compare_run, 'associations.parquet'
+            )
+        )
+
+    def test_forced_num(self):
+        '''
+        See documentation for test_forced_num in property_check.
+        '''
+        compare_runs.test_forced_num(
+            self, self.forced_files, self.forced_files_add
+        )
