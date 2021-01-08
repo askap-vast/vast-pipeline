@@ -1032,7 +1032,7 @@ def association(images_df, limit, dr_limit, bw_limit,
         sources_df = skyc1_srcs.copy()
         start_epoch = 1
 
-    if len(unique_epochs) == 1:
+    if len(unique_epochs) == 1 and not add_mode:
         # This means only one image is present - or one group of images (epoch
         # mode) - so the same approach as above in add mode where there are no
         # images to be added, the interim needs to be calculated and skyc1_srcs
@@ -1324,11 +1324,18 @@ def _correct_parallel_source_ids_add_mode(
     # When using add_mode the correction becomes easier with the buffer
     # as there's a clear difference between old and new.
     # old ones do not need to be corrected
-    # create a new column for the new id
-    df['new_source'] = df['source']
 
     # get a mask of those that need to be corrected
     to_correct_mask = ~(df['source'].isin(done_source_ids))
+
+    # check that there are any to correct
+    if not np.any(to_correct_mask):
+        # there are no ids to correct we can just return the input
+        # next start elem is just the same as the input as well
+        return df[['source', 'related']], start_elem
+
+    # create a new column for the new id
+    df['new_source'] = df['source']
     # how many unique new sources
     to_correct_source_ids = df['source'][to_correct_mask].unique()
     # create the range of new ids
