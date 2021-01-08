@@ -64,7 +64,7 @@ class BasicForcedTest(TestCase):
 
         # add image run
         os.system(f'cp {self.config_base} {self.config}')
-        call_command('runpipeline', self.add_image_run, complete_rerun=True)
+        call_command('runpipeline', self.add_image_run)
         os.system(f'cp {self.config_add} {self.config}')
         call_command('runpipeline', self.add_image_run)
 
@@ -160,7 +160,7 @@ class AdvancedForcedTest(TestCase):
 
         # add image run
         os.system(f'cp {self.config_base} {self.config}')
-        call_command('runpipeline', self.add_image_run, complete_rerun=True)
+        call_command('runpipeline', self.add_image_run)
         os.system(f'cp {self.config_add} {self.config}')
         call_command('runpipeline', self.add_image_run)
 
