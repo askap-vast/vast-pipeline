@@ -1539,8 +1539,13 @@ def reconstruct_associtaion_dfs(
         'time',
     ]
 
-    # Open all the parquets using dask.
-    measurements = dd.read_parquet(img_meas_paths, columns=cols).compute()
+    # Open all the parquets
+    logger.debug(
+        "Opening all measurement parquet files to use in reconstruction..."
+    )
+    measurements = pd.concat(
+        [pd.read_parquet(f, columns=cols) for f in img_meas_paths]
+    )
 
     # Create mask to drop measurements for epoch mode (epoch based mode).
     measurements_mask = measurements['id'].isin(
