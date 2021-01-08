@@ -73,7 +73,7 @@ class BasicEpochParallelAddImageTest(TestCase):
 
     def test_inc_assoc(self):
         '''
-        See documentation for test_inc_associ in compare_runs.
+        See documentation for test_inc_assoc in compare_runs.
         '''
         compare_runs.test_inc_assoc(self, self.ass_add, self.ass_backup)
 

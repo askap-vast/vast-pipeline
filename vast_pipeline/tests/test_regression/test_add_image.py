@@ -57,11 +57,11 @@ class BasicAddImageTest(TestCase):
         self.ass_backup = pd.read_parquet(
             os.path.join(self.compare_run, 'associations.parquet')
         )
-        self.sources_compare = pd.read_parquet(
+        self.sources_backup = pd.read_parquet(
             os.path.join(self.compare_run, 'sources.parquet')
         )
-        index = self.sources_compare.index
-        self.sources_compare_db = pd.DataFrame(
+        index = self.sources_backup.index
+        self.sources_backup_db = pd.DataFrame(
             [Source.objects.get(id=ind).n_meas for ind in index], 
             index=index, 
             columns = ['n_meas']
@@ -87,7 +87,7 @@ class BasicAddImageTest(TestCase):
 
     def test_inc_assoc(self):
         '''
-        See documentation for test_inc_associ in compare_runs.
+        See documentation for test_inc_assoc in compare_runs.
         '''
         compare_runs.test_inc_assoc(self, self.ass_compare, self.ass_backup)
 
@@ -97,7 +97,7 @@ class BasicAddImageTest(TestCase):
         '''
         compare_runs.test_update_source(
             self, 
-            self.sources_compare, self.sources_compare_db, 
+            self.sources_backup, self.sources_backup_db, 
             self.sources_compare, self.sources_compare_db
         )
 
@@ -258,6 +258,91 @@ class DeruiterAddImageTest(TestCase):
     def test_relations(self):
         '''
         See documentation for test_relations in compare_runs.
+        '''
+        compare_runs.test_relations(
+            self, self.relations_base, self.relations_compare)
+
+
+@unittest.skipIf(
+    no_data,
+    'The regression test data is missing, skipping add image tests'
+)
+@override_settings(
+    PIPELINE_WORKING_DIR=os.path.join(TEST_ROOT, 'pipeline-runs'),
+)
+class BasicAddTwoImageTest(TestCase):
+    '''
+    Test pipeline runs when adding two images for basic association method.
+    '''
+
+    @classmethod
+    def setUpTestData(self):
+        '''
+        Set up directories to test data, run the pipeline, and read the files.
+        '''
+        self.base_run = os.path.join(
+            s.PIPELINE_WORKING_DIR, 'regression', 'normal-basic'
+        )
+        self.compare_run = os.path.join(
+            s.PIPELINE_WORKING_DIR, 'regression', 'add-add-image-basic'
+        )
+        self.config_base = os.path.join(self.compare_run, 'config_base.py')
+        self.config_add = os.path.join(self.compare_run, 'config_add.py')
+        self.config_add2 = os.path.join(self.compare_run, 'config_add2.py')
+        self.config = os.path.join(self.compare_run, 'config.py')
+
+        # run with all images
+        call_command('runpipeline', self.base_run)
+        self.sources_base = pd.read_parquet(
+            os.path.join(self.base_run, 'sources.parquet')
+        )
+        self.relations_base = pd.read_parquet(
+            os.path.join(self.base_run, 'relations.parquet')
+        )
+
+        # run with add image
+        os.system(f'cp {self.config_base} {self.config}')
+        call_command('runpipeline', self.compare_run)
+        self.ass_backup = pd.read_parquet(
+            os.path.join(self.compare_run, 'associations.parquet')
+        )
+        
+        # run with epoch 05 06
+        os.system(f'cp {self.config_add} {self.config}')
+        call_command('runpipeline', self.compare_run)
+        self.ass_backup_mid = pd.read_parquet(
+            os.path.join(self.compare_run, 'associations.parquet')
+        )
+
+        # run with epoch 12
+        os.system(f'cp {self.config_add2} {self.config}')
+        call_command('runpipeline', self.compare_run)
+        self.ass_compare = pd.read_parquet(
+            os.path.join(self.compare_run, 'associations.parquet')
+        )
+        self.sources_compare = pd.read_parquet(
+            os.path.join(self.compare_run, 'sources.parquet')
+        )
+        self.relations_compare = pd.read_parquet(
+            os.path.join(self.compare_run, 'relations.parquet')
+        )
+
+    def test_inc_assoc(self):
+        '''
+        See documentation for test_inc_assoc in compare_runs.
+        '''
+        compare_runs.test_inc_assoc(self, self.ass_compare, self.ass_backup_mid)
+        compare_runs.test_inc_assoc(self, self.ass_backup_mid, self.ass_backup)
+
+    def test_sources(self):
+        '''
+        See documentation for test_sources in compare_runs.
+        '''
+        compare_runs.test_sources(self.sources_base, self.sources_compare)
+
+    def test_relations(self):
+        '''
+        See documentation for test_relations in comapre_runs.
         '''
         compare_runs.test_relations(
             self, self.relations_base, self.relations_compare)
