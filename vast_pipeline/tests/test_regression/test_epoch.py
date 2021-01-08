@@ -32,17 +32,17 @@ class BasicEpochTest(TestCase):
         '''
         Set up directory to test data and run the pipeline.
         '''
-        self.basic_run = os.path.join(
+        self.base_run = os.path.join(
             s.PIPELINE_WORKING_DIR, 'regression', 'epoch-basic'
         )
-        call_command('runpipeline', self.basic_run)
+        call_command('runpipeline', self.base_run)
 
         self.sources = pd.read_parquet(
-            os.path.join(self.basic_run, 'sources.parquet')
+            os.path.join(self.base_run, 'sources.parquet')
         )
         self.relations = pd.read_parquet(
             os.path.join(
-                self.basic_run, 'relations.parquet'
+                self.base_run, 'relations.parquet'
             )
         )
 
@@ -88,7 +88,6 @@ class BasicEpochTest(TestCase):
         property_check.test_known_source(self, self.sources, 12.369)
 
 
-no_data = not os.path.exists(os.path.join(TEST_ROOT, 'regression-data'))
 @unittest.skipIf(
     no_data, 
     'The regression test data is missing, skipping regression tests'
@@ -107,17 +106,17 @@ class AdvancedEpochTest(TestCase):
         '''
         Set up directory to test data and run the pipeline.
         '''
-        self.advanced_run = os.path.join(
+        self.base_run = os.path.join(
             s.PIPELINE_WORKING_DIR, 'regression', 'epoch-advanced'
         )
-        call_command('runpipeline', self.advanced_run)
+        call_command('runpipeline', self.base_run)
 
         self.sources = pd.read_parquet(
-            os.path.join(self.advanced_run, 'sources.parquet')
+            os.path.join(self.base_run, 'sources.parquet')
         )
         self.relations = pd.read_parquet(
             os.path.join(
-                self.advanced_run, 'relations.parquet'
+                self.base_run, 'relations.parquet'
             )
         )
 
@@ -139,6 +138,68 @@ class AdvancedEpochTest(TestCase):
         )
 
         property_check.test_most_relations(self.relations, self.sources, 2, expected)
+
+    def test_known_source(self):
+        '''
+        See documentation for test_known_source in property_check.
+        '''
+        property_check.test_known_source(self, self.sources, 12.369)
+
+
+@unittest.skipIf(
+    no_data,
+    'The regression test data is missing, skipping regression tests'
+)
+@override_settings(
+    PIPELINE_WORKING_DIR=os.path.join(TEST_ROOT, 'pipeline-runs'),
+)
+class DeruiterEpochTest(TestCase):
+    '''
+    Test pipeline under epoch based deruiter association method returns 
+    expected results.
+    '''
+
+    @classmethod
+    def setUpTestData(self):
+        '''
+        Set up directory to test data and run the pipeline.
+        '''
+        self.base_run = os.path.join(
+            s.PIPELINE_WORKING_DIR, 'regression', 'epoch-deruiter'
+        )
+        call_command('runpipeline', self.base_run)
+
+        self.sources = pd.read_parquet(
+            os.path.join(self.base_run, 'sources.parquet')
+        )
+        self.relations = pd.read_parquet(
+            os.path.join(
+                self.base_run, 'relations.parquet'
+            )
+        )
+
+    def test_num_sources(self):
+        '''
+        See documentation for test_num_sources in property_check.
+        '''
+        property_check.test_num_sources(self, self.sources, 616)
+
+    def test_most_relations(self):
+        '''
+        See documentation for test_most_relations in property_check.
+        '''
+        # this is the expected highest relation sources
+        expected = pd.DataFrame(
+            [[322.752467, -3.982379, 4],
+             [322.752646, -3.982859, 4],
+             [322.752791, -3.982937, 4],
+             [322.752859, -3.983386, 4],
+             [322.753513, -3.985183, 4]],
+            columns=['wavg_ra', 'wavg_dec', 'relations']
+        )
+
+        property_check.test_most_relations(
+            self.relations, self.sources, 5, expected)
 
     def test_known_source(self):
         '''
