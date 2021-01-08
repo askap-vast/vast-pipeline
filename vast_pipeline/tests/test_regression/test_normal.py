@@ -31,16 +31,16 @@ class BasicRegressionTest(TestCase):
         '''
         Set up directory to test data and run the pipeline.
         '''
-        self.basic_run = os.path.join(
+        self.base_run = os.path.join(
             s.PIPELINE_WORKING_DIR, 'regression', 'normal-basic'
         )
-        call_command('runpipeline', self.basic_run)
+        call_command('runpipeline', self.base_run)
 
         self.sources = pd.read_parquet(
-            os.path.join(self.basic_run, 'sources.parquet')
+            os.path.join(self.base_run, 'sources.parquet')
         )
         self.relations = pd.read_parquet(
-            os.path.join(self.basic_run, 'relations.parquet')
+            os.path.join(self.base_run, 'relations.parquet')
         )
 
     def test_num_sources(self):
@@ -83,7 +83,6 @@ class BasicRegressionTest(TestCase):
         property_check.test_known_source(self, self.sources, 12.369)
 
 
-no_data = not os.path.exists(os.path.join(TEST_ROOT, 'regression-data'))
 @unittest.skipIf(
     no_data, 
     'The regression test data is missing, skipping regression tests'
@@ -101,16 +100,16 @@ class AdvancedRegressionTest(TestCase):
         '''
         Set up directory to test data and run the pipeline.
         '''
-        self.advanced_run = os.path.join(
+        self.base_run = os.path.join(
             s.PIPELINE_WORKING_DIR, 'regression', 'normal-advanced'
         )
-        call_command('runpipeline', self.advanced_run)
+        call_command('runpipeline', self.base_run)
 
         self.sources = pd.read_parquet(
-            os.path.join(self.advanced_run, 'sources.parquet')
+            os.path.join(self.base_run, 'sources.parquet')
         )
         self.relations = pd.read_parquet(
-            os.path.join(self.advanced_run, 'relations.parquet')
+            os.path.join(self.base_run, 'relations.parquet')
         )
 
     def test_num_sources(self):
@@ -139,6 +138,74 @@ class AdvancedRegressionTest(TestCase):
              [322.823466,  -5.091993, 2],
              [322.824837,  -5.090852, 2]], 
              columns = ['wavg_ra', 'wavg_dec', 'relations']
+        )
+
+        property_check.test_most_relations(
+            self.relations, self.sources, 13, expected
+        )
+
+    def test_known_source(self):
+        '''
+        See documentation for test_known_source in property_check.
+        '''
+        property_check.test_known_source(self, self.sources, 12.369)
+
+
+@unittest.skipIf(
+    no_data,
+    'The regression test data is missing, skipping regression tests'
+)
+@override_settings(
+    PIPELINE_WORKING_DIR=os.path.join(TEST_ROOT, 'pipeline-runs'),
+)
+class DeruiterRegressionTest(TestCase):
+    '''
+    Test pipeline under deruiter association method returns expected results.
+    '''
+
+    @classmethod
+    def setUpTestData(self):
+        '''
+        Set up directory to test data and run the pipeline.
+        '''
+        self.base_run = os.path.join(
+            s.PIPELINE_WORKING_DIR, 'regression', 'normal-advanced'
+        )
+        call_command('runpipeline', self.base_run)
+
+        self.sources = pd.read_parquet(
+            os.path.join(self.base_run, 'sources.parquet')
+        )
+        self.relations = pd.read_parquet(
+            os.path.join(self.base_run, 'relations.parquet')
+        )
+
+    def test_num_sources(self):
+        '''
+        See documentation for test_num_sources in property_check.
+        '''
+        property_check.test_num_sources(self, self.sources, 621)
+
+    def test_most_relations(self):
+        '''
+        See documentation for test_most_relations in property_check.
+        '''
+        # this is the expected highest relation sources
+        expected = pd.DataFrame(
+            [[321.899747,  -4.201875, 4],
+             [321.900237,  -4.201482, 4],
+             [321.898668,  -4.202589, 3],
+             [321.900885,  -4.200907, 3],
+             [20.649051, -73.638252, 2],
+             [321.901242,  -4.200643, 2],
+             [322.517744,  -4.050434, 2],
+             [322.578566,  -4.318185, 2],
+             [322.578833,  -4.317944, 2],
+             [322.578973,  -4.317444, 2],
+             [322.822594,  -5.092404, 2],
+             [322.823466,  -5.091993, 2],
+             [322.824837,  -5.090852, 2]],
+            columns=['wavg_ra', 'wavg_dec', 'relations']
         )
 
         property_check.test_most_relations(
