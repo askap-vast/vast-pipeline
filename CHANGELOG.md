@@ -14,10 +14,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
-- Changed tests to run on 3 images instead of 6 [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
+- Changed forced extraction name suffix to run id rather than datetime [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
+- Changed tests to run on smaller cutouts [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
 
 #### Fixed
 
+- Fixed basic association new sources created through relations [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
 - Fixed tests running pipeline multiple times [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
 - Fixed config files in tests [#430](https://github.com/askap-vast/vast-pipeline/pull/430)
 - Fixed sources table on measurement detail page [#429](https://github.com/askap-vast/vast-pipeline/pull/429).
@@ -27,6 +29,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#443](https://github.com/askap-vast/vast-pipeline/pull/443) feat, fix: Adds the ability to add images to an existing run.
 - [#430](https://github.com/askap-vast/vast-pipeline/pull/430) fix: Test config files.
 - [#425](https://github.com/askap-vast/vast-pipeline/pull/425) feat: Basic regression tests.
 - [#429](https://github.com/askap-vast/vast-pipeline/pull/429) fix: Fixed sources table on measurement detail page.
