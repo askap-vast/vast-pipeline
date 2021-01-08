@@ -97,8 +97,8 @@ class BasicEpochForcedTest(TestCase):
         '''
         # the expected forced extractions for PSR J2129-04
         exp_forced = {
-            '2118-06A_EPOCH01', '2118+00A_EPOCH03x', '2118+00A_EPOCH02',
-            '2118-06A_EPOCH02', '2118-06A_EPOCH03x', '2118+00A_EPOCH01'
+            '2118-06A_EPOCH01', '2118-06A_EPOCH12','2118-06A_EPOCH02', 
+            '2118-06A_EPOCH03x'
         }
 
         for forced, sources, ass in zip(
@@ -106,7 +106,7 @@ class BasicEpochForcedTest(TestCase):
             [self.sources, self.sources_add], 
             [self.associations, self.associations_add]
         ):
-            property_check.test_known_in_forced(self, forced, sources, ass, 10, exp_forced)
+            property_check.test_known_in_forced(self, forced, sources, ass, 6, exp_forced)
 
 
 no_data = not os.path.exists(os.path.join(TEST_ROOT, 'regression-data'))
