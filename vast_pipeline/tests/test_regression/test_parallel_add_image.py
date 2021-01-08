@@ -272,6 +272,7 @@ class BasicParallelAddTwoImageTest(TestCase):
         )
         self.config_base = os.path.join(self.compare_run, 'config_base.py')
         self.config_add = os.path.join(self.compare_run, 'config_add.py')
+        self.config_add2 = os.path.join(self.compare_run, 'config_add2.py')
         self.config = os.path.join(self.compare_run, 'config.py')
 
         # run with all images
