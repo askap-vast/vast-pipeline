@@ -162,3 +162,20 @@ def test_known_in_forced(testcase, forced, sources, associations, num, exp_force
 
     # check that the forced extractions appear in the correct images
     testcase.assertEqual(set(images), exp_forced)
+
+def test_forced_num(testcase, forced, num):
+    '''
+    Test the number of forced extractions is expected.
+
+    Parameters
+    ----------
+    testcase : class
+        Test class.
+    forced : dict
+        The forced measurements.
+    num : int
+        The number of expected forced measurements.
+    '''
+    count = np.sum([len(f.index) for f in forced.values()])
+
+    testcase.assertEqual(count, num)
