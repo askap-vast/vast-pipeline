@@ -268,7 +268,7 @@ class BasicParallelAddTwoImageTest(TestCase):
             s.PIPELINE_WORKING_DIR, 'regression', 'normal-basic'
         )
         self.compare_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'add-image-parallel-basic'
+            s.PIPELINE_WORKING_DIR, 'regression', 'add-add-image-parallel-basic'
         )
         self.config_base = os.path.join(self.compare_run, 'config_base.py')
         self.config_add = os.path.join(self.compare_run, 'config_add.py')
