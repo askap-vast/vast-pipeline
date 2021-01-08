@@ -114,7 +114,17 @@ def run_pipe(
     pipeline.add_mode = False
     pipeline.previous_parquets = {}
 
-    if flag_exist:
+    if not flag_exist:
+        # check for and remove any present .parquet (and .arrow) files
+        parquets = (
+            glob.glob(os.path.join(p_run.path, "*.parquet"))
+            # TODO Remove arrow when vaex support is dropped.
+            + glob.glob(os.path.join(p_run.path, "*.arrow"))
+            + glob.glob(os.path.join(p_run.path, "*.backup"))
+        )
+        for parquet in parquets:
+            os.remove(parquet)
+    else:
         # Check if the status is already running or queued. Exit if this is the
         # case.
         if p_run.status == 'RUN':
@@ -203,16 +213,6 @@ def run_pipe(
                     p_run.path, 'relations.parquet.backup')
                 pipeline.previous_parquets['measurement_pairs'] = os.path.join(
                     p_run.path, 'measurement_pairs.parquet.backup')
-    else:
-        # check for and remove any present .parquet (and .arrow) files
-        parquets = (
-            glob.glob(os.path.join(p_run.path, "*.parquet"))
-            # TODO Remove arrow when vaex support is dropped.
-            + glob.glob(os.path.join(p_run.path, "*.arrow"))
-            + glob.glob(os.path.join(p_run.path, "*.backup"))
-        )
-        for parquet in parquets:
-            os.remove(parquet)
 
     if pipeline.config.CREATE_MEASUREMENTS_ARROW_FILES and cmd is False:
         logger.warning(
