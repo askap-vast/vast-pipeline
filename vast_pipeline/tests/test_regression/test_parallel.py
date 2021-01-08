@@ -32,29 +32,29 @@ class BasicParallelTest(TestCase):
         '''
         Set up directories to test data, run the pipeline, and read the files.
         '''
-        self.normal_run = os.path.join(
+        self.base_run = os.path.join(
             s.PIPELINE_WORKING_DIR, 'regression', 'normal-basic'
         )
-        self.parallel_run = os.path.join(
+        self.compare_run = os.path.join(
             s.PIPELINE_WORKING_DIR, 'regression', 'parallel-basic'
         )
 
         # normal run
-        call_command('runpipeline', self.normal_run)
+        call_command('runpipeline', self.base_run)
         self.sources_norm = pd.read_parquet(
-            os.path.join(self.normal_run, 'sources.parquet')
+            os.path.join(self.base_run, 'sources.parquet')
         )
         self.relations_norm = pd.read_parquet(
-            os.path.join(self.normal_run, 'relations.parquet')
+            os.path.join(self.base_run, 'relations.parquet')
         )
 
         # parallel run
-        call_command('runpipeline', self.parallel_run)
+        call_command('runpipeline', self.compare_run)
         self.sources_parallel = pd.read_parquet(
-            os.path.join(self.parallel_run, 'sources.parquet')
+            os.path.join(self.compare_run, 'sources.parquet')
         )
         self.relations_parallel = pd.read_parquet(
-            os.path.join(self.parallel_run, 'relations.parquet')
+            os.path.join(self.compare_run, 'relations.parquet')
         )
 
     def test_sources(self):
@@ -70,7 +70,6 @@ class BasicParallelTest(TestCase):
         compare_runs.test_relations(self, self.relations_norm, self.relations_parallel)
 
 
-no_data = not os.path.exists(os.path.join(TEST_ROOT, 'regression-data'))
 @unittest.skipIf(
     no_data, 
     'The regression test data is missing, skipping add image tests'
@@ -88,29 +87,29 @@ class AdvancedParallelTest(TestCase):
         '''
         Set up directories to test data, run the pipeline, and read files.
         '''
-        self.normal_run = os.path.join(
+        self.base_run = os.path.join(
             s.PIPELINE_WORKING_DIR, 'regression', 'normal-advanced'
         )
-        self.parallel_run = os.path.join(
+        self.compare_run = os.path.join(
             s.PIPELINE_WORKING_DIR, 'regression', 'parallel-advanced'
         )
 
         # run with normal
-        call_command('runpipeline', self.normal_run)
+        call_command('runpipeline', self.base_run)
         self.sources_norm = pd.read_parquet(
-            os.path.join(self.normal_run, 'sources.parquet')
+            os.path.join(self.base_run, 'sources.parquet')
         )
         self.relations_norm = pd.read_parquet(
-            os.path.join(self.normal_run, 'relations.parquet')
+            os.path.join(self.base_run, 'relations.parquet')
         )
 
         # run with parallel
-        call_command('runpipeline', self.parallel_run)
+        call_command('runpipeline', self.compare_run)
         self.sources_parallel = pd.read_parquet(
-            os.path.join(self.normal_run, 'sources.parquet')
+            os.path.join(self.base_run, 'sources.parquet')
         )
         self.relations_parallel = pd.read_parquet(
-            os.path.join(self.parallel_run, 'relations.parquet')
+            os.path.join(self.compare_run, 'relations.parquet')
         )
 
     def test_sources(self):
@@ -124,3 +123,59 @@ class AdvancedParallelTest(TestCase):
         See documentation for test_relations in compare_runs.
         '''
         compare_runs.test_relations(self, self.relations_norm, self.relations_parallel)
+
+
+@unittest.skipIf(
+    no_data,
+    'The regression test data is missing, skipping add image tests'
+)
+@override_settings(
+    PIPELINE_WORKING_DIR=os.path.join(TEST_ROOT, 'pipeline-runs'),
+)
+class DeruiterParallelTest(TestCase):
+    '''
+    Test pipeline runs in parallel for deruiter association method.
+    '''
+
+    @classmethod
+    def setUpTestData(self):
+        '''
+        Set up directories to test data, run the pipeline, and read files.
+        '''
+        self.base_run = os.path.join(
+            s.PIPELINE_WORKING_DIR, 'regression', 'normal-deruiter'
+        )
+        self.compare_run = os.path.join(
+            s.PIPELINE_WORKING_DIR, 'regression', 'parallel-deruiter'
+        )
+
+        # run with normal
+        call_command('runpipeline', self.base_run)
+        self.sources_norm = pd.read_parquet(
+            os.path.join(self.base_run, 'sources.parquet')
+        )
+        self.relations_norm = pd.read_parquet(
+            os.path.join(self.base_run, 'relations.parquet')
+        )
+
+        # run with parallel
+        call_command('runpipeline', self.compare_run)
+        self.sources_parallel = pd.read_parquet(
+            os.path.join(self.base_run, 'sources.parquet')
+        )
+        self.relations_parallel = pd.read_parquet(
+            os.path.join(self.compare_run, 'relations.parquet')
+        )
+
+    def test_sources(self):
+        '''
+        See documentation for test_sources in compare_runs.
+        '''
+        compare_runs.test_sources(self.sources_norm, self.sources_parallel)
+
+    def test_relations(self):
+        '''
+        See documentation for test_relations in compare_runs.
+        '''
+        compare_runs.test_relations(
+            self, self.relations_norm, self.relations_parallel)
