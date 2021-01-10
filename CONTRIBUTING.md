@@ -221,4 +221,9 @@ place the VAST_2118-06A field test dataset in a folder named `regression-data` i
 
 All tests should be run before pushing to master. Running all the tests takes a few minutes, so it is not recommended to run them for every change.
 
+If you have made a minor change and would like to only run unit tests, skipping regression tests, use:
+```bash
+./manage.py test vast_pipeline.tests.test_pipeline
+```
+
 __NOTE__: if changes are made to the default config keys, these changes need to be propagated to the test config files.
