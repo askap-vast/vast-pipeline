@@ -13,13 +13,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
-- Changed particles style on login page [#458](https://github.com/askap-vast/vast-pipeline/pull/458).
+- Changed particles style on login page [#459](https://github.com/askap-vast/vast-pipeline/pull/459).
 - Dependabot: Bump ini from 1.3.5 to 1.3.8 [#436](https://github.com/askap-vast/vast-pipeline/pull/436)
 
 #### Fixed
 
-- Fixed particles canvas sizing on login page [#458](https://github.com/askap-vast/vast-pipeline/pull/458).
-- Fixed breadcrumb new line on small resolutitons [#458](https://github.com/askap-vast/vast-pipeline/pull/458).
+- Fixed particles canvas sizing on login page [#459](https://github.com/askap-vast/vast-pipeline/pull/459).
+- Fixed breadcrumb new line on small resolutitons [#459](https://github.com/askap-vast/vast-pipeline/pull/459).
 - Fixed config files in tests [#430](https://github.com/askap-vast/vast-pipeline/pull/430)
 - Fixed sources table on measurement detail page [#429](https://github.com/askap-vast/vast-pipeline/pull/429).
 - Fixed missing meta columns in parallel association [#427](https://github.com/askap-vast/vast-pipeline/pull/427).
@@ -28,7 +28,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
-- [#458](https://github.com/askap-vast/vast-pipeline/pull/458) fix: Fix particles and breadcrumb issues on mobile.
+- [#459](https://github.com/askap-vast/vast-pipeline/pull/459) fix: Fix particles and breadcrumb issues on mobile.
 - [#436](https://github.com/askap-vast/vast-pipeline/pull/436) dep: Bump ini from 1.3.5 to 1.3.8.
 - [#430](https://github.com/askap-vast/vast-pipeline/pull/430) fix: Test config files.
 - [#425](https://github.com/askap-vast/vast-pipeline/pull/425) feat: Basic regression tests.
