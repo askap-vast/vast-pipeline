@@ -40,7 +40,7 @@ jobs:
         node-version: '12'
 
     - name: Set up frontend assets and install python dependencies
-    - run: |
+      run: |
         npm ci
         npm start
         pip install -r requirements/dev.txt
