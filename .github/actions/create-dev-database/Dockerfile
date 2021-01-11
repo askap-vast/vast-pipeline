@@ -1,5 +1,5 @@
 # A development database for the VAST pipeline
-FROM postgres:13
+FROM postgres:13.1
 
 RUN apt-get update -y
 RUN apt-get install -y \
