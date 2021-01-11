@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - Changed forced extraction name suffix to run id rather than datetime [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
 - Changed tests to run on smaller cutouts [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
+- Changed particles style on login page [#459](https://github.com/askap-vast/vast-pipeline/pull/459).
 - Dependabot: Bump ini from 1.3.5 to 1.3.8 [#436](https://github.com/askap-vast/vast-pipeline/pull/436)
 
 
@@ -23,6 +24,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - Fixed basic association new sources created through relations [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
 - Fixed tests running pipeline multiple times [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
+- Fixed particles canvas sizing on login page [#459](https://github.com/askap-vast/vast-pipeline/pull/459).
+- Fixed breadcrumb new line on small resolutitons [#459](https://github.com/askap-vast/vast-pipeline/pull/459).
 - Fixed config files in tests [#430](https://github.com/askap-vast/vast-pipeline/pull/430)
 - Fixed sources table on measurement detail page [#429](https://github.com/askap-vast/vast-pipeline/pull/429).
 - Fixed missing meta columns in parallel association [#427](https://github.com/askap-vast/vast-pipeline/pull/427).
@@ -32,6 +35,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### List of PRs
 
 - [#443](https://github.com/askap-vast/vast-pipeline/pull/443) feat, fix: Adds the ability to add images to an existing run.
+- [#459](https://github.com/askap-vast/vast-pipeline/pull/459) fix: Fix particles and breadcrumb issues on mobile.
 - [#436](https://github.com/askap-vast/vast-pipeline/pull/436) dep: Bump ini from 1.3.5 to 1.3.8.
 - [#430](https://github.com/askap-vast/vast-pipeline/pull/430) fix: Test config files.
 - [#425](https://github.com/askap-vast/vast-pipeline/pull/425) feat: Basic regression tests.
