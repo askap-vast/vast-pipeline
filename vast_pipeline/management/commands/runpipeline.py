@@ -85,7 +85,8 @@ def run_pipe(
     logger.debug("Copying temp config file.")
     shutil.copyfile(
         os.path.join(p_run.path, 'config.py'),
-        os.path.join(p_run.path, 'config_temp.py'))
+        os.path.join(p_run.path, 'config_temp.py')
+    )
 
     # load and validate run configs
     try:
@@ -120,7 +121,7 @@ def run_pipe(
             glob.glob(os.path.join(p_run.path, "*.parquet"))
             # TODO Remove arrow when vaex support is dropped.
             + glob.glob(os.path.join(p_run.path, "*.arrow"))
-            + glob.glob(os.path.join(p_run.path, "*.backup"))
+            + glob.glob(os.path.join(p_run.path, "*.bak"))
         )
         for parquet in parquets:
             os.remove(parquet)
@@ -130,7 +131,8 @@ def run_pipe(
         if p_run.status == 'RUN':
             logger.error(
                 "The pipeline run requested to process already has a running"
-                "status! Performing no actions. Exiting.")
+                " status! Performing no actions. Exiting."
+            )
             return True
 
         # Check for an error status and whether any previous config file
@@ -182,7 +184,8 @@ def run_pipe(
                         "The config file has either not changed since the"
                         " previous run or other settings have changed such that"
                         " a new or complete re-run should be performed"
-                        " instead. Performing no actions. Exiting.")
+                        " instead. Performing no actions. Exiting."
+                    )
                     os.remove(os.path.join(p_run.path, 'config_temp.py'))
                     pipeline.set_status(p_run, 'END')
 
@@ -192,7 +195,8 @@ def run_pipe(
                     logger.info(
                         "The 'epoch based' setting has changed since the"
                         " previous run. A complete re-run is required if"
-                        " changing to epoch based mode or vice versa.")
+                        " changing to epoch based mode or vice versa."
+                    )
                     os.remove(os.path.join(p_run.path, 'config_temp.py'))
                     pipeline.set_status(p_run, 'END')
                     return True

@@ -1443,7 +1443,7 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
 def backup_parquets(p_run_path: str) -> None:
     """
     Backups up all the existing parquet files in a pipeline run directory.
-    Backups are named with a '.backup' suffix in the pipeline run directory.
+    Backups are named with a '.bak' suffix in the pipeline run directory.
 
     Parameters
     ----------
@@ -1471,7 +1471,7 @@ def reconstruct_associtaion_dfs(
     images_df_done: pd.DataFrame,
     previous_parquet_paths: Dict[str, str]) -> (pd.DataFrame, pd.DataFrame):
     """
-    This function is used with add mode and performs the necessary
+    This function is used with add image mode and performs the necessary
     manipulations to reconstruct the sources_df and skyc1_srcs required by
     association.
 
@@ -1499,7 +1499,7 @@ def reconstruct_associtaion_dfs(
 
     # Obtain the pipeline run path in order to fetch forced measurements.
     run_path = previous_parquet_paths['sources'].replace(
-        'sources.parquet.backup', "")
+        'sources.parquet.bak', '')
 
     # Get the forced measurement paths.
     img_fmeas_paths = []
@@ -1642,7 +1642,7 @@ def reconstruct_associtaion_dfs(
 
     # Create the unique skyc1_srcs dataframe.
     skyc1_srcs = (
-        sources_df.loc[sources_df.forced == False]
+        sources_df[sources_df['forced'] == False]
         .sort_values(by='id')
         .drop('related', axis=1)
         .drop_duplicates('source')
@@ -1651,7 +1651,8 @@ def reconstruct_associtaion_dfs(
     # Get relations into the skyc1_srcs (as we only keep the first instance
     # which does not have the relation information)
     skyc1_srcs = skyc1_srcs.merge(
-        prev_relations, how='left', left_on='source', right_index=True)
+        prev_relations, how='left', left_on='source', right_index=True
+)
 
     # Need to break the pointer relationship between the related sources (
     # deep=True copy does not truly copy mutable type objects)

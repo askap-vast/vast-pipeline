@@ -822,9 +822,10 @@ def basic_association(
     # and update skyc1 with the sources that were created from the one
     # to many relations and any new sources.
     skyc1_srcs = skyc1_srcs.append(
-        skyc2_srcs.loc[
-            ~skyc2_srcs.source.isin(skyc1_srcs.source)
-        ], ignore_index=True
+        skyc2_srcs[
+            ~skyc2_srcs['source'].isin(skyc1_srcs['source'])
+        ],
+        ignore_index=True
     ).reset_index(drop=True)
 
     return sources_df, skyc1_srcs
@@ -870,7 +871,7 @@ def advanced_association(
     del temp_skyc1_srcs, temp_skyc2_srcs
 
     # Step 3: Apply the beamwidth limit
-    temp_srcs = temp_srcs.loc[d2d <= bw_max].copy()
+    temp_srcs = temp_srcs[d2d <= bw_max].copy()
 
     # Step 4: Calculate and perform De Ruiter radius cut
     if method == 'deruiter':
@@ -986,7 +987,7 @@ def association(images_df, limit, dr_limit, bw_limit,
         # Here the skyc1_srcs and sources_df are recreated and the done images
         # are filtered out.
         image_mask = images_df['image_name'].isin(done_images_df['name'])
-        images_df_done = images_df.loc[image_mask].copy()
+        images_df_done = images_df[image_mask].copy()
         sources_df, skyc1_srcs = reconstruct_associtaion_dfs(images_df_done,
             previous_parquets)
         images_df = images_df.loc[~image_mask]
@@ -1224,7 +1225,7 @@ def association(images_df, limit, dr_limit, bw_limit,
         # and update relations in skyc1
         skyc1_srcs = skyc1_srcs.drop('related', axis=1)
         relations_unique = pd.DataFrame(
-            sources_df[~sources_df.related.isna()]
+            sources_df[~sources_df['related'].isna()]
             .explode('related')
             .groupby('source')['related']
             .apply(lambda x: x.unique().tolist())
@@ -1345,7 +1346,7 @@ def _correct_parallel_source_ids_add_mode(
     source_id_map = dict(zip(to_correct_source_ids, new_ids))
     # get and apply the new ids to the new column
     df.loc[to_correct_mask, 'new_source'] = (
-        df.loc[to_correct_mask]['new_source'].map(source_id_map)
+        df.loc[to_correct_mask, 'new_source'].map(source_id_map)
     )
     # regenrate the map
     source_id_map = dict(zip(df.source.values, df.new_source.values))
@@ -1508,7 +1509,7 @@ def parallel_association(
         new_id = max(done_source_ids) + 1
         for i in indexes[1:]:
             corr_df, new_id = _correct_parallel_source_ids_add_mode(
-                results.loc[i][['source', 'related']], done_source_ids, new_id)
+                results.loc[i, ['source', 'related']], done_source_ids, new_id)
             results.loc[
                 (i, slice(None)), ['source', 'related']
             ] = corr_df.values
