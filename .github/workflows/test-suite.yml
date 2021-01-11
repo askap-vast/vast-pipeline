@@ -39,9 +39,11 @@ jobs:
       with:
         node-version: '12'
 
-    - run: npm ci
-    - run: npm start
-    - run: pip install -r requirements/dev.txt
+    - name: Set up frontend assets and install python dependencies
+    - run: |
+        npm ci
+        npm start
+        pip install -r requirements/dev.txt
 
     - name: Set DATABASE_URL (using ansible)
       run: >
