@@ -1460,7 +1460,7 @@ def backup_parquets(p_run_path: str) -> None:
         + glob.glob(os.path.join(p_run_path, "*.arrow")))
 
     for i in parquets:
-        backup_name = i + '.backup'
+        backup_name = i + '.bak'
         if os.path.isfile(backup_name):
             logger.debug(f'Removing old backup file: {backup_name}.')
             os.remove(backup_name)
