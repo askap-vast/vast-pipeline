@@ -23,11 +23,11 @@ sudo groupadd docker
 sudo usermod -aG docker $USER
 ```
 
-2. create your PostgreSQL container: `docker run --name NAME_OF_MyCONTAINER -e POSTGRES_PASSWORD=postgres -p 127.0.0.1:5432:5432 -d postgres`. This will install a PostgreSQL 12.1 container exposing the container internal port 5432 to your system (`127.0.0.1` or `localhost`) at port `5432`. I encourage to change the localhost port (e.g. `5433:5432`) so you know you're are in control! The command setup automatically a user `postgres` with password `postgres` and default database `postgres`. If everything goes well, you see your container up and running by issuing `docker ps`.
+2. create your PostgreSQL container: `docker run --name NAME_OF_MyCONTAINER -e POSTGRES_PASSWORD=postgres -p 127.0.0.1:5432:5432 -d postgres:13.1`. This will install a PostgreSQL 13.1 container exposing the container internal port 5432 to your system (`127.0.0.1` or `localhost`) at port `5432`. I encourage to change the localhost port (e.g. `5433:5432`) so you know you're in control! The command setup automatically a user `postgres` with password `postgres` and default database `postgres`. If everything goes well, you see your container up and running by issuing `docker ps`.
 
 ```bash
 CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                    NAMES
-afnafnalkfo3        postgres:12.1        "docker-entrypoint.s…"   22 hours ago        Up 22 hours         localhost:5432->5432/tcp   NAME_OF_MyCONTAINER
+afnafnalkfo3        postgres:13.1        "docker-entrypoint.s…"   22 hours ago        Up 22 hours         localhost:5432->5432/tcp   NAME_OF_MyCONTAINER
 ```
 
 If `localhost` is not passed, the command exposes the port on `0.0.0.0` so other users on the same subnet (e.g. same WiFi access point) can connect to it (I don't recommend it for a local development environment!)
@@ -36,10 +36,10 @@ If `localhost` is not passed, the command exposes the port on `0.0.0.0` so other
 
 	a. Connect to the container by running `docker exec -it NAME_OF_MyCONTAINER bash`. That runs `bash` shell as `root` inside the container.
 
-	b. Install the packages, replace XX with the postgres version installed in docker (check version with `psql -U postgres`):
+	b. Install the packages, making sure the postgres version is same as the one installed in docker (version 13 in this case -- check version with `psql -U postgres`):
 
 	```bash
-	apt-get update -y && apt-get install -y libssl-dev libkrb5-dev zlib1g-dev make git gcc postgresql-server-dev-XX postgresql-common
+	apt-get update -y && apt-get install -y libssl-dev libkrb5-dev zlib1g-dev make git gcc postgresql-server-dev-13 postgresql-common
 	```
 	c. Clone `Q3C` repo and install it:
 
@@ -67,7 +67,7 @@ postgres=#
 
 The command will ask you for the password, please type `postgres`. The password is set by the `POSTGRES_PASSWORD=postgres` environment variable at container initialization, and __CAN'T__ be changed afterward.
 
-As you can see does not matter if the CLI client is for higher PostgreSQL versions, as it still connect to your instance ( e.g. `psql (11.0 (Ubuntu 11.0-2.pgdg18.04+1), server 12.1 (Debian 12.1-1.pgdg100+1))`).
+As you can see does not matter if the CLI client is for higher PostgreSQL versions, as it still connect to your instance ( e.g. `psql (11.0 (Ubuntu 11.0-2.pgdg18.04+1), server 13.1 (Debian 13.1-1.pgdg100+1))`).
 
 Basic Start/Stop commands are `docker start NAME_OF_MyCONTAINER` and `docker stop NAME_OF_MyCONTAINER`. Remember to start your container after rebooting your machine, if you don't have docker daemon configured to autoload!
 
@@ -164,7 +164,7 @@ npm ERR! code ELIFECYCLE
 npm ERR! errno 1
 npm ERR! vast-pipeline@99.99.99-dev start: `gulp default`
 npm ERR! Exit status 1
-npm ERR! 
+npm ERR!
 npm ERR! Failed at the vast-pipeline@99.99.99-dev start script.
 npm ERR! This is probably not a problem with npm. There is likely additional logging output above.
 

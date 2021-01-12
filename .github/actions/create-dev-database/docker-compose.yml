@@ -1,0 +1,16 @@
+version: "3"
+
+services:
+
+  database:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    # The name for the custom image being built
+    image: vast-dev-db
+    container_name: vast-dev-db
+    ports:
+      - "127.0.0.1:${DB_PORT}:5432"
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
