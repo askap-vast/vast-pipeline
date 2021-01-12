@@ -1,6 +1,7 @@
 # VAST Pipeline
 
 [![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/)
+![Tests](https://github.com/askap-vast/vast-pipeline/workflows/test-suite/badge.svg)
 
 This repository holds the code of the Radio Transient detection pipeline for the VAST project.
 

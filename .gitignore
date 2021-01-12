@@ -105,8 +105,6 @@ celerybeat-schedule
 *survey*/
 **/*.env
 
-Dockerfile
 docker/
 .dockerignore
-docker-compose.yml
 .idea/
