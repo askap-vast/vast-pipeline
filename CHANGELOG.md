@@ -26,6 +26,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Removed
 
+- Removed aplpy from base requirements [#460](https://github.com/askap-vast/vast-pipeline/pull/460).
+
 #### List of PRs
 
 - [#459](https://github.com/askap-vast/vast-pipeline/pull/459) fix: Fix particles and breadcrumb issues on mobile.
