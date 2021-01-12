@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import unittest
+import glob
 
 from vast_pipeline.tests.test_regression import compare_runs
 
@@ -14,7 +15,7 @@ from vast_pipeline.models import Source
 TEST_ROOT = os.path.join(s.BASE_DIR, 'vast_pipeline', 'tests')
 
 
-no_data = not os.path.exists(os.path.join(TEST_ROOT, 'regression-data'))
+no_data = not glob.glob(os.path.join(TEST_ROOT, 'regression-data','EPOCH*'))
 @unittest.skipIf(
     no_data, 
     'The regression test data is missing, skipping add image tests'

@@ -2,6 +2,7 @@ import os
 import types
 import pandas as pd
 import unittest
+import glob
 
 from vast_pipeline.tests.test_regression import compare_runs, property_check
 
@@ -13,7 +14,7 @@ from django.core.management import call_command
 TEST_ROOT = os.path.join(s.BASE_DIR, 'vast_pipeline', 'tests')
 
 
-no_data = not os.path.exists(os.path.join(TEST_ROOT, 'regression-data'))
+no_data = not glob.glob(os.path.join(TEST_ROOT, 'regression-data','EPOCH*'))
 @unittest.skipIf(
     no_data,
     'The regression test data is missing, skipping regression tests'
