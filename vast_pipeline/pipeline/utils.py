@@ -1561,7 +1561,8 @@ def reconstruct_associtaion_dfs(
     measurements = (
         measurements.merge(
             images_df_done[['image_name', 'epoch']],
-            left_on='image_id', right_index=True)
+            left_on='image_id', right_index=True
+        )
         .rename(columns={'image_name': 'image'})
     )
 
@@ -1574,13 +1575,13 @@ def reconstruct_associtaion_dfs(
     # Merge measurements into the associations to form the sources_df.
     sources_df = (
         prev_associations.merge(
-            measurements, left_on='meas_id', right_index=True)
+            measurements, left_on='meas_id', right_index=True
+        )
         .rename(columns={
             'source_id': 'source', 'time': 'datetime', 'meas_id': 'id',
             'ra': 'ra_source', 'dec': 'dec_source',
             'uncertainty_ew': 'uncertainty_ew_source',
             'uncertainty_ns': 'uncertainty_ns_source',
-
         })
     )
 
@@ -1613,7 +1614,6 @@ def reconstruct_associtaion_dfs(
         prev_relations
         .groupby('from_source_id')['to_source_id']
         .apply(lambda x: x.values.tolist())
-        .replace({np.nan: None})
     ).rename(columns={'to_source_id': 'related'})
 
     # Append the relations to only the last instance of each source
@@ -1657,7 +1657,7 @@ def reconstruct_associtaion_dfs(
     # Need to break the pointer relationship between the related sources (
     # deep=True copy does not truly copy mutable type objects)
     relation_mask = skyc1_srcs.related.isna()
-    relation_vals = skyc1_srcs.loc[~relation_mask]['related'].to_list()
+    relation_vals = skyc1_srcs.loc[~relation_mask, 'related'].to_list()
     new_relation_vals = [x.copy() for x in relation_vals]
     skyc1_srcs.loc[~relation_mask, 'related'] = new_relation_vals
 

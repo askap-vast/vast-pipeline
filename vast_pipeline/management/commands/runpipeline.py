@@ -15,6 +15,7 @@ from vast_pipeline.pipeline.utils import (
     create_measurement_pairs_arrow_file, backup_parquets
 )
 from vast_pipeline.utils.utils import StopWatch
+from vast_pipeline.models import Run
 from ..helpers import get_p_run_name
 from astropy.utils.exceptions import AstropyWarning
 from vast_pipeline.pipeline.errors import PipelineError, PipelineConfigError
@@ -24,8 +25,9 @@ logger = logging.getLogger(__name__)
 
 
 def run_pipe(
-    name, path_name=None, run_dj_obj=None, cmd=True, debug=False, user=None,
-    complete_rerun=False, prev_ui_status='END'
+    name: str, path_name: str=None, run_dj_obj: Run=None, cmd: bool=True,
+    debug: bool=False, user: User=None, full_rerun: bool=False,
+    prev_ui_status: str='END'
 ):
     '''
     Main function to run the pipeline.
@@ -47,9 +49,11 @@ def run_pipe(
         output. Defaults to False.
     user : User, optional
         The User of the request if made through the UI. Defaults to None.
-    complete_rerun : bool, optional
+    full_rerun : bool, optional
         If the run already exists, a complete rerun will be performed which
         will remove and replace all the previous results.
+    prev_ui_status : str, optional
+        The previous status through the UI. Defaults to 'END'.
 
     Returns
     -------
@@ -141,7 +145,7 @@ def run_pipe(
         # on before so to do that `complete-rerun` mode is activated.
         if p_run.status == 'ERR' and not os.path.isfile(
             os.path.join(p_run.path, 'config_prev.py')):
-            complete_rerun = True
+            full_rerun = True
 
         # Check if the run has only been initialised, if so we don't want to do
         # any previous run checks or cleaning.
@@ -152,7 +156,7 @@ def run_pipe(
                 + glob.glob(os.path.join(p_run.path, "*.arrow"))
             )
 
-            if complete_rerun:
+            if full_rerun:
                 if p_run.status == 'END':
                     backup_parquets(p_run.path)
                 logger.info('Cleaning up pipeline run before re-process data')
@@ -207,16 +211,12 @@ def run_pipe(
                     backup_parquets(p_run.path)
 
                 pipeline.add_mode = True
-                pipeline.previous_parquets['images'] = os.path.join(
-                    p_run.path, 'images.parquet.backup')
-                pipeline.previous_parquets['associations'] = os.path.join(
-                    p_run.path, 'associations.parquet.backup')
-                pipeline.previous_parquets['sources'] = os.path.join(
-                    p_run.path, 'sources.parquet.backup')
-                pipeline.previous_parquets['relations'] = os.path.join(
-                    p_run.path, 'relations.parquet.backup')
-                pipeline.previous_parquets['measurement_pairs'] = os.path.join(
-                    p_run.path, 'measurement_pairs.parquet.backup')
+                for i in [
+                    'images', 'associations', 'sources', 'relations',
+                    'measurement_pairs'
+                ]:
+                    pipeline.previous_parquets[i] = os.path.join(
+                        p_run.path, f'{i}.parquet.bak')
 
     if pipeline.config.CREATE_MEASUREMENTS_ARROW_FILES and cmd is False:
         logger.warning(
@@ -287,7 +287,7 @@ class Command(BaseCommand):
         )
 
         parser.add_argument(
-            '--complete-rerun',
+            '--full-rerun',
             required=False,
             default=False,
             action='store_true',
@@ -326,6 +326,6 @@ class Command(BaseCommand):
         debug_flag = True if options['verbosity'] > 1 else False
 
         done = run_pipe(p_run_name, path_name=run_folder,
-            debug=debug_flag, complete_rerun=options['complete_rerun'])
+            debug=debug_flag, full_rerun=options['full_rerun'])
 
         self.stdout.write(self.style.SUCCESS('Finished'))

@@ -15,7 +15,7 @@ TEST_ROOT = os.path.join(s.BASE_DIR, 'vast_pipeline', 'tests')
 
 no_data = not os.path.exists(os.path.join(TEST_ROOT, 'regression-data'))
 @unittest.skipIf(
-    no_data, 
+    no_data,
     'The regression test data is missing, skipping regression tests'
 )
 @override_settings(
@@ -23,7 +23,7 @@ no_data = not os.path.exists(os.path.join(TEST_ROOT, 'regression-data'))
 )
 class BasicEpochForcedTest(TestCase):
     '''
-    Test pipeline under epoch based forced basic association method returns 
+    Test pipeline under epoch based forced basic association method returns
     expected results.
     '''
 
@@ -36,8 +36,8 @@ class BasicEpochForcedTest(TestCase):
             s.PIPELINE_WORKING_DIR, 'regression', 'epoch-basic-forced'
         )
         self.compare_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 
-            'regression', 
+            s.PIPELINE_WORKING_DIR,
+            'regression',
             'epoch-add-image-parallel-basic-forced'
         )
         self.config_base = os.path.join(self.compare_run, 'config_base.py')
@@ -72,7 +72,7 @@ class BasicEpochForcedTest(TestCase):
 
         self.forced_compare = {}
         for f in os.listdir(self.compare_run):
-            if f[:6] == 'forced' and f[-6:] != 'backup':
+            if f[:6] == 'forced' and f[-3:] != 'bak':
                 self.forced_compare[f] = pd.read_parquet(
                     os.path.join(self.compare_run, f)
                 )
@@ -101,13 +101,13 @@ class BasicEpochForcedTest(TestCase):
         '''
         # the expected forced extractions for PSR J2129-04
         exp_forced = {
-            '2118-06A_EPOCH01', '2118-06A_EPOCH12','2118-06A_EPOCH02', 
+            '2118-06A_EPOCH01', '2118-06A_EPOCH12','2118-06A_EPOCH02',
             '2118-06A_EPOCH03x'
         }
 
         for forced, sources, ass in zip(
-            [self.forced_files, self.forced_compare], 
-            [self.sources_base, self.sources_compare], 
+            [self.forced_files, self.forced_compare],
+            [self.sources_base, self.sources_compare],
             [self.ass_base, self.ass_compare]
         ):
             property_check.test_known_in_forced(
@@ -116,7 +116,7 @@ class BasicEpochForcedTest(TestCase):
 
 
 @unittest.skipIf(
-    no_data, 
+    no_data,
     'The regression test data is missing, skipping regression tests'
 )
 @override_settings(
@@ -124,7 +124,7 @@ class BasicEpochForcedTest(TestCase):
 )
 class AdvancedEpochForcedTest(TestCase):
     '''
-    Test pipeline under epoch based forced advanced association method returns 
+    Test pipeline under epoch based forced advanced association method returns
     expected results.
     '''
 
@@ -137,8 +137,8 @@ class AdvancedEpochForcedTest(TestCase):
             s.PIPELINE_WORKING_DIR, 'regression', 'epoch-advanced-forced'
         )
         self.compare_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 
-            'regression', 
+            s.PIPELINE_WORKING_DIR,
+            'regression',
             'epoch-add-image-parallel-advanced-forced'
         )
         self.config_base = os.path.join(self.compare_run, 'config_base.py')
@@ -173,7 +173,7 @@ class AdvancedEpochForcedTest(TestCase):
 
         self.forced_compare = {}
         for f in os.listdir(self.compare_run):
-            if f[:6] == 'forced' and f[-6:] != 'backup':
+            if f[:6] == 'forced' and f[-3:] != 'bak':
                 self.forced_compare[f] = pd.read_parquet(
                     os.path.join(self.compare_run, f)
                 )
@@ -186,7 +186,7 @@ class AdvancedEpochForcedTest(TestCase):
             os.path.join(
                 self.compare_run, 'associations.parquet'
             )
-        )  
+        )
 
     def test_forced_num(self):
         '''
@@ -206,8 +206,8 @@ class AdvancedEpochForcedTest(TestCase):
 )
 class DeruiterEpochForcedTest(TestCase):
     '''
-    Test pipeline under epoch based forced advanced association method returns 
-    expected results. This is a property check and not a comparison because 
+    Test pipeline under epoch based forced advanced association method returns
+    expected results. This is a property check and not a comparison because
     deruiter uses the largest beam size in present images, which gives slightly
     different results compared to the normal epoch based run.
     '''
@@ -218,8 +218,8 @@ class DeruiterEpochForcedTest(TestCase):
         Set up directory to test data and run the pipeline.
         '''
         self.base_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 
-            'regression', 
+            s.PIPELINE_WORKING_DIR,
+            'regression',
             'epoch-add-image-parallel-deruiter-forced'
         )
         self.config_base = os.path.join(self.base_run, 'config_base.py')
@@ -234,7 +234,7 @@ class DeruiterEpochForcedTest(TestCase):
 
         self.forced = {}
         for f in os.listdir(self.base_run):
-            if f[:6] == 'forced' and f[-6:] != 'backup':
+            if f[:6] == 'forced' and f[-3:] != 'bak':
                 self.forced[f] = pd.read_parquet(
                     os.path.join(self.base_run, f)
                 )

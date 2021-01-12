@@ -328,13 +328,13 @@ class RunViewSet(ModelViewSet):
                 p_run.save()
 
             debug_flag = True if request.POST.get('debug', None) else False
-            complete_rerun = True if request.POST.get('completeReRun', None) else False
+            full_rerun = True if request.POST.get('fullReRun', None) else False
 
             async_task(
                 'vast_pipeline.management.commands.runpipeline.run_pipe',
                 p_run.name, p_run.path, p_run, False, debug_flag,
                 task_name=p_run.name, ack_failure=True, user=request.user,
-                complete_rerun=complete_rerun, prev_ui_status=prev_status
+                full_rerun=full_rerun, prev_ui_status=prev_status
             )
             msg = mark_safe(
                 f'<b>{p_run.name}</b> successfully sent to the queue!<br><br>Refresh the'

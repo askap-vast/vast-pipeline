@@ -15,7 +15,7 @@ TEST_ROOT = os.path.join(s.BASE_DIR, 'vast_pipeline', 'tests')
 
 no_data = not os.path.exists(os.path.join(TEST_ROOT, 'regression-data'))
 @unittest.skipIf(
-    no_data, 
+    no_data,
     'The regression test data is missing, skipping regression tests'
 )
 @override_settings(
@@ -23,7 +23,7 @@ no_data = not os.path.exists(os.path.join(TEST_ROOT, 'regression-data'))
 )
 class BasicForcedTest(TestCase):
     '''
-    Test pipeline under forced basic association method returns expected 
+    Test pipeline under forced basic association method returns expected
     results.
     '''
 
@@ -36,8 +36,8 @@ class BasicForcedTest(TestCase):
             s.PIPELINE_WORKING_DIR, 'regression', 'normal-basic-forced'
         )
         self.compare_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 
-            'regression', 
+            s.PIPELINE_WORKING_DIR,
+            'regression',
             'add-image-parallel-basic-forced'
         )
         self.config_base = os.path.join(self.compare_run, 'config_base.py')
@@ -72,7 +72,7 @@ class BasicForcedTest(TestCase):
 
         self.forced_compare = {}
         for f in os.listdir(self.compare_run):
-            if f[:6] == 'forced' and f[-6:] != 'backup':
+            if f[:6] == 'forced' and f[-3:] != 'bak':
                 self.forced_compare[f] = pd.read_parquet(
                     os.path.join(self.compare_run, f)
                 )
@@ -106,8 +106,8 @@ class BasicForcedTest(TestCase):
         }
 
         for forced, sources, ass in zip(
-            [self.forced_base, self.forced_compare], 
-            [self.sources_norm, self.sources_compare], 
+            [self.forced_base, self.forced_compare],
+            [self.sources_norm, self.sources_compare],
             [self.ass_norm, self.ass_compare]
         ):
             property_check.test_known_in_forced(
@@ -116,7 +116,7 @@ class BasicForcedTest(TestCase):
 
 
 @unittest.skipIf(
-    no_data, 
+    no_data,
     'The regression test data is missing, skipping regression tests'
 )
 @override_settings(
@@ -137,8 +137,8 @@ class AdvancedForcedTest(TestCase):
             s.PIPELINE_WORKING_DIR, 'regression', 'normal-advanced-forced'
         )
         self.compare_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 
-            'regression', 
+            s.PIPELINE_WORKING_DIR,
+            'regression',
             'add-image-parallel-advanced-forced'
         )
         self.config_base = os.path.join(self.compare_run, 'config_base.py')
@@ -173,7 +173,7 @@ class AdvancedForcedTest(TestCase):
 
         self.forced_compare = {}
         for f in os.listdir(self.compare_run):
-            if f[:6] == 'forced' and f[-6:] != 'backup':
+            if f[:6] == 'forced' and f[-3:] != 'bak':
                 self.forced_compare[f] = pd.read_parquet(
                     os.path.join(self.compare_run, f)
                 )
@@ -186,7 +186,7 @@ class AdvancedForcedTest(TestCase):
             os.path.join(
                 self.compare_run, 'associations.parquet'
             )
-        )  
+        )
 
     def test_forced_num(self):
         '''
@@ -219,8 +219,8 @@ class DeruiterForcedTest(TestCase):
             s.PIPELINE_WORKING_DIR, 'regression', 'normal-deruiter-forced'
         )
         self.compare_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 
-            'regression', 
+            s.PIPELINE_WORKING_DIR,
+            'regression',
             'add-image-parallel-deruiter-forced'
         )
         self.config_base = os.path.join(self.compare_run, 'config_base.py')
@@ -255,7 +255,7 @@ class DeruiterForcedTest(TestCase):
 
         self.forced_compare = {}
         for f in os.listdir(self.compare_run):
-            if f[:6] == 'forced' and f[-6:] != 'backup':
+            if f[:6] == 'forced' and f[-3:] != 'bak':
                 self.forced_compare[f] = pd.read_parquet(
                     os.path.join(self.compare_run, f)
                 )

@@ -775,13 +775,46 @@ def many_to_one_advanced(temp_srcs: pd.DataFrame) -> pd.DataFrame:
 
 
 def basic_association(
-        sources_df, skyc1_srcs, skyc1, skyc2_srcs, skyc2, limit,
-        new_src_buffer=0
+        sources_df: pd.DataFrame, skyc1_srcs: pd.DataFrame, skyc1: SkyCoord,
+        skyc2_srcs: pd.DataFrame, skyc2: SkyCoord, limit: Angle,
+        new_src_buffer: int=0
     ):
     '''
     The loop for basic source association that uses the astropy
     'match_to_catalog_sky' function (i.e. only the nearest match between
     the catalogs). A direct on sky separation is used to define the association.
+
+    Parameters
+    ----------
+    sources_df : pd.DataFrame
+        The dataframe containing all current measurements along with their
+        association source and relations.
+    skyc1_srcs : pd.DataFrame
+        The same structure as sources_df but only has one entry per 'source'
+        along with a weighted average sky position of the current assoociated
+        sources.
+    skyc1 : SkyCoord
+        A SkyCoord object with the weighted average sky positions from
+        skyc1_srcs.
+    skyc2_srcs : pd.DataFrame
+        The same structure as sources_df containing the measurements to be
+        associated.
+    skyc2 : SkyCoord
+        A SkyCoord object with the sky positions from skyc2_srcs.
+    limit : astropy.coordinates.Angle
+        The association limit to use (applies to basic and advanced only).
+    new_src_buffer : int, optional
+        An additive buffer to be applied to source numbering when adding new
+        sources to the associations (applies when parallel and add image are
+        being used). Defaults to 0.
+
+    Returns
+    -------
+    sources_df, skyc1_srcs : pd.DataFrame, pd.DataFrame
+        The output sources_df containing all input measurements along with the
+        association and relation information.
+        The output skyc1_srcs with updated with new sources from the
+        association.
     '''
     # match the new sources to the base
     # idx gives the index of the closest match in the base for skyc2
@@ -832,8 +865,9 @@ def basic_association(
 
 
 def advanced_association(
-        method, sources_df, skyc1_srcs, skyc1,
-        skyc2_srcs, skyc2, dr_limit, bw_max, new_src_buffer=0
+        method: str, sources_df: pd.DataFrame, skyc1_srcs: pd.DataFrame,
+        skyc1: SkyCoord, skyc2_srcs: pd.DataFrame, skyc2: SkyCoord,
+        dr_limit: float, bw_max: float, new_src_buffer: int=0
     ):
     '''
     The loop for advanced source association that uses the astropy
@@ -841,6 +875,42 @@ def advanced_association(
     found). The BMAJ of the image * the user supplied beamwidth
     limit is the base distance for association. This is followed
     by calculating the 'de Ruiter' radius.
+
+    Parameters
+    ----------
+    method : str
+        The advanced association method 'advanced' or 'deruiter'.
+    sources_df : pd.DataFrame
+        The dataframe containing all current measurements along with their
+        association source and relations.
+    skyc1_srcs : pd.DataFrame
+        The same structure as sources_df but only has one entry per 'source'
+        along with a weighted average sky position of the current assoociated
+        sources.
+    skyc1 : SkyCoord
+        A SkyCoord object with the weighted average sky positions from
+        skyc1_srcs.
+    skyc2_srcs : pd.DataFrame
+        The same structure as sources_df containing the measurements to be
+        associated.
+    skyc2 : SkyCoord
+        A SkyCoord object with the sky positions from skyc2_srcs.
+    dr_limit : float
+        The de Ruiter radius limit to use (applies to de ruiter only).
+    bw_limit : float
+        The beamwidth limit to use (applies to de ruiter only).
+    new_src_buffer : int, optional
+        An additive buffer to be applied to source numbering when adding new
+        sources to the associations (applies when parallel and add image are
+        being used). Defaults to 0.
+
+    Returns
+    -------
+    sources_df, skyc1_srcs : pd.DataFrame, pd.DataFrame
+        The output sources_df containing all input measurements along with the
+        association and relation information.
+        The output skyc1_srcs with updated with new sources from the
+        association.
     '''
     # read the needed sources fields
     # Step 1: get matches within semimajor axis of image.
@@ -951,17 +1021,51 @@ def advanced_association(
     return sources_df, skyc1_srcs
 
 
-def association(images_df, limit, dr_limit, bw_limit,
-    duplicate_limit, config, add_mode, previous_parquets, done_images_df,
-    new_src_buffer=0, parallel=False):
+def association(images_df: pd.DataFrame, limit: Angle, dr_limit: float,
+    bw_limit: float, duplicate_limit: Angle, config, add_mode: bool,
+    previous_parquets: Dict[str, str], done_images_df: pd.DataFrame,
+    new_src_buffer: int=0, parallel: bool=False):
     '''
     The main association function that does the common tasks between basic
     and advanced modes.
+
+    Parameters
+    ----------
+    images_df : pd.DataFrame
+        The input images to be associated.
+    limit : astropy.coordinates.Angle
+        The association limit to use (applies to basic and advanced only).
+    dr_limit : float
+        The de Ruiter radius limit to use (applies to de ruiter only).
+    bw_limit : float
+        The beamwidth limit to use (applies to de ruiter only).
+    duplicate_limit : astropy.coordinates.Angle
+        The limit of separation for which a measurement is considered to be
+        a duplicate (epoch based association).
+    config : config
+        The pipeline configuration object.
+    add_mode : bool
+        Whether the pipeline is currently being run in add image mode.
+    previous_parquets : Dict[str, str]
+        Dictionary containing the paths of the previous successful run parquet
+        files (used in add image mode).
+    done_images_df : pd.DataFrame
+        Datafraame containing the images of the previous successful run
+        (used in add image mode).
+    new_src_buffer : int, optional
+        An additive buffer to be applied to source numbering when adding new
+        sources to the associations (applies when parallel and add image are
+        being used). Defaults to 0.
+    parallel : bool, optional
+        Whether parallel association is being used.
+
+    Returns
+    -------
+    sources_df : pd.DataFrame
+        The output sources_df containing all input measurements along with the
+        association and relation information.
     '''
     timer = StopWatch()
-
-    if images_df.empty:
-        return
 
     if parallel:
         images_df = (
@@ -1507,29 +1611,35 @@ def parallel_association(
         # Need to correct all skyreg_groups.
         # First get the starting id for new sources.
         new_id = max(done_source_ids) + 1
-        for i in indexes[1:]:
+        for i in indexes:
             corr_df, new_id = _correct_parallel_source_ids_add_mode(
-                results.loc[i, ['source', 'related']], done_source_ids, new_id)
+                results.loc[i, ['source', 'related']],
+                done_source_ids,
+                new_id
+            )
             results.loc[
                 (i, slice(None)), ['source', 'related']
             ] = corr_df.values
     else:
         # The first index acts as the base, so the others are looped over and
         # corrected.
-        for i in indexes[1:]:
+        for i, val in enumerate(indexes):
+            # skip first one, makes the enumerate easier to deal with
+            if i == 0:
+                continue
             # Get the maximum source ID from the previous group.
-            max_id = results.loc[i - 1].source.max()
+            max_id = results.loc[indexes[i - 1]].source.max()
             # Run through the correction function, only the 'source' and
             # 'related'
             # columns are passed and returned (corrected).
             corr_df = _correct_parallel_source_ids(
-                results.loc[i][['source', 'related']],
+                results.loc[val][['source', 'related']],
                 max_id
             )
             # replace the values in the results with the corrected source and
             # related values
             results.loc[
-                (i, slice(None)), ['source', 'related']
+                (val, slice(None)), ['source', 'related']
             ] = corr_df.values
 
             del corr_df
