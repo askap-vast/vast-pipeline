@@ -17,7 +17,7 @@ TEST_ROOT = os.path.join(s.BASE_DIR, 'vast_pipeline', 'tests')
 
 no_data = not glob.glob(os.path.join(TEST_ROOT, 'regression-data','EPOCH*'))
 @unittest.skipIf(
-    no_data, 
+    no_data,
     'The regression test data is missing, skipping parallel add image tests'
 )
 @override_settings(
@@ -25,7 +25,7 @@ no_data = not glob.glob(os.path.join(TEST_ROOT, 'regression-data','EPOCH*'))
 )
 class BasicEpochParallelAddImageTest(TestCase):
     '''
-    Test pipeline runs when in epoch based parallel and adding an image for 
+    Test pipeline runs when in epoch based parallel and adding an image for
     basic association method.
     '''
 
@@ -94,7 +94,7 @@ class BasicEpochParallelAddImageTest(TestCase):
 
 
 @unittest.skipIf(
-    no_data, 
+    no_data,
     'The regression test data is missing, skipping parallel add image tests'
 )
 @override_settings(
@@ -102,7 +102,7 @@ class BasicEpochParallelAddImageTest(TestCase):
 )
 class AdvancedEpochParallelAddImageTest(TestCase):
     '''
-    Test pipeline runs when in epoch based parallel and adding an image for 
+    Test pipeline runs when in epoch based parallel and adding an image for
     advanced association method.
     '''
 
@@ -179,7 +179,7 @@ class AdvancedEpochParallelAddImageTest(TestCase):
 )
 class DeruiterEpochParallelAddImageTest(TestCase):
     '''
-    Test pipeline runs when in epoch based parallel and adding an image for 
+    Test pipeline runs when in epoch based parallel and adding an image for
     deruiter association method. This is a property check and not a comparison
     because deruiter uses the largest beam size in present images, which gives
     slightly different results compared to the normal epoch based run.

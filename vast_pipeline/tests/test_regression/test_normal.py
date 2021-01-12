@@ -16,7 +16,7 @@ TEST_ROOT = os.path.join(s.BASE_DIR, 'vast_pipeline', 'tests')
 
 no_data = not glob.glob(os.path.join(TEST_ROOT, 'regression-data','EPOCH*'))
 @unittest.skipIf(
-    no_data, 
+    no_data,
     'The regression test data is missing, skipping regression tests'
 )
 @override_settings(
@@ -69,13 +69,13 @@ class BasicRegressionTest(TestCase):
              [322.875277, -4.231576, 1],
              [322.875429, -4.231719, 1],
              [322.927896, -5.030347, 1],
-             [322.930182, -5.031106, 1]], 
+             [322.930182, -5.031106, 1]],
              columns = ['wavg_ra', 'wavg_dec', 'relations']
         )
 
         property_check.test_most_relations(
             self.relations, self.sources, 14, expected
-        ) 
+        )
 
     def test_known_source(self):
         '''
@@ -85,7 +85,7 @@ class BasicRegressionTest(TestCase):
 
 
 @unittest.skipIf(
-    no_data, 
+    no_data,
     'The regression test data is missing, skipping regression tests'
 )
 @override_settings(
@@ -137,7 +137,7 @@ class AdvancedRegressionTest(TestCase):
              [322.578973,  -4.317444, 2],
              [322.822594,  -5.092404, 2],
              [322.823466,  -5.091993, 2],
-             [322.824837,  -5.090852, 2]], 
+             [322.824837,  -5.090852, 2]],
              columns = ['wavg_ra', 'wavg_dec', 'relations']
         )
 

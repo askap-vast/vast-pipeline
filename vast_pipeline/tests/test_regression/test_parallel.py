@@ -17,7 +17,7 @@ TEST_ROOT = os.path.join(s.BASE_DIR, 'vast_pipeline', 'tests')
 
 no_data = not glob.glob(os.path.join(TEST_ROOT, 'regression-data','EPOCH*'))
 @unittest.skipIf(
-    no_data, 
+    no_data,
     'The regression test data is missing, skipping parallel tests'
 )
 @override_settings(
@@ -72,7 +72,7 @@ class BasicParallelTest(TestCase):
 
 
 @unittest.skipIf(
-    no_data, 
+    no_data,
     'The regression test data is missing, skipping add image tests'
 )
 @override_settings(
