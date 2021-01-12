@@ -32,6 +32,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#460](https://github.com/askap-vast/vast-pipeline/pull/460) dep: Removed aplpy from base requirements.
 - [#446](https://github.com/askap-vast/vast-pipeline/pull/446) feat: CI/CD workflow.
 - [#459](https://github.com/askap-vast/vast-pipeline/pull/459) fix: Fix particles and breadcrumb issues on mobile.
 - [#436](https://github.com/askap-vast/vast-pipeline/pull/436) dep: Bump ini from 1.3.5 to 1.3.8.
