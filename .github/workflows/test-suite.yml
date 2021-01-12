@@ -66,5 +66,9 @@ jobs:
     - name: Make relevant directories
       run: mkdir pipeline-runs && mkdir reference-surveys
 
+    - name: Download regression test data
+      run: bash -e ./download.sh
+      working-directory: ./vast_pipeline/tests/regression-data
+
     - name: Run tests
       run: ./manage.py test
