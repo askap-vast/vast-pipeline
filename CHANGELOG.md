@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added networkx to base reqiurements [#460](https://github.com/askap-vast/vast-pipeline/pull/460).
 - Added basic regression tests [#425](https://github.com/askap-vast/vast-pipeline/pull/425)
 - Added image length validation for config [#425](https://github.com/askap-vast/vast-pipeline/pull/425)
 

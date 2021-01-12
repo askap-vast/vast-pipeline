@@ -13,6 +13,7 @@ djangorestframework-datatables==0.5.1
 djangorestframework==3.11.0
 forced-phot @ git+https://github.com/askap-vast/forced_phot.git@v0.1.0
 jinja2==2.11.2
+networkx==2.4
 numpy==1.18.1
 pandas==1.0.1
 psutil==5.7.0
