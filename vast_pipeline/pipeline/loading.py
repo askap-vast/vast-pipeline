@@ -239,7 +239,7 @@ def make_upload_measurement_pairs(measurement_pairs_df):
     return measurement_pairs_df
 
 
-def update_sources(sources_df, batch_size=10_000):
+def update_sources(sources_df: pd.DataFrame, batch_size:int=10_000) -> pd.DataFrame:
     '''
     Update database using SQL code. This function opens one connection to the
     database, and closes it after the update is done. 
@@ -252,23 +252,20 @@ def update_sources(sources_df, batch_size=10_000):
         the table in the database.
     batch_size : int
         The df rows are broken into chunks, each chunk is executed in a 
-        separate SQL command, chunk determines the maximum size of the chunk.
+        separate SQL command, batch_size determines the maximum size of the 
+        chunk.
 
     Returns
     -------
     sources_df : pd.DataFrame
         DataFrame containing the new data to be uploaded to the database.
     '''
+    all_source_table_cols = [
+        fld.attname for fld in Source._meta.get_fields() 
+        if getattr(fld, 'attname', None) is not None
+    ]
     columns = [
-        'new', 'wavg_ra', 'wavg_dec', 'wavg_uncertainty_ew',
-        'wavg_uncertainty_ns', 'avg_flux_int', 'avg_flux_peak',
-        'max_flux_peak', 'min_flux_peak', 'max_flux_int', 'min_flux_int',
-        'min_flux_int_isl_ratio', 'min_flux_peak_isl_ratio', 'avg_compactness',
-        'min_snr', 'max_snr', 'v_int', 'v_peak', 'eta_int', 'eta_peak',
-        'new_high_sigma', 'n_neighbour_dist', 'vs_abs_significant_max_int',
-        'm_abs_significant_max_int', 'vs_abs_significant_max_peak',
-        'm_abs_significant_max_peak', 'n_meas', 'n_meas_sel', 'n_meas_forced',
-        'n_rel', 'n_sibl'
+        col for col in all_source_table_cols if col in sources_df.columns
     ]
 
     sources_df['id'] = sources_df.index.values
@@ -277,13 +274,15 @@ def update_sources(sources_df, batch_size=10_000):
     dfs = np.array_split(sources_df, batches)
     with connection.cursor() as cursor:
         for df_batch in dfs:
-            SQL_comm = SQL_update(df_batch, Source, index='id', columns=columns)
+            SQL_comm = SQL_update(
+                df_batch, Source, index='id', columns=columns
+            )
             cursor.execute(SQL_comm)
 
     return sources_df
 
 
-def SQL_update(df, model, index=None, columns=None):
+def SQL_update(df: pd.DataFrame, model, index=None, columns=None) -> str:
     '''
     Generate SQL code required to update database.
 
@@ -295,7 +294,7 @@ def SQL_update(df, model, index=None, columns=None):
         the table in the database.
     model : Model
         The model that is being updated. 
-    index : str
+    index : str or None
         Header of the column to join on, determines which rows in the different
         tables match. If None, then use the primary key column. 
     columns : List[str] or None
