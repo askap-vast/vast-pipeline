@@ -11,7 +11,7 @@ data_path = './vast_pipeline/tests/regression-data'
 obs = []
 # -06A and +00A
 for epoch in ['01', '03x', '02']:
-    for field in ['VAST_2118-06A', 'VAST_2118+00A']
+    for field in ['VAST_2118-06A', 'VAST_2118+00A']:
         obs.append(os.path.join('EPOCH' + epoch, field + '.EPOCH' + epoch))
 # 0127
 for epoch in ['01']:
