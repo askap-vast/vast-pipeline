@@ -3,8 +3,7 @@ import logging
 import numpy as np
 import pandas as pd
 
-from django.db import connection
-from django.db import transaction
+from django.db import transaction, connection
 from itertools import islice
 
 from vast_pipeline.image.main import SelavyImage
@@ -15,7 +14,9 @@ from vast_pipeline.pipeline.model_generator import (
     association_models_generator,
     measurement_pair_models_generator,
 )
-from vast_pipeline.models import Association, Measurement, Source, RelatedSource, MeasurementPair
+from vast_pipeline.models import (
+    Association, Measurement, Source, RelatedSource, MeasurementPair, Run
+)
 from vast_pipeline.pipeline.utils import (
     get_create_img, get_create_img_band
 )
@@ -23,30 +24,6 @@ from vast_pipeline.utils.utils import StopWatch
 
 
 logger = logging.getLogger(__name__)
-
-
-@transaction.atomic
-def bulk_upload_model(djmodel, generator, batch_size=10_000, return_ids=False):
-    '''
-    bulk upload a pandas series of django models to db
-    djmodel: django.model
-    generator: generator
-    batch_size: int
-    return_ids: bool
-    '''
-    bulk_ids = []
-    while True:
-        items = list(islice(generator, batch_size))
-        if not items:
-            break
-        out_bulk = djmodel.objects.bulk_create(items)
-        logger.info('Bulk created #%i %s', len(out_bulk), djmodel.__name__)
-        # save the DB ids to return
-        if return_ids:
-            bulk_ids.extend(list(map(lambda i: i.id, out_bulk)))
-
-    if return_ids:
-        return bulk_ids
 
 
 @transaction.atomic
@@ -175,10 +152,26 @@ def make_upload_images(paths, config, pipeline_run):
     return images, skyregs_df
 
 
-def make_upload_sources(sources_df, pipeline_run, add_mode=False):
+def make_upload_sources(sources_df: pd.DataFrame, pipeline_run: Run,
+    add_mode: bool=False) -> pd.DataFrame:
     '''
-    delete previous sources for given pipeline run and bulk upload
+    Delete previous sources for given pipeline run and bulk upload
     new found sources as well as related sources
+
+    Parameters
+    ----------
+    sources_df : pd.DataFrame
+        Holds the measurements associated into sources. The output of of the
+        association step.
+    pipeline_run : Run
+        The pipeline Run object.
+    add_mode : bool
+        Whether the pipeline is running in add image mode.
+
+    Returns
+    -------
+    sources_df : pd.DataFrame
+        The input dataframe with the 'id' column added.
     '''
     # create sources in DB
     with transaction.atomic():
@@ -242,7 +235,7 @@ def make_upload_measurement_pairs(measurement_pairs_df):
 def update_sources(sources_df, batch_size=10_000):
     '''
     Update database using SQL code. This function opens one connection to the
-    database, and closes it after the update is done. 
+    database, and closes it after the update is done.
 
     Parameters
     ----------
@@ -251,7 +244,7 @@ def update_sources(sources_df, batch_size=10_000):
         columns to be updated need to have the same headers between the df and
         the table in the database.
     batch_size : int
-        The df rows are broken into chunks, each chunk is executed in a 
+        The df rows are broken into chunks, each chunk is executed in a
         separate SQL command, chunk determines the maximum size of the chunk.
 
     Returns
@@ -294,18 +287,18 @@ def SQL_update(df, model, index=None, columns=None):
         columns to be updated need to have the same headers between the df and
         the table in the database.
     model : Model
-        The model that is being updated. 
+        The model that is being updated.
     index : str
         Header of the column to join on, determines which rows in the different
-        tables match. If None, then use the primary key column. 
+        tables match. If None, then use the primary key column.
     columns : List[str] or None
-        The column headers of the columns to be updated. If None, updates all 
+        The column headers of the columns to be updated. If None, updates all
         columns except the index column.
 
     Returns
     -------
     SQL_comm : str
-        The SQL command to update the database. 
+        The SQL command to update the database.
     '''
     # set index and columns if None
     if index is None:
@@ -314,7 +307,7 @@ def SQL_update(df, model, index=None, columns=None):
         columns = df.columns.tolist()
         columns.remove(index)
 
-    # get names 
+    # get names
     table = model._meta.db_table
     new_columns = ', '.join('new_'+c for c in columns)
     set_columns = ', '.join(c+'=new_'+c for c in columns)
@@ -337,5 +330,5 @@ def SQL_update(df, model, index=None, columns=None):
         AS new_values (index_col, {new_columns})
         WHERE {index}=index_col;
     """
-    
+
     return SQL_comm
