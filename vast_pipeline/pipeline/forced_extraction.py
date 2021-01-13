@@ -13,8 +13,9 @@ from astropy.coordinates import SkyCoord
 from django.conf import settings
 from django.db import transaction
 from pyarrow.parquet import read_schema
+from typing import List, Tuple
 
-from vast_pipeline.models import Image, Measurement
+from vast_pipeline.models import Image, Measurement, Run
 from vast_pipeline.image.utils import on_sky_sep
 from vast_pipeline.pipeline.loading import make_upload_measurements
 
@@ -448,7 +449,7 @@ def forced_extraction(
     p_run: Run, extr_df: pd.DataFrame, min_sigma: float, edge_buffer: float,
     cluster_threshold: float, allow_nan: bool, add_mode: bool,
     done_images_df: pd.DataFrame, done_source_ids: List[int]
-) -> Tuple[pd.Dataframe, int]:
+) -> Tuple[pd.DataFrame, int]:
     """
     Check and extract expected measurements, and associated them with the
     related source(s).

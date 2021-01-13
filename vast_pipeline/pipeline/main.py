@@ -99,7 +99,8 @@ class Pipeline():
         return valid_keys
 
     @staticmethod
-    def check_for_epoch_based(cfg) -> Tuple[cfg, bool]:
+    def check_for_epoch_based(cfg) -> Tuple['config', bool]:
+        # Config typing above is unknown what to put.
         """
         Checks whether the images have been provided in a Dictionary format
         which means that epoch_based has been requested. If they have been
