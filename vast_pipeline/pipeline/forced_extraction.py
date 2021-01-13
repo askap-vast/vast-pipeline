@@ -240,6 +240,10 @@ def parallel_extraction(
         flag to pass to ForcedPhot.measure method
     allow_nan : bool
         flag to pass to ForcedPhot.measure method
+    add_mode : bool
+        True when the pipeline is running in add image mode.
+    p_run_path : str
+        The system path of the pipeline run output.
 
     Returns
     -------
