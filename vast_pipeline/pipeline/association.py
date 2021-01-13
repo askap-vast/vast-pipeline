@@ -1329,7 +1329,7 @@ def association(images_df: pd.DataFrame, limit: Angle, dr_limit: float,
         # and update relations in skyc1
         skyc1_srcs = skyc1_srcs.drop('related', axis=1)
         relations_unique = pd.DataFrame(
-            sources_df[~sources_df['related'].isna()]
+            sources_df[sources_df['related'].notna()]
             .explode('related')
             .groupby('source')['related']
             .apply(lambda x: x.unique().tolist())
@@ -1383,7 +1383,7 @@ def _correct_parallel_source_ids(
         The input df with corrected source ids and relations.
     """
     df['source'] = df['source'].values + correction
-    related_mask = ~(df['related'].isna())
+    related_mask = df['related'].notna()
 
     new_relations = df.loc[
         related_mask, 'related'
@@ -1431,7 +1431,7 @@ def _correct_parallel_source_ids_add_mode(
     # old ones do not need to be corrected
 
     # get a mask of those that need to be corrected
-    to_correct_mask = ~(df['source'].isin(done_source_ids))
+    to_correct_mask = ~df['source'].isin(done_source_ids)
 
     # check that there are any to correct
     if not np.any(to_correct_mask):
@@ -1455,7 +1455,7 @@ def _correct_parallel_source_ids_add_mode(
     # regenrate the map
     source_id_map = dict(zip(df.source.values, df.new_source.values))
     # get mask of non-nan relations
-    related_mask = ~(df['related'].isna())
+    related_mask = df['related'].notna()
     # get the relations
     new_relations = df.loc[related_mask, 'related'].explode()
     # map the new values
@@ -1633,7 +1633,7 @@ def parallel_association(
             # 'related'
             # columns are passed and returned (corrected).
             corr_df = _correct_parallel_source_ids(
-                results.loc[val][['source', 'related']],
+                results.loc[val, ['source', 'related']],
                 max_id
             )
             # replace the values in the results with the corrected source and
