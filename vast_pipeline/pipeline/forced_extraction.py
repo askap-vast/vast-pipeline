@@ -57,7 +57,7 @@ def remove_forced_meas(run_path):
 
 
 def get_data_from_parquet(
-    file: str, p_run_path: str, add_mode: bool=False,) -> dict:
+    file: str, p_run_path: str, add_mode: bool = False,) -> dict:
     '''
     Get the prefix, max id and image id from the measurements parquets
 
@@ -379,10 +379,24 @@ def parallel_extraction(
     return df_out
 
 
-def write_group_to_parquet(df, fname, add_mode):
+def write_group_to_parquet(
+    df: pd.DataFrame, fname: str, add_mode: bool) -> None:
     '''
-    write a dataframe correpondent to a single group/image
-    to a parquet file
+    Write a dataframe correpondent to a single group/image
+    to a parquet file.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataframe containing all the extracted measurements.
+    fname : str
+        The file name of the output parquet.
+    add_mode : bool
+        True when the pipeline is running in add image mode.
+
+    Returns
+    -------
+    None
     '''
     out_df = df.drop(['d2d', 'dr', 'source', 'image'], axis=1)
     if os.path.isfile(fname) and add_mode:
@@ -394,9 +408,23 @@ def write_group_to_parquet(df, fname, add_mode):
     pass
 
 
-def parallel_write_parquet(df, run_path, add_mode=False):
+def parallel_write_parquet(
+    df: pd.DataFrame, run_path: str, add_mode: bool = False) -> None:
     '''
-    parallelize writing parquet files for forced measurements
+    Parallelize writing parquet files for forced measurements.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataframe containing all the extracted measurements.
+    fname : str
+        The file name of the output parquet.
+    add_mode : bool
+        True when the pipeline is running in add image mode.
+
+    Returns
+    -------
+    None
     '''
     images = df['image'].unique().tolist()
     get_fname = lambda n: os.path.join(
@@ -416,13 +444,51 @@ def parallel_write_parquet(df, run_path, add_mode=False):
 
 
 def forced_extraction(
-        sources_df, cfg_err_ra, cfg_err_dec, p_run, extr_df,
-        min_sigma, edge_buffer, cluster_threshold, allow_nan,
-        add_mode, done_images_df, done_source_ids
-    ):
+    sources_df: pd.DataFrame, cfg_err_ra: float, cfg_err_dec: float,
+    p_run: Run, extr_df: pd.DataFrame, min_sigma: float, edge_buffer: float,
+    cluster_threshold: float, allow_nan: bool, add_mode: bool,
+    done_images_df: pd.DataFrame, done_source_ids: List[int]
+) -> Tuple[pd.Dataframe, int]:
     """
-    check and extract expected measurements, and associated them with the
-    related source(s)
+    Check and extract expected measurements, and associated them with the
+    related source(s).
+
+    Parameters
+    ----------
+    sources_df : pd.DataFrame
+        Dataframe containing all the extracted measurements and associations (
+        product from association step).
+    cfg_err_ra : float
+        The minimum RA error from the config file (in degrees).
+    cfg_err_dec : float
+        The minimum declination error from the config file (in degrees).
+    p_run : Run
+        The pipeline run object.
+    extr_df : pd.DataFrame
+        The dataframe containing the information on what sources are missing
+        from which images (output from get_src_skyregion_merged_df in main.py).
+    min_sigma : float
+        minimum sigma value to drop forced extracted measurements
+    edge_buffer : float
+        flag to pass to ForcedPhot.measure method
+    cluster_threshold : float
+        flag to pass to ForcedPhot.measure method
+    allow_nan : bool
+        flag to pass to ForcedPhot.measure method
+    add_mode : bool
+        True when the pipeline is running in add image mode.
+    done_images_df : pd.DataFrame
+        Dataframe containing the images that thave already been processed in a
+        previous run (used in add image mode).
+    done_source_ids : List[int]
+        List of the source ids that were already present in the previous run
+        (used in add image mode).
+
+    Returns
+    -------
+    (sources_df, n_forced) : Tuple[pd.DataFrame, int]
+        The sources_df with the extracted sources added and n_forced is the
+        total number of forced measurements present in the run.
     """
     logger.info(
         'Starting force extraction step.'

@@ -1,7 +1,7 @@
 import os
 import operator
 import logging
-from typing import List
+from typing import List, Tuple
 
 from astropy import units as u
 from astropy.coordinates import Angle
@@ -78,7 +78,7 @@ class Pipeline():
         return mod
 
     @staticmethod
-    def _get_valid_keys(upper: bool=False) -> List[str]:
+    def _get_valid_keys(upper: bool = False) -> List[str]:
         """
         Obtains the valid config keys from the template config.
 
@@ -99,7 +99,7 @@ class Pipeline():
         return valid_keys
 
     @staticmethod
-    def check_for_epoch_based(cfg):
+    def check_for_epoch_based(cfg) -> Tuple[cfg, bool]:
         """
         Checks whether the images have been provided in a Dictionary format
         which means that epoch_based has been requested. If they have been
@@ -187,7 +187,7 @@ class Pipeline():
             return True
 
 
-    def validate_cfg(self, user=None):
+    def validate_cfg(self, user: User = None) -> None:
         """
         validate a pipeline run configuration against default parameters and
         for different settings (e.g. force extraction)

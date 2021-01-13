@@ -8,7 +8,7 @@ import pandas as pd
 import astropy.units as u
 import dask.dataframe as dd
 
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Tuple
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
@@ -1469,7 +1469,8 @@ def backup_parquets(p_run_path: str) -> None:
 
 def reconstruct_associtaion_dfs(
     images_df_done: pd.DataFrame,
-    previous_parquet_paths: Dict[str, str]) -> (pd.DataFrame, pd.DataFrame):
+    previous_parquet_paths: Dict[str, str]
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     This function is used with add image mode and performs the necessary
     manipulations to reconstruct the sources_df and skyc1_srcs required by

@@ -5,6 +5,7 @@ import logging
 import traceback
 import warnings
 
+from typing import Optional
 from django.db import transaction
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand, CommandError
@@ -25,10 +26,11 @@ logger = logging.getLogger(__name__)
 
 
 def run_pipe(
-    name: str, path_name: str=None, run_dj_obj: Run=None, cmd: bool=True,
-    debug: bool=False, user: User=None, full_rerun: bool=False,
+    name: str, path_name: Optional[str] = None,
+    run_dj_obj: Optional[Run] = None, cmd: bool = True,
+    debug: bool = False, user: Optional[User] = None, full_rerun: bool = False,
     prev_ui_status: str='END'
-):
+) -> bool:
     '''
     Main function to run the pipeline.
 

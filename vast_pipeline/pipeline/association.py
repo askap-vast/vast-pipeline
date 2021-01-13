@@ -1400,7 +1400,7 @@ def _correct_parallel_source_ids(
 
 def _correct_parallel_source_ids_add_mode(
     df: pd.DataFrame, done_source_ids: List[int],
-    start_elem: int) -> (pd.DataFrame, int):
+    start_elem: int) -> Tuple[pd.DataFrame, int]:
     """
     This function is to correct the source ids after the combination of
     the associaiton dataframes produced by parallel association - as source
