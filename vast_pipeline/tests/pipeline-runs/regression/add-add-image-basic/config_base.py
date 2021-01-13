@@ -9,12 +9,10 @@ PIPE_RUN_PATH = os.path.dirname(os.path.realpath(__file__))
 data_path = './vast_pipeline/tests/regression-data'
 # create list of observations to use
 obs = []
-# -06A
+# -06A and +00A
 for epoch in ['01', '03x', '02']:
-    obs.append(os.path.join('EPOCH' + epoch, 'VAST_2118-06A.EPOCH' + epoch))
-# +00A
-for epoch in ['01', '03x', '02']:
-    obs.append(os.path.join('EPOCH' + epoch, 'VAST_2118+00A.EPOCH' + epoch))
+    for field in ['VAST_2118-06A', 'VAST_2118+00A']
+        obs.append(os.path.join('EPOCH' + epoch, field + '.EPOCH' + epoch))
 # 0127
 for epoch in ['01']:
     obs.append(os.path.join('EPOCH' + epoch, 'VAST_0127-73A.EPOCH' + epoch))
