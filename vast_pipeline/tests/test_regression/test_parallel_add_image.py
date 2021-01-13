@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import unittest
+import glob
 
 from vast_pipeline.tests.test_regression import compare_runs
 
@@ -14,9 +15,9 @@ from vast_pipeline.models import Source
 TEST_ROOT = os.path.join(s.BASE_DIR, 'vast_pipeline', 'tests')
 
 
-no_data = not os.path.exists(os.path.join(TEST_ROOT, 'regression-data'))
+no_data = not glob.glob(os.path.join(TEST_ROOT, 'regression-data','EPOCH*'))
 @unittest.skipIf(
-    no_data, 
+    no_data,
     'The regression test data is missing, skipping parallel add image tests'
 )
 @override_settings(
@@ -24,7 +25,7 @@ no_data = not os.path.exists(os.path.join(TEST_ROOT, 'regression-data'))
 )
 class BasicParallelAddImageTest(TestCase):
     '''
-    Test pipeline runs when in parallel and adding an image for basic 
+    Test pipeline runs when in parallel and adding an image for basic
     association method.
     '''
 
@@ -93,7 +94,7 @@ class BasicParallelAddImageTest(TestCase):
 
 
 @unittest.skipIf(
-    no_data, 
+    no_data,
     'The regression test data is missing, skipping parallel add image tests'
 )
 @override_settings(
@@ -101,7 +102,7 @@ class BasicParallelAddImageTest(TestCase):
 )
 class AdvancedParallelAddImageTest(TestCase):
     '''
-    Test pipeline runs when in parallel and adding an image for advanced 
+    Test pipeline runs when in parallel and adding an image for advanced
     association method.
     '''
 
@@ -178,7 +179,7 @@ class AdvancedParallelAddImageTest(TestCase):
 )
 class DeruiterParallelAddImageTest(TestCase):
     '''
-    Test pipeline runs when in parallel and adding an image for deruiter 
+    Test pipeline runs when in parallel and adding an image for deruiter
     association method.
     '''
 
@@ -255,7 +256,7 @@ class DeruiterParallelAddImageTest(TestCase):
 )
 class BasicParallelAddTwoImageTest(TestCase):
     '''
-    Test pipeline runs when in parallel and adding two images for basic 
+    Test pipeline runs when in parallel and adding two images for basic
     association method.
     '''
 

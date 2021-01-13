@@ -2,6 +2,7 @@ import os
 import types
 import pandas as pd
 import unittest
+import glob
 
 from vast_pipeline.tests.test_regression import property_check
 
@@ -13,9 +14,9 @@ from django.core.management import call_command
 TEST_ROOT = os.path.join(s.BASE_DIR, 'vast_pipeline', 'tests')
 
 
-no_data = not os.path.exists(os.path.join(TEST_ROOT, 'regression-data'))
+no_data = not glob.glob(os.path.join(TEST_ROOT, 'regression-data','EPOCH*'))
 @unittest.skipIf(
-    no_data, 
+    no_data,
     'The regression test data is missing, skipping regression tests'
 )
 @override_settings(
@@ -23,7 +24,7 @@ no_data = not os.path.exists(os.path.join(TEST_ROOT, 'regression-data'))
 )
 class BasicEpochTest(TestCase):
     '''
-    Test pipeline under epoch based basic association method returns expected 
+    Test pipeline under epoch based basic association method returns expected
     results.
     '''
 
@@ -89,7 +90,7 @@ class BasicEpochTest(TestCase):
 
 
 @unittest.skipIf(
-    no_data, 
+    no_data,
     'The regression test data is missing, skipping regression tests'
 )
 @override_settings(
@@ -97,7 +98,7 @@ class BasicEpochTest(TestCase):
 )
 class AdvancedEpochTest(TestCase):
     '''
-    Test pipeline under epoch based advanced association method returns 
+    Test pipeline under epoch based advanced association method returns
     expected results.
     '''
 
@@ -155,7 +156,7 @@ class AdvancedEpochTest(TestCase):
 )
 class DeruiterEpochTest(TestCase):
     '''
-    Test pipeline under epoch based deruiter association method returns 
+    Test pipeline under epoch based deruiter association method returns
     expected results.
     '''
 

@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### Added
 
 - Added add image to existing run feature [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
+- Added networkx to base reqiurements [#460](https://github.com/askap-vast/vast-pipeline/pull/460).
+- Added CI/CD workflow to run tests on pull requests [#446](https://github.com/askap-vast/vast-pipeline/pull/446)
 - Added basic regression tests [#425](https://github.com/askap-vast/vast-pipeline/pull/425)
 - Added image length validation for config [#425](https://github.com/askap-vast/vast-pipeline/pull/425)
 
@@ -32,9 +34,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Removed
 
+- Removed aplpy from base requirements [#460](https://github.com/askap-vast/vast-pipeline/pull/460).
+
 #### List of PRs
 
 - [#443](https://github.com/askap-vast/vast-pipeline/pull/443) feat, fix: Adds the ability to add images to an existing run.
+- [#460](https://github.com/askap-vast/vast-pipeline/pull/460) dep: Removed aplpy from base requirements.
+- [#446](https://github.com/askap-vast/vast-pipeline/pull/446) feat: CI/CD workflow.
 - [#459](https://github.com/askap-vast/vast-pipeline/pull/459) fix: Fix particles and breadcrumb issues on mobile.
 - [#436](https://github.com/askap-vast/vast-pipeline/pull/436) dep: Bump ini from 1.3.5 to 1.3.8.
 - [#430](https://github.com/askap-vast/vast-pipeline/pull/430) fix: Test config files.

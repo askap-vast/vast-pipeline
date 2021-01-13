@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import unittest
+import glob
 
 from vast_pipeline.tests.test_regression import compare_runs
 
@@ -14,9 +15,9 @@ from vast_pipeline.models import Source
 TEST_ROOT = os.path.join(s.BASE_DIR, 'vast_pipeline', 'tests')
 
 
-no_data = not os.path.exists(os.path.join(TEST_ROOT, 'regression-data'))
+no_data = not glob.glob(os.path.join(TEST_ROOT, 'regression-data','EPOCH*'))
 @unittest.skipIf(
-    no_data, 
+    no_data,
     'The regression test data is missing, skipping add image tests'
 )
 @override_settings(
@@ -62,8 +63,8 @@ class BasicAddImageTest(TestCase):
         )
         index = self.sources_backup.index
         self.sources_backup_db = pd.DataFrame(
-            [Source.objects.get(id=ind).n_meas for ind in index], 
-            index=index, 
+            [Source.objects.get(id=ind).n_meas for ind in index],
+            index=index,
             columns = ['n_meas']
         )
 
@@ -77,8 +78,8 @@ class BasicAddImageTest(TestCase):
         )
         index = self.sources_compare.index
         self.sources_compare_db = pd.DataFrame(
-            [Source.objects.get(id=ind).n_meas for ind in index], 
-            index=index, 
+            [Source.objects.get(id=ind).n_meas for ind in index],
+            index=index,
             columns = ['n_meas']
         )
         self.relations_compare = pd.read_parquet(
@@ -96,8 +97,8 @@ class BasicAddImageTest(TestCase):
         See documentation for test_update_sources in compare_runs.
         '''
         compare_runs.test_update_source(
-            self, 
-            self.sources_backup, self.sources_backup_db, 
+            self,
+            self.sources_backup, self.sources_backup_db,
             self.sources_compare, self.sources_compare_db
         )
 
@@ -115,7 +116,7 @@ class BasicAddImageTest(TestCase):
 
 
 @unittest.skipIf(
-    no_data, 
+    no_data,
     'The regression test data is missing, skipping add image tests'
 )
 @override_settings(
@@ -306,7 +307,7 @@ class BasicAddTwoImageTest(TestCase):
         self.ass_backup = pd.read_parquet(
             os.path.join(self.compare_run, 'associations.parquet')
         )
-        
+
         # run with epoch 05 06
         os.system(f'cp {self.config_add} {self.config}')
         call_command('runpipeline', self.compare_run)

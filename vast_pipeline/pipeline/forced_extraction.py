@@ -380,12 +380,12 @@ def write_group_to_parquet(df, fname, add_mode):
     write a dataframe correpondent to a single group/image
     to a parquet file
     '''
-    df = df.drop(['d2d', 'dr', 'source', 'image'], axis=1)
+    out_df = df.drop(['d2d', 'dr', 'source', 'image'], axis=1)
     if os.path.isfile(fname) and add_mode:
         exist_df = pd.read_parquet(fname)
-        df = exist_df.append(df)
+        out_df = exist_df.append(out_df)
 
-    df.to_parquet(fname, index=False)
+    out_df.to_parquet(fname, index=False)
 
     pass
 
@@ -472,10 +472,10 @@ def forced_extraction(
         # measuremnts filled in (actually covered by 2.)
 
         extr_df = (
-            extr_df[~extr_df['img_diff'].isin(done_images_df.name)]
+            extr_df[~extr_df['img_diff'].isin(done_images_df['name'])]
             .append(extr_df[
-                (~extr_df.source.isin(done_source_ids))
-                & (extr_df.img_diff.isin(done_images_df.name))
+                (~extr_df['source'].isin(done_source_ids))
+                & (extr_df['img_diff'].isin(done_images_df.name))
             ])
             .sort_index()
         )
