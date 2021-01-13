@@ -1656,10 +1656,10 @@ def reconstruct_associtaion_dfs(
 
     # Need to break the pointer relationship between the related sources (
     # deep=True copy does not truly copy mutable type objects)
-    relation_mask = skyc1_srcs.related.isna()
-    relation_vals = skyc1_srcs.loc[~relation_mask, 'related'].to_list()
+    relation_mask = skyc1_srcs.related.notna()
+    relation_vals = skyc1_srcs.loc[relation_mask, 'related'].to_list()
     new_relation_vals = [x.copy() for x in relation_vals]
-    skyc1_srcs.loc[~relation_mask, 'related'] = new_relation_vals
+    skyc1_srcs.loc[relation_mask, 'related'] = new_relation_vals
 
     # Reorder so we don't mess up the dask metas.
     skyc1_srcs = skyc1_srcs[[
