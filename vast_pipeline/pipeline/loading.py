@@ -3,8 +3,9 @@ import logging
 import numpy as np
 import pandas as pd
 
-from django.db import transaction, connection
+from typing import List, Optional
 from itertools import islice
+from django.db import transaction, connection, models
 
 from vast_pipeline.image.main import SelavyImage
 from vast_pipeline.pipeline.model_generator import (
@@ -153,7 +154,7 @@ def make_upload_images(paths, config, pipeline_run):
 
 
 def make_upload_sources(sources_df: pd.DataFrame, pipeline_run: Run,
-    add_mode: bool=False) -> pd.DataFrame:
+    add_mode: bool = False) -> pd.DataFrame:
     '''
     Delete previous sources for given pipeline run and bulk upload
     new found sources as well as related sources
@@ -232,7 +233,8 @@ def make_upload_measurement_pairs(measurement_pairs_df):
     return measurement_pairs_df
 
 
-def update_sources(sources_df: pd.DataFrame, batch_size:int=10_000) -> pd.DataFrame:
+def update_sources(
+    sources_df: pd.DataFrame, batch_size: int = 10_000) -> pd.DataFrame:
     '''
     Update database using SQL code. This function opens one connection to the
     database, and closes it after the update is done.
@@ -244,8 +246,8 @@ def update_sources(sources_df: pd.DataFrame, batch_size:int=10_000) -> pd.DataFr
         columns to be updated need to have the same headers between the df and
         the table in the database.
     batch_size : int
-        The df rows are broken into chunks, each chunk is executed in a 
-        separate SQL command, batch_size determines the maximum size of the 
+        The df rows are broken into chunks, each chunk is executed in a
+        separate SQL command, batch_size determines the maximum size of the
         chunk.
 
     Returns
@@ -253,10 +255,13 @@ def update_sources(sources_df: pd.DataFrame, batch_size:int=10_000) -> pd.DataFr
     sources_df : pd.DataFrame
         DataFrame containing the new data to be uploaded to the database.
     '''
+    # Get all possible columns from the model
     all_source_table_cols = [
-        fld.attname for fld in Source._meta.get_fields() 
+        fld.attname for fld in Source._meta.get_fields()
         if getattr(fld, 'attname', None) is not None
     ]
+
+    # Filter to those present in sources_df
     columns = [
         col for col in all_source_table_cols if col in sources_df.columns
     ]
@@ -275,7 +280,10 @@ def update_sources(sources_df: pd.DataFrame, batch_size:int=10_000) -> pd.DataFr
     return sources_df
 
 
-def SQL_update(df: pd.DataFrame, model, index=None, columns=None) -> str:
+def SQL_update(
+    df: pd.DataFrame, model: models.Model, index: Optional[str] = None,
+    columns: Optional[List[str]] = None
+) -> str:
     '''
     Generate SQL code required to update database.
 
@@ -286,7 +294,7 @@ def SQL_update(df: pd.DataFrame, model, index=None, columns=None) -> str:
         columns to be updated need to have the same headers between the df and
         the table in the database.
     model : Model
-        The model that is being updated. 
+        The model that is being updated.
     index : str or None
         Header of the column to join on, determines which rows in the different
         tables match. If None, then use the primary key column.

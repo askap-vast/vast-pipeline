@@ -1024,7 +1024,7 @@ def advanced_association(
 def association(images_df: pd.DataFrame, limit: Angle, dr_limit: float,
     bw_limit: float, duplicate_limit: Angle, config, add_mode: bool,
     previous_parquets: Dict[str, str], done_images_df: pd.DataFrame,
-    id_incr_par_assoc: int=0, parallel: bool=False):
+    id_incr_par_assoc: int=0, parallel: bool=False) -> pd.DataFrame:
     '''
     The main association function that does the common tasks between basic
     and advanced modes.
