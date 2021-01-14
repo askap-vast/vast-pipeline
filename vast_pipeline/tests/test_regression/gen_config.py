@@ -38,7 +38,6 @@ def gen_obs_list(epochs: List[str]) -> List[str]:
             obs.append(
                 os.path.join('EPOCH' + epoch, 'VAST_0127-73A.EPOCH' + epoch)
             )
-
     return obs
 
 def obs_list(obs: List[str], file_type: str) -> List[str]:
@@ -103,9 +102,8 @@ def obs_dict(obs: dict, file_type: str) -> dict:
     for epoch in obs.keys():
         obs_files[epoch] = []
         for image in obs[epoch]:
-            obs_files[epoch].append(os.path.join(
-                data_path, image + file_type))
-    return obs_dict 
+            obs_files[epoch].append(os.path.join(data_path, image + file_type))
+    return obs_files
 
 def gen_config(folder: str, run_path: str, epochs: List[str]):
     '''

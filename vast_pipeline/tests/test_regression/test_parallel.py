@@ -2,8 +2,9 @@ import os
 import pandas as pd
 import unittest
 import glob
+import shutil
 
-from vast_pipeline.tests.test_regression import compare_runs
+from vast_pipeline.tests.test_regression import compare_runs, gen_config
 
 from django.conf import settings as s
 from django.test import TestCase, override_settings
@@ -33,14 +34,22 @@ class BasicParallelTest(TestCase):
         '''
         Set up directories to test data, run the pipeline, and read the files.
         '''
+        base_path = 'normal-basic'
+        compare_path = 'parallel-basic'
         self.base_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'normal-basic'
+            s.PIPELINE_WORKING_DIR, base_path
         )
         self.compare_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'parallel-basic'
+            s.PIPELINE_WORKING_DIR, compare_path
         )
 
         # normal run
+        os.mkdir(self.base_run)
+        gen_config.gen_config(
+            base_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02', '05x', '06x', '12']
+        )
         call_command('runpipeline', self.base_run)
         self.sources_base = pd.read_parquet(
             os.path.join(self.base_run, 'sources.parquet')
@@ -50,6 +59,12 @@ class BasicParallelTest(TestCase):
         )
 
         # parallel run
+        os.mkdir(self.compare_run)
+        gen_config.gen_config(
+            compare_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02', '05x', '06x', '12']
+        )
         call_command('runpipeline', self.compare_run)
         self.sources_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'sources.parquet')
@@ -57,6 +72,10 @@ class BasicParallelTest(TestCase):
         self.relations_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'relations.parquet')
         )
+
+        # remove test directories
+        shutil.rmtree(self.base_run)
+        shutil.rmtree(self.compare_run)
 
     def test_sources(self):
         '''
@@ -88,14 +107,22 @@ class AdvancedParallelTest(TestCase):
         '''
         Set up directories to test data, run the pipeline, and read files.
         '''
+        base_path = 'normal-advanced'
+        compare_path = 'parallel-advanced'
         self.base_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'normal-advanced'
+            s.PIPELINE_WORKING_DIR, base_path
         )
         self.compare_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'parallel-advanced'
+            s.PIPELINE_WORKING_DIR, compare_path
         )
 
         # run with normal
+        os.mkdir(self.base_run)
+        gen_config.gen_config(
+            base_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02', '05x', '06x']
+        )
         call_command('runpipeline', self.base_run)
         self.sources_base = pd.read_parquet(
             os.path.join(self.base_run, 'sources.parquet')
@@ -105,6 +132,12 @@ class AdvancedParallelTest(TestCase):
         )
 
         # run with parallel
+        os.mkdir(self.compare_run)
+        gen_config.gen_config(
+            compare_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02', '05x', '06x']
+        )
         call_command('runpipeline', self.compare_run)
         self.sources_compare = pd.read_parquet(
             os.path.join(self.base_run, 'sources.parquet')
@@ -112,6 +145,10 @@ class AdvancedParallelTest(TestCase):
         self.relations_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'relations.parquet')
         )
+
+        # remove directories
+        shutil.rmtree(self.base_run)
+        shutil.rmtree(self.compare_run)
 
     def test_sources(self):
         '''
@@ -143,14 +180,22 @@ class DeruiterParallelTest(TestCase):
         '''
         Set up directories to test data, run the pipeline, and read files.
         '''
+        base_path = 'normal-deruiter'
+        compare_path = 'parallel-deruiter'
         self.base_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'normal-deruiter'
+            s.PIPELINE_WORKING_DIR, base_path
         )
         self.compare_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'parallel-deruiter'
+            s.PIPELINE_WORKING_DIR, compare_path
         )
 
         # run with normal
+        os.mkdir(self.base_run)
+        gen_config.gen_config(
+            base_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02', '05x', '06x']
+        )
         call_command('runpipeline', self.base_run)
         self.sources_base = pd.read_parquet(
             os.path.join(self.base_run, 'sources.parquet')
@@ -160,6 +205,12 @@ class DeruiterParallelTest(TestCase):
         )
 
         # run with parallel
+        os.mkdir(self.compare_run)
+        gen_config.gen_config(
+            compare_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02', '05x', '06x']
+        )
         call_command('runpipeline', self.compare_run)
         self.sources_compare = pd.read_parquet(
             os.path.join(self.base_run, 'sources.parquet')
@@ -167,6 +218,10 @@ class DeruiterParallelTest(TestCase):
         self.relations_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'relations.parquet')
         )
+
+        # remove test directories
+        shutil.rmtree(self.base_run)
+        shutil.rmtree(self.compare_run)
 
     def test_sources(self):
         '''

@@ -3,8 +3,9 @@ import types
 import pandas as pd
 import unittest
 import glob
+import shutil
 
-from vast_pipeline.tests.test_regression import property_check
+from vast_pipeline.tests.test_regression import property_check, gen_config
 
 from django.conf import settings as s
 from django.test import TestCase, override_settings
@@ -32,17 +33,28 @@ class BasicRegressionTest(TestCase):
         '''
         Set up directory to test data and run the pipeline.
         '''
-        self.base_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'normal-basic'
+        base_path = 'normal-basic'
+        self.base_run = os.path.join(s.PIPELINE_WORKING_DIR, base_path)
+
+        # setup test directory
+        os.mkdir(self.base_run)
+        gen_config.gen_config(
+            base_path, 
+            s.PIPELINE_WORKING_DIR, 
+            ['01', '03x', '02', '05x', '06x', '12']
         )
         call_command('runpipeline', self.base_run)
 
+        # read output
         self.sources = pd.read_parquet(
             os.path.join(self.base_run, 'sources.parquet')
         )
         self.relations = pd.read_parquet(
             os.path.join(self.base_run, 'relations.parquet')
         )
+
+        # remove test directory
+        shutil.rmtree(self.base_run)
 
     def test_num_sources(self):
         '''
@@ -101,17 +113,30 @@ class AdvancedRegressionTest(TestCase):
         '''
         Set up directory to test data and run the pipeline.
         '''
+        base_path = 'normal-advanced'
         self.base_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'normal-advanced'
+            s.PIPELINE_WORKING_DIR, base_path
+        )
+
+        # setup test directory
+        os.mkdir(self.base_run)
+        gen_config.gen_config(
+            base_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02', '05x', '06x']
         )
         call_command('runpipeline', self.base_run)
 
+        # read output
         self.sources = pd.read_parquet(
             os.path.join(self.base_run, 'sources.parquet')
         )
         self.relations = pd.read_parquet(
             os.path.join(self.base_run, 'relations.parquet')
         )
+
+        # remove test directory
+        shutil.rmtree(self.base_run)
 
     def test_num_sources(self):
         '''
@@ -169,11 +194,21 @@ class DeruiterRegressionTest(TestCase):
         '''
         Set up directory to test data and run the pipeline.
         '''
+        base_path = 'normal-deruiter'
         self.base_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'normal-advanced'
+            s.PIPELINE_WORKING_DIR, base_path
+        )
+
+        # setup test directory
+        os.mkdir(self.base_run)
+        gen_config.gen_config(
+            base_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02', '05x', '06x']
         )
         call_command('runpipeline', self.base_run)
 
+        # read output
         self.sources = pd.read_parquet(
             os.path.join(self.base_run, 'sources.parquet')
         )
@@ -181,11 +216,14 @@ class DeruiterRegressionTest(TestCase):
             os.path.join(self.base_run, 'relations.parquet')
         )
 
+        # remove test directory
+        shutil.rmtree(self.base_run)
+
     def test_num_sources(self):
         '''
         See documentation for test_num_sources in property_check.
         '''
-        property_check.test_num_sources(self, self.sources, 621)
+        property_check.test_num_sources(self, self.sources, 618)
 
     def test_most_relations(self):
         '''
@@ -193,24 +231,21 @@ class DeruiterRegressionTest(TestCase):
         '''
         # this is the expected highest relation sources
         expected = pd.DataFrame(
-            [[321.899747,  -4.201875, 4],
-             [321.900237,  -4.201482, 4],
-             [321.898668,  -4.202589, 3],
-             [321.900885,  -4.200907, 3],
-             [20.649051, -73.638252, 2],
-             [321.901242,  -4.200643, 2],
-             [322.517744,  -4.050434, 2],
-             [322.578566,  -4.318185, 2],
-             [322.578833,  -4.317944, 2],
-             [322.578973,  -4.317444, 2],
-             [322.822594,  -5.092404, 2],
-             [322.823466,  -5.091993, 2],
-             [322.824837,  -5.090852, 2]],
+            [[321.899519, -4.201984, 6],
+             [321.900346, -4.201317, 6],
+             [321.900591, -4.201090, 6],
+             [321.900811, -4.200894, 6],
+             [321.901015, -4.200723, 5],
+             [321.898773, -4.202560, 4],
+             [321.901242, -4.200643, 4],
+             [323.073095, -4.517545, 3],
+             [323.073548, -4.517426, 3],
+             [323.073907, -4.517367, 3]],
             columns=['wavg_ra', 'wavg_dec', 'relations']
         )
 
         property_check.test_most_relations(
-            self.relations, self.sources, 13, expected
+            self.relations, self.sources, 10, expected
         )
 
     def test_known_source(self):

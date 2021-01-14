@@ -2,8 +2,9 @@ import os
 import pandas as pd
 import unittest
 import glob
+import shutil
 
-from vast_pipeline.tests.test_regression import compare_runs
+from vast_pipeline.tests.test_regression import compare_runs, gen_config
 
 from django.conf import settings as s
 from django.test import TestCase, override_settings
@@ -34,17 +35,22 @@ class BasicParallelAddImageTest(TestCase):
         '''
         Set up directories to test data, run the pipeline, and read the files.
         '''
+        base_path = 'normal-basic'
+        compare_path = 'add-parallel-basic'
         self.base_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'normal-basic'
+            s.PIPELINE_WORKING_DIR, base_path
         )
         self.compare_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'add-image-parallel-basic'
+            s.PIPELINE_WORKING_DIR, compare_path
         )
-        self.config_base = os.path.join(self.compare_run, 'config_base.py')
-        self.config_add = os.path.join(self.compare_run, 'config_add.py')
-        self.config = os.path.join(self.compare_run, 'config.py')
 
         # run with all images
+        os.mkdir(self.base_run)
+        gen_config.gen_config(
+            base_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02', '05x', '06x', '12']
+        )
         call_command('runpipeline', self.base_run)
         self.sources_base = pd.read_parquet(
             os.path.join(self.base_run, 'sources.parquet')
@@ -54,13 +60,22 @@ class BasicParallelAddImageTest(TestCase):
         )
 
         # run with add image
-        os.system(f'cp {self.config_base} {self.config}')
+        os.mkdir(self.compare_run)
+        gen_config.gen_config(
+            compare_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02']
+        )
         call_command('runpipeline', self.compare_run)
         self.ass_backup = pd.read_parquet(
             os.path.join(self.compare_run, 'associations.parquet')
         )
 
-        os.system(f'cp {self.config_add} {self.config}')
+        gen_config.gen_config(
+            compare_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02', '05x', '06x', '12']
+        )
         call_command('runpipeline', self.compare_run)
         self.ass_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'associations.parquet')
@@ -71,6 +86,10 @@ class BasicParallelAddImageTest(TestCase):
         self.relations_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'relations.parquet')
         )
+
+        # remove test directories
+        shutil.rmtree(self.base_run)
+        shutil.rmtree(self.compare_run)
 
     def test_inc_assoc(self):
         '''
@@ -111,17 +130,22 @@ class AdvancedParallelAddImageTest(TestCase):
         '''
         Set up directories to test data, run the pipeline, and read files.
         '''
+        base_path = 'normal-advanced'
+        compare_path = 'add-parallel-advanced'
         self.base_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'normal-advanced'
+            s.PIPELINE_WORKING_DIR, base_path
         )
         self.compare_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'add-image-parallel-advanced'
+            s.PIPELINE_WORKING_DIR, compare_path
         )
-        self.config_base = os.path.join(self.compare_run, 'config_base.py')
-        self.config_add = os.path.join(self.compare_run, 'config_add.py')
-        self.config = os.path.join(self.compare_run, 'config.py')
 
         # run with all images
+        os.mkdir(self.base_run)
+        gen_config.gen_config(
+            base_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02', '05x', '06x']
+        )
         call_command('runpipeline', self.base_run)
         self.sources_base = pd.read_parquet(
             os.path.join(self.base_run, 'sources.parquet')
@@ -131,13 +155,22 @@ class AdvancedParallelAddImageTest(TestCase):
         )
 
         # run with add image
-        os.system(f'cp {self.config_base} {self.config}')
+        os.mkdir(self.compare_run)
+        gen_config.gen_config(
+            compare_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02']
+        )
         call_command('runpipeline', self.compare_run)
         self.ass_backup = pd.read_parquet(
             os.path.join(self.compare_run, 'associations.parquet')
         )
 
-        os.system(f'cp {self.config_add} {self.config}')
+        gen_config.gen_config(
+            compare_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02', '05x', '06x']
+        )
         call_command('runpipeline', self.compare_run)
         self.ass_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'associations.parquet')
@@ -148,6 +181,10 @@ class AdvancedParallelAddImageTest(TestCase):
         self.relations_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'relations.parquet')
         )
+
+        # remove test directories
+        shutil.rmtree(self.base_run)
+        shutil.rmtree(self.compare_run)
 
     def test_inc_assoc(self):
         '''
@@ -188,17 +225,22 @@ class DeruiterParallelAddImageTest(TestCase):
         '''
         Set up directories to test data, run the pipeline, and read files.
         '''
+        base_path = 'normal-deruiter'
+        compare_path = 'add-parallel-deruiter'
         self.base_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'normal-deruiter'
+            s.PIPELINE_WORKING_DIR, base_path
         )
         self.compare_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'add-image-parallel-deruiter'
+            s.PIPELINE_WORKING_DIR, compare_path
         )
-        self.config_base = os.path.join(self.compare_run, 'config_base.py')
-        self.config_add = os.path.join(self.compare_run, 'config_add.py')
-        self.config = os.path.join(self.compare_run, 'config.py')
 
         # run with all images
+        os.mkdir(self.base_run)
+        gen_config.gen_config(
+            base_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02', '05x', '06x']
+        )
         call_command('runpipeline', self.base_run)
         self.sources_base = pd.read_parquet(
             os.path.join(self.base_run, 'sources.parquet')
@@ -208,13 +250,22 @@ class DeruiterParallelAddImageTest(TestCase):
         )
 
         # run with add image
-        os.system(f'cp {self.config_base} {self.config}')
+        os.mkdir(self.compare_run)
+        gen_config.gen_config(
+            compare_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02']
+        )
         call_command('runpipeline', self.compare_run)
         self.ass_backup = pd.read_parquet(
             os.path.join(self.compare_run, 'associations.parquet')
         )
 
-        os.system(f'cp {self.config_add} {self.config}')
+        gen_config.gen_config(
+            compare_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02', '05x', '06x']
+        )
         call_command('runpipeline', self.compare_run)
         self.ass_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'associations.parquet')
@@ -225,6 +276,10 @@ class DeruiterParallelAddImageTest(TestCase):
         self.relations_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'relations.parquet')
         )
+
+        # remove test directories
+        shutil.rmtree(self.base_run)
+        shutil.rmtree(self.compare_run)
 
     def test_inc_assoc(self):
         '''
@@ -265,18 +320,22 @@ class BasicParallelAddTwoImageTest(TestCase):
         '''
         Set up directories to test data, run the pipeline, and read the files.
         '''
+        base_path = 'normal-basic'
+        compare_path = 'add-add-parallel-basic'
         self.base_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'normal-basic'
+            s.PIPELINE_WORKING_DIR, base_path
         )
         self.compare_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'add-add-image-parallel-basic'
+            s.PIPELINE_WORKING_DIR, compare_path
         )
-        self.config_base = os.path.join(self.compare_run, 'config_base.py')
-        self.config_add = os.path.join(self.compare_run, 'config_add.py')
-        self.config_add2 = os.path.join(self.compare_run, 'config_add2.py')
-        self.config = os.path.join(self.compare_run, 'config.py')
 
         # run with all images
+        os.mkdir(self.base_run)
+        gen_config.gen_config(
+            base_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02', '05x', '06x', '12']
+        )
         call_command('runpipeline', self.base_run)
         self.sources_base = pd.read_parquet(
             os.path.join(self.base_run, 'sources.parquet')
@@ -286,21 +345,34 @@ class BasicParallelAddTwoImageTest(TestCase):
         )
 
         # run with add image
-        os.system(f'cp {self.config_base} {self.config}')
+        os.mkdir(self.compare_run)
+        gen_config.gen_config(
+            compare_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02']
+        )
         call_command('runpipeline', self.compare_run)
         self.ass_backup = pd.read_parquet(
             os.path.join(self.compare_run, 'associations.parquet')
         )
 
         # run with epoch 05 06
-        os.system(f'cp {self.config_add} {self.config}')
+        gen_config.gen_config(
+            compare_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02', '05x', '06x']
+        )
         call_command('runpipeline', self.compare_run)
         self.ass_backup_mid = pd.read_parquet(
             os.path.join(self.compare_run, 'associations.parquet')
         )
 
         # run with epoch 12
-        os.system(f'cp {self.config_add2} {self.config}')
+        gen_config.gen_config(
+            compare_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02', '05x', '06x', '12']
+        )
         call_command('runpipeline', self.compare_run)
         self.ass_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'associations.parquet')
@@ -311,6 +383,10 @@ class BasicParallelAddTwoImageTest(TestCase):
         self.relations_compare = pd.read_parquet(
             os.path.join(self.compare_run, 'relations.parquet')
         )
+
+        # remove test directories
+        shutil.rmtree(self.base_run)
+        shutil.rmtree(self.compare_run)
 
     def test_inc_assoc(self):
         '''
