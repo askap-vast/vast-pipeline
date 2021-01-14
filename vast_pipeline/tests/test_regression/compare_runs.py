@@ -1,8 +1,10 @@
 import numpy as np
 import pandas as pd
 
+from django.test import TestCase
 
-def test_inc_assoc(testcase, ass_add, ass_backup):
+
+def test_inc_assoc(testcase: TestCase, ass_add: pd.DataFrame, ass_backup: pd.DataFrame):
     '''
     Test that the number of associations increased or equal with added 
     images.
@@ -20,7 +22,8 @@ def test_inc_assoc(testcase, ass_add, ass_backup):
     testcase.assertTrue(len(ass_add) >= len(ass_backup))
 
 def test_update_source(
-    testcase, sources_backup, sources_backup_db, sources_add, sources_add_db
+    testcase: TestCase, sources_backup: pd.DataFrame, sources_backup_db: pd.DataFrame, 
+    sources_add: pd.DataFrame, sources_add_db: pd.DataFrame
     ):
     '''
     Test that the sources are correctly updated in the database.
@@ -50,7 +53,7 @@ def test_update_source(
         n_meas_pd = sources_add.loc[ind, 'n_meas']
         testcase.assertEqual(n_meas_db, n_meas_pd)
 
-def test_sources(sources_1, sources_2):
+def test_sources(sources_1: pd.DataFrame, sources_2: pd.DataFrame):
     '''
     Test that the sources are the same between two different runs. 
 
@@ -78,7 +81,8 @@ def test_sources(sources_1, sources_2):
         check_less_precise=4
     )
 
-def test_relations(testcase, relations_1, relations_2):
+def test_relations(testcase: TestCase, relations_1: pd.DataFrame, 
+    relations_2: pd.DataFrame):
     '''
     Test that the number relations are the same between two different runs.
 
@@ -109,7 +113,7 @@ def test_relations(testcase, relations_1, relations_2):
 
     testcase.assertEqual(len(relations_1), len(relations_2))
 
-def test_forced_num(testcase, forced_1, forced_2):
+def test_forced_num(testcase: TestCase, forced_1: dict, forced_2: dict):
     '''
     Test the number of forced extractions are correct.
 

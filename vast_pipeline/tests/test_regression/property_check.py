@@ -1,10 +1,13 @@
 import numpy as np
 import pandas as pd
+from typing import List
 
 from astropy.coordinates import SkyCoord, match_coordinates_sky
 
+from django.test import TestCase
 
-def test_num_sources(testcase, sources, num):
+
+def test_num_sources(testcase: TestCase, sources: pd.DataFrame, num: int):
     '''
     Test the number of overall sources identified is correct.
 
@@ -20,7 +23,8 @@ def test_num_sources(testcase, sources, num):
 
     testcase.assertEqual(len(sources.index), num)
 
-def test_most_relations(relations, sources, rows, expected):
+def test_most_relations(relations: pd.DataFrame, sources: pd.DataFrame, 
+    rows: int, expected: pd.DataFrame):
     '''
     Test that the highest relation source is the same, and in general the 
     top sources with the most relations are correct.
@@ -65,7 +69,7 @@ def test_most_relations(relations, sources, rows, expected):
         check_less_precise=4
     )
 
-def known_source(sources):
+def known_source(sources: pd.DataFrame) -> int:
     '''
     Find the source closest to PSR J2129-04
 
@@ -96,7 +100,7 @@ def known_source(sources):
 
     return id_match
 
-def test_known_source(testcase, sources, high_sigma):
+def test_known_source(testcase: TestCase, sources: pd.DataFrame, high_sigma: float):
     '''
     Check that PSR J2129-04 is detected as a new source and has correct 
     new_high_sigma.
@@ -119,7 +123,8 @@ def test_known_source(testcase, sources, high_sigma):
         abs(sources.loc[id_match, 'new_high_sigma'] - high_sigma) < 1e-3
     )
 
-def test_known_in_forced(testcase, forced, sources, associations, num, exp_forced):
+def test_known_in_forced(testcase: TestCase, forced: dict, sources: pd.DataFrame, 
+    associations: pd.DataFrame, num: int, exp_forced: List[str]):
     '''
     Find if PSR J2129-04 appears in the correct forced files and has the
     correct number of associations.
@@ -163,7 +168,7 @@ def test_known_in_forced(testcase, forced, sources, associations, num, exp_force
     # check that the forced extractions appear in the correct images
     testcase.assertEqual(set(images), exp_forced)
 
-def test_forced_num(testcase, forced, num):
+def test_forced_num(testcase: TestCase, forced: dict, num: int):
     '''
     Test the number of forced extractions is expected.
 
