@@ -3,8 +3,9 @@ import types
 import pandas as pd
 import unittest
 import glob
+import shutil
 
-from vast_pipeline.tests.test_regression import property_check
+from vast_pipeline.tests.test_regression import property_check, gen_config
 
 from django.conf import settings as s
 from django.test import TestCase, override_settings
@@ -33,11 +34,21 @@ class BasicEpochTest(TestCase):
         '''
         Set up directory to test data and run the pipeline.
         '''
+        base_path = 'epoch-basic'
         self.base_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'epoch-basic'
+            s.PIPELINE_WORKING_DIR, base_path
+        )
+
+        # setup test directory
+        os.mkdir(self.base_run)
+        gen_config.gen_config(
+            base_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02', '05x', '06x']
         )
         call_command('runpipeline', self.base_run)
 
+        # read output
         self.sources = pd.read_parquet(
             os.path.join(self.base_run, 'sources.parquet')
         )
@@ -46,6 +57,9 @@ class BasicEpochTest(TestCase):
                 self.base_run, 'relations.parquet'
             )
         )
+
+        # remove test directory
+        shutil.rmtree(self.base_run)
 
     def test_num_sources(self):
         '''
@@ -107,11 +121,21 @@ class AdvancedEpochTest(TestCase):
         '''
         Set up directory to test data and run the pipeline.
         '''
+        base_path = 'epoch-advanced'
         self.base_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'epoch-advanced'
+            s.PIPELINE_WORKING_DIR, base_path
+        )
+
+        # setup test directory
+        os.mkdir(self.base_run)
+        gen_config.gen_config(
+            base_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02', '05x', '06x']
         )
         call_command('runpipeline', self.base_run)
 
+        # read output
         self.sources = pd.read_parquet(
             os.path.join(self.base_run, 'sources.parquet')
         )
@@ -120,6 +144,9 @@ class AdvancedEpochTest(TestCase):
                 self.base_run, 'relations.parquet'
             )
         )
+
+        # remove test directory
+        shutil.rmtree(self.base_run)
 
     def test_num_sources(self):
         '''
@@ -165,11 +192,21 @@ class DeruiterEpochTest(TestCase):
         '''
         Set up directory to test data and run the pipeline.
         '''
+        base_path = 'epoch-deruiter'
         self.base_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'epoch-deruiter'
+            s.PIPELINE_WORKING_DIR, base_path
+        )
+
+        # setup test directory
+        os.mkdir(self.base_run)
+        gen_config.gen_config(
+            base_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02', '05x', '06x']
         )
         call_command('runpipeline', self.base_run)
 
+        # read output
         self.sources = pd.read_parquet(
             os.path.join(self.base_run, 'sources.parquet')
         )
@@ -178,6 +215,9 @@ class DeruiterEpochTest(TestCase):
                 self.base_run, 'relations.parquet'
             )
         )
+
+        # remove test directory
+        shutil.rmtree(self.base_run)
 
     def test_num_sources(self):
         '''

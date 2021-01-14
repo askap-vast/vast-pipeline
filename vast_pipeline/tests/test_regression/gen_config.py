@@ -139,6 +139,7 @@ def gen_config(folder: str, run_path: str, epochs: List[str]):
     if 'epoch' in modes:
         obs = list_to_dict(obs)
         obs_func = obs_dict
+        settings['epoch_mode'] = True
     settings['image_files'] = obs_func(obs, '.I.cutout.fits')
     settings['selavy_files'] = obs_func(obs, '.I.cutout.components.txt')
     settings['noise_files'] = obs_func(obs, '.I.cutout_rms.fits')

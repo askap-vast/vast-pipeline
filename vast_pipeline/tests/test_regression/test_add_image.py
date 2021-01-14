@@ -409,8 +409,12 @@ class BasicAddTwoImageTest(TestCase):
         '''
         See documentation for test_inc_assoc in compare_runs.
         '''
-        compare_runs.test_inc_assoc(self, self.ass_compare, self.ass_backup_mid)
-        compare_runs.test_inc_assoc(self, self.ass_backup_mid, self.ass_backup)
+        compare_runs.test_inc_assoc(
+            self, self.ass_compare, self.ass_backup_mid
+        )
+        compare_runs.test_inc_assoc(
+            self, self.ass_backup_mid, self.ass_backup
+        )
 
     def test_sources(self):
         '''

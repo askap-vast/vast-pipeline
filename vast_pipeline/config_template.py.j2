@@ -7,6 +7,28 @@ import os
 # path of the pipeline run
 PIPE_RUN_PATH = os.path.dirname(os.path.realpath(__file__))
 
+{% if epoch_mode %}
+IMAGE_FILES = {
+    {% for key, value in image_files.items() %}
+      '{{ key }}' : {{ value }},
+    {% endfor %}}
+
+SELAVY_FILES = {
+    {% for key, value in selavy_files.items() %}
+      '{{ key }}' : {{ value }},
+    {% endfor %}}
+
+NOISE_FILES = {
+    {% for key, value in noise_files.items() %}
+      '{{ key }}' : {{ value }},
+    {% endfor %}}
+
+BACKGROUND_FILES = {
+    {% for key, value in background_files.items() %}
+      '{{ key }}' : {{ value }},
+    {% endfor %}}
+
+{% else %}
 # Images settings
 # NOTE: all the paths !!!MUST!!! match with each other, e.g.
 # IMAGE_FILES[0] image matches SELAVY_FILES[0] file
@@ -32,6 +54,7 @@ BACKGROUND_FILES = [
     # insert background map file path(s) here
     {% for el in background_files %}'{{ el }}',
     {% endfor %}]
+{% endif %}
 
 ###
 # SOURCE FINDER OPTIONS

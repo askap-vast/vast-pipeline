@@ -3,8 +3,9 @@ import types
 import pandas as pd
 import unittest
 import glob
+import shutil
 
-from vast_pipeline.tests.test_regression import compare_runs, property_check
+from vast_pipeline.tests.test_regression import compare_runs, property_check, gen_config
 
 from django.conf import settings as s
 from django.test import TestCase, override_settings
@@ -33,19 +34,22 @@ class BasicEpochForcedTest(TestCase):
         '''
         Set up directory to test data and run the pipeline.
         '''
+        base_path = 'epoch-basic-forced'
+        compare_path = 'epoch-add-parallel-basic-forced'
         self.base_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'epoch-basic-forced'
+            s.PIPELINE_WORKING_DIR, base_path
         )
         self.compare_run = os.path.join(
-            s.PIPELINE_WORKING_DIR,
-            'regression',
-            'epoch-add-image-parallel-basic-forced'
+            s.PIPELINE_WORKING_DIR, compare_path
         )
-        self.config_base = os.path.join(self.compare_run, 'config_base.py')
-        self.config_add = os.path.join(self.compare_run, 'config_add.py')
-        self.config = os.path.join(self.compare_run, 'config.py')
 
         # normal run
+        os.mkdir(self.base_run)
+        gen_config.gen_config(
+            base_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02', '05x', '06x', '12']
+        )
         call_command('runpipeline', self.base_run)
 
         self.forced_files = {}
@@ -66,9 +70,18 @@ class BasicEpochForcedTest(TestCase):
         )
 
         # add image run
-        os.system(f'cp {self.config_base} {self.config}')
+        os.mkdir(self.compare_run)
+        gen_config.gen_config(
+            compare_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02']
+        )
         call_command('runpipeline', self.compare_run)
-        os.system(f'cp {self.config_add} {self.config}')
+        gen_config.gen_config(
+            compare_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02', '05x', '06x', '12']
+        )
         call_command('runpipeline', self.compare_run)
 
         self.forced_compare = {}
@@ -87,6 +100,10 @@ class BasicEpochForcedTest(TestCase):
                 self.compare_run, 'associations.parquet'
             )
         )
+
+        # remove directories
+        shutil.rmtree(self.base_run)
+        shutil.rmtree(self.compare_run)
 
     def test_forced_num(self):
         '''
@@ -134,19 +151,22 @@ class AdvancedEpochForcedTest(TestCase):
         '''
         Set up directory to test data and run the pipeline.
         '''
+        base_path = 'epoch-advanced-forced'
+        compare_path = 'epoch-add-parallel-advanced-forced'
         self.base_run = os.path.join(
-            s.PIPELINE_WORKING_DIR, 'regression', 'epoch-advanced-forced'
+            s.PIPELINE_WORKING_DIR, base_path
         )
         self.compare_run = os.path.join(
-            s.PIPELINE_WORKING_DIR,
-            'regression',
-            'epoch-add-image-parallel-advanced-forced'
+            s.PIPELINE_WORKING_DIR, compare_path
         )
-        self.config_base = os.path.join(self.compare_run, 'config_base.py')
-        self.config_add = os.path.join(self.compare_run, 'config_add.py')
-        self.config = os.path.join(self.compare_run, 'config.py')
 
         # normal run
+        os.mkdir(self.base_run)
+        gen_config.gen_config(
+            base_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02', '05x', '06x', '12']
+        )
         call_command('runpipeline', self.base_run)
 
         self.forced_files = {}
@@ -167,9 +187,18 @@ class AdvancedEpochForcedTest(TestCase):
         )
 
         # add image run
-        os.system(f'cp {self.config_base} {self.config}')
+        os.mkdir(self.compare_run)
+        gen_config.gen_config(
+            compare_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02']
+        )
         call_command('runpipeline', self.compare_run)
-        os.system(f'cp {self.config_add} {self.config}')
+        gen_config.gen_config(
+            compare_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02', '05x', '06x', '12']
+        )
         call_command('runpipeline', self.compare_run)
 
         self.forced_compare = {}
@@ -188,6 +217,10 @@ class AdvancedEpochForcedTest(TestCase):
                 self.compare_run, 'associations.parquet'
             )
         )
+
+        # remove directories
+        shutil.rmtree(self.base_run)
+        shutil.rmtree(self.compare_run)
 
     def test_forced_num(self):
         '''
@@ -218,19 +251,24 @@ class DeruiterEpochForcedTest(TestCase):
         '''
         Set up directory to test data and run the pipeline.
         '''
+        base_path = 'epoch-add-parallel-deruiter-forced'
         self.base_run = os.path.join(
-            s.PIPELINE_WORKING_DIR,
-            'regression',
-            'epoch-add-image-parallel-deruiter-forced'
+            s.PIPELINE_WORKING_DIR, base_path
         )
-        self.config_base = os.path.join(self.base_run, 'config_base.py')
-        self.config_add = os.path.join(self.base_run, 'config_add.py')
-        self.config = os.path.join(self.base_run, 'config.py')
 
         # add image run
-        os.system(f'cp {self.config_base} {self.config}')
+        os.mkdir(self.base_run)
+        gen_config.gen_config(
+            base_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02']
+        )
         call_command('runpipeline', self.base_run)
-        os.system(f'cp {self.config_add} {self.config}')
+        gen_config.gen_config(
+            base_path,
+            s.PIPELINE_WORKING_DIR,
+            ['01', '03x', '02', '05x', '06x', '12']
+        )
         call_command('runpipeline', self.base_run)
 
         self.forced = {}
@@ -239,6 +277,9 @@ class DeruiterEpochForcedTest(TestCase):
                 self.forced[f] = pd.read_parquet(
                     os.path.join(self.base_run, f)
                 )
+
+        # remove directory
+        shutil.rmtree(self.base_run)
 
     def test_forced_num(self):
         '''
