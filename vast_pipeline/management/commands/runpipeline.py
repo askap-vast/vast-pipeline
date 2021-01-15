@@ -87,7 +87,7 @@ def run_pipe(
         pipeline.config.PIPE_RUN_PATH
     )
 
-    # copy across config file now that it is successful
+    # copy across config file at the start
     logger.debug("Copying temp config file.")
     shutil.copyfile(
         os.path.join(p_run.path, 'config.py'),
@@ -148,6 +148,15 @@ def run_pipe(
         if p_run.status == 'ERR' and not os.path.isfile(
             os.path.join(p_run.path, 'config_prev.py')):
             full_rerun = True
+
+        # Backup the previous run config
+        if os.path.isfile(
+            os.path.join(p_run.path, 'config_prev.py')
+        ):
+            shutil.copy(
+                os.path.join(p_run.path, 'config_prev.py'),
+                os.path.join(p_run.path, 'config.py.bak')
+            )
 
         # Check if the run has only been initialised, if so we don't want to do
         # any previous run checks or cleaning.
