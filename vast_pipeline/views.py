@@ -297,9 +297,9 @@ class RunViewSet(ModelViewSet):
             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
         # check that it's not already running or queued
-        if p_run.status in ["RUN", "QUE"]:
+        if p_run.status in ["RUN", "QUE", "RES"]:
             msg = (
-                f'{p_run.name} is already running or is queued.'
+                f'{p_run.name} is already running, queued or restoring.'
                 ' Please wait for the run to complete before trying to'
                 ' submit again.'
             )

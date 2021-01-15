@@ -5,9 +5,11 @@ import numpy as np
 import pandas as pd
 
 from glob import glob
+from django.conf import settings
 from django.db.models import Q
 from django.db import transaction
 from django.core.management.base import BaseCommand, CommandError
+from typing import Dict
 
 from vast_pipeline.models import (
     Run, Source, Measurement, Image, Association, MeasurementPair
@@ -20,8 +22,20 @@ from ..helpers import get_p_run_name
 logger = logging.getLogger(__name__)
 
 
-def yesno(question):
-    """Simple Yes/No Function."""
+def yesno(question: str) -> bool:
+    """
+    Simple Yes/No Function.
+
+    Parameters
+    ----------
+    question : str
+        The question to show to the user for a y/n response.
+
+    Returns
+    -------
+    bool : bool
+        True if user enters 'y', False if 'n'.
+    """
     prompt = f'{question} ? (y/n): '
     ans = input(prompt).strip().lower()
     if ans not in ['y', 'n']:
@@ -32,24 +46,42 @@ def yesno(question):
     return False
 
 
-def restore_pipe(p_run, bak_files, prev_config):
+def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config) -> None:
+    """
+    Restores the pipeline to the backup files version.
+    TODO: Update prev_config type hint.
+
+    Parameters
+    ----------
+    p_run : Run
+        The run model object.
+    bak_files : Dict[str, str]
+        Dictionary containing the paths to the .bak files.
+    prev_config : config
+        Module object that represents the back up run configuration.
+
+    Returns
+    -------
+    None
+    """
     # check images match
     img_f_list = getattr(prev_config, 'IMAGE_FILES')
     if isinstance(img_f_list, dict):
         img_f_list = [
             item for sublist in img_f_list.values() for item in sublist
         ]
+    img_f_list = [os.path.basename(i) for i in img_f_list]
 
     prev_images = pd.read_parquet(
-        bak_files['images'], columns=['id', 'measurements_path']
+        bak_files['images'], columns=['id', 'name', 'measurements_path']
     )
 
-    # if prev_images.shape[0] != len(img_f_list):
-    #     raise CommandError(
-    #         'Number of images in previous config file does not'
-    #         ' match the number found in previous images.parquet.bak.'
-    #         ' Cannot restore pipeline run.'
-    #     )
+    if sorted(prev_images['name'].tolist()) != sorted(img_f_list):
+        raise CommandError(
+            'Images in previous config file does not'
+            ' match those found in the previous images.parquet.bak.'
+            ' Cannot restore pipeline run.'
+        )
 
     # check forced measurements
     monitor = getattr(prev_config, 'MONITOR')
@@ -218,7 +250,10 @@ def restore_pipe(p_run, bak_files, prev_config):
     # switch files and delete backups
     for i in bak_files:
         bak_file = bak_files[i]
-        actual_file = bak_file.replace('.bak', '')
+        if i == 'config':
+            actual_file = bak_file.replace('.py.bak', '_prev.py')
+        else:
+            actual_file = bak_file.replace('.bak', '')
         shutil.copy(bak_file, actual_file)
         os.remove(bak_file)
 
@@ -229,6 +264,7 @@ def restore_pipe(p_run, bak_files, prev_config):
         for i in forced_parquets:
             new_file = i.replace('.bak', '')
             shutil.copy(i, new_file)
+            os.remove(i)
 
 
 class Command(BaseCommand):
@@ -287,35 +323,71 @@ class Command(BaseCommand):
                 name=p_run_name,
                 config_path=os.path.join(path, 'config.py')
             )
+            try:
+                # update pipeline run status to restoring
+                prev_status = p_run.status
+                pipeline.set_status('RES')
 
-            prev_config = os.path.join(p_run.path, 'config_prev.py')
+                prev_config_file = os.path.join(p_run.path, 'config.py.bak')
 
-            if os.path.isfile(prev_config):
-                prev_config = Pipeline.load_cfg(prev_config)
-            else:
-                raise CommandError(
-                    f'Previous config file does not exist.'
-                    ' Cannot restore pipeline run.'
-                )
-
-            bak_files = {}
-            for i in [
-                'associations', 'bands', 'images', 'measurement_pairs',
-                'relations', 'skyregions', 'sources'
-            ]:
-                parquet = os.path.join(p_run.path, f'{i}.parquet.bak')
-
-                if os.path.isfile(parquet):
-                    bak_files[i] = parquet
+                if os.path.isfile(prev_config_file):
+                    shutil.copy(
+                        prev_config_file,
+                        prev_config_file.replace('.py.bak', '.bak.py')
+                    )
+                    prev_config_file = prev_config_file.replace(
+                        '.py.bak', '.bak.py'
+                    )
+                    prev_config = Pipeline.load_cfg(prev_config_file)
+                    os.remove(prev_config_file)
                 else:
                     raise CommandError(
-                        f'File {i}.parquet does not exist.'
+                        f'Previous config file does not exist.'
                         ' Cannot restore pipeline run.'
                     )
 
-            user_continue = yesno("Would you like to restore the run?")
+                bak_files = {}
+                for i in [
+                    'associations', 'bands', 'images', 'measurement_pairs',
+                    'relations', 'skyregions', 'sources', 'config'
+                ]:
+                    if i == 'config':
+                        parquet = os.path.join(p_run.path, f'{i}.py.bak')
+                    else:
+                        parquet = os.path.join(p_run.path, f'{i}.parquet.bak')
 
-            if user_continue:
-                restore_pipe(p_run, bak_files, prev_config)
+                    if os.path.isfile(parquet):
+                        bak_files[i] = parquet
+                    else:
+                        raise CommandError(
+                            f'File {parquet} does not exist.'
+                            ' Cannot restore pipeline run.'
+                        )
 
-            logger.info('Restore complete.')
+                logger_msg = "Will restore the run to the following config:"
+
+                keys = settings.PIPE_RUN_CONFIG_DEFAULTS.keys()
+
+                for i in keys:
+                    setting_val = getattr(prev_config, i.upper())
+                    logger_msg += f"\n{i.upper():.<50s}{setting_val}"
+
+                logger.info(logger_msg)
+
+                if options['no_confirm']:
+                    user_continue = True
+                else:
+                    user_continue = yesno("Would you like to restore the run")
+
+                if user_continue:
+                    restore_pipe(p_run, bak_files, prev_config)
+                    pipeline.set_status('END')
+                    logger.info('Restore complete.')
+                else:
+                    pipeline.set_status(prev_status)
+                    logger.info('No actions performed.')
+
+            except Exception as e:
+                logger.error('Restoring failed!')
+                logger.error(e)
+                pipeline.set_status('ERR')

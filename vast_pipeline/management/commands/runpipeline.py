@@ -134,10 +134,10 @@ def run_pipe(
     else:
         # Check if the status is already running or queued. Exit if this is the
         # case.
-        if p_run.status == 'RUN':
+        if p_run.status in ['RUN', 'RES']:
             logger.error(
                 "The pipeline run requested to process already has a running"
-                " status! Performing no actions. Exiting."
+                " or restoring status! Performing no actions. Exiting."
             )
             return True
 
