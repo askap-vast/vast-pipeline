@@ -184,6 +184,7 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config) -> None:
                 logger.debug('(type, #deleted): %s', detail_del)
 
     # restore source metrics
+    logger.info(f'Restoring metrics for {bak_sources.shape[0]} sources.')
     bak_sources = update_sources(bak_sources)
 
     # remove images from run
@@ -192,7 +193,7 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config) -> None:
         .filter(run=p_run)
         .exclude(id__in=prev_images['id'].to_numpy())
     )
-
+    logger.info(f'Removing {len(images_to_remove)} images from the run.')
     if images_to_remove.exists():
         with transaction.atomic():
             p_run.image_set.remove(*images_to_remove)
@@ -238,6 +239,7 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config) -> None:
             )
             logger.debug('(type, #deleted): %s', detail_del)
 
+    logger.info(f'Restoring run metrics.')
     p_run.n_images = prev_images.shape[0]
     p_run.n_sources = bak_sources.shape[0]
     p_run.n_selavy_measurements = meas.shape[0]
@@ -248,6 +250,7 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config) -> None:
         p_run.save()
 
     # switch files and delete backups
+    logger.info(f'Restoring parquet files and removing .bak files.')
     for i in bak_files:
         bak_file = bak_files[i]
         if i == 'config':
