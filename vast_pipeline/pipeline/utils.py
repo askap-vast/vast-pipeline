@@ -1500,7 +1500,8 @@ def reconstruct_associtaion_dfs(
 
     # Obtain the pipeline run path in order to fetch forced measurements.
     run_path = previous_parquet_paths['sources'].replace(
-        'sources.parquet.bak', '')
+        'sources.parquet.bak', ''
+    )
 
     # Get the forced measurement paths.
     img_fmeas_paths = []

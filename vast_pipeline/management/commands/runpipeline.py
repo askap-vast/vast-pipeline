@@ -172,6 +172,12 @@ def run_pipe(
                 for parquet in parquets:
                     os.remove(parquet)
 
+                # remove bak files
+                bak_files = glob.glob(os.path.join(p_run.path, "*.bak"))
+                if bak_files:
+                    for bf in bak_files:
+                        os.remove(bf)
+
                 # remove previous config if it exists
                 if os.path.isfile(os.path.join(p_run.path, 'config_prev.py')):
                     os.remove(os.path.join(p_run.path, 'config_prev.py'))
