@@ -1344,8 +1344,9 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
         dd.from_pandas(df, n_cpu)
         .groupby("source")["id"]
         .apply(
-            lambda x: pd.DataFrame(list(combinations(x, 2))
-        ), meta={0: "i", 1: "i"},)
+            lambda x: pd.DataFrame(list(combinations(x, 2))),
+            meta={0: "i", 1: "i"}
+        )
         .compute(num_workers=n_cpu, scheduler="processes")
     )
 
@@ -1507,7 +1508,8 @@ def reconstruct_associtaion_dfs(
 
     for i in images_df_done.image_name.values:
         forced_parquet = os.path.join(
-            run_path, "forced_measurements_{}.parquet".format(
+            run_path,
+            "forced_measurements_{}.parquet".format(
                 i.replace(".", "_")
             )
         )

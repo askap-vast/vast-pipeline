@@ -172,7 +172,8 @@ class Pipeline():
 
         image_check = (
             prev_config_dict['IMAGE_FILES']
-            == current_config_dict['IMAGE_FILES'])
+            == current_config_dict['IMAGE_FILES']
+        )
 
         for i in [
             'IMAGE_FILES', 'SELAVY_FILES', 'NOISE_FILES', 'BACKGROUND_FILES'
@@ -184,8 +185,8 @@ class Pipeline():
 
         if not image_check and settings_check:
             return False
-        else:
-            return True
+
+        return True
 
 
     def validate_cfg(self, user: User = None) -> None:
@@ -432,10 +433,12 @@ class Pipeline():
         # Get already done images if in add mode
         if self.add_mode:
             done_images_df = pd.read_parquet(
-                self.previous_parquets['images'], columns=['id', 'name'])
+                self.previous_parquets['images'], columns=['id', 'name']
+            )
             done_source_ids = pd.read_parquet(
                 self.previous_parquets['sources'],
-                columns=['wavg_ra']).index.tolist()
+                columns=['wavg_ra']
+            ).index.tolist()
         else:
             done_images_df = None
             done_source_ids = None
@@ -506,7 +509,7 @@ class Pipeline():
         # could happen in add mode, otherwise the wrong detection image is
         # assigned.
         missing_sources_df = get_src_skyregion_merged_df(
-            sources_df.loc[sources_df.forced == False, missing_source_cols],
+            sources_df.loc[sources_df['forced'] == False, missing_source_cols],
             images_df,
             skyregs_df,
         )
