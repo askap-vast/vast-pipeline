@@ -6,6 +6,7 @@ import glob
 import shutil
 
 from vast_pipeline.tests.test_regression import compare_runs, property_check, gen_config
+from vast_pipeline.tests.test_regression.make_testdir import make_testdir
 
 from django.conf import settings as s
 from django.test import TestCase, override_settings
@@ -45,7 +46,7 @@ class BasicForcedTest(TestCase):
         )
 
         # normal run
-        os.mkdir(self.base_run)
+        make_testdir(self.base_run)
         gen_config.gen_config(
             base_path,
             s.PIPELINE_WORKING_DIR,
@@ -71,7 +72,7 @@ class BasicForcedTest(TestCase):
         )
 
         # add image run
-        os.mkdir(self.compare_run)
+        make_testdir(self.compare_run)
         gen_config.gen_config(
             compare_path,
             s.PIPELINE_WORKING_DIR,
@@ -162,7 +163,7 @@ class AdvancedForcedTest(TestCase):
         )
 
         # normal run
-        os.mkdir(self.base_run)
+        make_testdir(self.base_run)
         gen_config.gen_config(
             base_path,
             s.PIPELINE_WORKING_DIR,
@@ -188,7 +189,7 @@ class AdvancedForcedTest(TestCase):
         )
 
         # add image run
-        os.mkdir(self.compare_run)
+        make_testdir(self.compare_run)
         gen_config.gen_config(
             compare_path,
             s.PIPELINE_WORKING_DIR,
@@ -260,7 +261,7 @@ class DeruiterForcedTest(TestCase):
         )
 
         # normal run
-        os.mkdir(self.base_run)
+        make_testdir(self.base_run)
         gen_config.gen_config(
             base_path,
             s.PIPELINE_WORKING_DIR,
@@ -286,7 +287,7 @@ class DeruiterForcedTest(TestCase):
         )
 
         # add image run
-        os.mkdir(self.compare_run)
+        make_testdir(self.compare_run)
         gen_config.gen_config(
             compare_path,
             s.PIPELINE_WORKING_DIR,

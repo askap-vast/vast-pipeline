@@ -5,6 +5,7 @@ import glob
 import shutil
 
 from vast_pipeline.tests.test_regression import compare_runs, gen_config
+from vast_pipeline.tests.test_regression.make_testdir import make_testdir
 
 from django.conf import settings as s
 from django.test import TestCase, override_settings
@@ -44,7 +45,7 @@ class BasicParallelTest(TestCase):
         )
 
         # normal run
-        os.mkdir(self.base_run)
+        make_testdir(self.base_run)
         gen_config.gen_config(
             base_path,
             s.PIPELINE_WORKING_DIR,
@@ -59,7 +60,7 @@ class BasicParallelTest(TestCase):
         )
 
         # parallel run
-        os.mkdir(self.compare_run)
+        make_testdir(self.compare_run)
         gen_config.gen_config(
             compare_path,
             s.PIPELINE_WORKING_DIR,
@@ -117,7 +118,7 @@ class AdvancedParallelTest(TestCase):
         )
 
         # run with normal
-        os.mkdir(self.base_run)
+        make_testdir(self.base_run)
         gen_config.gen_config(
             base_path,
             s.PIPELINE_WORKING_DIR,
@@ -132,7 +133,7 @@ class AdvancedParallelTest(TestCase):
         )
 
         # run with parallel
-        os.mkdir(self.compare_run)
+        make_testdir(self.compare_run)
         gen_config.gen_config(
             compare_path,
             s.PIPELINE_WORKING_DIR,
@@ -190,7 +191,7 @@ class DeruiterParallelTest(TestCase):
         )
 
         # run with normal
-        os.mkdir(self.base_run)
+        make_testdir(self.base_run)
         gen_config.gen_config(
             base_path,
             s.PIPELINE_WORKING_DIR,
@@ -205,7 +206,7 @@ class DeruiterParallelTest(TestCase):
         )
 
         # run with parallel
-        os.mkdir(self.compare_run)
+        make_testdir(self.compare_run)
         gen_config.gen_config(
             compare_path,
             s.PIPELINE_WORKING_DIR,

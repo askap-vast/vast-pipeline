@@ -6,6 +6,7 @@ import glob
 import shutil
 
 from vast_pipeline.tests.test_regression import property_check, gen_config
+from vast_pipeline.tests.test_regression.make_testdir import make_testdir
 
 from django.conf import settings as s
 from django.test import TestCase, override_settings
@@ -37,10 +38,10 @@ class BasicRegressionTest(TestCase):
         self.base_run = os.path.join(s.PIPELINE_WORKING_DIR, base_path)
 
         # setup test directory
-        os.mkdir(self.base_run)
+        make_testdir(self.base_run)
         gen_config.gen_config(
-            base_path, 
-            s.PIPELINE_WORKING_DIR, 
+            base_path,
+            s.PIPELINE_WORKING_DIR,
             ['01', '03x', '02', '05x', '06x', '12']
         )
         call_command('runpipeline', self.base_run)
@@ -119,7 +120,7 @@ class AdvancedRegressionTest(TestCase):
         )
 
         # setup test directory
-        os.mkdir(self.base_run)
+        make_testdir(self.base_run)
         gen_config.gen_config(
             base_path,
             s.PIPELINE_WORKING_DIR,
@@ -200,7 +201,7 @@ class DeruiterRegressionTest(TestCase):
         )
 
         # setup test directory
-        os.mkdir(self.base_run)
+        make_testdir(self.base_run)
         gen_config.gen_config(
             base_path,
             s.PIPELINE_WORKING_DIR,

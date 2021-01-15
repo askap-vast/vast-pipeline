@@ -6,6 +6,7 @@ import glob
 import shutil
 
 from vast_pipeline.tests.test_regression import property_check, gen_config
+from vast_pipeline.tests.test_regression.make_testdir import make_testdir
 
 from django.conf import settings as s
 from django.test import TestCase, override_settings
@@ -40,7 +41,7 @@ class BasicEpochTest(TestCase):
         )
 
         # setup test directory
-        os.mkdir(self.base_run)
+        make_testdir(self.base_run)
         gen_config.gen_config(
             base_path,
             s.PIPELINE_WORKING_DIR,
@@ -127,7 +128,7 @@ class AdvancedEpochTest(TestCase):
         )
 
         # setup test directory
-        os.mkdir(self.base_run)
+        make_testdir(self.base_run)
         gen_config.gen_config(
             base_path,
             s.PIPELINE_WORKING_DIR,
@@ -198,7 +199,7 @@ class DeruiterEpochTest(TestCase):
         )
 
         # setup test directory
-        os.mkdir(self.base_run)
+        make_testdir(self.base_run)
         gen_config.gen_config(
             base_path,
             s.PIPELINE_WORKING_DIR,

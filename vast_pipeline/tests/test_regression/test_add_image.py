@@ -6,6 +6,7 @@ import shutil
 
 from vast_pipeline.tests.test_regression import compare_runs
 from vast_pipeline.tests.test_regression import gen_config
+from vast_pipeline.tests.test_regression.make_testdir import make_testdir
 
 from django.conf import settings as s
 from django.test import TestCase, override_settings
@@ -45,7 +46,7 @@ class BasicAddImageTest(TestCase):
         )
 
         # run with all images
-        os.mkdir(self.base_run)
+        make_testdir(self.base_run)
         gen_config.gen_config(
             base_path,
             s.PIPELINE_WORKING_DIR,
@@ -60,7 +61,7 @@ class BasicAddImageTest(TestCase):
         )
 
         # run with add image
-        os.mkdir(self.compare_run)
+        make_testdir(self.compare_run)
         gen_config.gen_config(
             compare_path,
             s.PIPELINE_WORKING_DIR,
@@ -162,7 +163,7 @@ class AdvancedAddImageTest(TestCase):
         )
 
         # run with all images
-        os.mkdir(self.base_run)
+        make_testdir(self.base_run)
         gen_config.gen_config(
             base_path,
             s.PIPELINE_WORKING_DIR,
@@ -177,7 +178,7 @@ class AdvancedAddImageTest(TestCase):
         )
 
         # run with add image
-        os.mkdir(self.compare_run)
+        make_testdir(self.compare_run)
         gen_config.gen_config(
             compare_path,
             s.PIPELINE_WORKING_DIR,
@@ -254,7 +255,7 @@ class DeruiterAddImageTest(TestCase):
         )
 
         # run with all images
-        os.mkdir(self.base_run)
+        make_testdir(self.base_run)
         gen_config.gen_config(
             base_path,
             s.PIPELINE_WORKING_DIR,
@@ -269,7 +270,7 @@ class DeruiterAddImageTest(TestCase):
         )
 
         # run with add image
-        os.mkdir(self.compare_run)
+        make_testdir(self.compare_run)
         gen_config.gen_config(
             compare_path,
             s.PIPELINE_WORKING_DIR,
@@ -347,7 +348,7 @@ class BasicAddTwoImageTest(TestCase):
         )
 
         # run with all images
-        os.mkdir(self.base_run)
+        make_testdir(self.base_run)
         gen_config.gen_config(
             base_path,
             s.PIPELINE_WORKING_DIR,
@@ -362,7 +363,7 @@ class BasicAddTwoImageTest(TestCase):
         )
 
         # run with add image
-        os.mkdir(self.compare_run)
+        make_testdir(self.compare_run)
         gen_config.gen_config(
             compare_path,
             s.PIPELINE_WORKING_DIR,
