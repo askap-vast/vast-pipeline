@@ -1601,7 +1601,8 @@ def reconstruct_associtaion_dfs(
     # ra and dec)
     sources_df = (
         sources_df.merge(
-            prev_sources, left_on='source', right_index=True)
+            prev_sources, left_on='source', right_index=True
+        )
         .rename(columns={
             'wavg_ra': 'ra', 'wavg_dec': 'dec',
             'wavg_uncertainty_ew': 'uncertainty_ew',
