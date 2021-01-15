@@ -321,6 +321,12 @@ class Command(BaseCommand):
             except Run.DoesNotExist:
                 raise CommandError(f'Pipeline run {p_run_name} does not exist')
 
+            if p_run.status not in ['END', 'ERR']:
+                raise CommandError(
+                    f"Run {p_run_name} does not have an 'END' or 'ERR' status."
+                    " Unable to run restore."
+                )
+
             path = p_run.path
             pipeline = Pipeline(
                 name=p_run_name,
