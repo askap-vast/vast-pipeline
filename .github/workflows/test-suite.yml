@@ -10,8 +10,9 @@ jobs:
   test:
     runs-on: ubuntu-18.04
     strategy:
+      fail-fast: false
       matrix:
-        python_version: ['3.6', '3.7.5', '3.8']
+        python_version: ['3.6.12', '3.7.5', '3.8.7']
 
     steps:
     - uses: actions/checkout@v2
