@@ -488,10 +488,10 @@ def add_new_many_to_one_relations(row: pd.Series) -> List[int]:
         The new related field for the source in question, containing the
         appended ids.
     """
+    out = row['new_relations'].copy()
+
     if isinstance(row['related_skyc1'], list):
-        out = row['related_skyc1'].copy() + row['new_relations']
-    else:
-        out = row['new_relations'].copy()
+        out += row['related_skyc1'].copy()
 
     return out
 
@@ -1344,9 +1344,8 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
         dd.from_pandas(df, n_cpu)
         .groupby("source")["id"]
         .apply(
-            lambda x: pd.DataFrame(list(combinations(x, 2))),
-            meta={0: "i", 1: "i"}
-        )
+            lambda x: pd.DataFrame(list(combinations(x, 2))
+        ), meta={0: "i", 1: "i"},)
         .compute(num_workers=n_cpu, scheduler="processes")
     )
 
@@ -1508,8 +1507,7 @@ def reconstruct_associtaion_dfs(
 
     for i in images_df_done.image_name.values:
         forced_parquet = os.path.join(
-            run_path,
-            "forced_measurements_{}.parquet".format(
+            run_path, "forced_measurements_{}.parquet".format(
                 i.replace(".", "_")
             )
         )
@@ -1601,8 +1599,7 @@ def reconstruct_associtaion_dfs(
     # ra and dec)
     sources_df = (
         sources_df.merge(
-            prev_sources, left_on='source', right_index=True
-        )
+            prev_sources, left_on='source', right_index=True)
         .rename(columns={
             'wavg_ra': 'ra', 'wavg_dec': 'dec',
             'wavg_uncertainty_ew': 'uncertainty_ew',
