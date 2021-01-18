@@ -4,8 +4,7 @@ import unittest
 import glob
 import shutil
 
-from vast_pipeline.tests.test_regression import compare_runs
-from vast_pipeline.tests.test_regression import gen_config
+from vast_pipeline.tests.test_regression import compare_runs, gen_config
 from vast_pipeline.tests.test_regression.make_testdir import make_testdir
 
 from django.conf import settings as s
