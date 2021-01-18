@@ -321,16 +321,20 @@ class RunViewSet(ModelViewSet):
             )
             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
+        prev_status = p_run.status
         try:
             with transaction.atomic():
                 p_run.status = 'QUE'
                 p_run.save()
-            debug_flag = request.POST.get('debug', 'debugOff')
-            debug_flag = True if debug_flag == 'debugOn' else False
+
+            debug_flag = True if request.POST.get('debug', None) else False
+            full_rerun = True if request.POST.get('fullReRun', None) else False
+
             async_task(
                 'vast_pipeline.management.commands.runpipeline.run_pipe',
                 p_run.name, p_run.path, p_run, False, debug_flag,
-                task_name=p_run.name, ack_failure=True, user=request.user
+                task_name=p_run.name, ack_failure=True, user=request.user,
+                full_rerun=full_rerun, prev_ui_status=prev_status
             )
             msg = mark_safe(
                 f'<b>{p_run.name}</b> successfully sent to the queue!<br><br>Refresh the'

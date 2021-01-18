@@ -1,9 +1,11 @@
 import os
 import logging
+import numpy as np
 import pandas as pd
 
-from django.db import transaction
+from typing import List, Optional
 from itertools import islice
+from django.db import transaction, connection, models
 
 from vast_pipeline.image.main import SelavyImage
 from vast_pipeline.pipeline.model_generator import (
@@ -13,7 +15,9 @@ from vast_pipeline.pipeline.model_generator import (
     association_models_generator,
     measurement_pair_models_generator,
 )
-from vast_pipeline.models import Association, Measurement, Source, RelatedSource, MeasurementPair
+from vast_pipeline.models import (
+    Association, Measurement, Source, RelatedSource, MeasurementPair, Run
+)
 from vast_pipeline.pipeline.utils import (
     get_create_img, get_create_img_band
 )
@@ -149,14 +153,31 @@ def make_upload_images(paths, config, pipeline_run):
     return images, skyregs_df
 
 
-def make_upload_sources(sources_df, pipeline_run):
+def make_upload_sources(sources_df: pd.DataFrame, pipeline_run: Run,
+    add_mode: bool = False) -> pd.DataFrame:
     '''
-    delete previous sources for given pipeline run and bulk upload
+    Delete previous sources for given pipeline run and bulk upload
     new found sources as well as related sources
+
+    Parameters
+    ----------
+    sources_df : pd.DataFrame
+        Holds the measurements associated into sources. The output of of the
+        association step.
+    pipeline_run : Run
+        The pipeline Run object.
+    add_mode : bool
+        Whether the pipeline is running in add image mode.
+
+    Returns
+    -------
+    sources_df : pd.DataFrame
+        The input dataframe with the 'id' column added.
     '''
     # create sources in DB
     with transaction.atomic():
-        if Source.objects.filter(run=pipeline_run).exists():
+        if (add_mode is False and
+                Source.objects.filter(run=pipeline_run).exists()):
             logger.info('Removing objects from previous pipeline run')
             n_del, detail_del = (
                 Source.objects.filter(run=pipeline_run).delete()
@@ -210,3 +231,111 @@ def make_upload_measurement_pairs(measurement_pairs_df):
     )
     measurement_pairs_df["id"] = meas_pair_dj_ids
     return measurement_pairs_df
+
+
+def update_sources(
+    sources_df: pd.DataFrame, batch_size: int = 10_000) -> pd.DataFrame:
+    '''
+    Update database using SQL code. This function opens one connection to the
+    database, and closes it after the update is done.
+
+    Parameters
+    ----------
+    sources_df : pd.DataFrame
+        DataFrame containing the new data to be uploaded to the database. The
+        columns to be updated need to have the same headers between the df and
+        the table in the database.
+    batch_size : int
+        The df rows are broken into chunks, each chunk is executed in a
+        separate SQL command, batch_size determines the maximum size of the
+        chunk.
+
+    Returns
+    -------
+    sources_df : pd.DataFrame
+        DataFrame containing the new data to be uploaded to the database.
+    '''
+    # Get all possible columns from the model
+    all_source_table_cols = [
+        fld.attname for fld in Source._meta.get_fields()
+        if getattr(fld, 'attname', None) is not None
+    ]
+
+    # Filter to those present in sources_df
+    columns = [
+        col for col in all_source_table_cols if col in sources_df.columns
+    ]
+
+    sources_df['id'] = sources_df.index.values
+
+    batches = np.ceil(len(sources_df)/batch_size)
+    dfs = np.array_split(sources_df, batches)
+    with connection.cursor() as cursor:
+        for df_batch in dfs:
+            SQL_comm = SQL_update(
+                df_batch, Source, index='id', columns=columns
+            )
+            cursor.execute(SQL_comm)
+
+    return sources_df
+
+
+def SQL_update(
+    df: pd.DataFrame, model: models.Model, index: Optional[str] = None,
+    columns: Optional[List[str]] = None
+) -> str:
+    '''
+    Generate SQL code required to update database.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        DataFrame containing the new data to be uploaded to the database. The
+        columns to be updated need to have the same headers between the df and
+        the table in the database.
+    model : Model
+        The model that is being updated.
+    index : str or None
+        Header of the column to join on, determines which rows in the different
+        tables match. If None, then use the primary key column.
+    columns : List[str] or None
+        The column headers of the columns to be updated. If None, updates all
+        columns except the index column.
+
+    Returns
+    -------
+    SQL_comm : str
+        The SQL command to update the database.
+    '''
+    # set index and columns if None
+    if index is None:
+        index = model._meta.pk.name
+    if columns is None:
+        columns = df.columns.tolist()
+        columns.remove(index)
+
+    # get names
+    table = model._meta.db_table
+    new_columns = ', '.join('new_'+c for c in columns)
+    set_columns = ', '.join(c+'=new_'+c for c in columns)
+
+    # get index values and new values
+    column_headers = [index]
+    column_headers.extend(columns)
+    data_arr = df[column_headers].to_numpy()
+    values = []
+    for row in data_arr:
+        val_row = '(' + ', '.join(f'{val}' for val in row) + ')'
+        values.append(val_row)
+    values = ', '.join(values)
+
+    # update database
+    SQL_comm = f"""
+        UPDATE {table}
+        SET {set_columns}
+        FROM (VALUES {values})
+        AS new_values (index_col, {new_columns})
+        WHERE {index}=index_col;
+    """
+
+    return SQL_comm

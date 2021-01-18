@@ -7,6 +7,28 @@ import os
 # path of the pipeline run
 PIPE_RUN_PATH = os.path.dirname(os.path.realpath(__file__))
 
+{% if epoch_mode %}
+IMAGE_FILES = {
+    {% for key, value in image_files.items() %}
+      '{{ key }}' : {{ value }},
+    {% endfor %}}
+
+SELAVY_FILES = {
+    {% for key, value in selavy_files.items() %}
+      '{{ key }}' : {{ value }},
+    {% endfor %}}
+
+NOISE_FILES = {
+    {% for key, value in noise_files.items() %}
+      '{{ key }}' : {{ value }},
+    {% endfor %}}
+
+BACKGROUND_FILES = {
+    {% for key, value in background_files.items() %}
+      '{{ key }}' : {{ value }},
+    {% endfor %}}
+
+{% else %}
 # Images settings
 # NOTE: all the paths !!!MUST!!! match with each other, e.g.
 # IMAGE_FILES[0] image matches SELAVY_FILES[0] file
@@ -32,6 +54,7 @@ BACKGROUND_FILES = [
     # insert background map file path(s) here
     {% for el in background_files %}'{{ el }}',
     {% endfor %}]
+{% endif %}
 
 ###
 # SOURCE FINDER OPTIONS
@@ -82,7 +105,7 @@ ASSOCIATION_BEAMWIDTH_LIMIT = {{ association_beamwidth_limit }}   # multiplicati
 # 'sky region groups' and association run on these groups in parallel and combined at the end.
 # Setting to 'True' is best used when you have a large dataset with multiple patches of the sky, 
 # for smaller searches of only 3 or below sky regions it is recommened to keep as 'False'.
-ASSOCIATION_PARALLEL =  {{ association_parallel }}
+ASSOCIATION_PARALLEL = {{ association_parallel }}
 
 # If images have been submitted in epoch dictionaries then an attempt will be made by the pipeline to
 # remove duplicate sources. To do this a crossmatch is made between catalgoues to match 'the same'
@@ -108,7 +131,7 @@ DEFAULT_SURVEY = {{ default_survey }} # 'NVSS'
 # This is a fraction, 0 = No minimum error
 FLUX_PERC_ERROR = {{ flux_perc_error }} #percent 0.05 is 5%
 
-# Replace the selavy errors witht
+# Replace the selavy errors with
 USE_CONDON_ERRORS = {{ use_condon_errors }}
 
 # Sometimes the local rms for a source is reported as 0 by selavy.

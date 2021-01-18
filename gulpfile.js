@@ -188,6 +188,12 @@ function modules() {
     './node_modules/startbootstrap-sb-admin-2/css/*.css'
   ]).pipe(gulp.dest(paths.vendor + '/startbootstrap-sb-admin-2'));
 
+  // Bootstrap4 toggle
+  var bootstrap4toggle = gulp.src([
+    './node_modules/bootstrap4-toggle/js/*.js',
+    './node_modules/bootstrap4-toggle/css/*.css'
+  ]).pipe(gulp.dest(paths.vendor + '/bootstrap4-toggle'));
+
   // dataTables
   var dataTables = gulp.src([
     './node_modules/datatables.net/js/*.js',
@@ -252,7 +258,7 @@ function modules() {
   var prismJsLineNumCss = gulp.src('./node_modules/prismjs/plugins/line-numbers/prism-line-numbers.css')
     .pipe(gulp.dest(paths.vendor + '/prismjs/line-numbers'));
 
-  return merge(bootstrapJS, bootstrapSbAdmin2, bokehJS, dataTables, dataTablesButtons, fontAwesome, jquery, jqueryEasing, jszip, d3Celestial, d3CelestialData, d3CelestialImage, particlesJs, prismJs, prismJsPy, prismJsLineNum, prismJsCss, prismJsLineNumCss);
+  return merge(bootstrapJS, bootstrapSbAdmin2, bootstrap4toggle, bokehJS, dataTables, dataTablesButtons, fontAwesome, jquery, jqueryEasing, jszip, d3Celestial, d3CelestialData, d3CelestialImage, particlesJs, prismJs, prismJsPy, prismJsLineNum, prismJsCss, prismJsLineNumCss);
 }
 
 // SCSS task

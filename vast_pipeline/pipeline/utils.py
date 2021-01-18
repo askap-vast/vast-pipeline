@@ -2,12 +2,13 @@ import os
 import logging
 import glob
 import vaex
+import shutil
 import numpy as np
 import pandas as pd
 import astropy.units as u
 import dask.dataframe as dd
 
-from typing import List, Optional
+from typing import List, Optional, Dict, Tuple
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
@@ -317,11 +318,7 @@ def _load_measurements(
     df['dr'] = 0.
     df['related'] = None
 
-    sources_sc = SkyCoord(
-        df['ra'],
-        df['dec'],
-        unit=(u.deg, u.deg)
-    )
+    sources_sc = SkyCoord(df['ra'], df['dec'], unit=(u.deg, u.deg))
 
     seps = sources_sc.separation(image_centre).degree
     df['dist_from_centre'] = seps
@@ -456,7 +453,8 @@ def add_new_one_to_many_relations(
     # this is the not_original case where the original source id is appended.
     if source_ids.empty:
         if isinstance(row[related_col], list):
-            out = row[related_col].append(row[source_col])
+            out = row[related_col]
+            out.append(row[source_col])
         else:
             out = [row[source_col],]
 
@@ -490,10 +488,10 @@ def add_new_many_to_one_relations(row: pd.Series) -> List[int]:
         The new related field for the source in question, containing the
         appended ids.
     """
+    out = row['new_relations'].copy()
+
     if isinstance(row['related_skyc1'], list):
-        out = row['related_skyc1'] + row['new_relations']
-    else:
-        out = row['new_relations']
+        out += row['related_skyc1'].copy()
 
     return out
 
@@ -1123,8 +1121,7 @@ def get_parallel_assoc_image_df(
     Returns
     -------
     results : pd.DataFrame
-        The combined association results of the parallel association with
-        corrected source ids.
+        Dataframe containing the merged images and skyreg_id and skyreg_group.
         +----+-------------------------------+-------------+----------------+
         |    | image                         |   skyreg_id |   skyreg_group |
         |----+-------------------------------+-------------+----------------|
@@ -1150,6 +1147,14 @@ def get_parallel_assoc_image_df(
         how='left',
         left_on='skyreg_id',
         right_index=True
+    )
+
+    images_df['image_name'] = images_df['image_dj'].apply(
+        lambda x: x.name
+    )
+
+    images_df['image_datetime'] = images_df['image_dj'].apply(
+        lambda x: x.datetime
     )
 
     return images_df
@@ -1336,9 +1341,11 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
         11128   0   6216  23534
     """
     measurement_combinations = (
-        dd.from_pandas(df.sort_values(["source", "datetime"]), n_cpu)
+        dd.from_pandas(df, n_cpu)
         .groupby("source")["id"]
-        .apply(lambda x: pd.DataFrame(list(combinations(x, 2))), meta={0: "i", 1: "i"},)
+        .apply(
+            lambda x: pd.DataFrame(list(combinations(x, 2))
+        ), meta={0: "i", 1: "i"},)
         .compute(num_workers=n_cpu, scheduler="processes")
     )
 
@@ -1361,6 +1368,38 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
     measurement_combinations = measurement_combinations.reset_index(
         level=1, drop=True
     ).rename(columns={0: "id_a", 1: "id_b"}).astype(int).reset_index()
+
+    # Dask has a tendency to swap which order the measurement pairs are
+    # defined in, even if the dataframe is pre-sorted. We want the pairs to be
+    # in date order (a < b) so the code below corrects any that are not.
+    measurement_combinations = measurement_combinations.join(
+        df[['source', 'id', 'datetime']].set_index(['source', 'id']),
+        on=['source', 'id_a'],
+    )
+
+    measurement_combinations = measurement_combinations.join(
+        df[['source', 'id', 'datetime']].set_index(['source', 'id']),
+        on=['source', 'id_b'], lsuffix='_a', rsuffix='_b'
+    )
+
+    to_correct_mask = (
+        measurement_combinations['datetime_a']
+        > measurement_combinations['datetime_b']
+    )
+
+    if np.any(to_correct_mask):
+        logger.debug('Correcting measurement pairs order')
+        (
+            measurement_combinations.loc[to_correct_mask, 'id_a'],
+            measurement_combinations.loc[to_correct_mask, 'id_b']
+        ) = np.array([
+            measurement_combinations.loc[to_correct_mask, 'id_b'].values,
+            measurement_combinations.loc[to_correct_mask, 'id_a'].values
+        ])
+
+    measurement_combinations = measurement_combinations.drop(
+        ['datetime_a', 'datetime_b'], axis=1
+    )
 
     # add the measurement fluxes and errors
     association_fluxes = df.set_index(["source", "id"])[
@@ -1399,3 +1438,250 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
     )
 
     return measurement_combinations
+
+
+def backup_parquets(p_run_path: str) -> None:
+    """
+    Backups up all the existing parquet files in a pipeline run directory.
+    Backups are named with a '.bak' suffix in the pipeline run directory.
+
+    Parameters
+    ----------
+    p_run_path : str
+        The path of the pipeline run where the parquets are stored.
+
+    Returns
+    -------
+    None
+    """
+    parquets = (
+        glob.glob(os.path.join(p_run_path, "*.parquet"))
+        # TODO Remove arrow when vaex support is dropped.
+        + glob.glob(os.path.join(p_run_path, "*.arrow")))
+
+    for i in parquets:
+        backup_name = i + '.bak'
+        if os.path.isfile(backup_name):
+            logger.debug(f'Removing old backup file: {backup_name}.')
+            os.remove(backup_name)
+        shutil.copyfile(i, backup_name)
+
+
+def reconstruct_associtaion_dfs(
+    images_df_done: pd.DataFrame,
+    previous_parquet_paths: Dict[str, str]
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    This function is used with add image mode and performs the necessary
+    manipulations to reconstruct the sources_df and skyc1_srcs required by
+    association.
+
+    Parameters
+    ----------
+    images_df_done : pd.DataFrame
+        The images_df output from the existing run (from the parquet).
+    previous_parquet_paths : Dict[str, str]
+        Dictionary that contains the paths for the previous run parquet files.
+        Keys are 'images', 'associations', 'sources', 'relations' and
+        'measurement_pairs'.
+
+    Returns
+    -------
+    sources_df, skyc1_srcs : pd.DataFrame, pd.DataFrame.
+        The reconstructed sources_df and skyc1_srs dataframes.
+    """
+    prev_associations = pd.read_parquet(previous_parquet_paths['associations'])
+
+    # Get the parquet paths from the image objects
+    img_meas_paths = (
+        images_df_done['image_dj'].apply(lambda x: x.measurements_path)
+        .to_list()
+    )
+
+    # Obtain the pipeline run path in order to fetch forced measurements.
+    run_path = previous_parquet_paths['sources'].replace(
+        'sources.parquet.bak', ''
+    )
+
+    # Get the forced measurement paths.
+    img_fmeas_paths = []
+
+    for i in images_df_done.image_name.values:
+        forced_parquet = os.path.join(
+            run_path, "forced_measurements_{}.parquet".format(
+                i.replace(".", "_")
+            )
+        )
+        if os.path.isfile(forced_parquet):
+            img_fmeas_paths.append(forced_parquet)
+
+    # Create union of paths.
+    img_meas_paths += img_fmeas_paths
+
+    # Define the columns that are required
+    cols = [
+        'id',
+        'ra',
+        'uncertainty_ew',
+        'weight_ew',
+        'dec',
+        'uncertainty_ns',
+        'weight_ns',
+        'flux_int',
+        'flux_int_err',
+        'flux_int_isl_ratio',
+        'flux_peak',
+        'flux_peak_err',
+        'flux_peak_isl_ratio',
+        'forced',
+        'compactness',
+        'has_siblings',
+        'snr',
+        'image_id',
+        'time',
+    ]
+
+    # Open all the parquets
+    logger.debug(
+        "Opening all measurement parquet files to use in reconstruction..."
+    )
+    measurements = pd.concat(
+        [pd.read_parquet(f, columns=cols) for f in img_meas_paths]
+    )
+
+    # Create mask to drop measurements for epoch mode (epoch based mode).
+    measurements_mask = measurements['id'].isin(
+        prev_associations['meas_id'])
+    measurements = measurements.loc[measurements_mask].set_index('id')
+
+    # Set the index on images_df for faster merging.
+    images_df_done['image_id'] = images_df_done['image_dj'].apply(
+        lambda x: x.id).values
+    images_df_done = images_df_done.set_index('image_id')
+
+    # Merge image information to measurements
+    measurements = (
+        measurements.merge(
+            images_df_done[['image_name', 'epoch']],
+            left_on='image_id', right_index=True
+        )
+        .rename(columns={'image_name': 'image'})
+    )
+
+    # Drop any associations that are not used in this sky region group.
+    associations_mask = prev_associations['meas_id'].isin(
+        measurements.index.values)
+
+    prev_associations = prev_associations.loc[associations_mask]
+
+    # Merge measurements into the associations to form the sources_df.
+    sources_df = (
+        prev_associations.merge(
+            measurements, left_on='meas_id', right_index=True
+        )
+        .rename(columns={
+            'source_id': 'source', 'time': 'datetime', 'meas_id': 'id',
+            'ra': 'ra_source', 'dec': 'dec_source',
+            'uncertainty_ew': 'uncertainty_ew_source',
+            'uncertainty_ns': 'uncertainty_ns_source',
+        })
+    )
+
+    # Load up the previous unique sources.
+    prev_sources = pd.read_parquet(
+        previous_parquet_paths['sources'], columns=[
+            'wavg_ra', 'wavg_dec',
+            'wavg_uncertainty_ew', 'wavg_uncertainty_ns',
+        ]
+    )
+
+    # Merge the wavg ra and dec to the sources_df - this is required to
+    # create the skyc1_srcs below (but MUST be converted back to the source
+    # ra and dec)
+    sources_df = (
+        sources_df.merge(
+            prev_sources, left_on='source', right_index=True)
+        .rename(columns={
+            'wavg_ra': 'ra', 'wavg_dec': 'dec',
+            'wavg_uncertainty_ew': 'uncertainty_ew',
+            'wavg_uncertainty_ns': 'uncertainty_ns',
+        })
+    )
+
+    # Load the previous relations
+    prev_relations = pd.read_parquet(previous_parquet_paths['relations'])
+
+    # Form relation lists to merge in.
+    prev_relations = pd.DataFrame(
+        prev_relations
+        .groupby('from_source_id')['to_source_id']
+        .apply(lambda x: x.values.tolist())
+    ).rename(columns={'to_source_id': 'related'})
+
+    # Append the relations to only the last instance of each source
+    # First get the ids of the sources
+    relation_ids = sources_df[
+        sources_df.source.isin(prev_relations.index.values)].drop_duplicates(
+            'source', keep='last'
+        ).index.values
+    # Make sure we attach the correct source id
+    source_ids = sources_df.loc[relation_ids].source.values
+    sources_df['related'] = np.nan
+    relations_to_update = prev_relations.loc[source_ids].to_numpy().copy()
+    relations_to_update = np.reshape(
+        relations_to_update, relations_to_update.shape[0])
+    sources_df.loc[relation_ids, 'related'] = relations_to_update
+
+    # Reorder so we don't mess up the dask metas.
+    sources_df = sources_df[[
+        'id', 'uncertainty_ew', 'weight_ew', 'uncertainty_ns', 'weight_ns',
+        'flux_int', 'flux_int_err', 'flux_int_isl_ratio', 'flux_peak',
+        'flux_peak_err', 'flux_peak_isl_ratio', 'forced', 'compactness',
+        'has_siblings', 'snr', 'image', 'datetime', 'source', 'ra', 'dec',
+        'ra_source', 'dec_source', 'd2d', 'dr', 'related', 'epoch',
+        'uncertainty_ew_source', 'uncertainty_ns_source'
+    ]]
+
+    # Create the unique skyc1_srcs dataframe.
+    skyc1_srcs = (
+        sources_df[sources_df['forced'] == False]
+        .sort_values(by='id')
+        .drop('related', axis=1)
+        .drop_duplicates('source')
+    ).copy(deep=True)
+
+    # Get relations into the skyc1_srcs (as we only keep the first instance
+    # which does not have the relation information)
+    skyc1_srcs = skyc1_srcs.merge(
+        prev_relations, how='left', left_on='source', right_index=True
+)
+
+    # Need to break the pointer relationship between the related sources (
+    # deep=True copy does not truly copy mutable type objects)
+    relation_mask = skyc1_srcs.related.notna()
+    relation_vals = skyc1_srcs.loc[relation_mask, 'related'].to_list()
+    new_relation_vals = [x.copy() for x in relation_vals]
+    skyc1_srcs.loc[relation_mask, 'related'] = new_relation_vals
+
+    # Reorder so we don't mess up the dask metas.
+    skyc1_srcs = skyc1_srcs[[
+        'id', 'ra', 'uncertainty_ew', 'weight_ew', 'dec', 'uncertainty_ns',
+        'weight_ns', 'flux_int', 'flux_int_err', 'flux_int_isl_ratio',
+        'flux_peak', 'flux_peak_err', 'flux_peak_isl_ratio', 'forced',
+        'compactness', 'has_siblings', 'snr', 'image', 'datetime', 'source',
+        'ra_source', 'dec_source', 'd2d', 'dr', 'related', 'epoch'
+    ]].reset_index(drop=True)
+
+    # Finally move the source ra and dec back to the sources_df ra and dec
+    # columns
+    sources_df['ra'] = sources_df['ra_source']
+    sources_df['dec'] = sources_df['dec_source']
+    sources_df['uncertainty_ew'] = sources_df['uncertainty_ew_source']
+    sources_df['uncertainty_ns'] = sources_df['uncertainty_ns_source']
+
+    # Drop not needed columns for the sources_df.
+    sources_df = sources_df.drop([
+        'uncertainty_ew_source', 'uncertainty_ns_source'
+    ], axis=1).reset_index(drop=True)
+
+    return sources_df, skyc1_srcs

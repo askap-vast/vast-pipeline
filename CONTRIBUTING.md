@@ -27,7 +27,7 @@ A very exahustive set of general guidelines can be follow [here](https://github.
 First consider
 >opening an issue before creating/issuing the PR.
 
-So we can separe problems from solutions.
+So we can separate problems from solutions.
 
 1. Open an issue (e.g. `My issue blah`, GitHub will assign a id e.g. `#123`).
 2. Branch off `master` by naming your branch `fix-#123-my-issue-blah` (keep it short please).
@@ -113,7 +113,7 @@ Run 'python manage.py migrate' to apply them.
 
 Solutions to such scenario:
 
-If you don't mind losing all the data in your database just follow the [Reset the database](#reset-the-database) instructions to drop all the data. But if you want to keep your data, you have to fix these changes by trying running `makemigrations` and `migrate`. But ideally you should follow the following steps:
+If you don't mind losing all the data in your database just follow the [Reset the database](#reset-the-database) instructions to drop all the data. But if you want to keep your data, you have to fix these changes by trying to run `makemigrations` and `migrate`. But ideally you should follow the following steps:
 
 1. Identify the previous commit before pulling the changes (when your migration and model files were working):
 
@@ -213,12 +213,17 @@ to run the tests located in [`test_webserver.py`](./vast_pipeline/tests/test_web
 (pipeline_env)$ ./manage.py test vast_pipeline.tests.test_webserver
 ```
 
-Regression tests located in [`test_regression.py`](./vast_pipeline/tests/test_regression.py) requires the use of the VAST_2118-06A field test dataset which is not a part of the repository. This data is downloadable at https://cloudstor.aarnet.edu.au/plus/s/m2eRb27MIMNM7LM, use:
+Regression tests located in [`test_regression`](./vast_pipeline/tests/test_regression/) require the use of the VAST_2118-06A field test dataset which is not a part of the repository. This data is downloadable at https://cloudstor.aarnet.edu.au/plus/s/xjh0aRr1EGY6Bt3. You can use the script located in [tests/regression-data/](./vast_pipeline/tests/regression-data/):
 ```bash
-wget https://cloudstor.aarnet.edu.au/plus/s/m2eRb27MIMNM7LM/download
+(pipeline_env)$ cd vast_pipeline/tests/regression-data/ && ./download.sh
 ```
-place the VAST_2118-06A field test dataset in a folder named `regression-data` inside the [tests](./vast_pipeline/tests/) folder. These regression tests are skipped if the data folder containing the dataset is not present. 
+to download the VAST_2118-06A field test dataset into the [regression-data](./vast_pipeline/tests/regression-data) folder. These regression tests are skipped if the dataset is not present.
 
 All tests should be run before pushing to master. Running all the tests takes a few minutes, so it is not recommended to run them for every change.
+
+If you have made a minor change and would like to only run unit tests, skipping regression tests, use:
+```bash
+./manage.py test vast_pipeline.tests.test_pipeline
+```
 
 __NOTE__: if changes are made to the default config keys, these changes need to be propagated to the test config files.

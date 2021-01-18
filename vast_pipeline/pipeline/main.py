@@ -1,6 +1,7 @@
 import os
 import operator
 import logging
+from typing import List, Tuple
 
 from astropy import units as u
 from astropy.coordinates import Angle
@@ -56,26 +57,7 @@ class Pipeline():
 
         # Check if provided files are lists and convert to
         # dictionaries if so
-        for cfg_key in [
-            'IMAGE_FILES', 'SELAVY_FILES',
-            'BACKGROUND_FILES', 'NOISE_FILES'
-        ]:
-            if isinstance(getattr(self.config, cfg_key), list):
-                setattr(
-                    self.config,
-                    cfg_key,
-                    convert_list_to_dict(
-                        getattr(self.config, cfg_key)
-                    )
-                )
-            elif isinstance(getattr(self.config, cfg_key), dict):
-                # Set to True if dictionaries are passed.
-                self.epoch_based = True
-            else:
-                raise PipelineConfigError((
-                    'Unknown images entry format!'
-                    f' Must be a list or dictionary.'
-                ))
+        self.config, self.epoch_based = self.check_for_epoch_based(self.config)
 
     @staticmethod
     def load_cfg(cfg):
@@ -95,7 +77,119 @@ class Pipeline():
 
         return mod
 
-    def validate_cfg(self, user=None):
+    @staticmethod
+    def _get_valid_keys(upper: bool = False) -> List[str]:
+        """
+        Obtains the valid config keys from the template config.
+
+        Parameters
+        ----------
+        upper : bool
+            Return all the keys in upper formatt.
+
+        Returns
+        -------
+        valid_keys : List[str]
+            List of valid keys.
+        """
+        valid_keys = settings.PIPE_RUN_CONFIG_DEFAULTS.keys()
+        if upper:
+            valid_keys = [i.upper() for i in valid_keys]
+
+        return valid_keys
+
+    @staticmethod
+    def check_for_epoch_based(cfg) -> Tuple['config', bool]:
+        # Config typing above is unknown what to put.
+        """
+        Checks whether the images have been provided in a Dictionary format
+        which means that epoch_based has been requested. If they have been
+        provided with just lists then the inputs are converted to dictionaries
+        with an epoch defined for each individual image.
+
+        Parameters
+        ----------
+        cfg : self.config
+            The config object.
+
+        Returns
+        -------
+        cfg, epoch_based : self.config, bool.
+            The config (with converted List -> Dict inputs if required) and
+            epoch_based boolean flag.
+        """
+        epoch_based = False
+
+        for cfg_key in [
+            'IMAGE_FILES', 'SELAVY_FILES',
+            'BACKGROUND_FILES', 'NOISE_FILES'
+        ]:
+            if isinstance(getattr(cfg, cfg_key), list):
+                setattr(
+                    cfg,
+                    cfg_key,
+                    convert_list_to_dict(getattr(cfg, cfg_key))
+                )
+            elif isinstance(getattr(cfg, cfg_key), dict):
+                # Set to True if dictionaries are passed.
+                epoch_based = True
+            else:
+                raise PipelineConfigError((
+                    'Unknown images entry format!'
+                    f' Must be a list or dictionary.'
+                ))
+
+        return cfg, epoch_based
+
+    def check_prev_config_diff(self, p_run_path: str) -> bool:
+        """
+        Checks if the previous config file differs from the current config
+        file. Used in add mode. Only returns true if the images are different
+        and the other general settings are the same (the requirement for add
+        mode). Otherwise False is returned.
+
+        Parameters
+        ----------
+        p_run_path : str
+            The path of the pipeline run where the parquets are stored.
+
+        Returns
+        -------
+        bool : bool
+            True if images are different but general settings are the same.
+            Otherwise False is returned.
+        """
+        valid_keys = self._get_valid_keys(upper=True)
+
+        prev_config, _ = self.check_for_epoch_based(
+            self.load_cfg(os.path.join(p_run_path, 'config_prev.py')))
+        prev_config_dict = {k: getattr(prev_config, k) for k in valid_keys}
+
+        current_config_dict = {k: getattr(self.config, k) for k in valid_keys}
+
+        if prev_config_dict == current_config_dict:
+            return True
+
+        image_check = (
+            prev_config_dict['IMAGE_FILES']
+            == current_config_dict['IMAGE_FILES']
+        )
+
+        for i in [
+            'IMAGE_FILES', 'SELAVY_FILES', 'NOISE_FILES', 'BACKGROUND_FILES'
+        ]:
+            prev_config_dict.pop(i)
+            current_config_dict.pop(i)
+
+        settings_check = prev_config_dict == current_config_dict
+
+        if not image_check and settings_check:
+            return False
+
+        return True
+
+
+    def validate_cfg(self, user: User = None) -> None:
         """
         validate a pipeline run configuration against default parameters and
         for different settings (e.g. force extraction)
@@ -111,7 +205,7 @@ class Pipeline():
         """
         # validate every config from the config template
         config_keys = [k for k in dir(self.config) if k.isupper()]
-        valid_keys = settings.PIPE_RUN_CONFIG_DEFAULTS.keys()
+        valid_keys = self._get_valid_keys()
 
         # Check that there are no 'unknown' options given by the user
         for key in config_keys:
@@ -284,10 +378,13 @@ class Pipeline():
 
     def process_pipeline(self, p_run):
         logger.info(f'Epoch based association: {self.epoch_based}')
+        if self.add_mode:
+            logger.info('Running in image add mode.')
 
         # Update epoch based flag to not cause user confusion when running
-        # the pipeline (i.e. if it was only updated at the end).
-        if self.epoch_based:
+        # the pipeline (i.e. if it was only updated at the end). It is not
+        # updated if the pipeline is being run in add mode.
+        if self.epoch_based and not self.add_mode:
             with transaction.atomic():
                 p_run.epoch_based = self.epoch_based
                 p_run.save()
@@ -333,6 +430,19 @@ class Pipeline():
             'skyreg_group'
         ].unique().shape[0]
 
+        # Get already done images if in add mode
+        if self.add_mode:
+            done_images_df = pd.read_parquet(
+                self.previous_parquets['images'], columns=['id', 'name']
+            )
+            done_source_ids = pd.read_parquet(
+                self.previous_parquets['sources'],
+                columns=['wavg_ra']
+            ).index.tolist()
+        else:
+            done_images_df = None
+            done_source_ids = None
+
         # 2.2 Associate with other measurements
         if self.config.ASSOCIATION_PARALLEL and n_skyregion_groups > 1:
             images_df = get_parallel_assoc_image_df(
@@ -348,6 +458,10 @@ class Pipeline():
                 duplicate_limit,
                 self.config,
                 n_skyregion_groups,
+                self.add_mode,
+                self.previous_parquets,
+                done_images_df,
+                done_source_ids
             )
         else:
             images_df = pd.DataFrame.from_dict(
@@ -361,6 +475,10 @@ class Pipeline():
                 lambda x: x.skyreg_id
             )
 
+            images_df['image_name'] = images_df['image_dj'].apply(
+                lambda x: x.name
+            )
+
             sources_df = association(
                 images_df,
                 limit,
@@ -368,6 +486,9 @@ class Pipeline():
                 bw_limit,
                 duplicate_limit,
                 self.config,
+                self.add_mode,
+                self.previous_parquets,
+                done_images_df
             )
 
         # 2.3 Associate Measurements with reference survey sources
@@ -384,8 +505,11 @@ class Pipeline():
             'source', 'datetime', 'image', 'epoch',
             'interim_ew', 'weight_ew', 'interim_ns', 'weight_ns'
         ]
+        # need to make sure no forced measurments are being passed which
+        # could happen in add mode, otherwise the wrong detection image is
+        # assigned.
         missing_sources_df = get_src_skyregion_merged_df(
-            sources_df[missing_source_cols],
+            sources_df.loc[sources_df['forced'] == False, missing_source_cols],
             images_df,
             skyregs_df,
         )
@@ -418,7 +542,10 @@ class Pipeline():
                 self.config.MONITOR_MIN_SIGMA,
                 self.config.MONITOR_EDGE_BUFFER_SCALE,
                 self.config.MONITOR_CLUSTER_THRESHOLD,
-                self.config.MONITOR_ALLOW_NAN
+                self.config.MONITOR_ALLOW_NAN,
+                self.add_mode,
+                done_images_df,
+                done_source_ids
             )
 
         del missing_sources_df
@@ -430,6 +557,9 @@ class Pipeline():
             p_run,
             new_sources_df,
             self.config.SOURCE_AGGREGATE_PAIR_METRICS_MIN_ABS_VS,
+            self.add_mode,
+            done_source_ids,
+            self.previous_parquets
         )
 
         # calculate number processed images
