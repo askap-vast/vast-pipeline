@@ -361,15 +361,15 @@ class Command(BaseCommand):
                     'relations', 'skyregions', 'sources', 'config'
                 ]:
                     if i == 'config':
-                        parquet = os.path.join(p_run.path, f'{i}.py.bak')
+                        f_name = os.path.join(p_run.path, f'{i}.py.bak')
                     else:
-                        parquet = os.path.join(p_run.path, f'{i}.parquet.bak')
+                        f_name = os.path.join(p_run.path, f'{i}.parquet.bak')
 
-                    if os.path.isfile(parquet):
-                        bak_files[i] = parquet
+                    if os.path.isfile(f_name):
+                        bak_files[i] = f_name
                     else:
                         raise CommandError(
-                            f'File {parquet} does not exist.'
+                            f'File {f_name} does not exist.'
                             ' Cannot restore pipeline run.'
                         )
 
@@ -383,10 +383,7 @@ class Command(BaseCommand):
 
                 logger.info(logger_msg)
 
-                if options['no_confirm']:
-                    user_continue = True
-                else:
-                    user_continue = yesno("Would you like to restore the run")
+                user_continue = True if options['no_confirm'] else yesno("Would you like to restore the run")
 
                 if user_continue:
                     restore_pipe(p_run, bak_files, prev_config)
