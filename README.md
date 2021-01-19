@@ -4,10 +4,12 @@
 [![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/)
 [![Nimbus](https://img.shields.io/website?down_color=red&down_message=offline&label=Nimbus&up_color=green&up_message=online&url=https%3A%2F%2Fdata.vast-survey.org%2Fpipeline%2F)](https://data.vast-survey.org/pipeline/)
 ![Tests](https://github.com/askap-vast/vast-pipeline/workflows/test-suite/badge.svg)
+<!-- TODO: replace above with this below when repo is public -->
+<!-- ![Tests](https://img.shields.io/github/workflow/status/askap-vast/vast-pipeline/test-suite/master?label=Test%20Suite&logo=github) -->
 
 This repository holds the code of the Radio Transient detection pipeline for the VAST project.
 
-[![VAST Pipeline Login](https://github.com/askap-vast/vast-pipeline/blob/issue-385-mkdocs-doc/docs/img/login.png)](https://github.com/askap-vast/vast-pipeline/blob/issue-385-mkdocs-doc/docs/img/login.png)
+[![VAST Pipeline Login](https://github.com/askap-vast/vast-pipeline/blob/master/docs/img/login.png)](https://github.com/askap-vast/vast-pipeline/blob/master/docs/img/login.png)
 
 Please read the [Installation Instructions](https://vast-survey.org/vast-pipeline/quickstart/installation/). If you intend to contribute to/develop the code base please read and follow the [Contributing and Developing Guidelines](https://vast-survey.org/vast-pipeline/developing/intro/).
 
@@ -26,7 +28,7 @@ Please read the [Installation Instructions](https://vast-survey.org/vast-pipelin
 
 ## Screenshots and Previews
 
-[![VAST Pipeline Overview](https://github.com/askap-vast/vast-pipeline/blob/issue-385-mkdocs-doc/docs/img/vast_pipeline_overview1.gif)](https://github.com/askap-vast/vast-pipeline/blob/issue-385-mkdocs-doc/docs/img/vast_pipeline_overview1.gif)
+[![VAST Pipeline Overview](https://github.com/askap-vast/vast-pipeline/blob/master/docs/img/vast_pipeline_overview1.gif)](https://github.com/askap-vast/vast-pipeline/blob/master/docs/img/vast_pipeline_overview1.gif)
 
 
 ## Credits & Acknowledgements
