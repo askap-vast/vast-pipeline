@@ -64,8 +64,8 @@ local_settings.py
 **/settings.py
 db.sqlite3
 
-# Sphinx documentation
-docs/_build/
+# Documentation
+docs_build/
 
 # PyBuilder
 target/
@@ -99,7 +99,7 @@ celerybeat-schedule
 
 # pipeline files/folders
 **/*.parquet
-**/*.png
+# **/*.png
 *project*/
 *run*/
 *survey*/
