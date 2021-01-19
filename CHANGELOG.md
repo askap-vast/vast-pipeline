@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### Added
 
 - Added image add mode run restore command 'restorepiperun' [#463](https://github.com/askap-vast/vast-pipeline/pull/463)
+- Added documentation folder and files for `mkdocs` and CI [#433](https://github.com/askap-vast/vast-pipeline/pull/433)
 - Added add image to existing run feature [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
 - Added networkx to base reqiurements [#460](https://github.com/askap-vast/vast-pipeline/pull/460).
 - Added CI/CD workflow to run tests on pull requests [#446](https://github.com/askap-vast/vast-pipeline/pull/446)
@@ -17,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Changed `CONTRIBUTING.md` and `README.md` [#433](https://github.com/askap-vast/vast-pipeline/pull/433)
 - Changed forced extraction name suffix to run id rather than datetime [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
 - Changed tests to run on smaller cutouts [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
 - Changed particles style on login page [#459](https://github.com/askap-vast/vast-pipeline/pull/459).
@@ -35,11 +37,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Removed
 
+- Removed `INSTALL.md`, `PROFILE.md` and `static/README.md` [#433](https://github.com/askap-vast/vast-pipeline/pull/433)
 - Removed aplpy from base requirements [#460](https://github.com/askap-vast/vast-pipeline/pull/460).
 
 #### List of PRs
 
 - [#463](https://github.com/askap-vast/vast-pipeline/pull/463) feat: Added image add mode run restore command.
+- [#433](https://github.com/askap-vast/vast-pipeline/pull/433) doc: add documentation GitHub pages website with CI.
 - [#443](https://github.com/askap-vast/vast-pipeline/pull/443) feat, fix: Adds the ability to add images to an existing run.
 - [#460](https://github.com/askap-vast/vast-pipeline/pull/460) dep: Removed aplpy from base requirements.
 - [#446](https://github.com/askap-vast/vast-pipeline/pull/446) feat: CI/CD workflow.
