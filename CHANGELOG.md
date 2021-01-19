@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed links in `README.md` [#464](https://github.com/askap-vast/vast-pipeline/pull/464)
 - Fixed basic association new sources created through relations [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
 - Fixed tests running pipeline multiple times [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
 - Fixed particles canvas sizing on login page [#459](https://github.com/askap-vast/vast-pipeline/pull/459).
