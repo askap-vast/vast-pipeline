@@ -1,4 +1,5 @@
 -r prod.txt
+-r docs.txt
 django-extensions
 pygraphviz
 ipdb
