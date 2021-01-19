@@ -343,3 +343,7 @@ MAX_PIPERUN_IMAGES = env('MAX_PIPERUN_IMAGES', cast=int, default=200)
 
 # pipeline maintainance message/banner
 PIPELINE_MAINTAINANCE_MESSAGE = env('PIPELINE_MAINTAINANCE_MESSAGE', cast=str, default=None)
+
+# DASK CLUSTER
+DASK_SCHEDULER_HOST = env('DASK_SCHEDULER_HOST', cast=str, default='localhost')
+DASK_SCHEDULER_PORT = env('DASK_SCHEDULER_PORT', cast=str, default='8786')
