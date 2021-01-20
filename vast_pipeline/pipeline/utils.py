@@ -831,7 +831,6 @@ def get_src_skyregion_merged_df(
         on='id'
     )
 
-    sources_df = sources_df.sort_values(by='datetime')
     # calculate some metrics on sources
     # compute only some necessary metrics in the groupby
     timer = StopWatch()

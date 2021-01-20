@@ -1353,11 +1353,17 @@ def association(images_df: pd.DataFrame, limit: Angle, dr_limit: float,
 
     del skyc1_srcs, skyc2_srcs
 
+
+
     logger.info(
         'Total association time: %.2f seconds%s.',
         timer.reset_init(),
         skyreg_tag
     )
+
+    # sort by the datetime of the image as this make sure that we do
+    # things correctly when computing missing_sources_df
+    sources_df = sources_df.sort_values(by='datetime')
 
     return sources_df
 
