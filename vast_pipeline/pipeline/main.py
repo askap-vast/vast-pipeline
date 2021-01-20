@@ -1,33 +1,31 @@
 import os
 import operator
 import logging
-from typing import List, Tuple
-
-from astropy import units as u
-from astropy.coordinates import Angle
-
 import pandas as pd
 
+from types import ModuleType
+from typing import List, Tuple
+from astropy import units as u
+from astropy.coordinates import Angle
 from django.conf import settings
 from django.db import transaction
 from django.contrib.auth.models import User
-
 from importlib.util import spec_from_file_location, module_from_spec
 
 from vast_pipeline.models import Run, SurveySource
+from vast_pipeline.utils.utils import convert_list_to_dict
+
 from .association import association, parallel_association
-from .new_sources import new_sources
+from .errors import MaxPipelineRunsError, PipelineConfigError
 from .forced_extraction import forced_extraction
 from .finalise import final_operations
 from .loading import make_upload_images
+from .new_sources import new_sources
 from .utils import (
     get_src_skyregion_merged_df,
     group_skyregions,
     get_parallel_assoc_image_df
 )
-from vast_pipeline.utils.utils import convert_list_to_dict
-
-from .errors import MaxPipelineRunsError, PipelineConfigError
 
 
 logger = logging.getLogger(__name__)
@@ -39,10 +37,19 @@ class Pipeline():
     such as association
     '''
 
-    def __init__(self, name, config_path):
+    def __init__(self, name: str, config_path: str):
         '''
         Initialise the pipeline with attributed such as configuration file
-        path, name, and list of images and related files (e.g. selavy)
+        path, name, and list of images and related files (e.g. selavy).
+        Load the configuration file as a Python module. Transform list
+        of images to dictionary if not defined as such in the configuration.
+
+        Parameters
+        ----------
+        name : str
+            A string with the name of the pipeline
+        config_path : str
+            A sring with the path of the pipeline configuration file
         '''
         self.name = name
         self.config = self.load_cfg(config_path)
@@ -60,10 +67,26 @@ class Pipeline():
         self.config, self.epoch_based = self.check_for_epoch_based(self.config)
 
     @staticmethod
-    def load_cfg(cfg):
+    def load_cfg(cfg: str) -> ModuleType:
         """
         Check the given Config path. Throw exception if any problems
         return the config object as module/class
+
+        Parameters
+        ----------
+        cfg : str
+            A string with the path of the pipeline configuration file
+
+        Returns
+        -------
+        ModuleType
+            The pipeline configuration as a python module (e.g. can
+            access the attribute using .myattr)
+
+        Raises
+        ------
+        PipelineConfigError
+            Error if pipeline configuration file does not exist
         """
         if not os.path.exists(cfg):
             raise PipelineConfigError(
@@ -99,7 +122,7 @@ class Pipeline():
         return valid_keys
 
     @staticmethod
-    def check_for_epoch_based(cfg) -> Tuple['config', bool]:
+    def check_for_epoch_based(cfg: ModuleType) -> Tuple['config', bool]:
         # Config typing above is unknown what to put.
         """
         Checks whether the images have been provided in a Dictionary format
@@ -109,7 +132,7 @@ class Pipeline():
 
         Parameters
         ----------
-        cfg : self.config
+        cfg : ModuleType
             The config object.
 
         Returns
@@ -579,11 +602,30 @@ class Pipeline():
 
     @staticmethod
     def check_current_runs():
+        """
+        Check if the current pipeline runs/jobs are higher than maximum
+
+        Raises
+        ------
+        MaxPipelineRunsError
+            Error: maximum limit of simultaneous pipeline runs/jobs reached
+        """
         if Run.objects.check_max_runs(settings.MAX_PIPELINE_RUNS):
             raise MaxPipelineRunsError
 
     @staticmethod
-    def set_status(pipe_run, status=None):
+    def set_status(pipe_run: Run, status: str = None):
+        """
+        Set the status of a pipeline instance (a "run" or "job") in the
+        database.
+
+        Parameters
+        ----------
+        pipe_run : Run
+            The Django model of a pipeline instance
+        status : str, optional
+            A string with the pipeline status to set
+        """
         choices = [x[0] for x in Run._meta.get_field('status').choices]
         if status and status in choices and pipe_run.status != status:
             with transaction.atomic():
