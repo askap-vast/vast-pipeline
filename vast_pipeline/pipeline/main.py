@@ -2,6 +2,7 @@ import os
 import operator
 import logging
 import pandas as pd
+import dask.dataframe as dd
 
 from types import ModuleType
 from typing import List, Tuple
@@ -12,6 +13,7 @@ from django.db import transaction
 from django.contrib.auth.models import User
 from importlib.util import spec_from_file_location, module_from_spec
 
+from vast_pipeline.daskmanager.manager import DaskManager
 from vast_pipeline.models import Run, SurveySource
 from vast_pipeline.utils.utils import convert_list_to_dict
 
@@ -518,9 +520,22 @@ class Pipeline():
         if SurveySource.objects.exists():
             pass
 
+        # Inserting here the Dask Manager to initialise the connection
+        # to the Dask cluster, transform to dask dataframe and "scatter"
+        # data to the cluster
+        # TODO: in the future data should be read directly using dask and
+        # call "compute" when needed or "persist" to trigger computaton
+        # run by the cluster in the background
+        dm = DaskManager()
+        sources_df = dd.from_pandas(
+            sources_df,
+            npartitions=dm.get_nr_workers()
+        )
+        sources_df = dm.persist(sources_df)
+
         # Obtain the number of selavy measurements for the run
         # n_selavy_measurements = sources_df.
-        nr_selavy_measurements = sources_df['id'].unique().shape[0]
+        nr_selavy_measurements = sources_df['id'].unique().count().compute()
 
         # STEP #3: Merge sky regions and sources ready for
         # steps 4 and 5 below.
@@ -534,8 +549,10 @@ class Pipeline():
         missing_sources_df = get_src_skyregion_merged_df(
             sources_df.loc[sources_df['forced'] == False, missing_source_cols],
             images_df,
-            skyregs_df,
+            skyregs_df.drop(['x', 'y', 'z', 'width_ra', 'width_dec'], axis=1),
         )
+        del images_df, skyregs_df
+        import ipdb; ipdb.set_trace()  # breakpoint 6f5e77b4 //
 
         # STEP #4 New source analysis
         new_sources_df = new_sources(

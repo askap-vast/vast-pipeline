@@ -8,25 +8,36 @@ import pandas as pd
 import astropy.units as u
 import dask.dataframe as dd
 
-from typing import List, Optional, Dict, Tuple
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
-from astropy.io import fits
 from django.conf import settings
 from psutil import cpu_count
 from itertools import chain, combinations
+from typing import List, Optional, Dict, Tuple
 
+from vast_pipeline.daskmanager.manager import DaskManager
+from vast_pipeline.image.utils import on_sky_sep
+from vast_pipeline.models import (
+    Band, Image, Measurement, Run, Source, SkyRegion
+)
 from vast_pipeline.utils.utils import (
     deg2hms, deg2dms, eq_to_cart, StopWatch,
     optimize_ints, optimize_floats
 )
-from vast_pipeline.models import (
-    Band, Image, Measurement, Run, Source, SkyRegion
-)
-from vast_pipeline.image.utils import on_sky_sep
 
 
 logger = logging.getLogger(__name__)
+
+
+# Dask custom aggregations
+# from https://docs.dask.org/en/latest/dataframe-groupby.html#aggregate
+collect_list = dd.Aggregation(
+    name='collect_list',
+    chunk=lambda s: s.apply(list),
+    agg=lambda s0: s0.apply(
+        lambda chunks: list(chain.from_iterable(chunks))
+    ),
+)
 
 
 def get_create_skyreg(p_run, image):
@@ -638,31 +649,44 @@ def parallel_groupby(df):
     return out
 
 
-def calc_ave_coord(grp):
-    d = {}
-    grp = grp.sort_values(by='datetime')
-    d['img_list'] = grp['image'].values.tolist()
-    d['epoch_list'] = grp['epoch'].values.tolist()
-    d['wavg_ra'] = grp['interim_ew'].sum() / grp['weight_ew'].sum()
-    d['wavg_dec'] = grp['interim_ns'].sum() / grp['weight_ns'].sum()
-    return pd.Series(d)
+def parallel_groupby_coord(df: dd.core.DataFrame) -> dd.core.DataFrame:
+    """
+    Group the sources dataframe by unique sources and calculate in parallel
+    some new columns and some aggregations
 
+    Parameters
+    ----------
+    df : dd.Dataframe
+        The dataframe with sources
 
-def parallel_groupby_coord(df):
-    col_dtype = {
-        'img_list': 'O',
-        'epoch_list': 'O',
-        'wavg_ra': 'f',
-        'wavg_dec': 'f',
-    }
-    n_cpu = cpu_count() - 1
-    out = dd.from_pandas(df, n_cpu)
-    out = (
-        out.groupby('source')
-        .apply(calc_ave_coord, meta=col_dtype)
-        .compute(num_workers=n_cpu, scheduler='processes')
+    Returns
+    -------
+    dd.Dataframe
+        Dataframe with aggregated metrics for each source and some new columns.
+        | source | wavg_ra |   wavg_dec | img_list               | epoch_list |
+        |-------:|--------:|-----------:|:-----------------------|:-----------|
+        |      1 | 29.6557 |  3.15552   | ['my_image.fits', ...] | [1, ...]   |
+        |      2 | 33.7962 |  0.074698  | ['my_image.fits', ...] | [1, ...]   |
+        |      3 | 30.9752 | -1.36104   | ['my_image.fits', ...] | [1, ...]   |
+        |      4 | 37.7054 | -3.60445   | ['my_image.fits', ...] | [1, ...]   |
+        |      5 | 33.4735 | -2.64244   | ['my_image.fits', ...] | [1, ...]   |
+    """
+    cols_to_sum = ['interim_ew', 'weight_ew', 'interim_ns', 'weight_ns']
+    cols_to_select = ['source', 'image', 'epoch'] + cols_to_sum
+
+    groups = df[cols_to_select].groupby('source')
+    out = groups[cols_to_sum].agg('sum', split_out=df.npartitions)
+    out = out.assign(
+        wavg_ra=out['interim_ew'] / out['weight_ew'],
+        wavg_dec=out['interim_ns'] / out['weight_ns']
     )
-    return out
+    out = out.drop(cols_to_sum, axis=1)
+    out = out.assign(
+        img_list=groups['image'].agg(collect_list, split_out=df.npartitions),
+        epoch_list=groups['epoch'].agg(collect_list, split_out=df.npartitions)
+    )
+
+    return out.persist()
 
 
 def get_rms_noise_image_values(rms_path):
@@ -727,28 +751,10 @@ def get_names_and_epochs(grp):
     return pd.Series(d)
 
 
-def check_primary_image(row: pd.Series) -> bool:
-    """
-    Checks whether the primary image of the ideal source
-    dataframe is in the image list for the source.
-
-    Parameters
-    ----------
-    row : pd.Series
-        input dataframe row, with columns ['primary']
-        and ['img_list'].
-
-    Returns
-    -------
-    bool : bool
-        True if primary in image list else False.
-    """
-    return row['primary'] in row['img_list']
-
-
 def get_src_skyregion_merged_df(
-    sources_df: pd.DataFrame, images_df: pd.DataFrame, skyreg_df: pd.DataFrame
-) -> pd.DataFrame:
+    sources_df: dd.core.DataFrame, images_df: pd.DataFrame,
+    skyreg_df: pd.DataFrame
+) -> dd.core.DataFrame:
     """
     Analyses the current sources_df to determine what the 'ideal coverage'
     for each source should be. In other words, what images is the source
@@ -756,9 +762,9 @@ def get_src_skyregion_merged_df(
 
     Parameters
     ----------
-    sources_df : pd.DataFrame
-        The output of the assoication step containing the
-        measurements assoicated into sources.
+    sources_df : dd.core.DataFrame
+        The output of the association step containing the
+        measurements associated into sources.
     images_df : pd.DataFrame
         Contains the images of the pipeline run. I.e. all image
         objects for the run loaded into a dataframe.
@@ -768,7 +774,7 @@ def get_src_skyregion_merged_df(
 
     Returns
     -------
-    srcs_df : pd.DataFrame
+    srcs_df : dd.core.DataFrame
         DataFrame containing missing image information. Output format:
         +----------+----------------------------------+-----------+------------+
         |   source | img_list                         |   wavg_ra |   wavg_dec |
@@ -811,25 +817,25 @@ def get_src_skyregion_merged_df(
 
     merged_timer = StopWatch()
 
-    skyreg_df = skyreg_df.drop(
-        ['x', 'y', 'z', 'width_ra', 'width_dec'], axis=1
-    )
-
-    images_df['name'] = images_df['image_dj'].apply(
+    # Never modify the dataframe in input unless you return it at the
+    # end of the function
+    images_dff = images_df.copy()
+    images_dff['name'] = images_dff['image_dj'].apply(
         lambda x: x.name
     )
-    images_df['datetime'] = images_df['image_dj'].apply(
+    images_dff['datetime'] = images_dff['image_dj'].apply(
         lambda x: x.datetime
     )
 
-    skyreg_df = skyreg_df.join(
+    skyreg_dff = skyreg_df.join(
         pd.DataFrame(
-            images_df.groupby('skyreg_id').apply(
+            images_dff.groupby('skyreg_id').apply(
                 get_names_and_epochs
             )
         ),
         on='id'
     )
+    del images_dff
 
     # calculate some metrics on sources
     # compute only some necessary metrics in the groupby
@@ -837,15 +843,13 @@ def get_src_skyregion_merged_df(
     srcs_df = parallel_groupby_coord(sources_df)
     logger.debug('Groupby-apply time: %.2f seconds', timer.reset())
 
-    del sources_df
-
     # create dataframe with all skyregions and sources combinations
     src_skyrg_df = cross_join(
         srcs_df.drop(['epoch_list', 'img_list'], axis=1).reset_index(),
-        skyreg_df.drop('skyreg_img_epoch_list', axis=1)
+        skyreg_dff.drop('skyreg_img_epoch_list', axis=1)
     )
 
-    skyreg_df = skyreg_df.drop(
+    skyreg_dff = skyreg_dff.drop(
         ['centre_ra', 'centre_dec', 'xtr_radius'],
         axis=1
     ).set_index('id')
@@ -864,44 +868,43 @@ def get_src_skyregion_merged_df(
     # compute list of images
     src_skyrg_df = (
         src_skyrg_df.loc[
-            src_skyrg_df.sep < src_skyrg_df.xtr_radius,
+            src_skyrg_df['sep'] < src_skyrg_df['xtr_radius'],
             ['source', 'id', 'sep']
-        ].merge(skyreg_df, left_on='id', right_index=True)
+        ].merge(skyreg_dff, left_on='id', right_index=True)
         .drop('id', axis=1)
         .explode('skyreg_img_epoch_list')
     )
+    del skyreg_dff
 
-    del skyreg_df
-
-    src_skyrg_df[
-        ['skyreg_img_list', 'skyreg_epoch', 'skyreg_datetime']
-    ] = pd.DataFrame(
-        src_skyrg_df['skyreg_img_epoch_list'].tolist(),
-        index=src_skyrg_df.index
+    src_skyrg_df = src_skyrg_df.assign(
+        skyreg_img_list=src_skyrg_df['skyreg_img_epoch_list'].apply(
+            lambda x: x[0], meta=object
+        ),
+        skyreg_epoch=src_skyrg_df['skyreg_img_epoch_list'].apply(
+            lambda x: x[1], meta=int
+        ),
     )
 
     src_skyrg_df = src_skyrg_df.drop('skyreg_img_epoch_list', axis=1)
 
     src_skyrg_df = (
-        src_skyrg_df.sort_values(
-            ['source', 'sep']
-        )
+        # Dask dataframes do not have sort_values so need to set an
+        # index to sort
+        src_skyrg_df.set_index('sep')
         .drop_duplicates(['source', 'skyreg_epoch'])
-        .sort_values(by='skyreg_datetime')
-        .drop(
-            ['sep', 'skyreg_datetime'],
-            axis=1
-        )
     )
     # annoyingly epoch needs to be not a list to drop duplicates
     # but then we need to sum the epochs into a list
-    src_skyrg_df['skyreg_epoch'] = src_skyrg_df['skyreg_epoch'].apply(
-        lambda x: [x,]
+    src_skyrg_df = src_skyrg_df.assign(
+        skyreg_epoch=src_skyrg_df['skyreg_epoch'].apply(
+            lambda x: [x,], meta=object
+        )
     )
 
+    # sum because we need to preserve order
     src_skyrg_df = (
         src_skyrg_df.groupby('source')
-        .agg('sum') # sum because we need to preserve order
+        .agg('sum', split_out=srcs_df.npartitions)
     )
 
     # merge into main df and compare the images
@@ -911,43 +914,35 @@ def get_src_skyregion_merged_df(
 
     del src_skyrg_df
 
-    srcs_df['img_diff'] = srcs_df[
-        ['img_list', 'skyreg_img_list', 'epoch_list', 'skyreg_epoch']
-    ].apply(
-        get_image_list_diff, axis=1
+    cols = ['img_list', 'skyreg_img_list', 'epoch_list', 'skyreg_epoch']
+    srcs_df = srcs_df.assign(
+        img_diff=srcs_df[cols].apply(get_image_list_diff, axis=1, meta=object)
+    )
+    del cols
+
+    srcs_df = (
+        srcs_df.loc[srcs_df['img_diff'] != -1]
+        .drop(['epoch_list', 'skyreg_epoch'], axis=1)
+        .assign(
+            primary=srcs_df['skyreg_img_list'].apply(lambda x: x[0], meta=str),
+            detection=srcs_df['img_list'].apply(lambda x: x[0], meta=str),
+        )
     )
 
-    srcs_df = srcs_df.loc[
-        srcs_df['img_diff'] != -1
-    ]
-
-    srcs_df = srcs_df.drop(
-        ['epoch_list', 'skyreg_epoch'],
-        axis=1
+    srcs_df = (
+        srcs_df.assign(
+            in_primary=srcs_df[['primary', 'img_list']].apply(
+                lambda x: x['primary'] in x['img_list'], axis=1, meta=bool
+            )
+        )
+        .drop(['img_list', 'skyreg_img_list', 'primary'], axis=1)
     )
-
-    srcs_df['primary'] = srcs_df[
-        'skyreg_img_list'
-    ].apply(lambda x: x[0])
-
-    srcs_df['detection'] = srcs_df[
-        'img_list'
-    ].apply(lambda x: x[0])
-
-    srcs_df['in_primary'] = srcs_df[
-        ['primary', 'img_list']
-    ].apply(
-        check_primary_image,
-        axis=1
-    )
-
-    srcs_df = srcs_df.drop(['img_list', 'skyreg_img_list', 'primary'], axis=1)
 
     logger.info(
         'Ideal source coverage time: %.2f seconds', merged_timer.reset()
     )
 
-    return srcs_df
+    return srcs_df.persist()
 
 
 def _get_skyregion_relations(
