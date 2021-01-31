@@ -25,9 +25,14 @@ extra_css:
   - theme/css/extra.css
 extra_javascript:
   - theme/js/extra.js
+  - javascripts/config.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 markdown_extensions:
   - admonition
   - attr_list
+  - pymdownx.arithmatex:
+      generic: true
   - pymdownx.caret
   - pymdownx.details
   - pymdownx.inlinehilite
@@ -41,16 +46,37 @@ markdown_extensions:
       toc_depth: 4
       permalink: true
 
-
 nav:
   - Home: README.md
   - Quickstart:
     - Installation: quickstart/installation.md
     - Configuration: quickstart/configuration.md
     - Deployment: quickstart/deployment.md
-  - Usage:
-      - CLI: usage/cli.md
-      - Web App: usage/app.md
+  - Admin Usage:
+    - CLI: adminusage/cli.md
+    - Web App: adminusage/app.md
+  - Pipeline Features and Design:
+    - Pipeline Steps Overview: usage/cli.md
+    - Image Ingestion: usage/cli.md
+    - Association: usage/cli.md
+    - Forced Measurements: usage/cli.md
+    - New sources: usage/cli.md
+  - Using the Pipeline:
+    - Accessing the Pipeline: using/access.md
+    - Initialising a Run: using/initrun.md
+    - Run Configuration: using/runconfig.md
+    - Processing a Run: using/processrun.md
+    - Adding Images to a Run: using/addtorun.md
+    - Deleting a Run: using/deleterun.md
+  - Using the Pipeline Website:
+    - Overview: usage/cli.md
+    - Run Detail: usage/cli.md
+    - Source Query: usage/cli.md
+    - Comments, Tags & Favourites: usage/cli.md
+    - Admin Tools: usage/cli.md
+  - Pipeline Outputs:
+    - Output Products: usage/cli.md
+    - Reading of Outputs: usage/cli.md
   - Contributing and Developing:
     - Intro: developing/intro.md
     - GitHub Platform: developing/github.md
@@ -66,6 +92,7 @@ nav:
     - Architecture Intro: architecture/intro.md
     - Database Schema: architecture/database.md
     # - Production: architecture/nimbus.md
+  - FAQs: faqs.md
   - Changelog: changelog.md
   - Code of Conduct: code_of_conduct.md
   - License: license.md
