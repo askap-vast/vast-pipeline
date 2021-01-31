@@ -161,79 +161,85 @@ def run_pipe(
         # Check if the run has only been initialised, if so we don't want to do
         # any previous run checks or cleaning.
         if p_run.status != 'INI':
-            parquets = (
-                glob.glob(os.path.join(p_run.path, "*.parquet"))
-                # TODO Remove arrow when vaex support is dropped.
-                + glob.glob(os.path.join(p_run.path, "*.arrow"))
-            )
-
-            if full_rerun:
-                if p_run.status == 'END':
-                    backup_parquets(p_run.path)
-                logger.info('Cleaning up pipeline run before re-process data')
-                p_run.image_set.clear()
-
-                logger.info(
-                    'Cleaning up forced measurements before re-process data'
+            # check if coming from UI
+            if cmd is False and prev_ui_status != 'INI':
+                parquets = (
+                    glob.glob(os.path.join(p_run.path, "*.parquet"))
+                    # TODO Remove arrow when vaex support is dropped.
+                    + glob.glob(os.path.join(p_run.path, "*.arrow"))
                 )
-                remove_forced_meas(p_run.path)
 
-                for parquet in parquets:
-                    os.remove(parquet)
-
-                # remove bak files
-                bak_files = glob.glob(os.path.join(p_run.path, "*.bak"))
-                if bak_files:
-                    for bf in bak_files:
-                        os.remove(bf)
-
-                # remove previous config if it exists
-                if os.path.isfile(os.path.join(p_run.path, 'config_prev.py')):
-                    os.remove(os.path.join(p_run.path, 'config_prev.py'))
-
-                # reset epoch_based flag
-                with transaction.atomic():
-                    p_run.epoch_based = False
-                    p_run.save()
-            else:
-                # Before parquets are started to be copied and backed up, a
-                # check is run to see if anything has actually changed in the
-                # config
-                config_diff = pipeline.check_prev_config_diff(p_run.path)
-                if config_diff:
+                if full_rerun:
+                    if p_run.status == 'END':
+                        backup_parquets(p_run.path)
                     logger.info(
-                        "The config file has either not changed since the"
-                        " previous run or other settings have changed such that"
-                        " a new or complete re-run should be performed"
-                        " instead. Performing no actions. Exiting."
+                        'Cleaning up pipeline run before re-process data'
                     )
-                    os.remove(os.path.join(p_run.path, 'config_temp.py'))
-                    pipeline.set_status(p_run, 'END')
+                    p_run.image_set.clear()
 
-                    return True
-
-                if pipeline.epoch_based != p_run.epoch_based:
                     logger.info(
-                        "The 'epoch based' setting has changed since the"
-                        " previous run. A complete re-run is required if"
-                        " changing to epoch based mode or vice versa."
+                        'Cleaning up forced measurements before re-process data'
                     )
-                    os.remove(os.path.join(p_run.path, 'config_temp.py'))
-                    pipeline.set_status(p_run, 'END')
-                    return True
+                    remove_forced_meas(p_run.path)
 
-                if cmd and p_run.status == 'END':
-                    backup_parquets(p_run.path)
-                elif not cmd and prev_ui_status == 'END':
-                    backup_parquets(p_run.path)
+                    for parquet in parquets:
+                        os.remove(parquet)
 
-                pipeline.add_mode = True
-                for i in [
-                    'images', 'associations', 'sources', 'relations',
-                    'measurement_pairs'
-                ]:
-                    pipeline.previous_parquets[i] = os.path.join(
-                        p_run.path, f'{i}.parquet.bak')
+                    # remove bak files
+                    bak_files = glob.glob(os.path.join(p_run.path, "*.bak"))
+                    if bak_files:
+                        for bf in bak_files:
+                            os.remove(bf)
+
+                    # remove previous config if it exists
+                    if os.path.isfile(
+                        os.path.join(p_run.path, 'config_prev.py')
+                    ):
+                        os.remove(os.path.join(p_run.path, 'config_prev.py'))
+
+                    # reset epoch_based flag
+                    with transaction.atomic():
+                        p_run.epoch_based = False
+                        p_run.save()
+                else:
+                    # Before parquets are started to be copied and backed up, a
+                    # check is run to see if anything has actually changed in
+                    # the config
+                    config_diff = pipeline.check_prev_config_diff(p_run.path)
+                    if config_diff:
+                        logger.info(
+                            "The config file has either not changed since the"
+                            " previous run or other settings have changed such"
+                            " that a new or complete re-run should be performed"
+                            " instead. Performing no actions. Exiting."
+                        )
+                        os.remove(os.path.join(p_run.path, 'config_temp.py'))
+                        pipeline.set_status(p_run, 'END')
+
+                        return True
+
+                    if pipeline.epoch_based != p_run.epoch_based:
+                        logger.info(
+                            "The 'epoch based' setting has changed since the"
+                            " previous run. A complete re-run is required if"
+                            " changing to epoch based mode or vice versa."
+                        )
+                        os.remove(os.path.join(p_run.path, 'config_temp.py'))
+                        pipeline.set_status(p_run, 'END')
+                        return True
+
+                    if cmd and p_run.status == 'END':
+                        backup_parquets(p_run.path)
+                    elif not cmd and prev_ui_status == 'END':
+                        backup_parquets(p_run.path)
+
+                    pipeline.add_mode = True
+                    for i in [
+                        'images', 'associations', 'sources', 'relations',
+                        'measurement_pairs'
+                    ]:
+                        pipeline.previous_parquets[i] = os.path.join(
+                            p_run.path, f'{i}.parquet.bak')
 
     if pipeline.config.CREATE_MEASUREMENTS_ARROW_FILES and cmd is False:
         logger.warning(
