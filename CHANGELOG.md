@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Changed 'cmd' flag in run pipeline to 'cli' [#466](https://github.com/askap-vast/vast-pipeline/pull/466).
 - Changed `CONTRIBUTING.md` and `README.md` [#433](https://github.com/askap-vast/vast-pipeline/pull/433)
 - Changed forced extraction name suffix to run id rather than datetime [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
 - Changed tests to run on smaller cutouts [#443](https://github.com/askap-vast/vast-pipeline/pull/443)

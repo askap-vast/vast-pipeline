@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 def run_pipe(
     name: str, path_name: Optional[str] = None,
-    run_dj_obj: Optional[Run] = None, cmd: bool = True,
+    run_dj_obj: Optional[Run] = None, cli: bool = True,
     debug: bool = False, user: Optional[User] = None, full_rerun: bool = False,
     prev_ui_status: str='END'
 ) -> bool:
@@ -43,7 +43,7 @@ def run_pipe(
         None.
     run_dj_obj : Run, optional
         The Run object of the pipeline run, defaults to None.
-    cmd : bool, optional
+    cli : bool, optional
         Flag to signify whether the pipeline run has been run via the UI
         (False), or the command line (True). Defaults to True.
     debug : bool, optional
@@ -69,7 +69,7 @@ def run_pipe(
         config_path=os.path.join(path, 'config.py')
     )
     # set up logging for running pipeline from UI
-    if not cmd:
+    if not cli:
         # set up the logger for the UI job
         root_logger = logging.getLogger('')
         if debug:
@@ -105,7 +105,7 @@ def run_pipe(
         # If the run is already created (e.g. through UI) then set status to
         # error
         pipeline.set_status(p_run, 'ERR')
-        raise CommandError(msg) if cmd else PipelineConfigError(msg)
+        raise CommandError(msg) if cli else PipelineConfigError(msg)
 
     # clean up pipeline images and forced measurements for re-runs
     # Scenarios:
@@ -163,7 +163,7 @@ def run_pipe(
         if p_run.status == 'INI':
             initial_run = True
         # check if coming from UI
-        elif cmd is False and prev_ui_status == 'INI':
+        elif cli is False and prev_ui_status == 'INI':
             initial_run = True
         else:
             initial_run = False
@@ -232,9 +232,9 @@ def run_pipe(
                     pipeline.set_status(p_run, 'END')
                     return True
 
-                if cmd and p_run.status == 'END':
+                if cli and p_run.status == 'END':
                     backup_parquets(p_run.path)
-                elif not cmd and prev_ui_status == 'END':
+                elif not cli and prev_ui_status == 'END':
                     backup_parquets(p_run.path)
 
                 pipeline.add_mode = True
@@ -245,7 +245,7 @@ def run_pipe(
                     pipeline.previous_parquets[i] = os.path.join(
                         p_run.path, f'{i}.parquet.bak')
 
-    if pipeline.config.CREATE_MEASUREMENTS_ARROW_FILES and cmd is False:
+    if pipeline.config.CREATE_MEASUREMENTS_ARROW_FILES and cli is False:
         logger.warning(
             'The creation of arrow files is currently unavailable when running'
             ' through the UI. Please ask an admin to complete this step for'
