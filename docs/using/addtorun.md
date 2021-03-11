@@ -58,3 +58,6 @@ When images are added to a run, a backup is made of the run before proceeding wh
 This command is currently unavailable to perform through the website interface but can be performed by an administrator of the pipeline via the command line interface. Please contact the adminstrator for the pipeline instance to request a run restoration.
 
 The command to perform this operation is `restorepiperun` and is described in the admin section [here](../../adminusage/cli/#restoring-a-pipeline-run).
+
+!!! warning
+    Do not add any further images if you wish to restore otherwise the backup version will be lost!

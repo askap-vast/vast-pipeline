@@ -56,11 +56,12 @@ nav:
     - CLI: adminusage/cli.md
     - Web App: adminusage/app.md
   - Pipeline Features and Design:
-    - Pipeline Steps Overview: usage/cli.md
-    - Image Ingestion: usage/cli.md
-    - Association: usage/cli.md
-    - Forced Measurements: usage/cli.md
-    - New sources: usage/cli.md
+    - Pipeline Steps Overview: design/overview.md
+    - Image & Selavy Catalogue Ingest: design/imageingest.md
+    - Source Association: design/association.md
+    - New sources: design/newsources.md
+    - Forced Measurements: design/monitor.md
+    - Source Statistics: design/sourcestats.md
   - Using the Pipeline:
     - Accessing the Pipeline: using/access.md
     - Initialising a Run: using/initrun.md
@@ -68,15 +69,16 @@ nav:
     - Processing a Run: using/processrun.md
     - Adding Images to a Run: using/addtorun.md
     - Deleting a Run: using/deleterun.md
-  - Using the Pipeline Website:
-    - Overview: usage/cli.md
-    - Run Detail: usage/cli.md
-    - Source Query: usage/cli.md
-    - Comments, Tags & Favourites: usage/cli.md
-    - Admin Tools: usage/cli.md
+  - Exploring the Pipeline Website:
+    - Overview: exploringwebsite/websiteoverview.md
+    - Run Detail: exploringwebsite/rundetail.md
+    - Source Query: exploringwebsite/sourcequery.md
+    - Source Detail: exploringwebsite/sourcedetail.md
+    - Comments, Tags & Favourites: exploringwebsite/comments.md
+    - Admin Tools: exploringwebsite/admintools.md
   - Pipeline Outputs:
-    - Output Products: usage/cli.md
-    - Reading of Outputs: usage/cli.md
+    - Output Products: outputs/products.md
+    - Reading of Outputs: outputs/reading.md
   - Contributing and Developing:
     - Intro: developing/intro.md
     - GitHub Platform: developing/github.md
