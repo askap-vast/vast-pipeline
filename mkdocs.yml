@@ -59,7 +59,7 @@ nav:
     - Pipeline Steps Overview: design/overview.md
     - Image & Selavy Catalogue Ingest: design/imageingest.md
     - Source Association: design/association.md
-    - New sources: design/newsources.md
+    - New Sources: design/newsources.md
     - Forced Measurements: design/monitor.md
     - Source Statistics: design/sourcestats.md
   - Using the Pipeline:

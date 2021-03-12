@@ -110,8 +110,9 @@ The lightcurves below show the difference between 'regular' association (top) an
 For large surveys where transient and variablity searches on the epoch timescale is required, using this mode can greatly speed up the association stage.
 
 !!! warning
-    Using this mode does eliminate the full time resolution of your data! The base time resolution will be between the defined epochs.
+    Epoch based association does eliminate the full time resolution of your data! The base time resolution will be between the defined epochs.
 
 ## Parallel Association
+When parallel association is used, the images to process are analysed and grouped into distinct patches of the sky that do not overlap. These distinct regions are then processed through the source association in parallel. It is recommended to use parallel association when your dataset covers three or more distinct patches of sky.
 
 
