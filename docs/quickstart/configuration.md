@@ -21,28 +21,36 @@ NOTE: the connection details (host and port) are the same that you setup during 
 3. Create the database user and database name, by running:
 
 ```bash
-$ ./init-tools/init-db.sh localhost 5432 postgres postgres vast vastpsw vastdb
+$ python ./init-tools/init-db.py localhost 5432 postgres postgres vast vastpsw vastdb
 ```
 
-  For help on the command run it without arguments
+  For help on the command run it with the option `--help`
 
 ```bash
-$ ./init-tools/init-db.sh
-Usage: init-db.sh HOST PORT ADMINUSER ADMINPSW USER USERPSW DBNAME
-Eg:    init-db.sh localhost 5432 postgres postgres vast vastpsw vastdb
+$ python ./init-tools/init-db.py --help
+usage: init-db.py [-h] host port admin-username admin-password username password database-name
 
-Help: This will create a postgresql user 'vast' with login password 'vastpsw'
-      and a database 'vastdb' and grant to 'vast' user all the privileges to 'vastdb'
+Initialize a PostgreSQL database for VAST Pipeline use. Creates a new superuser and creates a new database owned by the new superuser.
+
+positional arguments:
+  host            database host
+  port            database port
+  admin-username  database administrator username
+  admin-password  database administrator password
+  username        username for the new user/role to create for the VAST Pipeline
+  password        password for the new user/role to create for the VAST Pipeline
+  database-name   name of the new database to create for the VAST Pipeline
+
+optional arguments:
+  -h, --help      show this help message and exit
 ```
 
   If everything went well the output is:
 
 ```bash
-connecting to PostgreSQL on 'localhost:5433' as admin 'postgres'
-creating user 'vast' with login password 'vastpsw' and give it createdb privileges
-CREATE ROLE
-************************************
-creating db 'vastdb'
+Creating new user/role vast ...
+Creating new database vastdb ...
+Done!
 ```
 
 4. Create the database tables. Remember first to activate the Python environment as described in [Installation of Python Enviroment](installation.md#python-environment). The `createcachetable` command below creates the cache tables required by DjangoQ.

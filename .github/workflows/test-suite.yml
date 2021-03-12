@@ -62,7 +62,7 @@ jobs:
 
     - name: Create database user and database name
       run: >
-        ./init-tools/init-db.sh
+        python ./init-tools/init-db.py
         localhost ${{ env.db_port }}
         postgres ${{ env.db_password }}
         vast vastpsw vastdb
