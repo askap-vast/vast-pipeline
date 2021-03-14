@@ -11,7 +11,7 @@ This repository holds the code of the Radio Transient detection pipeline for the
 
 [![VAST Pipeline Login](https://github.com/askap-vast/vast-pipeline/blob/master/docs/img/login.png)](https://github.com/askap-vast/vast-pipeline/blob/master/docs/img/login.png)
 
-Please read the [Installation Instructions](https://vast-survey.org/vast-pipeline/quickstart/installation/). If you intend to contribute to/develop the code base please read and follow the [Contributing and Developing Guidelines](https://vast-survey.org/vast-pipeline/developing/intro/).
+Please read the [Installation Instructions](https://vast-survey.org/vast-pipeline/quickstart/installation/). If you have any questions or feedback, we welcome you to open an [issue](https://github.com/askap-vast/vast-pipeline/issues). If you are interested in contributing to the code, please read and follow the [Contributing and Developing Guidelines](https://vast-survey.org/vast-pipeline/developing/intro/).
 
 ## Features
 
@@ -30,15 +30,15 @@ Please read the [Installation Instructions](https://vast-survey.org/vast-pipelin
 
 [![VAST Pipeline Overview](https://github.com/askap-vast/vast-pipeline/blob/master/docs/img/vast_pipeline_overview1.gif)](https://github.com/askap-vast/vast-pipeline/blob/master/docs/img/vast_pipeline_overview1.gif)
 
-
 ## Credits & Acknowledgements
+
 This tool was developed by Sergio Pintaldi from the [Sydney Informatics Hub](https://informatics.sydney.edu.au) – a core research facility of [The University of Sydney](https://www.sydney.edu.au/) – together with Adam Stewart from the [Sydney Institute for Astronomy](https://sifa.sydney.edu.au/), Andrew O'Brien and David Kaplan from the [Department of Physics, University of Wisconsin-Milwaukee](https://uwm.edu/physics/research/astronomy-gravitation-cosmology/). Substantial contributions have been made by the [ADACS team](https://adacs.org.au/who-we-are/our-team/) Shibli Saleheen, David Liptai, Ella Xi Wang.
 
 The developers thank the creators of [SB Admin 2](https://github.com/StartBootstrap/startbootstrap-sb-admin-2) to make the dashboard template freely available.
 
 If using this tool in your research, please acknowledge the [Sydney Informatics Hub](https://informatics.sydney.edu.au) in publications.
 
-```bash
+```console
 
          /  /\        ___          /__/\
         /  /:/_      /  /\         \  \:\

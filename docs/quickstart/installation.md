@@ -1,177 +1,165 @@
-# VAST Pipeline - Installation Notes
+<!-- markdownlint-disable MD046 -->
+# Installation
 
-This document explains how to install all the packages that the pipeline needs to run, as well as the PostgreSQL database.
+This document provides instructions on installing the VAST Pipeline for local use.
 
-The pipeline main stack require setting up 3 things:
+The VAST Pipeline consists of 3 main components that require installation:
 
-1. the database to serve the web app
-2. the Python environment
-3. the front-end assets, namely HTML, CSS and Javascript
+1. a PostgreSQL database,
+2. a [Django](https://www.djangoproject.com) application,
+3. a front-end website.
 
-Following this documentation should get you started with a good __LOCAL__ development environment, where you can mess up things, but always go back and fix it up.
-
-
-
-## Assumptions/Notes
-
-* The instructions are valid for Debian-based Linux OS and Mac OS.
-* Note for installs on a Mac, the use of `homebrew` is recommended (https://brew.sh).
+Following this documentation should get you started with a good **local** installation of the pipeline, suitable for development. The instructions have been tested on Debian/Ubuntu and macOS.
 
 ## PostgreSQL
 
-We don't recommend installing the database as part of a system package (e.g. `apt-get install postgres`), but instead use [Docker](https://www.docker.com/), which let you mess up things and keep your database installation separated from the system packages. In this way you can easily destroy and re-create the database without messing up your OS installed packages.
+We recommend using a [Docker](https://www.docker.com/) container for the database rather than installing the database system-wide.
 
 Steps:
 
-1. Installing docker in your system. Refer to [this official documentation](https://docs.docker.com/install/), and for Ubuntu users to [this](https://docs.docker.com/install/linux/docker-ce/ubuntu/). Remember to add your `user` to the `docker` group [official docs](https://docs.docker.com/install/linux/linux-postinstall/), by running
+1. Install Docker. Refer to [the official documentation](https://docs.docker.com/install/), and for Ubuntu users to [this](https://docs.docker.com/install/linux/docker-ce/ubuntu/). Remember to add your user account to the `docker` group [official docs](https://docs.docker.com/install/linux/linux-postinstall/), by running:
 
-    ```bash
-    $ sudo groupadd docker
-    $ sudo usermod -aG docker $USER
+    ```console
+    sudo groupadd docker
+    sudo usermod -aG docker $USER
     ```
 
-2. create your PostgreSQL container: `docker run --name NAME_OF_MyCONTAINER -e POSTGRES_PASSWORD=postgres -p 127.0.0.1:5432:5432 -d postgres:13.1`. This will install a PostgreSQL 13.1 container exposing the container internal port 5432 to your system (`127.0.0.1` or `localhost`) at port `5432`. I encourage to change the localhost port (e.g. `5433:5432`) so you know you are in control! The command setup automatically a user `postgres` with password `postgres` and default database `postgres`. If everything goes well, you see your container up and running by issuing `docker ps`.
+2. Create a PostgreSQL container. The VAST Pipeline requires a PostgreSQL database with the [Q3C](https://github.com/segasai/q3c) plugin to enable special indexing on coordinates and fast cone-search queries. We have prepared a Docker image based on the latest PostgreSQL image that includes Q3C <ghcr.io/marxide/postgres-q3c>. Start a container using this image by running the command below, replacing `<container-name>` with a name of your choice (e.g. vast-pipeline-db) and `<password>` with a password of your choice which will be set for the default `postgres` database superuser account.
 
-    ```bash
-    CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                    NAMES
-    afnafnalkfo3        postgres:13.1        "docker-entrypoint.s…"   22 hours ago        Up 22 hours         localhost:5432->5432/tcp   NAME_OF_MyCONTAINER
+    ```console
+    docker run --name <container-name> --env POSTGRES_PASSWORD=<password> --publish-all --detach ghcr.io/marxide/postgres-q3c:latest
     ```
 
-    If `localhost` is not passed, the command exposes the port on `0.0.0.0` so other users on the same subnet (e.g. same WiFi access point) can connect to it (I don't recommend it for a local development environment!)
+    The `--publish-all` option will make the PostgreSQL server port 5432 in the container accessible on a random available port on your system (the host). The `--detach` option instructs Docker to start the container in the background rather than taking over your current shell. Verify that the container is running and note the host port that `5432/tcp` is published on by running `docker ps`, e.g. in the example below, the host port is `55002`.
 
-3. Install PostgreSQL dependency [`Q3C`](https://github.com/segasai/q3c):
+    ```console
+    docker ps
+    CONTAINER ID   IMAGE                                 COMMAND                  CREATED         STATUS         PORTS                     NAMES
+    8ff553add2ed   ghcr.io/marxide/postgres-q3c:latest   "docker-entrypoint.s…"   4 seconds ago   Up 3 seconds   0.0.0.0:55002->5432/tcp   vast-pipeline-db
+    ```
 
-	a. Connect to the container by running `docker exec -it NAME_OF_MyCONTAINER bash`. That runs `bash` shell as `root` inside the container.
+The database server should now be running in a container on your machine.
 
-	b. Install the packages, making sure the postgres version is same as the one installed in docker (version 13 in this case -- check version with `psql -U postgres`):
+!!! tip
+    To stop the database server, simply stop the container with the following command
 
-    	```bash
-    	$ apt-get update -y && apt-get install -y libssl-dev libkrb5-dev \
-            zlib1g-dev make git gcc postgresql-server-dev-13 postgresql-common
-    	```
+    ```console
+    docker stop <container-name or container-id>
+    ```
 
-	c. Clone `Q3C` repo and install it:
+    You can start an existing stopped container with the following command
 
-	   ```bash
-	   $ git clone https://github.com/segasai/q3c.git
-	   $ cd q3c
-	   $ make
-	   $ make install
-	   ```
+    ```console
+    docker start <container-name or container-id>
+    ```
 
-You can disconnect from the container and the database installation should now be complete. You can connect to the database by running the `psql` CLI (Command Line Interface) by installing on your system (e.g. Ubuntu `sudo apt-get install postgres-common` or just `postgresql-client-common`, Mac: `brew install libpq`). Alternatively you can access the CLI by connecting to the container as described above (`docker exec -it NAME_OF_MyCONTAINER bash`). Finally connect to your PostgreSQL instance:
-
-``` bash linenums="1"
-psql -h localhost -p 5432 -U postgres
-```
-
-Output
-
-``` bash linenums="1"
-psql (YYYY (MYOS YYYY), server XXXX)
-Type "help" for help.
-
-postgres=#
-```
-
-The command will ask you for the password, please type `postgres`. The password is set by the `POSTGRES_PASSWORD=postgres` environment variable at container initialization, and __CAN'T__ be changed afterward.
-
-As you can see does not matter if the CLI client is for higher PostgreSQL versions, as it still connect to your instance ( e.g. `psql (11.0 (Ubuntu 11.0-2.pgdg18.04+1), server 13.1 (Debian 13.1-1.pgdg100+1))`).
-
-Basic Start/Stop commands are `docker start NAME_OF_MyCONTAINER` and `docker stop NAME_OF_MyCONTAINER`. Remember to start your container after rebooting your machine, if you don't have docker daemon configured to autoload!
+    Note that `docker run` and `docker start` are not the same. `docker run` will _create_ and start a container from an image; `docker start` will start an existing stopped container. If you have previously created a VAST Pipeline database container and you wish to reuse it, you want to use `docker start`. You will likely need to restart the container after a system reboot.
 
 ## Python Environment
-I strongly recommend to setup a virtual environment, in which you can then install all these `Python` modules into.
-This will avoid conflicts either with the system version of python, or with other code that you have that require different versions of these modules.
 
-Steps:
+We strongly recommend installing the VAST Pipeline in an isolated virtual environment (e.g. using [Miniconda](https://docs.conda.io/en/latest/miniconda.html), [Virtualenv](https://virtualenv.pypa.io/en/latest/), or [venv](https://docs.python.org/3/library/venv.html)). This will keep the rather complex set of dependencies separated from the system-wide Python installation.
 
-1. Install OS requirements:
+1. Create a new Python environment using your chosen virtual environment manager and activate it. For example, Miniconda users should run the following command, replacing `<environment-name>` with an appropriate name (e.g. pipeline-env):
 
-   a. gcc
-   b. python3-dev
-   c. libpq-dev
-   d. libgraphviz-dev (for development requirements)
-   For Ubuntu:
+    ```console
+    conda create --name <environment-name> python=3.8
+    conda activate <environment-name>
+    ```
 
-   ```bash
-   sudo apt-get install python3-dev libpq-dev libgraphviz-dev
-   ```
+    !!! note
+        All further installation instructions will assume you have activated your new virtual environment. Your environment manager will usually prepend the virtual environment name to the shell prompt, e.g.
 
-2. Copy repo link from `Clone or download` button and clone the repository:
+        ```console
+        (pipeline-env)$ ...
+        ```
 
-```bash
-git clone <PASTE REPO LINK> && cd <REPO>
-```
+2. Clone the pipeline repository <https://github.com/askap-vast/vast-pipeline> and change into the repo directory.
 
-__NOTE__: DO NOT change the the folder name, e.g. `git clone https://github.com/askap-vast/vast-pipeline.git my-pipeline-local-dev`
+    ```console
+    git clone https://github.com/askap-vast/vast-pipeline.git
+    cd vast-pipeline
+    ```
 
-3. Setup a `Python >= 3.6` virtual environment. E.g. with `virtualenv`:
+    !!! warning
+        **Do not** change the the repo folder name, e.g. `git clone https://github.com/askap-vast/vast-pipeline.git my-pipeline-local-dev`
 
-```bash
-virtualenv -p python3 pipeline_env
-```
+3. (Optional) Checkout the version you want to install. Currently, the repo will have cloned the latest code from the _master_ branch. If you require a specific version, checkout the appropriate version [tag](https://github.com/askap-vast/vast-pipeline/tags) into a new branch e.g. for version 0.2.0
 
-Otherwise use `Anaconda/conda`:
+    ```console
+    git checkout -b <new-branch-name> 0.2.0
+    ```
 
-```bash
-conda create -n pipeline_env python=3.6
-```
+4. Install non-Python dependencies. Some of the Python dependencies required by the pipeline depend on some non-Python libraries. These can also be installed by Miniconda, otherwise they are best installed using an appropriate package manager for your operating system e.g. `apt` for Debian/Ubuntu, `dnf` for RHEL 8/CentOS 8, [Homebrew](https://brew.sh) for macOS. The dependencies are:
 
-__NOTE__: you can name the environment whatever you want instead of `pipeline_env`
+    === "Miniconda"
 
-4. Activate the environment.
-```bash
-source pipeline_env/bin/activate
-```
-Otherwise use `Anaconda/conda`:
+        * libpq
+        * graphviz
 
-```bash
-conda activate pipeline_env
-```
+        Both are available on the [conda-forge](https://conda-forge.org) channel. They are also specified in the environment file `requirements/environment.yml` which can be used to install the required packages into an activated conda environment with the following command
 
-5. Install the development requirements
+        ```console
+        conda env update -f requirements/environment.yml
+        ```
 
-Note that if you want to install the development requirements, graphviz needs to be installed on your system (Ubuntu: `sudo apt-get install graphviz`, Mac: `brew install graphviz`).
+    === "Debian/Ubuntu"
 
-```bash
-(pipeline_env)$ pip install -r requirements/dev.txt
-```
-or with conda (some packages will not be installed properly so check and eventually install them manually, if not with `conda`, with `pip`):
-```bash
-(pipeline_env)$ while read requirement; do conda install --yes $requirement; done < requirements/dev.txt
-(pipeline_env)$ while read requirement; do conda install --yes $requirement; done < requirements/base.txt
-```
+        * libpq-dev
+        * libgraphviz-dev
+
+    === "RHEL/CentOS"
+
+        * libpq-devel
+        * graphviz-devel
+
+        !!! note "CentOS users"
+            You may need to enable the PowerTools repository to install `graphviz-devel`.
+
+            ```console
+            dnf install dnf-plugins-core
+            dnf config-manager --set-enabled powertools
+            ```
+
+    === "Homebrew"
+
+        * libpq
+        * graphviz
+
+5. Install the pipeline and it's Python depedendies.
+
+    ```console
+    pip install .
+    ```
+
+    !!! warning
+        Don't forget the `.` at the end of the above command. It instructs `pip` that the root directory of the package to install is the current directory.
+
+    !!! tip
+        If you are intending to deploy an instance of the pipeline onto a server, you may also want to install the recommended production extras with `pip install .[prod]`. However, note that these are recommendations only and there are other alternative packages that may work just as well.
 
 ## Front-End Assets Quickstart
-In order to install and compile the front-end assets (modules like js9 and bootstrap, as well as minification of JS and CSS files) you need a recent version of `node` with `npm` installed.
 
-### Installation of `Node` and `npm`
-We recommend install an node version manager like [nvm](https://github.com/nvm-sh/nvm). Check the links for the latest version, but the time of writing, the following command will install `nvm` and `node `:
+In order to install and compile the front-end website assets (modules like js9 and bootstrap, as well as minification of JS and CSS files) you need a recent version of [NodeJS](https://nodejs.org/) installed.
 
-```bash
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
-command -v nvm && nvm install --lts || echo "nvm not found"
-```
-That would install `node v12.17.0` at the time of writing.
+### Installation of NodeJS
+
+If you are using Miniconda and installed the `requirements/environment.yml` file as shown above, then NodeJS is already installed. Otherwise, we recommend following the instructions on the NodeJS [downloads page](https://nodejs.org/en/download/) for your OS (there are many installation options).
 
 ### Setting up the front-end assets
+
 In order to set up the front end assets, run:
 
-```
-$ pwd
-/PATH/TO/REPO/vast-pipeline
-$ npm ci && npm start
+```console
+npm ci && npm start
 ```
 
 !!! note
-    Make sure you are in the root of the repo, as shown above. The `ci` command ("clean install") remove all previous node modules and install all the dependencies. The `start` command run the default `gulp` "task" which minifies CSS and JS files and copies files into the `static/vendor` folder. For more details of compilation of frontend assets (e.g. single tasks), and front end developement set up read the [Front End Developing Guidelines](../developing/localdevenv.md#frontend-assets-management-and-guidelines).
+    Ensure you are still in the root of the repo before running the command above. The `npm ci` command ("clean install") will remove all previous node modules and install all the dependencies from scratch. The `npm start` command will run the default `gulp` "task" which, among other things, compiles Sass into CSS, minifies CSS and JS files, and copies these files into the `static/vendor` folder. For more details of compilation of frontend assets (e.g. single tasks), and front-end developement set up read the [Front End Developing Guidelines](../developing/localdevenv.md#frontend-assets-management-and-guidelines).
 
-
-!!! warning
+!!! bug
     When `npm start` or `npm run start` was run in a Ubuntu 20.04 LTS (containerised environment), for some unknown reasons, both commands failed with the following error.
 
-    ```
+    ```console
     [12:48:19] 'js9Make' errored after 7.67 ms
     [12:48:19] Error: spawn make ENOENT
         at Process.ChildProcess._handle.onexit (internal/child_process.js:267:19)
@@ -191,13 +179,13 @@ $ npm ci && npm start
 
     The way around for this issue is unorthodox. The following steps were followed to overcome the issue:
 
-    ```
-    $ cd node_modules/js9/
-    $ ./configure
-    $ make
-    $ make install
-    $ cd ~/vast-pipeline/  ## (to comeback to the root folder of the project)
-    $ npm install
+    ```console
+    cd node_modules/js9/
+    ./configure
+    make
+    make install
+    cd ~/vast-pipeline/  ## (to comeback to the root folder of the project)
+    npm install
     ```
 
     That somehow solved the issue mentioned above.

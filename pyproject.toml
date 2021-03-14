@@ -1,0 +1,57 @@
+[tool.poetry]
+name = "vast-pipeline"
+version = "0.2.0"
+description = "Vast Pipeline code base for processing and analysing telescope images from the Square Kilometre Pathfinder"
+authors = ["The VAST Development Team"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.7.1"
+astropy = "^4.0"
+astroquery = "^0.4.0"
+bokeh = "^2.2.0"
+cloudpickle = "^1.5.0"
+dask = {extras = ["dataframe"], version = "^2021.3.0"}
+dill = "^0.3.3"
+Django = "^3.1.7"
+django-crispy-forms = "^1.9.2"
+django-environ = "^0.4.5"
+djangorestframework = "^3.11.0"
+djangorestframework-datatables = "^0.5.1"
+django-q = "^1.3.3"
+django-tagulous = "^1.1.0"
+jinja2 = "^2.11.2"
+networkx = "^2.4"
+numpy = "^1.18.1"
+pandas = "^1.2.0"
+psutil = "^5.7.0"
+psycopg2 = "^2.8.4"
+pyarrow = "^0.17.0"
+scipy = "^1.6.0"
+social-auth-app-django = "^3.1.0"
+social-auth-core = "^3.3.3"
+sqlalchemy = "^1.3.11"
+vaex = "^3.0.0"
+whitenoise = "^5.2.0"
+gevent = { version = "^21.1.2", optional = true }
+gunicorn = { version = "^20.0.4", optional = true }
+forced-phot = { git = "https://github.com/askap-vast/forced_phot.git" }
+
+[tool.poetry.dev-dependencies]
+mkdocs-material = "^7.0.5"
+mkdocstrings = "^0.15.0"
+mkdocs-minify-plugin = "^0.4.0"
+extensions = "^0.4"
+pygraphviz = "^1.7"
+ipdb = "^0.13.6"
+ipython = "^7.21.0"
+pip-tools = "^5.5.0"
+tabulate = "^0.8.9"
+django-debug-toolbar = "^3.2"
+
+[tool.poetry.extras]
+prod = ["gevent", "gunicorn"]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

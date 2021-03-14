@@ -1,9 +1,0 @@
--r prod.txt
--r docs.txt
-django-extensions
-pygraphviz
-ipdb
-ipython==7.10.2
-pip-tools
-tabulate
-django-debug-toolbar
