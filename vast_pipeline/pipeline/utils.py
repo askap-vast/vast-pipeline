@@ -6,6 +6,7 @@ import shutil
 import numpy as np
 import pandas as pd
 import astropy.units as u
+import dask
 import dask.dataframe as dd
 
 from typing import List, Optional, Dict, Tuple
@@ -27,6 +28,7 @@ from vast_pipeline.image.utils import on_sky_sep
 
 
 logger = logging.getLogger(__name__)
+dask.config.set({"multiprocessing.context": "fork"})
 
 
 def get_create_skyreg(p_run, image):
