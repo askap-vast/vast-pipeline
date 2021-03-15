@@ -26,16 +26,16 @@ numpy = "^1.18.1"
 pandas = "^1.2.0"
 psutil = "^5.7.0"
 psycopg2 = "^2.8.4"
-pyarrow = "^0.17.0"
+pyarrow = "^3.0.0"
 scipy = "^1.6.0"
 social-auth-app-django = "^3.1.0"
 social-auth-core = "^3.3.3"
 sqlalchemy = "^1.3.11"
-vaex = "^3.0.0"
 whitenoise = "^5.2.0"
 gevent = { version = "^21.1.2", optional = true }
 gunicorn = { version = "^20.0.4", optional = true }
 forced-phot = { git = "https://github.com/askap-vast/forced_phot.git" }
+vaex-arrow = "^0.5.1"
 
 [tool.poetry.dev-dependencies]
 mkdocs-material = "^7.0.5"

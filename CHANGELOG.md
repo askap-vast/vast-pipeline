@@ -21,6 +21,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Changed the `vaex` dependency to `vaex-arrow` [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
+- Set `CREATE_MEASUREMENTS_ARROW_FILES = True` in the basic association test config [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
 - Bumped minimum Python version to 3.7.1 [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
 - Replaced npm package `gulp-sass` with `@mr-hope/gulp-sass`, a fork which drops the dependency on the deprecated `node-sass` which is difficult to install [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
 - Changed the installtion documentation to instruct users to use a PostgreSQL Docker image with Q3C already installed [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
