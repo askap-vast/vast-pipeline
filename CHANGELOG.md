@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added `requirements/environment.yml` so make it easier for Miniconda users to get the non-Python dependencies [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
+- Added `pyproject.toml` and `poetry.lock` [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
+- Added `init-tools/init-db.py` [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
 - Added image add mode run restore command 'restorepiperun' [#463](https://github.com/askap-vast/vast-pipeline/pull/463)
 - Added documentation folder and files for `mkdocs` and CI [#433](https://github.com/askap-vast/vast-pipeline/pull/433)
 - Added add image to existing run feature [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
@@ -18,6 +21,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Replaced npm package `gulp-sass` with `@mr-hope/gulp-sass`, a fork which drops the dependency on the deprecated `node-sass` which is difficult to install [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
+- Changed the installtion documentation to instruct users to use a PostgreSQL Docker image with Q3C already installed [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
 - Changed 'cmd' flag in run pipeline to 'cli' [#466](https://github.com/askap-vast/vast-pipeline/pull/466).
 - Changed `CONTRIBUTING.md` and `README.md` [#433](https://github.com/askap-vast/vast-pipeline/pull/433)
 - Changed forced extraction name suffix to run id rather than datetime [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
@@ -25,9 +30,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Changed particles style on login page [#459](https://github.com/askap-vast/vast-pipeline/pull/459).
 - Dependabot: Bump ini from 1.3.5 to 1.3.8 [#436](https://github.com/askap-vast/vast-pipeline/pull/436)
 
-
 #### Fixed
 
+- Fixed the default Dask multiprocessing context to "fork" [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
 - Fixed initial job processing from the UI [#466](https://github.com/askap-vast/vast-pipeline/pull/466).
 - Fixed links in `README.md` [#464](https://github.com/askap-vast/vast-pipeline/pull/464).
 - Fixed basic association new sources created through relations [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
@@ -40,11 +45,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Removed
 
+- Removed `requirements/*.txt` files. Development dependency management moved to Poetry [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
+- Removed `init-tools/init-db.sh` [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
 - Removed `INSTALL.md`, `PROFILE.md` and `static/README.md` [#433](https://github.com/askap-vast/vast-pipeline/pull/433)
 - Removed aplpy from base requirements [#460](https://github.com/askap-vast/vast-pipeline/pull/460).
 
 #### List of PRs
 
+- [#472](https://github.com/askap-vast/vast-pipeline/pull/472) feat: Simplify install.
 - [#466](https://github.com/askap-vast/vast-pipeline/pull/466) fix: Fixed initial job processing from the UI.
 - [#463](https://github.com/askap-vast/vast-pipeline/pull/463) feat: Added image add mode run restore command.
 - [#433](https://github.com/askap-vast/vast-pipeline/pull/433) doc: add documentation GitHub pages website with CI.

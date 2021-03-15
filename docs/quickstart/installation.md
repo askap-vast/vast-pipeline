@@ -125,7 +125,7 @@ We strongly recommend installing the VAST Pipeline in an isolated virtual enviro
         * libpq
         * graphviz
 
-5. Install the pipeline and it's Python depedendies.
+5. Install the pipeline and it's Python dependencies.
 
     ```console
     pip install .
@@ -136,6 +136,9 @@ We strongly recommend installing the VAST Pipeline in an isolated virtual enviro
 
     !!! tip
         If you are intending to deploy an instance of the pipeline onto a server, you may also want to install the recommended production extras with `pip install .[prod]`. However, note that these are recommendations only and there are other alternative packages that may work just as well.
+
+    !!! tip
+        If you intend to contribute to development of the pipeline, you will need the Python dependency management tool [Poetry](https://python-poetry.org). See the [development guidelines](../developing/localdevenv.md).
 
 ## Front-End Assets Quickstart
 

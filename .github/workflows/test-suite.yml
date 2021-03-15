@@ -47,7 +47,7 @@ jobs:
       run: |
         npm ci
         npm start
-        pip install -r requirements/dev.txt
+        pip install .
 
     - name: Set DATABASE_URL (using ansible)
       run: >
