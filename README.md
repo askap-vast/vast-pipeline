@@ -15,7 +15,7 @@ Please read the [Installation Instructions](https://vast-survey.org/vast-pipelin
 
 ## Features
 
-* Code base in `Python 3.6+`, recommended >= `3.7`
+* Code base in `Python 3.7+`
 * Source association/manipulations using `Astropy4+` and `Pandas1+` dataframe
 * Association methods: basic (`Astropy` crossmatch), advanced (search with a fixed distance), De Ruiter
 * Flagging of "New Source" and "Related Source"
