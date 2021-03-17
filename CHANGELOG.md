@@ -36,6 +36,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### Fixed
 
 - Fixed the default Dask multiprocessing context to "fork" [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
+- Fixed Selavy catalogue ingest to discard the unit row before reading the data [#473](https://github.com/askap-vast/vast-pipeline/pull/473).
 - Fixed initial job processing from the UI [#466](https://github.com/askap-vast/vast-pipeline/pull/466).
 - Fixed links in `README.md` [#464](https://github.com/askap-vast/vast-pipeline/pull/464).
 - Fixed basic association new sources created through relations [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
@@ -56,6 +57,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### List of PRs
 
 - [#472](https://github.com/askap-vast/vast-pipeline/pull/472) feat: Simplify install.
+- [#473](https://github.com/askap-vast/vast-pipeline/pull/473) fix: discard the selavy unit row before reading.
 - [#466](https://github.com/askap-vast/vast-pipeline/pull/466) fix: Fixed initial job processing from the UI.
 - [#463](https://github.com/askap-vast/vast-pipeline/pull/463) feat: Added image add mode run restore command.
 - [#433](https://github.com/askap-vast/vast-pipeline/pull/433) doc: add documentation GitHub pages website with CI.
