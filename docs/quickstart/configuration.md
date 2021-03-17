@@ -52,13 +52,13 @@ The following instructions, will get you started in setting up the database and 
     Done!
     ```
 
-2. Copy the setting configuration file template and modify it with your desired settings (see [defaults](https://github.com/askap-vast/vast-pipeline/blob/master/webinterface/.env.template)).
+2. Copy the setting configuration file template and modify it with your desired settings (see [defaults](https://github.com/askap-vast/vast-pipeline/blob/master/webinterface/.env.template){:target="_blank"}).
 
     ```console
     cp webinterface/.env.template webinterface/.env
     ```
 
-3. Set the database connection settings in the `webinterface/.env` file by modifying `DATABASE_URL` (for URL syntax see [this link](https://django-environ.readthedocs.io/en/latest/#tips)). For example:
+3. Set the database connection settings in the `webinterface/.env` file by modifying `DATABASE_URL` (for URL syntax see [this link](https://django-environ.readthedocs.io/en/latest/#tips){:target="_blank"}). For example:
 
     ```bash
     DATABASE_URL=psql://vast:<vast-user-password>@localhost:55002/vastdb

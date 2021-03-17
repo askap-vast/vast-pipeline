@@ -1,7 +1,7 @@
 # Benchmarks
 
 ## Initial Profiling
-These profiling tests were run with the pipeline codebase correspondent to commit [373c2ce](https://github.com/askap-vast/vast-pipeline/tree/373c2ceea0c6bf6b8f0bee2ec3f8d592f1d83373) (some commits after the first release).
+These profiling tests were run with the pipeline codebase correspondent to commit [373c2ce](https://github.com/askap-vast/vast-pipeline/tree/373c2ceea0c6bf6b8f0bee2ec3f8d592f1d83373){:target="_blank"} (some commits after the first release).
 
 Running on 12GB of data with 464MB peak memory usage takes 4 mins:
 _performance:_ ~80% `final_operations`, ~10% `get_src_skyregion_merged_df`. `final_operations` calls other functions, out of these the largest is 50% in `make_upload_sources` which spends about 20% of time on `utils` `<method 'execute' of 'psycopg2.extensions.cursor' objects>`. The `get_src_skyregion_merged_df` time sink is in `threading` 15% of time is on `wait` (`final_operations` spends some time on `threading` as well, hence 15% > 10%).

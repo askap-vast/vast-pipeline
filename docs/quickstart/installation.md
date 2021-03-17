@@ -6,25 +6,25 @@ This document provides instructions on installing the VAST Pipeline for local us
 The VAST Pipeline consists of 3 main components that require installation:
 
 1. a PostgreSQL database,
-2. a [Django](https://www.djangoproject.com) application,
+2. a [Django](https://www.djangoproject.com){:target="_blank"} application,
 3. a front-end website.
 
 Following this documentation should get you started with a good **local** installation of the pipeline, suitable for development. The instructions have been tested on Debian/Ubuntu and macOS.
 
 ## PostgreSQL
 
-We recommend using a [Docker](https://www.docker.com/) container for the database rather than installing the database system-wide.
+We recommend using a [Docker](https://www.docker.com/){:target="_blank"} container for the database rather than installing the database system-wide.
 
 Steps:
 
-1. Install Docker. Refer to [the official documentation](https://docs.docker.com/install/), and for Ubuntu users to [this](https://docs.docker.com/install/linux/docker-ce/ubuntu/). Remember to add your user account to the `docker` group [official docs](https://docs.docker.com/install/linux/linux-postinstall/), by running:
+1. Install Docker. Refer to [the official documentation](https://docs.docker.com/install/){:target="_blank"}, and for Ubuntu users to [this](https://docs.docker.com/install/linux/docker-ce/ubuntu/){:target="_blank"}. Remember to add your user account to the `docker` group [official docs](https://docs.docker.com/install/linux/linux-postinstall/){:target="_blank"}, by running:
 
     ```console
     sudo groupadd docker
     sudo usermod -aG docker $USER
     ```
 
-2. Create a PostgreSQL container. The VAST Pipeline requires a PostgreSQL database with the [Q3C](https://github.com/segasai/q3c) plugin to enable special indexing on coordinates and fast cone-search queries. We have prepared a Docker image based on the latest PostgreSQL image that includes Q3C <ghcr.io/marxide/postgres-q3c>. Start a container using this image by running the command below, replacing `<container-name>` with a name of your choice (e.g. vast-pipeline-db) and `<password>` with a password of your choice which will be set for the default `postgres` database superuser account.
+2. Create a PostgreSQL container. The VAST Pipeline requires a PostgreSQL database with the [Q3C](https://github.com/segasai/q3c){:target="_blank"} plugin to enable special indexing on coordinates and fast cone-search queries. We have prepared a Docker image based on the latest PostgreSQL image that includes Q3C <ghcr.io/marxide/postgres-q3c>. Start a container using this image by running the command below, replacing `<container-name>` with a name of your choice (e.g. vast-pipeline-db) and `<password>` with a password of your choice which will be set for the default `postgres` database superuser account.
 
     ```console
     docker run --name <container-name> --env POSTGRES_PASSWORD=<password> --publish-all --detach ghcr.io/marxide/postgres-q3c:latest
@@ -57,7 +57,7 @@ The database server should now be running in a container on your machine.
 
 ## Python Environment
 
-We strongly recommend installing the VAST Pipeline in an isolated virtual environment (e.g. using [Miniconda](https://docs.conda.io/en/latest/miniconda.html), [Virtualenv](https://virtualenv.pypa.io/en/latest/), or [venv](https://docs.python.org/3/library/venv.html)). This will keep the rather complex set of dependencies separated from the system-wide Python installation.
+We strongly recommend installing the VAST Pipeline in an isolated virtual environment (e.g. using [Miniconda](https://docs.conda.io/en/latest/miniconda.html){:target="_blank"}, [Virtualenv](https://virtualenv.pypa.io/en/latest/){:target="_blank"}, or [venv](https://docs.python.org/3/library/venv.html){:target="_blank"}). This will keep the rather complex set of dependencies separated from the system-wide Python installation.
 
 1. Create a new Python environment using your chosen virtual environment manager and activate it. For example, Miniconda users should run the following command, replacing `<environment-name>` with an appropriate name (e.g. pipeline-env):
 
@@ -83,20 +83,20 @@ We strongly recommend installing the VAST Pipeline in an isolated virtual enviro
     !!! warning
         **Do not** change the the repo folder name, e.g. `git clone https://github.com/askap-vast/vast-pipeline.git my-pipeline-local-dev`
 
-3. (Optional) Checkout the version you want to install. Currently, the repo will have cloned the latest code from the _master_ branch. If you require a specific version, checkout the appropriate version [tag](https://github.com/askap-vast/vast-pipeline/tags) into a new branch e.g. for version 0.2.0
+3. (Optional) Checkout the version you want to install. Currently, the repo will have cloned the latest code from the _master_ branch. If you require a specific version, checkout the appropriate version [tag](https://github.com/askap-vast/vast-pipeline/tags){:target="_blank"} into a new branch e.g. for version 0.2.0
 
     ```console
     git checkout -b <new-branch-name> 0.2.0
     ```
 
-4. Install non-Python dependencies. Some of the Python dependencies required by the pipeline depend on some non-Python libraries. These can also be installed by Miniconda, otherwise they are best installed using an appropriate package manager for your operating system e.g. `apt` for Debian/Ubuntu, `dnf` for RHEL 8/CentOS 8, [Homebrew](https://brew.sh) for macOS. The dependencies are:
+4. Install non-Python dependencies. Some of the Python dependencies required by the pipeline depend on some non-Python libraries. These can also be installed by Miniconda, otherwise they are best installed using an appropriate package manager for your operating system e.g. `apt` for Debian/Ubuntu, `dnf` for RHEL 8/CentOS 8, [Homebrew](https://brew.sh){:target="_blank"} for macOS. The dependencies are:
 
     === "Miniconda"
 
         * libpq
         * graphviz
 
-        Both are available on the [conda-forge](https://conda-forge.org) channel. They are also specified in the environment file `requirements/environment.yml` which can be used to install the required packages into an activated conda environment with the following command
+        Both are available on the [conda-forge](https://conda-forge.org){:target="_blank"} channel. They are also specified in the environment file `requirements/environment.yml` which can be used to install the required packages into an activated conda environment with the following command
 
         ```console
         conda env update -f requirements/environment.yml
@@ -138,15 +138,15 @@ We strongly recommend installing the VAST Pipeline in an isolated virtual enviro
         If you are intending to deploy an instance of the pipeline onto a server, you may also want to install the recommended production extras with `pip install .[prod]`. However, note that these are recommendations only and there are other alternative packages that may work just as well.
 
     !!! tip
-        If you intend to contribute to development of the pipeline, you will need the Python dependency management tool [Poetry](https://python-poetry.org). See the [development guidelines](../developing/localdevenv.md).
+        If you intend to contribute to development of the pipeline, you will need the Python dependency management tool [Poetry](https://python-poetry.org){:target="_blank"}. See the [development guidelines](../developing/localdevenv.md).
 
 ## Front-End Assets Quickstart
 
-In order to install and compile the front-end website assets (modules like js9 and bootstrap, as well as minification of JS and CSS files) you need a recent version of [NodeJS](https://nodejs.org/) installed.
+In order to install and compile the front-end website assets (modules like js9 and bootstrap, as well as minification of JS and CSS files) you need a recent version of [NodeJS](https://nodejs.org/){:target="_blank"} installed.
 
 ### Installation of NodeJS
 
-If you are using Miniconda and installed the `requirements/environment.yml` file as shown above, then NodeJS is already installed. Otherwise, we recommend following the instructions on the NodeJS [downloads page](https://nodejs.org/en/download/) for your OS (there are many installation options).
+If you are using Miniconda and installed the `requirements/environment.yml` file as shown above, then NodeJS is already installed. Otherwise, we recommend following the instructions on the NodeJS [downloads page](https://nodejs.org/en/download/){:target="_blank"} for your OS (there are many installation options).
 
 ### Setting up the front-end assets
 

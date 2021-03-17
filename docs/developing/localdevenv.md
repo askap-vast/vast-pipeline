@@ -6,14 +6,14 @@ This section describes how to set up a local development environment more in det
 
 ### Installation
 
-The installation instructions are the same as the ones describes in the [quickstart section](../quickstart/installation.md) with one key difference. Rather than installing the Python dependencies with pip, you will need to install and use [Poetry](https://python-poetry.org). After installing Poetry, running the command below will install the pipeline dependencies defined in `poetry.lock` into a virtual environment. The main difference between using Poetry and pip is that pip will only install the dependencies necessary for using the pipeline, whereas Poetry will also install development dependencies required for contributing (e.g. tools to build the documentation).
+The installation instructions are the same as the ones describes in the [quickstart section](../quickstart/installation.md) with one key difference. Rather than installing the Python dependencies with pip, you will need to install and use [Poetry](https://python-poetry.org){:target="_blank"}. After installing Poetry, running the command below will install the pipeline dependencies defined in `poetry.lock` into a virtual environment. The main difference between using Poetry and pip is that pip will only install the dependencies necessary for using the pipeline, whereas Poetry will also install development dependencies required for contributing (e.g. tools to build the documentation).
 
 ```console
 poetry install
 ```
 
 !!! note
-    Poetry will automatically create a virtual environment if it detects that your shell isn't currently using one. This should be fine for most users. If you prefer to use an alternative virtual environment manager (e.g. Miniconda), you can [prevent Poetry from creating virtual environments](https://python-poetry.org/docs/faq/#i-dont-want-poetry-to-manage-my-virtual-environments-can-i-disable-it). However, even if you are using something like Miniconda, allowing Poetry to manage the virtualenv (the default behaviour) is fine. The development team only uses this option during our automated testing since our test runner machines only contain a single Python environment so using virtualenvs is redundant.
+    Poetry will automatically create a virtual environment if it detects that your shell isn't currently using one. This should be fine for most users. If you prefer to use an alternative virtual environment manager (e.g. Miniconda), you can [prevent Poetry from creating virtual environments](https://python-poetry.org/docs/faq/#i-dont-want-poetry-to-manage-my-virtual-environments-can-i-disable-it){:target="_blank"}. However, even if you are using something like Miniconda, allowing Poetry to manage the virtualenv (the default behaviour) is fine. The development team only uses this option during our automated testing since our test runner machines only contain a single Python environment so using virtualenvs is redundant.
 
 ### Solving your `models.py`/migrations issues
 
@@ -23,7 +23,7 @@ First of all the `makemigrations` command must be run only if you modified the `
 
 In this case there are 2 situations that arise:
 
-1. You currently don't have a production environment and/or you are comfortable in dropping all the data in the database. In this case, you don't need to update the production environment with multiple migration files even though Django docs promote making as many migrations as you need to ([see Django migration guidelines](https://docs.djangoproject.com/en/3.0/topics/migrations/#squashing-migrations)). For such reasons please consider doing the following steps:
+1. You currently don't have a production environment and/or you are comfortable in dropping all the data in the database. In this case, you don't need to update the production environment with multiple migration files even though Django docs promote making as many migrations as you need to ([see Django migration guidelines](https://docs.djangoproject.com/en/3.0/topics/migrations/#squashing-migrations){:target="_blank"}). For such reasons please consider doing the following steps:
 
     1.1. Make your changes to `models.py`.
 
@@ -105,7 +105,7 @@ If you don't mind losing all the data in your database just follow the [Reset th
 
 4. Run the pipeline and the webserver to see that everything is working fine
 
-5. Squash the migrations using [Django migration guidelines](https://docs.djangoproject.com/en/3.0/topics/migrations/#squashing-migrations)
+5. Squash the migrations using [Django migration guidelines](https://docs.djangoproject.com/en/3.0/topics/migrations/#squashing-migrations){:target="_blank"}
 
 6. Continue with the normal development cycle (i.e. branch off master, do changes, commit everything, _including your changes in the models/migrations even done with the squashing!_)
 
@@ -115,7 +115,7 @@ The following sub-sections show how to completely drop every data in the databas
 
 #### Reset the database
 
-Make sure you installed the [requirements `dev.txt`](https://github.com/apache/incubator-superset/blob/master/requirements/dev.txt). And `django_extensions` is in `EXTRA_APPS` in your setting configuration file `.env` (e.g. `EXTRA_APPS=django_extensions,another_app,...`).
+Make sure you installed the [requirements `dev.txt`](https://github.com/apache/incubator-superset/blob/master/requirements/dev.txt){:target="_blank"}. And `django_extensions` is in `EXTRA_APPS` in your setting configuration file `.env` (e.g. `EXTRA_APPS=django_extensions,another_app,...`).
 
 ```bash
 (pipeline_env)$ ./manage.py reset_db  && ./manage.py migrate
@@ -175,7 +175,7 @@ npm ci
 ...
 ```
 
-For installing future additional dependecies you can run `npm install --save my-package` or `npm install --save-dev my-dev-package` (to save a development module), and after that commit __both__ `package.json` and `package-lock.json` files. For details about the installed packages and npm scripts see [`package.json`](https://github.com/apache/incubator-superset/blob/master/package.json).
+For installing future additional dependecies you can run `npm install --save my-package` or `npm install --save-dev my-dev-package` (to save a development module), and after that commit __both__ `package.json` and `package-lock.json` files. For details about the installed packages and npm scripts see [`package.json`](https://github.com/apache/incubator-superset/blob/master/package.json){:target="_blank"}.
 
 ### FrontEnd Tasks with `gulp`
 
@@ -185,7 +185,7 @@ Using `gulp` and `npm` scripts you can:
 2. Building (e.g. minify/uglify) CSS and/or Javascript files.
 3. Run a developement server that "hot-reload" your web page when any HTML, CSS or Javascript file is modified.
 
-The command to list all the `gulp` "tasks" and sub-tasks is (you might need `gulp-cli` installed globally, i.e. `npm i --global gulp-cli`, more info [here](https://gulpjs.com/docs/en/getting-started/quick-start)):
+The command to list all the `gulp` "tasks" and sub-tasks is (you might need `gulp-cli` installed globally, i.e. `npm i --global gulp-cli`, more info [here](https://gulpjs.com/docs/en/getting-started/quick-start){:target="_blank"}):
 
 ```bash
 gulp --tasks
@@ -257,7 +257,7 @@ Alternatively you can run gulp from the installed version in the `node_modules` 
 ./node_modules/.bin/gulp --tasks
 ```
 
-For further details about tasks, see [`gulpfile`](https://github.com/apache/incubator-superset/blob/master/gulpfile.js).
+For further details about tasks, see [`gulpfile`](https://github.com/apache/incubator-superset/blob/master/gulpfile.js){:target="_blank"}.
 
 #### 1. Install Dependencies under `vendor` Folder
 
@@ -347,4 +347,4 @@ This command will collect all static assets (Javascript and CSS files) and copy 
 
 The `js9staticprod` gulp task is necessary if you specify a `STATIC_URL` and a `BASE_URL` different than the default, for example if you need to prefix the site `/` with a base url because you are running another webserver (e.g. another web server is running on `https://my-astro-platform.com/` so you want to run the pipeline on the same server/domain `https://my-astro-platform.com/pipeline`, so you need to set `BASE_URL='/pipeline/'` and `STATIC_URL=/pipeline-static/` in `settings.py`). __We recommend to run this in any case!__
 
-Then you can move that folder to where it can be served by the production static files server ([Ningx](https://www.nginx.com/) or [Apache](https://httpd.apache.org/) are usually good choices, in case refere to the [Django documentation](https://docs.djangoproject.com/en/3.1/howto/deployment/)).
+Then you can move that folder to where it can be served by the production static files server ([Ningx](https://www.nginx.com/){:target="_blank"} or [Apache](https://httpd.apache.org/){:target="_blank"} are usually good choices, in case refere to the [Django documentation](https://docs.djangoproject.com/en/3.1/howto/deployment/){:target="_blank"}).
