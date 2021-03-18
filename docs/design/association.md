@@ -36,24 +36,24 @@ Sources positions are reported using the weighted averages.
 ## Association Methods
 
 !!! tip
-    For a better understanding on the underlying process, see [this page](https://docs.astropy.org/en/stable/coordinates/matchsep.html#matching-catalogs) in the astropy documentation for examples on matching catalogues.
+    For a better understanding on the underlying process, see [this page](https://docs.astropy.org/en/stable/coordinates/matchsep.html#matching-catalogs){:target="_blank"} in the astropy documentation for examples on matching catalogues.
 
 ### Basic
-The most basic association method uses the astropy [`match_coordinates_sky`](https://docs.astropy.org/en/stable/api/astropy.coordinates.match_coordinates_sky.html) function which:
+The most basic association method uses the astropy [`match_coordinates_sky`](https://docs.astropy.org/en/stable/api/astropy.coordinates.match_coordinates_sky.html){:target="_blank"} function which:
 
 * Associates measurements using only the nearest neighbour for each source when comparing catalogues.
 * Uses a fixed association radius as a threshold for a 'match'.
 * Only one-to-many [relations](#relations) are possible.
 
 ### Advanced
-This method uses the same process as `Basic`, however the astropy function [`search_around_sky`](https://docs.astropy.org/en/stable/api/astropy.coordinates.search_around_sky.html) is used instead. This means:
+This method uses the same process as `Basic`, however the astropy function [`search_around_sky`](https://docs.astropy.org/en/stable/api/astropy.coordinates.search_around_sky.html){:target="_blank"} is used instead. This means:
 
 * All possible matches between the two catalogues are found, rather than only the nearest neighbour.
 * A fixed association radius is still applied as the threshold.
 * All types of [relations](#relations) are possible.
 
 ### de Ruiter
-The de Ruiter method is a translation of the association method used by the [LOFAR Transients Pipeline (TraP)](https://tkp.readthedocs.io/en/latest/), which uses the `de Ruiter radius` in order to define associations. 
+The de Ruiter method is a translation of the association method used by the [LOFAR Transients Pipeline (TraP)](https://tkp.readthedocs.io/en/latest/){:target="_blank"}, which uses the `de Ruiter radius` in order to define associations. 
 
 The `search_around_sky` astropy method is still used, but the threshold for a potential match is first limited by a `beamwidth limit` value which is defined in the pipeline run configuration file (`ASSOCIATION_BEAMWIDTH_LIMIT`), such that the initial threshold separation distance is set to
 
@@ -81,14 +81,14 @@ Situations can arise where a source is associated with more than one source in t
 * `one-to-many`
 * `many-to-one`
 
-a good explanation of these situations is presented in the TraP documentation [here](https://tkp.readthedocs.io/en/latest/devref/database/assoc.html#database-assoc). The VAST Pipeline follows the TraP methods in handling these types of associations, which is also detailed in the linked documentation. In short:
+a good explanation of these situations is presented in the TraP documentation [here](https://tkp.readthedocs.io/en/latest/devref/database/assoc.html#database-assoc){:target="_blank"}. The VAST Pipeline follows the TraP methods in handling these types of associations, which is also detailed in the linked documentation. In short:
 
 * `many-to-many` associations are reduced to `one-to-one` or `one-to-many` associations.
 * `one-to-many` and `many-to-one` associations create "forked" unique sources. I.e. an individual datapoint can belong to two different sources.
 
 The VAST Pipeline reports the `one-to-many` and `many-to-one` associations by `relating` sources. A source may have one or more `relations` which signifies the the source could be associated with more than one other source. This often happens for complex sources with many closely packed components.
 
-A read-through of the [TraP documentation](https://tkp.readthedocs.io/en/latest/devref/database/assoc.html#database-assoc) is highly encouraged on this point as it contains an excellent description.
+A read-through of the [TraP documentation](https://tkp.readthedocs.io/en/latest/devref/database/assoc.html#database-assoc){:target="_blank"} is highly encouraged on this point as it contains an excellent description.
 
 ## Epoch Based Association
 The pipeline is able to associate inputs on an epoch basis. What this means is that, for example, all VAST Pilot Epoch 1 measurements are grouped together and are associated with grouped together Epoch 2 measurements, and so on. In doing this, duplicate measurements from within the same epoch are cut with the measurement kept being that which is closest to the centre of its respective image. The separation distance that defines a duplicate is defined in the pipeline run configuration file (`ASSOCIATION_EPOCH_DUPLICATE_RADIUS`). 

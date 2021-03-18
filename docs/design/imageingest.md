@@ -7,7 +7,7 @@ When the pipeline encounters an image for the first time (in any pipeline run), 
 !!! note
     Once an image is uploaded then that image is available for all other runs to use without having to re-upload.
 
-```bash
+```console
 2021-03-11 12:59:49,751 loading INFO Reading image VAST_0127-73A.EPOCH01.I.cutout.fits ...
 2021-03-11 12:59:49,756 utils INFO Adding new frequency band: 887
 2021-03-11 12:59:49,771 utils INFO Created sky region 21.838, -73.121
@@ -29,7 +29,7 @@ When the pipeline encounters an image for the first time (in any pipeline run), 
 ## Ingest Steps Summary
 
 1. The FITS file is opened and read (the header is used to obtain meta data) along with the selavy component catalogue text file.
-2. The selavy component file is cleaned for erroneous components along with the calculation of extra measurements metrics such as `signal-to-noise ratio`, `compactness` and positional uncertainties. Also, optionally, flux errors are recalculated using the [Condon 1997](https://ui.adsabs.harvard.edu/abs/1997PASP..109..166C/abstract) method. See [Selavy Measurements Processing](#selavy-measurements-processing) for further details.
+2. The selavy component file is cleaned for erroneous components along with the calculation of extra measurements metrics such as `signal-to-noise ratio`, `compactness` and positional uncertainties. Also, optionally, flux errors are recalculated using the [Condon 1997](https://ui.adsabs.harvard.edu/abs/1997PASP..109..166C/abstract){:target="_blank"} method. See [Selavy Measurements Processing](#selavy-measurements-processing) for further details.
 3. Median, minimum and maxiumn root-mean-squre (RMS) values are read from the accompanying RMS image provided by the user and these values are attached to the image.
 4. The image is also attached to a sky region and a frequency band based on its properties (see [Sky Region](#sky-region) and [Frequency Band](#frequency-band)).
 5. The cleaned measurements (selavy components) are saved to a parquet file for repeated easy access.
@@ -67,7 +67,7 @@ In addition to the above filtering, components are also checked for zero values 
 
 #### Condon 1997 Flux & Positional Errors
 
-If selected in the pipeline run configuration file, the flux and positional errors are recalculated using the [Condon 1997](https://ui.adsabs.harvard.edu/abs/1997PASP..109..166C/abstract) method. The following errors are replaced with those that are recalculated:
+If selected in the pipeline run configuration file, the flux and positional errors are recalculated using the [Condon 1997](https://ui.adsabs.harvard.edu/abs/1997PASP..109..166C/abstract){:target="_blank"} method. The following errors are replaced with those that are recalculated:
 
 * `flux_peak_err`
 * `flux_int_err`
@@ -148,7 +148,7 @@ The `astropy` method `proj_plane_pixel_scales` is used to obtain the pixel scale
 
 The table below defines what is defined and uploaded using the meta data (FITS header) and other inputs.
 
-| Field Name          | Default | Description                          |
+| Field Name<img width=200/>          | Default | Description                          |
 | ------------------- | ------- | ------------------------------------ |
 | `measurements_path` | n/a     | The system path to the corresponding selavy components file (saved as a parquet file by the pipeline)  |
 | `polarisation`      | `I`     | The polarisation of the image (currently only Stokes `I` is supported). |

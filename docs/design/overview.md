@@ -22,29 +22,29 @@ A group of associated measurements that are identified as the same astrophysical
     Each pipeline run is self-aware only, which means that each run does not draw on the results of other runs. However images and associated measurements are only ingested once and are shared between runs.
 
 ### 1. Image & Selavy Catalogue Ingest
-Full details: [Image & Selavy Catalogue Ingest](#imageingest.md).
+Full details: [Image & Selavy Catalogue Ingest](imageingest.md).
 
 The first stage of the pipeline is to read and ingest to the database the input data that has been provided in the configuration file. This includes determing statistics about the image footprint and properties, and also importing and cleaning the associated measurements from the selavy file. The errors on the measurements can also be recalculated at this stage based upon the Condon 97 method.
 
 An image uniqueness is determined by the filename, and once the image is ingested, it is available for other pipeline runs to use without having to re-ingest.
 
 ### 2. Source Association
-Full details: [Source Association](#association.md).
+Full details: [Source Association](association.md).
 
 Once all images and measurments have been ingested the source association step is performed, where measurements over time are associated to a unique astrophysical source. Images are arranged chronologically and association is performed on an image by image basis, or as a grouped "epoch" if epoch based association is used. The association is performed as per the settings entered in the run configuration file.
 
 ### 3. Ideal Coverage & New Source Analysis
-Full details: [New Sources](#newsources.md).
+Full details: [New Sources](newsources.md).
 
 With the measurements associated the sources are analysed to check for non-detections over time and whether the source should have been seen in any non-detection images. The ideal coverage calculation is also used to determine any sources that should be marked as `new`, i.e. a source that has appeared over time that was not detected in the first image of its location on the sky. The non-detections are then passed to the forced monitoring step.
 
 ### 4. Monitoring Forced Measurements
-Full details: [Forced Measurements](#monitor.md).
+Full details: [Forced Measurements](monitor.md).
 
 This step is optional. The non-detections which form gaps in the lightcurves of each source are filled in by forcefully extracting a flux measurement at the location of the source.
 
 ### 5. Source Statistics Calculation
-Full details: [Source Statistics](#sourcestats.md).
+Full details: [Source Statistics](sourcestats.md).
 
 Statistics are calculated for each source such as the weighted average sky position, average flux values, variability metrics (including two-epoch pair metrics) and various counts.
 
@@ -59,7 +59,7 @@ All the results from the pipeline run are uploaded to the database. Specifically
 For large runs this can be a substantional component of the pipeline run time. 
 `Bulk upload` statements will be seen in the pipeline run log file such as these shown below:
 
-```bash
+```console
 2021-03-11 13:00:04,893 loading INFO Bulk created #557 Source
 2021-03-11 13:00:04,910 loading INFO Populate "related" field of sources...
 2021-03-11 13:00:04,919 loading INFO Bulk created #29 RelatedSource

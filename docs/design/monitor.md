@@ -33,7 +33,7 @@ where $i$ is the image for which the measurement is to be forcefully measured.
 
 ## Configuration File Options
 The following options are present in the pipeline run configuration file to users along with their defaults:
-```bash
+```python
 MONITOR = False
 
 MONITOR_MIN_SIGMA = 3.0

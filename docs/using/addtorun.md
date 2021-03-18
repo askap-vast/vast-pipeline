@@ -42,7 +42,7 @@ Select the `Add Images or Re-Process Run` button at the top right of the run det
 
 You can refresh the page to check the status of the run. You can confirm that the images have been added correctly by consulting the log output found below the configuration file. New images should have been ingested and output similar to the following should be present:
 
-```bash
+```console
 2021-01-31 12:20:37,885 association INFO Association mode selected: basic.
 2021-01-31 12:20:37,975 association INFO Found 2 images to add to the run.
 2021-01-31 12:20:37,979 association INFO Association iteration: #1

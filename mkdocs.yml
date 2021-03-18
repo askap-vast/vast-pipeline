@@ -76,7 +76,10 @@ nav:
     - Source Detail: exploringwebsite/sourcedetail.md
     - Comments, Tags & Favourites: exploringwebsite/comments.md
     - Admin Tools: exploringwebsite/admintools.md
-  - Pipeline Outputs: outputs/outputs.md
+  - Pipeline Outputs: 
+    - Outputs Overview: outputs/outputs.md
+    - Using the Outputs: outputs/usingoutputs.md
+    - Column Descriptions: outputs/coldesc.md
   - Contributing and Developing:
     - Intro: developing/intro.md
     - GitHub Platform: developing/github.md

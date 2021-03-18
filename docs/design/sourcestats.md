@@ -9,7 +9,7 @@ The table below provides a summary of all the statistic and counts provided by t
 !!! note
     Remember that all source statistics and counts are calculated from the invidiual measurements that are associated with the source.
 
-| Parameter                        | Includes Forced Meas. | Description      | 
+| Parameter <img width=420/>      | Includes Forced Meas. | Description      | 
 | ------------------------------ | ------------------------ | ----------------- |
 | `wavg_ra`          |  No    |  The weighted average of the Right Ascension, degrees.  |
 | `wavg_dec`                |  No    |  The weighted average of the Declination, degrees.  |
@@ -26,19 +26,19 @@ The table below provides a summary of all the statistic and counts provided by t
 | `avg_compactness`        |  No      |         The average compactness of the source (compactness is defined by int_flux / peak_flux). |
 | `min_snr`        |  No      |         The minimum signal-to-noise ratio of the source. |
 | `max_snr`        |  No      |         The maximum signal-to-noise ratio of the source. |
-| `n_neighbour_dist`        |  N/A      |         On sky separation distance to the nearest neighbour within the same run, degrees (arcmin on webserver). |
-| `new_high_sigma`        |  N/A      |        The largest sigma value a new source would have if it was placed at its location in the previous images it was not detected in. See [New Sources](newsources.md#new-source-high-sigma) for more information. New sources only. |
+| `n_neighbour_dist`        |  n/a      |         On sky separation distance to the nearest neighbour within the same run, degrees (arcmin on webserver). |
+| `new_high_sigma`        |  n/a      |        The largest sigma value a new source would have if it was placed at its location in the previous images it was not detected in. See [New Sources](newsources.md#new-source-high-sigma) for more information. New sources only. |
 | `n_meas`        |  Yes      |         The total number of measurements associated to the source. Named `Total Datapoints` on the webserver. |
 | `n_meas_sel`        |  No      |         The total number of selavy measurements associated to the source. Named `Selavy Datapoints` on the webserver. |
 | `n_meas_forced`        |  Yes      |         The total number of forced measurements associated to the source. Named `Forced Datapoints` on the webserver. |
-| `n_rel`        |  N/A      |        The total number of relations the source has. See [Source Association](association#relations). Named `Relations` on the webserver. |
-| `n_sibl`        |  N/A      |        The total number measurements that has a sibling. On the webserver tables this is firstly presented as a boolean column of if the source contains measurements that have a sibling. |
+| `n_rel`        |  n/a      |        The total number of relations the source has. See [Source Association](association#relations). Named `Relations` on the webserver. |
+| `n_sibl`        |  n/a      |        The total number measurements that has a sibling. On the webserver tables this is firstly presented as a boolean column of if the source contains measurements that have a sibling. |
 
 ## Variability Statistics
 
 Below is a table describing the variability metrics of the source. See the following sections for further explanation of these metrics. 
 
-| Parameter                       | Includes Forced Meas. | Description      | 
+| Parameter  <img width=350/>     | Includes Forced Meas. | Description      | 
 | ------------------------------- | ------------------------ | ----------------- |
 | `v_int`                         |  Yes   |  The $V$ metric for the integrated flux.  |
 | `v_peak`                        |  Yes   |  The $V$ metric for the peak flux.  |
@@ -52,7 +52,7 @@ Below is a table describing the variability metrics of the source. See the follo
 
 ### $V$ and $\eta$ Metrics
 
-The $V$ and $\eta$ metrics are the same as those used by the [LOFAR Transients Pipeline (TraP)](https://tkp.readthedocs.io/en/latest/), for a complete description please refer to [Swinbank et al. 2015](https://ui.adsabs.harvard.edu/abs/2015A%26C....11...25S/abstract). In the VAST Pipeline, the metrics are calculated twice, for both the integrated and peak fluxes.
+The $V$ and $\eta$ metrics are the same as those used by the [LOFAR Transients Pipeline (TraP)](https://tkp.readthedocs.io/en/latest/){:target="_blank"}, for a complete description please refer to [Swinbank et al. 2015](https://ui.adsabs.harvard.edu/abs/2015A%26C....11...25S/abstract){:target="_blank"}. In the VAST Pipeline, the metrics are calculated twice, for both the integrated and peak fluxes.
 
 $V$ is the proportional flux variability of the source and is given by the ratio of the sample standard deviation ($s$) and mean of the flux, $I$:
 
@@ -71,7 +71,7 @@ where $w$ is the uncertainty ($e$) in $I$ of a measurement, and is given by $w=\
 ### Two-Epoch Metrics
 
 Alternative variability metrics, $V_s$ and $m$, are also calculated which we refer to as the 'two-epoch metrics'. 
-They are calculated for each unique pair of measurements assoicated with the source, with the most significant pair of values attached to the source (see section below). Please refer to [Mooley et al. 2016](https://ui.adsabs.harvard.edu/abs/2016ApJ...818..105M/abstract) for further details.
+They are calculated for each unique pair of measurements assoicated with the source, with the most significant pair of values attached to the source (see section below). Please refer to [Mooley et al. 2016](https://ui.adsabs.harvard.edu/abs/2016ApJ...818..105M/abstract){:target="_blank"} for further details.
 
 !!! note
     All the two-epoch pair $V_s$ and $m$ values for a run are saved in the output file `measurement_pairs.parquet` for offline analysis.
