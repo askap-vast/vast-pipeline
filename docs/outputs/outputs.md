@@ -99,7 +99,7 @@ Here, for each image, the selavy measurements that have been ingested are stored
 
 ## File Details
 
-| File | Description |
+| File<img width=300/>  | Description |
 | ---- | ----------- |
 | `associations.parquet` | Contains the association information between sources and measurements.  |
 | `bands.parquet` | Contains the information of the bands associated with the pipeline run. |

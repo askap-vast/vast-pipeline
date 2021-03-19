@@ -71,11 +71,11 @@ nav:
     - Deleting a Run: using/deleterun.md
   - Exploring the Pipeline Website:
     - Overview: exploringwebsite/websiteoverview.md
-    - Run Detail: exploringwebsite/rundetail.md
-    - Source Query: exploringwebsite/sourcequery.md
-    - Source Detail: exploringwebsite/sourcedetail.md
-    - Comments, Tags & Favourites: exploringwebsite/comments.md
     - Admin Tools: exploringwebsite/admintools.md
+    - Pipeline Run Pages: exploringwebsite/runpages.md
+    - Source Pages: exploringwebsite/sourcepages.md
+    - Measurement Pages: exploringwebsite/measurementpages.md
+    - Image Pages: exploringwebsite/imagepages.md
   - Pipeline Outputs: 
     - Outputs Overview: outputs/outputs.md
     - Using the Outputs: outputs/usingoutputs.md
