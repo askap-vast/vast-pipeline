@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added new pages and sections to documentation [#471](https://github.com/askap-vast/vast-pipeline/pull/471)
 - Added image add mode run restore command 'restorepiperun' [#463](https://github.com/askap-vast/vast-pipeline/pull/463)
 - Added documentation folder and files for `mkdocs` and CI [#433](https://github.com/askap-vast/vast-pipeline/pull/433)
 - Added add image to existing run feature [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
@@ -18,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Changed some documentation layout and updated content [#471](https://github.com/askap-vast/vast-pipeline/pull/471).
 - Changed 'cmd' flag in run pipeline to 'cli' [#466](https://github.com/askap-vast/vast-pipeline/pull/466).
 - Changed `CONTRIBUTING.md` and `README.md` [#433](https://github.com/askap-vast/vast-pipeline/pull/433)
 - Changed forced extraction name suffix to run id rather than datetime [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
@@ -46,6 +48,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#471](https://github.com/askap-vast/vast-pipeline/pull/471) feat: Documentation update.
 - [#473](https://github.com/askap-vast/vast-pipeline/pull/473) fix: discard the selavy unit row before reading.
 - [#466](https://github.com/askap-vast/vast-pipeline/pull/466) fix: Fixed initial job processing from the UI.
 - [#463](https://github.com/askap-vast/vast-pipeline/pull/463) feat: Added image add mode run restore command.
