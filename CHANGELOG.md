@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Changed 'cmd' flag in run pipeline to 'cli' [#466](https://github.com/askap-vast/vast-pipeline/pull/466).
 - Changed `CONTRIBUTING.md` and `README.md` [#433](https://github.com/askap-vast/vast-pipeline/pull/433)
 - Changed forced extraction name suffix to run id rather than datetime [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
 - Changed tests to run on smaller cutouts [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
@@ -27,7 +28,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
-- Fixed links in `README.md` [#464](https://github.com/askap-vast/vast-pipeline/pull/464)
+- Fixed Selavy catalogue ingest to discard the unit row before reading the data [#473](https://github.com/askap-vast/vast-pipeline/pull/473).
+- Fixed initial job processing from the UI [#466](https://github.com/askap-vast/vast-pipeline/pull/466).
+- Fixed links in `README.md` [#464](https://github.com/askap-vast/vast-pipeline/pull/464).
 - Fixed basic association new sources created through relations [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
 - Fixed tests running pipeline multiple times [#443](https://github.com/askap-vast/vast-pipeline/pull/443)
 - Fixed particles canvas sizing on login page [#459](https://github.com/askap-vast/vast-pipeline/pull/459).
@@ -43,6 +46,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#473](https://github.com/askap-vast/vast-pipeline/pull/473) fix: discard the selavy unit row before reading.
+- [#466](https://github.com/askap-vast/vast-pipeline/pull/466) fix: Fixed initial job processing from the UI.
 - [#463](https://github.com/askap-vast/vast-pipeline/pull/463) feat: Added image add mode run restore command.
 - [#433](https://github.com/askap-vast/vast-pipeline/pull/433) doc: add documentation GitHub pages website with CI.
 - [#443](https://github.com/askap-vast/vast-pipeline/pull/443) feat, fix: Adds the ability to add images to an existing run.
