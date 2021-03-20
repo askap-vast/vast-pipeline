@@ -160,7 +160,7 @@ This page details the columns contained in each output file.
 |`wavg_uncertainty_ew`| deg | The error of the weighted average right ascension value. |
 |`wavg_uncertainty_ns`| deg | The error of the weighted average declination value. |
 |`new`| n/a | Flag to signify the source is classed as a [`new source`](../design/newsources.md) (`True`). |
-|`new_high_sigma`| n/a | The largest sigma value a new source would have if it was placed at its location in the previous images it was not detected in. See [New Sources](newsources.md#new-source-high-sigma) for more information. Set to 0 for non-new sources.|
+|`new_high_sigma`| n/a | The largest sigma value a new source would have if it was placed at its location in the previous images it was not detected in. See [New Sources](../design/newsources.md#new-source-high-sigma) for more information. Set to 0 for non-new sources.|
 |`n_neighbour_dist`| deg | The on-sky separation to the nearest source with in the same pipeline run. |
 |`avg_compactness`| n/a | The average compactness value of the associated measurements. |
 |`min_snr`| n/a | The minimum signal-to-noise ratio of the associated measurements. |

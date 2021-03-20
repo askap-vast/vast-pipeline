@@ -18,7 +18,7 @@ Forced measurements are signified in the measurements table or parquet files by 
 
 Before forced measurements are processed, a minimum sigma check is made to make sure that the forced measurements are useful information. For example, a dataset may contain an image that is significantly not as sensitive as all the other images. In this case a faint source in the sensitive images will not be expected to be seen in the non-sensitive image, hence, to avoid unnecessary computation, this source is not forcefully measured.  
 
-The check is performed like that which is made in the [New Sources](../newsources.md) process where the signal-to-noise ration is calculated using the rms$_{min}$ of the image it is to be extracted from. Hence, for a forced measurement to take place the following condition must be met:
+The check is performed like that which is made in the [New Sources](newsources.md) process where the signal-to-noise ration is calculated using the rms$_{min}$ of the image it is to be extracted from. Hence, for a forced measurement to take place the following condition must be met:
 
 $$
 \frac{f_{peak,det}}{\text{rms}_{min,i}} > \text{MONITOR_MIN_SIGMA},

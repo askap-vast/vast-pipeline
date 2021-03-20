@@ -51,7 +51,7 @@ This can be slow using libraries such as pandas, and also consumes a lot of syst
 A solution to this is to save all the measurements associated with the pipeline run into one single file in the [Apache Arrow](https://arrow.apache.org/overview/){:target="_blank"} format.
 
 The library `vaex` is able to open `.arrow` files in an out-of-core context so the memory footprint is hugely reduced along with the reading of the file being very fast.
-The two-epoch measurement pairs are also saved to arrow format due to the same reasons. See [Reading with vaex](reading.md#reading-with-vaex) for further details on using `vaex`.
+The two-epoch measurement pairs are also saved to arrow format due to the same reasons. See [Reading with vaex](usingoutputs.md#reading-with-vaex) for further details on using `vaex`.
 
 !!! note
     At the time of development `vaex` could not open parquets in an out-of-core context. This will be reviewed in the future if such functionality is added to `vaex`.
