@@ -12,7 +12,7 @@ django-tagulous @ git+https://github.com/marxide/django-tagulous.git@65cbbf703c4
 djangorestframework-datatables==0.5.1
 djangorestframework==3.11.0
 forced-phot @ git+https://github.com/askap-vast/forced_phot.git@v0.1.0
-jinja2==2.11.2
+jinja2==2.11.3
 networkx==2.4
 numpy==1.18.1
 pandas==1.0.1
