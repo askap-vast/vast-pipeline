@@ -535,8 +535,8 @@ class Pipeline():
                 nr_forced_measurements
             ) = forced_extraction(
                 sources_df,
-                self.config.ASTROMETRIC_UNCERTAINTY_RA / 3600.,
-                self.config.ASTROMETRIC_UNCERTAINTY_DEC / 3600.,
+                self.config.MONITOR_ASTROMETRIC_UNCERTAINTY_RA / 3600.,
+                self.config.MONITOR_ASTROMETRIC_UNCERTAINTY_DEC / 3600.,
                 p_run,
                 missing_sources_df,
                 self.config.MONITOR_MIN_SIGMA,

@@ -317,8 +317,8 @@ PIPE_RUN_CONFIG_DEFAULTS = {
     'monitor_edge_buffer_scale': 1.2,
     'monitor_cluster_threshold': 3.0,
     'monitor_allow_nan': False,
-    'astrometric_uncertainty_ra': 1,
-    'astrometric_uncertainty_dec': 1,
+    'monitor_astrometric_uncertainty_ra': 1,
+    'monitor_astrometric_uncertainty_dec': 1,
     'association_parallel': False,
     'association_epoch_duplicate_radius': 2.5,
     'association_method': 'basic',
@@ -328,12 +328,25 @@ PIPE_RUN_CONFIG_DEFAULTS = {
     'new_source_min_sigma': 5.0,
     'default_survey': None,
     'flux_perc_error': 0,
-    'use_condon_errors': True,
-    'selavy_local_rms_zero_fill_value': 0.2,
     'create_measurements_arrow_files': False,
     'suppress_astropy_warnings': True,
     'source_aggregate_pair_metrics_min_abs_vs': 4.3,
 }
+
+# Replace the selavy errors with
+USE_CONDON_ERRORS = env('USE_CONDON_ERRORS', cast=bool, default=True)
+
+# Sometimes the local rms for a source is reported as 0 by selavy.
+# Choose a value to use for the local rms in these cases
+SELAVY_LOCAL_RMS_ZERO_FILL_VALUE = env('SELAVY_LOCAL_RMS_ZERO_FILL_VALUE', cast=float, default=0.2) # mJy
+
+# default uncertainties
+# The position uncertainty is in reality a combination of the fitting errors and the
+# astrometric uncertainty of the image/survey/instrument.
+# These two uncertainties are combined in quadrature.
+# These two parameters are the astrometric uncertainty in ra/dec and they may be different
+ASTROMETRIC_UNCERTAINTY_RA = env('ASTROMETRIC_UNCERTAINTY_RA', cast=float, default=1)
+ASTROMETRIC_UNCERTAINTY_DEC = env('ASTROMETRIC_UNCERTAINTY_DEC', cast=float, default=1)
 
 # default max concurrent pipeline runs
 MAX_PIPELINE_RUNS = env('MAX_PIPELINE_RUNS', cast=int, default=3)

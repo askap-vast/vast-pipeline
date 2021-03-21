@@ -66,7 +66,6 @@ def make_upload_images(paths, config, pipeline_run):
         image = SelavyImage(
             path,
             paths,
-            config=config
         )
         logger.info('Reading image %s ...', image.name)
 

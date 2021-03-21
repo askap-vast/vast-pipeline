@@ -75,8 +75,8 @@ MONITOR_ALLOW_NAN = False
 # astrometric uncertainty of the image/survey/instrument.
 # These two uncertainties are combined in quadrature.
 # These two parameters are the astrometric uncertainty in ra/dec and they may be different
-ASTROMETRIC_UNCERTAINTY_RA = 1 # arcsec
-ASTROMETRIC_UNCERTAINTY_DEC = 1  # arcsec
+MONITOR_ASTROMETRIC_UNCERTAINTY_RA = 1 # arcsec
+MONITOR_ASTROMETRIC_UNCERTAINTY_DEC = 1  # arcsec
 
 ###
 # OPTIONS THAT CONTROL THE SOURCE ASSOCIATION
@@ -103,13 +103,6 @@ DEFAULT_SURVEY = None # 'NVSS'
 # reported value or this value, whichever is greater.
 # This is a fraction, 0 = No minimum error
 FLUX_PERC_ERROR = 0 #percent 0.05 is 5%
-
-# Replace the selavy errors witht
-USE_CONDON_ERRORS = True
-
-# Sometimes the local rms for a source is reported as 0 by selavy.
-# Choose a value to use for the local rms in these cases
-SELAVY_LOCAL_RMS_ZERO_FILL_VALUE = 0.2  # mJy
 
 # Only measurement pairs where the Vs metric exceeds this value are selected for the
 # aggregate pair metrics that are stored in Source objects.
