@@ -45,26 +45,25 @@ def get_create_skyreg(p_run, image):
     if skyr:
         skyr = skyr.get()
         logger.info('Found sky region %s', skyr)
-        if p_run not in skyr.run.all():
-            logger.info('Adding %s to sky region %s', p_run, skyr)
-            skyr.run.add(p_run)
-        return skyr
+    else:
+        x, y, z = eq_to_cart(image.ra, image.dec)
+        skyr = SkyRegion(
+            centre_ra=image.ra,
+            centre_dec=image.dec,
+            width_ra=image.physical_bmin,
+            width_dec=image.physical_bmaj,
+            xtr_radius=image.fov_bmin,
+            x=x,
+            y=y,
+            z=z,
+        )
+        skyr.save()
+        logger.info('Created sky region %s', skyr)
 
-    x, y, z = eq_to_cart(image.ra, image.dec)
-    skyr = SkyRegion(
-        centre_ra=image.ra,
-        centre_dec=image.dec,
-        width_ra=image.physical_bmin,
-        width_dec=image.physical_bmaj,
-        xtr_radius=image.fov_bmin,
-        x=x,
-        y=y,
-        z=z,
-    )
-    skyr.save()
-    logger.info('Created sky region %s', skyr)
-    skyr.run.add(p_run)
-    logger.info('Adding %s to sky region %s', p_run, skyr)
+    if p_run not in skyr.run.all():
+        logger.info('Adding %s to sky region %s', p_run, skyr)
+        skyr.run.add(p_run)
+
     return skyr
 
 
