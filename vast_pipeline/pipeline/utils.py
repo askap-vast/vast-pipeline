@@ -29,7 +29,7 @@ from vast_pipeline.image.utils import on_sky_sep
 logger = logging.getLogger(__name__)
 
 
-def get_create_skyreg(p_run, image):
+def get_create_skyreg(image):
     '''
     This create a Sky Region object in Django ORM given the related
     image object.
@@ -59,10 +59,6 @@ def get_create_skyreg(p_run, image):
         )
         skyr.save()
         logger.info('Created sky region %s', skyr)
-
-    if p_run not in skyr.run.all():
-        logger.info('Adding %s to sky region %s', p_run, skyr)
-        skyr.run.add(p_run)
 
     return skyr
 
@@ -130,14 +126,19 @@ def get_create_img(p_run, band_id, image):
         img.rms_median, img.rms_min, img.rms_max = get_rms_noise_image_values(img.noise_path)
 
     # get create the sky region and associate with image
-    skyreg = get_create_skyreg(p_run, img)
+    skyreg = get_create_skyreg(img)
     if not exists:
         img.skyreg = skyreg
         img.save()
 
     # check and add the many to many if not existent
     if not Image.objects.filter(id=img.id, run__id=p_run.id).exists():
+        logger.info('Adding %s to image %s', p_run, img.name)
         img.run.add(p_run)
+
+    if p_run not in skyreg.run.all():
+        logger.info('Adding %s to sky region %s', p_run, skyreg)
+        skyreg.run.add(p_run)
 
     return (img, skyreg, exists)
 
