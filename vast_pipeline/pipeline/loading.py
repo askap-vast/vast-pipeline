@@ -109,27 +109,28 @@ def make_upload_images(paths, config, pipeline_run=None):
         )
         del measurements, image, band, img
 
-    # write images parquet file under pipeline run folder
-    images_df = pd.DataFrame(map(lambda x: x.__dict__, images))
-    images_df = images_df.drop('_state', axis=1)
-    images_df.to_parquet(
-        os.path.join(config.PIPE_RUN_PATH, 'images.parquet'),
-        index=False
-    )
-    # write skyregions parquet file under pipeline run folder
-    skyregs_df = pd.DataFrame(map(lambda x: x.__dict__, skyregions))
-    skyregs_df = skyregs_df.drop('_state', axis=1)
-    skyregs_df.to_parquet(
-        os.path.join(config.PIPE_RUN_PATH, 'skyregions.parquet'),
-        index=False
-    )
-    # write skyregions parquet file under pipeline run folder
-    bands_df = pd.DataFrame(map(lambda x: x.__dict__, bands))
-    bands_df = bands_df.drop('_state', axis=1)
-    bands_df.to_parquet(
-        os.path.join(config.PIPE_RUN_PATH, 'bands.parquet'),
-        index=False
-    )
+    if pipeline_run:
+        # write images parquet file under pipeline run folder
+        images_df = pd.DataFrame(map(lambda x: x.__dict__, images))
+        images_df = images_df.drop('_state', axis=1)
+        images_df.to_parquet(
+            os.path.join(config.PIPE_RUN_PATH, 'images.parquet'),
+            index=False
+        )
+        # write skyregions parquet file under pipeline run folder
+        skyregs_df = pd.DataFrame(map(lambda x: x.__dict__, skyregions))
+        skyregs_df = skyregs_df.drop('_state', axis=1)
+        skyregs_df.to_parquet(
+            os.path.join(config.PIPE_RUN_PATH, 'skyregions.parquet'),
+            index=False
+        )
+        # write skyregions parquet file under pipeline run folder
+        bands_df = pd.DataFrame(map(lambda x: x.__dict__, bands))
+        bands_df = bands_df.drop('_state', axis=1)
+        bands_df.to_parquet(
+            os.path.join(config.PIPE_RUN_PATH, 'bands.parquet'),
+            index=False
+        )
 
     logger.info(
         'Total images upload/loading time: %.2f seconds',
