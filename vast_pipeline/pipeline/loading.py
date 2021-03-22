@@ -16,7 +16,7 @@ from vast_pipeline.pipeline.model_generator import (
     measurement_pair_models_generator,
 )
 from vast_pipeline.models import (
-    Association, Measurement, Source, RelatedSource, MeasurementPair, Run
+    Association, Measurement, Source, RelatedSource, MeasurementPair, Run, Image
 )
 from vast_pipeline.pipeline.utils import (
     get_create_img, get_create_img_band
@@ -77,9 +77,15 @@ def make_upload_images(paths, config, pipeline_run):
 
         # 1.2 create image and skyregion entry in DB
         with transaction.atomic():
-            img, skyreg, exists_f = get_create_img(
-                pipeline_run, band.id, image
-            )
+            img, skyreg, exists_f = get_create_img(band.id, image)
+            # check and add the many to many if not existent
+            if not Image.objects.filter(id=img.id, run__id=pipeline_run.id).exists():
+                logger.info('Adding %s to image %s', pipeline_run, img.name)
+                img.run.add(pipeline_run)
+
+            if pipeline_run not in skyreg.run.all():
+                logger.info('Adding %s to sky region %s', pipeline_run, skyreg)
+                skyreg.run.add(pipeline_run)
 
         # add image and skyregion to respective lists
         images.append(img)

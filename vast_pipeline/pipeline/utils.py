@@ -89,7 +89,7 @@ def get_create_img_band(image):
     return band
 
 
-def get_create_img(p_run, band_id, image):
+def get_create_img(band_id, image):
     img = Image.objects.filter(name__exact=image.name)
     exists = img.exists()
     if exists:
@@ -130,15 +130,6 @@ def get_create_img(p_run, band_id, image):
     if not exists:
         img.skyreg = skyreg
         img.save()
-
-    # check and add the many to many if not existent
-    if not Image.objects.filter(id=img.id, run__id=p_run.id).exists():
-        logger.info('Adding %s to image %s', p_run, img.name)
-        img.run.add(p_run)
-
-    if p_run not in skyreg.run.all():
-        logger.info('Adding %s to sky region %s', p_run, skyreg)
-        skyreg.run.add(p_run)
 
     return (img, skyreg, exists)
 
