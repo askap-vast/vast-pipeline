@@ -95,56 +95,51 @@ def get_create_img_band(image):
 
 def get_create_img(p_run, band_id, image):
     img = Image.objects.filter(name__exact=image.name)
-    if img.exists():
+    exists = img.exists()
+    if exists:
         img = img.get()
         # Add background path if not originally provided
         if image.background_path and not img.background_path:
             img.background_path = image.background_path
             img.save()
-        skyreg = get_create_skyreg(p_run, img)
-        # check and add the many to many if not existent
-        if not Image.objects.filter(
-            id=img.id, run__id=p_run.id
-        ).exists():
-            img.run.add(p_run)
 
-        return (img, skyreg, True)
-
-    # at this stage, measurement parquet file is not created but
-    # assume location
-    img_folder_name = image.name.replace('.', '_')
-    measurements_path = os.path.join(
-        settings.PIPELINE_WORKING_DIR,
-        'images',
-        img_folder_name,
-        'measurements.parquet'
+    else:
+        # at this stage, measurement parquet file is not created but
+        # assume location
+        img_folder_name = image.name.replace('.', '_')
+        measurements_path = os.path.join(
+            settings.PIPELINE_WORKING_DIR,
+            'images',
+            img_folder_name,
+            'measurements.parquet'
+            )
+        img = Image(
+            band_id=band_id,
+            measurements_path=measurements_path
         )
-    img = Image(
-        band_id=band_id,
-        measurements_path=measurements_path
-    )
-    # set the attributes and save the image,
-    # by selecting only valid (not hidden) attributes
-    # FYI attributs and/or method starting with _ are hidden
-    # and with __ can't be modified/called
-    for fld in img._meta.get_fields():
-        if getattr(fld, 'attname', None) and (
-            getattr(image, fld.attname, None) is not None
-        ):
-            setattr(img, fld.attname, getattr(image, fld.attname))
+        # set the attributes and save the image,
+        # by selecting only valid (not hidden) attributes
+        # FYI attributs and/or method starting with _ are hidden
+        # and with __ can't be modified/called
+        for fld in img._meta.get_fields():
+            if getattr(fld, 'attname', None) and (
+                getattr(image, fld.attname, None) is not None
+            ):
+                setattr(img, fld.attname, getattr(image, fld.attname))
+
+        img.rms_median, img.rms_min, img.rms_max = get_rms_noise_image_values(img.noise_path)
 
     # get create the sky region and associate with image
     skyreg = get_create_skyreg(p_run, img)
-    img.skyreg = skyreg
+    if not exists:
+        img.skyreg = skyreg
+        img.save()
 
-    img.rms_median, img.rms_min, img.rms_max = get_rms_noise_image_values(
-        img.noise_path
-    )
+    # check and add the many to many if not existent
+    if not Image.objects.filter(id=img.id, run__id=p_run.id).exists():
+        img.run.add(p_run)
 
-    img.save()
-    img.run.add(p_run)
-
-    return (img, skyreg, False)
+    return (img, skyreg, exists)
 
 
 def get_create_p_run(name, path, description=None, user=None):
