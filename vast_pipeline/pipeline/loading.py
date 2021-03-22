@@ -63,10 +63,7 @@ def make_upload_images(paths, config, pipeline_run=None):
 
     for path in paths['selavy']:
         # STEP #1: Load image and measurements
-        image = SelavyImage(
-            path,
-            paths,
-        )
+        image = SelavyImage(path, paths)
         logger.info('Reading image %s ...', image.name)
 
         # 1.1 get/create the frequency band
@@ -86,20 +83,9 @@ def make_upload_images(paths, config, pipeline_run=None):
         images.append(img)
         if skyreg not in skyregions:
             skyregions.append(skyreg)
+
         if exists_f:
-            logger.info(
-                'Image %s already processed, grab measurements',
-                img.name
-            )
-            # grab the measurements and skip to process next image
-            measurements = (
-                pd.Series(
-                    Measurement.objects.filter(forced=False, image__id=img.id),
-                    name='meas_dj'
-                )
-                .to_frame()
-            )
-            measurements['id'] = measurements['meas_dj'].apply(lambda x: x.id)
+            logger.info('Image %s already processed', img.name)
             continue
 
         # 1.3 get the image measurements and save them in DB
