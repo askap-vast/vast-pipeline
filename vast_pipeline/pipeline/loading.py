@@ -77,7 +77,7 @@ def make_upload_images(paths, config, pipeline_run=None):
             img, exists_f = get_create_img(band.id, image)
             skyreg = img.skyreg
             if pipeline_run:
-                add_run_to_img(pipeline_run, img, skyreg)
+                add_run_to_img(pipeline_run, img)
 
         # add image and skyregion to respective lists
         images.append(img)

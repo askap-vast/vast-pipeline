@@ -149,7 +149,8 @@ def get_create_p_run(name, path, description=None, user=None):
 
     return p_run, False
 
-def add_run_to_img(pipeline_run, img, skyreg):
+def add_run_to_img(pipeline_run, img):
+    skyreg = img.skyreg
     # check and add the many to many if not existent
     if not Image.objects.filter(id=img.id, run__id=pipeline_run.id).exists():
         logger.info('Adding %s to image %s', pipeline_run, img.name)
