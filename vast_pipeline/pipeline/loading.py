@@ -77,7 +77,9 @@ def make_upload_images(paths, config, pipeline_run):
 
         # 1.2 create image and skyregion entry in DB
         with transaction.atomic():
-            img, skyreg, exists_f = get_create_img(band.id, image)
+            img, exists_f = get_create_img(band.id, image)
+            skyreg = img.skyreg
+
             # check and add the many to many if not existent
             if not Image.objects.filter(id=img.id, run__id=pipeline_run.id).exists():
                 logger.info('Adding %s to image %s', pipeline_run, img.name)

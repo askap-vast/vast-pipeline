@@ -125,13 +125,11 @@ def get_create_img(band_id, image):
 
         img.rms_median, img.rms_min, img.rms_max = get_rms_noise_image_values(img.noise_path)
 
-    # get create the sky region and associate with image
-    skyreg = get_create_skyreg(img)
-    if not exists:
-        img.skyreg = skyreg
+        # get create the sky region and associate with image
+        img.skyreg = get_create_skyreg(img)
         img.save()
 
-    return (img, skyreg, exists)
+    return (img, exists)
 
 
 def get_create_p_run(name, path, description=None, user=None):
