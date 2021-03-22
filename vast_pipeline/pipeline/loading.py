@@ -19,7 +19,7 @@ from vast_pipeline.models import (
     Association, Measurement, Source, RelatedSource, MeasurementPair, Run, Image
 )
 from vast_pipeline.pipeline.utils import (
-    get_create_img, get_create_img_band
+    get_create_img, get_create_img_band, add_run_to_img
 )
 from vast_pipeline.utils.utils import StopWatch
 
@@ -51,7 +51,7 @@ def bulk_upload_model(djmodel, generator, batch_size=10_000, return_ids=False):
         return bulk_ids
 
 
-def make_upload_images(paths, config, pipeline_run):
+def make_upload_images(paths, config, pipeline_run=None):
     '''
     carry the first part of the pipeline, by uploading all the images
     to the image table and populated band and skyregion objects
@@ -79,15 +79,8 @@ def make_upload_images(paths, config, pipeline_run):
         with transaction.atomic():
             img, exists_f = get_create_img(band.id, image)
             skyreg = img.skyreg
-
-            # check and add the many to many if not existent
-            if not Image.objects.filter(id=img.id, run__id=pipeline_run.id).exists():
-                logger.info('Adding %s to image %s', pipeline_run, img.name)
-                img.run.add(pipeline_run)
-
-            if pipeline_run not in skyreg.run.all():
-                logger.info('Adding %s to sky region %s', pipeline_run, skyreg)
-                skyreg.run.add(pipeline_run)
+            if pipeline_run:
+                add_run_to_img(pipeline_run, img, skyreg)
 
         # add image and skyregion to respective lists
         images.append(img)
