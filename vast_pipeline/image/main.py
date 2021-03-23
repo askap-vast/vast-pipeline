@@ -176,13 +176,11 @@ class SelavyImage(FitsImage):
         and remap them to correct names
         """
         # TODO: improve with loading only the cols we need and set datatype
-        df = pd.read_fwf(self.selavy_path)
+        df = pd.read_fwf(self.selavy_path, skiprows=[1])
         # drop first line with unit of measure, select only wanted
         # columns and rename them
-        df = (
-            df.drop(0)
-            .loc[:, tr_selavy.keys()]
-            .rename(columns={x : tr_selavy[x]['name'] for x in tr_selavy})
+        df = df.loc[:, tr_selavy.keys()].rename(
+            columns={x: tr_selavy[x]["name"] for x in tr_selavy}
         )
 
         # fix dtype of columns
