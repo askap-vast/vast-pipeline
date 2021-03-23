@@ -61,6 +61,13 @@ def make_upload_images(paths, config=None, pipeline_run=None):
     skyregions = []
     bands = []
 
+    # Ingest only mode if no config + no pipeline_run.
+    # Otherwise, they are both required.
+    if not pipeline_run and not config:
+        pass
+    elif not all((pipeline_run,config)):
+        raise ValueError('Function requires both config and pipeline_run, or neither.')
+
     for path in paths['selavy']:
         # STEP #1: Load image and measurements
         image = SelavyImage(path, paths)
