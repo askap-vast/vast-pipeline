@@ -51,7 +51,7 @@ def bulk_upload_model(djmodel, generator, batch_size=10_000, return_ids=False):
         return bulk_ids
 
 
-def make_upload_images(paths, config, pipeline_run=None):
+def make_upload_images(paths, config=None, pipeline_run=None):
     '''
     carry the first part of the pipeline, by uploading all the images
     to the image table and populated band and skyregion objects
@@ -131,6 +131,8 @@ def make_upload_images(paths, config, pipeline_run=None):
             os.path.join(config.PIPE_RUN_PATH, 'bands.parquet'),
             index=False
         )
+    else:
+        skyregs_df = None
 
     logger.info(
         'Total images upload/loading time: %.2f seconds',
