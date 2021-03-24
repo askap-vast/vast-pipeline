@@ -1,6 +1,6 @@
 # Development Guidelines for Documentation
 
-The pipeline documentation has been developed using the python package `mkdocs`and the [material theme](https://squidfunk.github.io/mkdocs-material/). It is published as a static website using GitHub pages.
+The pipeline documentation has been developed using the python package `mkdocs`and the [material theme](https://squidfunk.github.io/mkdocs-material/){:target="_blank"}. It is published as a static website using GitHub pages.
 
 ## Documentation development server
 
@@ -39,7 +39,7 @@ Python docstrings and source code can be rendered using the `mkdocstrings` plugi
 ::: vast_pipeline.models
 ```
 
-More details on how to display the source code and additional tweaks can be found in [mkdocstrings documentation](https://pawamoy.github.io/mkdocstrings/usage/).
+More details on how to display the source code and additional tweaks can be found in [mkdocstrings documentation](https://pawamoy.github.io/mkdocstrings/usage/){:target="_blank"}.
 
 ## Deployment to GitHub pages
 
