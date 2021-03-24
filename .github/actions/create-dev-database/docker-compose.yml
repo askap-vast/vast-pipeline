@@ -3,11 +3,7 @@ version: "3"
 services:
 
   database:
-    build:
-      context: ./
-      dockerfile: Dockerfile
-    # The name for the custom image being built
-    image: vast-dev-db
+    image: ghcr.io/marxide/postgres-q3c:latest
     container_name: vast-dev-db
     ports:
       - "127.0.0.1:${DB_PORT}:5432"

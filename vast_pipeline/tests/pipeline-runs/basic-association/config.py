@@ -122,7 +122,7 @@ FLUX_PERC_ERROR = 0  #percent 0.05 is 5%
 
 # Create 'measurements.arrow' and 'measurement_pairs.arrow' files at the end of
 # a successful run
-CREATE_MEASUREMENTS_ARROW_FILES = False
+CREATE_MEASUREMENTS_ARROW_FILES = True
 
 # Hide astropy warnings
 SUPPRESS_ASTROPY_WARNINGS = True
