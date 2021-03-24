@@ -19,6 +19,8 @@ jobs:
         run: |
           git config --global url.ssh://git@github.com/.insteadOf https://github.com/;
           git config --global core.sshCommand 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
+      - name: Install dependencies
+        run: sudo apt-get install -y libpq-dev libgraphviz-dev
       - uses: actions/setup-python@v2
         with:
           python-version: 3.x
