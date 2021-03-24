@@ -9,7 +9,7 @@ The VAST Pipeline consists of 3 main components that require installation:
 2. a [Django](https://www.djangoproject.com){:target="_blank"} application,
 3. a front-end website.
 
-Following this documentation should get you started with a good **local** installation of the pipeline, suitable for development. The instructions have been tested on Debian/Ubuntu and macOS.
+The instructions have been tested on Debian/Ubuntu and macOS.
 
 ## PostgreSQL
 
