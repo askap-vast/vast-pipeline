@@ -12,6 +12,13 @@ jobs:
     if: github.event.pull_request.head.repo.fork == false
     steps:
       - uses: actions/checkout@v2
+      - uses: webfactory/ssh-agent@v0.4.1
+        with:
+          ssh-private-key: ${{ secrets.FORCED_PHOT_DEPLOY_KEY }}
+      - name: Use ssh instead of https when cloning from github
+        run: |
+          git config --global url.ssh://git@github.com/.insteadOf https://github.com/;
+          git config --global core.sshCommand 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
       - uses: actions/setup-python@v2
         with:
           python-version: 3.x
