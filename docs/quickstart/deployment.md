@@ -1,7 +1,7 @@
 # Deployment
 
 ## Production System
-This section describes a simple deployment without using Docker containers, assuming the use of [WhiteNoise](http://whitenoise.evans.io/en/stable/) to serve the static files. It is possible to serve the static files using other methods (e.g. Nginx). And in the future it is possible to upgrade the deployment stack using Docker container and Docker compose (we foresee 3 main containers: Django, Dask and Traefik/Nginx). We recommend in any case reading [Django deployment documentation](https://docs.djangoproject.com/en/3.1/howto/deployment/) for general knowledge.
+This section describes a simple deployment without using Docker containers, assuming the use of [WhiteNoise](https://whitenoise.evans.io/en/stable/){:target="_blank"} to serve the static files. It is possible to serve the static files using other methods (e.g. Nginx). And in the future it is possible to upgrade the deployment stack using Docker container and Docker compose (we foresee 3 main containers: Django, Dask and Traefik/Nginx). We recommend in any case reading [Django deployment documentation](https://docs.djangoproject.com/en/3.1/howto/deployment/){:target="_blank"} for general knowledge.
 
 !!! note
     We assume deployment to a __UNIX server__.
@@ -39,7 +39,7 @@ The following steps describes how to set up the Django side of the production de
         && npm run js9staticprod && ./manage.py collectstatic -c --noinput
     ```
 
-7. Set up a unit/systemd file as recommended in [Gunicorn docs](https://docs.gunicorn.org/en/latest/deploy.html#systemd) (feel free to use the socket or an IP and port). An example of command to write in the file is (assuming a virtual environment is installed in `venv` under the main pipeline folder):
+7. Set up a unit/systemd file as recommended in [Gunicorn docs](https://docs.gunicorn.org/en/latest/deploy.html#systemd){:target="_blank"} (feel free to use the socket or an IP and port). An example of command to write in the file is (assuming a virtual environment is installed in `venv` under the main pipeline folder):
 
     ```bash
     ExecStart=/opt/vast-pipeline/venv/bin/gunicorn -w 3 -k gevent \
@@ -48,11 +48,11 @@ The following steps describes how to set up the Django side of the production de
     ```
   __NOTE__: (for future development) the `--limit-request-line` parameter needs to be adjusted for the actual request length as that might change if more parameters are added to the query.
 
-8. Finalise the installation of the unit file. Some good instructions on where to put, link and install the unit file are described in the [Jupyter Hub docs](https://jupyterhub.readthedocs.io/en/stable/installation-guide-hard.html#setup-systemd-service)
+8. Finalise the installation of the unit file. Some good instructions on where to put, link and install the unit file are described in the [Jupyter Hub docs](https://jupyterhub.readthedocs.io/en/stable/installation-guide-hard.html#setup-systemd-service){:target="_blank"}
 
 ### Extra Service(s) Deployment
 
-In order to run a pipeline run from the Web App, the `Django-Q` process need to be started and managed as a service by the OS. In order to do so we recommend building a unit/systemd file to manage the `Django-Q` process, in a similar way of the `gunicorn` process (following the [Jupyter Hub docs](https://jupyterhub.readthedocs.io/en/stable/installation-guide-hard.html#setup-systemd-service)):
+In order to run a pipeline run from the Web App, the `Django-Q` process need to be started and managed as a service by the OS. In order to do so we recommend building a unit/systemd file to manage the `Django-Q` process, in a similar way of the `gunicorn` process (following the [Jupyter Hub docs](https://jupyterhub.readthedocs.io/en/stable/installation-guide-hard.html#setup-systemd-service){:target="_blank"}):
 
 ```bash
 ...
@@ -66,4 +66,4 @@ ExecStart=/opt/vast-pipeline/venv/bin/python manage.py qcluster
 
 ## Security
 
-By default the settings file has some security parameters that are set when you run the web app in production (`DEBUG = False`), but you can read more in the Django documentation or in this [blog post](https://adamj.eu/tech/2019/04/10/how-to-score-a+-for-security-headers-on-your-django-website/) in which they explain how to get an A+ rating for your web site.
+By default the settings file has some security parameters that are set when you run the web app in production (`DEBUG = False`), but you can read more in the Django documentation or in this [blog post](https://adamj.eu/tech/2019/04/10/how-to-score-a+-for-security-headers-on-your-django-website/){:target="_blank"} in which they explain how to get an A+ rating for your web site.

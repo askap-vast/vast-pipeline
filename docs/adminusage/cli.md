@@ -31,7 +31,7 @@ There are 5 commands, described in detail below.
 ### Initialise a Pipeline Run
 In order to process the images in the pipeline, you must create/initialise a pipeline run first.
 
-The pipeline run creation is done using the `initpiperun` django command, which requires a pipeline run folder. The command creates a folder with the pipeline run name under the settings `PROJECT_WORKING_DIR` defined in [settings](https://github.com/askap-vast/vast-pipeline/blob/master/webinterface/settings.template.py).
+The pipeline run creation is done using the `initpiperun` django command, which requires a pipeline run folder. The command creates a folder with the pipeline run name under the settings `PROJECT_WORKING_DIR` defined in [settings](https://github.com/askap-vast/vast-pipeline/blob/master/webinterface/settings.template.py){:target="_blank"}.
 
 ```bash
 (pipeline_env)$ ./manage.py initpiperun --help

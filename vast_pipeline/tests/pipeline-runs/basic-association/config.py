@@ -129,7 +129,7 @@ SELAVY_LOCAL_RMS_ZERO_FILL_VALUE = 0.2  # mJy
 
 # Create 'measurements.arrow' and 'measurement_pairs.arrow' files at the end of 
 # a successful run
-CREATE_MEASUREMENTS_ARROW_FILES = False
+CREATE_MEASUREMENTS_ARROW_FILES = True
 
 # Hide astropy warnings
 SUPPRESS_ASTROPY_WARNINGS = True
