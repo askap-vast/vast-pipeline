@@ -1,6 +1,6 @@
 # Contributing and Developing Guidelines
 
-This section explains how to contribute to the project code base and collaborate on GitHub platform. A very exahustive set of general guidelines can be follow [here](https://github.com/apache/incubator-superset/blob/master/CONTRIBUTING.md), but I think the following will suffice for our purpose. The next sections describes:
+This section explains how to contribute to the project code base and collaborate on GitHub platform. A very exahustive set of general guidelines can be follow [here](https://github.com/apache/incubator-superset/blob/master/CONTRIBUTING.md){:target="_blank"}, but I think the following will suffice for our purpose. The next sections describes:
 
 * [GitHub Platform](github.md)
 * [Local Development Enviroment](localdevenv.md)

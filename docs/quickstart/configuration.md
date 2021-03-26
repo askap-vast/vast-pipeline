@@ -1,108 +1,119 @@
-# Vast Pipeline Configuration
+<!-- markdownlint-disable MD046 -->
+# Configuration
 
-This section describe how to configure your downloaded VAST pipeline.
+This section describe how to configure your VAST Pipeline installation.
 
 ## Pipeline Configuration
-The following instructions, will get you started in setting up the database and pipeline configuration
-1. Copy the setting configuration file template, and fill it with your settings (see [defaults](https://github.com/askap-vast/vast-pipeline/blob/master/webinterface/.env.template))
 
-```bash
-cp webinterface/.env.template webinterface/.env
+The following instructions, will get you started in setting up the database and pipeline configuration.
+
+!!! note
+    The commands given in this section, unless otherwise stated, assume that the current directory is the pipeline root and that your pipeline Python environment has been activated.
+
+1. Create a database for the pipeline. If you followed the [installation](installation.md) process, you will have a PostgreSQL Docker container running on your system. Use the provided script `init-tools/init-db.py` script to create a new database for the pipeline. As a security precaution, this script will also create a new database user and set the pipeline database owner to this new user.
+
+    The initialization script requires several input parameters. For usage information, run with the `--help` option:
+
+    ```console
+    python init-tools/init-db.py --help
+    usage: init-db.py [-h] host port admin-username admin-password username password database-name
+
+    Initialize a PostgreSQL database for VAST Pipeline use. Creates a new superuser and creates a new database owned by the new superuser.
+
+    positional arguments:
+    host            database host
+    port            database port
+    admin-username  database administrator username
+    admin-password  database administrator password
+    username        username for the new user/role to create for the VAST Pipeline
+    password        password for the new user/role to create for the VAST Pipeline
+    database-name   name of the new database to create for the VAST Pipeline
+
+    optional arguments:
+    -h, --help      show this help message and exit
+    ```
+
+    Fill in the parameters as appropriate for your configuration. If you followed the [installation](installation.md) instructions, these would be the details for your PostgreSQL Docker container. Following from the same example in the installation section:
+
+    ```console
+    python init-tools/init-db.py localhost 55002 postgres <password> vast <vast-user-password> vastdb
+    ```
+
+    !!! info
+        Where `<password>` is the superuser password that was passed to `docker run`, and `<vast-user-password>` is a new password of your choice for the new `vast` database user.
+
+        You may change the values for the username and database-name, the above is just an example.
+
+    If everything went well the output should be:
+
+    ```console
+    Creating new user/role vast ...
+    Creating new database vastdb ...
+    Done!
+    ```
+
+2. Copy the setting configuration file template and modify it with your desired settings (see [defaults](https://github.com/askap-vast/vast-pipeline/blob/master/webinterface/.env.template){:target="_blank"}).
+
+    ```console
+    cp webinterface/.env.template webinterface/.env
+    ```
+
+3. Set the database connection settings in the `webinterface/.env` file by modifying `DATABASE_URL` (for URL syntax see [this link](https://django-environ.readthedocs.io/en/latest/#tips){:target="_blank"}). For example:
+
+    ```bash
+    DATABASE_URL=psql://vast:<vast-user-password>@localhost:55002/vastdb
+    ```
+
+    !!! note
+        The connection details are the same that you setup during the [installation](installation.md). The database/user names must not contain any spaces or dashes, so use the underscore if you want, e.g. `this_is_my_db_name`.
+
+4. Create the pipeline database tables. The `createcachetable` command creates the cache tables required by DjangoQ.
+
+    ```bash
+    python manage.py migrate
+    python manage.py createcachetable
+    ```
+
+5. Create the pipeline data directories. The pipeline has several directories that can be configured in `webinterface/.env`:
+
+    * `PIPELINE_WORKING_DIR`: location to store various pipeline output files.
+    * `SURVEYS_WORKING_DIR`: location of reference survey catalogues, e.g. NVSS, SUMSS.
+    * `RAW_IMAGE_DIR`: default location that the pipeline will search for input images and catalogues to ingest during a pipeline run. Data inputs can also be defined as absolute paths in a pipeline run configuration file, so this setting only affects relative paths in the pipeline run configuration.
+    * `HOME_DATA_DIR`: additional location to search for input images and catalogues that is relative to the user's home directory. Intended for multi-user server deployments and unlikely to be useful for local installations.
+
+    While the default values for these settings are relative to the pipeline codebase root (i.e. within the repo), we recommend creating these directories outside of the repo and updating the `webinterface/.env` file appropriately with absolute paths. For example, assuming you wish to create these directories in `/data/vast-pipeline`:
+
+    ```console
+    mkdir -p /data/vast-pipeline
+    mkdir /data/vast-pipeline/pipeline-runs
+    mkdir /data/vast-pipeline/reference-surveys
+    mkdir /data/vast-pipeline/raw-images
+    mkdir /data/vast-pipeline/vast-pipeline-extra-data
+    ```
+
+    and update the `webinterface/.env` file with:
+
+    ```bash
+    PIPELINE_WORKING_DIR=/data/vast-pipeline/pipeline-runs
+    SURVEYS_WORKING_DIR=/data/vast-pipeline/reference-surveys
+    RAW_IMAGE_DIR=/data/vast-pipeline/raw-images
+    HOME_DATA_DIR=/data/vast-pipeline/vast-pipeline-extra-data
+    ```
+
+## Authentication
+
+The pipeline supports two authentication methods: GitHub Teams, intended to multi-user server deployments; and local Django administrator. For a single-user local installation, we recommend creating a Django superuser account.
+
+### Django superuser
+
+Create a Django superuser account with the following command and follow the interactive prompts.
+
+```console
+python manage.py createsuperuser
 ```
 
-2. Choose a database name and user with password (e.g. database name: `vastdb`; user: `vast`, psw: `vastpsw`), and add the connection details in `.env` (for URL syntax see [this link](https://django-environ.readthedocs.io/en/latest/#tips))
-
-```cmake
-DATABASE_URL=psql://FILLMYUSER:FILLMYPASSWORD@FILLMYHOST:FILLMYPORT/FILLMYDBNAME
-```
-
-NOTE: the connection details (host and port) are the same that you setup during the [Installation](installation.md). The database/user names must not contain any spaces or dashes, so use the underscore if you want, e.g. `this_is_my_db_name`.
-
-3. Create the database user and database name, by running:
-
-```bash
-$ ./init-tools/init-db.sh localhost 5432 postgres postgres vast vastpsw vastdb
-```
-
-  For help on the command run it without arguments
-
-```bash
-$ ./init-tools/init-db.sh
-Usage: init-db.sh HOST PORT ADMINUSER ADMINPSW USER USERPSW DBNAME
-Eg:    init-db.sh localhost 5432 postgres postgres vast vastpsw vastdb
-
-Help: This will create a postgresql user 'vast' with login password 'vastpsw'
-      and a database 'vastdb' and grant to 'vast' user all the privileges to 'vastdb'
-```
-
-  If everything went well the output is:
-
-```bash
-connecting to PostgreSQL on 'localhost:5433' as admin 'postgres'
-creating user 'vast' with login password 'vastpsw' and give it createdb privileges
-CREATE ROLE
-************************************
-creating db 'vastdb'
-```
-
-4. Create the database tables. Remember first to activate the Python environment as described in [Installation of Python Enviroment](installation.md#python-environment). The `createcachetable` command below creates the cache tables required by DjangoQ.
-
-```bash
-(pipeline_env)$ ./manage.py migrate
-(pipeline_env)$ ./manage.py createcachetable
-```
-
-5. Create the directories listed at the bottom of `settings.py` and update the details on your setting configuration file `.env` (single name, e.g. `pipeline-runs` means path relative to `BASE_DIR`, so the main folder where you cloned the repo).
-
-```Python
-# reference surveys default folder
-PIPELINE_WORKING_DIR = env('PIPELINE_WORKING_DIR', cast=str, default=os.path.join(BASE_DIR, 'pipeline-runs'))
-
-# reference surveys default folder
-SURVEYS_WORKING_DIR = env('SURVEYS_WORKING_DIR', cast=str, default=os.path.join(BASE_DIR, 'reference-surveys'))
-```
-
-The defaults values of the folders are pre-filled in your [`.env`](https://github.com/askap-vast/vast-pipeline/blob/master/webinterface/.env.template) file, and even if that variables are not present in such file, the settings assumed the default values, which are relative to the main repo folder. So create the folders with (Note: make sure you change BASE_DIR to `vast-pipeline`):
-
-```bash
-cd BASE_DIR && mkdir pipeline-runs && mkdir reference-surveys
-```
-
-After creating the folders with the defaults values your directory tree should look like this:
-
-<pre><code>
-├── CHANGELOG.md
-├── CODE_OF_CONDUCT.md
-├── CONTRIBUTING.md
-├── gulpfile.js
-├── <b>init-tools</b>
-├── INSTALL.md
-├── LICENSE.txt
-├── manage.py
-├── <b>node_modules</b>
-├── package.json
-├── package-lock.json
-├── README.md
-├── <b>requirements</b>
-├── <b>static</b>
-├── <b>templates</b>
-├── <b>pipeline-runs</b>
-├── <b>vast_pipeline</b>
-└── <b>webinterface</b>
-</code></pre>
-
-## Pipeline Login
-Currently the pipeline support only login via GitHub Team and/or as Django administrator.
-
-Please make sure to fill the `SOCIAL_AUTH_GITHUB_KEY, SOCIAL_AUTH_GITHUB_SECRET, SOCIAL_AUTH_GITHUB_TEAM_ID, SOCIAL_AUTH_GITHUB_TEAM_ADMIN` in your [`.env`](https://github.com/askap-vast/vast-pipeline/blob/master/webinterface/.env.template) file. Also be sure to be part of the GitHub team, if not ask @srggrs, @ajstewart or @marxide to be added.
-
-You can also login on your __local__ version for doing some develpment by creating an admin user:
-
-```bash
-$ ./manage.py createsuperuser
-```
-
-Fill in your details and then login with the created credentials at `localhost:8000/pipe-admin` (change ip and port if needed). That will log you in the Django admin site. Go to `localhost:8000` or click "site" on the right top corner to enter the vast pipeline website.
+This account can be used to log into the Django admin panel once the webserver is running (see [Starting the Pipeline Web App](../usage/app.md#starting-the-pipeline-web-app)) by navigating to <https://localhost:8000/pipe-admin/>. Once logged in, you will land on the Django admin page. Navigate back to the pipeline homepage <http://localhost:8000/> and you should be authenticated.
 
 ## Data Exploration via Django Web Server
-You can start the web app/server via the instructions provided in XXXX.
+
+You can start the web app/server via the instructions provided in [Starting the Pipeline Web App](../usage/app.md#starting-the-pipeline-web-app).
