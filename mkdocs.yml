@@ -25,7 +25,6 @@ extra_css:
   - theme/css/extra.css
 extra_javascript:
   - theme/js/extra.js
-  - javascripts/config.js
   - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 markdown_extensions:
@@ -76,7 +75,7 @@ nav:
     - Source Pages: exploringwebsite/sourcepages.md
     - Measurement Pages: exploringwebsite/measurementpages.md
     - Image Pages: exploringwebsite/imagepages.md
-  - Pipeline Outputs: 
+  - Pipeline Outputs:
     - Outputs Overview: outputs/outputs.md
     - Using the Outputs: outputs/usingoutputs.md
     - Column Descriptions: outputs/coldesc.md

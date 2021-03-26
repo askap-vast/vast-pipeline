@@ -4,3 +4,16 @@ function addGoToTop() {
 
 // window.open = addGoToTop();
 document.addEventListener('scroll', addGoToTop())
+
+window.MathJax = {
+  tex: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]],
+    processEscapes: true,
+    processEnvironments: true
+  },
+  options: {
+    ignoreHtmlClass: ".*|",
+    processHtmlClass: "arithmatex"
+  }
+};
