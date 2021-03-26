@@ -25,7 +25,6 @@ extra_css:
   - theme/css/extra.css
 extra_javascript:
   - theme/js/extra.js
-  - javascripts/config.js
   - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 markdown_extensions:
@@ -37,8 +36,8 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.inlinehilite
   - pymdownx.superfences
-  - pymdownx.highlight:
-      linenums: true
+  - pymdownx.highlight
+  - pymdownx.tabbed
   - pymdownx.emoji:
       emoji_index: !!python/name:materialx.emoji.twemoji
       emoji_generator: !!python/name:materialx.emoji.to_svg

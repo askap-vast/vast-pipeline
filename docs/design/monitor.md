@@ -4,7 +4,7 @@ This page details the forced measurements obtained by the pipeline.
 
 ## Definition
 
-When `monitor = True` is selected in the pipeline run configuration file, any sources that have non-detections in their lightcurve will have these measurements 'filled in' by performing `forced measurements`. This means that the flux at the source's would be position in the non-detection image is forcefully measured by fitting a Gaussian with the same shape as the respective image restoring beam.
+When `monitor = True` is selected in the pipeline run configuration file, any sources that have non-detections in their lightcurve will have these measurements 'filled in' by performing `forced measurements`. This means that the flux at the source's position in the non-detection image is forcefully measured by fitting a Gaussian with the same shape as the respective image restoring beam.
 
 Forced measurements are signified in the measurements table or parquet files by the column `forced`.
 
@@ -50,4 +50,3 @@ MONITOR_ALLOW_NAN = False
 
 ## Software - forced_phot
 The software used to perform the forced measurements, `forced_phot`, was written by David Kaplan and can be found on the VAST GitHub [here](https://github.com/askap-vast/forced_phot).
-

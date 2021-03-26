@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python_version: ['3.6.12', '3.7.5', '3.8.7']
+        python_version: ['3.7.5', '3.8.7', '3.9.1']
 
     steps:
     - uses: actions/checkout@v2
@@ -47,7 +47,7 @@ jobs:
       run: |
         npm ci
         npm start
-        pip install -r requirements/dev.txt
+        pip install .
 
     - name: Set DATABASE_URL (using ansible)
       run: >
@@ -62,7 +62,7 @@ jobs:
 
     - name: Create database user and database name
       run: >
-        ./init-tools/init-db.sh
+        python ./init-tools/init-db.py
         localhost ${{ env.db_port }}
         postgres ${{ env.db_password }}
         vast vastpsw vastdb

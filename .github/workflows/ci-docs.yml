@@ -15,5 +15,5 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 3.x
-      - run: pip install -r requirements/docs.txt
+      - run: pip install mkdocs-material mkdocstrings mkdocs-minify-plugin mkdocs-material-extensions
       - run: mkdocs gh-deploy -m 'github action deployment' --force
