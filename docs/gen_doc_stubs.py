@@ -10,9 +10,8 @@ exclude_dirs = ['migrations', 'tests']
 # Problem files because of Django and mkdocs
 # See https://github.com/mkdocstrings/mkdocstrings/issues/141
 # __init__ is there just to avoid building these.
-# urls.py is empty.
 # TODO: Fix Django pages for mkdocs.
-problem_files = ['serializers.py', 'views.py', '__init__.py', 'urls.py']
+problem_files = ['serializers.py', 'views.py', '__init__.py']
 
 for path in Path("vast_pipeline").glob("**/*.py"):
 

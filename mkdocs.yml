@@ -128,7 +128,7 @@ nav:
       - models.py: reference/models.md
       - plots.py: reference/plots.md
       # - serializers.py: reference/serializers.md
-      # - urls.py: reference/urls.md
+      - urls.py: reference/urls.md
       # - views.py: reference/views.md
   - Architecture:
     - Architecture Intro: architecture/intro.md
