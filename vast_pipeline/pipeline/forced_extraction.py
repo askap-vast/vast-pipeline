@@ -13,7 +13,7 @@ from astropy.coordinates import SkyCoord
 from django.conf import settings
 from django.db import transaction
 from pyarrow.parquet import read_schema
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 from vast_pipeline.models import Image, Measurement, Run
 from vast_pipeline.image.utils import on_sky_sep
@@ -29,10 +29,17 @@ from ..utils.utils import StopWatch
 logger = logging.getLogger(__name__)
 
 
-def remove_forced_meas(run_path):
+def remove_forced_meas(run_path) -> None:
     '''
-    remove forced measurements from the database if forced parquet files
-    are found
+    Remove forced measurements from the database if forced parquet files
+    are found.
+
+    Args:
+        run_path:
+            The run path of the pipeline run.
+
+    Returns:
+        None
     '''
     path_glob = glob(
         os.path.join(run_path, 'forced_measurements_*.parquet')
@@ -58,24 +65,21 @@ def remove_forced_meas(run_path):
 
 
 def get_data_from_parquet(
-    file: str, p_run_path: str, add_mode: bool = False,) -> dict:
+    file: str, p_run_path: str, add_mode: bool = False,) -> Dict:
     '''
     Get the prefix, max id and image id from the measurements parquets
 
-    Parameters
-    ----------
-    file : str
-        a string with the path of the measurements parquet file
-    p_run_path : str
-        Pipeline run path to get forced parquet in case of add mode.
-    add_mode: bool
-        Whether image add mode is being used where the forced parquet needs to
-        be used instead.
+    Args:
+        file:
+            a string with the path of the measurements parquet file
+        p_run_path:
+            Pipeline run path to get forced parquet in case of add mode.
+        add_mode:
+            Whether image add mode is being used where the forced parquet
+            needs to be used instead.
 
-    Returns
-    -------
-    dict
-        dictionary with prefix string, an interger max_id and a string with the
+    Returns:
+        Dictionary with prefix string, an interger max_id and a string with the
         id of the image
     '''
     if add_mode:
@@ -101,35 +105,32 @@ def get_data_from_parquet(
 def extract_from_image(
     df: pd.DataFrame, image: str, background: str, noise: str,
     edge_buffer: float, cluster_threshold: float, allow_nan: bool
-    ) -> dict:
+    ) -> Dict:
     """
     Extract the flux, its erros and chi squared data from the image
     files (image FIT, background and noise files) and return a dictionary
     with the dataframe and image name
 
-    Parameters
-    ----------
-    df : pd.DataFrame
-        input dataframe with columns [source_tmp_id, wavg_ra, wavg_dec,
-        image_name, flux_peak]
-    image : str
-        a string with the path of the image FIT file
-    background : str
-        a string with the path of the image background file
-    noise : str
-        a string with the path of the image noise file
-    edge_buffer : float
-        flag to pass to ForcedPhot.measure method
-    cluster_threshold : float
-        flag to pass to ForcedPhot.measure method
-    allow_nan : bool
-        flag to pass to ForcedPhot.measure method
+    Args:
+        df:
+            input dataframe with columns [source_tmp_id, wavg_ra, wavg_dec,
+            image_name, flux_peak]
+        image:
+            a string with the path of the image FIT file
+        background:
+            a string with the path of the image background file
+        noise:
+            a string with the path of the image noise file
+        edge_buffer:
+            flag to pass to ForcedPhot.measure method
+        cluster_threshold:
+            flag to pass to ForcedPhot.measure method
+        allow_nan:
+            flag to pass to ForcedPhot.measure method
 
-    Returns
-    -------
-    dict
-        dictionary with input dataframe with added columns (flux_int,
-        flux_int_err, chi_squared_fit) and image name
+    Returns:
+        Dictionary with input dataframe with added columns (flux_int,
+        flux_int_err, chi_squared_fit) and image name.
     """
     # create the skycoord obj to pass to the forced extraction
     # see usage https://github.com/dlakaplan/forced_phot
@@ -162,33 +163,30 @@ def finalise_forced_dfs(
     Compute populate leftover columns for the dataframe with forced
     photometry data given the input parameters
 
-    Parameters
-    ----------
-    df : pd.DataFrame
-        input dataframe with columns [source_tmp_id, wavg_ra, wavg_dec,
-        image_name, flux_peak, flux_int, flux_int_err, chi_squared_fit]
-    prefix : str
-        string to use to generate the 'island_id' column
-    max_id : int
-        integer to use to generate the 'island_id' column
-    beam_bmaj : float
-        image beam major axis
-    beam_bmin : float
-        image beam minor axis
-    beam_bpa : float
-        image beam position angle
-    id : int
-        image id in database
-    datetime : datetime.datetime
-        timestamp of the image file (from header)
-    image : str
-        string with the image name
+    Args:
+        df:
+            input dataframe with columns [source_tmp_id, wavg_ra, wavg_dec,
+            image_name, flux_peak, flux_int, flux_int_err, chi_squared_fit]
+        prefix:
+            string to use to generate the 'island_id' column
+        max_id:
+            integer to use to generate the 'island_id' column
+        beam_bmaj:
+            image beam major axis
+        beam_bmin:
+            image beam minor axis
+        beam_bpa:
+            image beam position angle
+        id:
+            image id in database
+        datetime:
+            timestamp of the image file (from header)
+        image:
+            string with the image name
 
-    Returns
-    -------
-    pd.DataFrame
-        input dataframe with added columns island_id, component_id,
-        name, bmaj, bmin, pa, image_id, time
+    Returns:
+        Input dataframe with added columns island_id, component_id,
+        name, bmaj, bmin, pa, image_id, time.
     """
     # make up the measurements name from the image island_id and component_id
     df['island_id'] = np.char.add(
@@ -221,35 +219,34 @@ def parallel_extraction(
     """
     Parallelize forced extraction with Dask
 
-    Parameters
-    ----------
-    df : pd.DataFrame
-        dataframe with columns 'wavg_ra', 'wavg_dec', 'img_diff', 'detection'
-    df_images : pd.DataFrame
-        dataframe with the images data and columns 'id', 'measurements_path',
-        'path', 'noise_path', 'beam_bmaj', 'beam_bmin', 'beam_bpa',
-        'background_path', 'rms_min', 'datetime', 'skyreg__centre_ra',
-        'skyreg__centre_dec', 'skyreg__xtr_radius' and 'name' as the index
-    df_sources : pd.DataFrame
-        dataframe derived from the measurement data with columns 'source',
-        'image', 'flux_peak'
-    min_sigma : float
-        minimum sigma value to drop forced extracted measurements
-    edge_buffer : float
-        flag to pass to ForcedPhot.measure method
-    cluster_threshold : float
-        flag to pass to ForcedPhot.measure method
-    allow_nan : bool
-        flag to pass to ForcedPhot.measure method
-    add_mode : bool
-        True when the pipeline is running in add image mode.
-    p_run_path : str
-        The system path of the pipeline run output.
+    Args:
+        df:
+            dataframe with columns 'wavg_ra', 'wavg_dec', 'img_diff',
+            'detection'
+        df_images:
+            dataframe with the images data and columns 'id',
+            'measurements_path', 'path', 'noise_path', 'beam_bmaj',
+            'beam_bmin', 'beam_bpa', 'background_path', 'rms_min', 'datetime',
+            'skyreg__centre_ra', 'skyreg__centre_dec', 'skyreg__xtr_radius'
+            and 'name' as the index.
+        df_sources:
+            dataframe derived from the measurement data with columns 'source',
+            'image', 'flux_peak'.
+        min_sigma:
+            minimum sigma value to drop forced extracted measurements.
+        edge_buffer:
+            flag to pass to ForcedPhot.measure method.
+        cluster_threshold:
+            flag to pass to ForcedPhot.measure method.
+        allow_nan:
+            flag to pass to ForcedPhot.measure method.
+        add_mode:
+            True when the pipeline is running in add image mode.
+        p_run_path:
+            The system path of the pipeline run output.
 
-    Returns
-    -------
-    pd.DataFrame
-        dataframe with forced extracted measurements data, columns are
+    Returns:
+        Dataframe with forced extracted measurements data, columns are
         'source_tmp_id', 'ra', 'dec', 'image', 'flux_peak', 'island_id',
         'component_id', 'name', 'flux_int', 'flux_int_err'
     """
@@ -386,18 +383,16 @@ def write_group_to_parquet(
     Write a dataframe correpondent to a single group/image
     to a parquet file.
 
-    Parameters
-    ----------
-    df : pd.DataFrame
-        Dataframe containing all the extracted measurements.
-    fname : str
-        The file name of the output parquet.
-    add_mode : bool
-        True when the pipeline is running in add image mode.
+    Args:
+        df:
+            Dataframe containing all the extracted measurements.
+        fname:
+            The file name of the output parquet.
+        add_mode:
+            True when the pipeline is running in add image mode.
 
-    Returns
-    -------
-    None
+    Returns:
+        None
     '''
     out_df = df.drop(['d2d', 'dr', 'source', 'image'], axis=1)
     if os.path.isfile(fname) and add_mode:
@@ -414,18 +409,16 @@ def parallel_write_parquet(
     '''
     Parallelize writing parquet files for forced measurements.
 
-    Parameters
-    ----------
-    df : pd.DataFrame
-        Dataframe containing all the extracted measurements.
-    fname : str
-        The file name of the output parquet.
-    add_mode : bool
-        True when the pipeline is running in add image mode.
+    Args:
+        df:
+            Dataframe containing all the extracted measurements.
+        run_path:
+            The run path of the pipeline run.
+        add_mode:
+            True when the pipeline is running in add image mode.
 
-    Returns
-    -------
-    None
+    Returns:
+        None
     '''
     images = df['image'].unique().tolist()
     get_fname = lambda n: os.path.join(
@@ -454,40 +447,38 @@ def forced_extraction(
     Check and extract expected measurements, and associated them with the
     related source(s).
 
-    Parameters
-    ----------
-    sources_df : pd.DataFrame
-        Dataframe containing all the extracted measurements and associations (
-        product from association step).
-    cfg_err_ra : float
-        The minimum RA error from the config file (in degrees).
-    cfg_err_dec : float
-        The minimum declination error from the config file (in degrees).
-    p_run : Run
-        The pipeline run object.
-    extr_df : pd.DataFrame
-        The dataframe containing the information on what sources are missing
-        from which images (output from get_src_skyregion_merged_df in main.py).
-    min_sigma : float
-        minimum sigma value to drop forced extracted measurements
-    edge_buffer : float
-        flag to pass to ForcedPhot.measure method
-    cluster_threshold : float
-        flag to pass to ForcedPhot.measure method
-    allow_nan : bool
-        flag to pass to ForcedPhot.measure method
-    add_mode : bool
-        True when the pipeline is running in add image mode.
-    done_images_df : pd.DataFrame
-        Dataframe containing the images that thave already been processed in a
-        previous run (used in add image mode).
-    done_source_ids : List[int]
-        List of the source ids that were already present in the previous run
-        (used in add image mode).
+    Args:
+        sources_df:
+            Dataframe containing all the extracted measurements and
+            associations (product from association step).
+        cfg_err_ra:
+            The minimum RA error from the config file (in degrees).
+        cfg_err_dec:
+            The minimum declination error from the config file (in degrees).
+        p_run:
+            The pipeline run object.
+        extr_df:
+            The dataframe containing the information on what sources are
+            missing from which images (output from
+            get_src_skyregion_merged_df in main.py).
+        min_sigma:
+            Minimum sigma value to drop forced extracted measurements.
+        edge_buffer:
+            Flag to pass to ForcedPhot.measure method.
+        cluster_threshold:
+            Flag to pass to ForcedPhot.measure method.
+        allow_nan:
+            Flag to pass to ForcedPhot.measure method.
+        add_mode:
+            True when the pipeline is running in add image mode.
+        done_images_df:
+            Dataframe containing the images that thave already been processed
+            in a previous run (used in add image mode).
+        done_source_ids:
+            List of the source ids that were already present in the previous
+            run (used in add image mode).
 
-    Returns
-    -------
-    (sources_df, n_forced) : Tuple[pd.DataFrame, int]
+    Returns:
         The sources_df with the extracted sources added and n_forced is the
         total number of forced measurements present in the run.
     """

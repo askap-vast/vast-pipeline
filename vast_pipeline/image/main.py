@@ -1,16 +1,22 @@
+"""
+This module contains the relevant classes for the image ingestion.
+"""
+
 import os
 import logging
-
 import numpy as np
 import pandas as pd
+
 from django.conf import settings
 from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
+from typing import Dict
 
 from .utils import calc_error_radius
 from .utils import calc_condon_flux_errors
 
+from vast_pipeline.models import Image
 from vast_pipeline.survey.translators import tr_selavy
 
 
@@ -19,21 +25,73 @@ logger = logging.getLogger(__name__)
 
 # TODO: improve using Py abstract class ABC
 class Image(object):
-    """generic abstract class for an image"""
-    def __init__(self, path):
+    """Generic abstract class for an image.
+
+    Attributes:
+        name (str): The image name taken from the file name.
+        path (str): The system path to the image.
+
+    """
+    def __init__(self, path: str) -> None:
+        """
+        Initiliase an image object.
+
+        Args:
+            path:
+                The system path to the FITS image. The name of the image is
+                taken from the filename in the given path.
+
+        Returns:
+            None.
+        """
         self.name = os.path.basename(path)
         self.path = path
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """
+        Defines the printable representation.
+
+        Returns:
+            Printable representation which is the pipeline run name.
+        """
         return self.name
 
 
 class FitsImage(Image):
-    """FitsImage class to model FITS files"""
+    """
+    FitsImage class to model FITS files
+
+    Attributes:
+        beam_bmaj (float): Major axis size of the restoring beam (degrees).
+        beam_bmin (float): Minor axis size of the restoring beam (degrees).
+        beam_bpa (float): Position angle of the restoring beam (degrees).
+        datetime (pd.Timestamp): Date of the observation.
+        duration (float): Duration of the observation in seconds. Is set to
+            0 if duration is not in header.
+        fov_bmaj (float): Estimate of the field of view in the north-south
+            direction (degrees).
+        fov_bmin (float): Estimate of the field of view in the east-west
+            direction (degrees).
+        ra (float): Right ascension coordinate of the image centre (degrees).
+        dec (float): Declination coordinate of the image centre (degrees).
+        polarisation (str): The polarisation of the image.
+    """
 
     entire_image = True
 
-    def __init__(self, path, hdu_index=0):
+    def __init__(self, path: str, hdu_index: int=0) -> None:
+        """
+        Initialise a FitsImage object.
+
+        Args:
+            path:
+                The system path of the FITS image.
+            hdu_index:
+                The index to use on the hdu to fetch the FITS header.
+
+        Returns:
+            None.
+        """
         # inherit from parent
         super().__init__(path)
 
@@ -46,7 +104,17 @@ class FitsImage(Image):
         # get the frequency
         self.__get_frequency(header)
 
-    def __get_header(self, hdu_index):
+    def __get_header(self, hdu_index: int) -> fits.Header:
+        """
+        Retrieves the header from teh FITS image.
+
+        Args:
+            hdu_index:
+                The index to use on the hdu to fetch the FITS header.
+
+        Returns:
+            The FITS header as an astropy.io.fits.Header object.
+        """
         try:
             with fits.open(self.path) as hdulist:
                 hdu = hdulist[hdu_index]
@@ -55,11 +123,12 @@ class FitsImage(Image):
                 'Could not read this FITS file: '
                 f'{os.path.basename(self.path)}'
             ))
+
         return hdu.header.copy()
 
     def __set_img_attr_for_telescope(self, header):
         '''
-        set the image attributes depending on the telescope type
+        Set the image attributes depending on the telescope type
         '''
         self.polarisation = header.get('STOKES', 'I')
         self.duration = float(header.get('DURATION', 0.))
@@ -73,7 +142,9 @@ class FitsImage(Image):
 
         if header.get('TELESCOP', None) == 'ASKAP':
             try:
-                self.datetime = pd.Timestamp(header['DATE-OBS'], tz=header['TIMESYS'])
+                self.datetime = pd.Timestamp(
+                    header['DATE-OBS'], tz=header['TIMESYS']
+                )
                 self.beam_bmaj = header['BMAJ']
                 self.beam_bmin = header['BMIN']
                 self.beam_bpa = header['BPA']
@@ -110,7 +181,9 @@ class FitsImage(Image):
         # We leave a pixel margin at the edge that we don't use.
         # TODO: move unused pixel as argument
         unusedpix = 0.
-        usable_radius_pix = self.__get_radius_pixels(header, fits_naxis1, fits_naxis2) - unusedpix
+        usable_radius_pix = self.__get_radius_pixels(
+            header, fits_naxis1, fits_naxis2
+        ) - unusedpix
         cdelt1, cdelt2 = proj_plane_pixel_scales(WCS(header).celestial)
         self.fov_bmin = usable_radius_pix * abs(cdelt1)
         self.fov_bmaj = usable_radius_pix * abs(cdelt2)
@@ -161,9 +234,36 @@ class FitsImage(Image):
 
 
 class SelavyImage(FitsImage):
-    """Fits images that have a selavy catalogue"""
+    """
+    Fits images that have a selavy catalogue.
 
-    def __init__(self, path, paths, hdu_index=0, config=None):
+    Attributes:
+        selavy_path (str): The system path to the Selavy file.
+        noise_path (str): The system path to the noise image associated
+            with the image.
+        background_path (str): The system path to the background image
+            associated with the image.
+        config (config): The pipeline configuration settings.
+    """
+
+    def __init__(
+        self, path: str, paths: Dict[str, str], hdu_index: int=0, config=None
+    ) -> None:
+        """
+        Initialise the SelavyImage.
+
+        Args:
+            path: The system path to the FITS image.
+            paths: Dictionary containing the system paths to the associated
+                image products and selavy catalogue. The keys are 'selavy',
+                'noise', 'background'.
+            hdu_index: The index number to use to access the header from the
+                hdu object.
+            config (config): Configuration settings for the pipeline.
+
+        Returns:
+            None.
+        """
         # inherit from parent
         self.selavy_path = paths['selavy'][path]
         self.noise_path = paths['noise'].get(path, '')
@@ -171,10 +271,17 @@ class SelavyImage(FitsImage):
         self.config = config
         super().__init__(path, hdu_index)
 
-    def read_selavy(self, dj_image):
+    def read_selavy(self, dj_image: Image) -> pd.DataFrame:
         """
-        read the sources from the selavy catalogue, select wanted columns
-        and remap them to correct names
+        Read the sources from the selavy catalogue, select wanted columns
+        and remap them to correct names, followed by filtering and Condon
+        error calculations.
+
+        Args:
+            dj_image: The image model object.
+
+        Returns:
+            Dataframe containing the cleaned and processed Selavy components.
         """
         # TODO: improve with loading only the cols we need and set datatype
         df = pd.read_fwf(self.selavy_path, skiprows=[1])

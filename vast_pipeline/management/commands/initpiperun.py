@@ -1,8 +1,16 @@
+"""
+Initialises a pipeline run and creates the relevant directories.
+
+Usage: ./manage.py initpiperun pipeline_run_name
+"""
+
 import os
 import logging
 
+from argparse import ArgumentParser
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings as sett
+from django.contrib.auth.models import User
 from jinja2 import Template
 
 from vast_pipeline.models import Run
@@ -13,7 +21,21 @@ from vast_pipeline.pipeline.utils import get_create_p_run
 logger = logging.getLogger(__name__)
 
 
-def initialise_run(run_name, run_description=None, user=None, config=None):
+def initialise_run(
+    run_name: str, run_description: str=None, user: User=None, config=None
+) -> Run:
+    """
+    Initialises a pipeline run object.
+
+    Args:
+        run_name: The string name of the run.
+        run_description: The description of the run supplied by the user.
+        user: The Django user that is performing the run (None if from CLI).
+        config: The pipeline configuration settings.
+
+    Returns:
+        The pipeline run Django model object.
+    """
     # check for duplicated run name
     p_run = Run.objects.filter(name__exact=run_name)
     if p_run:
@@ -63,7 +85,16 @@ class Command(BaseCommand):
         'instance'
     )
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser) -> None:
+        """
+        Enables arguments for the command.
+
+        Args:
+            parser (ArgumentParser): The parser object of the command.
+
+        Returns:
+            None
+        """
         # positional arguments
         parser.add_argument(
             'runname',
@@ -71,7 +102,17 @@ class Command(BaseCommand):
             help='Name of the pipeline run.'
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args, **options) -> None:
+        """
+        Handle function of the command.
+
+        Args:
+            *args: Variable length argument list.
+            **options: Variable length options.
+
+        Returns:
+            None
+        """
         # configure logging
         if options['verbosity'] > 1:
             # set root logger to use the DEBUG level

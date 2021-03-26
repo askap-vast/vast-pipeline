@@ -4,6 +4,7 @@ import shutil
 import numpy as np
 import pandas as pd
 
+from argparse import ArgumentParser
 from glob import glob
 from django.conf import settings
 from django.db.models import Q
@@ -26,14 +27,11 @@ def yesno(question: str) -> bool:
     """
     Simple Yes/No Function.
 
-    Parameters
-    ----------
-    question : str
-        The question to show to the user for a y/n response.
+    Args:
+        question (str):
+            The question to show to the user for a y/n response.
 
-    Returns
-    -------
-    bool : bool
+    Returns:
         True if user enters 'y', False if 'n'.
     """
     prompt = f'{question} ? (y/n): '
@@ -51,18 +49,16 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config) -> None:
     Restores the pipeline to the backup files version.
     TODO: Update prev_config type hint.
 
-    Parameters
-    ----------
-    p_run : Run
-        The run model object.
-    bak_files : Dict[str, str]
-        Dictionary containing the paths to the .bak files.
-    prev_config : config
-        Module object that represents the back up run configuration.
+    Args:
+        p_run (Run):
+            The run model object.
+        bak_files (Dict[str, str]):
+            Dictionary containing the paths to the .bak files.
+        prev_config (config):
+            Module object that represents the back up run configuration.
 
-    Returns
-    -------
-    None
+    Returns:
+        None
     """
     # check images match
     img_f_list = getattr(prev_config, 'IMAGE_FILES')
@@ -272,9 +268,8 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config) -> None:
 
 class Command(BaseCommand):
     """
-    This script is used to restore a pipeline run to the previous verion after
-    add mode has been used.
-    Use --help for usage.
+    This command is used to restore a pipeline run to the previous verion after
+    add mode has been used. Use --help for usage.
     """
 
     help = (
@@ -282,7 +277,16 @@ class Command(BaseCommand):
         ' has been used.'
     )
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: ArgumentParser) -> None:
+        """
+        Enables arguments for the command.
+
+        Args:
+            parser (ArgumentParser): The parser object of the command.
+
+        Returns:
+            None
+        """
         # positional arguments (required)
         parser.add_argument(
             'piperuns',
@@ -303,7 +307,17 @@ class Command(BaseCommand):
             )
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args, **options) -> None:
+        """
+        Handle function of the command.
+
+        Args:
+            *args: Variable length argument list.
+            **options: Variable length options.
+
+        Returns:
+            None
+        """
         # configure logging
         if options['verbosity'] > 1:
             # set root logger to use the DEBUG level

@@ -1,7 +1,9 @@
-# translators to map the table column names in the input files
-# into the required column names in our db
-# the flux/ang scale needs to be the multiplicative factor
-# that converts the input flux into mJy and a/b into arcsec
+"""
+Translators to map the table column names in the input files
+into the required column names in our db
+the flux/ang scale needs to be the multiplicative factor
+that converts the input flux into mJy and a/b into arcsec.
+"""
 
 import numpy as np
 

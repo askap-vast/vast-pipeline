@@ -1,3 +1,5 @@
+"""Contains plotting code used by the web server."""
+
 from bokeh.models import (
     ColumnDataSource,
     CustomJS,

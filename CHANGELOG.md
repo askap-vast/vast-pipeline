@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added script to auto-generate code reference documentation pages [#480](https://github.com/askap-vast/vast-pipeline/pull/480).
+- Added code reference section to documentation [#480](https://github.com/askap-vast/vast-pipeline/pull/480).
 - Added new pages and sections to documentation [#471](https://github.com/askap-vast/vast-pipeline/pull/471)
 - Added image add mode run restore command 'restorepiperun' [#463](https://github.com/askap-vast/vast-pipeline/pull/463)
 - Added documentation folder and files for `mkdocs` and CI [#433](https://github.com/askap-vast/vast-pipeline/pull/433)
@@ -19,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Changed non-google format docstrings to google format [#480](https://github.com/askap-vast/vast-pipeline/pull/480).
 - Changed some documentation layout and updated content [#471](https://github.com/askap-vast/vast-pipeline/pull/471).
 - Changed 'cmd' flag in run pipeline to 'cli' [#466](https://github.com/askap-vast/vast-pipeline/pull/466).
 - Changed `CONTRIBUTING.md` and `README.md` [#433](https://github.com/askap-vast/vast-pipeline/pull/433)
