@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Bumped Browsersync from 2.26.13 to 2.26.14 [#481](https://github.com/askap-vast/vast-pipeline/pull/481).
 - Changed the `vaex` dependency to `vaex-arrow` [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
 - Set `CREATE_MEASUREMENTS_ARROW_FILES = True` in the basic association test config [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
 - Bumped minimum Python version to 3.7.1 [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
@@ -56,6 +57,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#481](https://github.com/askap-vast/vast-pipeline/pull/481) dep: Bump Browsersync from 2.26.13 to 2.26.14.
 - [#472](https://github.com/askap-vast/vast-pipeline/pull/472) feat: Simplify install.
 - [#473](https://github.com/askap-vast/vast-pipeline/pull/473) fix: discard the selavy unit row before reading.
 - [#466](https://github.com/askap-vast/vast-pipeline/pull/466) fix: Fixed initial job processing from the UI.
