@@ -4,7 +4,7 @@ This page details the forced measurements obtained by the pipeline.
 
 ## Definition
 
-When `monitor = True` is selected in the pipeline run configuration file, any sources that have non-detections in their lightcurve will have these measurements 'filled in' by performing `forced measurements`. This means that the flux at the source's position in the non-detection image is forcefully measured by fitting a Gaussian with the same shape as the respective image restoring beam.
+When `MONITOR = True` is set in the pipeline run configuration file, any sources that have non-detections in their lightcurve will have these measurements 'filled in' by performing `forced measurements`. This means that the flux at the source's current average position in the non-detection image is forcefully measured by fitting a Gaussian with the same shape as the respective image restoring beam.
 
 Forced measurements are labelled in the measurements table and parquet files by the column `forced`.
 
