@@ -3,7 +3,7 @@
 This page outlines the steps required to create a pipeline run through the web interface. A description of the run configuration options can be found in the [next section](runconfig.md).
 
 !!! note
-    Administrators please refer to [this section](../../adminusage/cli/#initialise-a-pipeline-run) in the admin documentation for instructions on how to initialise a pipeline run via the command line interface.
+    Administrators please refer to [this section](../../adminusage/cli/#initpiperun) in the admin documentation for instructions on how to initialise a pipeline run via the command line interface.
     
 !!! warning
     No data quality control is performed by the pipeline. Make sure your input data is clean and error free before processing using your preferred method.

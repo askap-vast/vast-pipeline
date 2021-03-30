@@ -3,7 +3,7 @@
 This page describes how to submit a pipeline run for processing.
 
 !!! note
-    Administrators please refer to [this section](../../adminusage/cli/#run-a-pipeline-instance) in the admin documentation for instructions on how to process a pipeline run via the command line interface.
+    Administrators please refer to [this section](../../adminusage/cli/#runpipeline) in the admin documentation for instructions on how to process a pipeline run via the command line interface.
     
 !!! tip
     Use the editor window on the run detail page to make adjustments to the run configuration file before processing.
