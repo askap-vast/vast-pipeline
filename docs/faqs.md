@@ -11,7 +11,9 @@ As seen from the [Image Ingest page](design/imageingest.md), the pipeline does n
 * Convert the component output from a different source extractor to match that of the [`Selavy` component file](https://www.atnf.csiro.au/computing/software/askapsoft/sdp/docs/current/analysis/postprocessing.html#output-files){:target="_blank"}.
 
 The pipeline was also designed in a way such that other source extractor 'translators' could be plugged into the pipeline. 
-So a further option is to develop new translators such that the pipeline can read in output from other source extractors. Please open a discussion or issue on GitHub if you intend to give this a go!
+So a further option is to develop new translators such that the pipeline can read in output from other source extractors. 
+The translators can be found in [`vast_pipeline/surveys/translators.py`](reference/survey/translators.md).
+Please open a discussion or issue on GitHub if you intend to give this a go!
 
 !!! bug
     In reading the code recently I have a suspicion the FITS reading code is reliant on the `TELESCOP` FITS header being equal to `ASKAP`. 

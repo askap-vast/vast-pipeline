@@ -1,7 +1,7 @@
 """
 Translators to map the table column names in the input files
-into the required column names in our db
-the flux/ang scale needs to be the multiplicative factor
+into the required column names in our db.
+The flux/ang scale needs to be the multiplicative factor
 that converts the input flux into mJy and a/b into arcsec.
 """
 
@@ -26,6 +26,9 @@ tr_aegean = {
     'pa': 'pa',
     'freq': 999  # some clearly wrong number
     }
+"""
+The translator dictionary for a Agean catalogue input. Not complete.
+"""
 
 tr_mwacs = {
     'prefix': 'MWACS',
@@ -45,6 +48,9 @@ tr_mwacs = {
     'pa': 'PABeam',
     'freq': 180  # MHz
     }
+"""
+The translator dictionary for a MWACS catalogue input. Not complete.
+"""
 
 tr_gleam = {
     'prefix': 'MWA',
@@ -64,6 +70,9 @@ tr_gleam = {
     'pa': 'pa_wide',
     'freq': 200  #MHz (central for deep image)
     }
+"""
+The translator dictionary for a GLEAM catalogue input. Not complete.
+"""
 
 tr_sumss = {
     'prefix':'SUMSS',
@@ -83,6 +92,9 @@ tr_sumss = {
     'pa': 'PA',
     'freq': 843  # MHz
     }
+"""
+The translator dictionary for a SUMSS catalogue input. Not complete.
+"""
 
 tr_nvss = {
     'prefix':'NVSS',
@@ -102,6 +114,9 @@ tr_nvss = {
     'pa': 'PA',
     'freq': 1400  # MHz
     }
+"""
+The translator dictionary for a NVSS catalogue input. Not complete.
+"""
 
 # translator for reading data from the Selavy catalogue
 # Name -> name of the Source Model fields (see pipeline/models.py)
@@ -134,6 +149,9 @@ tr_selavy = {
     "has_siblings": {'name': "has_siblings", 'dtype': np.dtype(bool)},
     "rms_image": {'name': "local_rms", 'dtype': np.dtype(float)},
 }
+"""
+The translator dictionary for a Selavy catalogue input.
+"""
 
 translators = {
     'MWACS': tr_mwacs,
@@ -144,3 +162,6 @@ translators = {
     'SELAVY': tr_selavy,
     'DEFAULT': tr_aegean,
 }
+"""
+Dictionary containing all the translators defined in this module.
+"""
