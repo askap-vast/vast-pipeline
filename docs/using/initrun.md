@@ -3,7 +3,7 @@
 This page outlines the steps required to create a pipeline run through the web interface. A description of the run configuration options can be found in the [next section](runconfig.md).
 
 !!! note
-    Administrators please refer to [this section](../../adminusage/cli/#initialise-a-pipeline-run) in the admin documentation for instructions on how to initialise a pipeline run via the command line interface.
+    Administrators please refer to [this section](../../adminusage/cli/#initpiperun) in the admin documentation for instructions on how to initialise a pipeline run via the command line interface.
     
 !!! warning
     No data quality control is performed by the pipeline. Make sure your input data is clean and error free before processing using your preferred method.
@@ -26,7 +26,7 @@ Fill in the name and description of the run and then press next to navigate to t
 
 For full details on how to configure a pipeline run see the [Run Configuration](runconfig.md) page, but a few notes here:
 
-* Any settings enetered here are not final, they can still be changed once the run is created.
+* Any settings entered here are not final, they can still be changed once the run is created.
 * The order of the input files must match between the data types - i.e. the first selavy file, rms image and background image must all be the products of the first image, and so on.
 * If you have a high number of images, selavy files, rms images and background images, it may be easier to leave these empty and instead use the text editor on the run detail page to directly enter the list to the configuration file.
 * By default, non-admin users have a 200 image limit.

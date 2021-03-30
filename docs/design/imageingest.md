@@ -28,9 +28,9 @@ When the pipeline encounters an image for the first time (in any pipeline run), 
 
 ## Ingest Steps Summary
 
-1. The FITS file is opened and read (the header is used to obtain meta data) along with the selavy component catalogue text file.
-2. The selavy component file is cleaned for erroneous components along with the calculation of extra measurements metrics such as `signal-to-noise ratio`, `compactness` and positional uncertainties. Also, optionally, flux errors are recalculated using the [Condon 1997](https://ui.adsabs.harvard.edu/abs/1997PASP..109..166C/abstract){:target="_blank"} method. See [Selavy Measurements Processing](#selavy-measurements-processing) for further details.
-3. Median, minimum and maxiumn root-mean-squre (RMS) values are read from the accompanying RMS image provided by the user and these values are attached to the image.
+1. The FITS file is opened and read (the header is used to obtain metadata) along with the selavy component catalogue text file.
+2. The selavy component file is cleaned for erroneous components along with the calculation of extra measurements metrics such as `signal-to-noise ratio`, `compactness` and positional uncertainties. Also, optionally, flux errors are recalculated using the [Condon (1997)](https://ui.adsabs.harvard.edu/abs/1997PASP..109..166C/abstract){:target="_blank"} method. See the [Selavy Measurements Processing](#selavy-measurements-processing) section below for further details.
+3. Median, minimum and maximum root-mean-square (RMS) values are read from the accompanying RMS image provided by the user and these values are attached to the image.
 4. The image is also attached to a sky region and a frequency band based on its properties (see [Sky Region](#sky-region) and [Frequency Band](#frequency-band)).
 5. The cleaned measurements (selavy components) are saved to a parquet file for repeated easy access.
 6. The overall image, band and sky region information for the pipeline run are written to a parquet file.
@@ -39,7 +39,7 @@ See [Ingest Steps Details](#ingest-steps-details) for further details on the ste
 
 ## Uniqueness
 
-The image uniqueness is defined by the filename. I.e. if you wished to upload a different version of the same image (perhaps different selavy settings were used in the source extraction) then you would have to make sure the image filename was different to the previous entry.
+The image uniqueness is defined by the filename. If you wish to upload a different version of the same image, e.g. a version where different Selavy settings were used in the source extraction, then you would have to make sure the image filename was different to the previously ingested image.
 
 ## Ingest Steps Details
 
@@ -47,15 +47,13 @@ The image uniqueness is defined by the filename. I.e. if you wished to upload a 
 
 #### Cleaning
 
-The selavy measurements are checked for erroneous values that could cause issues with the source association. Such errors are:
+The selavy measurements are checked for erroneous values that could cause issues with the source association. Any sources that are found to have the following properties are removed:
 
 * Sources that have a peak or integrated flux value of 0.
 * Sources that have a `bmaj` or `bmin` value of 0.
 * Sources that have a `bmaj` or `bmin` value less than half of the respective values of the image restoring beam.
 
-Any sources that are found to have the above properties are removed.
-
-In addition to the above filtering, components are also checked for zero values that can be corrected, where the correction values to apply are defined in the user or overall pipeline configuration files. The field names of these zero checks are defined in the table below.
+In addition, components are also checked for zero values that can be corrected, where the correction values to apply are defined in either the user or overall pipeline configuration files. The field names of these zero checks are defined in the table below.
 
 | Field Name          | Correct with                          | Location      |
 | ------------------- | ------------------------------------- | ------------- |
@@ -65,9 +63,13 @@ In addition to the above filtering, components are also checked for zero values 
 | `dec_err`           | `POS_DEFAULT_MIN_ERROR`               | `settings.py` |
 | `local_rms`         | `SELAVY_LOCAL_RMS_ZERO_FILL_VALUE`    | `config.py`   |
 
-#### Condon 1997 Flux & Positional Errors
+!!! note
+    `settings.py` refers to the pipeline configuration file `webinterface/settings.py` which is configured by the system administrator and cannot be modified by regular users.
+    `config.py` refers to a pipeline run configuration file which is set by the user.
 
-If selected in the pipeline run configuration file, the flux and positional errors are recalculated using the [Condon 1997](https://ui.adsabs.harvard.edu/abs/1997PASP..109..166C/abstract){:target="_blank"} method. The following errors are replaced with those that are recalculated:
+#### Condon (1997) Flux & Positional Errors
+
+If selected in the pipeline run configuration file, the flux and positional errors are recalculated using the [Condon (1997)](https://ui.adsabs.harvard.edu/abs/1997PASP..109..166C/abstract){:target="_blank"} method. The following errors are replaced with those that are recalculated:
 
 * `flux_peak_err`
 * `flux_int_err`
@@ -86,7 +88,7 @@ Firstly, the systematic astrometry error from the user pipeline run configuratio
     
     It is recommended to leave the values to the default value of 1.0. 
 
-In order to apply the `TraP` de Ruiter association method, some extra positional error values are calculated. Firstly the `ra_err` and `dec_err` are used to estimate the largest angular uncertainty of the measurement which is recorded as the `error_radius`. It is estimated by finding the largest angular separation between the measurement coordinate and every coordinate combination of $ra \pm \delta ra$ and $dec \pm \delta ra$.
+In order to apply the `TraP` de Ruiter association method, some extra positional error values are calculated. Firstly the `ra_err` and `dec_err` are used to estimate the largest angular uncertainty of the measurement which is recorded as the `error_radius`. It is estimated by finding the largest angular separation between the measurement coordinate and every coordinate combination of $ra \pm \delta ra$ and $dec \pm \delta dec$.
 
 The final uncertainties are then defined as the hypotenuse values of `ew_sys_err`/`ns_sys_err` and the `error_radius`. These are defined as the `uncertainty_ew` and `uncertainty_ns`, respectively. The weights of the errors are defined as $\frac{1}{\text{uncertainty_x}^{2}}$ where `x` is either `ew` or `ns`.
 
@@ -104,7 +106,7 @@ The table below defines extra metrics that are added to the measurements.
 
 ### Sky Region
 
-The pipeline defines `sky regions` in order to be easily able to find images that cover the same region of the sky. A sky region is defined by:
+The pipeline defines `sky regions` that are used to easily find images that cover the same region of the sky. A sky region is defined by:
 
 * The central coodinate.
 * The width in both ra and dec (the `physical_bmaj` and `physical_bmin` values are used here, see [Uploaded Image Information](#uploaded-image-information)).
@@ -134,15 +136,15 @@ The table below defines which header fields are used to read the image informati
 | `BMAJ`| Major axis size of the restoring beam. |
 | `BMIN`| Minor axis size of the restoring beam. |
 | `BPA`| Position angle of the restoring beam. |
-| `NAXIS1`| Size of the image axis. |
-| `NAXIS2`| Size of the image. |
+| `NAXIS1`| Size of the image RA axis in pixels. |
+| `NAXIS2`| Size of the image Dec axis in pixels. |
 | `CTYPE3(or 4)`| Check if equal to `FREQ` to use for frequency information. |
 | `CRVAL3(or 4)`| Central frequency.  |
 | `CDELT3(or 4)`| Bandwidth. |
 
 `RESTFREQ` and `RESTBW` can also be used as fallback options for frequency detection.
 
-The `astropy` method `proj_plane_pixel_scales` is used to obtain the pixel scales.
+The pixel scales are obtained with [`astropy.wcs.utils.proj_plane_pixel_scales`](https://docs.astropy.org/en/stable/api/astropy.wcs.utils.proj_plane_pixel_scales.html#astropy.wcs.utils.proj_plane_pixel_scales){:target="_blank"}.
 
 ## Uploaded Image Information
 
@@ -161,14 +163,14 @@ The table below defines what is defined and uploaded using the meta data (FITS h
 | `duration`          | `0`     | Duration of the observation (if found in header). Seconds. |
 | `ra`                | n/a     | The Right Ascension of the image pointing centre. Degrees. |
 | `dec`               | n/a     | The Declination of the image pointing centre. Degrees. |
-| `fov_bmaj`          | n/a     | The estimated major axis field-of-view value - the `radius_pixels` multipled by the major axis pixel size. Degrees. |
-| `fov_bmin`          | n/a     | The estimated minor axis field-of-view value - the `raidus_pixels` multipled by the minor axis pixel size. Degrees. |
+| `fov_bmaj`          | n/a     | The estimated major axis field-of-view value - the `radius_pixels` multiplied by the major axis pixel size. Degrees. |
+| `fov_bmin`          | n/a     | The estimated minor axis field-of-view value - the `radius_pixels` multiplied by the minor axis pixel size. Degrees. |
 | `physical_bmaj`     | n/a     | The actual major axis on-sky size - the number of pixels on the major axis multiplied by the major axis pixel size. Degrees. |
 | `physical_bmin`     | n/a     | The actual minor axis on-sky size - the number of pixels on the minor axis multiplied by the minor axis pixel size. Degrees. |
 | `radius_pixels`     | n/a     | Estimated 'diameter' of the useable image area. Pixels. |
 | `beam_bmaj`         | n/a     | The size of the major axis of the image restoring beam. Degrees. |
 | `beam_bmin`         | n/a     | The size of the minor axis of the image restoring beam. Degrees. |
-| `beam_bpa`          | n/a     | The position angle of the image restoring beam. Degrees. |
-| `rms_median`        | n/a     | The median RMS value derrived from the RMS map. mJy. |
-| `rms_min`           | n/a     | The minimum RMS value derrived from the RMS map (pixel value). mJy. |
-| `rms_max`           | n/a     | The maximum RMS value derrived from the RMS map (pixel value). mJy. |
+| `beam_bpa`          | n/a     | The position angle of the image restoring beam. Degrees East of North. |
+| `rms_median`        | n/a     | The median RMS value from the RMS map. mJy/beam. |
+| `rms_min`           | n/a     | The minimum RMS value from the RMS map (pixel value). mJy/beam. |
+| `rms_max`           | n/a     | The maximum RMS value from the RMS map (pixel value). mJy/beam. |

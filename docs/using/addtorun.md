@@ -3,9 +3,9 @@
 This page describes how to add images to a completed run, including how to restore the run to the previous state if an addition goes wrong.
 
 !!! note
-    Adding images to an existing run will update the sources already present from the respective run, such that the same source IDs are kept and so to all comments and tags. If a full re-run was used instead then new IDs would be created and the comments and tags lost.
+    Adding images to an existing run will update the sources already present from the respective run, such that the existing source IDs, comments, and tags are retained. If a full re-run was used instead then new IDs would be created and the comments and tags lost.
     
-    There is no limit on how many times a run can have images added to.
+    There is no limit on how many times images may be added to a run.
 
 ## Step-by-step Guide
 
@@ -57,7 +57,7 @@ When images are added to a run, a backup is made of the run before proceeding wh
 
 This command is currently unavailable to perform through the website interface but can be performed by an administrator of the pipeline via the command line interface. Please contact the adminstrator for the pipeline instance to request a run restoration.
 
-The command to perform this operation is `restorepiperun` and is described in the admin section [here](../../adminusage/cli/#restoring-a-pipeline-run).
+The command to perform this operation is `restorepiperun` and is described in the admin section [here](../../adminusage/cli/#restorepiperun).
 
 !!! warning
     Do not add any further images if you wish to restore otherwise the backup version will be lost!

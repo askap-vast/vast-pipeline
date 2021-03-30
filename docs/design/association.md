@@ -29,7 +29,7 @@ By default, association is performed on an image-by-image basis, ordered by the 
 
 ### Weighted Average Coordinates
 
-For each association method, after every iteration, the weighted average RA and Dec are calculated for each source. These weighted averages are then used as the base catalogue for the next association iteration. In other words, as the measurements are associated, new meausrements are associated against the weighted average of the sources identified to that point in the process.
+After every iteration of each association method, the average RA and Dec, weighted by the positional uncertainty, are calculated for each source. These weighted averages are then used as the base catalogue for the next association iteration. In other words, as the measurements are associated, new measurements are associated against the weighted average of the sources identified to that point in the process.
 
 Sources positions are reported using the weighted averages.
 
@@ -114,5 +114,4 @@ For large surveys where transient and variablity searches on the epoch timescale
 
 ## Parallel Association
 When parallel association is used, the images to process are analysed and grouped into distinct patches of the sky that do not overlap. These distinct regions are then processed through the source association in parallel. It is recommended to use parallel association when your dataset covers three or more distinct patches of sky.
-
 

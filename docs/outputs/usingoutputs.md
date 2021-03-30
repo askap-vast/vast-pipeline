@@ -5,7 +5,7 @@ This page gives details on how to open and use the pipeline output files.
 It is recommended to use `pandas` or `vaex` to read the pipeline results from the parquet files. See the sections below for more information on using each library.
 
 !!! note
-    It is also possible to use [`Dask`](https://docs.dask.org/en/latest/){:target="_blank"} to read the parquets in an out-of-core context but the general performace can sometimes be poor with many parquet files. 
+    It is also possible to use [`Dask`](https://docs.dask.org/en/latest/){:target="_blank"} to read the parquets in an out-of-core context but the general performance can sometimes be poor with many parquet files. 
     `vaex` is the preferred out-of-core method.
     
 !!! tip

@@ -7,7 +7,7 @@ This page details the source statistics that are calculated by the pipeline.
 The table below provides a summary of all the statistic and counts provided by the pipeline. See the [Variability Statistics](#variability-statistics) section for the table containing the variability metrics.
 
 !!! note
-    Remember that all source statistics and counts are calculated from the invidiual measurements that are associated with the source.
+    Remember that all source statistics and counts are calculated from the individual measurements that are associated with the source.
 
 | Parameter <img width=420/>      | Includes Forced Meas. | Description      | 
 | ------------------------------ | ------------------------ | ----------------- |
@@ -18,9 +18,9 @@ The table below provides a summary of all the statistic and counts provided by t
 | `avg_flux_int`          |  Yes   |         The average integrated flux, mJy. |
 | `max_flux_int`          |  Yes    |         The maximum integrated flux value, mJy. |
 | `min_flux_int`         |  Yes     |         The minimum integrated flux value, mJy. |
-| `avg_flux_peak`         |  Yes    |         The average peak flux, mJy. |
-| `max_flux_peak`         |  Yes     |         The maximum peak flux value, mJy. |
-| `min_flux_peak`        |  Yes      |         The minimum peak flux value, mJy. |
+| `avg_flux_peak`         |  Yes    |         The average peak flux, mJy/beam. |
+| `max_flux_peak`         |  Yes     |         The maximum peak flux value, mJy/beam. |
+| `min_flux_peak`        |  Yes      |         The minimum peak flux value, mJy/beam. |
 | `min_flux_int_isl_ratio`        |  Yes      |   The minimum integrated flux value island ratio (int_flux / total_isl_int_flux). |
 | `min_flux_peak_isl_ratio`        |  Yes      |   The minimum peak flux value island ratio (peak_flux / total_isl_peak_flux). |
 | `avg_compactness`        |  No      |         The average compactness of the source (compactness is defined by int_flux / peak_flux). |
@@ -50,9 +50,9 @@ Below is a table describing the variability metrics of the source. See the follo
 | `m_abs_significant_max_peak`    |  Yes   |  The $\mid m \mid$ value of the most significant two-epoch pair using the peak fluxes. Will be `0` if no significant pair.|
 
 
-### $V$ and $\eta$ Metrics
+### _V_ and _η_ Metrics
 
-The $V$ and $\eta$ metrics are the same as those used by the [LOFAR Transients Pipeline (TraP)](https://tkp.readthedocs.io/en/latest/){:target="_blank"}, for a complete description please refer to [Swinbank et al. 2015](https://ui.adsabs.harvard.edu/abs/2015A%26C....11...25S/abstract){:target="_blank"}. In the VAST Pipeline, the metrics are calculated twice, for both the integrated and peak fluxes.
+The $V$ and $\eta$ metrics are the same as those used by the [LOFAR Transients Pipeline (TraP)](https://tkp.readthedocs.io/en/latest/){:target="_blank"}, for a complete description please refer to [Swinbank et al. (2015)](https://ui.adsabs.harvard.edu/abs/2015A%26C....11...25S/abstract){:target="_blank"}. In the VAST Pipeline, the metrics are calculated twice, for both the integrated and peak fluxes.
 
 $V$ is the proportional flux variability of the source and is given by the ratio of the sample standard deviation ($s$) and mean of the flux, $I$:
 
@@ -60,7 +60,7 @@ $$
 V = \frac{s}{\overline{I}} = \frac{1}{\overline{I}} \sqrt{\frac{N}{N - 1}\left(\overline{I^{2}}-\overline{I}^{2}\right)}.
 $$
 
-The $\eta$ value is the significane of the variability, based on $\chi^{2}$ statistics, and is given by:
+The $\eta$ value is the significance of the variability, based on $\chi^{2}$ statistics, and is given by:
 
 $$
 \eta = \frac{N}{N - 1}\left(\overline{wI^{2}} - \frac{\overline{wI}^{2}}{\overline{w}}\right)
@@ -71,7 +71,7 @@ where $w$ is the uncertainty ($e$) in $I$ of a measurement, and is given by $w=\
 ### Two-Epoch Metrics
 
 Alternative variability metrics, $V_s$ and $m$, are also calculated which we refer to as the 'two-epoch metrics'. 
-They are calculated for each unique pair of measurements assoicated with the source, with the most significant pair of values attached to the source (see section below). Please refer to [Mooley et al. 2016](https://ui.adsabs.harvard.edu/abs/2016ApJ...818..105M/abstract){:target="_blank"} for further details.
+They are calculated for each unique pair of measurements assoicated with the source, with the most significant pair of values attached to the source (see section below). Please refer to [Mooley et al. (2016)](https://ui.adsabs.harvard.edu/abs/2016ApJ...818..105M/abstract){:target="_blank"} for further details.
 
 !!! note
     All the two-epoch pair $V_s$ and $m$ values for a run are saved in the output file `measurement_pairs.parquet` for offline analysis.

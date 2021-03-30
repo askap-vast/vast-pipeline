@@ -14,19 +14,19 @@ A FITS image that is being processed as part of a pipeline run. It also has rela
 An extracted measurement read from the selavy source catalogue from an associated image. The only measurements produced by the pipeline are `forced measurements` which are performed when monitoring is used.
 
 **`Source`**  
-A group of associated measurements that are identified as the same astrophysical source.
+A group of measurements that have been identified as the same astrophysical source by a pipeline association method.
 
 ## Pipeline Processing Steps
 
 !!! note
-    Each pipeline run is self-aware only, which means that each run does not draw on the results of other runs. However images and associated measurements are only ingested once and are shared between runs.
+    Each pipeline run is self-aware only, which means that each run does not draw on the results of other runs. However, since images and their measurements don't change, subsequent runs that use any image that was ingested as part of a previous run will not be ingested again.
 
 ### 1. Image & Selavy Catalogue Ingest
 Full details: [Image & Selavy Catalogue Ingest](imageingest.md).
 
-The first stage of the pipeline is to read and ingest to the database the input data that has been provided in the configuration file. This includes determing statistics about the image footprint and properties, and also importing and cleaning the associated measurements from the selavy file. The errors on the measurements can also be recalculated at this stage based upon the Condon 97 method.
+The first stage of the pipeline is to read and ingest to the database the input data that has been provided in the configuration file. This includes determing statistics about the image footprint and properties, and also importing and cleaning the associated measurements from the selavy file. The errors on the measurements can also be recalculated at this stage based upon the [Condon (1997)](https://doi.org/10.1086/133871){:target="_blank"} method.
 
-An image uniqueness is determined by the filename, and once the image is ingested, it is available for other pipeline runs to use without having to re-ingest.
+Image uniqueness is determined by the filename, and once the image is ingested, it is available for other pipeline runs to use without having to re-ingest.
 
 ### 2. Source Association
 Full details: [Source Association](association.md).
