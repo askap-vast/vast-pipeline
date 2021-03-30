@@ -6,7 +6,7 @@ This page details the website pages for information on the sources.
 
 Users can filter and query the sources currently in the database by using the form located on this page. 
 
-The form is submitted by clicking the blue 'magnifying glass' button, the red 'bin' button will reset the form by removing all entered values.
+The form is submitted by clicking the blue :fontawesome-solid-search: button, the red :fontawesome-solid-trash: button  will reset the form by removing all entered values.
 Once the form is submitted the results are dynamically updated in the results table below the form (i.e. on the same page).
 
 The following sections provide further details on the form.
@@ -26,7 +26,7 @@ Users can choose whether to input their coordinates directly or use the object n
 
 #### Manual Input
 
-The format of the coordinates should be in a standard format that is recongised by astropy, for example:
+The format of the coordinates should be in a standard format that is recognised by astropy, for example:
 
 * `21 29 45.29 -04 29 11.9`
 * `21:29:45.29 -04:29:11.9`
@@ -38,7 +38,7 @@ Feedback will be given immediately whether the coordinates are valid, as shown i
 [![VAST Pipeline Source Query Cone Search](../img/cone-search-ok.png){: loading=lazy }](../img/cone-search-ok.png)
 [![VAST Pipeline Source Query Cone Search](../img/cone-search-bad.png){: loading=lazy }](../img/cone-search-bad.png)
 
-Once the coordinates have been entered the radius value must also be specified as done in the screenshot above. Use the dropdown menu to set the radius unit to be `arcsec`, `arcmin` or `deg`.
+Once the coordinates have been entered the radius value must also be specified as shown in the screenshot above. Use the dropdown menu to change the radius unit to be `arcsec`, `arcmin` or `deg`.
 
 #### Name Resolver
 

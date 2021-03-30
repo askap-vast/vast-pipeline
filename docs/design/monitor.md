@@ -6,7 +6,7 @@ This page details the forced measurements obtained by the pipeline.
 
 When `monitor = True` is selected in the pipeline run configuration file, any sources that have non-detections in their lightcurve will have these measurements 'filled in' by performing `forced measurements`. This means that the flux at the source's position in the non-detection image is forcefully measured by fitting a Gaussian with the same shape as the respective image restoring beam.
 
-Forced measurements are signified in the measurements table or parquet files by the column `forced`.
+Forced measurements are labelled in the measurements table and parquet files by the column `forced`.
 
 !!! note
     Forced measurements are local to a pipeline run - they will not appear in any other pipeline run.
@@ -16,9 +16,9 @@ Forced measurements are signified in the measurements table or parquet files by 
 
 ## Minimum Sigma Filter
 
-Before forced measurements are processed, a minimum sigma check is made to make sure that the forced measurements are useful information. For example, a dataset may contain an image that is significantly not as sensitive as all the other images. In this case a faint source in the sensitive images will not be expected to be seen in the non-sensitive image, hence, to avoid unnecessary computation, this source is not forcefully measured.  
+Before forced measurements are processed, a minimum sigma check is made to make sure that the forced measurements would provide useful information. For example, a dataset may contain an image that has significantly less sensitivity than the other images. In this case a faint source in the more sensitive images will not be expected to be seen in the less sensitive image. To avoid unnecessary computation, this source is not forcefully measured.
 
-The check is performed like that which is made in the [New Sources](newsources.md) process where the signal-to-noise ration is calculated using the rms$_{min}$ of the image it is to be extracted from. Hence, for a forced measurement to take place the following condition must be met:
+The check is performed like that which is made in the [New Sources](newsources.md) process where the signal-to-noise ratio is calculated using the rms$_{min}$ of the image it is to be extracted from. Hence, for a forced measurement to take place the following condition must be met:
 
 $$
 \frac{f_{peak,det}}{\text{rms}_{min,i}} > \text{MONITOR_MIN_SIGMA},

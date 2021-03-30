@@ -16,7 +16,7 @@ Navigate to the detail page of the run you wish to process.
 [![VAST Pipeline Runs Detail](../img/run-detail.png){: loading=lazy }](../img/run-detail.png)
 
 ### 2. Run a config validation
-Before processing it is recommended to check that the confiuration file is valid. This is done by scrolling down to the config file card on the page and selecting `Validate Config` option accessed by clicking the three dots menu button. Doing this will check if the configuration contains any errors prior to processing.
+Before processing it is recommended to check that the configuration file is valid. This is done by scrolling down to the config file card on the page and selecting the `Validate Config` option accessed by clicking the three dots menu button. Doing this will check if the configuration contains any errors prior to processing.
 
 Feedback will be provided on whether the configuration file is valid. In the event of an error, this can be corrected by using the edit option found in the same menu.
 
@@ -59,4 +59,3 @@ A full re-run will be required if the run configuration needs to be changed, or 
 
 ## Adding Images to a Run
 See the dedicated documentation page [here](addtorun.md).
-

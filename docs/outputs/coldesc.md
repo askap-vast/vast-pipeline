@@ -2,14 +2,14 @@
 
 This page details the columns contained in each output file.
 
-## assocications
+## associations
 
 | Column | Unit | Description |
 | ------ | ---- | ----------- |
 | `source_id` | n/a | The database `id` of the source for the association. |
 | `meas_id` | n/a | The database `id` of the measurement for the association. |
-| `d2d` | arcsec | The on-sky separation of the measurement to the source at the iteration stage the assocation was created. |
-| `dr` | n/a | The de Ruiter radius of the measurement to the source at the iteration stage the assocation was created. Will be 0 if de Ruiter assocation is not being used. |
+| `d2d` | arcsec | The on-sky separation of the measurement to the source at the iteration stage the association was created. |
+| `dr` | n/a | The de Ruiter radius of the measurement to the source at the iteration stage the association was created. Will be 0 if de Ruiter assocation is not being used. |
 
 ## bands
 
@@ -39,16 +39,16 @@ This page details the columns contained in each output file.
 |`ra`| deg | The central Right Ascension coordinate of the image. |
 |`dec`| deg | The central Declination coordinate of the image. |
 |`fov_bmaj`| deg | The estimated major axis field-of-view value - the `radius_pixels` multipled by the major axis pixel size. |
-|`fov_bmin`| deg | The estimated minor axis field-of-view value - the `raidus_pixels` multipled by the minor axis pixel size. |
+|`fov_bmin`| deg | The estimated minor axis field-of-view value - the `radius_pixels` multipled by the minor axis pixel size. |
 |`physical_bmaj`| deg | The actual major axis on-sky size - the number of pixels on the major axis multiplied by the major axis pixel size. |
 |`physical_bmin`| deg | The actual minor axis on-sky size - the number of pixels on the minor axis multiplied by the minor axis pixel size. |
 |`radius_pixels`| pixels | Estimated 'diameter' of the useable image area. |
 |`beam_bmaj`| deg | The size of the major axis of the image restoring beam. |
 |`beam_bmin`| deg | The size of the minor axis of the image restoring beam. |
 |`beam_bpa`| deg | The position angle of the image restoring beam. |
-|`rms_median`| mJy | The median RMS value derrived from the RMS map. |
-|`rms_min`| mJy | The minimum RMS value derrived from the RMS map (pixel value). |
-|`rms_max`| mJy | The maximum RMS value derrived from the RMS map (pixel value). |
+|`rms_median`| mJy/beam | The median RMS value derrived from the RMS map. |
+|`rms_min`| mJy/beam | The minimum RMS value derrived from the RMS map (pixel value). |
+|`rms_max`| mJy/beam | The maximum RMS value derrived from the RMS map (pixel value). |
 
 ## measurements
 
@@ -64,8 +64,8 @@ This page details the columns contained in each output file.
 |`ra_err`| deg | The error of the right ascension coordinate of the measurement. |
 |`dec`| deg | The declination coordinate of the measurement. |
 |`dec_err`| deg | The error of the declination coordinate of the measurement. |
-|`flux_peak`| mJy | The measured peak flux of the component. |
-|`flux_peak_err`| mJy | The error of the measured peak flux of the component. |
+|`flux_peak`| mJy/beam | The measured peak flux of the component. |
+|`flux_peak_err`| mJy/beam | The error of the measured peak flux of the component. |
 |`flux_int`| mJy | The measured integrated flux of the component. |
 |`flux_int_err`| mJy | The error of the measured integrated flux of the component. |
 |`bmaj`| arcsec | The major axis size of the fitted Gaussian (FWHM). |
@@ -107,13 +107,13 @@ This page details the columns contained in each output file.
 |`meas_id_b`| n/a | The database `id` of measurement `b` of the pair. |
 |`flux_int_a`| mJy | The integrated flux of measurement `a` of the pair. |
 |`flux_int_err_a`| mJy | The error of the integrated flux of measurement `a` of the pair. |
-|`flux_peak_a`| mJy | The peak flux of measurement `a` of the pair. |
-|`flux_peak_err_a`| mJy | The error of the peak flux of measurement `a` of the pair. |
+|`flux_peak_a`| mJy/beam | The peak flux of measurement `a` of the pair. |
+|`flux_peak_err_a`| mJy/beam | The error of the peak flux of measurement `a` of the pair. |
 |`image_name_a`| n/a | The `image name` of measurement `a` of the pair. |
 |`flux_int_b`| mJy | The integrated flux of measurement `b` of the pair. |
 |`flux_int_err_b`| mJy | The error of the integrated flux of measurement `b` of the pair. |
-|`flux_peak_b`| mJy | The peak flux of measurement `b` of the pair. |
-|`flux_peak_err_b`| mJy | The error of the peak flux of measurement `b` of the pair. |
+|`flux_peak_b`| mJy/beam | The peak flux of measurement `b` of the pair. |
+|`flux_peak_err_b`| mJy/beam | The error of the peak flux of measurement `b` of the pair. |
 |`image_name_b`| n/a | The `image name` of measurement `b` of the pair. |
 |`vs_peak`| n/a | The pair $V_s$ value using the peak flux. |
 |`vs_int`| n/a | The pair $V_s$ value using the integrated flux. |
@@ -168,9 +168,9 @@ This page details the columns contained in each output file.
 |`avg_flux_int`| mJy | The average integrated flux value of the measurements associated to the source (inc. forced measurements). |
 |`max_flux_int`| mJy | The maximum integrated flux value of the measurements associated to the source (inc. forced measurements). |
 |`min_flux_int`| mJy | The minimum integrated flux value of the measurements associated to the source (inc. forced measurements). |
-|`avg_flux_peak`| mJy | The average peak flux value of the measurements associated to the source (inc. forced measurements). |
-|`max_flux_peak`| mJy | The maximum peak flux value of the measurements associated to the source (inc. forced measurements). |
-|`min_flux_peak`| mJy | The minimum peak flux value of the measurements associated to the source (inc. forced measurements). |
+|`avg_flux_peak`| mJy/beam | The average peak flux value of the measurements associated to the source (inc. forced measurements). |
+|`max_flux_peak`| mJy/beam | The maximum peak flux value of the measurements associated to the source (inc. forced measurements). |
+|`min_flux_peak`| mJy/beam | The minimum peak flux value of the measurements associated to the source (inc. forced measurements). |
 |`min_flux_peak_isl_ratio`| n/a | The minimum ratio of the peak flux to the total island peak flux of the measurements associated to the source. |
 |`min_flux_int_isl_ratio`| n/a | The minimum ratio of the integrated flux to the total island integrated flux of the measurements associated to the source. |
 |`v_int`| n/a | The calculated variability $V$ metric using the integrated flux values. See [variability statistics](../design/sourcestats.md#variability-statistics). |

@@ -137,18 +137,24 @@ SOURCE_AGGREGATE_PAIR_METRICS_MIN_ABS_VS = 4.3
 
 ### Images and Selavy Files
 **`IMAGE_FILES`**  
-List or Dictionary. The full paths to the image FITS files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see ) in which case all inputs must also be in dictionary format. The order of the entires must be consistent with the other input types.
-```python
-IMAGE_FILES = [
-    "/full/path/to/image1.fits", "/full/path/to/image2.fits", "/full/path/to/image3.fits"
-]
-```
-```python
-IMAGE_FILES = {
-    "epoch01": ["/full/path/to/image1.fits", "/full/path/to/image2.fits"], 
-    "epoch02": ["/full/path/to/image3.fits"],
-}
-```
+List or Dictionary. The full paths to the image FITS files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see [Epoch Based Association](../design/association.md#epoch-based-association)) in which case all inputs must also be in dictionary format. The order of the entries must be consistent with the other input types.
+
+=== "Normal mode"
+
+    ```python
+    IMAGE_FILES = [
+        "/full/path/to/image1.fits", "/full/path/to/image2.fits", "/full/path/to/image3.fits"
+    ]
+    ```
+
+=== "Epoch mode"
+
+    ```python
+    IMAGE_FILES = {
+        "epoch01": ["/full/path/to/image1.fits", "/full/path/to/image2.fits"],
+        "epoch02": ["/full/path/to/image3.fits"],
+    }
+    ```
 
 !!! tip
     Use `glob` to easily list a large amount of files. E.g.  
@@ -160,50 +166,68 @@ IMAGE_FILES = {
     This can also be applied to any of the input options below.
     
 **`SELAVY_FILES`**  
-List or Dictionary. The full paths to the selavy text files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see ) in which case all inputs must also be in dictionary format. The order of the entires must be consistent with the other input types.
-```python
-SELAVY_FILES = [
-    "/full/path/to/image1_selavy.txt", "/full/path/to/image2_selavy.txt", "/full/path/to/image3_selavy.txt"
-]
-```
-```python
-SELAVY_FILES = {
-    "epoch01": ["/full/path/to/image1_selavy.txt", "/full/path/to/image2_selavy.txt"], 
-    "epoch02": ["/full/path/to/image3_selavy.txt"],
-}
-```
+List or Dictionary. The full paths to the selavy text files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see [Epoch Based Association](../design/association.md#epoch-based-association)) in which case all inputs must also be in dictionary format. The order of the entries must be consistent with the other input types.
+
+=== "Normal mode"
+
+    ```python
+    SELAVY_FILES = [
+        "/full/path/to/image1_selavy.txt", "/full/path/to/image2_selavy.txt", "/full/path/to/image3_selavy.txt"
+    ]
+    ```
+
+=== "Epoch mode"
+
+    ```python
+    SELAVY_FILES = {
+        "epoch01": ["/full/path/to/image1_selavy.txt", "/full/path/to/image2_selavy.txt"], 
+        "epoch02": ["/full/path/to/image3_selavy.txt"],
+    }
+    ```
 
 **`NOISE_FILES`**  
-List or Dictionary. The full paths to the image noise (RMS) FITS files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see ) in which case all inputs must also be in dictionary format. The order of the entires must be consistent with the other input types.
-```python
-NOISE_FILES = [
-    "/full/path/to/image1_rms.fits", "/full/path/to/image2_rms.fits", "/full/path/to/image3_rms.fits"
-]
-```
-```python
-NOISE_FILES = {
-    "epoch01": ["/full/path/to/image1_rms.fits", "/full/path/to/image2_rms.fits"], 
-    "epoch02": ["/full/path/to/image3_rms.fits"],
-}
-```
+List or Dictionary. The full paths to the image noise (RMS) FITS files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see [Epoch Based Association](../design/association.md#epoch-based-association)) in which case all inputs must also be in dictionary format. The order of the entries must be consistent with the other input types.
+
+=== "Normal mode"
+
+    ```python
+    NOISE_FILES = [
+        "/full/path/to/image1_rms.fits", "/full/path/to/image2_rms.fits", "/full/path/to/image3_rms.fits"
+    ]
+    ```
+
+=== "Epoch mode"
+
+    ```python
+    NOISE_FILES = {
+        "epoch01": ["/full/path/to/image1_rms.fits", "/full/path/to/image2_rms.fits"], 
+        "epoch02": ["/full/path/to/image3_rms.fits"],
+    }
+    ```
 
 **`BACKGROUND_FILES`**  
-List or Dictionary. The full paths to the image background (mean) FITS files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see ) in which case all inputs must also be in dictionary format. The order of the entires must be consistent with the other input types. Only required to be defined if `MONITOR` is set to `True`.
-```python
-BACKGROUND_FILES = [
-    "/full/path/to/image1_bkg.fits", "/full/path/to/image2_bkg.fits", "/full/path/to/image3_bkg.fits"
-]
-```
-```python
-BACKGROUND_FILES = {
-    "epoch01": ["/full/path/to/image1_bkg.fits", "/full/path/to/image2_bkg.fits"], 
-    "epoch02": ["/full/path/to/image3_bkg.fits"],
-}
-```
+List or Dictionary. The full paths to the image background (mean) FITS files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see [Epoch Based Association](../design/association.md#epoch-based-association)) in which case all inputs must also be in dictionary format. The order of the entries must be consistent with the other input types. Only required to be defined if `MONITOR` is set to `True`.
+
+=== "Normal mode"
+
+    ```python
+    BACKGROUND_FILES = [
+        "/full/path/to/image1_bkg.fits", "/full/path/to/image2_bkg.fits", "/full/path/to/image3_bkg.fits"
+    ]
+    ```
+
+=== "Epoch mode"
+
+    ```python
+    BACKGROUND_FILES = {
+        "epoch01": ["/full/path/to/image1_bkg.fits", "/full/path/to/image2_bkg.fits"], 
+        "epoch02": ["/full/path/to/image3_bkg.fits"],
+    }
+    ```
 
 ### Source Finder Format
 **`SOURCE_FINDER`**  
-String. Signifies the format of the source finder text file which will be read. Currently only supports `"selavy"`.
+String. Signifies the format of the source finder text file read by the pipeline. Currently only supports `"selavy"`.
 
 !!! warning
     Source finding is not performed by the pipeline and must be completed prior to processing.
@@ -254,7 +278,7 @@ Float. The de Ruiter radius limit to use during `deruiter` association only. The
 Float. The beamwidth limit to use during `deruiter` association only. Multiplicative factor. Defaults to `1.5`.
 
 **`ASSOCIATION_PARALLEL`**  
-Boolean. When `True`, association is attempted to be performed in parallel on separate sky regions. Defaults to `False`.
+Boolean. When `True`, association is performed in parallel on non-overlapping groups of sky regions. Defaults to `False`.
 
 **`ASSOCIATION_EPOCH_DUPLICATE_RADIUS`**  
 Float. Applies to epoch based association only. Defines the limit at which a duplicate source is identified. Unit is arcseconds. Defaults to `2.5` (commonly one pixel for ASKAP images).

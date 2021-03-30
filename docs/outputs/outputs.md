@@ -1,11 +1,11 @@
 # Outputs Overview
 
-This page gives details on the physical files that the pipeline produces.
+This page gives details on the output files that the pipeline writes to disk.
 
 ## Pipeline Run Output Overview
 
 The output for a pipeline run will be located in the pipeline working directory, which is defined at the pipeline configuration stage (see [Pipeline Configuration](../quickstart/configuration.md#pipeline-configuration)).
-A sub-directoy will exist for each pipeline run that contains the output products for the run. 
+A sub-directory will exist for each pipeline run that contains the output products for the run. 
 
 !!! note
     If you do not administrate your system or do not have access to a `vast-tools` notebook interface, please contact your system admin to confirm the working directory and how to best access the files.
