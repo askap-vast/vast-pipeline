@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added support for glob expressions when specifying input files in the run config file [#504](https://github.com/askap-vast/vast-pipeline/pull/504)
 - Added new entries in the documentation FAQ section [#491](https://github.com/askap-vast/vast-pipeline/pull/491).
 - Added new home page for documentation [#491](https://github.com/askap-vast/vast-pipeline/pull/491).
 - Added dark mode switch on documentation [#487](https://github.com/askap-vast/vast-pipeline/pull/487).
@@ -79,6 +80,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - [#503](https://github.com/askap-vast/vast-pipeline/pull/503) fix, dep: Change arrow file generation from vaex to pyarrow.
 - [#501](https://github.com/askap-vast/vast-pipeline/pull/501) fix: fix broken cone search when coord = 0
+- [#504](https://github.com/askap-vast/vast-pipeline/pull/504) feat: Add glob expression support to yaml run config.
 - [#491](https://github.com/askap-vast/vast-pipeline/pull/491) doc: Updated the docs layout, home page and FAQs.
 - [#493](https://github.com/askap-vast/vast-pipeline/pull/493) fix: Fix bokeh hover tool for lightcurve plots.
 - [#482](https://github.com/askap-vast/vast-pipeline/pull/482) dep: Bump y18n from 3.2.1 to 3.2.2.

@@ -108,3 +108,4 @@ celerybeat-schedule
 docker/
 .dockerignore
 .idea/
+mypy.ini

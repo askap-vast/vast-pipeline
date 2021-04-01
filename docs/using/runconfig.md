@@ -254,6 +254,43 @@ List or Dictionary. The full paths to the image background (mean) FITS files to 
     ```
 <!-- markdownlint-enable MD046 -->
 
+#### Using glob expressions
+
+Instead of providing each input file explicitly, the inputs can be given as glob expressions which are resolved and sorted. Glob expressions must be provided as a mapping with the key `glob`. Both normal and epoch mode are supported.
+
+For example, the image input examples given above can be equivalently specified with the following glob expressions.
+
+<!-- markdownlint-disable MD046 -->
+=== "Normal mode"
+
+    ```yaml
+    inputs:
+      image:
+        glob: /full/path/to/image*.fits
+    ```
+
+=== "Epoch mode"
+
+    ```yaml
+    inputs:
+      image:
+        epoch01:
+          glob: /full/path/to/image[12].fits
+        epoch02:
+        - /full/path/to/image3.fits
+    ```
+<!-- markdownlint-enable MD046 -->
+
+Multiple glob expressions can also be provided as a list, in which case they are resolved and sorted in the order they are given. For example:
+
+```yaml
+inputs:
+  image:
+    glob:
+    - /full/path/to/A/image*.fits
+    - /full/path/to/B/image*.fits
+```
+
 ### Source Monitoring
 
 **`source_monitoring.monitor`**

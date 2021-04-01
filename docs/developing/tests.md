@@ -20,10 +20,10 @@ To run one test file or class, use:
 (pipeline_env)$ ./manage.py test <path.to.test>
 ```
 
-for example, to run the test class `CheckRunConfigValidationTest` located in [`test_pipelineconfig.py`](https://github.com/askap-vast/vast-pipeline/blob/master/vast_pipeline/tests/test_pipelineconfig.py){:target="_blank"}, use:
+for example, to run the test class `CheckBasicRunConfigValidationTest` located in [`test_pipelineconfig.py`](https://github.com/askap-vast/vast-pipeline/blob/master/vast_pipeline/tests/test_pipelineconfig/test_pipelineconfig.py){:target="_blank"}, use:
 
 ```bash
-(pipeline_env)$ ./manage.py test vast_pipeline.tests.test_pipelineconfig.CheckRunConfigValidationTest
+(pipeline_env)$ ./manage.py test vast_pipeline.tests.test_pipelineconfig.test_pipelineconfig.CheckBasicRunConfigValidationTest
 ```
 
 to run the tests located in [`test_webserver.py`](https://github.com/askap-vast/vast-pipeline/blob/master/vast_pipeline/tests/test_webserver.py){:target="_blank"}, use:

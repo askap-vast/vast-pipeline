@@ -1,3 +1,4 @@
+from glob import glob
 import logging
 import os
 from typing import Any, Dict, List
@@ -53,14 +54,15 @@ class PipelineConfig:
         "noise": True,
         "background": False,
     }
-    # inputs may be optional, all inputs will be either a unique list or a mapping to a unique list
+    # Inputs may be optional. All inputs will be either a unique list or a mapping (epoch
+    # mode and/or glob expressions). These possibilities cannot be validated at once, so
+    # it will accept Any and then revalidate later.
     _SCHEMA_INPUTS = {
-        (k if v else yaml.Optional(k)): yaml.MapPattern(
-            yaml.Str(), yaml.UniqueSeq(yaml.Str())
-        )
+        (k if v else yaml.Optional(k)): yaml.MapPattern(yaml.Str(), yaml.Any())
         | yaml.UniqueSeq(yaml.Str())
         for k, v in _REQUIRED_INPUT_TYPES.items()
     }
+    _SCHEMA_GLOB_INPUTS = {"glob": yaml.Str() | yaml.Seq(yaml.Str())}
     _VALID_ASSOC_METHODS: List[str] = ["basic", "advanced", "deruiter"]
     SCHEMA = yaml.Map(
         {
@@ -143,33 +145,62 @@ class PipelineConfig:
 
         # ensure the inputs are valid in case .from_file(..., validate=False) was used
         try:
-            self._yaml["inputs"].revalidate(yaml.Map(self._SCHEMA_INPUTS))
+            self._validate_inputs()
         except yaml.YAMLValidationError as e:
             raise PipelineConfigError(e)
+
+        # detect simple list inputs and convert them to epoch-mode inputs
         for input_file_type in self._REQUIRED_INPUT_TYPES:
+            # skip missing optional input types, e.g. background
             if (
                 not self._REQUIRED_INPUT_TYPES[input_file_type]
                 and input_file_type not in self["inputs"]
             ):
-                # skip missing optional input types, e.g. background
                 continue
+
             input_files = self["inputs"][input_file_type]
-            if isinstance(input_files, list):
-                # Epoch-based association not requested. Replace input lists with dicts
-                # where each input file has it's own epoch.
-                self.epoch_based = False
-                pad_width = len(str(len(input_files)))
-                input_files_dict = {
-                    f"{i + 1:0{pad_width}}": [val] for i, val in enumerate(input_files)
-                }
-                self._yaml["inputs"][input_file_type] = input_files_dict
+
+            # resolve glob expressions if present
+            if isinstance(input_files, dict):
+                # must be either a glob expression, list of glob expressions, or epoch-mode
+                if "glob" in input_files:
+                    # resolve the glob expressions
+                    self.epoch_based = False
+                    file_list = self._resolve_glob_expressions(
+                        self._yaml["inputs"][input_file_type]
+                    )
+                    self._yaml["inputs"][input_file_type] = self._create_input_epochs(
+                        file_list
+                    )
+                else:
+                    # epoch-mode with either a list of files or glob expressions
+                    self.epoch_based = True
+                    for epoch in input_files:
+                        if "glob" in input_files[epoch]:
+                            # resolve the glob expressions
+                            file_list = self._resolve_glob_expressions(
+                                self._yaml["inputs"][input_file_type][epoch]
+                            )
+                            self._yaml["inputs"][input_file_type][epoch] = file_list
             else:
-                # must be a dict
-                self.epoch_based = True
+                # Epoch-based association not requested and no globs present. Replace
+                # input lists with dicts where each input file has it's own epoch.
+                self.epoch_based = False
+                self._yaml["inputs"][input_file_type] = self._create_input_epochs(
+                    input_files
+                )
 
     def __getitem__(self, name: str):
         """Retrieves the requested YAML chunk as a native Python object."""
         return self._yaml[name].data
+
+    @staticmethod
+    def _create_input_epochs(input_files: List[str]) -> Dict[str, List[str]]:
+        pad_width = len(str(len(input_files)))
+        input_files_dict = {
+            f"{i + 1:0{pad_width}}": [val] for i, val in enumerate(input_files)
+        }
+        return input_files_dict
 
     @classmethod
     def from_file(
@@ -216,6 +247,73 @@ class PipelineConfig:
             config_dict = dict_merge(config_defaults_dict, config_yaml.data)
             config_yaml = yaml.as_document(config_dict, schema=schema, label=label)
         return cls(config_yaml)
+
+    @staticmethod
+    def _resolve_glob_expressions(input_files: yaml.YAML) -> List[str]:
+        """Resolve glob expressions in a YAML chunk, returning a list of sorted file
+        paths.
+
+        Args:
+            input_files (yaml.YAML): A validated YAML chunk of input files that is a
+                mapping of "glob" to either a single glob expression or a sequence of
+                glob expressions. e.g.
+                ---
+                glob: /foo/*.fits
+                ---
+                or
+                ---
+                glob:
+                - /foo/A/*.fits
+                - /foo/B/*.fits
+                ---
+
+        Returns:
+            List[str]: The resolved file paths in lexicographical order.
+        """
+        file_list: List[str] = []
+        if input_files["glob"].is_sequence():
+            for glob_expr in input_files["glob"]:
+                file_list.extend(sorted(list(glob(glob_expr.data))))
+        else:
+            file_list.extend(sorted(list(glob(input_files["glob"].data))))
+        return file_list
+
+    def _validate_inputs(self):
+        """Validate the input files. Each input type (i.e. image, selavy, noise,
+        background) may be given as one of the following:
+            1. A list of files.
+            2. A glob expression.
+            3. A list of glob expressions.
+            4. A mapping of epochs to any of the above.
+        Each input type is validated individually. Extra input validation steps, e.g. to
+        ensure each input type has the same number of files, are performed in
+        `validate()`.
+
+        Raises:
+            PipelineConfigError: The run config inputs fail schema validation.
+        """
+        try:
+            # first pass validation
+            self._yaml["inputs"].revalidate(yaml.Map(self._SCHEMA_INPUTS))
+
+            for input_type in self._yaml["inputs"]:
+                input_yaml = self._yaml["inputs"][input_type]
+                if input_yaml.is_mapping():
+                    # inputs are either epoch-mode, glob expressions, or both
+                    if "glob" in input_yaml:
+                        # validate globs
+                        input_yaml.revalidate(yaml.Map(self._SCHEMA_GLOB_INPUTS))
+                    else:
+                        # validate epoch mode which may also contain glob expressions
+                        input_yaml.revalidate(
+                            yaml.MapPattern(
+                                yaml.Str(),
+                                yaml.UniqueSeq(yaml.Str())
+                                | yaml.Map(self._SCHEMA_GLOB_INPUTS),
+                            )
+                        )
+        except yaml.YAMLValidationError as e:
+            raise PipelineConfigError(e)
 
     def validate(self, user: User = None):
         """Perform extra validation steps not covered by the default schema validation.
@@ -376,7 +474,7 @@ class PipelineConfig:
 
         # ensure the input files all exist
         for input_type in self["inputs"].keys():
-            for file_list in self["inputs"][input_type].values():
+            for epoch, file_list in self["inputs"][input_type].items():
                 for file in file_list:
                     if not os.path.exists(file):
                         raise PipelineConfigError(f"{file} does not exist.")
