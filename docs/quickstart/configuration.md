@@ -112,8 +112,8 @@ Create a Django superuser account with the following command and follow the inte
 python manage.py createsuperuser
 ```
 
-This account can be used to log into the Django admin panel once the webserver is running (see [Starting the Pipeline Web App](../usage/app.md#starting-the-pipeline-web-app)) by navigating to <https://localhost:8000/pipe-admin/>. Once logged in, you will land on the Django admin page. Navigate back to the pipeline homepage <http://localhost:8000/> and you should be authenticated.
+This account can be used to log into the Django admin panel once the webserver is running (see [Starting the Pipeline Web App](../adminusage/app.md#starting-the-pipeline-web-app)) by navigating to <https://localhost:8000/pipe-admin/>. Once logged in, you will land on the Django admin page. Navigate back to the pipeline homepage <http://localhost:8000/> and you should be authenticated.
 
 ## Data Exploration via Django Web Server
 
-You can start the web app/server via the instructions provided in [Starting the Pipeline Web App](../usage/app.md#starting-the-pipeline-web-app).
+You can start the web app/server via the instructions provided in [Starting the Pipeline Web App](../adminusage/app.md#starting-the-pipeline-web-app).

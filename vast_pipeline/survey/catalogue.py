@@ -1,4 +1,5 @@
-# original VAST file: PATH/vast-pipeline/vast/import_survey_catalogue.py
+"""Original VAST file: PATH/vast-pipeline/vast/import_survey_catalogue.py
+"""
 
 import os
 import numpy as np
@@ -7,6 +8,7 @@ import logging
 import pandas as pd
 from astropy.table import Table
 from astropy.io.votable import parse_single_table
+from typing import Dict
 
 from vast_pipeline.utils.utils import StopWatch
 from .translators import translators
@@ -15,13 +17,24 @@ from .translators import translators
 logger = logging.getLogger(__name__)
 
 
-def get_survey(filename, survey_name, survey_id, tr=translators['DEFAULT']):
+def get_survey(
+    filename: str, survey_name: str, survey_id,
+    tr: Dict[str, str]=translators['DEFAULT']
+) -> pd.DataFrame:
     """
-    read a table and extract the columns of interest
-    :param filename:
-    :param survey_name:
-    :return:
+    Read a table and extract the columns of interest.
+
+    Args:
+        filename: The catalogue file name.
+        survey_name: The name of the survey.
+        survey_id: The ID of the survey.
+        tr: The dictionary containing the translators of the source
+            finders.
+
+    Returns:
+        A dataframe of the translated source catalogue.
     """
+    #TODO: Unsure of what the survey ID is.
     # moving to Pandas (in future to Dask)
     watch = StopWatch()
     ext = os.path.splitext(filename)[-1]
@@ -95,4 +108,5 @@ def get_survey(filename, survey_name, survey_id, tr=translators['DEFAULT']):
                 tab[col] = tab[col].fillna(0)
 
     logger.info('total time to process catalogue: %f s', watch.reset())
+
     return tab

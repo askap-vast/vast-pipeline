@@ -1,3 +1,7 @@
+"""
+This module contains the urls used by the Django web server.
+"""
+
 from django.urls import include, path, re_path, register_converter
 from rest_framework.routers import DefaultRouter
 import tagulous.views

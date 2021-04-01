@@ -8,6 +8,7 @@ Eg   : ./manage.py importsurvey NVSS /data/nvss.fits
 import os
 import logging
 
+from argparse import ArgumentParser
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from sqlalchemy import create_engine
@@ -32,7 +33,16 @@ class Command(BaseCommand):
         '(SurveySource table).'
     )
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: ArgumentParser) -> None:
+        """
+        Enables arguments for the command.
+
+        Args:
+            parser (ArgumentParser): The parser object of the command.
+
+        Returns:
+            None
+        """
         # positional arguments
         parser.add_argument(
             'survey_name', nargs=1, type=str, help='the name of the survey'
@@ -44,7 +54,17 @@ class Command(BaseCommand):
             help='the path to the survey file'
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args, **options) -> None:
+        """
+        Handle function of the command.
+
+        Args:
+            *args: Variable length argument list.
+            **options: Variable length options.
+
+        Returns:
+            None
+        """
         # check/create survey folder
         if not os.path.exists(settings.SURVEYS_WORKING_DIR):
             os.mkdir(settings.SURVEYS_WORKING_DIR)

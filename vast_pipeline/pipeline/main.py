@@ -1,7 +1,13 @@
+"""
+This module contains the main pipeline class used for processing a pipeline
+run.
+"""
+
 import os
 import operator
 import logging
 from typing import List, Tuple
+from types import ModuleType
 
 from astropy import units as u
 from astropy.coordinates import Angle
@@ -35,14 +41,27 @@ logger = logging.getLogger(__name__)
 
 class Pipeline():
     '''
-    Instance of a pipeline. All the methods runs the pipeline opearations,
-    such as association
+    Instance of a pipeline. All the methods run stages of the pipeline
+    processing.
+
+    Attributes:
+        name (str): The name of the pipeline run.
+        config (config): The configuration options of the pipeline run.
+        epoch_based (bool): Whether the pipeline run is in epoch_based
+            mode or not.
     '''
 
-    def __init__(self, name, config_path):
+    def __init__(self, name: str, config_path: str) -> None:
         '''
         Initialise the pipeline with attributed such as configuration file
         path, name, and list of images and related files (e.g. selavy)
+
+        Args:
+            name: The pipeline name.
+            config_path: The system path to the configuration file.
+
+        Returns:
+            None.
         '''
         self.name = name
         self.config = self.load_cfg(config_path)
@@ -60,10 +79,20 @@ class Pipeline():
         self.config, self.epoch_based = self.check_for_epoch_based(self.config)
 
     @staticmethod
-    def load_cfg(cfg):
+    def load_cfg(cfg: str) -> ModuleType:
         """
         Check the given Config path. Throw exception if any problems
-        return the config object as module/class
+        return the config object as module/class.
+
+        Args:
+            cfg: The system path to the pipeline run configuration file.
+
+        Returns:
+            The configuration options read from the input file.
+
+        Raises:
+            PipelineConfigError: Raised if the configuration file cannot be
+                found.
         """
         if not os.path.exists(cfg):
             raise PipelineConfigError(
@@ -82,14 +111,11 @@ class Pipeline():
         """
         Obtains the valid config keys from the template config.
 
-        Parameters
-        ----------
-        upper : bool
-            Return all the keys in upper formatt.
+        Args:
+            upper:
+                Return all the keys in upper formatt.
 
-        Returns
-        -------
-        valid_keys : List[str]
+        Returns:
             List of valid keys.
         """
         valid_keys = settings.PIPE_RUN_CONFIG_DEFAULTS.keys()
@@ -99,7 +125,7 @@ class Pipeline():
         return valid_keys
 
     @staticmethod
-    def check_for_epoch_based(cfg) -> Tuple['config', bool]:
+    def check_for_epoch_based(cfg: ModuleType) -> Tuple[ModuleType, bool]:
         # Config typing above is unknown what to put.
         """
         Checks whether the images have been provided in a Dictionary format
@@ -107,16 +133,17 @@ class Pipeline():
         provided with just lists then the inputs are converted to dictionaries
         with an epoch defined for each individual image.
 
-        Parameters
-        ----------
-        cfg : self.config
-            The config object.
+        Args:
+            cfg:
+                The config object.
 
-        Returns
-        -------
-        cfg, epoch_based : self.config, bool.
+        Returns:
             The config (with converted List -> Dict inputs if required) and
             epoch_based boolean flag.
+
+        Raises:
+            PipelineConfigError: Raised if the images are entered into the
+                configuration file in a format that cannot be read.
         """
         epoch_based = False
 
@@ -148,14 +175,11 @@ class Pipeline():
         and the other general settings are the same (the requirement for add
         mode). Otherwise False is returned.
 
-        Parameters
-        ----------
-        p_run_path : str
-            The path of the pipeline run where the parquets are stored.
+        Args:
+            p_run_path:
+                The path of the pipeline run where the parquets are stored.
 
-        Returns
-        -------
-        bool : bool
+        Returns:
             True if images are different but general settings are the same.
             Otherwise False is returned.
         """
@@ -191,17 +215,20 @@ class Pipeline():
 
     def validate_cfg(self, user: User = None) -> None:
         """
-        validate a pipeline run configuration against default parameters and
-        for different settings (e.g. force extraction)
+        Validates a pipeline run configuration against default parameters and
+        for different settings (e.g. force extraction).
 
-        Parameters
-        ----------
-        user : User, optional
-            The User of the request if made through the UI. Defaults to None.
+        Args:
+            user:
+                The User of the request if made through the UI. Defaults to
+                None.
 
-        Returns
-        -------
-        None
+        Returns:
+            None
+
+        Raises:
+            PipelineConfigError: Raised if any errors are encountered during
+                the configuration validation.
         """
         # validate every config from the config template
         config_keys = [k for k in dir(self.config) if k.isupper()]
@@ -331,18 +358,13 @@ class Pipeline():
                         )
         pass
 
-    def match_images_to_data(self):
+    def match_images_to_data(self) -> None:
         """
         Loops through images and matches the selavy, noise and bkg images.
         Assumes that user has enteted images and other data in the same order.
 
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        None
+        Returns:
+            None
         """
         self.img_paths = {
             'selavy': {},
@@ -376,7 +398,17 @@ class Pipeline():
             for x in self.config.IMAGE_FILES[key]:
                 self.img_epochs[os.path.basename(x)] = key
 
-    def process_pipeline(self, p_run):
+    def process_pipeline(self, p_run: Run) -> None:
+        """
+        The function that performs the processing operations of the pipeline
+        run.
+
+        Args:
+            p_run: The pipeline run model object.
+
+        Returns:
+            None
+        """
         logger.info(f'Epoch based association: {self.epoch_based}')
         if self.add_mode:
             logger.info('Running in image add mode.')
@@ -578,12 +610,35 @@ class Pipeline():
         pass
 
     @staticmethod
-    def check_current_runs():
+    def check_current_runs() -> None:
+        """
+        Checks the number of pipeline runs currently being processed.
+
+        Returns:
+            None
+
+        Raises:
+            MaxPipelineRunsError: Raised if the number of pipeline runs
+                currently being processed is larger than the allowed
+                maximum.
+        """
         if Run.objects.check_max_runs(settings.MAX_PIPELINE_RUNS):
             raise MaxPipelineRunsError
 
     @staticmethod
-    def set_status(pipe_run, status=None):
+    def set_status(pipe_run: Run, status: str=None) -> None:
+        """
+        Function to change the status of a pipeline run model object and save
+        to the database.
+
+        Args:
+            pipe_run: The pipeline run model object.
+            status: The status to set.
+
+        Returns:
+            None
+        """
+        #TODO: This function gives no feedback if the status is not accepted?
         choices = [x[0] for x in Run._meta.get_field('status').choices]
         if status and status in choices and pipe_run.status != status:
             with transaction.atomic():
