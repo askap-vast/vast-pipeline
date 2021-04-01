@@ -1,16 +1,32 @@
-import logging
+"""
+This module contains utility functions used by the image ingestion section
+of the pipeline.
+"""
 
+import logging
 import numpy as np
+import pandas as pd
+
+from typing import Tuple
 
 
 logger = logging.getLogger(__name__)
 
 
-def on_sky_sep(ra_1, ra_2, dec_1, dec_2):
+def on_sky_sep(ra_1, ra_2, dec_1, dec_2) -> float:
     """
     Simple on sky distance between two RA and Dec coordinates.
     Needed for fast calculation on dataframes as astropy is
     slow. All units are radians.
+
+    Args:
+        ra_1 (float): The right ascension of coodinate 1 (radians).
+        ra_2 (float): The right ascension of coodinate 2 (radians).
+        dec_1 (float): The declination of coodinate 1 (radians).
+        dec_2 (float): The declination of coodinate 2 (radians).
+
+    Returns:
+        The on-sky separation distance between the two coodinates (radians).
     """
     separation = (
         np.sin(dec_1) * np.sin(dec_2) +
@@ -22,14 +38,25 @@ def on_sky_sep(ra_1, ra_2, dec_1, dec_2):
     return np.arccos(separation)
 
 
-def calc_error_radius(ra, ra_err, dec, dec_err):
+def calc_error_radius(ra, ra_err, dec, dec_err) -> float:
     """
     Using the fitted errors from selavy, this function
     estimates the largest on sky angular size of the
     uncertainty. The four different combinations of the
     errors are analysed and the maximum is returned.
     Logic is taken from the TraP, where this is also
-    used. Function has been vectorised for pandas.
+    used. Function has been vectorised for pandas. All inputs are in
+    degrees.
+
+    Args:
+        ra (float): The right ascension of the coordinate (degrees).
+        ra_err (float): The error associated with the ra value (degrees).
+        dec (float): The declination of the coordinate (degrees).
+        dec_err (float): The error associated with the declination
+            value (degrees).
+
+    Returns:
+        The calculated error radius (degrees).
     """
     ra_1 = np.deg2rad(ra)
     dec_1 = np.deg2rad(dec)
@@ -62,9 +89,12 @@ def calc_error_radius(ra, ra_err, dec, dec_err):
     return np.amax(seps, 1)
 
 
-def calc_condon_flux_errors(row, theta_B, theta_b, alpha_maj1=2.5, alpha_min1=0.5,
-                 alpha_maj2=0.5, alpha_min2=2.5, alpha_maj3=1.5, alpha_min3=1.5,
-                 clean_bias=0.0, clean_bias_error=0.0, frac_flux_cal_error=0.0,):
+def calc_condon_flux_errors(
+    row: pd.Series, theta_B: float, theta_b: float , alpha_maj1: float=2.5,
+    alpha_min1: float=0.5, alpha_maj2: float=0.5, alpha_min2:float =2.5,
+    alpha_maj3: float=1.5, alpha_min3: float=1.5, clean_bias: float=0.0,
+    clean_bias_error: float=0.0, frac_flux_cal_error: float=0.0,
+) -> Tuple[float, float, float, float, float, float, float]:
     """
     The following code for this function taken from the TraP with a few
     modifications.
@@ -74,8 +104,44 @@ def calc_condon_flux_errors(row, theta_B, theta_b, alpha_maj1=2.5, alpha_min1=0.
     These formulae are not perfect, but we'll use them for the
     time being.  (See Refregier and Brown (astro-ph/9803279v1) for
     a more rigorous approach.) It also returns the corrected peak.
-    The peak is corrected for the overestimate due to the local
-    noise gradient.
+    The peak can be corrected for the overestimate due to the local
+    noise gradient, but this is currently not used in the function.
+
+    Args:
+        row (pd.Series):
+            The row containing the componenet information from the Selavy
+            component catalogue.
+        theta_B (float):
+            The major axis size of the restoring beam of the image (degrees).
+        theta_b (float):
+            The minor axis size of the restoring beam of the image (degrees).
+        alpha_maj1 (float):
+            The alpha_M exponent value for x_0.
+        alpha_min1 (float):
+            The alpha_m exponent value for x_0.
+        alpha_maj2 (float):
+            The alpha_M exponent value for y_0.
+        alpha_min2 (float):
+            The alpha_m exponent value for y_0.
+        alpha_maj3 (float):
+            The alpha_M exponent value for the amplitude error.
+        alpha_min3 (float):
+            The alpha_m exponent value for the amplitude error.
+        clean_bias (float):
+            Clean bias value used in the peak flux correction (not currently
+             used).
+        clean_bias_error (float):
+            The error of the clean bias value used in the peak flux correction
+            (not currently used).
+        frac_flux_cal_error (float):
+            Flux calibration error value. (Unsure of exact meaning, refer to
+            TraP).
+
+    Returns:
+        Tuple containing the following calculated values:
+        peak flux error, integrated flux error, major axis error, minor
+        axis error, position angle error, right ascension error and the
+        declination error.
     """
 
     major = row.bmaj / 3600.  # degrees

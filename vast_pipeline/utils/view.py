@@ -1,4 +1,4 @@
-# Functions and variables used in pipeline/views.py
+"""Functions and variables used in pipeline/views.py."""
 
 import logging
 from vast_pipeline.models import SkyRegion

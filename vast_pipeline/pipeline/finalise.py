@@ -26,29 +26,30 @@ def calculate_measurement_pair_aggregate_metrics(
     min_vs: float,
     flux_type: str = "peak",
 ) -> pd.DataFrame:
-    """Calculate the aggregate maximum measurement pair variability metrics to be stored
-    in `Source` objects. Only measurement pairs with abs(Vs metric) >= `min_vs` are considered.
-    The measurement pairs are filtered on abs(Vs metric) >= `min_vs`, grouped by the source
-    ID column `source`, then the row index of the maximum abs(m) metric is found. The
-    absolute Vs and m metric values from this row are returned for each source.
+    """
+    Calculate the aggregate maximum measurement pair variability metrics
+    to be stored in `Source` objects. Only measurement pairs with
+    abs(Vs metric) >= `min_vs` are considered.
+    The measurement pairs are filtered on abs(Vs metric) >= `min_vs`,
+    grouped by the source ID column `source`, then the row index of the
+    maximum abs(m) metric is found. The absolute Vs and m metric values from
+    this row are returned for each source.
 
-    Parameters
-    ----------
-    measurement_pairs_df : pd.DataFrame
-        The measurement pairs and their variability metrics. Must at least contain the
-        columns: source, vs_{flux_type}, m_{flux_type}.
-    min_vs : float
-        The minimum value of the Vs metric (i.e. column `vs_{flux_type}`) the measurement
-        pair must have to be included in the aggregate metric determination.
-    flux_type : str, optional
-        The flux type on which to perform the aggregation, either "peak" or "int".
-        Default is "peak".
+    Args:
+        measurement_pairs_df:
+            The measurement pairs and their variability metrics. Must at least
+            contain the columns: source, vs_{flux_type}, m_{flux_type}.
+        min_vs:
+            The minimum value of the Vs metric (i.e. column `vs_{flux_type}`)
+            the measurement pair must have to be included in the aggregate
+            metric determination.
+        flux_type:
+            The flux type on which to perform the aggregation, either "peak"
+            or "int". Default is "peak".
 
-    Returns
-    -------
-    pd.DataFrame
-        Measurement pair aggregate metrics indexed by the source ID, `source`. The metric
-        columns are named: `vs_abs_significant_max_{flux_type}` and
+    Returns:
+        Measurement pair aggregate metrics indexed by the source ID, `source`.
+        The metric columns are named: `vs_abs_significant_max_{flux_type}` and
         `m_abs_significant_max_{flux_type}`.
     """
     pair_agg_metrics = measurement_pairs_df.set_index("source").iloc[
@@ -82,29 +83,28 @@ def final_operations(
     - Uploads related sources and writes parquet.
     - Uploads associations and writes parquet.
 
-    Parameters
-    ----------
-    sources_df : pd.DataFrame
-        The main sources_df dataframe produced from the pipeline. Contains all
-        measurements and the association information. The `id` column is the Measurement
-        object primary key that has already been saved to the database.
-    p_run : Run
-        The pipeline Run object of which the sources are associated with.
-    new_sources_df : pd.DataFrame
-        The new sources dataframe, only contains the 'new_source_high_sigma'
-        column (source_id is the index).
-    source_aggregate_pair_metrics_min_abs_vs : float
-        Only measurement pairs where the Vs metric exceeds this value are selected for
-        the aggregate pair metrics that are stored in `Source` objects.
-    add_mode : float
-        Whether the pipeline is running in add mode.
-    done_source_ids : List[int]
-        A list containing the source ids that have already been uploaded in the
-        previous run in add mode.
+    Args:
+        sources_df:
+            The main sources_df dataframe produced from the pipeline.
+            Contains all measurements and the association information.
+            The `id` column is the Measurement object primary key that has
+            already been saved to the database.
+        p_run:
+            The pipeline Run object of which the sources are associated with.
+        new_sources_df:
+            The new sources dataframe, only contains the
+            'new_source_high_sigma' column (source_id is the index).
+        source_aggregate_pair_metrics_min_abs_vs:
+            Only measurement pairs where the Vs metric exceeds this value
+            are selected for the aggregate pair metrics that are stored in
+            `Source` objects.
+        add_mode:
+            Whether the pipeline is running in add mode.
+        done_source_ids:
+            A list containing the source ids that have already been uploaded
+            in the previous run in add mode.
 
-    Returns
-    -------
-    nr_sources : int
+    Returns:
         The number of sources contained in the pipeline (used in the next steps
         of main.py).
     """

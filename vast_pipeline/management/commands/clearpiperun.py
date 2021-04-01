@@ -1,7 +1,12 @@
+"""
+This module defines the command for clearing a run from the database.
+"""
+
 import os
 import logging
 import shutil
 
+from argparse import ArgumentParser
 from glob import glob
 from django.core.management.base import BaseCommand, CommandError
 
@@ -25,7 +30,16 @@ class Command(BaseCommand):
         'pipeline run.'
     )
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: ArgumentParser) -> None:
+        """
+        Enables arguments for the command.
+
+        Args:
+            parser (ArgumentParser): The parser object of the command.
+
+        Returns:
+            None
+        """
         # positional arguments (required)
         parser.add_argument(
             'piperuns',
@@ -56,7 +70,17 @@ class Command(BaseCommand):
             help='Flag to remove all the content of the pipeline run(s) folder.'
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args, **options) -> None:
+        """
+        Handle function of the command.
+
+        Args:
+            *args: Variable length argument list.
+            **options: Variable length options.
+
+        Returns:
+            None
+        """
         # configure logging
         if options['verbosity'] > 1:
             # set root logger to use the DEBUG level
