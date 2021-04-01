@@ -1,19 +1,54 @@
 import os
 import logging
+from typing import Any, Dict, Optional
 
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings as sett
-from jinja2 import Template
+from django.contrib.auth.models import User
 
 from vast_pipeline.models import Run
 from vast_pipeline.pipeline.errors import PipelineInitError
+from vast_pipeline.pipeline.config import make_config_template, PipelineConfig
 from vast_pipeline.pipeline.utils import get_create_p_run
 
 
 logger = logging.getLogger(__name__)
 
 
-def initialise_run(run_name, run_description=None, user=None, config=None):
+def initialise_run(
+    run_name: str,
+    run_description: Optional[str] = None,
+    user: Optional[User] = None,
+    config: Optional[Dict[str, Any]] = None,
+) -> Run:
+    """Initialise a pipeline run.
+
+    Parameters
+    ----------
+    run_name : str
+        A unique name for the run.
+    run_description : Optional[str], optional
+        Description for the run, only used if initialised with the web UI, by default
+        None
+    user : Optional[User], optional
+        User that created the run, only used if initialised with the web UI, by default
+        None
+    config : Optional[Dict[str, Any]], optional
+        Dictionary of configuration values to pass to the run config template, only used
+        if initialised with the web UI, by default None
+
+    Returns
+    -------
+    Run
+        The initialised Run object.
+
+    Raises
+    ------
+    PipelineInitError
+        `run_name` was not unique.
+    PipelineInitError
+        A directory named `run_name` already exists.
+    """
     # check for duplicated run name
     p_run = Run.objects.filter(name__exact=run_name)
     if p_run:
@@ -32,20 +67,12 @@ def initialise_run(run_name, run_description=None, user=None, config=None):
 
     # copy default config into the pipeline run folder
     logger.info('copying default config in pipeline run folder')
-    template_f = os.path.join(
-        sett.BASE_DIR,
-        'vast_pipeline',
-        'config_template.py.j2'
+    template_kwargs = config if config else sett.PIPE_RUN_CONFIG_DEFAULTS
+    template_str = make_config_template(
+        PipelineConfig.TEMPLATE_PATH, run_path=run_path, **template_kwargs
     )
-    with open(template_f, 'r') as fp:
-        template_str = fp.read()
-
-    tm = Template(template_str)
-    with open(os.path.join(run_path, 'config.py'), 'w') as fp:
-        if config:
-            fp.write(tm.render(**config))
-        else:
-            fp.write(tm.render(**sett.PIPE_RUN_CONFIG_DEFAULTS))
+    with open(os.path.join(run_path, 'config.yaml'), 'w') as fp:
+        fp.write(template_str)
 
     # create entry in db
     p_run, _ = get_create_p_run(run_name, run_path, run_description, user)
@@ -81,11 +108,11 @@ class Command(BaseCommand):
             options['traceback'] = True
 
         try:
-            p_run = initialise_run(options['runname'])
+            _ = initialise_run(options['runname'])
         except Exception as e:
             raise CommandError(e)
 
         logger.info((
             'pipeline run initialisation successful! Please modify the '
-            '"config.py"'
+            '"config.yaml"'
         ))

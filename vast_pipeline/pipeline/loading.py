@@ -3,7 +3,7 @@ import logging
 import numpy as np
 import pandas as pd
 
-from typing import List, Optional
+from typing import Dict, List, Optional
 from itertools import islice
 from django.db import transaction, connection, models
 
@@ -18,6 +18,7 @@ from vast_pipeline.pipeline.model_generator import (
 from vast_pipeline.models import (
     Association, Measurement, Source, RelatedSource, MeasurementPair, Run
 )
+from vast_pipeline.pipeline.config import PipelineConfig
 from vast_pipeline.pipeline.utils import (
     get_create_img, get_create_img_band
 )
@@ -51,7 +52,7 @@ def bulk_upload_model(djmodel, generator, batch_size=10_000, return_ids=False):
         return bulk_ids
 
 
-def make_upload_images(paths, config, pipeline_run):
+def make_upload_images(paths: Dict[str, Dict[str, str]], config: PipelineConfig, pipeline_run: Run):
     '''
     carry the first part of the pipeline, by uploading all the images
     to the image table and populated band and skyregion objects
@@ -66,7 +67,7 @@ def make_upload_images(paths, config, pipeline_run):
         image = SelavyImage(
             path,
             paths,
-            config=config
+            config
         )
         logger.info('Reading image %s ...', image.name)
 
@@ -127,21 +128,21 @@ def make_upload_images(paths, config, pipeline_run):
     images_df = pd.DataFrame(map(lambda x: x.__dict__, images))
     images_df = images_df.drop('_state', axis=1)
     images_df.to_parquet(
-        os.path.join(config.PIPE_RUN_PATH, 'images.parquet'),
+        os.path.join(config["run"]["path"], 'images.parquet'),
         index=False
     )
     # write skyregions parquet file under pipeline run folder
     skyregs_df = pd.DataFrame(map(lambda x: x.__dict__, skyregions))
     skyregs_df = skyregs_df.drop('_state', axis=1)
     skyregs_df.to_parquet(
-        os.path.join(config.PIPE_RUN_PATH, 'skyregions.parquet'),
+        os.path.join(config["run"]["path"], 'skyregions.parquet'),
         index=False
     )
     # write skyregions parquet file under pipeline run folder
     bands_df = pd.DataFrame(map(lambda x: x.__dict__, bands))
     bands_df = bands_df.drop('_state', axis=1)
     bands_df.to_parquet(
-        os.path.join(config.PIPE_RUN_PATH, 'bands.parquet'),
+        os.path.join(config["run"]["path"], 'bands.parquet'),
         index=False
     )
 
@@ -153,8 +154,9 @@ def make_upload_images(paths, config, pipeline_run):
     return images, skyregs_df
 
 
-def make_upload_sources(sources_df: pd.DataFrame, pipeline_run: Run,
-    add_mode: bool = False) -> pd.DataFrame:
+def make_upload_sources(
+    sources_df: pd.DataFrame, pipeline_run: Run, add_mode: bool = False
+) -> pd.DataFrame:
     '''
     Delete previous sources for given pipeline run and bulk upload
     new found sources as well as related sources
@@ -234,7 +236,8 @@ def make_upload_measurement_pairs(measurement_pairs_df):
 
 
 def update_sources(
-    sources_df: pd.DataFrame, batch_size: int = 10_000) -> pd.DataFrame:
+    sources_df: pd.DataFrame, batch_size: int = 10_000
+) -> pd.DataFrame:
     '''
     Update database using SQL code. This function opens one connection to the
     database, and closes it after the update is done.

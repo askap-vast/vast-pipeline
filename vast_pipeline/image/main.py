@@ -1,5 +1,6 @@
 import os
 import logging
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -11,6 +12,7 @@ from astropy.wcs.utils import proj_plane_pixel_scales
 from .utils import calc_error_radius
 from .utils import calc_condon_flux_errors
 
+from vast_pipeline.pipeline.config import PipelineConfig
 from vast_pipeline.survey.translators import tr_selavy
 
 
@@ -163,12 +165,18 @@ class FitsImage(Image):
 class SelavyImage(FitsImage):
     """Fits images that have a selavy catalogue"""
 
-    def __init__(self, path, paths, hdu_index=0, config=None):
+    def __init__(
+        self,
+        path: str,
+        paths: Dict[str, Dict[str, str]],
+        config: PipelineConfig,
+        hdu_index: int = 0,
+    ):
         # inherit from parent
         self.selavy_path = paths['selavy'][path]
         self.noise_path = paths['noise'].get(path, '')
         self.background_path = paths['background'].get(path, '')
-        self.config = config
+        self.config: PipelineConfig = config
         super().__init__(path, hdu_index)
 
     def read_selavy(self, dj_image):
@@ -243,12 +251,12 @@ class SelavyImage(FitsImage):
         # replace 0 local_rms values using user config value
         df.loc[
             df['local_rms'] == 0., 'local_rms'
-        ] = self.config.SELAVY_LOCAL_RMS_ZERO_FILL_VALUE
+        ] = self.config["measurements"]["selavy_local_rms_fill_value"]
 
         df['snr'] = df['flux_peak'].values / df['local_rms'].values
         df['compactness'] = df['flux_int'].values / df['flux_peak'].values
 
-        if self.config.USE_CONDON_ERRORS:
+        if self.config["measurements"]["condon_errors"]:
             logger.debug("Calculating Condon '97 errors...")
             theta_B = dj_image.beam_bmaj
             theta_b = dj_image.beam_bmin
@@ -280,8 +288,8 @@ class SelavyImage(FitsImage):
 
         logger.debug("Calculating positional errors...")
         # TODO: avoid extra column given that it is a single value
-        df['ew_sys_err'] = self.config.ASTROMETRIC_UNCERTAINTY_RA / 3600.
-        df['ns_sys_err'] = self.config.ASTROMETRIC_UNCERTAINTY_DEC / 3600.
+        df['ew_sys_err'] = self.config["measurements"]["ra_uncertainty"] / 3600.
+        df['ns_sys_err'] = self.config["measurements"]["dec_uncertainty"] / 3600.
 
         df['error_radius'] = calc_error_radius(
             df['ra'].values,

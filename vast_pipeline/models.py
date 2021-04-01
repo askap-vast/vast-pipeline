@@ -158,12 +158,14 @@ class SurveySource(models.Model):
 
 
 class RunQuerySet(models.QuerySet):
-
     def check_max_runs(self, max_runs=5):
         """
         Check if number of running pipeline runs is above threshold
         """
         return self.filter(status='RUN').count() >= max_runs
+
+
+RunManager = models.Manager.from_queryset(RunQuerySet)
 
 
 class Run(CommentableModel):
@@ -242,7 +244,7 @@ class Run(CommentableModel):
         )
     )
 
-    objects = RunQuerySet.as_manager()
+    objects = RunManager()  # used instead of RunQuerySet.as_manager() so mypy checks work
 
     class Meta:
         ordering = ['name']

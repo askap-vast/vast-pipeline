@@ -197,7 +197,7 @@
           </div>
         </div>
         <div class="card-body">
-          <pre id="runConfigText" class="pre-scrollable" style="max-height: 50vh" contenteditable="false"><code id="runConfigTextCode" class="language-python line-numbers" style="white-space: pre">{{ p_run.config_txt }}</code></pre>
+          <pre id="runConfigText" class="pre-scrollable" style="max-height: 50vh" contenteditable="false"><code id="runConfigTextCode" class="language-yaml line-numbers" style="white-space: pre">{{ p_run.config_txt }}</code></pre>
         </div>
       </div>
     </div>
@@ -409,7 +409,7 @@
 
 <!-- PrismJS -->
 <script src="{% static 'vendor/prismjs/prism.js' %}"></script>
-<script src="{% static 'vendor/prismjs/prism-python.min.js' %}"></script>
+<script src="{% static 'vendor/prismjs/prism-yaml.min.js' %}"></script>
 <script src="{% static 'vendor/prismjs/line-numbers/prism-line-numbers.min.js' %}"></script>
 
 <script id="runDetailScript" src="{% static 'js/run-detail.min.js' %}" apiValidateUrl="{% url 'vast_pipeline:api_runcfg-validate' p_run.id %}" apiWriteCfgUrl="{% url 'vast_pipeline:run_detail' p_run.id %}"></script>

@@ -1,7 +1,7 @@
 import os
 import operator
 import logging
-from typing import List, Tuple
+from typing import Dict
 
 from astropy import units as u
 from astropy.coordinates import Angle
@@ -10,12 +10,10 @@ import pandas as pd
 
 from django.conf import settings
 from django.db import transaction
-from django.contrib.auth.models import User
-
-from importlib.util import spec_from_file_location, module_from_spec
 
 from vast_pipeline.models import Run, SurveySource
 from .association import association, parallel_association
+from .config import PipelineConfig
 from .new_sources import new_sources
 from .forced_extraction import forced_extraction
 from .finalise import final_operations
@@ -25,311 +23,50 @@ from .utils import (
     group_skyregions,
     get_parallel_assoc_image_df
 )
-from vast_pipeline.utils.utils import convert_list_to_dict
 
-from .errors import MaxPipelineRunsError, PipelineConfigError
+from .errors import MaxPipelineRunsError
 
 
 logger = logging.getLogger(__name__)
 
 
 class Pipeline():
-    '''
-    Instance of a pipeline. All the methods runs the pipeline opearations,
-    such as association
-    '''
+    """Instance of a pipeline. All the methods runs the pipeline opearations, such as
+    association.
 
-    def __init__(self, name, config_path):
-        '''
-        Initialise the pipeline with attributed such as configuration file
-        path, name, and list of images and related files (e.g. selavy)
-        '''
-        self.name = name
-        self.config = self.load_cfg(config_path)
-        # The epoch_based parameter below is for
-        # if the user has entered just lists we don't have
-        # access to the dates until the Image instances are
-        # created. So we flag this as true so that we can
-        # reorder the epochs once the date information is available.
-        # It is also recorded in the database such that there is a record
-        # of the fact that the run was processed in an epoch based mode.
-        self.epoch_based = False
+    Attributes:
+        name (str): The name of the pipeline run.
+        config (PipelineConfig): The pipeline run configuration.
+        img_paths: A dict mapping input image paths to their selavy/noise/background
+            counterpart path. e.g. `img_paths["selavy"][<image_path>]` contains the
+            selavy catalogue file path for `<image_path>`.
+        img_epochs: A dict mapping input image names to their provided epoch.
+        add_mode: A boolean indicating if this run is adding new images to a previously
+            executed pipeline run.
+        previous_parquets: A dict mapping that provides the paths to parquet files for
+            previous executions of this pipeline run.
+    """
+    def __init__(self, name: str, config_path: str, validate_config: bool = True):
+        """Initialise an instance of Pipeline with a name and configuration file path.
 
-        # Check if provided files are lists and convert to
-        # dictionaries if so
-        self.config, self.epoch_based = self.check_for_epoch_based(self.config)
-
-    @staticmethod
-    def load_cfg(cfg):
+        Args:
+            name (str): The name of the pipeline run.
+            config_path (str): The path to a YAML run configuration file.
+            validate_config (bool, optional): Validate the run configuration immediately.
+                Defaults to True.
         """
-        Check the given Config path. Throw exception if any problems
-        return the config object as module/class
-        """
-        if not os.path.exists(cfg):
-            raise PipelineConfigError(
-                'pipeline run config file not existent'
-            )
-
-        # load the run config as a Python module
-        spec = spec_from_file_location('run_config', cfg)
-        mod = module_from_spec(spec)
-        spec.loader.exec_module(mod)
-
-        return mod
-
-    @staticmethod
-    def _get_valid_keys(upper: bool = False) -> List[str]:
-        """
-        Obtains the valid config keys from the template config.
-
-        Parameters
-        ----------
-        upper : bool
-            Return all the keys in upper formatt.
-
-        Returns
-        -------
-        valid_keys : List[str]
-            List of valid keys.
-        """
-        valid_keys = settings.PIPE_RUN_CONFIG_DEFAULTS.keys()
-        if upper:
-            valid_keys = [i.upper() for i in valid_keys]
-
-        return valid_keys
-
-    @staticmethod
-    def check_for_epoch_based(cfg) -> Tuple['config', bool]:
-        # Config typing above is unknown what to put.
-        """
-        Checks whether the images have been provided in a Dictionary format
-        which means that epoch_based has been requested. If they have been
-        provided with just lists then the inputs are converted to dictionaries
-        with an epoch defined for each individual image.
-
-        Parameters
-        ----------
-        cfg : self.config
-            The config object.
-
-        Returns
-        -------
-        cfg, epoch_based : self.config, bool.
-            The config (with converted List -> Dict inputs if required) and
-            epoch_based boolean flag.
-        """
-        epoch_based = False
-
-        for cfg_key in [
-            'IMAGE_FILES', 'SELAVY_FILES',
-            'BACKGROUND_FILES', 'NOISE_FILES'
-        ]:
-            if isinstance(getattr(cfg, cfg_key), list):
-                setattr(
-                    cfg,
-                    cfg_key,
-                    convert_list_to_dict(getattr(cfg, cfg_key))
-                )
-            elif isinstance(getattr(cfg, cfg_key), dict):
-                # Set to True if dictionaries are passed.
-                epoch_based = True
-            else:
-                raise PipelineConfigError((
-                    'Unknown images entry format!'
-                    f' Must be a list or dictionary.'
-                ))
-
-        return cfg, epoch_based
-
-    def check_prev_config_diff(self, p_run_path: str) -> bool:
-        """
-        Checks if the previous config file differs from the current config
-        file. Used in add mode. Only returns true if the images are different
-        and the other general settings are the same (the requirement for add
-        mode). Otherwise False is returned.
-
-        Parameters
-        ----------
-        p_run_path : str
-            The path of the pipeline run where the parquets are stored.
-
-        Returns
-        -------
-        bool : bool
-            True if images are different but general settings are the same.
-            Otherwise False is returned.
-        """
-        valid_keys = self._get_valid_keys(upper=True)
-
-        prev_config, _ = self.check_for_epoch_based(
-            self.load_cfg(os.path.join(p_run_path, 'config_prev.py')))
-        prev_config_dict = {k: getattr(prev_config, k) for k in valid_keys}
-
-        current_config_dict = {k: getattr(self.config, k) for k in valid_keys}
-
-        if prev_config_dict == current_config_dict:
-            return True
-
-        image_check = (
-            prev_config_dict['IMAGE_FILES']
-            == current_config_dict['IMAGE_FILES']
+        self.name: str = name
+        self.config: PipelineConfig = PipelineConfig.from_file(
+            config_path, validate=validate_config
         )
-
-        for i in [
-            'IMAGE_FILES', 'SELAVY_FILES', 'NOISE_FILES', 'BACKGROUND_FILES'
-        ]:
-            prev_config_dict.pop(i)
-            current_config_dict.pop(i)
-
-        settings_check = prev_config_dict == current_config_dict
-
-        if not image_check and settings_check:
-            return False
-
-        return True
-
-
-    def validate_cfg(self, user: User = None) -> None:
-        """
-        validate a pipeline run configuration against default parameters and
-        for different settings (e.g. force extraction)
-
-        Parameters
-        ----------
-        user : User, optional
-            The User of the request if made through the UI. Defaults to None.
-
-        Returns
-        -------
-        None
-        """
-        # validate every config from the config template
-        config_keys = [k for k in dir(self.config) if k.isupper()]
-        valid_keys = self._get_valid_keys()
-
-        # Check that there are no 'unknown' options given by the user
-        for key in config_keys:
-            if key.lower() not in valid_keys:
-                raise PipelineConfigError(
-                    f'Configuration not valid, unknown option: {key}!'
-                )
-        # Check that all options are provided by the user
-        for key in settings.PIPE_RUN_CONFIG_DEFAULTS.keys():
-            if key.upper() not in config_keys:
-                raise PipelineConfigError(
-                    f'Configuration not valid, missing option: {key.upper()}!'
-                )
-
-        # do sanity checks
-        if (
-            getattr(self.config, 'IMAGE_FILES') and
-            getattr(self.config, 'SELAVY_FILES') and
-            getattr(self.config, 'NOISE_FILES')
-        ):
-            img_f_list = getattr(self.config, 'IMAGE_FILES')
-            img_f_list = [
-                item for sublist in img_f_list.values() for item in sublist
-            ] # creates a flat list of all the dictionary value lists
-            len_img_f_list = len(img_f_list)
-            # maximum number of images check. If the user is `None` then it
-            # means the run was initiated through the command line hence no
-            # check is performed.
-            if (
-                user is not None
-                and len_img_f_list > settings.MAX_PIPERUN_IMAGES
-            ):
-                if user.is_staff:
-                    logger.warning(
-                        'Maximum number of images'
-                        f' ({settings.MAX_PIPERUN_IMAGES}) rule bypassed with'
-                        ' admin status.'
-                    )
-                else:
-                    raise PipelineConfigError(
-                        f'The number of images entered ({len_img_f_list})'
-                        ' exceeds the maximum number of images currently'
-                        f' allowed ({settings.MAX_PIPERUN_IMAGES}). Please ask'
-                        ' an administrator for advice on processing your run'
-                    )
-            for lst in ['IMAGE_FILES', 'SELAVY_FILES', 'NOISE_FILES']:
-                cfg_list = getattr(self.config, lst)
-                cfg_list = [
-                    item for sublist in cfg_list.values() for item in sublist
-                ]
-
-                # checks for duplicates in each list
-                if len(set(cfg_list)) != len(cfg_list):
-                    raise PipelineConfigError(f'Duplicated files in: \n{lst}')
-
-                # check if nr of files match nr of images
-                if len(cfg_list) != len_img_f_list:
-                    raise PipelineConfigError(
-                        f'Number of {lst} files not matching number of images'
-                    )
-
-                for key in getattr(self.config, lst):
-                    for file in getattr(self.config, lst)[key]:
-                        if not os.path.exists(file):
-                            raise PipelineConfigError(
-                                f'file:\n{file}\ndoes not exists!'
-                            )
-        else:
-            raise PipelineConfigError(
-                'No image and/or Selavy and/or noise file paths passed!'
-            )
-
-        # need more than 1 image file to generate a lightcurve
-        if len(getattr(self.config, 'IMAGE_FILES')) < 2:
-            raise PipelineConfigError(
-                'Number of image files needs to be larger than 1!'
-        )
-
-        source_finder_names = settings.SOURCE_FINDERS
-        if getattr(self.config, 'SOURCE_FINDER') not in source_finder_names:
-            raise PipelineConfigError((
-                f"Invalid source finder {getattr(self.config, 'SOURCE_FINDER')}."
-                f' Choices are {source_finder_names}'
-            ))
-
-        association_methods = settings.DEFAULT_ASSOCIATION_METHODS
-        if getattr(self.config, 'ASSOCIATION_METHOD') not in association_methods:
-            raise PipelineConfigError((
-                'ASSOCIATION_METHOD is not valid!'
-                f' Must be a value contained in: {association_methods}.'
-            ))
-
-        # validate Forced extraction settings
-        if getattr(self.config, 'MONITOR'):
-            if not getattr(self.config, 'BACKGROUND_FILES'):
-                raise PipelineConfigError(
-                    'Expecting list of background MAP files!'
-                )
-
-        # if defined, check background files regardless of monitor
-        if getattr(self.config, 'BACKGROUND_FILES'):
-            # check for duplicated values
-            backgrd_f_list = getattr(self.config, 'BACKGROUND_FILES')
-            backgrd_f_list = [
-                item for sublist in backgrd_f_list.values() for item in sublist
-            ]
-            if len(set(backgrd_f_list)) != len(backgrd_f_list):
-                raise PipelineConfigError(
-                    'Duplicated files in: BACKGROUND_FILES list'
-                )
-            # check if provided more background files than images
-            if len(backgrd_f_list) != len_img_f_list:
-                raise PipelineConfigError((
-                    'Number of BACKGROUND_FILES different from number of'
-                    ' IMAGE_FILES files'
-                ))
-
-            for key in getattr(self.config, 'BACKGROUND_FILES'):
-                for file in getattr(self.config, 'BACKGROUND_FILES')[key]:
-                    if not os.path.exists(file):
-                        raise PipelineConfigError(
-                            f'file:\n{file}\ndoes not exists!'
-                        )
-        pass
+        self.img_paths: Dict[str, Dict[str, str]] = {
+            'selavy': {},
+            'noise': {},
+            'background': {},
+        }  # maps input image paths to their selavy/noise/background counterpart path
+        self.img_epochs: Dict[str, str] = {}  # maps image names to their provided epoch
+        self.add_mode: bool = False
+        self.previous_parquets: Dict[str, str]
 
     def match_images_to_data(self):
         """
@@ -344,49 +81,35 @@ class Pipeline():
         -------
         None
         """
-        self.img_paths = {
-            'selavy': {},
-            'noise': {},
-            'background': {}
-        }
-        self.img_epochs = {}
-
-        for key in sorted(self.config.IMAGE_FILES.keys()):
-            for x,y in zip(
-                self.config.IMAGE_FILES[key],
-                self.config.SELAVY_FILES[key]
+        for key in sorted(self.config["inputs"]["image"].keys()):
+            for x, y in zip(
+                self.config["inputs"]["image"][key],
+                self.config["inputs"]["selavy"][key],
             ):
-                self.img_paths['selavy'][x] = y
-
-            for x,y in zip(
-                self.config.IMAGE_FILES[key],
-                self.config.NOISE_FILES[key]
-            ):
-                self.img_paths['noise'][x] = y
-
-            # check if backgound files have been given before
-            # attempting to match
-            if key in self.config.BACKGROUND_FILES:
-                for x,y in zip(
-                    self.config.IMAGE_FILES[key],
-                    self.config.BACKGROUND_FILES[key]
-                ):
-                    self.img_paths['background'][x] = y
-
-            for x in self.config.IMAGE_FILES[key]:
+                self.img_paths["selavy"][x] = y
                 self.img_epochs[os.path.basename(x)] = key
+            for x, y in zip(
+                self.config["inputs"]["image"][key], self.config["inputs"]["noise"][key]
+            ):
+                self.img_paths["noise"][x] = y
+            if "background" in self.config["inputs"]:
+                for x, y in zip(
+                    self.config["inputs"]["image"][key],
+                    self.config["inputs"]["background"][key],
+                ):
+                    self.img_paths["background"][x] = y
 
-    def process_pipeline(self, p_run):
-        logger.info(f'Epoch based association: {self.epoch_based}')
+    def process_pipeline(self, p_run: Run):
+        logger.info(f'Epoch based association: {self.config.epoch_based}')
         if self.add_mode:
             logger.info('Running in image add mode.')
 
         # Update epoch based flag to not cause user confusion when running
         # the pipeline (i.e. if it was only updated at the end). It is not
         # updated if the pipeline is being run in add mode.
-        if self.epoch_based and not self.add_mode:
+        if self.config.epoch_based and not self.add_mode:
             with transaction.atomic():
-                p_run.epoch_based = self.epoch_based
+                p_run.epoch_based = self.config.epoch_based
                 p_run.save()
 
         # Match the image files to the respective selavy, noise and bkg files.
@@ -406,7 +129,7 @@ class Pipeline():
 
         # If the user has given lists we need to reorder the
         # image epochs such that they are in date order.
-        if self.epoch_based is False:
+        if self.config.epoch_based is False:
             self.img_epochs = {}
             for i, img in enumerate(images):
                 self.img_epochs[img.name] = i + 1
@@ -414,11 +137,11 @@ class Pipeline():
         image_epochs = [
             self.img_epochs[img.name] for img in images
         ]
-        limit = Angle(self.config.ASSOCIATION_RADIUS * u.arcsec)
-        dr_limit = self.config.ASSOCIATION_DE_RUITER_RADIUS
-        bw_limit = self.config.ASSOCIATION_BEAMWIDTH_LIMIT
+        limit = Angle(self.config["source_association"]["radius"] * u.arcsec)
+        dr_limit = self.config["source_association"]["deruiter_radius"]
+        bw_limit = self.config["source_association"]["deruiter_beamwidth_limit"]
         duplicate_limit = Angle(
-            self.config.ASSOCIATION_EPOCH_DUPLICATE_RADIUS * u.arcsec
+            self.config["source_association"]["epoch_duplicate_radius"] * u.arcsec
         )
 
         # 2.1 Check if sky regions to be associated can be
@@ -444,7 +167,7 @@ class Pipeline():
             done_source_ids = None
 
         # 2.2 Associate with other measurements
-        if self.config.ASSOCIATION_PARALLEL and n_skyregion_groups > 1:
+        if self.config["source_association"]["parallel"] and n_skyregion_groups > 1:
             images_df = get_parallel_assoc_image_df(
                 images, skyregion_groups
             )
@@ -518,8 +241,8 @@ class Pipeline():
         new_sources_df = new_sources(
             sources_df,
             missing_sources_df,
-            self.config.NEW_SOURCE_MIN_SIGMA,
-            self.config.MONITOR_EDGE_BUFFER_SCALE,
+            self.config["new_sources"]["min_sigma"],
+            self.config["source_monitoring"]["edge_buffer_scale"],
             p_run
         )
 
@@ -529,20 +252,20 @@ class Pipeline():
         )
 
         # STEP #5: Run forced extraction/photometry if asked
-        if self.config.MONITOR:
+        if self.config["source_monitoring"]["monitor"]:
             (
                 sources_df,
                 nr_forced_measurements
             ) = forced_extraction(
                 sources_df,
-                self.config.ASTROMETRIC_UNCERTAINTY_RA / 3600.,
-                self.config.ASTROMETRIC_UNCERTAINTY_DEC / 3600.,
+                self.config["measurements"]["ra_uncertainty"] / 3600.,
+                self.config["measurements"]["dec_uncertainty"] / 3600.,
                 p_run,
                 missing_sources_df,
-                self.config.MONITOR_MIN_SIGMA,
-                self.config.MONITOR_EDGE_BUFFER_SCALE,
-                self.config.MONITOR_CLUSTER_THRESHOLD,
-                self.config.MONITOR_ALLOW_NAN,
+                self.config["source_monitoring"]["min_sigma"],
+                self.config["source_monitoring"]["edge_buffer_scale"],
+                self.config["source_monitoring"]["cluster_threshold"],
+                self.config["source_monitoring"]["allow_nan"],
                 self.add_mode,
                 done_images_df,
                 done_source_ids
@@ -556,7 +279,7 @@ class Pipeline():
             sources_df,
             p_run,
             new_sources_df,
-            self.config.SOURCE_AGGREGATE_PAIR_METRICS_MIN_ABS_VS,
+            self.config["variability"]["source_aggregate_pair_metrics_min_abs_vs"],
             self.add_mode,
             done_source_ids,
             self.previous_parquets
@@ -571,7 +294,7 @@ class Pipeline():
             p_run.n_sources = nr_sources
             p_run.n_selavy_measurements = nr_selavy_measurements
             p_run.n_forced_measurements = (
-                nr_forced_measurements if self.config.MONITOR else 0
+                nr_forced_measurements if self.config["source_monitoring"]["monitor"] else 0
             )
             p_run.save()
 

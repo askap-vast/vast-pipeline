@@ -16,6 +16,7 @@ from .utils import (
     reconstruct_associtaion_dfs
 )
 from vast_pipeline.models import Association
+from vast_pipeline.pipeline.config import PipelineConfig
 from vast_pipeline.utils.utils import StopWatch
 
 
@@ -1022,7 +1023,7 @@ def advanced_association(
 
 
 def association(images_df: pd.DataFrame, limit: Angle, dr_limit: float,
-    bw_limit: float, duplicate_limit: Angle, config, add_mode: bool,
+    bw_limit: float, duplicate_limit: Angle, config: PipelineConfig, add_mode: bool,
     previous_parquets: Dict[str, str], done_images_df: pd.DataFrame,
     id_incr_par_assoc: int=0, parallel: bool=False) -> pd.DataFrame:
     '''
@@ -1042,8 +1043,8 @@ def association(images_df: pd.DataFrame, limit: Angle, dr_limit: float,
     duplicate_limit : astropy.coordinates.Angle
         The limit of separation for which a measurement is considered to be
         a duplicate (epoch based association).
-    config : config
-        The pipeline configuration object.
+    config : PipelineConfig
+        The pipeline run configuration object.
     add_mode : bool
         Whether the pipeline is currently being run in add image mode.
     previous_parquets : Dict[str, str]
@@ -1080,7 +1081,7 @@ def association(images_df: pd.DataFrame, limit: Angle, dr_limit: float,
         skyreg_group = -1
         skyreg_tag = ""
 
-    method = config.ASSOCIATION_METHOD
+    method = config["source_association"]["method"]
 
     logger.info('Starting association%s.', skyreg_tag)
     logger.info('Association mode selected: %s.', method)
@@ -1092,8 +1093,10 @@ def association(images_df: pd.DataFrame, limit: Angle, dr_limit: float,
         # are filtered out.
         image_mask = images_df['image_name'].isin(done_images_df['name'])
         images_df_done = images_df[image_mask].copy()
-        sources_df, skyc1_srcs = reconstruct_associtaion_dfs(images_df_done,
-            previous_parquets)
+        sources_df, skyc1_srcs = reconstruct_associtaion_dfs(
+            images_df_done,
+            previous_parquets,
+        )
         images_df = images_df.loc[~image_mask]
         if images_df.empty:
             logger.info(
@@ -1127,7 +1130,7 @@ def association(images_df: pd.DataFrame, limit: Angle, dr_limit: float,
         # initialise sky source dataframe
         skyc1_srcs = prep_skysrc_df(
             first_images,
-            config.FLUX_PERC_ERROR,
+            config["measurements"]["flux_fractional_error"],
             duplicate_limit,
             ini_df=True
         )
@@ -1185,7 +1188,7 @@ def association(images_df: pd.DataFrame, limit: Angle, dr_limit: float,
         )
         skyc2_srcs = prep_skysrc_df(
             images,
-            config.FLUX_PERC_ERROR,
+            config["measurements"]["flux_fractional_error"],
             duplicate_limit
         )
 
@@ -1479,8 +1482,7 @@ def parallel_association(
     dr_limit: float,
     bw_limit: float,
     duplicate_limit: Angle,
-    # TODO update config typing.
-    config, # a 'module` typing.
+    config: PipelineConfig,
     n_skyregion_groups: int,
     add_mode: bool,
     previous_parquets: Dict[str, str],
@@ -1503,8 +1505,8 @@ def parallel_association(
         The beamwidth limit.
     duplicate_limit: Angle
         The duplicate radius detection limit.
-    config : module
-        The pipeline config settings.
+    config : PipelineConfig
+        The pipeline run configuration.
     n_skyregion_groups: int
         The number of sky region groups.
 
