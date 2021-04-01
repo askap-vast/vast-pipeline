@@ -11,6 +11,9 @@ from tagulous.models import TagField
 
 
 class Comment(models.Model):
+    """
+    The model object for a comment.
+    """
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     datetime = models.DateTimeField(auto_now_add=True)
     comment = models.TextField()
@@ -19,13 +22,11 @@ class Comment(models.Model):
     content_object = GenericForeignKey('content_type', 'object_id')
 
     def get_avatar_url(self) -> str:
-        """Get the URL for the user's avatar from GitHub. If the user has no associated
-        GitHub account (e.g. a Django superuser), return the URL to the default user
-        avatar.
+        """Get the URL for the user's avatar from GitHub. If the user has
+        no associated GitHub account (e.g. a Django superuser), return the URL
+        to the default user avatar.
 
-        Returns
-        -------
-        str
+        Returns:
             The avatar URL.
         """
         social = UserSocialAuth.get_social_auth_for_user(self.author).first()
@@ -36,6 +37,9 @@ class Comment(models.Model):
 
 
 class CommentableModel(models.Model):
+    """
+    A class to provide a commentable model.
+    """
     comment = GenericRelation(
         Comment,
         content_type_field="content_type",
@@ -68,11 +72,22 @@ class Survey(models.Model):
 
 class SurveySourceQuerySet(models.QuerySet):
 
-    def cone_search(self, ra, dec, radius_deg):
+    def cone_search(
+        self, ra: float, dec: float, radius_deg: float
+    ) -> models.QuerySet:
         """
         Return all the survey sources withing radius_deg of (ra,dec).
         Returns a QuerySet of survey sources, ordered by distance from
-        (ra,dec) ascending
+        (ra,dec) ascending.
+
+        Args:
+            ra: The right ascension value of the cone search central
+                coordinate.
+            dec: The declination value of the cone search central coordinate.
+            radius_deg: The radius over which to perform the cone search.
+
+        Returns:
+            Sources found withing the cone search area.
         """
         return (
             self.extra(
@@ -159,9 +174,15 @@ class SurveySource(models.Model):
 
 class RunQuerySet(models.QuerySet):
 
-    def check_max_runs(self, max_runs=5):
+    def check_max_runs(self, max_runs: int=5) -> int:
         """
-        Check if number of running pipeline runs is above threshold
+        Check if number of running pipeline runs is above threshold.
+
+        Args:
+            max_runs: The maximum number of processing runs allowed.
+
+        Returns:
+            The count of the current pipeline runs with a status of `RUN`.
         """
         return self.filter(status='RUN').count() >= max_runs
 
@@ -294,11 +315,22 @@ class SkyRegion(models.Model):
 
 class SourceQuerySet(models.QuerySet):
 
-    def cone_search(self, ra, dec, radius_deg):
+    def cone_search(
+        self, ra: float, dec: float, radius_deg: float
+    ) -> models.QuerySet:
         """
         Return all the Sources withing radius_deg of (ra,dec).
         Returns a QuerySet of Sources, ordered by distance from
-        (ra,dec) ascending
+        (ra,dec) ascending.
+
+        Args:
+            ra: The right ascension value of the cone search central
+                coordinate.
+            dec: The declination value of the cone search central coordinate.
+            radius_deg: The radius over which to perform the cone search.
+
+        Returns:
+            Sources found withing the cone search area.
         """
         return (
             self.extra(
@@ -597,11 +629,22 @@ class Image(CommentableModel):
 
 class MeasurementQuerySet(models.QuerySet):
 
-    def cone_search(self, ra, dec, radius_deg):
+    def cone_search(
+        self, ra: float, dec: float, radius_deg: float
+    ) -> models.QuerySet:
         """
         Return all the Sources withing radius_deg of (ra,dec).
         Returns a QuerySet of Sources, ordered by distance from
-        (ra,dec) ascending
+        (ra,dec) ascending.
+
+        Args:
+            ra: The right ascension value of the cone search central
+                coordinate.
+            dec: The declination value of the cone search central coordinate.
+            radius_deg: The radius over which to perform the cone search.
+
+        Returns:
+            Measurements found withing the cone search area.
         """
         return (
             self.extra(

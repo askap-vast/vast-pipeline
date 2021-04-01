@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added script to auto-generate code reference documentation pages [#480](https://github.com/askap-vast/vast-pipeline/pull/480).
+- Added code reference section to documentation [#480](https://github.com/askap-vast/vast-pipeline/pull/480).
+- Added new pages and sections to documentation [#471](https://github.com/askap-vast/vast-pipeline/pull/471)
 - Added `requirements/environment.yml` so make it easier for Miniconda users to get the non-Python dependencies [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
 - Added `pyproject.toml` and `poetry.lock` [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
 - Added `init-tools/init-db.py` [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
@@ -21,6 +24,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Changed non-google format docstrings to google format [#480](https://github.com/askap-vast/vast-pipeline/pull/480).
+- Changed some documentation layout and updated content [#471](https://github.com/askap-vast/vast-pipeline/pull/471).
 - Changed the `vaex` dependency to `vaex-arrow` [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
 - Set `CREATE_MEASUREMENTS_ARROW_FILES = True` in the basic association test config [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
 - Bumped minimum Python version to 3.7.1 [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
@@ -56,6 +61,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#480](https://github.com/askap-vast/vast-pipeline/pull/480) feat: Code reference documentation update.
+- [#471](https://github.com/askap-vast/vast-pipeline/pull/471) feat: Documentation update.
 - [#472](https://github.com/askap-vast/vast-pipeline/pull/472) feat: Simplify install.
 - [#473](https://github.com/askap-vast/vast-pipeline/pull/473) fix: discard the selavy unit row before reading.
 - [#466](https://github.com/askap-vast/vast-pipeline/pull/466) fix: Fixed initial job processing from the UI.

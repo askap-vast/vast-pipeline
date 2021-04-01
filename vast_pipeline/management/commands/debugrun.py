@@ -1,3 +1,9 @@
+"""
+This module defines the command for debugging a pipeline run, which prints
+out statistics and logging.
+"""
+
+from argparse import ArgumentParser
 from django.core.management.base import BaseCommand, CommandError
 
 from vast_pipeline.models import (
@@ -16,7 +22,16 @@ class Command(BaseCommand):
         'Print out total metrics such as nr of measurements for runs'
     )
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: ArgumentParser) -> None:
+        """
+        Enables arguments for the command.
+
+        Args:
+            parser (ArgumentParser): The parser object of the command.
+
+        Returns:
+            None
+        """
         # positional arguments (required)
         parser.add_argument(
             'piperuns',
@@ -28,7 +43,17 @@ class Command(BaseCommand):
             )
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args, **options) -> None:
+        """
+        Handle function of the command.
+
+        Args:
+            *args: Variable length argument list.
+            **options: Variable length options.
+
+        Returns:
+            None
+        """
         piperuns = options['piperuns']
         flag_all_runs = True if 'all' in piperuns else False
         if flag_all_runs:

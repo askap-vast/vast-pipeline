@@ -1,8 +1,14 @@
+"""
+This module defines the command for creating an arrow output file for a
+previously completed pipeline run.
+"""
+
 import os
 import logging
 import traceback
 import warnings
 
+from argparse import ArgumentParser
 from django.core.management.base import BaseCommand, CommandError
 from vast_pipeline.pipeline.utils import (
     create_measurements_arrow_file,
@@ -25,7 +31,16 @@ class Command(BaseCommand):
         ' completed pipeline run.'
     )
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: ArgumentParser) -> None:
+        """
+        Enables arguments for the command.
+
+        Args:
+            parser (ArgumentParser): The parser object of the command.
+
+        Returns:
+            None
+        """
         # positional arguments
         parser.add_argument(
             'piperun',
@@ -41,7 +56,17 @@ class Command(BaseCommand):
             help="Overwrite previous 'measurements.arrow' file.",
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args, **options) -> None:
+        """
+        Handle function of the command.
+
+        Args:
+            *args: Variable length argument list.
+            **options: Variable length options.
+
+        Returns:
+            None
+        """
         # configure logging
         if options['verbosity'] > 1:
             # set root logger to use the DEBUG level
