@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Bumped Browsersync from 2.26.13 to 2.26.14 [#481](https://github.com/askap-vast/vast-pipeline/pull/481).
 - Dependabot: Bump prismjs from 1.22.0 to 1.23.0 [#469](https://github.com/askap-vast/vast-pipeline/pull/469).
 - Changed non-google format docstrings to google format [#480](https://github.com/askap-vast/vast-pipeline/pull/480).
 - Changed some documentation layout and updated content [#471](https://github.com/askap-vast/vast-pipeline/pull/471).
@@ -62,6 +63,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#481](https://github.com/askap-vast/vast-pipeline/pull/481) dep: Bump Browsersync from 2.26.13 to 2.26.14.
 - [#469](https://github.com/askap-vast/vast-pipeline/pull/469) dep: Bump prismjs from 1.22.0 to 1.23.0.
 - [#480](https://github.com/askap-vast/vast-pipeline/pull/480) feat: Code reference documentation update.
 - [#471](https://github.com/askap-vast/vast-pipeline/pull/471) feat: Documentation update.
