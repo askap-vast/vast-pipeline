@@ -1,7 +1,14 @@
+"""
+Initialises a pipeline run and creates the relevant directories.
+
+Usage: ./manage.py initpiperun pipeline_run_name
+"""
+
 import os
 import logging
 from typing import Any, Dict, Optional
 
+from argparse import ArgumentParser
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings as sett
 from django.contrib.auth.models import User
@@ -40,7 +47,7 @@ def initialise_run(
     Returns
     -------
     Run
-        The initialised Run object.
+        The initialised pipeline Run Django model object.
 
     Raises
     ------
@@ -90,7 +97,16 @@ class Command(BaseCommand):
         'instance'
     )
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser) -> None:
+        """
+        Enables arguments for the command.
+
+        Args:
+            parser (ArgumentParser): The parser object of the command.
+
+        Returns:
+            None
+        """
         # positional arguments
         parser.add_argument(
             'runname',
@@ -98,7 +114,17 @@ class Command(BaseCommand):
             help='Name of the pipeline run.'
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args, **options) -> None:
+        """
+        Handle function of the command.
+
+        Args:
+            *args: Variable length argument list.
+            **options: Variable length options.
+
+        Returns:
+            None
+        """
         # configure logging
         if options['verbosity'] > 1:
             # set root logger to use the DEBUG level

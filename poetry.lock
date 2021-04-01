@@ -876,6 +876,17 @@ Markdown = ">=3.3,<4.0"
 mkdocs = ">=1.1,<2.0"
 
 [[package]]
+name = "mkdocs-gen-files"
+version = "0.3.1"
+description = "MkDocs plugin to programmatically generate documentation pages during the build"
+category = "dev"
+optional = false
+python-versions = ">=3.7,<4.0"
+
+[package.dependencies]
+mkdocs = ">=1.0,<2.0"
+
+[[package]]
 name = "mkdocs-material"
 version = "7.1.0"
 description = "A Material Design theme for MkDocs"
@@ -1767,7 +1778,7 @@ prod = ["gevent", "gunicorn"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.1"
-content-hash = "0d7939cfd6d2ddd3a3cfe6e7c93d8538d90655f665e42adbf0e242482a092e81"
+content-hash = "23ec262ee934c64da65bf4a4eb4931650c2e03bbbd76b2dcb35e465953d32b9d"
 
 [metadata.files]
 ansicon = [
@@ -2256,6 +2267,10 @@ mkdocs = [
 mkdocs-autorefs = [
     {file = "mkdocs-autorefs-0.1.1.tar.gz", hash = "sha256:ff9386ceb1ceeb88786696c7534ec31a6248a4828a5a2f8fea9d2699f650e3ab"},
     {file = "mkdocs_autorefs-0.1.1-py3-none-any.whl", hash = "sha256:8bed8e81db45bb8d25e30e09d9d2943a7ceb92d3ad6b51e84618027c55c398eb"},
+]
+mkdocs-gen-files = [
+    {file = "mkdocs-gen-files-0.3.1.tar.gz", hash = "sha256:1b90654a6e9d7fa7bca7c4f80c0dbdce294ce4c4d63a26a384366f1dda4d29d1"},
+    {file = "mkdocs_gen_files-0.3.1-py3-none-any.whl", hash = "sha256:68131f7d5aae374be93a24f546c2d7a56e34f55413001a2d9b10682ac1900810"},
 ]
 mkdocs-material = [
     {file = "mkdocs-material-7.1.0.tar.gz", hash = "sha256:1afaa5b174265eaa4a886f73187bb0e302a9596e9bfedb5aa2cb260d8b1d994e"},

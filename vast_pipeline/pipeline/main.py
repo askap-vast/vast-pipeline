@@ -1,3 +1,8 @@
+"""
+This module contains the main pipeline class used for processing a pipeline
+run.
+"""
+
 import os
 import operator
 import logging
@@ -68,18 +73,13 @@ class Pipeline():
         self.add_mode: bool = False
         self.previous_parquets: Dict[str, str]
 
-    def match_images_to_data(self):
+    def match_images_to_data(self) -> None:
         """
         Loops through images and matches the selavy, noise and bkg images.
         Assumes that user has enteted images and other data in the same order.
 
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        None
+        Returns:
+            None
         """
         for key in sorted(self.config["inputs"]["image"].keys()):
             for x, y in zip(
@@ -99,7 +99,17 @@ class Pipeline():
                 ):
                     self.img_paths["background"][x] = y
 
-    def process_pipeline(self, p_run: Run):
+    def process_pipeline(self, p_run: Run) -> None:
+        """
+        The function that performs the processing operations of the pipeline
+        run.
+
+        Args:
+            p_run: The pipeline run model object.
+
+        Returns:
+            None
+        """
         logger.info(f'Epoch based association: {self.config.epoch_based}')
         if self.add_mode:
             logger.info('Running in image add mode.')
@@ -301,12 +311,35 @@ class Pipeline():
         pass
 
     @staticmethod
-    def check_current_runs():
+    def check_current_runs() -> None:
+        """
+        Checks the number of pipeline runs currently being processed.
+
+        Returns:
+            None
+
+        Raises:
+            MaxPipelineRunsError: Raised if the number of pipeline runs
+                currently being processed is larger than the allowed
+                maximum.
+        """
         if Run.objects.check_max_runs(settings.MAX_PIPELINE_RUNS):
             raise MaxPipelineRunsError
 
     @staticmethod
-    def set_status(pipe_run, status=None):
+    def set_status(pipe_run: Run, status: str=None) -> None:
+        """
+        Function to change the status of a pipeline run model object and save
+        to the database.
+
+        Args:
+            pipe_run: The pipeline run model object.
+            status: The status to set.
+
+        Returns:
+            None
+        """
+        #TODO: This function gives no feedback if the status is not accepted?
         choices = [x[0] for x in Run._meta.get_field('status').choices]
         if status and status in choices and pipe_run.status != status:
             with transaction.atomic():

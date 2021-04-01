@@ -1,3 +1,9 @@
+"""
+The main command to launch the processing of a pipeline run.
+
+Usage: ./manage.py runpipeline pipeline_run_name
+"""
+
 import os
 import glob
 import shutil
@@ -5,6 +11,7 @@ import logging
 import traceback
 import warnings
 
+from argparse import ArgumentParser
 from typing import Optional
 from django.db import transaction
 from django.contrib.auth.models import User
@@ -34,32 +41,29 @@ def run_pipe(
     '''
     Main function to run the pipeline.
 
-    Parameters
-    ----------
-    name : str
-        The name of the pipeline run (p_run.name).
-    path_name : str, optional
-        The path of the directory of the pipeline run (p_run.path), defaults to
-        None.
-    run_dj_obj : Run, optional
-        The Run object of the pipeline run, defaults to None.
-    cli : bool, optional
-        Flag to signify whether the pipeline run has been run via the UI
-        (False), or the command line (True). Defaults to True.
-    debug : bool, optional
-        Flag to signify whether to enable debug verbosity to the logging
-        output. Defaults to False.
-    user : User, optional
-        The User of the request if made through the UI. Defaults to None.
-    full_rerun : bool, optional
-        If the run already exists, a complete rerun will be performed which
-        will remove and replace all the previous results.
-    prev_ui_status : str, optional
-        The previous status through the UI. Defaults to 'END'.
+    Args:
+        name:
+            The name of the pipeline run (p_run.name).
+        path_name:
+            The path of the directory of the pipeline run (p_run.path),
+            defaults to None.
+        run_dj_obj:
+            The Run object of the pipeline run, defaults to None.
+        cli:
+            Flag to signify whether the pipeline run has been run via the UI
+            (False), or the command line (True). Defaults to True.
+        debug:
+            Flag to signify whether to enable debug verbosity to the logging
+            output. Defaults to False.
+        user:
+            The User of the request if made through the UI. Defaults to None.
+        full_rerun:
+            If the run already exists, a complete rerun will be performed which
+            will remove and replace all the previous results.
+        prev_ui_status:
+            The previous status through the UI. Defaults to 'END'.
 
-    Returns
-    -------
-    bool : bool OR CommandError : CommandError
+    Returns:
         Boolean equal to `True` on a successful completion, or in cases of
         failures a CommandError is returned.
     '''
@@ -308,7 +312,16 @@ class Command(BaseCommand):
     """
     help = 'Process the pipeline for a list of images and Selavy catalogs'
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: ArgumentParser) -> None:
+        """
+        Enables arguments for the command.
+
+        Args:
+            parser (ArgumentParser): The parser object of the command.
+
+        Returns:
+            None
+        """
         # positional arguments
         parser.add_argument(
             'piperun',
@@ -326,7 +339,17 @@ class Command(BaseCommand):
                 ' Old data is completely removed and replaced.')
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args, **options) -> None:
+        """
+        Handle function of the command.
+
+        Args:
+            *args: Variable length argument list.
+            **options: Variable length options.
+
+        Returns:
+            None
+        """
         p_run_name, run_folder = get_p_run_name(
             options['piperun'],
             return_folder=True

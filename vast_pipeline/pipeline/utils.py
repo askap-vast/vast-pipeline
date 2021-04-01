@@ -1,3 +1,8 @@
+"""
+This module contains utility functions that are used by the pipeline during
+the processing of a run.
+"""
+
 import os
 import logging
 import glob
@@ -14,6 +19,7 @@ from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
 from astropy.io import fits
 from django.conf import settings
+from django.contrib.auth.models import User
 from psutil import cpu_count
 from itertools import chain, combinations
 
@@ -31,10 +37,17 @@ logger = logging.getLogger(__name__)
 dask.config.set({"multiprocessing.context": "fork"})
 
 
-def get_create_skyreg(p_run, image):
+def get_create_skyreg(p_run: Run, image: Image) -> SkyRegion:
     '''
-    This create a Sky Region object in Django ORM given the related
+    This creates a Sky Region object in Django ORM given the related
     image object.
+
+    Args:
+        p_run: The pipeline run Django ORM object.
+        image: The image Django ORM object.
+
+    Returns:
+        The sky region Django ORM object.
     '''
     # In the calculations below, it is assumed the image has square
     # pixels (this pipeline has been designed for ASKAP images, so it
@@ -67,15 +80,22 @@ def get_create_skyreg(p_run, image):
     logger.info('Created sky region %s', skyr)
     skyr.run.add(p_run)
     logger.info('Adding %s to sky region %s', p_run, skyr)
+
     return skyr
 
 
-def get_create_img_band(image):
+def get_create_img_band(image: Image) -> Band:
     '''
     Return the existing Band row for the given FitsImage.
     An image is considered to belong to a band if its frequency is within some
     tolerance of the band's frequency.
     Returns a Band row or None if no matching band.
+
+    Args:
+        image: The image Django ORM object.
+
+    Returns:
+        The band Django ORM object.
     '''
     # For now we match bands using the central frequency.
     # This assumes that every band has a unique frequency,
@@ -96,7 +116,24 @@ def get_create_img_band(image):
     return band
 
 
-def get_create_img(p_run, band_id, image):
+def get_create_img(
+    p_run: Run, band_id: int, image: Image
+) -> Tuple[Image, SkyRegion, bool]:
+    """
+    Function to fetch or create the Image and Sky Region objects for the images
+    in the pipeline run.
+
+    Args:
+        p_run: The pipeline run Django ORM object.
+        band_id: The integer database id value of the frequency band of the
+            image.
+        image: The image Django ORM object.
+
+    Returns:
+        The resulting image django ORM object, the sky region Django ORM
+        object and a bool value denoting if the image already existed in the
+        database.
+    """
     img = Image.objects.filter(name__exact=image.name)
     if img.exists():
         img = img.get()
@@ -150,10 +187,23 @@ def get_create_img(p_run, band_id, image):
     return (img, skyreg, False)
 
 
-def get_create_p_run(name, path, description=None, user=None):
+def get_create_p_run(
+    name: str, path: str, description: str=None, user: User=None
+) -> Tuple[Run, bool]:
     '''
-    get or create a pipeline run in db, return the run django object and
-    a flag True/False if has been created or already exists
+    Get or create a pipeline run in db, return the run django object and
+    a flag True/False if has been created or already exists.
+
+    Args:
+        name: The name of the pipeline run.
+        path: The system path to the pipeline run folder which contains the
+            configuration file and where outputs will be saved.
+        description: An optional description of the pipeline run.
+        user: The Django user that launched the pipeline run.
+
+    Returns:
+        The pipeline run object and a boolean object representing whether
+        the pipeline run already existed ('True') or not ('False').
     '''
     p_run = Run.objects.filter(name__exact=name)
     if p_run:
@@ -178,22 +228,19 @@ def remove_duplicate_measurements(
     measurements. Duplicates are determined by their separation and whether
     this distances is within the 'dup_lim'.
 
-    Parameters
-    ----------
-    source_df : pd.DataFrame
-        The loaded measurements from two or more images.
-    dup_lim : Angle, optional
-        The separation limit of when a source is considered a duplicate.
-        Defaults to None in which case 2.5 arcsec is used (usual ASKAP
-        pixel size).
-    ini_df : bool, optional
-        Boolean to indicate whether these sources are part of the initial
-        source list creation for association. If 'True' the source ids are
-        reset ready for the first iteration. Defaults to 'False'.
+    Args:
+        sources_df:
+            The loaded measurements from two or more images.
+        dup_lim:
+            The separation limit of when a source is considered a duplicate.
+            Defaults to None in which case 2.5 arcsec is used (usual ASKAP
+            pixel size).
+        ini_df:
+            Boolean to indicate whether these sources are part of the initial
+            source list creation for association. If 'True' the source ids are
+            reset ready for the first iteration. Defaults to 'False'.
 
-    Returns
-    -------
-    sources_df : pd.DataFrame
+    Returns:
         The input sources_df with duplicate sources removed.
     """
     logger.debug('Cleaning duplicate sources from epoch...')
@@ -283,23 +330,21 @@ def _load_measurements(
     """
     Load the measurements for an image from the parquet file.
 
-    Parameters
-    ----------
-    image : Image
-        The object representing the image for which to load the measurements.
-    cols : List[str]
-        The columns to load.
-    start_id : int, optional
-        The number to start from when setting the source ids (when 'ini_df' is
-        'True'). Defaults to 0.
-    ini_df : bool, optional
-        Boolean to indicate whether these sources are part of the initial
-        source list creation for association. If 'True' the source ids are
-        reset ready for the first iteration. Defaults to 'False'.
+    Args:
+        image:
+            The object representing the image for which to load the
+            measurements.
+        cols:
+            The columns to load.
+        start_id:
+            The number to start from when setting the source ids (when
+            'ini_df' is 'True'). Defaults to 0.
+        ini_df:
+            Boolean to indicate whether these sources are part of the initial
+            source list creation for association. If 'True' the source ids are
+            reset ready for the first iteration. Defaults to 'False'.
 
-    Returns
-    -------
-    df : pd.DataFrame
+    Returns:
         The measurements of the image with some extra values set ready for
         assoication.
     """
@@ -336,32 +381,30 @@ def prep_skysrc_df(
     perc_error: float = 0.,
     duplicate_limit: Optional[Angle] = None,
     ini_df: bool = False
-):
+) -> pd.DataFrame:
     '''
     Initiliase the source dataframe to use in association logic by
     reading the measurement parquet file and creating columns. When epoch
     based assoication is used it will also remove duplicate measurements from
     the list of sources.
 
-    Parameters
-    ----------
-    images : List[Image]
-        A list holding the Image objects of the images to load measurements for.
-    perc_error : float, optional
-        A percentage flux error to apply to the flux errors of the
-        measurements. Defaults to 0.
-    duplicate_limit : Angle, optional
-        The separation limit of when a source is considered a duplicate.
-        Defaults to None in which case 2.5 arcsec is used in the
-        'remove_duplicate_measurements' function (usual ASKAP pixel size).
-    ini_df : bool, optional
-        Boolean to indicate whether these sources are part of the initial
-        source list creation for association. If 'True' the source ids are
-        reset ready for the first iteration. Defaults to 'False'.
+    Args:
+        images:
+            A list holding the Image objects of the images to load measurements
+            for.
+        perc_error:
+            A percentage flux error to apply to the flux errors of the
+            measurements. Defaults to 0.
+        duplicate_limit:
+            The separation limit of when a source is considered a duplicate.
+            Defaults to None in which case 2.5 arcsec is used in the
+            'remove_duplicate_measurements' function (usual ASKAP pixel size).
+        ini_df:
+            Boolean to indicate whether these sources are part of the initial
+            source list creation for association. If 'True' the source ids are
+            reset ready for the first iteration. Defaults to 'False'.
 
-    Returns
-    -------
-    df : pd.DataFrame
+    Returns:
         The measurements of the image(s) with some extra values set ready for
         assoication and duplicates removed if necessary.
     '''
@@ -418,31 +461,29 @@ def add_new_one_to_many_relations(
     This handles the relation information being created from the
     one_to_many functions in association.
 
-    Parameters
-    ----------
-    row : pd.Series
-        The relation information Series from the assoication dataframe. Only
-        the columns ['related_skyc1', 'source_skyc1'] are required for advanced
-        , these are instead called ['related', 'source'] for basic.
-    advanced : bool, optional
-        Whether advanced association is being used which changes the names
-        of the columns involved.
-    source_ids : int, optional
-        A dataframe that contains the other ids to append to related for each
-        original source.
-        +----------------+--------+
-        |   source_skyc1 | 0      |
-        |----------------+--------|
-        |            122 | [5542] |
-        |            254 | [5543] |
-        |            262 | [5544] |
-        |            405 | [5545] |
-        |            656 | [5546] |
-        +----------------+--------+
+    Args:
+        row:
+            The relation information Series from the assoication dataframe.
+            Only the columns ['related_skyc1', 'source_skyc1'] are required
+            for advanced, these are instead called ['related', 'source']
+            for basic.
+        advanced:
+            Whether advanced association is being used which changes the names
+            of the columns involved.
+        source_ids:
+            A dataframe that contains the other ids to append to related for
+            each original source.
+            +----------------+--------+
+            |   source_skyc1 | 0      |
+            |----------------+--------|
+            |            122 | [5542] |
+            |            254 | [5543] |
+            |            262 | [5544] |
+            |            405 | [5545] |
+            |            656 | [5546] |
+            +----------------+--------+
 
-    Returns
-    -------
-    out : List[int]
+    Returns:
         The new related field for the source in question, containing the
         appended ids.
     """
@@ -478,15 +519,12 @@ def add_new_many_to_one_relations(row: pd.Series) -> List[int]:
     the new relations to the relation column, taking into account if it is
     already a list of relations or not (i.e. no previous relations).
 
-    Parameters
-    ----------
-    row : pd.Series
-        The relation information Series from the assoication dataframe. Only
-        the columns ['related_skyc1', 'new_relations'] are required.
+    Args:
+        row:
+            The relation information Series from the assoication dataframe.
+            Only the columns ['related_skyc1', 'new_relations'] are required.
 
-    Returns
-    -------
-    out : List[int]
+    Returns:
         The new related field for the source in question, containing the
         appended ids.
     """
@@ -498,7 +536,18 @@ def add_new_many_to_one_relations(row: pd.Series) -> List[int]:
     return out
 
 
-def cross_join(left, right):
+def cross_join(left: pd.DataFrame, right: pd.DataFrame) -> pd.DataFrame:
+    """
+    A convenience function to merge two dataframes.
+
+    Args:
+        left: The base pandas DataFrame to merge.
+        right: The pandas DataFrame to merge to the left.
+
+    Returns:
+        The resultant merged DataFrame.
+
+    """
     return (
         left.assign(key=1)
         .merge(right.assign(key=1), on='key')
@@ -506,11 +555,24 @@ def cross_join(left, right):
     )
 
 
-def get_eta_metric(row, df, peak=False):
+def get_eta_metric(
+    row: Dict[str, float], df: pd.DataFrame, peak: bool=False
+) -> float:
     '''
     Calculates the eta variability metric of a source.
     Works on the grouped by dataframe using the fluxes
     of the assoicated measurements.
+
+    Args:
+        row: Dictionary containg statistics for the current source.
+        df: The grouped by sources dataframe of the measurements containing all
+            the flux and flux error information,
+        peak: Whether to use peak_flux for the calculation. If False then the
+            integrated flux is used.
+
+    Returns:
+        The calculated eta value.
+
     '''
     if row['n_meas'] == 1:
         return 0.
@@ -526,11 +588,19 @@ def get_eta_metric(row, df, peak=False):
     return eta
 
 
-def groupby_funcs(df):
+def groupby_funcs(df: pd.DataFrame) -> pd.Series:
     '''
     Performs calculations on the unique sources to get the
     lightcurve properties. Works on the grouped by source
     dataframe.
+
+    Args:
+        df: The current iteration dataframe of the grouped by sources
+            dataframe.
+
+    Returns:
+        Pandas series containing the calculated metrics of the source.
+
     '''
     # calculated average ra, dec, fluxes and metrics
     d = {}
@@ -598,7 +668,17 @@ def groupby_funcs(df):
     return pd.Series(d).fillna(value={"v_int": 0.0, "v_peak": 0.0})
 
 
-def parallel_groupby(df):
+def parallel_groupby(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Performs the parallel source dataframe operations to calculate the source
+    metrics using Dask and returns the resulting dataframe.
+
+    Args:
+        df: The sources dataframe produced by the previous pipeline stages.
+
+    Returns:
+        The source dataframe with the calculated metric columns.
+    """
     col_dtype = {
         'img_list': 'O',
         'n_meas_forced': 'i',
@@ -636,21 +716,49 @@ def parallel_groupby(df):
         )
         .compute(num_workers=n_cpu, scheduler='processes')
     )
+
     out['n_rel'] = out['related_list'].apply(lambda x: 0 if x == -1 else len(x))
+
     return out
 
 
-def calc_ave_coord(grp):
+def calc_ave_coord(grp: pd.DataFrame) -> pd.Series:
+    """
+    Calculates the average coordinate of the grouped by sources dataframe for
+    each unique group, along with defining the image and epoch list for each
+    unique source (group).
+
+    Args:
+        grp: The current group dataframe (unique source) of the grouped by
+            dataframe being acted upon.
+
+    Returns:
+        A pandas series containing the average coordinate along with the
+        image and epoch lists.
+    """
     d = {}
     grp = grp.sort_values(by='datetime')
     d['img_list'] = grp['image'].values.tolist()
     d['epoch_list'] = grp['epoch'].values.tolist()
     d['wavg_ra'] = grp['interim_ew'].sum() / grp['weight_ew'].sum()
     d['wavg_dec'] = grp['interim_ns'].sum() / grp['weight_ns'].sum()
+
     return pd.Series(d)
 
 
-def parallel_groupby_coord(df):
+def parallel_groupby_coord(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    This function uses Dask to perform the average coordinate and unique image
+    and epoch lists calculation. The result from the Dask compute is returned
+    which is a dataframe containing the results for each source.
+
+    Args:
+        df: The sources dataframe produced by the pipeline.
+
+    Returns:
+        The resulting average coordinate values and unique image and epoch
+        lists for each unique source (group).
+    """
     col_dtype = {
         'img_list': 'O',
         'epoch_list': 'O',
@@ -664,14 +772,24 @@ def parallel_groupby_coord(df):
         .apply(calc_ave_coord, meta=col_dtype)
         .compute(num_workers=n_cpu, scheduler='processes')
     )
+
     return out
 
 
-def get_rms_noise_image_values(rms_path):
+def get_rms_noise_image_values(rms_path: str) -> Tuple[float, float, float]:
     '''
-    open the RMS noise FITS file and compute the median, max and min
+    Open the RMS noise FITS file and compute the median, max and min
     rms values to be added to the image model and then used in the
-    calculations
+    calculations.
+
+    Args:
+        rms_path: The system path to the RMS FITS image.
+
+    Returns:
+        The median, minimum and maximum values of the RMS image.
+
+    Raises:
+        IOError: Raised when the RMS FITS file cannot be found.
     '''
     logger.debug('Extracting Image RMS values from Noise file...')
     med_val = min_val = max_val = 0.
@@ -690,7 +808,20 @@ def get_rms_noise_image_values(rms_path):
     return med_val, min_val, max_val
 
 
-def get_image_list_diff(row):
+def get_image_list_diff(row: pd.Series) -> List[str]:
+    """
+    Calculate the difference between the ideal coverage image list of a source
+    and the actual observed image list. Also checks whether an epoch does in
+    fact contain a detection but is not in the expected 'ideal' image for that
+    epoch.
+
+    Args:
+        row: The row from the sources dataframe that is being iterated over.
+
+    Returns:
+        A list of the images missing from the observed image list. Will be
+        returned as '-1' integer value if there are no missing images.
+    """
     out = list(
         filter(lambda arg: arg not in row['img_list'], row['skyreg_img_list'])
     )
@@ -699,7 +830,8 @@ def get_image_list_diff(row):
     if not out:
         return -1
 
-    # Check that an epoch has not already been seen (just not in the 'ideal' image)
+    # Check that an epoch has not already been seen (just not in the 'ideal'
+    # image)
     out_epochs = [
         row['skyreg_epoch'][pair[0]] for pair in enumerate(
             row['skyreg_img_list']
@@ -718,7 +850,19 @@ def get_image_list_diff(row):
     return out
 
 
-def get_names_and_epochs(grp):
+def get_names_and_epochs(grp: pd.DataFrame) -> pd.Series:
+    """
+    Convenience function to group together the image names, epochs and
+    datetimes into one list object which is then returned as a pandas series.
+    This is necessary for easier processing in the ideal coverage analysis.
+
+    Args:
+        grp: A group from the grouped by sources DataFrame.
+
+    Returns:
+        Pandas series containing the list object that contains the lists of the
+        image names, epochs and datetimes.
+    """
     d = {}
     d['skyreg_img_epoch_list'] = [[[x,], y, z] for x,y,z in zip(
         grp['name'].values.tolist(),
@@ -734,15 +878,11 @@ def check_primary_image(row: pd.Series) -> bool:
     Checks whether the primary image of the ideal source
     dataframe is in the image list for the source.
 
-    Parameters
-    ----------
-    row : pd.Series
-        input dataframe row, with columns ['primary']
-        and ['img_list'].
+    Args:
+        row:
+            Input dataframe row, with columns ['primary'] and ['img_list'].
 
-    Returns
-    -------
-    bool : bool
+    Returns:
         True if primary in image list else False.
     """
     return row['primary'] in row['img_list']
@@ -756,21 +896,18 @@ def get_src_skyregion_merged_df(
     for each source should be. In other words, what images is the source
     missing in when it should have been seen.
 
-    Parameters
-    ----------
-    sources_df : pd.DataFrame
-        The output of the assoication step containing the
-        measurements assoicated into sources.
-    images_df : pd.DataFrame
-        Contains the images of the pipeline run. I.e. all image
-        objects for the run loaded into a dataframe.
-    skyreg_df : pd.DataFrame
-        Contains the sky regions of the pipeline run. I.e. all
-        sky region objects for the run loaded into a dataframe.
+    Args:
+        sources_df:
+            The output of the assoication step containing the
+            measurements assoicated into sources.
+        images_df:
+            Contains the images of the pipeline run. I.e. all image
+            objects for the run loaded into a dataframe.
+        skyreg_df:
+            Contains the sky regions of the pipeline run. I.e. all
+            sky region objects for the run loaded into a dataframe.
 
-    Returns
-    -------
-    srcs_df : pd.DataFrame
+    Returns:
         DataFrame containing missing image information. Output format:
         +----------+----------------------------------+-----------+------------+
         |   source | img_list                         |   wavg_ra |   wavg_dec |
@@ -963,18 +1100,15 @@ def _get_skyregion_relations(
     contains the ids of other sky regions that overlap
     with the row sky region (including itself).
 
-    Parameters
-    ----------
-    row : pd.Series
-        A row from the dataframe containing all the sky regions of the run.
-        Contains the 'id', 'centre_ra', 'centre_dec' and 'xtr_radius' columns.
-    coords : SkyCoord
-        A SkyCoord holding the coordinates of all sky regions.
-    ids : The sky regions ids that match the coords.
+    Args:
+        row:
+            A row from the dataframe containing all the sky regions of the run.
+            Contains the 'id', 'centre_ra', 'centre_dec' and 'xtr_radius'
+            columns.
+        coords: A SkyCoord holding the coordinates of all sky regions.
+        ids: The sky regions ids that match the coords.
 
-    Returns
-    -------
-    related_ids : List[int]
+    Returns:
         A list of other sky regions (including self) that are withing the
         'xtr_radius' of the sky region in the row.
     '''
@@ -1002,22 +1136,20 @@ def group_skyregions(df: pd.DataFrame) -> pd.DataFrame:
     the index and a column containing a list of the
     sky region group number it belongs to.
 
-    Parameters
-    ----------
-    df : pd.DataFrame
-        A dataframe containing all the sky regions of the run. Only the
-        'id', 'centre_ra', 'centre_dec' and 'xtr_radius' columns are required.
-        +------+-------------+--------------+--------------+
-        |   id |   centre_ra |   centre_dec |   xtr_radius |
-        |------+-------------+--------------+--------------|
-        |    2 |    319.652  |    0.0030765 |      6.72488 |
-        |    3 |    319.652  |   -6.2989    |      6.7401  |
-        |    1 |     21.8361 |  -73.121     |      7.24662 |
-        +------+-------------+--------------+--------------+
+    Args:
+        df:
+            A dataframe containing all the sky regions of the run. Only the
+            'id', 'centre_ra', 'centre_dec' and 'xtr_radius' columns are
+            required.
+            +------+-------------+--------------+--------------+
+            |   id |   centre_ra |   centre_dec |   xtr_radius |
+            |------+-------------+--------------+--------------|
+            |    2 |    319.652  |    0.0030765 |      6.72488 |
+            |    3 |    319.652  |   -6.2989    |      6.7401  |
+            |    1 |     21.8361 |  -73.121     |      7.24662 |
+            +------+-------------+--------------+--------------+
 
-    Returns
-    -------
-    skyreg_group_ids : pd.DataFrame
+    Returns:
         The sky region group of each skyregion id.
         +----+----------------+
         |    |   skyreg_group |
@@ -1106,23 +1238,20 @@ def get_parallel_assoc_image_df(
     """
     Merge the sky region groups with the images and skyreg_ids.
 
-    Parameters
-    ----------
-    images : List
-        A list of the Image objects.
-    skyregion_groups: pd.DataFrame
-        The sky region group of each skyregion id.
-        +----+----------------+
-        |    |   skyreg_group |
-        |----+----------------|
-        |  2 |              1 |
-        |  3 |              1 |
-        |  1 |              2 |
-        +----+----------------+
+    Args:
+        images:
+            A list of the Image objects.
+        skyregion_groups:
+            The sky region group of each skyregion id.
+            +----+----------------+
+            |    |   skyreg_group |
+            |----+----------------|
+            |  2 |              1 |
+            |  3 |              1 |
+            |  1 |              2 |
+            +----+----------------+
 
-    Returns
-    -------
-    results : pd.DataFrame
+    Returns:
         Dataframe containing the merged images and skyreg_id and skyreg_group.
         +----+-------------------------------+-------------+----------------+
         |    | image                         |   skyreg_id |   skyreg_group |
@@ -1168,14 +1297,12 @@ def create_measurements_arrow_file(p_run: Run) -> None:
     of a pipeline run. Vaex is used to do the exporting to arrow to
     ensure compatibility with Vaex.
 
-    Parameters
-    ----------
-    p_run: Run
-        Pipeline model instance.
+    Args:
+        p_run:
+            Pipeline model instance.
 
-    Returns
-    -------
-    None
+    Returns:
+        None
     """
     logger.info('Creating measurements.arrow for run %s.', p_run.name)
 
@@ -1236,14 +1363,12 @@ def create_measurement_pairs_arrow_file(p_run: Run) -> None:
     of a pipeline run. Vaex is used to do the exporting to arrow to
     ensure compatibility with Vaex.
 
-    Parameters
-    ----------
-    p_run: Run
-        Pipeline model instance.
+    Args:
+        p_run:
+            Pipeline model instance.
 
-    Returns
-    -------
-    None
+    Returns:
+        None
     """
     logger.info('Creating measurement_pairs.arrow for run %s.', p_run.name)
 
@@ -1447,14 +1572,12 @@ def backup_parquets(p_run_path: str) -> None:
     Backups up all the existing parquet files in a pipeline run directory.
     Backups are named with a '.bak' suffix in the pipeline run directory.
 
-    Parameters
-    ----------
-    p_run_path : str
-        The path of the pipeline run where the parquets are stored.
+    Args:
+        p_run_path:
+            The path of the pipeline run where the parquets are stored.
 
-    Returns
-    -------
-    None
+    Returns:
+        None
     """
     parquets = (
         glob.glob(os.path.join(p_run_path, "*.parquet"))
@@ -1478,18 +1601,15 @@ def reconstruct_associtaion_dfs(
     manipulations to reconstruct the sources_df and skyc1_srcs required by
     association.
 
-    Parameters
-    ----------
-    images_df_done : pd.DataFrame
-        The images_df output from the existing run (from the parquet).
-    previous_parquet_paths : Dict[str, str]
-        Dictionary that contains the paths for the previous run parquet files.
-        Keys are 'images', 'associations', 'sources', 'relations' and
-        'measurement_pairs'.
+    Args:
+        images_df_done:
+            The images_df output from the existing run (from the parquet).
+        previous_parquet_paths:
+            Dictionary that contains the paths for the previous run parquet
+            files. Keys are 'images', 'associations', 'sources', 'relations'
+            and 'measurement_pairs'.
 
-    Returns
-    -------
-    sources_df, skyc1_srcs : pd.DataFrame, pd.DataFrame.
+    Returns:
         The reconstructed sources_df and skyc1_srs dataframes.
     """
     prev_associations = pd.read_parquet(previous_parquet_paths['associations'])

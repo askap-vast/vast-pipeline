@@ -3,7 +3,7 @@ import logging
 import numpy as np
 import pandas as pd
 
-from typing import Dict, List, Optional
+from typing import List, Optional, Dict, Tuple, Generator, Iterable
 from itertools import islice
 from django.db import transaction, connection, models
 
@@ -16,7 +16,8 @@ from vast_pipeline.pipeline.model_generator import (
     measurement_pair_models_generator,
 )
 from vast_pipeline.models import (
-    Association, Measurement, Source, RelatedSource, MeasurementPair, Run
+    Association, Measurement, Source, RelatedSource,
+    MeasurementPair, Run, Image
 )
 from vast_pipeline.pipeline.config import PipelineConfig
 from vast_pipeline.pipeline.utils import (
@@ -29,13 +30,28 @@ logger = logging.getLogger(__name__)
 
 
 @transaction.atomic
-def bulk_upload_model(djmodel, generator, batch_size=10_000, return_ids=False):
+def bulk_upload_model(
+    djmodel: models.Model,
+    generator: Iterable[Generator[models.Model, None, None]],
+    batch_size: int=10_000, return_ids: bool=False
+) -> List[int]:
     '''
-    bulk upload a pandas series of django models to db
-    djmodel: django.model
-    generator: generator
-    batch_size: int
-    return_ids: bool
+    Bulk upload a list of generator objects of django models to db.
+
+    Args:
+        djmodel:
+            The Django pipeline model to be uploaded.
+        generator:
+            The generator objects of the model to upload.
+        batch_size:
+            How many records to upload at once.
+        return_ids:
+            When set to True, the database IDs of the uploaded objects are
+            returned.
+
+    Returns:
+        None or a list of the database IDs of the uploaded objects.
+
     '''
     bulk_ids = []
     while True:
@@ -52,10 +68,27 @@ def bulk_upload_model(djmodel, generator, batch_size=10_000, return_ids=False):
         return bulk_ids
 
 
-def make_upload_images(paths: Dict[str, Dict[str, str]], config: PipelineConfig, pipeline_run: Run):
+def make_upload_images(
+    paths: Dict[str, Dict[str, str]], config: PipelineConfig, pipeline_run: Run
+) -> Tuple[List[Image], pd.DataFrame]:
     '''
-    carry the first part of the pipeline, by uploading all the images
-    to the image table and populated band and skyregion objects
+    Carry the first part of the pipeline, by uploading all the images
+    to the image table and populated band and skyregion objects.
+
+    Args:
+        paths:
+            Dictionary containing the image, noise and background paths of all
+            the images in the pipeline run. The primary keys are `selavy`,
+            'noise' and 'background' with the secondary key being the image
+            name.
+        config (config):
+            The config object of the pipeline run.
+        pipeline_run:
+            The pipeline run object.
+
+    Returns:
+        A list of image objects that have been uploaded along with a DataFrame
+        containing the information of the sky regions associated with the run.
     '''
     timer = StopWatch()
     images = []
@@ -159,21 +192,18 @@ def make_upload_sources(
 ) -> pd.DataFrame:
     '''
     Delete previous sources for given pipeline run and bulk upload
-    new found sources as well as related sources
+    new found sources as well as related sources.
 
-    Parameters
-    ----------
-    sources_df : pd.DataFrame
-        Holds the measurements associated into sources. The output of of the
-        association step.
-    pipeline_run : Run
-        The pipeline Run object.
-    add_mode : bool
-        Whether the pipeline is running in add image mode.
+    Args:
+        sources_df:
+            Holds the measurements associated into sources. The output of of
+            thE association step.
+        pipeline_run:
+            The pipeline Run object.
+        add_mode:
+            Whether the pipeline is running in add image mode.
 
-    Returns
-    -------
-    sources_df : pd.DataFrame
+    Returns:
         The input dataframe with the 'id' column added.
     '''
     # create sources in DB
@@ -202,19 +232,52 @@ def make_upload_sources(
     return sources_df
 
 
-def make_upload_related_sources(related_df):
+def make_upload_related_sources(related_df: pd.DataFrame) -> None:
+    """
+    Uploads the related sources from the supplied related sources DataFrame.
+
+    Args:
+        related_df:
+            DataFrame containing the related sources information from the
+            pipeline.
+
+    Returns:
+        None.
+    """
     logger.info('Populate "related" field of sources...')
     bulk_upload_model(RelatedSource, related_models_generator(related_df))
 
 
-def make_upload_associations(associations_df):
+def make_upload_associations(associations_df: pd.DataFrame) -> None:
+    """
+    Uploads the associations from the supplied associations DataFrame.
+
+    Args:
+        associations_df:
+            DataFrame containing the associations information from the
+            pipeline.
+
+    Returns:
+        None.
+    """
     logger.info('Upload associations...')
     bulk_upload_model(
         Association, association_models_generator(associations_df)
     )
 
 
-def make_upload_measurements(measurements_df):
+def make_upload_measurements(measurements_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Uploads the measurements from the supplied measurements DataFrame.
+
+    Args:
+        measurements_df:
+            DataFrame containing the measurements information from the
+            pipeline.
+
+    Returns:
+        Original DataFrame with the database ID attached to each row.
+    """
     meas_dj_ids = bulk_upload_model(
         Measurement,
         measurement_models_generator(measurements_df),
@@ -222,16 +285,32 @@ def make_upload_measurements(measurements_df):
     )
 
     measurements_df['id'] = meas_dj_ids
+
     return measurements_df
 
 
-def make_upload_measurement_pairs(measurement_pairs_df):
+def make_upload_measurement_pairs(
+    measurement_pairs_df: pd.DataFrame
+) -> pd.DataFrame:
+    """
+    Uploads the measurement pairs from the supplied measurement pairs
+    DataFrame.
+
+    Args:
+        measurement_pairs_df:
+            DataFrame containing the measurement pairs information from the
+            pipeline.
+
+    Returns:
+        Original DataFrame with the database ID attached to each row.
+    """
     meas_pair_dj_ids = bulk_upload_model(
         MeasurementPair,
         measurement_pair_models_generator(measurement_pairs_df),
         return_ids=True
     )
     measurement_pairs_df["id"] = meas_pair_dj_ids
+
     return measurement_pairs_df
 
 
@@ -242,20 +321,17 @@ def update_sources(
     Update database using SQL code. This function opens one connection to the
     database, and closes it after the update is done.
 
-    Parameters
-    ----------
-    sources_df : pd.DataFrame
-        DataFrame containing the new data to be uploaded to the database. The
-        columns to be updated need to have the same headers between the df and
-        the table in the database.
-    batch_size : int
-        The df rows are broken into chunks, each chunk is executed in a
-        separate SQL command, batch_size determines the maximum size of the
-        chunk.
+    Args:
+        sources_df:
+            DataFrame containing the new data to be uploaded to the database.
+            The columns to be updated need to have the same headers between
+            the df and the table in the database.
+        batch_size:
+            The df rows are broken into chunks, each chunk is executed in a
+            separate SQL command, batch_size determines the maximum size of the
+            chunk.
 
-    Returns
-    -------
-    sources_df : pd.DataFrame
+    Returns:
         DataFrame containing the new data to be uploaded to the database.
     '''
     # Get all possible columns from the model
@@ -288,26 +364,23 @@ def SQL_update(
     columns: Optional[List[str]] = None
 ) -> str:
     '''
-    Generate SQL code required to update database.
+    Generate the SQL code required to update the database.
 
-    Parameters
-    ----------
-    df : pd.DataFrame
-        DataFrame containing the new data to be uploaded to the database. The
-        columns to be updated need to have the same headers between the df and
-        the table in the database.
-    model : Model
-        The model that is being updated.
-    index : str or None
-        Header of the column to join on, determines which rows in the different
-        tables match. If None, then use the primary key column.
-    columns : List[str] or None
-        The column headers of the columns to be updated. If None, updates all
-        columns except the index column.
+    Args:
+        df:
+            DataFrame containing the new data to be uploaded to the database.
+            The columns to be updated need to have the same headers between
+            the df and the table in the database.
+        model:
+            The model that is being updated.
+        index:
+            Header of the column to join on, determines which rows in the
+            different tables match. If None, then use the primary key column.
+        columns:
+            The column headers of the columns to be updated. If None, updates
+            all columns except the index column.
 
-    Returns
-    -------
-    SQL_comm : str
+    Returns:
         The SQL command to update the database.
     '''
     # set index and columns if None

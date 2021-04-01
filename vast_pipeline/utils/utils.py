@@ -1,8 +1,12 @@
+"""
+This module contains general pipeline utility functions.
+"""
+
 import collections
 from datetime import datetime
-import math as m
-import logging
 import os
+import logging
+import math as m
 from typing import Any, Dict, Tuple
 
 from astropy import units as u
@@ -15,34 +19,60 @@ logger = logging.getLogger(__name__)
 
 
 class StopWatch():
-    """A simple stopwatch to simplify timing code"""
+    """
+    A simple stopwatch to simplify timing code.
+    """
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """
+        Initialise the StopWatch
+
+        Returns:
+            None.
+        """
         self._init = datetime.now()
         self._last = self._init
 
-    def reset(self):
+    def reset(self) -> float:
         """
-        Reset the stopwatch and return the time since last reset (seconds)
+        Reset the stopwatch and return the time since last reset (seconds).
+
+        Returns:
+            The time in seconds since the last reset.
         """
         now = datetime.now()
         diff = (now - self._last).total_seconds()
         self._last = now
+
         return diff
 
-    def reset_init(self):
+    def reset_init(self) -> float:
         """
-        Reset the stopwatch and return the total time since initialisation
+        Reset the stopwatch and return the total time since initialisation.
+
+        Returns:
+            The time in seconds since the initialisation.
         """
         now = datetime.now()
         diff = (now - self._init).total_seconds()
         self._last = self._init = now
+
         return diff
 
 
-def check_read_write_perm(path, perm='W'):
+def check_read_write_perm(path: str, perm: str='W') -> None:
     """
-    assess the file permission on a path
+    Assess the file permission on a path.
+
+    Args:
+        path: The system path to assess.
+        perm: The permission to check for.
+
+    Returns:
+        None
+
+    Raises:
+        IOError: The permission is not valid on the checked directory.
     """
     assert perm in ('R', 'W', 'X'), 'permission not supported'
 
@@ -55,8 +85,9 @@ def check_read_write_perm(path, perm='W'):
     pass
 
 
-def deg2sex(deg):
-    """ Converts angle in degrees to sexagesimal notation
+def deg2sex(deg: float) -> Tuple[int, Tuple[float, float, float]]:
+    """
+    Converts angle in degrees to sexagesimal notation
     Returns tuple containing (sign, (degrees, minutes & seconds))
     sign is -1 or 1
 
@@ -66,6 +97,13 @@ def deg2sex(deg):
     >>> deg2sex(-12.582438888888889)
     (-12, 34, 56.78000000000182)
 
+    Args:
+        deg: The angle to convert in degrees.
+
+    Returns:
+        A nested tuple with the sign as the 0th value followed by the
+        sexagesimal values tuple.
+
     """
 
     sign = -1 if deg < 0 else 1
@@ -74,10 +112,11 @@ def deg2sex(deg):
     mins = (adeg - degf) * 60.
     minsf = int(m.floor(mins))
     secs = (mins - minsf) * 60.
+
     return (sign, (degf, minsf, secs))
 
 
-def deg2dms(deg, dms_format=False):
+def deg2dms(deg: float, dms_format: bool=False) -> str:
     """Convert angle in degrees into DMS using format. Default: '02d:02d:05.2f'
 
     >>> deg2dms(12.582438888888889)
@@ -88,16 +127,26 @@ def deg2dms(deg, dms_format=False):
 
     >>> deg2dms(-12.582438888888889)
     '-12:34:56.78'
+
+    Args:
+        deg: The angle in degrees to convert.
+        dms_format: If `True` then the result is returned in dms format, e.g.
+            '+12d34m56.78s'.
+
+    Returns:
+        The string result.
     """
 
     sign, sex = deg2sex(deg)
     signchar = "+" if sign == 1 else "-"
+
     if dms_format:
         return f'{signchar}{sex[0]:02d}d{sex[1]:02d}m{sex[2]:05.2f}s'
+
     return f'{signchar}{sex[0]:02d}:{sex[1]:02d}:{sex[2]:05.2f}'
 
 
-def deg2hms(deg, hms_format=False):
+def deg2hms(deg: float, hms_format: bool=False) -> str:
     """Convert angle in degrees into HMS using format. Default: '%d:%d:%.2f'
 
     >>> deg2hms(188.73658333333333)
@@ -106,22 +155,40 @@ def deg2hms(deg, hms_format=False):
 
     >>> deg2hms(-188.73658333333333)
     '12:34:56.78'
-    """
 
+    Args:
+        deg: The angle in degrees to convert.
+        hms_format: If `True` then the result is returned in hms format, e.g.
+            '12h34m56.78s'.
+
+    Returns:
+        The string result.
+    """
     # TODO: why it this?
     # We only handle positive RA values
     # assert deg >= 0
     sign, sex = deg2sex(deg / 15.)
+
     if hms_format:
         return f'{sex[0]:02d}h{sex[1]:02d}m{sex[2]:05.2f}s'
+
     return f'{sex[0]:02d}:{sex[1]:02d}:{sex[2]:05.2f}'
 
 
-def eq_to_cart(ra, dec):
+def eq_to_cart(ra: float, dec: float) -> Tuple[float, float, float]:
     """
     Find the cartesian co-ordinates on the unit sphere given the eq.
     co-ords. ra, dec should be in degrees.
+
+    Args:
+        ra: The right ascension coordinate, in degrees, to convert.
+        dec: The declination coordinate, in degrees, to convert.
+
+    Returns:
+        The cartesian coordinates.
     """
+    # TODO: This part of the code can probably be removed along with the
+    # storage of these coodinates on the image.
     return (
         m.cos(m.radians(dec)) * m.cos(m.radians(ra)),# Cartesian x
         m.cos(m.radians(dec)) * m.sin(m.radians(ra)),# Cartesian y
@@ -206,15 +273,12 @@ def optimize_floats(df: pd.DataFrame) -> pd.DataFrame:
 
     Credit to Robbert van der Gugten.
 
-    Parameters
-    ----------
-    df : pd.DataFrame
-        input dataframe, no specific columns.
+    Args:
+        df:
+            input dataframe, no specific columns.
 
-    Returns
-    -------
-    df : pd.DataFrame
-        the input dataframe with the `float64` type
+    Returns:
+        The input dataframe with the `float64` type
         columns downcasted.
     """
     floats = df.select_dtypes(include=['float64']).columns.tolist()
@@ -230,15 +294,12 @@ def optimize_ints(df: pd.DataFrame) -> pd.DataFrame:
 
     Credit to Robbert van der Gugten.
 
-    Parameters
-    ----------
-    df : pd.DataFrame
-        input dataframe, no specific columns.
+    Args:
+        df:
+            Input dataframe, no specific columns.
 
-    Returns
-    -------
-    df : pd.DataFrame
-        the input dataframe with the `int64` type
+    Returns:
+        The input dataframe with the `int64` type
         columns downcasted.
     """
     ints = df.select_dtypes(include=['int64']).columns.tolist()

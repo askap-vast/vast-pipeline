@@ -1,3 +1,7 @@
+"""
+This module contains all the functions required to perform source association.
+"""
+
 import logging
 import numpy as np
 import pandas as pd
@@ -23,13 +27,23 @@ from vast_pipeline.utils.utils import StopWatch
 logger = logging.getLogger(__name__)
 
 
-def calc_de_ruiter(df):
-    '''
+def calc_de_ruiter(df: pd.DataFrame) -> np.ndarray:
+    """
     Calculates the unitless 'de Ruiter' radius of the
     association. Works on the 'temp_df' dataframe of the
     advanced association, where the two sources associated
     with each other have been merged into one row.
-    '''
+
+    Args:
+        df:
+            The 'temp_df' from advanced association. It must
+            contain the columns `ra_skyc1`, 'ra_skyc2', 'uncertainty_ew_skyc1',
+            'uncertainty_ew_skyc2', 'dec_skyc1', 'dec_skyc2',
+            'uncertainty_ns_skyc1' and 'uncertainty_ns_skyc2'.
+
+    Returns:
+        Array containing the de Ruiter radius for all rows in the df.
+    """
     ra_1 = df['ra_skyc1'].values
     ra_2 = df['ra_skyc2'].values
 
@@ -65,9 +79,10 @@ def calc_de_ruiter(df):
 
 
 def one_to_many_basic(
-    skyc2_srcs: pd.DataFrame, sources_df: pd.DataFrame, id_incr_par_assoc: int=0
+    skyc2_srcs: pd.DataFrame, sources_df: pd.DataFrame,
+    id_incr_par_assoc: int=0
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    '''
+    """
     Finds and processes the one-to-many associations in the basic
     association. For each one-to-many association, the nearest
     associated source is assigned the original source id, where as
@@ -78,24 +93,19 @@ def one_to_many_basic(
     This is needed to be separate from the advanced version
     as the data products between the two are different.
 
-    Parameters
-    ----------
-    skyc2_srcs : pd.DataFrame
-        The sky catalogue 2 sources (i.e. the sources being associated to the
-        base) used during basic association.
-    sources_df : pd.DataFrame
-        The sources_df produced by each step of association holding the current
-        'sources'.
-    id_incr_par_assoc : int
-        An increment value to add to new source ids when creating them. Mainly
-        useful for add mode with parallel association
+    Args:
+        skyc2_srcs: The sky catalogue 2 sources (i.e. the sources being
+            associated to the base) used during basic association.
+        sources_df: The sources_df produced by each step of
+            association holding the current 'sources'.
+        id_incr_par_assoc: An increment value to add to new source ids
+            when creating them. Mainly useful for add mode with parallel
+            association
 
-    Returns
-    -------
-    skyc2_srcs, sources_df : Tuple[pd.DataFrame, pd.DataFrame]
-        Updated skyc2_srcs and sources_df with all one_to_many relation
-        information added.
-    '''
+    Returns:
+        Tuple containging the updated 'skyc2_srcs' and 'sources_df' with
+        all one_to_many relation information added.
+    """
     # select duplicated in 'source' field in skyc2_srcs, excluding -1
     duplicated_skyc2 = skyc2_srcs.loc[
         (skyc2_srcs['source'] != -1) &
@@ -316,24 +326,21 @@ def one_to_many_advanced(
     This is needed to be separate from the basic version
     as the data products between the two are different.
 
-    Parameters
-    ----------
-    temp_srcs : pd.DataFrame
-        The temporary associtation dataframe used through the advanced
-        association process.
-    sources_df : pd.DataFrame
-        The sources_df produced by each step of association holding the current
-        'sources'.
-    method : str
-        Can be either 'advanced' or 'deruiter' to represent the advanced
-        association method being used.
-    id_incr_par_assoc : int
-        An increment value to add to new source ids when creating them. Mainly
-        useful for add mode with parallel association
+    Args:
+        temp_srcs:
+            The temporary associtation dataframe used through the advanced
+            association process.
+        sources_df:
+            The sources_df produced by each step of association holding
+            the current 'sources'.
+        method:
+            Can be either 'advanced' or 'deruiter' to represent the advanced
+            association method being used.
+        id_incr_par_assoc:
+            An increment value to add to new source ids when creating them.
+            Mainly useful for add mode with parallel association
 
-    Returns
-    -------
-    temp_srcs, sources_df : Tuple[pd.DataFrame, pd.DataFrame]
+    Returns:
         Updated temp_srcs and sources_df with all one_to_many relation
         information added.
     '''
@@ -597,18 +604,15 @@ def many_to_many_advanced(temp_srcs: pd.DataFrame, method: str) -> pd.DataFrame:
 
     This follows the same logic used by the TraP (see TraP documentation).
 
-    Parameters
-    ----------
-    temp_srcs : pd.DataFrame
-        The temporary associtation dataframe used through the advanced
-        association process.
-    method : str
-        Can be either 'advanced' or 'deruiter' to represent the advanced association
-        method being used.
+    Args:
+        temp_srcs:
+            The temporary associtation dataframe used through the advanced
+            association process.
+        method:
+            Can be either 'advanced' or 'deruiter' to represent the advanced
+            association method being used.
 
-    Returns
-    -------
-    temp_srcs : pd.DataFrame
+    Returns:
         Updated temp_srcs with the many_to_many relations dropped.
     '''
     # Select those where the extracted source is listed more than once
@@ -651,15 +655,12 @@ def many_to_one_advanced(temp_srcs: pd.DataFrame) -> pd.DataFrame:
     association. In this case in the related column of the 'many' sources
     we need to append the ids of all the other 'many' (expect for itself).
 
-    Parameters
-    ----------
-    temp_srcs : pd.DataFrame
-        The temporary associtation dataframe used through the advanced
-        association process.
+    Args:
+        temp_srcs:
+            The temporary associtation dataframe used through the advanced
+            association process.
 
-    Returns
-    -------
-    temp_srcs : pd.DataFrame
+    Returns:
         Updated temp_srcs with all many_to_one relation information added.
     '''
     # use only these columns for easy debugging of the dataframe
@@ -785,33 +786,30 @@ def basic_association(
     'match_to_catalog_sky' function (i.e. only the nearest match between
     the catalogs). A direct on sky separation is used to define the association.
 
-    Parameters
-    ----------
-    sources_df : pd.DataFrame
-        The dataframe containing all current measurements along with their
-        association source and relations.
-    skyc1_srcs : pd.DataFrame
-        The same structure as sources_df but only has one entry per 'source'
-        along with a weighted average sky position of the current assoociated
-        sources.
-    skyc1 : SkyCoord
-        A SkyCoord object with the weighted average sky positions from
-        skyc1_srcs.
-    skyc2_srcs : pd.DataFrame
-        The same structure as sources_df containing the measurements to be
-        associated.
-    skyc2 : SkyCoord
-        A SkyCoord object with the sky positions from skyc2_srcs.
-    limit : astropy.coordinates.Angle
-        The association limit to use (applies to basic and advanced only).
-    id_incr_par_assoc : int, optional
-        An increment value to be applied to source numbering when adding new
-        sources to the associations (applies when parallel and add image are
-        being used). Defaults to 0.
+    Args:
+        sources_df:
+            The dataframe containing all current measurements along with their
+            association source and relations.
+        skyc1_srcs:
+            The same structure as sources_df but only has one entry per
+            'source' along with a weighted average sky position of the current
+            assoociated sources.
+        skyc1:
+            A SkyCoord object with the weighted average sky positions from
+            skyc1_srcs.
+        skyc2_srcs:
+            The same structure as sources_df containing the measurements to be
+            associated.
+        skyc2:
+            A SkyCoord object with the sky positions from skyc2_srcs.
+        limit:
+            The association limit to use (applies to basic and advanced only).
+        id_incr_par_assoc:
+            An increment value to be applied to source numbering when adding
+            new sources to the associations (applies when parallel and add
+            image are being used). Defaults to 0.
 
-    Returns
-    -------
-    sources_df, skyc1_srcs : pd.DataFrame, pd.DataFrame
+    Returns:
         The output sources_df containing all input measurements along with the
         association and relation information.
         The output skyc1_srcs with updated with new sources from the
@@ -877,37 +875,34 @@ def advanced_association(
     limit is the base distance for association. This is followed
     by calculating the 'de Ruiter' radius.
 
-    Parameters
-    ----------
-    method : str
-        The advanced association method 'advanced' or 'deruiter'.
-    sources_df : pd.DataFrame
-        The dataframe containing all current measurements along with their
-        association source and relations.
-    skyc1_srcs : pd.DataFrame
-        The same structure as sources_df but only has one entry per 'source'
-        along with a weighted average sky position of the current assoociated
-        sources.
-    skyc1 : SkyCoord
-        A SkyCoord object with the weighted average sky positions from
-        skyc1_srcs.
-    skyc2_srcs : pd.DataFrame
-        The same structure as sources_df containing the measurements to be
-        associated.
-    skyc2 : SkyCoord
-        A SkyCoord object with the sky positions from skyc2_srcs.
-    dr_limit : float
-        The de Ruiter radius limit to use (applies to de ruiter only).
-    bw_limit : float
-        The beamwidth limit to use (applies to de ruiter only).
-    id_incr_par_assoc : int, optional
-        An increment value to be applied to source numbering when adding new
-        sources to the associations (applies when parallel and add image are
-        being used). Defaults to 0.
+    Args:
+        method:
+            The advanced association method 'advanced' or 'deruiter'.
+        sources_df:
+            The dataframe containing all current measurements along with their
+            association source and relations.
+        skyc1_srcs:
+            The same structure as sources_df but only has one entry per
+            'source' along with a weighted average sky position of the current
+            assoociated sources.
+        skyc1:
+            A SkyCoord object with the weighted average sky positions from
+            skyc1_srcs.
+        skyc2_srcs:
+            The same structure as sources_df containing the measurements to be
+            associated.
+        skyc2:
+            A SkyCoord object with the sky positions from skyc2_srcs.
+        dr_limit:
+            The de Ruiter radius limit to use (applies to de ruiter only).
+        bw_max:
+            The beamwidth limit to use (applies to de ruiter only).
+        id_incr_par_assoc:
+            An increment value to be applied to source numbering when adding
+            new sources to the associations (applies when parallel and add
+            image are being used). Defaults to 0.
 
-    Returns
-    -------
-    sources_df, skyc1_srcs : pd.DataFrame, pd.DataFrame
+    Returns:
         The output sources_df containing all input measurements along with the
         association and relation information.
         The output skyc1_srcs with updated with new sources from the
@@ -1030,41 +1025,41 @@ def association(images_df: pd.DataFrame, limit: Angle, dr_limit: float,
     The main association function that does the common tasks between basic
     and advanced modes.
 
-    Parameters
-    ----------
-    images_df : pd.DataFrame
-        The input images to be associated.
-    limit : astropy.coordinates.Angle
-        The association limit to use (applies to basic and advanced only).
-    dr_limit : float
-        The de Ruiter radius limit to use (applies to de ruiter only).
-    bw_limit : float
-        The beamwidth limit to use (applies to de ruiter only).
-    duplicate_limit : astropy.coordinates.Angle
-        The limit of separation for which a measurement is considered to be
-        a duplicate (epoch based association).
-    config : PipelineConfig
-        The pipeline run configuration object.
-    add_mode : bool
-        Whether the pipeline is currently being run in add image mode.
-    previous_parquets : Dict[str, str]
-        Dictionary containing the paths of the previous successful run parquet
-        files (used in add image mode).
-    done_images_df : pd.DataFrame
-        Datafraame containing the images of the previous successful run
-        (used in add image mode).
-    id_incr_par_assoc : int, optional
-        An increment value to be applied to source numbering when adding new
-        sources to the associations (applies when parallel and add image are
-        being used). Defaults to 0.
-    parallel : bool, optional
-        Whether parallel association is being used.
+    Args:
+        images_df:
+            The input images to be associated.
+        limit:
+            The association limit to use (applies to basic and advanced only).
+        dr_limit:
+            The de Ruiter radius limit to use (applies to de ruiter only).
+        bw_limit:
+            The beamwidth limit to use (applies to de ruiter only).
+        duplicate_limit:
+            The limit of separation for which a measurement is considered to
+            be a duplicate (epoch based association).
+        config:
+            The pipeline configuration object.
+        add_mode:
+            Whether the pipeline is currently being run in add image mode.
+        previous_parquets:
+            Dictionary containing the paths of the previous successful run
+            parquet files (used in add image mode).
+        done_images_df:
+            Datafraame containing the images of the previous successful run
+            (used in add image mode).
+        id_incr_par_assoc:
+            An increment value to be applied to source numbering when adding
+            new sources to the associations (applies when parallel and add
+            image are being used). Defaults to 0.
+        parallel:
+            Whether parallel association is being used.
 
-    Returns
-    -------
-    sources_df : pd.DataFrame
+    Returns:
         The output sources_df containing all input measurements along with the
         association and relation information.
+
+    Raises:
+        Exception: Raised if association method is not valid.
     '''
     timer = StopWatch()
 
@@ -1372,17 +1367,14 @@ def _correct_parallel_source_ids(
     the associaiton dataframes produced by parallel association - as source
     ids will be duplicated if left.
 
-    Parameters
-    ----------
-    df : pd.DataFrame
-        Holds the measurements associated into sources. The output of of the
-        association step (sources_df).
-    correction : int
-        The value to add to the source ids.
+    Args:
+        df:
+            Holds the measurements associated into sources. The output of
+            of the association step (sources_df).
+        correction:
+            The value to add to the source ids.
 
-    Returns
-    -------
-    df : pd.DataFrame
+    Returns:
         The input df with corrected source ids and relations.
     """
     df['source'] = df['source'].values + correction
@@ -1413,19 +1405,16 @@ def _correct_parallel_source_ids_add_mode(
     the same with only the new ones being changed. The next start elem also
     needs to be dynamically updated with every skyreg_group loop.
 
-    Parameters
-    ----------
-    df : pd.DataFrame
-        Holds the measurements associated into sources. The output of of the
-        association step (sources_df).
-    done_source_ids : List[int]
-        A list of the 'old' source ids that need to remain the same.
-    start_elem : int
-        The start elem number for the new source ids.
+    Args:
+        df:
+            Holds the measurements associated into sources. The output of of
+            the association step (sources_df).
+        done_source_ids:
+            A list of the 'old' source ids that need to remain the same.
+        start_elem:
+            The start elem number for the new source ids.
 
-    Returns
-    -------
-    df, new_start_elem : pd.DataFrame, int
+    Returns:
         The input df with corrected source ids and relations, and the new
         start elem for the next group.
     """
@@ -1492,29 +1481,19 @@ def parallel_association(
     """
     Launches association on different sky region groups in parallel using Dask.
 
-    Parameters
-    ----------
-    images_df : pd.DataFrame
-        Holds the images that are being processed. Also contains what sky
-        region group the image belongs to.
-    limit: Angle
-        The association radius limit.
-    dr_limit : float
-        The de Ruiter radius limit.
-    bw_limit : float
-        The beamwidth limit.
-    duplicate_limit: Angle
-        The duplicate radius detection limit.
-    config : PipelineConfig
-        The pipeline run configuration.
-    n_skyregion_groups: int
-        The number of sky region groups.
+    Args:
+        images_df: Holds the images that are being processed.
+            Also contains what sky region group the image belongs to.
+        limit: The association radius limit.
+        dr_limit: The de Ruiter radius limit.
+        bw_limit: The beamwidth limit.
+        duplicate_limit: The duplicate radius detection limit.
+        config (module): The pipeline config settings.
+        n_skyregion_groups: The number of sky region groups.
 
-    Returns
-    -------
-    results : pd.DataFrame
-        The combined association results of the parallel association with
-        corrected source ids.
+    Returns:
+        pd.DataFrame: The combined association results of the parallel
+            association with corrected source ids.
     """
     logger.info(
         "Running parallel association for %i sky region groups.",
