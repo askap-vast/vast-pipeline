@@ -88,9 +88,49 @@ nav:
     - Docs: developing/docsdev.md
     - Bechmarks: developing/profiling.md
   #   - Tips: developing/tips.md like this https://stackoverflow.com/questions/60160823/how-to-properly-parallelize-generic-code-with-numba-dask
-  # - Reference:
-  #   - Association Logic: reference/association.md
-  #   - Configuration: reference/configuration.md
+  - Code Reference:
+    - vast_pipeline:
+      - image:
+        - main.py: reference/image/main.md
+        - utils.py: reference/image/utils.md
+      - management:
+        - commands:
+          - clearpiperun.py: reference/management/commands/clearpiperun.md
+          - createmeasarrow.py: reference/management/commands/createmeasarrow.md
+          - debugrun.py: reference/management/commands/debugrun.md
+          - importsurvey.py: reference/management/commands/importsurvey.md
+          - initpiperun.py: reference/management/commands/initpiperun.md
+          - restorepiperun.py: reference/management/commands/restorepiperun.md
+          - runpipeline.py: reference/management/commands/runpipeline.md
+        - helpers.py: reference/management/helpers.md
+      - pipeline:
+        - association.py: reference/pipeline/association.md
+        - errors.py: reference/pipeline/errors.md
+        - finalise.py: reference/pipeline/finalise.md
+        - forced_extraction.py: reference/pipeline/forced_extraction.md
+        - loading.py: reference/pipeline/loading.md
+        - main.py: reference/pipeline/main.md
+        - model_generator.py: reference/pipeline/model_generator.md
+        - new_sources.py: reference/pipeline/new_sources.md
+        - utils.py: reference/pipeline/utils.md
+      - survey:
+        - catalogue.py: reference/survey/catalogue.md
+        - translators.py: reference/survey/translators.md
+      - utils:
+        - auth.py: reference/utils/auth.md
+        - unit_tags.py: reference/utils/unit_tags.md
+        - utils.py: reference/utils/utils.md
+        - view.py: reference/utils/view.md
+      - admin.py: reference/admin.md
+      - apps.py: reference/apps.md
+      - context_processors.py: reference/context_processors.md
+      - converters.py: reference/converters.md
+      - forms.py: reference/forms.md
+      - models.py: reference/models.md
+      - plots.py: reference/plots.md
+      # - serializers.py: reference/serializers.md
+      - urls.py: reference/urls.md
+      # - views.py: reference/views.md
   - Architecture:
     - Architecture Intro: architecture/intro.md
     - Database Schema: architecture/database.md
@@ -102,6 +142,10 @@ nav:
 
 plugins:
   - search
+  - gen-files:
+      scripts:
+      # - docs/gen_credits.py
+      - docs/gen_doc_stubs.py
   - minify:
       minify_html: true
       minify_js: true
@@ -114,7 +158,7 @@ plugins:
       handlers:
         python:
           rendering:
-            show_source: false
+            show_source: true
           setup_commands:
             - "import os"
             - "import django"

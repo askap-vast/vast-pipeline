@@ -7,6 +7,10 @@ from vast_pipeline.models import Comment, Source, Run
 
 
 class PipelineRunForm(forms.Form):
+    """
+    Class for the form used in the creation of a new pipeline run through the
+    webserver.
+    """
     run_name = forms.CharField(
         max_length=Run._meta.get_field('name').max_length
     )
@@ -35,11 +39,20 @@ class PipelineRunForm(forms.Form):
 
 
 class CommentForm(forms.ModelForm):
+    """
+    The form used for users to leave comments on objects.
+    """
     class Meta:
         model = Comment
         fields = ["comment"]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
+        """
+        Initialise a CommentForm.
+
+        Returns:
+            None.
+        """
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.layout = Layout(
@@ -49,13 +62,22 @@ class CommentForm(forms.ModelForm):
 
 
 class TagWithCommentsForm(forms.Form):
+    """
+    Class to combined tags with the CommentsForm.
+    """
     comment = forms.CharField(required=False, widget=forms.Textarea())
     tags = tagulous.forms.TagField(
         required=False,
         tag_options=tagulous.models.TagOptions(**Source.tags.tag_options.items()),
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
+        """
+        Initialise a TagWithCommentsForm.
+
+        Returns:
+            None.
+        """
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.layout = Layout(
