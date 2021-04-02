@@ -163,6 +163,7 @@ plugins:
             - "import os"
             - "import django"
             - "os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'webinterface.settings')"
+            - "os.environ.setdefault('DATABASE_URL', '')"
             - "django.setup()"
       watch:
         - vast_pipeline
