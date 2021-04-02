@@ -3,255 +3,276 @@
 This page gives an overview of the configuration options available for a pipeline run.
 
 ## Default Configuration File
-Below is an example of a default `config.py` file. Note that no images or other input files have been provided. The file can be either edited directly or through the editor available on the run detail page.
 
-```python
+Below is an example of a default `config.yaml` file. Note that no images or other input files have been provided. The file can be either edited directly or through the editor available on the run detail page.
+
+```yaml
 # This file specifies the pipeline configuration for the current pipeline run.
 # You should review these settings before processing any images - some of the default
 # values will probably not be appropriate.
 
-import os
+run:
+  # Path of the pipeline run
+  path: ... # auto-filled by pipeline initpiperun command
 
-# path of the pipeline run
-PIPE_RUN_PATH = os.path.dirname(os.path.realpath(__file__))
+  # Default survey used by the website for analysis plots. Currently not used.
+  default_survey: None
+
+  # Hide astropy warnings during the run execution.
+  suppress_astropy_warnings: True
+
+inputs:
+  # NOTE: all the inputs must match with each other, i.e. the catalogue for the first
+  # input image (inputs.image[0]) must be the first input catalogue (inputs.selavy[0])
+  # and so on.
+  image:
+  # list input images here, e.g. (note the leading hyphens)
+  # - /path/to/image1.fits
+  # - /path/to/image2.fits
+
+  selavy:
+  # list input selavy catalogues here, as above with the images
+
+  noise:
+  # list input noise (rms) images here, as above with the images
+
+  # Required only if source_monitoring.monitor is true, otherwise optional. If not providing
+  # background images, remove the entire background section below.
+  background:
+  # list input background images here, as above with the images
 
 
-# Images settings
-# NOTE: all the paths !!!MUST!!! match with each other, e.g.
-# IMAGE_FILES[0] image matches SELAVY_FILES[0] file
-IMAGE_FILES = [
-    # insert images file path(s) here
-    ]
+source_monitoring:
+  # Source monitoring can be done both forward and backward in 'time'.
+  # Monitoring backward means re-opening files that were previously processed and can be slow.
+  monitor: True
 
-# Selavy catalogue files
-SELAVY_FILES = [
-    # insert Selavy file path(s) here
-    ]
+  # Minimum SNR ratio a source has to be if it was placed in the area of minimum rms in
+  # the image from which it is to be extracted from. If lower than this value it is skipped
+  min_sigma: 3.0
+  
+  # Multiplicative scaling factor to the buffer size of the forced photometry from the
+  # image edge
+  edge_buffer_scale: 1.2
 
-# Noise or RMS files
-NOISE_FILES = [
-    # insert RMS file path(s) here
-    ]
+  # Passed to forced-phot as `cluster_threshold`. See docs for details. If unsure, leave
+  # as default.
+  cluster_threshold: 3.0
 
-# background map files
-BACKGROUND_FILES = [
-    # insert background map file path(s) here
-    ]
+  # Attempt forced-phot fit even if there are NaN's present in the rms or background maps.
+  allow_nan: False
 
+source_association:
+  # basic, advanced, or deruiter
+  method: basic
 
-###
-# SOURCE FINDER OPTIONS
-###
-# source finder used for this pipeline run
-SOURCE_FINDER = 'selavy'
+  # Maximum source separation allowed during basic and advanced association in arcsec
+  radius: 10.0
 
-###
-# SOURCE MONITORING OPTIONS
-###
-# Source monitoring can be done both forward and backward in 'time'.
-# Monitoring backward means re-opening files that were previously processed and can be slow.
-MONITOR = False
-# MONITOR_MIN_SIGMA defines the minimum SNR ratio a source has to be if it was placed in the
-# area of minimum rms in the image from which it is to be extracted from. If lower than this
-# value it is skipped
-MONITOR_MIN_SIGMA = 3.0
-# MONITOR_EDGE_BUFFER_SCALE is a multiplicative scaling factor to the buffer size of the
-# forced photometry from the image edge.
-MONITOR_EDGE_BUFFER_SCALE = 1.2
-# MONITOR_CLUSTER_THRESHOLD represents the cluster_threshold parameter used in the forced
-# extraction. If unsure leave as default.
-MONITOR_CLUSTER_THRESHOLD = 3.0
-# MONITOR_ALLOW_NAN governs whether a source is attempted to be fit even if there are NaN's
-# present in the rms or background maps.
-MONITOR_ALLOW_NAN = False
+  # Options that apply only to deruiter association
+  deruiter_radius: 5.68  # unitless
+  deruiter_beamwidth_limit: 1.5  # multiplicative factor
 
-# The position uncertainty is in reality a combination of the fitting errors and the
-# astrometric uncertainty of the image/survey/instrument.
-# These two uncertainties are combined in quadrature.
-# These two parameters are the astrometric uncertainty in ra/dec and they may be different
-ASTROMETRIC_UNCERTAINTY_RA = 1.0 # arcsec
-ASTROMETRIC_UNCERTAINTY_DEC = 1.0  # arcsec
+  # Split input images into sky region groups and run the association on these groups in
+  # parallel. Best used when there are a large number of input images with multiple
+  # non-overlapping patches of the sky.
+  # Not recommended for smaller searches of <= 3 sky regions.
+  parallel: False
 
-###
-# OPTIONS THAT CONTROL THE SOURCE ASSOCIATION
-###
-ASSOCIATION_METHOD = 'basic' # 'basic', 'advanced' or 'deruiter'
+  # If images have been submitted in epoch dictionaries then an attempt will be made by
+  # the pipeline to remove duplicate sources. To do this a crossmatch is made between
+  # catalgoues to match 'the same' measurements from different catalogues. This
+  # parameter governs the distance for which a match is made in arcsec. Default is 2.5
+  # arcsec which is typically 1 pixel in ASKAP images.
+  epoch_duplicate_radius: 2.5  # arcsec
 
-# options that apply to basic and advanced association
-ASSOCIATION_RADIUS = 10.0 # arcsec, basic and advanced only
+new_sources:
+  # Controls when a source is labelled as a new source. The source in question must meet
+  # the requirement of: min sigma > (source_peak_flux / lowest_previous_image_min_rms)
+  min_sigma: 5.0
 
-# options that apply to deruiter association
-ASSOCIATION_DE_RUITER_RADIUS = 5.68 # unitless, deruiter only
-ASSOCIATION_BEAMWIDTH_LIMIT = 1.5   # multiplicative factor, deruiter only
+measurements:
+  # Source finder used to produce input catalogues. Only selavy is currently supported.
+  source_finder: selavy
 
-# If ASSOCIATION_PARALLEL is set to 'True' then the input images will be split into
-# 'sky region groups' and association run on these groups in parallel and combined at the end.
-# Setting to 'True' is best used when you have a large dataset with multiple patches of the sky, 
-# for smaller searches of only 3 or below sky regions it is recommened to keep as 'False'.
-ASSOCIATION_PARALLEL = False
+  # Minimum error to apply to all flux measurements. The actual value used will either
+  # be the catalogued value or this value, whichever is greater. This is a fraction, e.g.
+  # 0.05 = 5% error, 0 = no minimum error.
+  flux_fractional_error: 0.0
 
-# If images have been submitted in epoch dictionaries then an attempt will be made by the pipeline to
-# remove duplicate sources. To do this a crossmatch is made between catalgoues to match 'the same'
-# measurements from different catalogues. This parameter governs the distance for which a match is made.
-# Default is 2.5 arcsec (which is typically 1 pixel in ASKAP images).
-ASSOCIATION_EPOCH_DUPLICATE_RADIUS = 2.5  # arcsec
+  # Replace the selavy errors with Condon (1997) errors.
+  condon_errors: True
 
-###
-# OPTIONS THAT CONTROL THE NEW SOURCE ANALYSIS
-###
+  # Sometimes the local rms for a source is reported as 0 by selavy.
+  # Choose a value to use for the local rms in these cases in mJy/beam.
+  selavy_local_rms_fill_value: 0.2
 
-# controls whether a source is labelled as a new source. The source in question
-# must meet the requirement of:
-# MIN_NEW_SOURCE_SIGMA > (source_peak_flux / lowest_previous_image_min_rms)
-NEW_SOURCE_MIN_SIGMA = 5.0
+  # Create 'measurements.arrow' and 'measurement_pairs.arrow' files at the end of 
+  # a successful run.
+  write_arrow_files: False
 
-# Default survey.
-# Used by the website for analysis plots.
-DEFAULT_SURVEY = None # 'NVSS'
+  # The positional uncertainty of a measurement is in reality the fitting errors and the
+  # astrometric uncertainty of the image/survey/instrument combined in quadrature.
+  # These two parameters are the astrometric uncertainty in RA/Dec and they may be different.
+  ra_uncertainty: 1.0 # arcsec
+  dec_uncertainty: 1.0  # arcsec
 
-# Minimum error to apply to all flux measurements. The actual value used will be the measured/
-# reported value or this value, whichever is greater.
-# This is a fraction, 0 = No minimum error
-FLUX_PERC_ERROR = 0.0 #percent 0.05 is 5%
+variability:
+  # Only measurement pairs where the Vs metric exceeds this value are selected for the
+  # aggregate pair metrics that are stored in Source objects.
+  source_aggregate_pair_metrics_min_abs_vs: 4.3
 
-# Replace the selavy errors with
-USE_CONDON_ERRORS = True
-
-# Sometimes the local rms for a source is reported as 0 by selavy.
-# Choose a value to use for the local rms in these cases
-SELAVY_LOCAL_RMS_ZERO_FILL_VALUE = 0.2  # mJy
-
-# Create 'measurements.arrow' and 'measurement_pairs.arrow' files at the end of 
-# a successful run
-CREATE_MEASUREMENTS_ARROW_FILES = False
-
-# Hide astropy warnings
-SUPPRESS_ASTROPY_WARNINGS = True
-
-# Only measurement pairs where the Vs metric exceeds this value are selected for the
-# aggregate pair metrics that are stored in Source objects.
-SOURCE_AGGREGATE_PAIR_METRICS_MIN_ABS_VS = 4.3
 ```
+
+!!! note
+    Similarly to Python files, the indentation in the run configuration YAML file is important as it defines nested parameters.
+    Throughout the documentation we use dot-notation to refer to nested parameters, for example `inputs.image` refers to the list of input images.
+    This page on [YAML syntax](https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html) from the Ansible documentation is a good brief primer on the basics.
 
 ## Configuration Options
 
-### Images and Selavy Files
-**`IMAGE_FILES`**  
-List or Dictionary. The full paths to the image FITS files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see [Epoch Based Association](../design/association.md#epoch-based-association)) in which case all inputs must also be in dictionary format. The order of the entries must be consistent with the other input types.
+### General Run Options
 
+**`run.path`**
+Path to the directory for the pipeline run. This parameter will be automatically filled if the configuration file is generate with the [`initpiperun` management command](../adminusage/cli.md#initpiperun) or if the run was created with the web interface.
+
+**`run.default_survey`**
+Currently not used hence this option can be safely ignored.
+
+**`run.suppress_astropy_warnings`**
+Boolean. Astropy warnings are suppressed in the logging output if set to `True`. Defaults to `True`.
+
+### Input Images and Selavy Files
+
+**`inputs.image`**
+List or dictionary. The full paths to the image FITS files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see [Epoch Based Association](../design/association.md#epoch-based-association)) in which case all inputs must also be in dictionary format. The order of the entries must be consistent with the other input types.
+
+<!-- markdownlint-disable MD046 -->
 === "Normal mode"
 
-    ```python
-    IMAGE_FILES = [
-        "/full/path/to/image1.fits", "/full/path/to/image2.fits", "/full/path/to/image3.fits"
-    ]
+    ```yaml
+    inputs:
+      image:
+      - /full/path/to/image1.fits
+      - /full/path/to/image2.fits
+      - /full/path/to/image3.fits
     ```
 
 === "Epoch mode"
 
-    ```python
-    IMAGE_FILES = {
-        "epoch01": ["/full/path/to/image1.fits", "/full/path/to/image2.fits"],
-        "epoch02": ["/full/path/to/image3.fits"],
-    }
+    ```yaml
+    inputs:
+      image:
+        epoch01:
+        - /full/path/to/image1.fits
+        - /full/path/to/image2.fits
+        epoch02:
+        - /full/path/to/image3.fits
     ```
+<!-- markdownlint-enable MD046 -->
 
-!!! tip
-    Use `glob` to easily list a large amount of files. E.g.  
-    ```python
-    from glob import glob
-    ...
-    IMAGE_FILES = glob("/full/path/to/image*.fits")
-    ```
-    This can also be applied to any of the input options below.
-    
-**`SELAVY_FILES`**  
+**`inputs.selavy`**
 List or Dictionary. The full paths to the selavy text files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see [Epoch Based Association](../design/association.md#epoch-based-association)) in which case all inputs must also be in dictionary format. The order of the entries must be consistent with the other input types.
 
+<!-- markdownlint-disable MD046 -->
 === "Normal mode"
 
-    ```python
-    SELAVY_FILES = [
-        "/full/path/to/image1_selavy.txt", "/full/path/to/image2_selavy.txt", "/full/path/to/image3_selavy.txt"
-    ]
+    ```yaml
+    inputs:
+      selavy:
+      - /full/path/to/image1_selavy.txt
+      - /full/path/to/image2_selavy.txt
+      - /full/path/to/image3_selavy.txt
     ```
 
 === "Epoch mode"
 
-    ```python
-    SELAVY_FILES = {
-        "epoch01": ["/full/path/to/image1_selavy.txt", "/full/path/to/image2_selavy.txt"], 
-        "epoch02": ["/full/path/to/image3_selavy.txt"],
-    }
+    ```yaml
+    inputs:
+      selavy:
+        epoch01:
+        - /full/path/to/image1_selavy.txt
+        - /full/path/to/image2_selavy.txt
+        epoch02:
+        - /full/path/to/image3_selavy.txt
     ```
+<!-- markdownlint-enable MD046 -->
 
-**`NOISE_FILES`**  
+**`inputs.noise`**
 List or Dictionary. The full paths to the image noise (RMS) FITS files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see [Epoch Based Association](../design/association.md#epoch-based-association)) in which case all inputs must also be in dictionary format. The order of the entries must be consistent with the other input types.
 
+<!-- markdownlint-disable MD046 -->
 === "Normal mode"
 
-    ```python
-    NOISE_FILES = [
-        "/full/path/to/image1_rms.fits", "/full/path/to/image2_rms.fits", "/full/path/to/image3_rms.fits"
-    ]
+    ```yaml
+    inputs:
+      noise:
+      - /full/path/to/image1_rms.fits
+      - /full/path/to/image2_rms.fits
+      - /full/path/to/image3_rms.fits
     ```
 
 === "Epoch mode"
 
-    ```python
-    NOISE_FILES = {
-        "epoch01": ["/full/path/to/image1_rms.fits", "/full/path/to/image2_rms.fits"], 
-        "epoch02": ["/full/path/to/image3_rms.fits"],
-    }
+    ```yaml
+    inputs:
+      noise:
+        epoch01:
+        - /full/path/to/image1_rms.fits
+        - /full/path/to/image2_rms.fits
+        epoch02:
+        - /full/path/to/image3_rms.fits
     ```
+<!-- markdownlint-enable MD046 -->
 
-**`BACKGROUND_FILES`**  
-List or Dictionary. The full paths to the image background (mean) FITS files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see [Epoch Based Association](../design/association.md#epoch-based-association)) in which case all inputs must also be in dictionary format. The order of the entries must be consistent with the other input types. Only required to be defined if `MONITOR` is set to `True`.
+**`inputs.background`**
+List or Dictionary. The full paths to the image background (mean) FITS files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see [Epoch Based Association](../design/association.md#epoch-based-association)) in which case all inputs must also be in dictionary format. The order of the entries must be consistent with the other input types. Only required to be defined if `source_monitoring.monitor` is set to `True`.
 
+<!-- markdownlint-disable MD046 -->
 === "Normal mode"
 
-    ```python
-    BACKGROUND_FILES = [
-        "/full/path/to/image1_bkg.fits", "/full/path/to/image2_bkg.fits", "/full/path/to/image3_bkg.fits"
-    ]
+    ```yaml
+    inputs:
+      background:
+      - /full/path/to/image1_bkg.fits
+      - /full/path/to/image2_bkg.fits
+      - /full/path/to/image3_bkg.fits
     ```
 
 === "Epoch mode"
 
-    ```python
-    BACKGROUND_FILES = {
-        "epoch01": ["/full/path/to/image1_bkg.fits", "/full/path/to/image2_bkg.fits"], 
-        "epoch02": ["/full/path/to/image3_bkg.fits"],
-    }
+    ```yaml
+    inputs:
+      background:
+        epoch01:
+        - /full/path/to/image1_bkg.fits
+        - /full/path/to/image2_bkg.fits
+        epoch02:
+        - /full/path/to/image3_bkg.fits
     ```
-
-### Source Finder Format
-**`SOURCE_FINDER`**  
-String. Signifies the format of the source finder text file read by the pipeline. Currently only supports `"selavy"`.
-
-!!! warning
-    Source finding is not performed by the pipeline and must be completed prior to processing.
+<!-- markdownlint-enable MD046 -->
 
 ### Source Monitoring
-**`MONITOR`**  
-Boolean. Turns on or off forced extractions for non detections. If set to `True` then `BACKGROUND_IMAGES` must also be defined. Defaults to `False`.
 
-**`MONITOR_MIN_SIGMA`**  
+**`source_monitoring.monitor`**
+Boolean. Turns on or off forced extractions for non detections. If set to `True` then `inputs.background` must also be defined. Defaults to `False`.
+
+**`source_monitoring.min_sigma`**
 Float. For forced extractions to be performed they must meet a minimum signal-to-noise threshold with respect to the minimum rms value of the respective image. If the proposed forced measurement does not meet the threshold then it is not performed. I.e.
 
 $$
-\frac{f_{peak}}{\text{rms}_{image, min}} \geq \small{\text{MONITOR_MIN_SIGMA}}\text{,}
+\frac{f_{peak}}{\text{rms}_{image, min}} \geq \small{\text{source_monitoring.min_sigma}}\text{,}
 $$
 
 where $f_{peak}$ is the initial detection peak flux measurement of the source in question and $\text{rms}_{image, min}$ is the minimum RMS value of the image where the forced extraction is to take place. Defaults to `3.0`.
 
-**`MONITOR_EDGE_BUFFER_SCALE`**  
+**`source_monitoring.edge_buffer_scale`**
 Float. Monitor forced extractions are not performed when the location is within 3 beamwidths of the image edge. This parameter scales this distance by the value set, which can help avoid errors when the 3 beamwidth limit is insufficient to avoid extraction failures. Defaults to 1.2.
 
-**`MONITOR_CLUSTER_THRESHOLD`**  
+**`source_monitoring.cluster_threshold`**
 Float. A argument directly passed to the [forced photometry package](https://github.com/askap-vast/forced_phot/) used by the pipeline. It defines the multiple of `major_axes` to use for identifying clusters. Defaults to 3.0.
 
-**`MONITOR_ALLOW_NAN`**  
+**`source_monitoring.allow_nan`**
 Boolean. A argument directly passed to the [forced photometry package](https://github.com/askap-vast/forced_phot/) used by the pipeline. It defines whether `NaN` values are allowed to be present in the extraction area in the rms or background maps. `True` would mean that `NaN` values are allowed. Defaults to False.
 
 ### Association
@@ -259,56 +280,53 @@ Boolean. A argument directly passed to the [forced photometry package](https://g
 !!! tip
     Refer to the association documentation for full details on the association methods.
 
-**`ASTROMETRIC_UNCERTAINTY_RA`**  
-Float. Defines an uncertainty error to the RA that will be added in quadrature to the existing source extraction error. Used to represent a systematic positional error. Unit is arcseconds. Defaults to 1.0.
-
-**`ASTROMETRIC_UNCERTAINTY_DEC`**  
-Float. Defines an uncertainty error to the Dec that will be added in quadrature to the existing source extraction error. Used to represent systematic positional error. Unit is arcseconds. Defaults to 1.0.
-
-**`ASSOCIATION_METHOD`**  
+**`source_association.method`**
 String. Select whether to use the `basic`, `advanced` or `deruiter` association method, entered as a string of the method name. Defaults to `"basic"`.
 
-**`ASSOCIATION_RADIUS`**   
+**`source_association.radius`**
 Float. The distance limit to use during `basic` and `advanced` association. Unit is arcseconds. Defaults to `10.0`.
 
-**`ASSOCIATION_DE_RUITER_RADIUS`**  
+**`source_association.deruiter_radius`**
 Float. The de Ruiter radius limit to use during `deruiter` association only. The parameter is unitless. Defaults to `5.68`.
 
-**`ASSOCIATION_BEAMWIDTH_LIMIT`**  
+**`source_association.deruiter_beamwidth_limit`**
 Float. The beamwidth limit to use during `deruiter` association only. Multiplicative factor. Defaults to `1.5`.
 
-**`ASSOCIATION_PARALLEL`**  
+**`source_association.parallel`**
 Boolean. When `True`, association is performed in parallel on non-overlapping groups of sky regions. Defaults to `False`.
 
-**`ASSOCIATION_EPOCH_DUPLICATE_RADIUS`**  
+**`source_association.epoch_duplicate_radius`**
 Float. Applies to epoch based association only. Defines the limit at which a duplicate source is identified. Unit is arcseconds. Defaults to `2.5` (commonly one pixel for ASKAP images).
 
 ### New Sources
 
-**`NEW_SOURCE_MIN_SIGMA`**  
-Float. Defines the limit at which a source is classed as a new source based upon the would-be significance of detections in previous images where no detection was made. I.e.
+**`new_sources.min_sigma`**
+Float. Defines the limit at which a source is classed as a new source based upon the would-be significance of detections in previous images where no detection was made. i.e.
 
 $$
-\frac{f_{peak}}{\text{rms}_{image, min}} \geq \small{\text{NEW_SOURCE_MIN_SIGMA}}\text{,}
+\frac{f_{peak}}{\text{rms}_{image, min}} \geq \small{\text{new_sources.min_sigma}}\text{,}
 $$
 
 where $f_{peak}$ is the initial detection peak flux measurement of the source in question and $\text{rms}_{image, min}$ is the minimum RMS value of the previous image(s) where no detection was made. If the requirement is met in any previous image then the source is flagged as new. Defaults to `5.0`.
 
-### General
+### Measurements
 
-**`DEFAULT_SURVEY`**  
-Currently not used hence this option can be safely ignored.
+**`measurements.source_finder`**
+String. Signifies the format of the source finder text file read by the pipeline. Currently only supports `"selavy"`.
 
-**`FLUX_PERC_ERROR`**  
-Define a percentage flux error that will be added in quadrature to the extracted sources. Note that this will be reflected in the final source statistics and will not be applied directly to the measurements. Entered as a float between 0 - 1.0 which represents 0 - 100%. Defaults to `0.0`.
+!!! warning
+    Source finding is not performed by the pipeline and must be completed prior to processing.
 
-**`USE_CONDON_ERRORS`**  
+**`measurements.flux_fractional_error`**
+Define a fractional flux error that will be added in quadrature to the extracted sources. Note that this will be reflected in the final source statistics and will not be applied directly to the measurements. Entered as a float between 0 - 1.0 which represents 0 - 100%. Defaults to `0.0`.
+
+**`measurements.condon_errors`**
 Boolean. Calculate the Condon errors of the extractions when read in from the source extraction file. If `False` then the errors directly from the source finder output are used. Recommended to set to `True` for selavy extractions. Defaults to `True`.
 
-**`SELAVY_LOCAL_RMS_ZERO_FILL_VALUE`**  
+**`measurements.selavy_local_rms_fill_value`**
 Float. Value to substitute for the `local_rms` parameter in selavy extractions if a `0.0` value is found. Unit is mJy. Defaults to `0.2`.
 
-**`CREATE_MEASUREMENTS_ARROW_FILES`**  
+**`measurements.write_arrow_files`**
 Boolean. When `True` then two `arrow` format files are produced:
 
 * `measurements.arrow` - an arrow file containing all the measurements associated with the run.
@@ -317,10 +335,15 @@ Boolean. When `True` then two `arrow` format files are produced:
 Producing these files for large runs (200+ images) is recommended for post-processing. Defaults to `False`.
 
 !!! note
-    The arrow files can be produced after the run has completed by an administrator.
+    The arrow files can optionally be produced after the run has completed by an administrator.
 
-**`SUPPRESS_ASTROPY_WARNINGS`**  
-Boolean. Astropy warnings are suppressed in the logging output if set to `True`. Defaults to `True`.
+**`measurements.ra_uncertainty`**
+Float. Defines an uncertainty error to the RA that will be added in quadrature to the existing source extraction error. Used to represent a systematic positional error. Unit is arcseconds. Defaults to 1.0.
 
-**`SOURCE_AGGREGATE_PAIR_METRICS_MIN_ABS_VS`**  
-Float. Defines the minimum `Vs` two-epoch metric value threshold used to attach the most significant pair value to the source. Defaults to `4.3`.
+**`measurements.dec_uncertainty`**
+Float. Defines an uncertainty error to the Dec that will be added in quadrature to the existing source extraction error. Used to represent systematic positional error. Unit is arcseconds. Defaults to 1.0.
+
+### Variability
+
+**`variability.source_aggregate_pair_metrics_min_abs_vs`**
+Float. Defines the minimum $V_s$ two-epoch metric value threshold used to attach the most significant pair value to the source. Defaults to `4.3`.

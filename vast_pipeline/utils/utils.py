@@ -322,7 +322,7 @@ def dict_merge(dct: Dict[Any, Any], merge_dct: Dict[Any, Any], add_keys=True) ->
     new dict.
 
     Args:
-        dct (dict) onto which the merge is executed
+        dct (dict): onto which the merge is executed
         merge_dct (dict): dct merged into dct
         add_keys (bool): whether to add new keys
 

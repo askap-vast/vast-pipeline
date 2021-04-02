@@ -448,33 +448,33 @@ class Source(CommentableModel):
     vs_abs_significant_max_int = models.FloatField(
         default=0.0,
         help_text=(
-            'Maximum value of all measurement pair variability t-statistics for int '
-            'flux that exceed SOURCE_AGGREGATE_PAIR_METRICS_MIN_ABS_VS in the pipeline run '
-            'configuration.'
+            'Maximum value of all measurement pair variability t-statistics for int'
+            ' flux that exceed variability.source_aggregate_pair_metrics_min_abs_vs in'
+            ' the pipeline run configuration.'
         )
     )
     m_abs_significant_max_int = models.FloatField(
         default=0.0,
         help_text=(
-            'Maximum absolute value of all measurement pair modulation indices for int '
-            'flux that exceed SOURCE_AGGREGATE_PAIR_METRICS_MIN_ABS_VS in the pipeline run '
-            'configuration.'
+            'Maximum absolute value of all measurement pair modulation indices for int'
+            ' flux that exceed variability.source_aggregate_pair_metrics_min_abs_vs in'
+            ' the pipeline run configuration.'
         )
     )
     vs_abs_significant_max_peak = models.FloatField(
         default=0.0,
         help_text=(
-            'Maximum absolute value of all measurement pair variability t-statistics for '
-            'peak flux that exceed SOURCE_AGGREGATE_PAIR_METRICS_MIN_ABS_VS in the pipeline '
-            'run configuration.'
+            'Maximum absolute value of all measurement pair variability t-statistics for'
+            ' peak flux that exceed variability.source_aggregate_pair_metrics_min_abs_vs'
+            ' in the pipeline run configuration.'
         )
     )
     m_abs_significant_max_peak = models.FloatField(
         default=0.0,
         help_text=(
             'Maximum absolute value of all measurement pair modulation indices for '
-            'peak flux that exceed SOURCE_AGGREGATE_PAIR_METRICS_MIN_ABS_VS in the '
-            'pipeline run configuration.'
+            ' peak flux that exceed variability.source_aggregate_pair_metrics_min_abs_vs'
+            ' in the pipeline run configuration.'
         )
     )
 

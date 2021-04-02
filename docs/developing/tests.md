@@ -20,10 +20,10 @@ To run one test file or class, use:
 (pipeline_env)$ ./manage.py test <path.to.test>
 ```
 
-for example, to run the test class `CheckRunConfigValidationTest` located in [`test_runpipeline.py`](https://github.com/askap-vast/vast-pipeline/blob/master/vast_pipeline/tests/test_runpipeline.py){:target="_blank"}, use:
+for example, to run the test class `CheckRunConfigValidationTest` located in [`test_pipelineconfig.py`](https://github.com/askap-vast/vast-pipeline/blob/master/vast_pipeline/tests/test_pipelineconfig.py){:target="_blank"}, use:
 
 ```bash
-(pipeline_env)$ ./manage.py test vast_pipeline.tests.test_runpipeline.CheckRunConfigValidationTest
+(pipeline_env)$ ./manage.py test vast_pipeline.tests.test_pipelineconfig.CheckRunConfigValidationTest
 ```
 
 to run the tests located in [`test_webserver.py`](https://github.com/askap-vast/vast-pipeline/blob/master/vast_pipeline/tests/test_webserver.py){:target="_blank"}, use:
@@ -34,17 +34,17 @@ to run the tests located in [`test_webserver.py`](https://github.com/askap-vast/
 
 ## Regression Tests
 
-Regression tests located in [`test_regression.py`](https://github.com/askap-vast/vast-pipeline/blob/master/vast_pipeline/tests/test_regression.py){:target="_blank"} require the use of the _VAST_2118-06A_ field test dataset which is not a part of the repository. This data is downloadable from [cloudstor](https://cloudstor.aarnet.edu.au/plus/s/xjh0aRr1EGY6Bt3){:target="_blank"}. You can use the script located in [tests/regression-data/](https://github.com/askap-vast/vast-pipeline/blob/master/vast_pipeline/tests/regression-data/){:target="_blank"}:
+Regression tests located in [`test_regression`](https://github.com/askap-vast/vast-pipeline/blob/master/vast_pipeline/tests/test_regression/){:target="\_blank"} require the use of the _VAST\_2118-06A_ field test dataset which is not a part of the repository. This data is downloadable from [cloudstor](https://cloudstor.aarnet.edu.au/plus/s/xjh0aRr1EGY6Bt3){:target="_blank"}. You can use the script located in [tests/regression-data/](https://github.com/askap-vast/vast-pipeline/blob/master/vast_pipeline/tests/regression-data/){:target="_blank"}:
 
 ```bash
-$ cd vast_pipeline/tests/regression-data/ && ./download.sh
+cd vast_pipeline/tests/regression-data/ && ./download.sh
 ```
 
-to download the _VAST_2118-06A_ field test dataset into the [`regression-data`](https://github.com/askap-vast/vast-pipeline/blob/master/vast_pipeline/tests/regression-data/){:target="_blank"} folder. Or manually by clicking the button below:
+to download the _VAST\_2118-06A_ field test dataset into the [`regression-data`](https://github.com/askap-vast/vast-pipeline/blob/master/vast_pipeline/tests/regression-data/){:target="_blank"} folder. Or manually by clicking the button below:
 
 [Download data for test :material-cloud-download-outline:](https://cloudstor.aarnet.edu.au/plus/s/xjh0aRr1EGY6Bt3/download){: .md-button target="_blank"}
 
-and place the _VAST_2118-06A_ field test dataset into the [`regression-data`](https://github.com/askap-vast/vast-pipeline/blob/master/vast_pipeline/tests/regression-data/){:target="_blank"} folder. These regression tests are skipped if the dataset is not present.
+and place the _VAST\_2118-06A_ field test dataset into the [`regression-data`](https://github.com/askap-vast/vast-pipeline/blob/master/vast_pipeline/tests/regression-data/){:target="_blank"} folder. These regression tests are skipped if the dataset is not present.
 
 All tests should be run before pushing to master. Running all the tests takes a few minutes, so it is not recommended to run them for every change.
 

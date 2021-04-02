@@ -231,7 +231,7 @@ class PipelineConfig:
 
         Args:
             user: Optional. The User of the request if made through the UI. Defaults to
-            None.
+                None.
 
         Raises:
             PipelineConfigError: a validation check failed.
