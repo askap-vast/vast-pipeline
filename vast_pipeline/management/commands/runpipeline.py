@@ -259,7 +259,7 @@ def run_pipe(
             ' you upon a successful completion.'
         )
         logger.warning("Setting 'measurements.write_arrow_files' to 'False'.")
-        pipeline.config["measurements"]["write_arrow_files"] = False
+        pipeline.config._yaml["measurements"]["write_arrow_files"] = False
 
     if pipeline.config["run"]["suppress_astropy_warnings"]:
         warnings.simplefilter("ignore", category=AstropyWarning)
