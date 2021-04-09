@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added further epoch based association information to documentation page [#487](https://github.com/askap-vast/vast-pipeline/pull/487).
 - Added script to auto-generate code reference documentation pages [#480](https://github.com/askap-vast/vast-pipeline/pull/480).
 - Added code reference section to documentation [#480](https://github.com/askap-vast/vast-pipeline/pull/480).
 - Added new pages and sections to documentation [#471](https://github.com/askap-vast/vast-pipeline/pull/471)
@@ -63,6 +64,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#487](https://github.com/askap-vast/vast-pipeline/pull/487) doc: Add epoch based association clarification to documentation.
 - [#481](https://github.com/askap-vast/vast-pipeline/pull/481) dep: Bump Browsersync from 2.26.13 to 2.26.14.
 - [#469](https://github.com/askap-vast/vast-pipeline/pull/469) dep: Bump prismjs from 1.22.0 to 1.23.0.
 - [#480](https://github.com/askap-vast/vast-pipeline/pull/480) feat: Code reference documentation update.
