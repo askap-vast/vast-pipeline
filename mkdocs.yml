@@ -16,7 +16,7 @@ site_dir: docs_build
 theme:
   name: material
   favicon: img/favicon.png
-  logo: img/vast.png
+  logo: img/vast-logo.png
   features:
     - navigation.instant
   palette:
