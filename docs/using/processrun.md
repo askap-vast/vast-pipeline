@@ -2,9 +2,12 @@
 
 This page describes how to submit a pipeline run for processing.
 
-!!! note
+!!! tip "Admin Tip"
     Administrators please refer to [this section](../../adminusage/cli/#runpipeline) in the admin documentation for instructions on how to process a pipeline run via the command line interface.
-    
+
+!!! warning "Admin Warning"
+    The `Django Q` service must be running in order for pipeline runs to be processed. See the [Deployment](../quickstart/deployment.md#django-q) page for further details.
+
 !!! tip
     Use the editor window on the run detail page to make adjustments to the run configuration file before processing.
 
