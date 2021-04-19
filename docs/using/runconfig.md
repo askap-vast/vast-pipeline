@@ -6,6 +6,9 @@ This page gives an overview of the configuration options available for a pipelin
 
 Below is an example of a default `config.yaml` file. Note that no images or other input files have been provided. The file can be either edited directly or through the editor available on the run detail page.
 
+!!! warning
+    Similarly to Python files, the indentation in the run configuration YAML file is important as it defines nested parameters.
+
 ```yaml
 # This file specifies the pipeline configuration for the current pipeline run.
 # You should review these settings before processing any images - some of the default
@@ -125,7 +128,6 @@ variability:
 ```
 
 !!! note
-    Similarly to Python files, the indentation in the run configuration YAML file is important as it defines nested parameters.
     Throughout the documentation we use dot-notation to refer to nested parameters, for example `inputs.image` refers to the list of input images.
     This page on [YAML syntax](https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html) from the Ansible documentation is a good brief primer on the basics.
 

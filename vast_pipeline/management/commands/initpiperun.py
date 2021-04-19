@@ -30,31 +30,22 @@ def initialise_run(
 ) -> Run:
     """Initialise a pipeline run.
 
-    Parameters
-    ----------
-    run_name : str
-        A unique name for the run.
-    run_description : Optional[str], optional
-        Description for the run, only used if initialised with the web UI, by default
-        None
-    user : Optional[User], optional
-        User that created the run, only used if initialised with the web UI, by default
-        None
-    config : Optional[Dict[str, Any]], optional
-        Dictionary of configuration values to pass to the run config template, only used
-        if initialised with the web UI, by default None
+    Args:
+        run_name (str): A unique name for the run.
+        run_description (Optional[str], optional): Description for the run, only used if
+            initialised with the web UI. Defaults to None.
+        user (Optional[User], optional): User that created the run, only used if
+            initialised with the web UI. Defaults to None.
+        config (Optional[Dict[str, Any]], optional): Dictionary of configuration values
+            to pass to the run config template, only used if initialised with the web UI.
+            Defaults to None.
 
-    Returns
-    -------
-    Run
-        The initialised pipeline Run Django model object.
+    Raises:
+        PipelineInitError: `run_name` was not unique.
+        PipelineInitError: A directory named `run_name` already exists.
 
-    Raises
-    ------
-    PipelineInitError
-        `run_name` was not unique.
-    PipelineInitError
-        A directory named `run_name` already exists.
+    Returns:
+        Run: The initialised pipeline Run Django model object.
     """
     # check for duplicated run name
     p_run = Run.objects.filter(name__exact=run_name)

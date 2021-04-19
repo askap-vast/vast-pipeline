@@ -136,8 +136,9 @@ class PipelineConfig:
         self.epoch_based: bool
 
         # Determine if epoch-based association should be used based on input files.
-        # If inputs are dicts, then the user has defined their own epochs. If inputs are
-        # lists, we must convert to dicts and auto-fill the epochs.
+        # If inputs have been parsed to dicts, then the user has defined their own epochs.
+        # If inputs have been parsed to lists, we must convert to dicts and auto-fill
+        # the epochs.
 
         # ensure the inputs are valid in case .from_file(..., validate=False) was used
         try:
