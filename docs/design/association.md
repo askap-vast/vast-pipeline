@@ -97,7 +97,7 @@ A read-through of the [TraP documentation](https://tkp.readthedocs.io/en/latest/
 
 The pipeline is able to associate inputs on an epoch basis. What this means is that, for example, all VAST Pilot Epoch 1 measurements are grouped together and are associated with grouped together Epoch 2 measurements, and so on. In doing this, duplicate measurements from within the same epoch are cut with the measurement kept being that which is closest to the centre of its respective image. The separation distance that defines a duplicate is defined in the pipeline run configuration file (`source_association.epoch_duplicate_radius`).
 
-The mode is activated by entering the images to be processed as `dictionary` objects, using an orderable string as the key and lists of images as the values, as demonstrated below.
+The mode is activated by entering the images to be processed under an extra heading in the `.yaml` configuration file as demonstrated below. The heading acts as the epoch 'key', hence be sure to use a string that can be ordered as the heading to maintain the correct epoch order.
 
 ```yaml
 inputs:

@@ -278,7 +278,7 @@ Boolean. A argument directly passed to the [forced photometry package](https://g
 ### Association
 
 !!! tip
-    Refer to the association documentation for full details on the association methods.
+    Refer to the [association documentation](../design/association.md) for full details on the association methods.
 
 **`source_association.method`**
 String. Select whether to use the `basic`, `advanced` or `deruiter` association method, entered as a string of the method name. Defaults to `"basic"`.
