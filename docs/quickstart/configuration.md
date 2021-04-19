@@ -102,7 +102,7 @@ The following instructions, will get you started in setting up the database and 
 
 ## .env File
 
-The `.env` file contains various top-level settings that apply to Django, authentification and the running of the pipeline itself.
+The `.env` file contains various top-level settings that apply to Django, authentication and the running of the pipeline itself.
 Shown below is the [`.env.template`](https://github.com/askap-vast/vast-pipeline/blob/master/webinterface/.env.template){:target="_blank"} file which is provided to be able to copy in step 3 above.
 
 !!! example ".env.template"
@@ -145,19 +145,19 @@ The available settings are grouped into three distinct categories:
 
 These settings are standard Django settings that are commonly set in the `settings.py` file of Django projects. 
 Please see [this page](https://docs.djangoproject.com/en/3.2/ref/settings/){:target="_blank"} in the Django documentation for explanations on their meaning.
-Multiple entries for settings such as `EXTRA_APPS` or `EXTRA_MIDDLEWARE` can be entered like the following example:
+Multiple entries for settings such as `EXTRA_APPS` or `EXTRA_MIDDLEWARE` can be entered as comma-separated strings like the following example:
 
 ```console
 EXTRA_APPS=django_extensions,debug_toolbar
 ```
 
-### GitHub Authentification
+### GitHub Authentication
 
-The settings in this section control the GitHub organization authentification method. 
+The settings in this section control the GitHub organization authentication method. 
 Please refer to the [Python Social Auth documentation](https://python-social-auth.readthedocs.io/en/latest/backends/github.html){:target="_blank"} for descriptions of the required settings.
 
 !!! note
-    By default the pipeline is set up for authentification using GitHub organizations. Note that switching to teams will require changes to `settings.py`. 
+    By default the pipeline is set up for authentication using GitHub organizations. Note that switching to teams will require changes to `settings.py`. 
     Please refer to the instructions in the [Python Social Auth documentation](https://python-social-auth.readthedocs.io/en/latest/backends/github.html){:target="_blank"}.
 
 ### Pipeline
@@ -190,7 +190,7 @@ The pipeline supports two authentication methods: GitHub Organizations, intended
 
 ### GitHub Organizations
 
-Please refer to the [Python Social Auth documentation](https://python-social-auth.readthedocs.io/en/latest/backends/github.html){:target="_blank"} for a complete description on this authentification method and how to set up the GitHub app used for authentification.
+Please refer to the [Python Social Auth documentation](https://python-social-auth.readthedocs.io/en/latest/backends/github.html){:target="_blank"} for a complete description on this authentication method and how to set up the GitHub app used for authentication.
 All settings are entered into the `.env` file as detailed in the [above section](#.env-file).
 
 ### Django superuser
