@@ -249,9 +249,20 @@ class PipelineConfig:
         }
         n_files = sum([n for n in epoch_n_files.values()])
 
-        # Ensure all input file types have the same number of epochs and the same number
-        # of files per epoch. Note by this point the input files have been converted to
-        # a mapping regardless of the user's input format.
+        # Note by this point the input files have been converted to a mapping regardless
+        # of the user's input format.
+        # Ensure all input file types have the same number of epochs.
+        try:
+            for input_type in self["inputs"].keys():
+                self._yaml["inputs"][input_type].revalidate(
+                    yaml.Map({epoch: yaml.Seq(yaml.Str()) for epoch in epochs})
+                )
+        except yaml.YAMLValidationError:
+            raise PipelineConfigError("Number of epochs per input type do not match.")
+
+        # Ensure all input file type epochs have the same number of files per epoch.
+        # This could be combined with the number of epochs validation above, but we want
+        # to give specific feedback to the user on failure.
         try:
             for input_type in self["inputs"].keys():
                 self._yaml["inputs"][input_type].revalidate(
@@ -264,8 +275,10 @@ class PipelineConfig:
                         }
                     )
                 )
-        except yaml.YAMLValidationError as e:
-            raise PipelineConfigError(e)
+        except yaml.YAMLValidationError:
+            raise PipelineConfigError(
+                "The number of files per epoch does not match between input types."
+            )
 
         # ensure the number of input files is less than the user limit
         if user and n_files > settings.MAX_PIPERUN_IMAGES:
@@ -300,8 +313,10 @@ class PipelineConfig:
             )
             try:
                 self._yaml["inputs"].revalidate(inputs_schema)
-            except yaml.YAMLValidationError as e:
-                raise PipelineConfigError(e)
+            except yaml.YAMLValidationError:
+                raise PipelineConfigError(
+                    "Background files must be provided if source monitoring is enabled."
+                )
 
         # ensure the input files all exist
         for input_type in self["inputs"].keys():
