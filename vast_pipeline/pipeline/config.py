@@ -45,6 +45,7 @@ class PipelineConfig:
     Raises:
         PipelineConfigError: the input YAML config violates the schema.
     """
+
     # key: config input type, value: boolean indicating if it is required
     _REQUIRED_INPUT_TYPES: Dict[str, bool] = {
         "image": True,
@@ -167,8 +168,7 @@ class PipelineConfig:
                 self.epoch_based = True
 
     def __getitem__(self, name: str):
-        """Retrieves the requested YAML chunk as a native Python object.
-        """
+        """Retrieves the requested YAML chunk as a native Python object."""
         return self._yaml[name].data
 
     @classmethod
@@ -243,22 +243,64 @@ class PipelineConfig:
         except yaml.YAMLValidationError as e:
             raise PipelineConfigError(e)
 
-        epochs = self["inputs"]["image"].keys()
-        epoch_n_files = {
-            epoch: len(files) for epoch, files in self["inputs"]["image"].items()
+        # epochs defined for images only, used as the reference list of epochs
+        epochs_image = self["inputs"]["image"].keys()
+        # map input type to a set of epochs
+        epochs_by_input_type = {
+            input_type: set(self["inputs"][input_type].keys())
+            for input_type in self["inputs"].keys()
         }
-        n_files = sum([n for n in epoch_n_files.values()])
+        # map input type to total number of files from all epochs
+        n_files_by_input_type = {}
+        for input_type, epochs_set in epochs_by_input_type.items():
+            n_files_by_input_type[input_type] = 0
+            for epoch in epochs_set:
+                n_files_by_input_type[input_type] += len(self["inputs"][input_type][epoch])
+        n_files = 0  # total number of input files
+        # map input type to a mapping of epoch to file count
+        epoch_n_files: Dict[str, Dict[str, int]] = {}
+        for input_type in self["inputs"].keys():
+            epoch_n_files[input_type] = {}
+            for epoch in self["inputs"][input_type].keys():
+                n = len(self["inputs"][input_type][epoch])
+                epoch_n_files[input_type][epoch] = n
+                n_files += n
 
         # Note by this point the input files have been converted to a mapping regardless
         # of the user's input format.
-        # Ensure all input file types have the same number of epochs.
+        # Ensure all input file types have the same epochs.
         try:
             for input_type in self["inputs"].keys():
                 self._yaml["inputs"][input_type].revalidate(
-                    yaml.Map({epoch: yaml.Seq(yaml.Str()) for epoch in epochs})
+                    yaml.Map({epoch: yaml.Seq(yaml.Str()) for epoch in epochs_image})
                 )
         except yaml.YAMLValidationError:
-            raise PipelineConfigError("Number of epochs per input type do not match.")
+            # number of epochs could be different or the name of the epochs may not match
+            # find out which by counting the number of unique epochs per input type
+            n_epochs_per_input_type = [
+                len(epochs_set) for epochs_set in epochs_by_input_type.values()
+            ]
+            if len(set(n_epochs_per_input_type)) > 1:
+                if self.epoch_based:
+                    error_msg = "The number of epochs must match for all input types.\n"
+                else:
+                    error_msg = "The number of files must match for all input types.\n"
+            else:
+                error_msg = "The name of the epochs must match for all input types.\n"
+            counts_str = ""
+            if self.epoch_based:
+                for input_type in epoch_n_files.keys():
+                    n = len(epoch_n_files[input_type])
+                    counts_str += (
+                        f"{input_type} has {n} epoch{'s' if n > 1 else ''}:"
+                        f" {', '.join(epoch_n_files[input_type].keys())}\n"
+                    )
+            else:
+                for input_type, n in n_files_by_input_type.items():
+                    counts_str += f"{input_type} has {n} file{'s' if n > 1 else ''}\n"
+
+            counts_str = counts_str[:-1]
+            raise PipelineConfigError(error_msg + counts_str)
 
         # Ensure all input file type epochs have the same number of files per epoch.
         # This could be combined with the number of epochs validation above, but we want
@@ -269,15 +311,28 @@ class PipelineConfig:
                     yaml.Map(
                         {
                             epoch: yaml.FixedSeq(
-                                [yaml.Str() for _ in range(epoch_n_files[epoch])]
+                                [
+                                    yaml.Str()
+                                    for _ in range(epoch_n_files["image"][epoch])
+                                ]
                             )
-                            for epoch in epochs
+                            for epoch in epochs_image
                         }
                     )
                 )
         except yaml.YAMLValidationError:
+            # map input type to a mapping of epoch to file count
+            file_counts_str = ""
+            for input_type in self["inputs"].keys():
+                file_counts_str += f"{input_type}:\n"
+                for epoch in sorted(self["inputs"][input_type].keys()):
+                    file_counts_str += (
+                        f"  {epoch}: {len(self['inputs'][input_type][epoch])}\n"
+                    )
+            file_counts_str = file_counts_str[:-1]
             raise PipelineConfigError(
-                "The number of files per epoch does not match between input types."
+                "The number of files per epoch does not match between input types.\n"
+                + file_counts_str
             )
 
         # ensure the number of input files is less than the user limit
@@ -297,9 +352,10 @@ class PipelineConfig:
                 )
 
         # ensure at least two inputs are provided
-        if n_files < 2:
+        check = [n_files_by_input_type[input_type] < 2 for input_type in self["inputs"].keys()]
+        if any(check):
             raise PipelineConfigError(
-                "Number of image files needs to be larger than 1!"
+                "Number of image files must to be larger than 1"
             )
 
         # ensure background files are provided if source monitoring is requested

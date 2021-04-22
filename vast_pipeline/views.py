@@ -1795,7 +1795,10 @@ class RunConfigSet(ViewSet):
                 'message': {
                     'severity': 'danger',
                     'text': (
-                        f'Error in config validation:\n{e}\n{trace}'
+                        'Error in config validation\n'
+                        f'{e}\n\n'
+                        'Debug trace:\n'
+                        f'{trace}'
                     ).split('\n'),
                 }
             }
