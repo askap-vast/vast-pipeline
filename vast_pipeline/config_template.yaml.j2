@@ -73,13 +73,11 @@ inputs:
 
   # Required only if source_monitoring.monitor is true, otherwise optional. If not providing
   # background images, remove the entire background section below.
-  {% if monitor or background_files %}
-  background:
+  {% if not monitor and not background_files %}  # {% else %}  {% endif %}background:
   # list input background images here, as above with the images
   {% for image in background_files %}
   - {{ image }}
   {% endfor %}
-  {% endif %}
 {% endif %}
 
 source_monitoring:
