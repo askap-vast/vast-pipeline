@@ -52,7 +52,9 @@ The following steps describes how to set up the Django side of the production de
 
 ### Extra Service(s) Deployment
 
-In order to run a pipeline run from the Web App, the `Django-Q` process need to be started and managed as a service by the OS. In order to do so we recommend building a unit/systemd file to manage the `Django-Q` process, in a similar way of the `gunicorn` process (following the [Jupyter Hub docs](https://jupyterhub.readthedocs.io/en/stable/installation-guide-hard.html#setup-systemd-service){:target="_blank"}):
+#### Django Q
+
+In order to run a pipeline run from the Web App, the `Django Q` process needs to be started and managed as a service by the OS. In order to do so we recommend building a unit/systemd file to manage the `Django Q` process, in a similar way of the `gunicorn` process (following the [Jupyter Hub docs](https://jupyterhub.readthedocs.io/en/stable/installation-guide-hard.html#setup-systemd-service){:target="_blank"}):
 
 ```bash
 ...
@@ -62,7 +64,7 @@ ExecStart=/opt/vast-pipeline/venv/bin/python manage.py qcluster
 ```
 
 !!! tip "Tip"
-    In the examples above I decided to install the Python virtual enviroment of the pipeline, in `venv` folder under the cloned repository
+    In the examples above, the Python virtual enviroment used by the pipeline is installed in the `venv` folder under the cloned repository.
 
 ## Security
 

@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added dark mode switch on documentation [#487](https://github.com/askap-vast/vast-pipeline/pull/487).
+- Added .env file information to documentation [#487](https://github.com/askap-vast/vast-pipeline/pull/487).
+- Added further epoch based association information to documentation page [#487](https://github.com/askap-vast/vast-pipeline/pull/487).
 - Added script to auto-generate code reference documentation pages [#480](https://github.com/askap-vast/vast-pipeline/pull/480).
 - Added code reference section to documentation [#480](https://github.com/askap-vast/vast-pipeline/pull/480).
 - Added new pages and sections to documentation [#471](https://github.com/askap-vast/vast-pipeline/pull/471)
@@ -25,6 +28,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### Changed
 
 - Dependabot: Bump y18n from 3.2.1 to 3.2.2 [#482](https://github.com/askap-vast/vast-pipeline/pull/482).
+- Changed docs VAST logo to icon format to avoid stretched appearence [#487](https://github.com/askap-vast/vast-pipeline/pull/487).
 - Bumped Browsersync from 2.26.13 to 2.26.14 [#481](https://github.com/askap-vast/vast-pipeline/pull/481).
 - Dependabot: Bump prismjs from 1.22.0 to 1.23.0 [#469](https://github.com/askap-vast/vast-pipeline/pull/469).
 - Changed non-google format docstrings to google format [#480](https://github.com/askap-vast/vast-pipeline/pull/480).
@@ -65,6 +69,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### List of PRs
 
 - [#482](https://github.com/askap-vast/vast-pipeline/pull/482) dep: Bump y18n from 3.2.1 to 3.2.2.
+- [#487](https://github.com/askap-vast/vast-pipeline/pull/487) doc: Minor documentation improvements.
 - [#481](https://github.com/askap-vast/vast-pipeline/pull/481) dep: Bump Browsersync from 2.26.13 to 2.26.14.
 - [#469](https://github.com/askap-vast/vast-pipeline/pull/469) dep: Bump prismjs from 1.22.0 to 1.23.0.
 - [#480](https://github.com/askap-vast/vast-pipeline/pull/480) feat: Code reference documentation update.
