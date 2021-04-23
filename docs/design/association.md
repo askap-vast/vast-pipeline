@@ -76,6 +76,9 @@ where $\alpha_{n}$ is the right ascension of source n, $\delta_{n}$ is its decli
 
 All relation types are possible using this method.
 
+!!!note "Epoch Based Association Note"
+    When the de Ruiter association method is used with epoch based assocation, the `beamwidth limit` is applied to the maximum `bmaj` value out of all the images included in the epoch. See the [de Ruiter and Epoch Based Association](#de-ruiter-and-epoch-based-association) section below for further details.
+
 ## Relations
 
 Situations can arise where a source is associated with more than one source in the catalogue being cross-matched (or vice versa). Internally these types of associations are called:
@@ -118,6 +121,18 @@ For large surveys where transient and variablity searches on the epoch timescale
 
 !!! warning
     Epoch based association does eliminate the full time resolution of your data! The base time resolution will be between the defined epochs.
+
+### de Ruiter and Epoch Based Association
+
+During the standard [de Ruiter assoication](#de-ruiter), an initial on sky separation cut is made of $\text{beamwidth limit} \times \frac{\theta_{\text{bmaj,img}}}{2}$, where `beamwidth limit` is a value entered by the user and $\theta_{\text{bmaj,img}}$ is the major component size of the restoring beam of the image being associated.
+
+When using epoch based association, an epoch that contains more than one image will have multiple values of $\theta_{\text{bmaj,img}}$ to apply to the combined measurements.
+In this case, the maximum major axis value of all the images, $\theta_{\text{bmaj,max}}$, is used. 
+Hence, the initial de Ruiter association step threshold becomes
+
+$$
+\text{beamwidth limit} \times \frac{\theta_{\text{bmaj,max}}}{2}.
+$$
 
 ## Parallel Association
 

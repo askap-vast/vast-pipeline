@@ -16,9 +16,25 @@ site_dir: docs_build
 theme:
   name: material
   favicon: img/favicon.png
-  logo: img/vast.png
+  logo: img/vast-logo.png
   features:
     - navigation.instant
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      accent: indigo
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to dark mode
+
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      accent: blue
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode
 
 # Extensions
 extra_css:
