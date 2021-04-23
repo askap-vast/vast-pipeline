@@ -121,6 +121,7 @@ nav:
         - helpers.py: reference/management/helpers.md
       - pipeline:
         - association.py: reference/pipeline/association.md
+        - config.py: reference/pipeline/config.md
         - errors.py: reference/pipeline/errors.md
         - finalise.py: reference/pipeline/finalise.md
         - forced_extraction.py: reference/pipeline/forced_extraction.md

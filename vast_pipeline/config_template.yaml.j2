@@ -1,0 +1,161 @@
+# This file specifies the pipeline configuration for the current pipeline run.
+# You should review these settings before processing any images - some of the default
+# values will probably not be appropriate.
+
+run:
+  # Path of the pipeline run
+  path: {{ run_path }}
+
+  # Default survey used by the website for analysis plots. Currently not used.
+  default_survey: {{ default_survey }}
+
+  # Hide astropy warnings during the run execution.
+  suppress_astropy_warnings: {{ suppress_astropy_warnings }}
+
+inputs:
+{% if epoch_mode %}
+  image:
+  {% for epoch, image_list in image_files.items() %}
+    '{{ epoch }}':
+    {% for image in image_list %}
+    - {{ image }}
+    {% endfor %}
+  {% endfor %}
+  
+  selavy:
+  {% for epoch, image_list in selavy_files.items() %}
+    '{{ epoch }}':
+    {% for image in image_list %}
+    - {{ image }}
+    {% endfor %}
+  {% endfor %}
+  
+  noise:
+  {% for epoch, image_list in noise_files.items() %}
+    '{{ epoch }}':
+    {% for image in image_list %}
+    - {{ image }}
+    {% endfor %}
+  {% endfor %}
+
+  # Required only if source_monitoring.monitor is true, otherwise optional. If not providing
+  # background images, remove the entire background section below.
+  background:
+  {% for epoch, image_list in background_files.items() %}
+    '{{ epoch }}':
+    {% for image in image_list %}
+    - {{ image }}
+    {% endfor %}
+  {% endfor %}
+{% else %}
+  # NOTE: all the inputs must match with each other, i.e. the catalogue for the first
+  # input image (inputs.image[0]) must be the first input catalogue (inputs.selavy[0])
+  # and so on.
+  image:
+  # list input images here, e.g. (note the leading hyphens)
+  # - /path/to/image1.fits
+  # - /path/to/image2.fits
+  {% for image in image_files %}
+  - {{ image }}
+  {% endfor %}
+
+  selavy:
+  # list input selavy catalogues here, as above with the images
+  {% for image in selavy_files %}
+  - {{ image }}
+  {% endfor %}
+
+  noise:
+  # list input noise (rms) images here, as above with the images
+  {% for image in noise_files %}
+  - {{ image }}
+  {% endfor %}
+
+  # Required only if source_monitoring.monitor is true, otherwise optional. If not providing
+  # background images, remove the entire background section below.
+  {% if not monitor and not background_files %}  # {% else %}  {% endif %}background:
+  # list input background images here, as above with the images
+  {% for image in background_files %}
+  - {{ image }}
+  {% endfor %}
+{% endif %}
+
+source_monitoring:
+  # Source monitoring can be done both forward and backward in 'time'.
+  # Monitoring backward means re-opening files that were previously processed and can be slow.
+  monitor: {{ monitor }}
+
+  # Minimum SNR ratio a source has to be if it was placed in the area of minimum rms in
+  # the image from which it is to be extracted from. If lower than this value it is skipped
+  min_sigma: {{ monitor_min_sigma }}
+  
+  # Multiplicative scaling factor to the buffer size of the forced photometry from the
+  # image edge
+  edge_buffer_scale: {{ monitor_edge_buffer_scale }}
+
+  # Passed to forced-phot as `cluster_threshold`. See docs for details. If unsure, leave
+  # as default.
+  cluster_threshold: {{ monitor_cluster_threshold }}
+
+  # Attempt forced-phot fit even if there are NaN's present in the rms or background maps.
+  allow_nan: {{ monitor_allow_nan }}
+
+source_association:
+  # basic, advanced, or deruiter
+  method: {{ association_method }}
+
+  # Maximum source separation allowed during basic and advanced association in arcsec
+  radius: {{ association_radius }}
+
+  # Options that apply only to deruiter association
+  deruiter_radius: {{ association_de_ruiter_radius }}  # unitless
+  deruiter_beamwidth_limit: {{ association_beamwidth_limit }}  # multiplicative factor
+
+  # Split input images into sky region groups and run the association on these groups in
+  # parallel. Best used when there are a large number of input images with multiple
+  # non-overlapping patches of the sky.
+  # Not recommended for smaller searches of <= 3 sky regions.
+  parallel: {{ association_parallel }}
+
+  # If images have been submitted in epoch dictionaries then an attempt will be made by
+  # the pipeline to remove duplicate sources. To do this a crossmatch is made between
+  # catalgoues to match 'the same' measurements from different catalogues. This
+  # parameter governs the distance for which a match is made in arcsec. Default is 2.5
+  # arcsec which is typically 1 pixel in ASKAP images.
+  epoch_duplicate_radius: {{ association_epoch_duplicate_radius }}  # arcsec
+
+new_sources:
+  # Controls when a source is labelled as a new source. The source in question must meet
+  # the requirement of: min sigma > (source_peak_flux / lowest_previous_image_min_rms)
+  min_sigma: {{ new_source_min_sigma }}
+
+measurements:
+  # Source finder used to produce input catalogues. Only selavy is currently supported.
+  source_finder: selavy
+
+  # Minimum error to apply to all flux measurements. The actual value used will either
+  # be the catalogued value or this value, whichever is greater. This is a fraction, e.g.
+  # 0.05 = 5% error, 0 = no minimum error.
+  flux_fractional_error: {{ flux_perc_error }}
+
+  # Replace the selavy errors with Condon (1997) errors.
+  condon_errors: {{ use_condon_errors }}
+
+  # Sometimes the local rms for a source is reported as 0 by selavy.
+  # Choose a value to use for the local rms in these cases in mJy/beam.
+  selavy_local_rms_fill_value: {{ selavy_local_rms_zero_fill_value }}
+
+  # Create 'measurements.arrow' and 'measurement_pairs.arrow' files at the end of 
+  # a successful run.
+  write_arrow_files: {{ create_measurements_arrow_files }}
+
+  # The positional uncertainty of a measurement is in reality the fitting errors and the
+  # astrometric uncertainty of the image/survey/instrument combined in quadrature.
+  # These two parameters are the astrometric uncertainty in RA/Dec and they may be different.
+  ra_uncertainty: {{ astrometric_uncertainty_ra }} # arcsec
+  dec_uncertainty: {{ astrometric_uncertainty_dec }}  # arcsec
+
+variability:
+  # Only measurement pairs where the Vs metric exceeds this value are selected for the
+  # aggregate pair metrics that are stored in Source objects.
+  source_aggregate_pair_metrics_min_abs_vs: {{ source_aggregate_pair_metrics_min_abs_vs }}

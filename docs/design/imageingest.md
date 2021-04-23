@@ -55,17 +55,17 @@ The selavy measurements are checked for erroneous values that could cause issues
 
 In addition, components are also checked for zero values that can be corrected, where the correction values to apply are defined in either the user or overall pipeline configuration files. The field names of these zero checks are defined in the table below.
 
-| Field Name          | Correct with                          | Location      |
-| ------------------- | ------------------------------------- | ------------- |
-| `flux_int_err`      | `FLUX_DEFAULT_MIN_ERROR`              | `settings.py` |
-| `flux_peak_err`     | `FLUX_DEFAULT_MIN_ERROR`              | `settings.py` |
-| `ra_err`            | `POS_DEFAULT_MIN_ERROR`               | `settings.py` |
-| `dec_err`           | `POS_DEFAULT_MIN_ERROR`               | `settings.py` |
-| `local_rms`         | `SELAVY_LOCAL_RMS_ZERO_FILL_VALUE`    | `config.py`   |
+| Field Name          | Correct with                               | Location      |
+| ------------------- | ------------------------------------------ | ------------- |
+| `flux_int_err`      | `FLUX_DEFAULT_MIN_ERROR`                   | `settings.py` |
+| `flux_peak_err`     | `FLUX_DEFAULT_MIN_ERROR`                   | `settings.py` |
+| `ra_err`            | `POS_DEFAULT_MIN_ERROR`                    | `settings.py` |
+| `dec_err`           | `POS_DEFAULT_MIN_ERROR`                    | `settings.py` |
+| `local_rms`         | `measurements.selavy_local_rms_fill_value` | `config.yaml` |
 
 !!! note
     `settings.py` refers to the pipeline configuration file `webinterface/settings.py` which is configured by the system administrator and cannot be modified by regular users.
-    `config.py` refers to a pipeline run configuration file which is set by the user.
+    `config.yaml` refers to a pipeline run configuration file which is set by the user.
 
 #### Condon (1997) Flux & Positional Errors
 
@@ -81,12 +81,12 @@ If selected in the pipeline run configuration file, the flux and positional erro
 
 #### Positional Errors (de Ruiter method)
 
-Firstly, the systematic astrometry error from the user pipeline run configuration file (`ASTROMETRIC_UNCERTAINTY_RA` and `ASTROMETRIC_UNCERTAINTY_DEC`) are applied to the measurement. These values are saved as `ew_sys_err` and `ns_sys_err`.
+Firstly, the systematic astrometry error from the user pipeline run configuration file (`measurements.ra_uncertainty` and `measurements.dec_uncertainty`) are applied to the measurement. These values are saved as `ew_sys_err` and `ns_sys_err`.
 
 !!! warning
     Currently the systematic errors applied at the pipeline run stage are then permanently fixed to the measurements, meaning that all subsequent runs using these measurements will use the fixed astrometic error.
     
-    It is recommended to leave the values to the default value of 1.0. 
+    It is recommended to leave the values to the default value of 1.0.
 
 In order to apply the `TraP` de Ruiter association method, some extra positional error values are calculated. Firstly the `ra_err` and `dec_err` are used to estimate the largest angular uncertainty of the measurement which is recorded as the `error_radius`. It is estimated by finding the largest angular separation between the measurement coordinate and every coordinate combination of $ra \pm \delta ra$ and $dec \pm \delta dec$.
 

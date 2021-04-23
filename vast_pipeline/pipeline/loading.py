@@ -19,6 +19,7 @@ from vast_pipeline.models import (
     Association, Measurement, Source, RelatedSource,
     MeasurementPair, Run, Image
 )
+from vast_pipeline.pipeline.config import PipelineConfig
 from vast_pipeline.pipeline.utils import (
     get_create_img, get_create_img_band
 )
@@ -68,7 +69,7 @@ def bulk_upload_model(
 
 
 def make_upload_images(
-    paths: Dict[str, Dict[str, str]], config, pipeline_run: Run
+    paths: Dict[str, Dict[str, str]], config: PipelineConfig, pipeline_run: Run
 ) -> Tuple[List[Image], pd.DataFrame]:
     '''
     Carry the first part of the pipeline, by uploading all the images
@@ -99,7 +100,7 @@ def make_upload_images(
         image = SelavyImage(
             path,
             paths,
-            config=config
+            config
         )
         logger.info('Reading image %s ...', image.name)
 
@@ -160,21 +161,21 @@ def make_upload_images(
     images_df = pd.DataFrame(map(lambda x: x.__dict__, images))
     images_df = images_df.drop('_state', axis=1)
     images_df.to_parquet(
-        os.path.join(config.PIPE_RUN_PATH, 'images.parquet'),
+        os.path.join(config["run"]["path"], 'images.parquet'),
         index=False
     )
     # write skyregions parquet file under pipeline run folder
     skyregs_df = pd.DataFrame(map(lambda x: x.__dict__, skyregions))
     skyregs_df = skyregs_df.drop('_state', axis=1)
     skyregs_df.to_parquet(
-        os.path.join(config.PIPE_RUN_PATH, 'skyregions.parquet'),
+        os.path.join(config["run"]["path"], 'skyregions.parquet'),
         index=False
     )
     # write skyregions parquet file under pipeline run folder
     bands_df = pd.DataFrame(map(lambda x: x.__dict__, bands))
     bands_df = bands_df.drop('_state', axis=1)
     bands_df.to_parquet(
-        os.path.join(config.PIPE_RUN_PATH, 'bands.parquet'),
+        os.path.join(config["run"]["path"], 'bands.parquet'),
         index=False
     )
 
@@ -186,8 +187,9 @@ def make_upload_images(
     return images, skyregs_df
 
 
-def make_upload_sources(sources_df: pd.DataFrame, pipeline_run: Run,
-    add_mode: bool = False) -> pd.DataFrame:
+def make_upload_sources(
+    sources_df: pd.DataFrame, pipeline_run: Run, add_mode: bool = False
+) -> pd.DataFrame:
     '''
     Delete previous sources for given pipeline run and bulk upload
     new found sources as well as related sources.
@@ -313,7 +315,8 @@ def make_upload_measurement_pairs(
 
 
 def update_sources(
-    sources_df: pd.DataFrame, batch_size: int = 10_000) -> pd.DataFrame:
+    sources_df: pd.DataFrame, batch_size: int = 10_000
+) -> pd.DataFrame:
     '''
     Update database using SQL code. This function opens one connection to the
     database, and closes it after the update is done.
