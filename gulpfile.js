@@ -249,7 +249,7 @@ function modules() {
   // PrismJs
   var prismJs = gulp.src('./node_modules/prismjs/prism.js')
     .pipe(gulp.dest(paths.vendor + '/prismjs'));
-  var prismJsPy = gulp.src('./node_modules/prismjs/components/prism-python.min.js')
+  var prismJsYaml = gulp.src('./node_modules/prismjs/components/prism-yaml.min.js')
     .pipe(gulp.dest(paths.vendor + '/prismjs'));
   var prismJsLineNum = gulp.src('./node_modules/prismjs/plugins/line-numbers/prism-line-numbers.min.js')
     .pipe(gulp.dest(paths.vendor + '/prismjs/line-numbers'));
@@ -258,7 +258,7 @@ function modules() {
   var prismJsLineNumCss = gulp.src('./node_modules/prismjs/plugins/line-numbers/prism-line-numbers.css')
     .pipe(gulp.dest(paths.vendor + '/prismjs/line-numbers'));
 
-  return merge(bootstrapJS, bootstrapSbAdmin2, bootstrap4toggle, bokehJS, dataTables, dataTablesButtons, fontAwesome, jquery, jqueryEasing, jszip, d3Celestial, d3CelestialData, d3CelestialImage, particlesJs, prismJs, prismJsPy, prismJsLineNum, prismJsCss, prismJsLineNumCss);
+  return merge(bootstrapJS, bootstrapSbAdmin2, bootstrap4toggle, bokehJS, dataTables, dataTablesButtons, fontAwesome, jquery, jqueryEasing, jszip, d3Celestial, d3CelestialData, d3CelestialImage, particlesJs, prismJs, prismJsYaml, prismJsLineNum, prismJsCss, prismJsLineNumCss);
 }
 
 // SCSS task

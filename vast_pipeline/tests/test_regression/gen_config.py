@@ -1,22 +1,24 @@
 import os
 from collections import defaultdict
-from typing import List
+from typing import Any, Dict, List
 
 from django.conf import settings as s
-from jinja2 import Template
+
+from vast_pipeline.pipeline.config import PipelineConfig, make_config_template
 
 
 data_path = './vast_pipeline/tests/regression-data'
 
+
 def gen_obs_list(epochs: List[str]) -> List[str]:
     '''
-    Generate list of observations. 
+    Generate list of observations.
 
     Parameters
     ----------
     epochs : List[str]
         The epochs to include in the list.
-    
+
     Returns
     -------
     obs : List[str]
@@ -40,6 +42,7 @@ def gen_obs_list(epochs: List[str]) -> List[str]:
             )
     return obs
 
+
 def obs_list(obs: List[str], file_type: str) -> List[str]:
     '''
     Generate observation list with the file extension.
@@ -49,7 +52,7 @@ def obs_list(obs: List[str], file_type: str) -> List[str]:
     obs : List[str]
         The list of observations (prefix).
     file_type : str
-        The file extension to append to obs. 
+        The file extension to append to obs.
 
     Returns
     -------
@@ -61,7 +64,8 @@ def obs_list(obs: List[str], file_type: str) -> List[str]:
     ]
     return obs_files
 
-def list_to_dict(obs: List[str]) -> dict:
+
+def list_to_dict(obs: List[str]) -> Dict[str, List[str]]:
     '''
     Convert from list of observations to dictionary.
 
@@ -72,7 +76,7 @@ def list_to_dict(obs: List[str]) -> dict:
 
     Returns
     -------
-    obs_dict : dict
+    obs_dict : Dict[str, str]
         Dictionary of observations.
     '''
     obs_dict = defaultdict(list)
@@ -82,7 +86,8 @@ def list_to_dict(obs: List[str]) -> dict:
         obs_dict[epoch[5:]].append(o)
     return obs_dict
 
-def obs_dict(obs: dict, file_type: str) -> dict:
+
+def obs_dict(obs: Dict[str, str], file_type: str) -> Dict[str, List[str]]:
     '''
     Generate observation dictionary with the file extension.
 
@@ -91,19 +96,20 @@ def obs_dict(obs: dict, file_type: str) -> dict:
     obs : dict
         The dictionary of observations (prefix).
     file_type : str
-        The file extension to append to obs. 
+        The file extension to append to obs.
 
     Returns
     -------
-    obs_files : dict
+    obs_files : Dict[str, List[str]]
         The dictionary of observations with file extensions.
     '''
-    obs_files = {}
+    obs_files: Dict[str, List[str]] = {}
     for epoch in obs.keys():
         obs_files[epoch] = []
         for image in obs[epoch]:
             obs_files[epoch].append(os.path.join(data_path, image + file_type))
     return obs_files
+
 
 def gen_config(folder: str, run_path: str, epochs: List[str]):
     '''
@@ -112,7 +118,7 @@ def gen_config(folder: str, run_path: str, epochs: List[str]):
     Parameters
     ----------
     folder : str
-        The test folder name. 
+        The test folder name.
     run_path : str
         The path to the test folder.
     epochs : List[str]
@@ -121,23 +127,14 @@ def gen_config(folder: str, run_path: str, epochs: List[str]):
     path = os.path.join(run_path, folder)
     modes = folder.split('-')
 
-    # read in template config
-    template_f = os.path.join(
-        s.BASE_DIR,
-        'vast_pipeline',
-        'config_template.py.j2'
-    )
-    with open(template_f, 'r') as fp:
-        template_str = fp.read()
-    tm = Template(template_str)
-
     # change config settings
     settings = dict(s.PIPE_RUN_CONFIG_DEFAULTS)
+    settings["run_path"] = path
     # add config file paths
     obs = gen_obs_list(epochs)
-    obs_func = obs_list
+    obs_func: Any = obs_list
     if 'epoch' in modes:
-        obs = list_to_dict(obs)
+        obs: Dict[str, List[str]] = list_to_dict(obs)  # type: ignore[no-redef]
         obs_func = obs_dict
         settings['epoch_mode'] = True
     settings['image_files'] = obs_func(obs, '.I.cutout.fits')
@@ -155,7 +152,8 @@ def gen_config(folder: str, run_path: str, epochs: List[str]):
         settings['monitor'] = True
     if 'parallel' in modes:
         settings['association_parallel'] = True
-    
+
     # write config file
-    with open(os.path.join(path, 'config.py'), 'w') as fp:
-        fp.write(tm.render(**settings))
+    config_str = make_config_template(PipelineConfig.TEMPLATE_PATH, **settings)
+    with open(os.path.join(path, 'config.yaml'), 'w') as fp:
+        fp.write(config_str)
