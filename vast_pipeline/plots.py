@@ -1,5 +1,6 @@
 """Contains plotting code used by the web server."""
 
+from datetime import timedelta
 from bokeh.models import (
     ColumnDataSource,
     CustomJS,
@@ -90,6 +91,7 @@ def plot_lightcurve(
         plot_height=PLOT_HEIGHT,
         sizing_mode="stretch_width",
         x_axis_type="datetime",
+        x_range=DataRange1d(default_span=timedelta(days=1)),
         y_range=DataRange1d(start=min_y, end=max_y + y_padding),
     )
     # line source must be a COPY of the data for the scatter source for the hover and
@@ -118,7 +120,7 @@ def plot_lightcurve(
         )
     )
     fig_lc.xaxis.axis_label = "Datetime"
-    fig_lc.xaxis[0].formatter = DatetimeTickFormatter(months="%F")
+    fig_lc.xaxis[0].formatter = DatetimeTickFormatter(days="%F", hours='%H:%M')
     fig_lc.yaxis.axis_label = (
         "Peak flux (mJy/beam)" if use_peak_flux else "Integrated flux (mJy)"
     )
