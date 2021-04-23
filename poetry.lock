@@ -164,7 +164,7 @@ wcwidth = ">=0.1.4"
 
 [[package]]
 name = "bokeh"
-version = "2.3.1"
+version = "2.3.0"
 description = "Interactive plots and applications in the browser from Python"
 category = "main"
 optional = false
@@ -1782,7 +1782,7 @@ prod = ["gevent", "gunicorn"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.1"
-content-hash = "5fb361b56eb507dde18397c77b64f85d4250d103baad9ee477a8afda22595c81"
+content-hash = "36fa5fe86deb483ddcf56d88c9904c9b6504f2a1c0d079aac7280fde43882cbf"
 
 [metadata.files]
 ansicon = [
@@ -1850,7 +1850,7 @@ blessed = [
     {file = "blessed-1.18.0.tar.gz", hash = "sha256:1312879f971330a1b7f2c6341f2ae7e2cbac244bfc9d0ecfbbecd4b0293bc755"},
 ]
 bokeh = [
-    {file = "bokeh-2.3.1.tar.gz", hash = "sha256:2f2fb8bab8ca8fa039f48b1f0bed56d3a847c75694ece1d206ffab645ff5beec"},
+    {file = "bokeh-2.3.0.tar.gz", hash = "sha256:dd417708f90702190222b1068a645acae99e66d4b58d7a336d545aeaa04e9b40"},
 ]
 cached-property = [
     {file = "cached-property-1.5.2.tar.gz", hash = "sha256:9fa5755838eecbb2d234c3aa390bd80fbd3ac6b6869109bfc1b499f7bd89a130"},
