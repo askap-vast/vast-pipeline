@@ -13,7 +13,6 @@ There are three association methods available which are summarised in the table 
 | [Advanced](#advanced)          |         Yes              | `search_around_sky`    | many-to-many, many-to-one, one-to-many |
 | [de Ruiter (TraP)](#de-ruiter) |         No               | `search_around_sky`    | many-to-many, many-to-one, one-to-many |
 
-
 ## General Association Notes
 
 ### Terminology
@@ -39,6 +38,7 @@ Sources positions are reported using the weighted averages.
     For a better understanding on the underlying process, see [this page](https://docs.astropy.org/en/stable/coordinates/matchsep.html#matching-catalogs){:target="_blank"} in the astropy documentation for examples on matching catalogues.
 
 ### Basic
+
 The most basic association method uses the astropy [`match_coordinates_sky`](https://docs.astropy.org/en/stable/api/astropy.coordinates.match_coordinates_sky.html){:target="_blank"} function which:
 
 * Associates measurements using only the nearest neighbour for each source when comparing catalogues.
@@ -46,6 +46,7 @@ The most basic association method uses the astropy [`match_coordinates_sky`](htt
 * Only one-to-many [relations](#relations) are possible.
 
 ### Advanced
+
 This method uses the same process as `Basic`, however the astropy function [`search_around_sky`](https://docs.astropy.org/en/stable/api/astropy.coordinates.search_around_sky.html){:target="_blank"} is used instead. This means:
 
 * All possible matches between the two catalogues are found, rather than only the nearest neighbour.
@@ -53,9 +54,10 @@ This method uses the same process as `Basic`, however the astropy function [`sea
 * All types of [relations](#relations) are possible.
 
 ### de Ruiter
-The de Ruiter method is a translation of the association method used by the [LOFAR Transients Pipeline (TraP)](https://tkp.readthedocs.io/en/latest/){:target="_blank"}, which uses the `de Ruiter radius` in order to define associations. 
 
-The `search_around_sky` astropy method is still used, but the threshold for a potential match is first limited by a `beamwidth limit` value which is defined in the pipeline run configuration file (`ASSOCIATION_BEAMWIDTH_LIMIT`), such that the initial threshold separation distance is set to
+The de Ruiter method is a translation of the association method used by the [LOFAR Transients Pipeline (TraP)](https://tkp.readthedocs.io/en/latest/){:target="_blank"}, which uses the `de Ruiter radius` in order to define associations.
+
+The `search_around_sky` astropy method is still used, but the threshold for a potential match is first limited by a `beamwidth limit` value which is defined in the pipeline run configuration file (`source_association.deruiter_beamwidth_limit`), such that the initial threshold separation distance is set to
 
 $$
 \text{beamwidth limit} \times \frac{\theta_{\text{bmaj,img}}}{2},
@@ -66,11 +68,11 @@ where $\theta_{\text{bmaj,img}}$ is the major axis of the restoring beam of the 
 $$
 r_{i,j} = \sqrt{
   \frac{ (\alpha_{i} - \alpha_{j})^{2}((\delta_{i} + \delta_{j})/2)}{\sigma^{2}_{\alpha_{i}} + \sigma^{2}_{\alpha_{j}}}
-  + \frac{(\delta_{i} + \delta_{j})^{2}}{\sigma^{2}_{\delta_{i}} + \sigma^{2}_{\delta_{j}}}
+  \\+ \frac{(\delta_{i} + \delta_{j})^{2}}{\sigma^{2}_{\delta_{i}} + \sigma^{2}_{\delta_{j}}}
 }
 $$
 
-where $\alpha_{n}$ is the right ascension of source n, $\delta_{n}$ is its declination, and $\sigma_{y}$ represents the error on the quantity y. Matches are then identified by applying a threshold maximum value to the de Ruiter radius which is defined by the user in the pipeline run configuration file (`ASSOCIATION_DE_RUITER_RADIUS`).
+where $\alpha_{n}$ is the right ascension of source n, $\delta_{n}$ is its declination, and $\sigma_{y}$ represents the error on the quantity y. Matches are then identified by applying a threshold maximum value to the de Ruiter radius which is defined by the user in the pipeline run configuration file (`source_association.deruiter_radius`).
 
 All relation types are possible using this method.
 
@@ -78,6 +80,7 @@ All relation types are possible using this method.
     When the de Ruiter association method is used with epoch based assocation, the `beamwidth limit` is applied to the maximum `bmaj` value out of all the images included in the epoch. See the [de Ruiter and Epoch Based Association](#de-ruiter-and-epoch-based-association) section below for further details.
 
 ## Relations
+
 Situations can arise where a source is associated with more than one source in the catalogue being cross-matched (or vice versa). Internally these types of associations are called:
 
 * `many-to-many`
@@ -94,16 +97,20 @@ The VAST Pipeline reports the `one-to-many` and `many-to-one` associations by `r
 A read-through of the [TraP documentation](https://tkp.readthedocs.io/en/latest/devref/database/assoc.html#database-assoc){:target="_blank"} is highly encouraged on this point as it contains an excellent description.
 
 ## Epoch Based Association
-The pipeline is able to associate inputs on an epoch basis. What this means is that, for example, all VAST Pilot Epoch 1 measurements are grouped together and are associated with grouped together Epoch 2 measurements, and so on. In doing this, duplicate measurements from within the same epoch are cut with the measurement kept being that which is closest to the centre of its respective image. The separation distance that defines a duplicate is defined in the pipeline run configuration file (`ASSOCIATION_EPOCH_DUPLICATE_RADIUS`). 
 
-The mode is activated by entering the images to be processed as `dictionary` objects, using an orderable string as the key and lists of images as the values, as demonstrated below.
+The pipeline is able to associate inputs on an epoch basis. What this means is that, for example, all VAST Pilot Epoch 1 measurements are grouped together and are associated with grouped together Epoch 2 measurements, and so on. In doing this, duplicate measurements from within the same epoch are cut with the measurement kept being that which is closest to the centre of its respective image. The separation distance that defines a duplicate is defined in the pipeline run configuration file (`source_association.epoch_duplicate_radius`).
 
-```python
-IMAGE_FILES = {
-    "epoch01": ["/full/path/to/image1.fits", "/full/path/to/image2.fits"], 
-    "epoch02": ["/full/path/to/image3.fits"],
-}
-``` 
+The mode is activated by entering the images to be processed under an extra heading in the `.yaml` configuration file as demonstrated below. The heading acts as the epoch 'key', hence be sure to use a string that can be ordered as the heading to maintain the correct epoch order.
+
+```yaml
+inputs:
+  image:
+    epoch01:
+    - /full/path/to/image1.fits
+    - /full/path/to/image2.fits
+    epoch02:
+    - /full/path/to/image3.fits
+```
 
 The lightcurves below show the difference between 'regular' association (top) and 'epoch based' association (lower) for a source.
 
@@ -128,5 +135,5 @@ $$
 $$
 
 ## Parallel Association
-When parallel association is used, the images to process are analysed and grouped into distinct patches of the sky that do not overlap. These distinct regions are then processed through the source association in parallel. It is recommended to use parallel association when your dataset covers three or more distinct patches of sky.
 
+When parallel association is used, the images to process are analysed and grouped into distinct patches of the sky that do not overlap. These distinct regions are then processed through the source association in parallel. It is recommended to use parallel association when your dataset covers three or more distinct patches of sky.

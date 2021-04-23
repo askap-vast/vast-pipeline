@@ -1,6 +1,6 @@
 # Pipeline Steps Overview
 
-This page gives an overview of the processing steps of a pipeline run. Each section contains a link to feature page that contains more details.
+This page gives an overview of the processing steps of a pipeline run. Each section contains a link to a feature page that contains more details.
 
 ## Terminology
 

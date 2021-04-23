@@ -306,7 +306,6 @@ POS_DEFAULT_MIN_ERROR = env('POS_DEFAULT_MIN_ERROR', cast=float, default=0.01)
 
 # Default pipeline run config values
 PIPE_RUN_CONFIG_DEFAULTS = {
-    'pipe_run_path': None,
     'image_files': [],
     'selavy_files': [],
     'background_files': [],

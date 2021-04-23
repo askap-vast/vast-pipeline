@@ -1,3 +1,4 @@
+<!-- markdownlint-disable html -->
 # Source Statistics
 
 This page details the source statistics that are calculated by the pipeline.
@@ -9,7 +10,7 @@ The table below provides a summary of all the statistic and counts provided by t
 !!! note
     Remember that all source statistics and counts are calculated from the individual measurements that are associated with the source.
 
-| Parameter <img width=420/>      | Includes Forced Meas. | Description      | 
+| Parameter <img width=420/>      | Includes Forced Meas. | Description      |
 | ------------------------------ | ------------------------ | ----------------- |
 | `wavg_ra`          |  No    |  The weighted average of the Right Ascension, degrees.  |
 | `wavg_dec`                |  No    |  The weighted average of the Declination, degrees.  |
@@ -36,9 +37,9 @@ The table below provides a summary of all the statistic and counts provided by t
 
 ## Variability Statistics
 
-Below is a table describing the variability metrics of the source. See the following sections for further explanation of these metrics. 
+Below is a table describing the variability metrics of the source. See the following sections for further explanation of these metrics.
 
-| Parameter  <img width=350/>     | Includes Forced Meas. | Description      | 
+| Parameter  <img width=350/>     | Includes Forced Meas. | Description      |
 | ------------------------------- | ------------------------ | ----------------- |
 | `v_int`                         |  Yes   |  The $V$ metric for the integrated flux.  |
 | `v_peak`                        |  Yes   |  The $V$ metric for the peak flux.  |
@@ -48,7 +49,6 @@ Below is a table describing the variability metrics of the source. See the follo
 | `m_abs_significant_max_int`     |  Yes   |  The $\mid m \mid$ value of the most significant two-epoch pair using the integrated fluxes. Will be `0` if no significant pair.|
 | `vs_abs_significant_max_peak`   |  Yes   |  The $\mid V_s \mid$ value of the most significant two-epoch pair using the peak fluxes. Will be `0` if no significant pair.|
 | `m_abs_significant_max_peak`    |  Yes   |  The $\mid m \mid$ value of the most significant two-epoch pair using the peak fluxes. Will be `0` if no significant pair.|
-
 
 ### _V_ and _η_ Metrics
 
@@ -70,7 +70,7 @@ where $w$ is the uncertainty ($e$) in $I$ of a measurement, and is given by $w=\
 
 ### Two-Epoch Metrics
 
-Alternative variability metrics, $V_s$ and $m$, are also calculated which we refer to as the 'two-epoch metrics'. 
+Alternative variability metrics, $V_s$ and $m$, are also calculated which we refer to as the 'two-epoch metrics'.
 They are calculated for each unique pair of measurements assoicated with the source, with the most significant pair of values attached to the source (see section below). Please refer to [Mooley et al. (2016)](https://ui.adsabs.harvard.edu/abs/2016ApJ...818..105M/abstract){:target="_blank"} for further details.
 
 !!! note
@@ -104,8 +104,8 @@ which equates to a variability of 30%. However the user is free to set their own
 
 #### Significant Source Values
 
-The $V_s$ and $m$ metrics of the 'maximum signficant pair' is attached to the source. 
-The maximum significant pair is determind by selecting the most significant $\mid m \mid$ value given a minimum $V_s$ threshold which is defined in the pipeline configuration file `SOURCE_AGGREGATE_PAIR_METRICS_MIN_ABS_VS`. 
+The $V_s$ and $m$ metrics of the 'maximum signficant pair' is attached to the source.
+The maximum significant pair is determind by selecting the most significant $\mid m \mid$ value given a minimum $V_s$ threshold which is defined in the pipeline configuration file `variability.source_aggregate_pair_metrics_min_abs_vs`.
 By default this value is set to 4.3. For example, if a source with three associatied measurements gave the following pair metrics:
 
 | Pair | $\mid V_s \mid$ | $\mid m \mid$ |
@@ -114,5 +114,5 @@ By default this value is set to 4.3. For example, if a source with three associa
 | B-C  |       2.5       |      0.05     |
 | A-C  |       4.3       |      0.4      |
 
-then the `A-C` pair metrics are attached to the source as the most significant. This can be used to quickly determine significant two-epoch variability for a source. 
+then the `A-C` pair metrics are attached to the source as the most significant. This can be used to quickly determine significant two-epoch variability for a source.
 If there are no pair values above the minimum $V_s$ threshold then these values attached to the source will be 0. The `measurement_pairs.parquet` file can be used to manually explore the measurement pairs if one wishes to lower the threshold.

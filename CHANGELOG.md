@@ -30,6 +30,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### Changed
 
 - Changed layout of documentation to use tabs [#491](https://github.com/askap-vast/vast-pipeline/pull/491).
+- Dependabot: Bump y18n from 3.2.1 to 3.2.2 [#482](https://github.com/askap-vast/vast-pipeline/pull/482).
+- Replaced run config .py format with .yaml [#483](https://github.com/askap-vast/vast-pipeline/pull/483).
 - Changed docs VAST logo to icon format to avoid stretched appearence [#487](https://github.com/askap-vast/vast-pipeline/pull/487).
 - Bumped Browsersync from 2.26.13 to 2.26.14 [#481](https://github.com/askap-vast/vast-pipeline/pull/481).
 - Dependabot: Bump prismjs from 1.22.0 to 1.23.0 [#469](https://github.com/askap-vast/vast-pipeline/pull/469).
@@ -70,6 +72,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#491](https://github.com/askap-vast/vast-pipeline/pull/491) doc: Updated the docs layout, home page and FAQs.
+- [#482](https://github.com/askap-vast/vast-pipeline/pull/482) dep: Bump y18n from 3.2.1 to 3.2.2.
+- [#483](https://github.com/askap-vast/vast-pipeline/pull/483) feat: replace run config .py files with .yaml.
 - [#487](https://github.com/askap-vast/vast-pipeline/pull/487) doc: Minor documentation improvements.
 - [#481](https://github.com/askap-vast/vast-pipeline/pull/481) dep: Bump Browsersync from 2.26.13 to 2.26.14.
 - [#469](https://github.com/askap-vast/vast-pipeline/pull/469) dep: Bump prismjs from 1.22.0 to 1.23.0.
