@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added new entries in the documentation FAQ section [#491](https://github.com/askap-vast/vast-pipeline/pull/491).
+- Added new home page for documentation [#491](https://github.com/askap-vast/vast-pipeline/pull/491).
 - Added dark mode switch on documentation [#487](https://github.com/askap-vast/vast-pipeline/pull/487).
 - Added .env file information to documentation [#487](https://github.com/askap-vast/vast-pipeline/pull/487).
 - Added further epoch based association information to documentation page [#487](https://github.com/askap-vast/vast-pipeline/pull/487).
@@ -27,6 +29,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Changed layout of documentation to use tabs [#491](https://github.com/askap-vast/vast-pipeline/pull/491).
 - Dependabot: Bump y18n from 3.2.1 to 3.2.2 [#482](https://github.com/askap-vast/vast-pipeline/pull/482).
 - Replaced run config .py format with .yaml [#483](https://github.com/askap-vast/vast-pipeline/pull/483).
 - Changed docs VAST logo to icon format to avoid stretched appearence [#487](https://github.com/askap-vast/vast-pipeline/pull/487).
@@ -70,6 +73,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#491](https://github.com/askap-vast/vast-pipeline/pull/491) doc: Updated the docs layout, home page and FAQs.
 - [#493](https://github.com/askap-vast/vast-pipeline/pull/493) fix: Fix bokeh hover tool for lightcurve plots.
 - [#482](https://github.com/askap-vast/vast-pipeline/pull/482) dep: Bump y18n from 3.2.1 to 3.2.2.
 - [#483](https://github.com/askap-vast/vast-pipeline/pull/483) feat: replace run config .py files with .yaml.

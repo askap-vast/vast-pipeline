@@ -20,3 +20,19 @@ Please open a discussion or issue on GitHub if you intend to give this a go!
     This is unintentional as there is nothing special about the FITS headers being read. 
     Worth to check if anyone goes down this path. - Adam, March 2021.
 
+### Does the pipeline support any other Stokes products such as Stokes V?
+
+Currently the pipeline only supports Stokes I data.
+
+Users can view Stokes V HIPS maps of the RACS and VAST surveys in the Aladin Lite tool on the [source detail page](exploringwebsite/sourcepages.md#source-detail-page).
+
+The support of Stokes V is [planned in a future update](https://github.com/askap-vast/vast-pipeline/issues/223){:target="_blank"}.
+
+### Can the pipeline handle multi-frequency datasets?
+
+Currently the pipeline does not support multi-frequency datasets. Any images that are put through in a run are assumed by the pipeline to be directly comparable to one another.
+For example, all variability metrics are calculated directly on the fluxes provided from the source catalogues.
+
+Multi-frequency support is [planned in a future update](https://github.com/askap-vast/vast-pipeline/issues/467).
+
+

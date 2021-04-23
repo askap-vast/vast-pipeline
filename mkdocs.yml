@@ -19,6 +19,9 @@ theme:
   logo: img/vast-logo.png
   features:
     - navigation.instant
+    - navigation.tabs
+    - navigation.sections
+  custom_dir: docs/custom_home
   palette:
     # Light mode
     - media: "(prefers-color-scheme: light)"
@@ -63,21 +66,11 @@ markdown_extensions:
       permalink: true
 
 nav:
-  - Home: README.md
-  - Quickstart:
+  - Home: index.md
+  - Getting Started:
     - Installation: quickstart/installation.md
     - Configuration: quickstart/configuration.md
     - Deployment: quickstart/deployment.md
-  - Admin Usage:
-    - CLI: adminusage/cli.md
-    - Web App: adminusage/app.md
-  - Pipeline Features and Design:
-    - Pipeline Steps Overview: design/overview.md
-    - Image & Selavy Catalogue Ingest: design/imageingest.md
-    - Source Association: design/association.md
-    - New Sources: design/newsources.md
-    - Forced Measurements: design/monitor.md
-    - Source Statistics: design/sourcestats.md
   - Using the Pipeline:
     - Accessing the Pipeline: using/access.md
     - Initialising a Run: using/initrun.md
@@ -85,17 +78,31 @@ nav:
     - Processing a Run: using/processrun.md
     - Adding Images to a Run: using/addtorun.md
     - Deleting a Run: using/deleterun.md
-  - Exploring the Pipeline Website:
-    - Overview: exploringwebsite/websiteoverview.md
-    - Admin Tools: exploringwebsite/admintools.md
-    - Pipeline Run Pages: exploringwebsite/runpages.md
-    - Source Pages: exploringwebsite/sourcepages.md
-    - Measurement Pages: exploringwebsite/measurementpages.md
-    - Image Pages: exploringwebsite/imagepages.md
-  - Pipeline Outputs:
-    - Outputs Overview: outputs/outputs.md
-    - Using the Outputs: outputs/usingoutputs.md
-    - Column Descriptions: outputs/coldesc.md
+    - Exploring the Pipeline Website:
+      - Overview: exploringwebsite/websiteoverview.md
+      - Pipeline Run Pages: exploringwebsite/runpages.md
+      - Source Pages: exploringwebsite/sourcepages.md
+      - Measurement Pages: exploringwebsite/measurementpages.md
+      - Image Pages: exploringwebsite/imagepages.md
+    - Pipeline Outputs:
+      - Outputs Overview: outputs/outputs.md
+      - Using the Outputs: outputs/usingoutputs.md
+      - Column Descriptions: outputs/coldesc.md
+    - Admin Usage:
+      - CLI: adminusage/cli.md
+      - Web App: adminusage/app.md
+      - Web App Admin Tools: exploringwebsite/admintools.md
+  - Features & Design:
+    - Pipeline Steps Overview: design/overview.md
+    - Image & Selavy Catalogue Ingest: design/imageingest.md
+    - Source Association: design/association.md
+    - New Sources: design/newsources.md
+    - Forced Measurements: design/monitor.md
+    - Source Statistics: design/sourcestats.md
+    - Architecture:
+      - Architecture Intro: architecture/intro.md
+      - Database Schema: architecture/database.md
+      # - Production: architecture/nimbus.md
   - Contributing and Developing:
     - Intro: developing/intro.md
     - GitHub Platform: developing/github.md
@@ -104,58 +111,54 @@ nav:
     - Docs: developing/docsdev.md
     - Bechmarks: developing/profiling.md
   #   - Tips: developing/tips.md like this https://stackoverflow.com/questions/60160823/how-to-properly-parallelize-generic-code-with-numba-dask
-  - Code Reference:
-    - vast_pipeline:
-      - image:
-        - main.py: reference/image/main.md
-        - utils.py: reference/image/utils.md
-      - management:
-        - commands:
-          - clearpiperun.py: reference/management/commands/clearpiperun.md
-          - createmeasarrow.py: reference/management/commands/createmeasarrow.md
-          - debugrun.py: reference/management/commands/debugrun.md
-          - importsurvey.py: reference/management/commands/importsurvey.md
-          - initpiperun.py: reference/management/commands/initpiperun.md
-          - restorepiperun.py: reference/management/commands/restorepiperun.md
-          - runpipeline.py: reference/management/commands/runpipeline.md
-        - helpers.py: reference/management/helpers.md
-      - pipeline:
-        - association.py: reference/pipeline/association.md
-        - config.py: reference/pipeline/config.md
-        - errors.py: reference/pipeline/errors.md
-        - finalise.py: reference/pipeline/finalise.md
-        - forced_extraction.py: reference/pipeline/forced_extraction.md
-        - loading.py: reference/pipeline/loading.md
-        - main.py: reference/pipeline/main.md
-        - model_generator.py: reference/pipeline/model_generator.md
-        - new_sources.py: reference/pipeline/new_sources.md
-        - utils.py: reference/pipeline/utils.md
-      - survey:
-        - catalogue.py: reference/survey/catalogue.md
-        - translators.py: reference/survey/translators.md
-      - utils:
-        - auth.py: reference/utils/auth.md
-        - unit_tags.py: reference/utils/unit_tags.md
-        - utils.py: reference/utils/utils.md
-        - view.py: reference/utils/view.md
-      - admin.py: reference/admin.md
-      - apps.py: reference/apps.md
-      - context_processors.py: reference/context_processors.md
-      - converters.py: reference/converters.md
-      - forms.py: reference/forms.md
-      - models.py: reference/models.md
-      - plots.py: reference/plots.md
-      # - serializers.py: reference/serializers.md
-      - urls.py: reference/urls.md
-      # - views.py: reference/views.md
-  - Architecture:
-    - Architecture Intro: architecture/intro.md
-    - Database Schema: architecture/database.md
-    # - Production: architecture/nimbus.md
+  - Reference:
+    - Changelog: changelog.md
+    - Code of Conduct: code_of_conduct.md
+    - License: license.md
+    - Code Reference:
+      - vast_pipeline:
+        - image:
+          - main.py: reference/image/main.md
+          - utils.py: reference/image/utils.md
+        - management:
+          - commands:
+            - clearpiperun.py: reference/management/commands/clearpiperun.md
+            - createmeasarrow.py: reference/management/commands/createmeasarrow.md
+            - debugrun.py: reference/management/commands/debugrun.md
+            - importsurvey.py: reference/management/commands/importsurvey.md
+            - initpiperun.py: reference/management/commands/initpiperun.md
+            - restorepiperun.py: reference/management/commands/restorepiperun.md
+            - runpipeline.py: reference/management/commands/runpipeline.md
+          - helpers.py: reference/management/helpers.md
+        - pipeline:
+          - association.py: reference/pipeline/association.md
+          - errors.py: reference/pipeline/errors.md
+          - finalise.py: reference/pipeline/finalise.md
+          - forced_extraction.py: reference/pipeline/forced_extraction.md
+          - loading.py: reference/pipeline/loading.md
+          - main.py: reference/pipeline/main.md
+          - model_generator.py: reference/pipeline/model_generator.md
+          - new_sources.py: reference/pipeline/new_sources.md
+          - utils.py: reference/pipeline/utils.md
+        - survey:
+          - catalogue.py: reference/survey/catalogue.md
+          - translators.py: reference/survey/translators.md
+        - utils:
+          - auth.py: reference/utils/auth.md
+          - unit_tags.py: reference/utils/unit_tags.md
+          - utils.py: reference/utils/utils.md
+          - view.py: reference/utils/view.md
+        - admin.py: reference/admin.md
+        - apps.py: reference/apps.md
+        - context_processors.py: reference/context_processors.md
+        - converters.py: reference/converters.md
+        - forms.py: reference/forms.md
+        - models.py: reference/models.md
+        - plots.py: reference/plots.md
+        # - serializers.py: reference/serializers.md
+        - urls.py: reference/urls.md
+        # - views.py: reference/views.md
   - FAQs: faqs.md
-  - Changelog: changelog.md
-  - Code of Conduct: code_of_conduct.md
-  - License: license.md
 
 plugins:
   - search
