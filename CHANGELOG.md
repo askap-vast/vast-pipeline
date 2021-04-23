@@ -51,6 +51,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed the missing hover tool for lightcurve plots of non-variable sources [#493](https://github.com/askap-vast/vast-pipeline/pull/493)
 - Fixed the default Dask multiprocessing context to "fork" [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
 - Fixed Selavy catalogue ingest to discard the unit row before reading the data [#473](https://github.com/askap-vast/vast-pipeline/pull/473).
 - Fixed initial job processing from the UI [#466](https://github.com/askap-vast/vast-pipeline/pull/466).
@@ -73,6 +74,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### List of PRs
 
 - [#491](https://github.com/askap-vast/vast-pipeline/pull/491) doc: Updated the docs layout, home page and FAQs.
+- [#493](https://github.com/askap-vast/vast-pipeline/pull/493) fix: Fix bokeh hover tool for lightcurve plots.
 - [#482](https://github.com/askap-vast/vast-pipeline/pull/482) dep: Bump y18n from 3.2.1 to 3.2.2.
 - [#483](https://github.com/askap-vast/vast-pipeline/pull/483) feat: replace run config .py files with .yaml.
 - [#487](https://github.com/askap-vast/vast-pipeline/pull/487) doc: Minor documentation improvements.
