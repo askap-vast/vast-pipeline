@@ -142,6 +142,7 @@ def plot_lightcurve(
         y_axis_type=None,
         sizing_mode="fixed",
     )
+    hover_tool_lc_callback = None
     if len(candidate_measurement_pairs_df) > 0:
         g = nx.Graph()
         for _row in candidate_measurement_pairs_df.itertuples(index=False):
@@ -234,28 +235,31 @@ def plot_lightcurve(
         )
         fig_graph.renderers.append(labels)
 
-        # create hover tool for lightcurve
-        hover_tool_lc = HoverTool(
-            tooltips=[
-                ("Index", "@index"),
-                ("Date", "@taustart_ts{%F}"),
-                (f"Flux {metric_suffix}", "@flux mJy"),
-            ],
-            formatters={"@taustart_ts": "datetime",},
-            mode="vline",
-            callback=CustomJS(
-                args={
-                    "node_data": node_renderer.data_source,
-                    "lightcurve_data": lc_scatter.data_source,
-                },
-                code="""
-                    let ids = cb_data.index.indices.map(i => lightcurve_data.data.id[i]);
-                    let node_indices = ids.map(i => node_data.data.index.indexOf(i));
-                    node_data.selected.indices = node_indices;
-                """,
-            ),
+        # prepare a JS callback for the lightcurve hover tool to mark the associated nodes
+        hover_tool_lc_callback = CustomJS(
+            args={
+                "node_data": node_renderer.data_source,
+                "lightcurve_data": lc_scatter.data_source,
+            },
+            code="""
+                let ids = cb_data.index.indices.map(i => lightcurve_data.data.id[i]);
+                let node_indices = ids.map(i => node_data.data.index.indexOf(i));
+                node_data.selected.indices = node_indices;
+            """,
         )
-        fig_lc.add_tools(hover_tool_lc)
+
+    # create hover tool for lightcurve
+    hover_tool_lc = HoverTool(
+        tooltips=[
+            ("Index", "@index"),
+            ("Date", "@taustart_ts{%F}"),
+            (f"Flux {metric_suffix}", "@flux mJy"),
+        ],
+        formatters={"@taustart_ts": "datetime", },
+        mode="vline",
+        callback=hover_tool_lc_callback,
+    )
+    fig_lc.add_tools(hover_tool_lc)
 
     plot_row = row(fig_lc, fig_graph, sizing_mode="stretch_width")
     plot_row.css_classes.append("mx-auto")
