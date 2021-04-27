@@ -182,7 +182,7 @@ These settings apply to various aspects of the VAST pipeline itself. The table b
 PIPELINE_MAINTAINANCE_MESSAGE=This website is subject to rapid changes which may result in data loss and may go offline with minimal warning. Please be mindful of usage.
 ```
 
-[![Maintenance message](../img/maintenance-message.png){: loading=lazy }](../img/maintenance-message.png)
+![!Maintenance message example.](../img/maintenance-message.png){: loading=lazy }
 
 ## Authentication
 

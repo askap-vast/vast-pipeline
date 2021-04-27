@@ -7,7 +7,7 @@ copyright: Copyright &copy; 2020 - 2025 Vast Development Team, University of Syd
 
 repo_url: https://github.com/askap-vast/vast-pipeline
 repo_name: askap-vast/vast-pipeline
-edit_uri: ""
+edit_uri: "tree/dev/docs/"
 dev_addr: localhost:8008
 
 docs_dir: docs
@@ -21,7 +21,7 @@ theme:
     - navigation.instant
     - navigation.tabs
     - navigation.sections
-  custom_dir: docs/custom_home
+  custom_dir: docs/theme
   palette:
     # Light mode
     - media: "(prefers-color-scheme: light)"
@@ -64,6 +64,7 @@ markdown_extensions:
   - toc:
       toc_depth: 4
       permalink: true
+  - lightgallery
 
 nav:
   - Home: index.md
@@ -132,6 +133,7 @@ nav:
           - helpers.py: reference/management/helpers.md
         - pipeline:
           - association.py: reference/pipeline/association.md
+          - config.py: reference/pipeline/config.md
           - errors.py: reference/pipeline/errors.md
           - finalise.py: reference/pipeline/finalise.md
           - forced_extraction.py: reference/pipeline/forced_extraction.md
