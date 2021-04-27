@@ -4,11 +4,11 @@ This page gives an overview of the pipeline website, with links to main pages on
 
 Refer to [Accessing the Pipeline](../using/access.md) for details on how to access the pipeline instance that is hosted by the VAST collaboration.
 
-For admins, refer to the following pages for details of the configuration and set up of the web server: [Configuration](../quickstart/configuration.md), [Deployment](../quickstart/deployment.md) and [Web App Admin Usage](../adminusage/app.md).
+For admins, refer to the following pages for details of the configuration and set up of the web server: [Configuration](../gettingstarted/configuration.md), [Deployment](../gettingstarted/deployment.md) and [Web App Admin Usage](../adminusage/app.md).
 
 ## Homepage
 
-[![VAST Pipeline Homepage](../img/homepage.png){: loading=lazy }](../img/homepage.png)
+![!VAST Pipeline homepage.](../img/homepage.png){: loading=lazy }
 
 The homepage provides a summary of the data currently held in the pipeline instance that has been processed. The four cards at the top of the homepage provide total values
 for the amount of pipeline runs, images, measurements and sources that are stored in the database. Clicking any of them will take you to the respective overview page for the data type.
@@ -21,7 +21,7 @@ Also displayed is a sky region map that shows all the areas of the sky that have
 
 ## Navbar
 
-[![VAST Pipeline Navbar](../img/navbar.png){: loading=lazy align=right width=80px }](../img/navbar.png)
+![!VAST Pipeline navbar.](../img/navbar.png){: loading=lazy align=right width=80px }
 
 The navbar, shown to the right, acts as the main method in which to navigate around the website.
 The following sections link to the respective documentation pages explainging the features of each link.
@@ -76,22 +76,3 @@ From here users can also access the detail page for individual images.
     - **JupyterHub**: Links to the VAST hosted JupyterHub instance which includes access to the pipeline results and `vast-tools`.
     - **Website**: Links to the VAST collaboration website.
     - **Wiki**: Links to the VAST Wiki which is hosted on GitHub.
-
-## Data Tables
-
-Much of the data is presented using tables that share consistent functionality across the website. 
-An example of a table is shown below, note the interactive features across the top of the table, these are explained after the screenshot.
-
-[![VAST Pipeline Datatable](../img/datatables.png){: loading=lazy }](../img/datatables.png)
-
-* **Show 10 entries**: A selectable limiter of how many rows to display at once (maximum 100).
-* **Column visibility**: Enables the user to hide and show columns columns. In the screenshot below the `compactness` column is hidden by deselecting it in the presented list. 
-    [![VAST Pipeline Datatable Column Visibility](../img/datatables-colvis.png){: loading=lazy }](../img/datatables-colvis.png)
-* **CSV**: Will download a CSV file of the data currently shown on screen.
-* **Excel**: Will download an Excel file of the data currently shown on screen.
-
-    !!! warning
-        Note the statement **currently shown on screen** - only this data will be downloaded to the CSV and Excel files. All the records are not able to be downloaded
-        in this manner - for this it is recommened to interact with the output [parquet files](../outputs/outputs.md).
-        
-* **Search**: A search bar for the user to filter the table to the row they require. The search will take into account all appropriate columns when searching.

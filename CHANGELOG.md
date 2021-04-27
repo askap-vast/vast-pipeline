@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added lightgallery support for all images in the documentation [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
+- Added new entries in the documentation contributing section [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
 - Added new entries in the documentation FAQ section [#491](https://github.com/askap-vast/vast-pipeline/pull/491).
 - Added new home page for documentation [#491](https://github.com/askap-vast/vast-pipeline/pull/491).
 - Added dark mode switch on documentation [#487](https://github.com/askap-vast/vast-pipeline/pull/487).
@@ -29,6 +31,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- All file examples in docs are now enclosed in an example admonition [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
+- Further changes to layout of documentation [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
 - Changed layout of documentation to use tabs [#491](https://github.com/askap-vast/vast-pipeline/pull/491).
 - Dependabot: Bump y18n from 3.2.1 to 3.2.2 [#482](https://github.com/askap-vast/vast-pipeline/pull/482).
 - Replaced run config .py format with .yaml [#483](https://github.com/askap-vast/vast-pipeline/pull/483).
@@ -51,6 +55,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed docstring in config.py [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
 - Fixed the missing hover tool for lightcurve plots of non-variable sources [#493](https://github.com/askap-vast/vast-pipeline/pull/493)
 - Fixed the default Dask multiprocessing context to "fork" [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
 - Fixed Selavy catalogue ingest to discard the unit row before reading the data [#473](https://github.com/askap-vast/vast-pipeline/pull/473).
@@ -66,6 +71,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Removed
 
+- Removed `docs/readme.md` softlink as it is no longer used [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
 - Removed `requirements/*.txt` files. Development dependency management moved to Poetry [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
 - Removed `init-tools/init-db.sh` [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
 - Removed `INSTALL.md`, `PROFILE.md` and `static/README.md` [#433](https://github.com/askap-vast/vast-pipeline/pull/433)
@@ -73,6 +79,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#494](https://github.com/askap-vast/vast-pipeline/pull/494) doc, dep: Docs: Added lightgallery support, layout update, minor fixes and additions.
 - [#491](https://github.com/askap-vast/vast-pipeline/pull/491) doc: Updated the docs layout, home page and FAQs.
 - [#493](https://github.com/askap-vast/vast-pipeline/pull/493) fix: Fix bokeh hover tool for lightcurve plots.
 - [#482](https://github.com/askap-vast/vast-pipeline/pull/482) dep: Bump y18n from 3.2.1 to 3.2.2.

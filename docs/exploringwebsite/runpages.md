@@ -6,9 +6,9 @@ This page details the website pages for information on the pipeline runs.
 
 A list of the pipeline runs that have been processed or initialised are presented on this page along with basic statistics, including the run status.
 From this page the full detail page of a specific pipeline run can be accessed by clicking on the name of the pipeline run. 
-Explanation of the table options can be found on the overview page [here](websiteoverview.md#data-tables).
+Explanation of the table options can be found in the [DataTables section](datatables.md).
 
-[![VAST Pipeline Runs Table](../img/pipeline-runs.png){: loading=lazy }](../img/pipeline-runs.png)
+![!Pipeline Runs table.](../img/pipeline-runs.png){: loading=lazy }
 
 ## Pipeline Run Detail Page
 
@@ -17,7 +17,7 @@ This page presents all the information about the pipeline run, including options
 !!! note
     For full details on how to process a run please refer to [this page](../using/processrun.md).
 
-[![VAST Pipeline Run Detail](../img/run-detail1.png){: loading=lazy }](../img/run-detail1.png)
+![!Pipeline Run detail page.](../img/run-detail1.png){: loading=lazy }
 
 ### Summary Cards
 The cards at the top of the page give a summary of the total numbers of:
@@ -43,13 +43,13 @@ A sky map showing the area of sky covered by the images associated with the pipe
 
 ### Configuration File
 
-[![VAST Pipeline Run Detail](../img/run-detail2.png){: loading=lazy }](../img/run-detail2.png)
+![!Pipeline Run detail page.](../img/run-detail2.png){: loading=lazy }
 
 Here the pipeline run configuration file can be viewed, edited and validated.
 
 #### Editing the Configuration File
 
-[![VAST Pipeline Run Detail](../img/run-detail3.png){: loading=lazy align=right width=350px}](../img/run-detail3.png)
+![!Pipeline Run detail page.](../img/run-detail3.png){: loading=lazy align=right width=350px}
 
 To edit the configuration file first select the `Toggle on/off Config Edit` option, that is shown in the screenshot to the right. 
 This will enter edit mode on the configuration file as denoted by the `--Edit Mode--` message shown in the screenshot below. 
@@ -57,7 +57,7 @@ This will enter edit mode on the configuration file as denoted by the `--Edit Mo
 !!! warning
     Do not toggle off edit mode without first selecting `Wrtie Current Config` otherwise changes will be lost.
 
-[![VAST Pipeline Run Detail](../img/run-detail6.png){: loading=lazy }](../img/run-detail6.png)
+![!VAST Pipeline Run Detail](../img/run-detail6.png){: loading=lazy }
 
 When all changes are applied, select the `Write Current Config` to save the changes.
 
@@ -65,9 +65,9 @@ When all changes are applied, select the `Write Current Config` to save the chan
 
 From the configuration file menu select the `Validate Config` option. 
 A feedback modal will then appear with feedback stating whether the configuration validation was successful or failed.
-The feeback may take a moment to appear as the check is performed.
+The feedback may take a moment to appear as the check is performed.
 
-[![VAST Pipeline Run Detail](../img/run-detail7.png){: loading=lazy }](../img/run-detail7.png)
+![!Configuration is valid confirmation.](../img/run-detail7.png){: loading=lazy }
 
 ### User Comments
 
@@ -75,7 +75,7 @@ Users are able to read and post comments on a pipeline run using this form.
 
 ### Log File
 
-[![VAST Pipeline Run Detail](../img/run-detail4.png){: loading=lazy }](../img/run-detail4.png)
+![!Run log file.](../img/run-detail4.png){: loading=lazy }
 
 The full log file of the pipeline run is able to viewed.
 

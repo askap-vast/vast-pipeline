@@ -46,14 +46,5 @@
 {% block libs %}
     {{ super() }}
     <script src="{{ base_url }}/js/lightgallery.min.js"></script>
+    <script src="{{ base_url }}/js/lg-zoom.js"></script>
 {% endblock libs %}
-
-{% block scripts %}
-    {{ super() }}
-    <script>
-    var elements = document.getElementsByClassName("lightgallery");
-    for(var i=0; i<elements.length; i++) {
-       lightGallery(elements[i]);
-    }
-    </script>
-{% endblock scripts %}

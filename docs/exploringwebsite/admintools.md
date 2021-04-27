@@ -5,11 +5,11 @@
 Users designated as administrators of the pipeline instance being explored (controlled by GitHub team membership) 
 will be able to see the admin button at the top of the navbar as shown below.
 
-[![Admin Navbar](../img/admin-navbar.png){: loading=lazy }](../img/admin-navbar.png)
+![!Admin navbar option.](../img/admin-navbar.png){: loading=lazy }
 
 Clicking this button and then selecting the `Django` open will take the user to the Django admin backend interface shown below.
 
-[![Admin Homepage](../img/admin-homepage.png){: loading=lazy }](../img/admin-homepage.png)
+![!Admin tools homepage.](../img/admin-homepage.png){: loading=lazy }
 
 
 ## Authentification and Authorization

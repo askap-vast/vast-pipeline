@@ -102,20 +102,21 @@ The pipeline is able to associate inputs on an epoch basis. What this means is t
 
 The mode is activated by entering the images to be processed under an extra heading in the `.yaml` configuration file as demonstrated below. The heading acts as the epoch 'key', hence be sure to use a string that can be ordered as the heading to maintain the correct epoch order.
 
-```yaml
-inputs:
-  image:
-    epoch01:
-    - /full/path/to/image1.fits
-    - /full/path/to/image2.fits
-    epoch02:
-    - /full/path/to/image3.fits
-```
+!!! example "config.yaml"
+    ```yaml
+    inputs:
+      image:
+        epoch01:
+        - /full/path/to/image1.fits
+        - /full/path/to/image2.fits
+        epoch02:
+        - /full/path/to/image3.fits
+    ```
 
 The lightcurves below show the difference between 'regular' association (top) and 'epoch based' association (lower) for a source.
 
-[![Regular Association](../img/regular_association.png){: loading=lazy }](../img/regular_association.png)
-[![Epoch Based Association](../img/epoch_based_association.png){: loading=lazy }](../img/epoch_based_association.png)
+![!Regular association light curve of source.](../img/regular_association.png){: loading=lazy }
+![!Epoch based association light curve of source.](../img/epoch_based_association.png){: loading=lazy }
 
 For large surveys where transient and variablity searches on the epoch timescale is required, using this mode can greatly speed up the association stage.
 
