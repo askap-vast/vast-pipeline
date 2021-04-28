@@ -29,6 +29,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Changed arrow file generation from `vaex` to `pyarrow` [#503](https://github.com/askap-vast/vast-pipeline/pull/503).
 - Changed layout of documentation to use tabs [#491](https://github.com/askap-vast/vast-pipeline/pull/491).
 - Dependabot: Bump y18n from 3.2.1 to 3.2.2 [#482](https://github.com/askap-vast/vast-pipeline/pull/482).
 - Replaced run config .py format with .yaml [#483](https://github.com/askap-vast/vast-pipeline/pull/483).
@@ -51,6 +52,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed arrow files being generated via the website [#503](https://github.com/askap-vast/vast-pipeline/pull/503).
 - Fixed a bug that returned all sources when performing a cone search where one of the coords = 0 [#501](https://github.com/askap-vast/vast-pipeline/pull/501)
 - Fixed the missing hover tool for lightcurve plots of non-variable sources [#493](https://github.com/askap-vast/vast-pipeline/pull/493)
 - Fixed the default Dask multiprocessing context to "fork" [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
@@ -67,6 +69,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Removed
 
+- Removed `vaex-arrow` from the dependancies [#503](https://github.com/askap-vast/vast-pipeline/pull/503).
 - Removed `requirements/*.txt` files. Development dependency management moved to Poetry [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
 - Removed `init-tools/init-db.sh` [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
 - Removed `INSTALL.md`, `PROFILE.md` and `static/README.md` [#433](https://github.com/askap-vast/vast-pipeline/pull/433)
@@ -74,6 +77,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#503](https://github.com/askap-vast/vast-pipeline/pull/503) fix, dep: Change arrow file generation from vaex to pyarrow.
 - [#501](https://github.com/askap-vast/vast-pipeline/pull/501) fix: fix broken cone search when coord = 0
 - [#491](https://github.com/askap-vast/vast-pipeline/pull/491) doc: Updated the docs layout, home page and FAQs.
 - [#493](https://github.com/askap-vast/vast-pipeline/pull/493) fix: Fix bokeh hover tool for lightcurve plots.

@@ -6,10 +6,10 @@ the processing of a run.
 import os
 import logging
 import glob
-import vaex
 import shutil
 import numpy as np
 import pandas as pd
+import pyarrow as pa
 import astropy.units as u
 import dask
 import dask.dataframe as dd
@@ -1294,8 +1294,7 @@ def get_parallel_assoc_image_df(
 def create_measurements_arrow_file(p_run: Run) -> None:
     """
     Creates a measurements.arrow file using the parquet outputs
-    of a pipeline run. Vaex is used to do the exporting to arrow to
-    ensure compatibility with Vaex.
+    of a pipeline run.
 
     Args:
         p_run:
@@ -1347,21 +1346,23 @@ def create_measurements_arrow_file(p_run: Run) -> None:
     logger.debug('Optimising dataframes.')
     measurements = optimize_ints(optimize_floats(measurements))
 
-    # use vaex to export to arrow
-    logger.debug("Loading to vaex.")
-    measurements = vaex.from_pandas(measurements)
+    logger.debug("Loading to pyarrow table.")
+    measurements = pa.Table.from_pandas(measurements)
 
-    logger.debug("Exporting to arrow.")
+    logger.debug("Exporting to arrow file.")
     outname = os.path.join(p_run.path, 'measurements.arrow')
 
-    measurements.export_arrow(outname)
+    local = pa.fs.LocalFileSystem()
+
+    with local.open_output_stream(outname) as file:
+       with pa.RecordBatchFileWriter(file, measurements.schema) as writer:
+          writer.write_table(measurements)
 
 
 def create_measurement_pairs_arrow_file(p_run: Run) -> None:
     """
     Creates a measurement_pairs.arrow file using the parquet outputs
-    of a pipeline run. Vaex is used to do the exporting to arrow to
-    ensure compatibility with Vaex.
+    of a pipeline run.
 
     Args:
         p_run:
@@ -1382,14 +1383,17 @@ def create_measurement_pairs_arrow_file(p_run: Run) -> None:
     logger.debug('Optimising dataframe.')
     measurement_pairs_df = optimize_ints(optimize_floats(measurement_pairs_df))
 
-    # use vaex to export to arrow
-    logger.debug("Loading to vaex.")
-    measurement_pairs_df = vaex.from_pandas(measurement_pairs_df)
+    logger.debug("Loading to pyarrow table.")
+    measurement_pairs_df = pa.Table.from_pandas(measurement_pairs_df)
 
-    logger.debug("Exporting to arrow.")
+    logger.debug("Exporting to arrow file.")
     outname = os.path.join(p_run.path, 'measurement_pairs.arrow')
 
-    measurement_pairs_df.export_arrow(outname)
+    local = pa.fs.LocalFileSystem()
+
+    with local.open_output_stream(outname) as file:
+       with pa.RecordBatchFileWriter(file, measurement_pairs_df.schema) as writer:
+          writer.write_table(measurement_pairs_df)
 
 
 def calculate_vs_metric(
@@ -1581,7 +1585,7 @@ def backup_parquets(p_run_path: str) -> None:
     """
     parquets = (
         glob.glob(os.path.join(p_run_path, "*.parquet"))
-        # TODO Remove arrow when vaex support is dropped.
+        # TODO Remove arrow when arrow files are no longer required.
         + glob.glob(os.path.join(p_run_path, "*.arrow")))
 
     for i in parquets:
