@@ -178,7 +178,7 @@ def run_pipe(
         if initial_run is False:
             parquets = (
                 glob.glob(os.path.join(p_run.path, "*.parquet"))
-                # TODO Remove arrow when vaex support is dropped.
+                # TODO Remove arrow when arrow files are no longer needed.
                 + glob.glob(os.path.join(p_run.path, "*.arrow"))
             )
 
@@ -251,15 +251,6 @@ def run_pipe(
                 ]:
                     pipeline.previous_parquets[i] = os.path.join(
                         p_run.path, f'{i}.parquet.bak')
-
-    if pipeline.config["measurements"]["write_arrow_files"] and cli is False:
-        logger.warning(
-            'The creation of arrow files is currently unavailable when running'
-            ' through the UI. Please ask an admin to complete this step for'
-            ' you upon a successful completion.'
-        )
-        logger.warning("Setting 'measurements.write_arrow_files' to 'False'.")
-        pipeline.config._yaml["measurements"]["write_arrow_files"] = False
 
     if pipeline.config["run"]["suppress_astropy_warnings"]:
         warnings.simplefilter("ignore", category=AstropyWarning)

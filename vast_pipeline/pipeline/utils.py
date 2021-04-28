@@ -6,10 +6,10 @@ the processing of a run.
 import os
 import logging
 import glob
-import vaex
 import shutil
 import numpy as np
 import pandas as pd
+import pyarrow as pa
 import astropy.units as u
 import dask
 import dask.dataframe as dd
@@ -1348,13 +1348,17 @@ def create_measurements_arrow_file(p_run: Run) -> None:
     measurements = optimize_ints(optimize_floats(measurements))
 
     # use vaex to export to arrow
-    logger.debug("Loading to vaex.")
-    measurements = vaex.from_pandas(measurements)
+    logger.debug("Loading to arrow table.")
+    measurements = pa.Table.from_pandas(measurements)
 
     logger.debug("Exporting to arrow.")
     outname = os.path.join(p_run.path, 'measurements.arrow')
 
-    measurements.export_arrow(outname)
+    local = pa.fs.LocalFileSystem()
+
+    with local.open_output_stream(outname) as file:
+       with pa.RecordBatchFileWriter(file, measurements.schema) as writer:
+          writer.write_table(measurements)
 
 
 def create_measurement_pairs_arrow_file(p_run: Run) -> None:
@@ -1384,12 +1388,16 @@ def create_measurement_pairs_arrow_file(p_run: Run) -> None:
 
     # use vaex to export to arrow
     logger.debug("Loading to vaex.")
-    measurement_pairs_df = vaex.from_pandas(measurement_pairs_df)
+    measurement_pairs_df = pa.Table.from_pandas(measurement_pairs_df)
 
     logger.debug("Exporting to arrow.")
     outname = os.path.join(p_run.path, 'measurement_pairs.arrow')
 
-    measurement_pairs_df.export_arrow(outname)
+    local = pa.fs.LocalFileSystem()
+
+    with local.open_output_stream(outname) as file:
+       with pa.RecordBatchFileWriter(file, measurement_pairs_df.schema) as writer:
+          writer.write_table(measurement_pairs_df)
 
 
 def calculate_vs_metric(
