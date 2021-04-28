@@ -1160,7 +1160,7 @@ class SourceViewSet(ModelViewSet):
             wavg_ra = coord.ra.deg
             wavg_dec = coord.dec.deg
 
-        if wavg_ra and wavg_dec and radius:
+        if None not in (wavg_ra, wavg_dec, radius):
             radius = float(radius) / radius_conversions[radiusUnit]
             qs = qs.cone_search(wavg_ra, wavg_dec, radius)
 
