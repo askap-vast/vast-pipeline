@@ -86,12 +86,13 @@ function configureAladin(aladin, aladinConf) {
     aladin.getBaseImageLayer().getColorMap().reverse();
     if (aladinConf.hasOwnProperty('aladin_box_ra')) {
         var overlay = A.graphicOverlay({color: '#ee2345', lineWidth: 2});
+        var COS_DEC = Math.cos(aladinConf.aladin_dec * (Math.PI / 180.0))
         aladin.addOverlay(overlay);
         overlay.addFootprints([A.polygon([
-            [aladinConf.aladin_ra + (aladinConf.aladin_box_ra / 2) , aladinConf.aladin_dec - (aladinConf.aladin_box_dec / 2)],
-            [aladinConf.aladin_ra + (aladinConf.aladin_box_ra / 2) , aladinConf.aladin_dec + (aladinConf.aladin_box_dec / 2)],
-            [aladinConf.aladin_ra - (aladinConf.aladin_box_ra / 2) , aladinConf.aladin_dec + (aladinConf.aladin_box_dec / 2)],
-            [aladinConf.aladin_ra - (aladinConf.aladin_box_ra / 2) , aladinConf.aladin_dec - (aladinConf.aladin_box_dec / 2)],
+            [aladinConf.aladin_ra + (aladinConf.aladin_box_ra / COS_DEC / 2) , aladinConf.aladin_dec - (aladinConf.aladin_box_dec / 2)],
+            [aladinConf.aladin_ra + (aladinConf.aladin_box_ra / COS_DEC / 2) , aladinConf.aladin_dec + (aladinConf.aladin_box_dec / 2)],
+            [aladinConf.aladin_ra - (aladinConf.aladin_box_ra / COS_DEC / 2) , aladinConf.aladin_dec + (aladinConf.aladin_box_dec / 2)],
+            [aladinConf.aladin_ra - (aladinConf.aladin_box_ra / COS_DEC / 2) , aladinConf.aladin_dec - (aladinConf.aladin_box_dec / 2)],
         ])]);
     }
 }
