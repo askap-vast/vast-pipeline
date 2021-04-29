@@ -9,123 +9,124 @@ Below is an example of a default `config.yaml` file. Note that no images or othe
 !!! warning
     Similarly to Python files, the indentation in the run configuration YAML file is important as it defines nested parameters.
 
-```yaml
-# This file specifies the pipeline configuration for the current pipeline run.
-# You should review these settings before processing any images - some of the default
-# values will probably not be appropriate.
+!!! example "config.yaml"
+    ```yaml
+    # This file specifies the pipeline configuration for the current pipeline run.
+    # You should review these settings before processing any images - some of the default
+    # values will probably not be appropriate.
 
-run:
-  # Path of the pipeline run
-  path: ... # auto-filled by pipeline initpiperun command
+    run:
+      # Path of the pipeline run
+      path: ... # auto-filled by pipeline initpiperun command
 
-  # Default survey used by the website for analysis plots. Currently not used.
-  default_survey: None
+      # Default survey used by the website for analysis plots. Currently not used.
+      default_survey: None
 
-  # Hide astropy warnings during the run execution.
-  suppress_astropy_warnings: True
+      # Hide astropy warnings during the run execution.
+      suppress_astropy_warnings: True
 
-inputs:
-  # NOTE: all the inputs must match with each other, i.e. the catalogue for the first
-  # input image (inputs.image[0]) must be the first input catalogue (inputs.selavy[0])
-  # and so on.
-  image:
-  # list input images here, e.g. (note the leading hyphens)
-  # - /path/to/image1.fits
-  # - /path/to/image2.fits
+    inputs:
+      # NOTE: all the inputs must match with each other, i.e. the catalogue for the first
+      # input image (inputs.image[0]) must be the first input catalogue (inputs.selavy[0])
+      # and so on.
+      image:
+      # list input images here, e.g. (note the leading hyphens)
+      # - /path/to/image1.fits
+      # - /path/to/image2.fits
 
-  selavy:
-  # list input selavy catalogues here, as above with the images
+      selavy:
+      # list input selavy catalogues here, as above with the images
 
-  noise:
-  # list input noise (rms) images here, as above with the images
+      noise:
+      # list input noise (rms) images here, as above with the images
 
-  # Required only if source_monitoring.monitor is true, otherwise optional. If not providing
-  # background images, remove the entire background section below.
-  background:
-  # list input background images here, as above with the images
+      # Required only if source_monitoring.monitor is true, otherwise optional. If not providing
+      # background images, remove the entire background section below.
+      background:
+      # list input background images here, as above with the images
 
 
-source_monitoring:
-  # Source monitoring can be done both forward and backward in 'time'.
-  # Monitoring backward means re-opening files that were previously processed and can be slow.
-  monitor: True
+    source_monitoring:
+      # Source monitoring can be done both forward and backward in 'time'.
+      # Monitoring backward means re-opening files that were previously processed and can be slow.
+      monitor: True
 
-  # Minimum SNR ratio a source has to be if it was placed in the area of minimum rms in
-  # the image from which it is to be extracted from. If lower than this value it is skipped
-  min_sigma: 3.0
+      # Minimum SNR ratio a source has to be if it was placed in the area of minimum rms in
+      # the image from which it is to be extracted from. If lower than this value it is skipped
+      min_sigma: 3.0
   
-  # Multiplicative scaling factor to the buffer size of the forced photometry from the
-  # image edge
-  edge_buffer_scale: 1.2
+      # Multiplicative scaling factor to the buffer size of the forced photometry from the
+      # image edge
+      edge_buffer_scale: 1.2
 
-  # Passed to forced-phot as `cluster_threshold`. See docs for details. If unsure, leave
-  # as default.
-  cluster_threshold: 3.0
+      # Passed to forced-phot as `cluster_threshold`. See docs for details. If unsure, leave
+      # as default.
+      cluster_threshold: 3.0
 
-  # Attempt forced-phot fit even if there are NaN's present in the rms or background maps.
-  allow_nan: False
+      # Attempt forced-phot fit even if there are NaN's present in the rms or background maps.
+      allow_nan: False
 
-source_association:
-  # basic, advanced, or deruiter
-  method: basic
+    source_association:
+      # basic, advanced, or deruiter
+      method: basic
 
-  # Maximum source separation allowed during basic and advanced association in arcsec
-  radius: 10.0
+      # Maximum source separation allowed during basic and advanced association in arcsec
+      radius: 10.0
 
-  # Options that apply only to deruiter association
-  deruiter_radius: 5.68  # unitless
-  deruiter_beamwidth_limit: 1.5  # multiplicative factor
+      # Options that apply only to deruiter association
+      deruiter_radius: 5.68  # unitless
+      deruiter_beamwidth_limit: 1.5  # multiplicative factor
 
-  # Split input images into sky region groups and run the association on these groups in
-  # parallel. Best used when there are a large number of input images with multiple
-  # non-overlapping patches of the sky.
-  # Not recommended for smaller searches of <= 3 sky regions.
-  parallel: False
+      # Split input images into sky region groups and run the association on these groups in
+      # parallel. Best used when there are a large number of input images with multiple
+      # non-overlapping patches of the sky.
+      # Not recommended for smaller searches of <= 3 sky regions.
+      parallel: False
 
-  # If images have been submitted in epoch dictionaries then an attempt will be made by
-  # the pipeline to remove duplicate sources. To do this a crossmatch is made between
-  # catalgoues to match 'the same' measurements from different catalogues. This
-  # parameter governs the distance for which a match is made in arcsec. Default is 2.5
-  # arcsec which is typically 1 pixel in ASKAP images.
-  epoch_duplicate_radius: 2.5  # arcsec
+      # If images have been submitted in epoch dictionaries then an attempt will be made by
+      # the pipeline to remove duplicate sources. To do this a crossmatch is made between
+      # catalgoues to match 'the same' measurements from different catalogues. This
+      # parameter governs the distance for which a match is made in arcsec. Default is 2.5
+      # arcsec which is typically 1 pixel in ASKAP images.
+      epoch_duplicate_radius: 2.5  # arcsec
 
-new_sources:
-  # Controls when a source is labelled as a new source. The source in question must meet
-  # the requirement of: min sigma > (source_peak_flux / lowest_previous_image_min_rms)
-  min_sigma: 5.0
+    new_sources:
+      # Controls when a source is labelled as a new source. The source in question must meet
+      # the requirement of: min sigma > (source_peak_flux / lowest_previous_image_min_rms)
+      min_sigma: 5.0
 
-measurements:
-  # Source finder used to produce input catalogues. Only selavy is currently supported.
-  source_finder: selavy
+    measurements:
+      # Source finder used to produce input catalogues. Only selavy is currently supported.
+      source_finder: selavy
 
-  # Minimum error to apply to all flux measurements. The actual value used will either
-  # be the catalogued value or this value, whichever is greater. This is a fraction, e.g.
-  # 0.05 = 5% error, 0 = no minimum error.
-  flux_fractional_error: 0.0
+      # Minimum error to apply to all flux measurements. The actual value used will either
+      # be the catalogued value or this value, whichever is greater. This is a fraction, e.g.
+      # 0.05 = 5% error, 0 = no minimum error.
+      flux_fractional_error: 0.0
 
-  # Replace the selavy errors with Condon (1997) errors.
-  condon_errors: True
+      # Replace the selavy errors with Condon (1997) errors.
+      condon_errors: True
 
-  # Sometimes the local rms for a source is reported as 0 by selavy.
-  # Choose a value to use for the local rms in these cases in mJy/beam.
-  selavy_local_rms_fill_value: 0.2
+      # Sometimes the local rms for a source is reported as 0 by selavy.
+      # Choose a value to use for the local rms in these cases in mJy/beam.
+      selavy_local_rms_fill_value: 0.2
 
-  # Create 'measurements.arrow' and 'measurement_pairs.arrow' files at the end of 
-  # a successful run.
-  write_arrow_files: False
+      # Create 'measurements.arrow' and 'measurement_pairs.arrow' files at the end of 
+      # a successful run.
+      write_arrow_files: False
 
-  # The positional uncertainty of a measurement is in reality the fitting errors and the
-  # astrometric uncertainty of the image/survey/instrument combined in quadrature.
-  # These two parameters are the astrometric uncertainty in RA/Dec and they may be different.
-  ra_uncertainty: 1.0 # arcsec
-  dec_uncertainty: 1.0  # arcsec
+      # The positional uncertainty of a measurement is in reality the fitting errors and the
+      # astrometric uncertainty of the image/survey/instrument combined in quadrature.
+      # These two parameters are the astrometric uncertainty in RA/Dec and they may be different.
+      ra_uncertainty: 1.0 # arcsec
+      dec_uncertainty: 1.0  # arcsec
 
-variability:
-  # Only measurement pairs where the Vs metric exceeds this value are selected for the
-  # aggregate pair metrics that are stored in Source objects.
-  source_aggregate_pair_metrics_min_abs_vs: 4.3
+    variability:
+      # Only measurement pairs where the Vs metric exceeds this value are selected for the
+      # aggregate pair metrics that are stored in Source objects.
+      source_aggregate_pair_metrics_min_abs_vs: 4.3
 
-```
+    ```
 
 !!! note
     Throughout the documentation we use dot-notation to refer to nested parameters, for example `inputs.image` refers to the list of input images.
@@ -147,112 +148,116 @@ Boolean. Astropy warnings are suppressed in the logging output if set to `True`.
 ### Input Images and Selavy Files
 
 **`inputs.image`**
-List or dictionary. The full paths to the image FITS files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see [Epoch Based Association](../design/association.md#epoch-based-association)) in which case all inputs must also be in dictionary format. The order of the entries must be consistent with the other input types.
+Line entries or epoch headed entries. The full paths to the image FITS files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see [Epoch Based Association](../design/association.md#epoch-based-association)) in which case all inputs must also be in dictionary format. The order of the entries must be consistent with the other input types.
 
 <!-- markdownlint-disable MD046 -->
-=== "Normal mode"
+!!! example "config.yaml"
+    === "Normal mode"
 
-    ```yaml
-    inputs:
-      image:
-      - /full/path/to/image1.fits
-      - /full/path/to/image2.fits
-      - /full/path/to/image3.fits
-    ```
+        ```yaml
+        inputs:
+          image:
+          - /full/path/to/image1.fits
+          - /full/path/to/image2.fits
+          - /full/path/to/image3.fits
+        ```
 
-=== "Epoch mode"
+    === "Epoch mode"
 
-    ```yaml
-    inputs:
-      image:
-        epoch01:
-        - /full/path/to/image1.fits
-        - /full/path/to/image2.fits
-        epoch02:
-        - /full/path/to/image3.fits
-    ```
-<!-- markdownlint-enable MD046 -->
+        ```yaml
+        inputs:
+          image:
+            epoch01:
+            - /full/path/to/image1.fits
+            - /full/path/to/image2.fits
+            epoch02:
+            - /full/path/to/image3.fits
+        ```
+    <!-- markdownlint-enable MD046 -->
 
 **`inputs.selavy`**
-List or Dictionary. The full paths to the selavy text files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see [Epoch Based Association](../design/association.md#epoch-based-association)) in which case all inputs must also be in dictionary format. The order of the entries must be consistent with the other input types.
+Line entries or epoch headed entries. The full paths to the selavy text files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see [Epoch Based Association](../design/association.md#epoch-based-association)) in which case all inputs must also be in dictionary format. The order of the entries must be consistent with the other input types.
 
-<!-- markdownlint-disable MD046 -->
-=== "Normal mode"
+!!! example "config.yaml"
+    <!-- markdownlint-disable MD046 -->
+    === "Normal mode"
 
-    ```yaml
-    inputs:
-      selavy:
-      - /full/path/to/image1_selavy.txt
-      - /full/path/to/image2_selavy.txt
-      - /full/path/to/image3_selavy.txt
-    ```
+        ```yaml
+        inputs:
+          selavy:
+          - /full/path/to/image1_selavy.txt
+          - /full/path/to/image2_selavy.txt
+          - /full/path/to/image3_selavy.txt
+        ```
 
-=== "Epoch mode"
+    === "Epoch mode"
 
-    ```yaml
-    inputs:
-      selavy:
-        epoch01:
-        - /full/path/to/image1_selavy.txt
-        - /full/path/to/image2_selavy.txt
-        epoch02:
-        - /full/path/to/image3_selavy.txt
-    ```
-<!-- markdownlint-enable MD046 -->
+        ```yaml
+        inputs:
+          selavy:
+            epoch01:
+            - /full/path/to/image1_selavy.txt
+            - /full/path/to/image2_selavy.txt
+            epoch02:
+            - /full/path/to/image3_selavy.txt
+        ```
+    <!-- markdownlint-enable MD046 -->
 
 **`inputs.noise`**
-List or Dictionary. The full paths to the image noise (RMS) FITS files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see [Epoch Based Association](../design/association.md#epoch-based-association)) in which case all inputs must also be in dictionary format. The order of the entries must be consistent with the other input types.
+Line entries or epoch headed entries. The full paths to the image noise (RMS) FITS files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see [Epoch Based Association](../design/association.md#epoch-based-association)) in which case all inputs must also be in dictionary format. The order of the entries must be consistent with the other input types.
 
-<!-- markdownlint-disable MD046 -->
-=== "Normal mode"
+!!! example "config.yaml"
+    <!-- markdownlint-disable MD046 -->
+    === "Normal mode"
 
-    ```yaml
-    inputs:
-      noise:
-      - /full/path/to/image1_rms.fits
-      - /full/path/to/image2_rms.fits
-      - /full/path/to/image3_rms.fits
-    ```
+        ```yaml
+        inputs:
+          noise:
+          - /full/path/to/image1_rms.fits
+          - /full/path/to/image2_rms.fits
+          - /full/path/to/image3_rms.fits
+        ```
 
-=== "Epoch mode"
+    === "Epoch mode"
 
-    ```yaml
-    inputs:
-      noise:
-        epoch01:
-        - /full/path/to/image1_rms.fits
-        - /full/path/to/image2_rms.fits
-        epoch02:
-        - /full/path/to/image3_rms.fits
-    ```
-<!-- markdownlint-enable MD046 -->
+        ```yaml
+        inputs:
+          noise:
+            epoch01:
+            - /full/path/to/image1_rms.fits
+            - /full/path/to/image2_rms.fits
+            epoch02:
+            - /full/path/to/image3_rms.fits
+        ```
+    <!-- markdownlint-enable MD046 -->
 
 **`inputs.background`**
-List or Dictionary. The full paths to the image background (mean) FITS files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see [Epoch Based Association](../design/association.md#epoch-based-association)) in which case all inputs must also be in dictionary format. The order of the entries must be consistent with the other input types. Only required to be defined if `source_monitoring.monitor` is set to `True`.
+Line entries or epoch headed entries. The full paths to the image background (mean) FITS files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see [Epoch Based Association](../design/association.md#epoch-based-association)) in which case all inputs must also be in dictionary format. The order of the entries must be consistent with the other input types. Only required to be defined if `source_monitoring.monitor` is set to `True`.
 
-<!-- markdownlint-disable MD046 -->
-=== "Normal mode"
+!!! example "config.yaml"
+    <!-- markdownlint-disable MD046 -->
+    === "Normal mode"
 
-    ```yaml
-    inputs:
-      background:
-      - /full/path/to/image1_bkg.fits
-      - /full/path/to/image2_bkg.fits
-      - /full/path/to/image3_bkg.fits
-    ```
+        ```yaml
+        inputs:
+          background:
+          - /full/path/to/image1_bkg.fits
+          - /full/path/to/image2_bkg.fits
+          - /full/path/to/image3_bkg.fits
+        ```
 
-=== "Epoch mode"
+    === "Epoch mode"
 
-    ```yaml
-    inputs:
-      background:
-        epoch01:
-        - /full/path/to/image1_bkg.fits
-        - /full/path/to/image2_bkg.fits
-        epoch02:
-        - /full/path/to/image3_bkg.fits
-    ```
-<!-- markdownlint-enable MD046 -->
+        ```yaml
+        inputs:
+          background:
+            epoch01:
+            - /full/path/to/image1_bkg.fits
+            - /full/path/to/image2_bkg.fits
+            epoch02:
+            - /full/path/to/image3_bkg.fits
+        ```
+    <!-- markdownlint-enable MD046 -->
 
 #### Using glob expressions
 

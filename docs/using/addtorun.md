@@ -18,7 +18,7 @@ This page describes how to add images to a completed run, including how to resto
 
 Navigate to the detail page of the run you wish to process, and confirm that the job is marked as `Completed`.
 
-[![VAST Pipeline Runs Add Images Detail](../img/add-images-detail.png){: loading=lazy }](../img/add-images-detail.png)
+![!Pipeline run detail page.](../img/add-images-detail.png){: loading=lazy }
 
 ### 2. Add the New Images to the Configuration
 
@@ -31,7 +31,7 @@ Once all the images, selavy files, rms images and background images have been ad
 
     Remember to make sure the order of the new input data is consistent between types!
 
-[![VAST Pipeline Runs Add Images Config](../img/add-images-config.png){: loading=lazy }](../img/add-images-config.png)
+![!New images added to the run configuration.](../img/add-images-config.png){: loading=lazy }
 
 ### 3. Perform a Config Validation
 
@@ -46,16 +46,17 @@ Select the `Add Images or Re-Process Run` button at the top right of the run det
 
 You can refresh the page to check the status of the run. You can confirm that the images have been added correctly by consulting the log output found below the configuration file. New images should have been ingested and output similar to the following should be present:
 
-<!-- markdownlint-disable-next-line MD046-->
-```console
-2021-04-02 21:17:00,628 association INFO Starting association.
-2021-04-02 21:17:00,628 association INFO Association mode selected: basic.
-2021-04-02 21:17:00,708 association INFO Found 7 images to add to the run.
-```
+!!! example "log.txt"
+    <!-- markdownlint-disable-next-line MD046-->
+    ```console
+    2021-04-02 21:17:00,628 association INFO Starting association.
+    2021-04-02 21:17:00,628 association INFO Association mode selected: basic.
+    2021-04-02 21:17:00,708 association INFO Found 7 images to add to the run.
+    ```
 
 Once the processing has `Completed` the run detail page will now show the updated statistics and information of the run.
 
-[![VAST Pipeline Runs Add Images Finished](../img/add-images-finished.png){: loading=lazy }](../img/add-images-finished.png)
+![!Pipeline run successfully completed after adding images.](../img/add-images-finished.png){: loading=lazy }
 
 ## Restore Run to Pre-Add Version
 

@@ -35,14 +35,15 @@ where $i$ is the image for which the measurement is to be forcefully measured.
 
 The following options are present in the pipeline run configuration file to users along with their defaults:
 
-```yaml
-source_monitoring:
-  monitor: false
-  min_sigma: 3.0
-  edge_buffer_scale: 1.2
-  cluster_threshold: 3.0
-  allow_nan: false
-```
+!!! example "config.yaml"
+    ```yaml
+    source_monitoring:
+      monitor: false
+      min_sigma: 3.0
+      edge_buffer_scale: 1.2
+      cluster_threshold: 3.0
+      allow_nan: false
+    ```
 
 * `source_monitoring.monitor` turns forced measurements on (`true`) or off (`false`).
 * `source_monitoring.min_sigma` controls the the minimum sigma check threshold as explained in [Minimum Sigma Filter](#minimum-sigma-filter).

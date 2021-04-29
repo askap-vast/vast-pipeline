@@ -96,26 +96,51 @@ The VAST Pipeline reports the `one-to-many` and `many-to-one` associations by `r
 
 A read-through of the [TraP documentation](https://tkp.readthedocs.io/en/latest/devref/database/assoc.html#database-assoc){:target="_blank"} is highly encouraged on this point as it contains an excellent description.
 
+### Relations False Variability
+
+The VAST Pipeline builds associations only using the component information. What this means is that, while the island information from the selavy source finder is stored, it is not considered during the association stage.
+Because of this, the relation process detailed above has the potential to cause sources to appear variable, when in reality it is not the case.
+
+For an example consider the source below:
+
+![!An example of a source that changes from one component to two between epochs.](../img/association_false_variability_stamps.png){: loading=lazy }
+![!The lightcurve of the example source that changes from one component to two between epochs.](../img/association_false_variability_lc.png){: loading=lazy }
+
+In the 3rd, 7th, and 8th measurement (EPOCH02, EPOCH09, and EPOCH12), the source is detected as an island with two Gaussian components, as opposed to the one component in all other epochs.
+The source lightcurve shows how the flux has reduced by approximately 50% in these three epochs, which makes the source appear variable.
+The pipeline provides information for each source that allows for these kind of situations to be swiftly identified:
+
+* the number number of measurements that contain siblings, and
+* the number of relations. 
+
+These are the columns `n_sibl` and `n_rel`, respectively, in the pipeline sources output file (refer to the [Column Descriptions](../outputs/coldesc.md#sources) section). 
+If these values are not 0 for a source then care must be taken when analysing variability.
+
+For the example source above, the values are `n_sibl = 3` and `n_rel = 1`. The missing flux can be seen in the lightcurve of the related source:
+
+![!The lightcurve of the related source of the example source that changes from one component to two between epochs.](../img/association_false_variability_lc_relation.png){: loading=lazy }
+
 ## Epoch Based Association
 
 The pipeline is able to associate inputs on an epoch basis. What this means is that, for example, all VAST Pilot Epoch 1 measurements are grouped together and are associated with grouped together Epoch 2 measurements, and so on. In doing this, duplicate measurements from within the same epoch are cut with the measurement kept being that which is closest to the centre of its respective image. The separation distance that defines a duplicate is defined in the pipeline run configuration file (`source_association.epoch_duplicate_radius`).
 
 The mode is activated by entering the images to be processed under an extra heading in the `.yaml` configuration file as demonstrated below. The heading acts as the epoch 'key', hence be sure to use a string that can be ordered as the heading to maintain the correct epoch order.
 
-```yaml
-inputs:
-  image:
-    epoch01:
-    - /full/path/to/image1.fits
-    - /full/path/to/image2.fits
-    epoch02:
-    - /full/path/to/image3.fits
-```
+!!! example "config.yaml"
+    ```yaml
+    inputs:
+      image:
+        epoch01:
+        - /full/path/to/image1.fits
+        - /full/path/to/image2.fits
+        epoch02:
+        - /full/path/to/image3.fits
+    ```
 
 The lightcurves below show the difference between 'regular' association (top) and 'epoch based' association (lower) for a source.
 
-[![Regular Association](../img/regular_association.png){: loading=lazy }](../img/regular_association.png)
-[![Epoch Based Association](../img/epoch_based_association.png){: loading=lazy }](../img/epoch_based_association.png)
+![!Regular association light curve of source.](../img/regular_association.png){: loading=lazy }
+![!Epoch based association light curve of source.](../img/epoch_based_association.png){: loading=lazy }
 
 For large surveys where transient and variablity searches on the epoch timescale is required, using this mode can greatly speed up the association stage.
 

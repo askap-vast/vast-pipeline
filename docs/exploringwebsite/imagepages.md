@@ -6,15 +6,15 @@ This page details the website pages for information on the images.
 
 Shown on this page is a list of images that have been ingested into the pipeline database from **all** pipeline runs, along with their statistics.
 From this page the full detail page of a specific image can be accessed by clicking on the image name. 
-Explanation of the table options can be found on the overview page [here](websiteoverview.md#data-tables).
+Explanation of the table options can be found in the [DataTables section](datatables.md).
 
-[![VAST Pipeline Images List](../img/image-list.png){: loading=lazy }](../img/image-list.png)
+![!Pipeline images table.](../img/image-list.png){: loading=lazy }
 
 ## Image Detail Page
 
 This page presents all the information about the selected image.
 
-[![VAST Pipeline Image Detail](../img/image-detail1.png){: loading=lazy }](../img/image-detail1.png)
+![!Image detail page.](../img/image-detail1.png){: loading=lazy }
 
 ### Previous & Next Buttons
 
@@ -44,10 +44,10 @@ Users are able to read and post comments on an image using this form.
 This table displays all the `Selavy` measurements that were ingested with the image (no forced measurements appear here as they are run specific). 
 The measurement detail page can be reached by clicking the measurement name.
 
-[![VAST Pipeline Image Detail](../img/image-detail2.png){: loading=lazy }](../img/image-detail2.png)
+![!Image detail page: measurements table.](../img/image-detail2.png){: loading=lazy }
 
 ### Pipeline Runs Table
 
 This table displays all the pipeline runs that use the current image. The pipeline detail page can be reached by clicking the run name.
 
-[![VAST Pipeline Image Detail](../img/image-detail3.png){: loading=lazy }](../img/image-detail3.png)
+![!Image detail page: runs table.](../img/image-detail3.png){: loading=lazy }

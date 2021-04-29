@@ -2,29 +2,31 @@
 
 This page details the stage of the pipeline that ingests the images to be processed.
 
-When the pipeline encounters an image for the first time (in any pipeline run), the image and accompanying selavy catalogue are uploaded to the pipeline database. The portion of a pipeline log file below shows the messages for the ingestion of three images.
+When the pipeline encounters an image for the first time (in any pipeline run), the image and accompanying selavy catalogue are uploaded to the pipeline database.
+The portion of a pipeline log file below shows the messages for the ingestion of three images.
 
 !!! note
     Once an image is uploaded then that image is available for all other runs to use without having to re-upload.
 
-```console
-2021-03-11 12:59:49,751 loading INFO Reading image VAST_0127-73A.EPOCH01.I.cutout.fits ...
-2021-03-11 12:59:49,756 utils INFO Adding new frequency band: 887
-2021-03-11 12:59:49,771 utils INFO Created sky region 21.838, -73.121
-2021-03-11 12:59:49,775 utils INFO Adding new-test-data to sky region 21.838, -73.121
-2021-03-11 12:59:50,100 loading INFO Processed measurements dataframe of shape: (203, 40)
-2021-03-11 12:59:50,273 loading INFO Bulk created #203 Measurement
-2021-03-11 12:59:50,334 loading INFO Reading image VAST_2118+00A.EPOCH01.I.cutout.fits ...
-2021-03-11 12:59:50,345 utils INFO Created sky region 322.439, -3.987
-2021-03-11 12:59:50,347 utils INFO Adding new-test-data to sky region 322.439, -3.987
-2021-03-11 12:59:50,577 loading INFO Processed measurements dataframe of shape: (148, 40)
-2021-03-11 12:59:50,708 loading INFO Bulk created #148 Measurement
-2021-03-11 12:59:50,736 loading INFO Reading image VAST_2118-06A.EPOCH01.I.cutout.fits ...
-2021-03-11 12:59:50,749 utils INFO Created sky region 322.439, -4.487
-2021-03-11 12:59:50,752 utils INFO Adding new-test-data to sky region 322.439, -4.487
-2021-03-11 12:59:50,977 loading INFO Processed measurements dataframe of shape: (159, 40)
-2021-03-11 12:59:51,111 loading INFO Bulk created #159 Measurement
-```
+!!! example "log.txt"
+    ```console
+    2021-03-11 12:59:49,751 loading INFO Reading image VAST_0127-73A.EPOCH01.I.cutout.fits ...
+    2021-03-11 12:59:49,756 utils INFO Adding new frequency band: 887
+    2021-03-11 12:59:49,771 utils INFO Created sky region 21.838, -73.121
+    2021-03-11 12:59:49,775 utils INFO Adding new-test-data to sky region 21.838, -73.121
+    2021-03-11 12:59:50,100 loading INFO Processed measurements dataframe of shape: (203, 40)
+    2021-03-11 12:59:50,273 loading INFO Bulk created #203 Measurement
+    2021-03-11 12:59:50,334 loading INFO Reading image VAST_2118+00A.EPOCH01.I.cutout.fits ...
+    2021-03-11 12:59:50,345 utils INFO Created sky region 322.439, -3.987
+    2021-03-11 12:59:50,347 utils INFO Adding new-test-data to sky region 322.439, -3.987
+    2021-03-11 12:59:50,577 loading INFO Processed measurements dataframe of shape: (148, 40)
+    2021-03-11 12:59:50,708 loading INFO Bulk created #148 Measurement
+    2021-03-11 12:59:50,736 loading INFO Reading image VAST_2118-06A.EPOCH01.I.cutout.fits ...
+    2021-03-11 12:59:50,749 utils INFO Created sky region 322.439, -4.487
+    2021-03-11 12:59:50,752 utils INFO Adding new-test-data to sky region 322.439, -4.487
+    2021-03-11 12:59:50,977 loading INFO Processed measurements dataframe of shape: (159, 40)
+    2021-03-11 12:59:51,111 loading INFO Bulk created #159 Measurement
+    ```
 
 ## Ingest Steps Summary
 
