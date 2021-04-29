@@ -114,7 +114,7 @@ nav:
     - Documentation: developing/docsdev.md
     - Benchmarks: developing/profiling.md
   #   - Tips: developing/tips.md like this https://stackoverflow.com/questions/60160823/how-to-properly-parallelize-generic-code-with-numba-dask
-  - FAQs: faqs.md
+  - FAQ: faq.md
   - Reference:
     - Changelog: changelog.md
     - Code of Conduct: code_of_conduct.md
