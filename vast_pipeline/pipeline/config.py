@@ -196,6 +196,28 @@ class PipelineConfig:
 
     @staticmethod
     def _create_input_epochs(input_files: List[str]) -> Dict[str, List[str]]:
+        """Convert a list of input files into a dict where each list element is placed
+        into its own list of length 1 and mapped to by a unique key, a string that is a
+        0-padded integer. For example, ["A", "B", "C", ..., "Z"] would be converted to
+        {
+            "01": ["A"],
+            "02": ["B"],
+            "03": ["C"],
+            ...
+            "26": ["Z"],
+        }
+        The keys are 0-padded to ensure the strings are sortable regardless of the
+        length of `input_files`.
+        This conversion is required for run configs that are not defined in "epoch mode"
+        as after config validation, the pipeline assumes that there will be defined
+        epochs.
+
+        Args:
+            input_files (List[str]): the list of input file paths.
+
+        Returns:
+            Dict[str, List[str]]: the input file paths mapped to by unique epoch keys.
+        """
         pad_width = len(str(len(input_files)))
         input_files_dict = {
             f"{i + 1:0{pad_width}}": [val] for i, val in enumerate(input_files)

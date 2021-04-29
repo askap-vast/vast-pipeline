@@ -284,6 +284,7 @@ For example, the image input examples given above can be equivalently specified 
 
 Multiple glob expressions can also be provided as a list, in which case they are resolved and sorted in the order they are given. For example:
 
+<!-- markdownlint-disable MD038 -->
 !!! example "config.yaml"
     ```yaml
     inputs:
@@ -292,6 +293,35 @@ Multiple glob expressions can also be provided as a list, in which case they are
         - /full/path/to/A/image*.fits
         - /full/path/to/B/image*.fits
     ```
+<!-- markdownlint-enable MD038 -->
+
+Note that it is not valid YAML to mix a sequence/list and a mapping/dictionary, meaning that for each input type (or epoch if using epoch mode), the files may be given _either_ as glob expressions or explicit file paths. For example, the following is **invalid**:
+
+<!-- markdownlint-disable MD038 -->
+!!! failure "Invalid config.yaml"
+    ```yaml
+    inputs:
+      image:
+        # Invalid! Thou shalt not mix sequences and mappings in YAML
+        - /full/path/to/A/image1.fits
+        glob: /full/path/to/B/image*.fits
+    ```
+<!-- markdownlint-enable MD038 -->
+
+However, an explicit file path is a valid glob expression, so adding explicit paths alongside glob expressions is still possible by simply including the path in a list of glob expressions. For example, the following is valid:
+
+<!-- markdownlint-disable MD038 -->
+!!! success "config.yaml"
+    ```yaml
+    inputs:
+      image:
+        glob:
+        - /full/path/to/A/image1.fits
+        - /full/path/to/B/image*.fits
+    ```
+<!-- markdownlint-enable MD038 -->
+
+In the above example, the final resolved image input list would contain the image `/full/path/to/A/image1.fits`, followed by all files matching `image*.fits` in `/full/path/to/B`.
 
 ### Source Monitoring
 
