@@ -139,3 +139,163 @@ class CheckRunConfigValidationTest(SimpleTestCase):
         with self.assertRaises(PipelineConfigError):
             pipeline_config = PipelineConfig(config_yaml)
             pipeline_config.validate()
+
+    def test_input_glob(self):
+        """Test simple glob expressions, one for each input"""
+        config_yaml_original = yaml.as_document(self.config_dict)
+        pipeline_config_original = PipelineConfig(config_yaml_original)
+        pipeline_config_original.validate()
+
+        # replace the inputs with glob expressions
+        self.config_dict["inputs"]["image"] = {
+            "glob": "vast_pipeline/tests/data/epoch??.fits"
+        }
+        self.config_dict["inputs"]["selavy"] = {
+            "glob": "vast_pipeline/tests/data/epoch??.selavy.components.txt"
+        }
+        self.config_dict["inputs"]["noise"] = {
+            "glob": "vast_pipeline/tests/data/epoch??.noiseMap.fits"
+        }
+        self.config_dict["inputs"]["background"] = {
+            "glob": "vast_pipeline/tests/data/epoch??.meanMap.fits"
+        }
+        config_yaml_globs = yaml.as_document(self.config_dict)
+        pipeline_config_globs = PipelineConfig(config_yaml_globs)
+        pipeline_config_globs.validate()
+
+        # after validation, the glob expressions should be resolved and be identical to
+        # the original config
+        self.assertDictEqual(
+            pipeline_config_original._yaml.data, pipeline_config_globs._yaml.data
+        )
+
+    def test_input_multiple_globs(self):
+        """Test multiple consecutive glob expressions"""
+        config_yaml_original = yaml.as_document(self.config_dict)
+        pipeline_config_original = PipelineConfig(config_yaml_original)
+        pipeline_config_original.validate()
+
+        # replace the inputs with glob expressions
+        self.config_dict["inputs"]["image"] = {
+            "glob": [
+                "vast_pipeline/tests/data/epoch0[12].fits",
+                "vast_pipeline/tests/data/epoch0[34].fits",
+            ],
+        }
+        self.config_dict["inputs"]["selavy"] = {
+            "glob": [
+                "vast_pipeline/tests/data/epoch0[12].selavy.components.txt",
+                "vast_pipeline/tests/data/epoch0[34].selavy.components.txt",
+            ],
+        }
+        self.config_dict["inputs"]["noise"] = {
+            "glob": [
+                "vast_pipeline/tests/data/epoch0[12].noiseMap.fits",
+                "vast_pipeline/tests/data/epoch0[34].noiseMap.fits",
+            ],
+        }
+        self.config_dict["inputs"]["background"] = {
+            "glob": [
+                "vast_pipeline/tests/data/epoch0[12].meanMap.fits",
+                "vast_pipeline/tests/data/epoch0[34].meanMap.fits",
+            ],
+        }
+        config_yaml_globs = yaml.as_document(self.config_dict)
+        pipeline_config_globs = PipelineConfig(config_yaml_globs)
+        pipeline_config_globs.validate()
+
+        # after validation, the glob expressions should be resolved and be identical to
+        # the original config
+        self.assertDictEqual(
+            pipeline_config_original._yaml.data, pipeline_config_globs._yaml.data
+        )
+
+    def test_input_globs_epoch_mode(self):
+        """Test glob expressions with user-defined epochs."""
+        # modify the config to define arbitrary epochs, i.e. "epoch-mode"
+        self.config_dict["inputs"]["image"] = {
+            "A": [
+                "vast_pipeline/tests/data/epoch01.fits",
+                "vast_pipeline/tests/data/epoch02.fits",
+            ],
+            "B": [
+                "vast_pipeline/tests/data/epoch03.fits",
+                "vast_pipeline/tests/data/epoch04.fits",
+            ],
+        }
+        self.config_dict["inputs"]["selavy"] = {
+            "A": [
+                "vast_pipeline/tests/data/epoch01.selavy.components.txt",
+                "vast_pipeline/tests/data/epoch02.selavy.components.txt",
+            ],
+            "B": [
+                "vast_pipeline/tests/data/epoch03.selavy.components.txt",
+                "vast_pipeline/tests/data/epoch04.selavy.components.txt",
+            ],
+        }
+        self.config_dict["inputs"]["noise"] = {
+            "A": [
+                "vast_pipeline/tests/data/epoch01.noiseMap.fits",
+                "vast_pipeline/tests/data/epoch02.noiseMap.fits",
+            ],
+            "B": [
+                "vast_pipeline/tests/data/epoch03.noiseMap.fits",
+                "vast_pipeline/tests/data/epoch04.noiseMap.fits",
+            ],
+        }
+        self.config_dict["inputs"]["background"] = {
+            "A": [
+                "vast_pipeline/tests/data/epoch01.meanMap.fits",
+                "vast_pipeline/tests/data/epoch02.meanMap.fits",
+            ],
+            "B": [
+                "vast_pipeline/tests/data/epoch03.meanMap.fits",
+                "vast_pipeline/tests/data/epoch04.meanMap.fits",
+            ],
+        }
+        config_yaml_original = yaml.as_document(self.config_dict)
+        pipeline_config_original = PipelineConfig(config_yaml_original)
+        pipeline_config_original.validate()
+
+        # replace the inputs with glob expressions
+        self.config_dict["inputs"]["image"] = {
+            "A": {
+                "glob": "vast_pipeline/tests/data/epoch0[12].fits",
+            },
+            "B": {
+                "glob": "vast_pipeline/tests/data/epoch0[34].fits",
+            },
+        }
+        self.config_dict["inputs"]["selavy"] = {
+            "A": {
+                "glob": "vast_pipeline/tests/data/epoch0[12].selavy.components.txt",
+            },
+            "B": {
+                "glob": "vast_pipeline/tests/data/epoch0[34].selavy.components.txt",
+            },
+        }
+        self.config_dict["inputs"]["noise"] = {
+            "A": {
+                "glob": "vast_pipeline/tests/data/epoch0[12].noiseMap.fits",
+            },
+            "B": {
+                "glob": "vast_pipeline/tests/data/epoch0[34].noiseMap.fits",
+            },
+        }
+        self.config_dict["inputs"]["background"] = {
+            "A": {
+                "glob": "vast_pipeline/tests/data/epoch0[12].meanMap.fits",
+            },
+            "B": {
+                "glob": "vast_pipeline/tests/data/epoch0[34].meanMap.fits",
+            },
+        }
+        config_yaml_globs = yaml.as_document(self.config_dict)
+        pipeline_config_globs = PipelineConfig(config_yaml_globs)
+        pipeline_config_globs.validate()
+
+        # after validation, the glob expressions should be resolved and be identical to
+        # the original config
+        self.assertDictEqual(
+            pipeline_config_original._yaml.data, pipeline_config_globs._yaml.data
+        )

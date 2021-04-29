@@ -259,6 +259,75 @@ Line entries or epoch headed entries. The full paths to the image background (me
         ```
     <!-- markdownlint-enable MD046 -->
 
+#### Using glob expressions
+
+Instead of providing each input file explicitly, the inputs can be given as glob expressions which are resolved and sorted. Glob expressions must be provided as a mapping with the key `glob`. Both normal and epoch mode are supported.
+
+For example, the image input examples given above can be equivalently specified with the following glob expressions.
+
+!!! example "config.yaml"
+    <!-- markdownlint-disable MD046 -->
+    === "Normal mode"
+
+        ```yaml
+        inputs:
+          image:
+            glob: /full/path/to/image*.fits
+        ```
+
+    === "Epoch mode"
+
+        ```yaml
+        inputs:
+          image:
+            epoch01:
+              glob: /full/path/to/image[12].fits
+            epoch02:
+            - /full/path/to/image3.fits
+        ```
+    <!-- markdownlint-enable MD046 -->
+
+Multiple glob expressions can also be provided as a list, in which case they are resolved and sorted in the order they are given. For example:
+
+<!-- markdownlint-disable MD038 -->
+!!! example "config.yaml"
+    ```yaml
+    inputs:
+      image:
+        glob:
+        - /full/path/to/A/image*.fits
+        - /full/path/to/B/image*.fits
+    ```
+<!-- markdownlint-enable MD038 -->
+
+Note that it is not valid YAML to mix a sequence/list and a mapping/dictionary, meaning that for each input type (or epoch if using epoch mode), the files may be given _either_ as glob expressions or explicit file paths. For example, the following is **invalid**:
+
+<!-- markdownlint-disable MD038 -->
+!!! failure "Invalid config.yaml"
+    ```yaml
+    inputs:
+      image:
+        # Invalid! Thou shalt not mix sequences and mappings in YAML
+        - /full/path/to/A/image1.fits
+        glob: /full/path/to/B/image*.fits
+    ```
+<!-- markdownlint-enable MD038 -->
+
+However, an explicit file path is a valid glob expression, so adding explicit paths alongside glob expressions is still possible by simply including the path in a list of glob expressions. For example, the following is valid:
+
+<!-- markdownlint-disable MD038 -->
+!!! success "config.yaml"
+    ```yaml
+    inputs:
+      image:
+        glob:
+        - /full/path/to/A/image1.fits
+        - /full/path/to/B/image*.fits
+    ```
+<!-- markdownlint-enable MD038 -->
+
+In the above example, the final resolved image input list would contain the image `/full/path/to/A/image1.fits`, followed by all files matching `image*.fits` in `/full/path/to/B`.
+
 ### Source Monitoring
 
 **`source_monitoring.monitor`**

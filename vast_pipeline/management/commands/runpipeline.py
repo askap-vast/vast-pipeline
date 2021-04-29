@@ -259,6 +259,41 @@ def run_pipe(
     logger.info("Using pipeline run '%s'", pipeline.name)
     logger.info("Source monitoring: %s", pipeline.config["source_monitoring"]["monitor"])
 
+    # log the list of input data files for posterity
+    input_image_list = [
+        image
+        for image_list in pipeline.config["inputs"]["image"].values()
+        for image in image_list
+    ]
+    input_selavy_list = [
+        selavy
+        for selavy_list in pipeline.config["inputs"]["selavy"].values()
+        for selavy in selavy_list
+    ]
+    input_noise_list = [
+        noise
+        for noise_list in pipeline.config["inputs"]["noise"].values()
+        for noise in noise_list
+    ]
+    if "background" in pipeline.config["inputs"].keys():
+        input_background_list = [
+            background
+            for background_list in pipeline.config["inputs"]["background"].values()
+            for background in background_list
+        ]
+    else:
+        input_background_list = ["N/A", ] * len(input_image_list)
+    for image, selavy, noise, background in zip(
+        input_image_list, input_selavy_list, input_noise_list, input_background_list
+    ):
+        logger.info(
+            "Matched inputs - image: %s, selavy: %s, noise: %s, background: %s",
+            image,
+            selavy,
+            noise,
+            background,
+        )
+
     stopwatch = StopWatch()
 
     # run the pipeline operations
