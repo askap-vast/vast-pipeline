@@ -83,6 +83,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'webinterface.wsgi.application'
 
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 # Authentication
 # Password validation
