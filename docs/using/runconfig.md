@@ -260,36 +260,38 @@ Instead of providing each input file explicitly, the inputs can be given as glob
 
 For example, the image input examples given above can be equivalently specified with the following glob expressions.
 
-<!-- markdownlint-disable MD046 -->
-=== "Normal mode"
+!!! example "config.yaml"
+    <!-- markdownlint-disable MD046 -->
+    === "Normal mode"
 
-    ```yaml
-    inputs:
-      image:
-        glob: /full/path/to/image*.fits
-    ```
+        ```yaml
+        inputs:
+          image:
+            glob: /full/path/to/image*.fits
+        ```
 
-=== "Epoch mode"
+    === "Epoch mode"
 
-    ```yaml
-    inputs:
-      image:
-        epoch01:
-          glob: /full/path/to/image[12].fits
-        epoch02:
-        - /full/path/to/image3.fits
-    ```
-<!-- markdownlint-enable MD046 -->
+        ```yaml
+        inputs:
+          image:
+            epoch01:
+              glob: /full/path/to/image[12].fits
+            epoch02:
+            - /full/path/to/image3.fits
+        ```
+    <!-- markdownlint-enable MD046 -->
 
 Multiple glob expressions can also be provided as a list, in which case they are resolved and sorted in the order they are given. For example:
 
-```yaml
-inputs:
-  image:
-    glob:
-    - /full/path/to/A/image*.fits
-    - /full/path/to/B/image*.fits
-```
+!!! example "config.yaml"
+    ```yaml
+    inputs:
+      image:
+        glob:
+        - /full/path/to/A/image*.fits
+        - /full/path/to/B/image*.fits
+    ```
 
 ### Source Monitoring
 
