@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added `DEFAULT_AUTO_FIELD` to `settings.py` to silence Django 3.2 warnings [#507](https://github.com/askap-vast/vast-pipeline/pull/507)
 - Added lightgallery support for all images in the documentation [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
 - Added new entries in the documentation contributing section [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
 - Added new entries in the documentation FAQ section [#491](https://github.com/askap-vast/vast-pipeline/pull/491).
@@ -83,6 +84,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#507](https://github.com/askap-vast/vast-pipeline/pull/507) fix: set default auto field model.
 - [#494](https://github.com/askap-vast/vast-pipeline/pull/494) doc, dep: Docs: Added lightgallery support, layout update, minor fixes and additions.
 - [#503](https://github.com/askap-vast/vast-pipeline/pull/503) fix, dep: Change arrow file generation from vaex to pyarrow.
 - [#501](https://github.com/askap-vast/vast-pipeline/pull/501) fix: fix broken cone search when coord = 0
