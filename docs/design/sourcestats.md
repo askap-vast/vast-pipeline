@@ -105,7 +105,16 @@ which equates to a variability of 30%. However the user is free to set their own
 #### Significant Source Values
 
 The $V_s$ and $m$ metrics of the 'maximum signficant pair' is attached to the source.
-The maximum significant pair is determind by selecting the most significant $\mid m \mid$ value given a minimum $V_s$ threshold which is defined in the pipeline configuration file `variability.source_aggregate_pair_metrics_min_abs_vs`.
+The maximum significant pair is determind by selecting the most significant $\mid m \mid$ value given a minimum $V_s$ threshold which is defined in the pipeline configuration file `variability.source_aggregate_pair_metrics_min_abs_vs`:
+
+!!! example "config.yaml"
+    ```yaml
+    variability:
+      # Only measurement pairs where the Vs metric exceeds this value are selected for the
+      # aggregate pair metrics that are stored in Source objects.
+      source_aggregate_pair_metrics_min_abs_vs: 4.3
+    ```
+
 By default this value is set to 4.3. For example, if a source with three associatied measurements gave the following pair metrics:
 
 | Pair | $\mid V_s \mid$ | $\mid m \mid$ |

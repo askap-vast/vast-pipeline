@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### Added
 
 - Added `DEFAULT_AUTO_FIELD` to `settings.py` to silence Django 3.2 warnings [#507](https://github.com/askap-vast/vast-pipeline/pull/507)
+- Added lightgallery support for all images in the documentation [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
+- Added new entries in the documentation contributing section [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
 - Added new entries in the documentation FAQ section [#491](https://github.com/askap-vast/vast-pipeline/pull/491).
 - Added new home page for documentation [#491](https://github.com/askap-vast/vast-pipeline/pull/491).
 - Added dark mode switch on documentation [#487](https://github.com/askap-vast/vast-pipeline/pull/487).
@@ -30,6 +32,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- All file examples in docs are now enclosed in an example admonition [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
+- Further changes to layout of documentation [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
 - Changed arrow file generation from `vaex` to `pyarrow` [#503](https://github.com/askap-vast/vast-pipeline/pull/503).
 - Changed layout of documentation to use tabs [#491](https://github.com/askap-vast/vast-pipeline/pull/491).
 - Dependabot: Bump y18n from 3.2.1 to 3.2.2 [#482](https://github.com/askap-vast/vast-pipeline/pull/482).
@@ -53,6 +57,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed docstring in config.py [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
 - Fixed arrow files being generated via the website [#503](https://github.com/askap-vast/vast-pipeline/pull/503).
 - Fixed a bug that returned all sources when performing a cone search where one of the coords = 0 [#501](https://github.com/askap-vast/vast-pipeline/pull/501)
 - Fixed the missing hover tool for lightcurve plots of non-variable sources [#493](https://github.com/askap-vast/vast-pipeline/pull/493)
@@ -70,6 +75,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Removed
 
+- Removed `docs/readme.md` softlink as it is no longer used [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
 - Removed `vaex-arrow` from the dependancies [#503](https://github.com/askap-vast/vast-pipeline/pull/503).
 - Removed `requirements/*.txt` files. Development dependency management moved to Poetry [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
 - Removed `init-tools/init-db.sh` [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
@@ -79,6 +85,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### List of PRs
 
 - [#507](https://github.com/askap-vast/vast-pipeline/pull/507) fix: set default auto field model.
+- [#494](https://github.com/askap-vast/vast-pipeline/pull/494) doc, dep: Docs: Added lightgallery support, layout update, minor fixes and additions.
 - [#503](https://github.com/askap-vast/vast-pipeline/pull/503) fix, dep: Change arrow file generation from vaex to pyarrow.
 - [#501](https://github.com/askap-vast/vast-pipeline/pull/501) fix: fix broken cone search when coord = 0
 - [#491](https://github.com/askap-vast/vast-pipeline/pull/491) doc: Updated the docs layout, home page and FAQs.

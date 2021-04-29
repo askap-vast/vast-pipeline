@@ -5,7 +5,7 @@ This page gives details on the output files that the pipeline writes to disk.
 
 ## Pipeline Run Output Overview
 
-The output for a pipeline run will be located in the pipeline working directory, which is defined at the pipeline configuration stage (see [Pipeline Configuration](../quickstart/configuration.md#pipeline-configuration)).
+The output for a pipeline run will be located in the pipeline working directory, which is defined at the pipeline configuration stage (see [Pipeline Configuration](../gettingstarted/configuration.md#pipeline-configuration)).
 A sub-directory will exist for each pipeline run that contains the output products for the run.
 
 !!! note

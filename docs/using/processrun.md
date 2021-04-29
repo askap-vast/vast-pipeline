@@ -6,7 +6,7 @@ This page describes how to submit a pipeline run for processing.
     Administrators please refer to [this section](../../adminusage/cli/#runpipeline) in the admin documentation for instructions on how to process a pipeline run via the command line interface.
 
 !!! warning "Admin Warning"
-    The `Django Q` service must be running in order for pipeline runs to be processed. See the [Deployment](../quickstart/deployment.md#django-q) page for further details.
+    The `Django Q` service must be running in order for pipeline runs to be processed. See the [Deployment](../gettingstarted/deployment.md#django-q) page for further details.
 
 !!! tip
     Use the editor window on the run detail page to make adjustments to the run configuration file before processing.
@@ -17,7 +17,7 @@ This page describes how to submit a pipeline run for processing.
 
 Navigate to the detail page of the run you wish to process.
 
-[![VAST Pipeline Runs Detail](../img/run-detail.png){: loading=lazy }](../img/run-detail.png)
+![!Run detail page.](../img/run-detail.png){: loading=lazy }
 
 ### 2. Run a config validation
 
@@ -25,9 +25,9 @@ Before processing it is recommended to check that the configuration file is vali
 
 Feedback will be provided on whether the configuration file is valid. In the event of an error, this can be corrected by using the edit option found in the same menu.
 
-[![VAST Pipeline Runs Validate Config](../img/rundetail-validate-config.png){: loading=lazy }](../img/rundetail-validate-config.png)
+![!Pipeline run validate configuration file option.](../img/rundetail-validate-config.png){: loading=lazy }
 
-[![VAST Pipeline Runs Validate Config Feedback](../img/rundetail-validate-config-feedback.png){: loading=lazy }](../img/rundetail-validate-config-feedback.png)
+![!Pipeline run validate configuration success.](../img/rundetail-validate-config-feedback.png){: loading=lazy }
 
 ### 3. Confirm Processing
 
@@ -42,11 +42,11 @@ Once ready, press the `Schedule Run` button which will send the run to the queue
 !!! warning
     For non-admin users, by default there is a run image limit of 200.
 
-[![VAST Pipeline Runs Process Button](../img/process-run-button.png){: loading=lazy }](../img/process-run-button.png)
+![!Process run button.](../img/process-run-button.png){: loading=lazy }
 
-[![VAST Pipeline Runs Process Modal](../img/process-run-modal.png){: loading=lazy }](../img/process-run-modal.png)
+![!Process run modal.](../img/process-run-modal.png){: loading=lazy }
 
-[![VAST Pipeline Runs Process Success](../img/process-run-success.png){: loading=lazy }](../img/process-run-success.png)
+![!Process runs success.](../img/process-run-success.png){: loading=lazy }
 
 ## Monitoring the Run
 

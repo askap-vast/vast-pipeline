@@ -4,7 +4,7 @@ This section describes how to run the pipeline Django web app/server.
 
 ## Starting the Pipeline Web App
 
-Make sure you installed and compiled correctly the frontend assets see [guide](../quickstart/installation.md#front-end-assets-quickstart)
+Make sure you installed and compiled correctly the frontend assets see [guide](../gettingstarted/installation.md#front-end-assets-quickstart)
 
 1. Start the Django development web server:
 

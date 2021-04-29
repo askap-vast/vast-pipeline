@@ -6,15 +6,15 @@ This page details the website pages for information on the measurements.
 
 A list of measurements that have been ingested into the pipeline database from **all** pipeline runs, along with their statistics, is shown on this page.
 From this page the full detail page of a specific measurement can be accessed by clicking on the name of the measurement. 
-Explanation of the table options can be found on the overview page [here](websiteoverview.md#data-tables).
+Explanation of the table options can be found in the [DataTables section](datatables.md).
 
-[![VAST Pipeline Measurements List](../img/measurements-list.png){: loading=lazy }](../img/measurements-list.png)
+![!Pipeline measurements table.](../img/measurements-list.png){: loading=lazy }
 
 ## Measurement Detail Page
 
 This page presents all the information about the selected measurement, including a postage stamp cutout of the component.
 
-[![VAST Pipeline Measurements Detail](../img/measurement-detail1.png){: loading=lazy }](../img/measurement-detail1.png)
+![!Measurement detail page.](../img/measurement-detail1.png){: loading=lazy }
 
 ### SIMBAD, NED, Previous & Next Buttons
 
@@ -49,14 +49,14 @@ The right panel contains a JS9 viewer showing the postage stamp FITS image of th
 
 Users are able to read and post comments on a measurement using this form.
 
-[![VAST Pipeline Measurements Detail](../img/measurement-detail2.png){: loading=lazy }](../img/measurement-detail2.png)
+![!Measurement detail page: user comments.](../img/measurement-detail2.png){: loading=lazy }
 
 ### Sources Table
 
 The sources table shows all the sources, from all pipeline runs, that the measurement is associated to.
 Explanation of the table options can be found on the overview page [here](websiteoverview.md#data-tables).
 
-[![VAST Pipeline Measurements Detail](../img/measurement-detail3.png){: loading=lazy }](../img/measurement-detail3.png)
+![!Measurement detail page: source and siblings tables.](../img/measurement-detail3.png){: loading=lazy }
 
 ### Siblings Table
 

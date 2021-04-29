@@ -13,13 +13,13 @@ This page outlines the steps required to create a pipeline run through the web i
 ### 1. Navigate to the Pipeline Runs Overview Page
 Navigate to the Pipeline Runs overview page by clicking on the `Pipeline Runs` option in the left hand side navigation bar, as highlighted below.
 
-[![VAST Pipeline Runs selection](../img/piperuns-navbar.png){: loading=lazy }](../img/piperuns-navbar.png)
+![!Navbar 'Pipeline Runs' selection.](../img/piperuns-navbar.png){: loading=lazy }
 
 ### 2. Select the New Pipeline Run Option
 From the Pipeline Runs overview page, select the `New Pipeline Run` button as highlighted in the screenshot below. This will open up a modal window to begin the run initialisation process.
 
-[![VAST Pipeline Runs New Run Button](../img/piperuns-newrun.png){: loading=lazy }](../img/piperuns-newrun.png)
-[![VAST Pipeline Runs Modal 1](../img/initrun-modal1.png){: loading=lazy }](../img/initrun-modal1.png)
+![!'New Pipeline Run' button.](../img/piperuns-newrun.png){: loading=lazy }
+![!Pipeline run creation modal.](../img/initrun-modal1.png){: loading=lazy }
 
 ### 3. Fill in the Run Details
 Fill in the name and description of the run and then press next to navigate to the next form to enter and select the configuration options.
@@ -33,9 +33,9 @@ For full details on how to configure a pipeline run see the [Run Configuration](
 
 Once you have finished filling in the configuration options, press the `create` button.
 
-[![VAST Pipeline Runs Modal 2](../img/initrun-modal2.png){: loading=lazy }](../img/initrun-modal2.png)
-[![VAST Pipeline Runs Modal 3](../img/initrun-modal3.png){: loading=lazy }](../img/initrun-modal3.png)
-[![VAST Pipeline Runs Modal 4](../img/initrun-modal4.png){: loading=lazy }](../img/initrun-modal4.png)
+![!Pipeline run creation modal.](../img/initrun-modal2.png){: loading=lazy }
+![!Pipeline run creation modal form (part 1).](../img/initrun-modal3.png){: loading=lazy }
+![!Pipeline run creation modal form (part 2).](../img/initrun-modal4.png){: loading=lazy }
 
 ### 4. The Run Detail Page
 
@@ -53,4 +53,4 @@ For full details on:
 * how to submit the job to be processed see [Processing a Run](processrun.md),
 * and how to add images to a run that has already been processed [Adding Images to a Run](addtorun.md).
 
-[![VAST Pipeline Run Detail](../img/rundetail-create.png){: loading=lazy }](../img/rundetail-create.png)
+![!Run creation confirmation.](../img/rundetail-create.png){: loading=lazy }

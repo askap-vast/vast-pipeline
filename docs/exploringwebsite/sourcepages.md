@@ -11,7 +11,7 @@ Once the form is submitted the results are dynamically updated in the results ta
 
 The following sections provide further details on the form.
 
-[![VAST Pipeline Source Query](../img/source-query-form.png){: loading=lazy }](../img/source-query-form.png)
+![!The source query form.](../img/source-query-form.png){: loading=lazy }
 
 ### Data Source
 
@@ -35,8 +35,8 @@ The format of the coordinates should be in a standard format that is recognised 
 Galactic coordinates can also be entered by selecting `Galactic` from the dropdown menu that is set to `ICRS` by default. 
 Feedback will be given immediately whether the coordinates are valid, as shown in the screenshots below:
 
-[![VAST Pipeline Source Query Cone Search](../img/cone-search-ok.png){: loading=lazy }](../img/cone-search-ok.png)
-[![VAST Pipeline Source Query Cone Search](../img/cone-search-bad.png){: loading=lazy }](../img/cone-search-bad.png)
+![!Cone search: accepted coordinate input.](../img/cone-search-ok.png){: loading=lazy }
+![!Cone search: rejected coordinate input.](../img/cone-search-bad.png){: loading=lazy }
 
 Once the coordinates have been entered the radius value must also be specified as shown in the screenshot above. Use the dropdown menu to change the radius unit to be `arcsec`, `arcmin` or `deg`.
 
@@ -45,11 +45,11 @@ Once the coordinates have been entered the radius value must also be specified a
 To use the name resolver, the name of the source should be entered into the `Object Name` field (e.g. `PSR J2129-04`), select the name resolver service and then click the `Resolve` button.
 The coordinates will then be automatically filled on a successful match.
 
-[![VAST Pipeline Source Query Cone Search](../img/cone-search-resolve.png){: loading=lazy }](../img/cone-search-resolve.png)
+![!Cone search: successful name resolver.](../img/cone-search-resolve.png){: loading=lazy }
 
 if no match is found then this will be communicated by the form as below:
 
-[![VAST Pipeline Source Query Cone Search](../img/cone-search-resolver-bad.png){: loading=lazy }](../img/cone-search-resolver-bad.png)
+![!Cone search: unsuccessful name resolver.](../img/cone-search-resolver-bad.png){: loading=lazy }
 
 ### Table Filters
 
@@ -60,7 +60,7 @@ The following options are not standard source metrics:
 
 #### Include and Exclude Tags
 
-Users can attach tags to sources (see [Tags and Favourites](#tags-and-favourites)) and here tags can be selected to include or exclude in the source search.
+Users can attach tags to sources (see [Source Tags and Favourites](sourcetagsfavs.md)) and here tags can be selected to include or exclude in the source search.
 
 #### Source Selection
 
@@ -75,21 +75,21 @@ are valid entries to this search field. Use the dropdown menu to declare whether
 
 Located directly below the form is the results table which is dynamically updated once the form is submitted.
 The full detail page of a specific source can be accessed by clicking on the source name in the table. 
-Explanation of the table options can be found on the overview page [here](websiteoverview.md#data-tables).
+Explanation of the table options can be found in the [DataTables section](datatables.md).
 
-[![VAST Pipeline Source Query](../img/source-query-results.png){: loading=lazy }](../img/source-query-results.png)
+![!Source query results table.](../img/source-query-results.png){: loading=lazy }
 
 ## Source Detail Page
 
 This page presents all the information about the selected source, including a light curve and cutouts of all the measurements that are associated to the source.
 
-[![VAST Pipeline Source Detail](../img/source-detail1.png){: loading=lazy }](../img/source-detail1.png)
+![!Source detail page.](../img/source-detail1.png){: loading=lazy }
 
 ### Star, SIMBAD, NED, Previous & Next Buttons
 
 These buttons do the following:
 
-* **Star**: Adds the source to the user's favourites, see [Tags and Favourites](#tags-and-favourites).
+* **Star**: Adds the source to the user's favourites, see [Source Tags and Favourites](sourcetagsfavs.md).
 * **SIMBAD**: Performs a cone search on SIMBAD with a radius of 10 arcmin centered on the source location.
 * **NED**: Performs a cone search on NED with a radius of 10 arcmin centered on the source location.
 * **Previous**: Navigates to the previous source that was returned in the source query.
@@ -101,7 +101,7 @@ A text representation of details of the measurement.
 
 ### User Comments & Tags
 
-Users are able to read and post comments on a measurement using this form, in addition to adding and removing tags, see [Tags and Favourites](#tags-and-favourites).
+Users are able to read and post comments on a measurement using this form, in addition to adding and removing tags, see [Source Tags and Favourites](sourcetagsfavs.md).
 
 ### Aladin Lite Viewer
 
@@ -114,7 +114,7 @@ Other surveys are available such as all epochs of the VAST Pilot Survey (includi
 
 The light curve of the source is shown. The peak or integrated flux can be selected by using the radio selection buttons.
 
-[![VAST Pipeline Source Detail](../img/source-detail2.png){: loading=lazy }](../img/source-detail2.png)
+![!Source detail page: light curve, node graph and external search results.](../img/source-detail2.png){: loading=lazy }
 
 ### Two-epoch Node Graph
 
@@ -135,63 +135,14 @@ The JS9 viewer is used to show the postage stamp FITS images of the measurements
 !!! note
     If the image data is removed from its location when the pipeline run was processed the JS9 viewer will no longer work.
 
-[![VAST Pipeline Source Detail](../img/source-detail3.png){: loading=lazy }](../img/source-detail3.png)
+![!Source detail page: postage stamps.](../img/source-detail3.png){: loading=lazy }
 
 ### Source Measurements Table
 
 This table displays the measurements that are associated with the source. The detail page for the measurement can be reached by clicking the name of the respective measurement.
 
-[![VAST Pipeline Source Detail](../img/source-detail4.png){: loading=lazy }](../img/source-detail4.png)
+![!Source detail page: measurement and related tables.](../img/source-detail4.png){: loading=lazy }
 
 ### Related Sources Table
 
 This table displays the sources that are a relation of the source in question. For further information refer to the [Relations](../design/association.md#relations) section in the association documentation.
-
-## Tags and Favourites
-
-Users are able to save a source as a favourite for later reference, in addition to adding `tags` to sources that can be used in source queries.
-
-### Adding a Source to Favourites
-
-A source can be added to a user's favourites by:
-
-1. Selecting the 'star' button at the top of the source detail page as shown below.
-
-    [![VAST Pipeline Source Favourite](../img/source-add-fav.png){: loading=lazy width=600px }](../img/source-add-fav.png)
-    
-2. A modal window will open to confirm the saving of the source as a favourite. An optional comment can be entered.
-
-    [![VAST Pipeline Source Favourite](../img/source-add-fav-modal.png){: loading=lazy }](../img/source-add-fav-modal.png)
-
-3. Select `Add to Favourites` and a confirmation alert will be shown to signify the source has been added successfully.
-
-    [![VAST Pipeline Source Favourite](../img/source-add-fav-confirm.png){: loading=lazy width=600px }](../img/source-add-fav-confirm.png)
-
-
-### Viewing Favourite Sources
-
-A user can access their favourite sources by selecting the `Favourite Sources` option from the menu when clicking on their username at the top right-hand corner of the page.
-
-[![VAST Pipeline User Favourites](../img/source-user-fav.png){: loading=lazy width=400px }](../img/source-user-fav.png)
-
-The user will then be navigated to their favourite sources table as shown below.
-
-[![VAST Pipeline User Favourites](../img/user-fav-sources.png){: loading=lazy }](../img/user-fav-sources.png)
-
-### Adding a Tag
-
-Follow these steps to add a tag to a source:
-
-1. Type the tag to be added into the field tag field. 
-2. If the tag has already been used it will appear in the dropdown text options and can be selected by clicking the text. To add a new tag, enter the complete text of the new tag and again click the text in the dropdown text. 
-3. After clicking the text the tag will then show as a bordered tag in the input field.
-4. Finally, click the submit button (a comment is optional) and the tag will be saved as shown below. A comment will appear stating the addition of the tag.
-
-[![VAST Pipeline Source Add Tag](../img/source-add-tag1.png){: loading=lazy align=left width=350px }](../img/source-add-tag1.png)
-[![VAST Pipeline Source Add Tag](../img/source-add-tag3.png){: loading=lazy align=right width=350px }](../img/source-add-tag3.png)
-
-### Removing a Tag
-
-Click the `x` on the tag to remove it and then click the `Submit` button to save the removal.
-
-[![VAST Pipeline Source Add Tag](../img/source-tag-remove.png){: loading=lazy width=350px }](../img/source-tag-remove.png)
