@@ -275,7 +275,7 @@ def run_pipe(
         for noise_list in pipeline.config["inputs"]["noise"].values()
         for noise in noise_list
     ]
-    if "background" in pipeline.config._yaml.data.keys():
+    if "background" in pipeline.config["inputs"].keys():
         input_background_list = [
             background
             for background_list in pipeline.config["inputs"]["background"].values()
