@@ -183,14 +183,16 @@ class PipelineConfig:
 
         Args:
             yaml_path: Path to the run config YAML file.
-        label: A label for the config object that will be used in error messages.
-            Default is "run config".
-        validate: Perform config schema validation immediately after loading the config
-            file. If set to False, the full schema validation will not be performed
-            until PipelineConfig.validate() is explicitly called. The inputs are always
-            validated regardless. Defaults to True.
-        add_defaults: Add missing configuration parameters using configured defaults.
-            The defaults are read from the Django settings file. Defaults to True.
+            label: A label for the config object that will be used in error messages.
+                Default is "run config".
+            validate: Perform config schema validation immediately after loading
+                the config file. If set to False, the full schema validation
+                will not be performed until PipelineConfig.validate() is
+                explicitly called. The inputs are always validated regardless.
+                Defaults to True.
+            add_defaults: Add missing configuration parameters using configured
+                defaults. The defaults are read from the Django settings file.
+                Defaults to True.
 
         Raises:
             PipelineConfigError: The run config YAML file fails schema validation.

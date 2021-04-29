@@ -6,13 +6,13 @@ This section describes the commands available to the administrators of the pipel
 
 All the pipeline commands are run using the Django global `./manage.py <command>` interface. Therefore you need to activate the `Python` environment. You can have a look at the available commands for the pipeline app:
 
-```bash
+```terminal
 (pipeline_env)$ ./manage.py help
 ```
 
 Output:
 
-```bash
+```terminal
  ...
 
 [vast_pipeline]
@@ -35,7 +35,7 @@ Detailed commands for resetting the database can be found in [Contributing and D
 
 Resetting a pipeline run can be done using the `clearpiperun` command. This will delete all images and related objects such as sources associated with that pipeline run. Images that have been used in other pipeline runs will not be deleted.
 
-```bash
+```terminal
 (pipeline_env)$ ./manage.py clearpiperun path/to/my_pipe_run
 # or
 (pipeline_env)$ ./manage.py clearpiperun my_pipe_run
@@ -152,13 +152,13 @@ In order to process the images in the pipeline, you must create/initialise a pip
 
 The pipeline run creation is done using the `initpiperun` django command, which requires a pipeline run folder. The command creates a folder with the pipeline run name under the settings `PROJECT_WORKING_DIR` defined in [settings](https://github.com/askap-vast/vast-pipeline/blob/master/webinterface/settings.template.py){:target="_blank"}.
 
-```bash
+```terminal
 (pipeline_env)$ ./manage.py initpiperun --help
 ```
 
 Output:
 
-```bash
+```terminal
 usage: manage.py initpiperun [-h] [--version] [-v {0,1,2,3}]
                              [--settings SETTINGS] [--pythonpath PYTHONPATH]
                              [--traceback] [--no-color] [--force-color]
@@ -189,13 +189,13 @@ optional arguments:
 
 The command yields the following folder structure:
 
-```bash
+```terminal
 (pipeline_env)$ ./manage.py initpiperun my_pipe_run
 ```
 
 Output:
 
-```bash
+```terminal
 2020-02-27 23:04:33,344 initpiperun INFO creating pipeline run folder
 2020-02-27 23:04:33,344 initpiperun INFO copying default config in pipeline run folder
 2020-02-27 23:04:33,344 initpiperun INFO pipeline run initialisation successful! Please modify the "config.yaml"
@@ -207,7 +207,7 @@ Details on the add images feature can be found [here](../using/addtorun.md).
 
 It allows for a pipeline run that has had an image added to the run to be restored to the state it was in before the image addition was made. By default the command will ask for confirmation that the run is to be restored (the option `--no-confirm` skips this).
 
-```bash
+```terminal
 ./manage.py restorepiperun --help
 usage: manage.py restorepiperun [-h] [--no-confirm] [--version] [-v {0,1,2,3}]
                                 [--settings SETTINGS]
@@ -242,7 +242,7 @@ optional arguments:
   --skip-checks         Skip system checks.
 ```
 
-```bash
+```terminal
 (pipeline_env)$ ./manage.py restorepiperun path/to/my_pipe_run
 # or
 (pipeline_env)$ ./manage.py restorepiperun my_pipe_run
@@ -345,13 +345,13 @@ Would you like to restore the run ? (y/n): y
 
 The pipeline is run using `runpipeline` django command.
 
-```bash
+```terminal
 (pipeline_env)$ ./manage.py runpipeline --help
 ```
 
 Output:
 
-```bash
+```terminal
 usage: manage.py runpipeline [-h] [--version] [-v {0,1,2,3}]
                              [--settings SETTINGS] [--pythonpath PYTHONPATH]
                              [--traceback] [--no-color] [--force-color]
@@ -384,6 +384,6 @@ optional arguments:
 
 General usage:
 
-```bash
+```terminal
 (pipeline_env)$ ./manage.py runpipeline path/to/my_pipe_run
 ```

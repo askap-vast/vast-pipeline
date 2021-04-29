@@ -7,7 +7,7 @@ copyright: Copyright &copy; 2020 - 2025 Vast Development Team, University of Syd
 
 repo_url: https://github.com/askap-vast/vast-pipeline
 repo_name: askap-vast/vast-pipeline
-edit_uri: ""
+edit_uri: "tree/dev/docs/"
 dev_addr: localhost:8008
 
 docs_dir: docs
@@ -21,7 +21,7 @@ theme:
     - navigation.instant
     - navigation.tabs
     - navigation.sections
-  custom_dir: docs/custom_home
+  custom_dir: docs/theme
   palette:
     # Light mode
     - media: "(prefers-color-scheme: light)"
@@ -64,13 +64,14 @@ markdown_extensions:
   - toc:
       toc_depth: 4
       permalink: true
+  - lightgallery
 
 nav:
   - Home: index.md
   - Getting Started:
-    - Installation: quickstart/installation.md
-    - Configuration: quickstart/configuration.md
-    - Deployment: quickstart/deployment.md
+    - Installation: gettingstarted/installation.md
+    - Configuration: gettingstarted/configuration.md
+    - Deployment: gettingstarted/deployment.md
   - Using the Pipeline:
     - Accessing the Pipeline: using/access.md
     - Initialising a Run: using/initrun.md
@@ -80,8 +81,10 @@ nav:
     - Deleting a Run: using/deleterun.md
     - Exploring the Pipeline Website:
       - Overview: exploringwebsite/websiteoverview.md
+      - DataTables: exploringwebsite/datatables.md
       - Pipeline Run Pages: exploringwebsite/runpages.md
       - Source Pages: exploringwebsite/sourcepages.md
+      - Source Tags & Favourites: exploringwebsite/sourcetagsfavs.md
       - Measurement Pages: exploringwebsite/measurementpages.md
       - Image Pages: exploringwebsite/imagepages.md
     - Pipeline Outputs:
@@ -100,21 +103,23 @@ nav:
     - Forced Measurements: design/monitor.md
     - Source Statistics: design/sourcestats.md
     - Architecture:
-      - Architecture Intro: architecture/intro.md
+      - Architecture Overview: architecture/intro.md
       - Database Schema: architecture/database.md
       # - Production: architecture/nimbus.md
   - Contributing and Developing:
-    - Intro: developing/intro.md
+    - Development Guidlines: developing/intro.md
     - GitHub Platform: developing/github.md
     - Local Development Environment: developing/localdevenv.md
     - Tests: developing/tests.md
-    - Docs: developing/docsdev.md
-    - Bechmarks: developing/profiling.md
+    - Documentation: developing/docsdev.md
+    - Benchmarks: developing/profiling.md
   #   - Tips: developing/tips.md like this https://stackoverflow.com/questions/60160823/how-to-properly-parallelize-generic-code-with-numba-dask
+  - FAQ: faq.md
   - Reference:
     - Changelog: changelog.md
     - Code of Conduct: code_of_conduct.md
     - License: license.md
+    - Credit and Acknowledgements: reference/acknowledgements.md
     - Code Reference:
       - vast_pipeline:
         - image:
@@ -132,6 +137,7 @@ nav:
           - helpers.py: reference/management/helpers.md
         - pipeline:
           - association.py: reference/pipeline/association.md
+          - config.py: reference/pipeline/config.md
           - errors.py: reference/pipeline/errors.md
           - finalise.py: reference/pipeline/finalise.md
           - forced_extraction.py: reference/pipeline/forced_extraction.md
@@ -158,7 +164,6 @@ nav:
         # - serializers.py: reference/serializers.md
         - urls.py: reference/urls.md
         # - views.py: reference/views.md
-  - FAQs: faqs.md
 
 plugins:
   - search

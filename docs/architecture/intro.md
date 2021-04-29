@@ -2,7 +2,7 @@
 
 The pipeline is essentially a [Django app](https://www.djangoproject.com/){:target="_blank"} in which the pipeline is run as a Django admin command. The main structure of the pipeline is described in this schematics:
 
-[![VAST Pipeline Stack](../img/vast_pipeline_architecture.png){: loading=lazy }](../img/vast_pipeline_architecture.png)
+![!VAST Pipeline Stack](../img/vast_pipeline_architecture.png){: loading=lazy }
 
 ## Design Philosophy
 

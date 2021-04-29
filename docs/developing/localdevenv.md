@@ -6,7 +6,7 @@ This section describes how to set up a local development environment more in det
 
 ### Installation
 
-The installation instructions are the same as the ones describes in the [quickstart section](../quickstart/installation.md) with one key difference. Rather than installing the Python dependencies with pip, you will need to install and use [Poetry](https://python-poetry.org){:target="_blank"}. After installing Poetry, running the command below will install the pipeline dependencies defined in `poetry.lock` into a virtual environment. The main difference between using Poetry and pip is that pip will only install the dependencies necessary for using the pipeline, whereas Poetry will also install development dependencies required for contributing (e.g. tools to build the documentation).
+The installation instructions are the same as the ones describes in the [Getting Started section](../gettingstarted/installation.md) with one key difference. Rather than installing the Python dependencies with pip, you will need to install and use [Poetry](https://python-poetry.org){:target="_blank"}. After installing Poetry, running the command below will install the pipeline dependencies defined in `poetry.lock` into a virtual environment. The main difference between using Poetry and pip is that pip will only install the dependencies necessary for using the pipeline, whereas Poetry will also install development dependencies required for contributing (e.g. tools to build the documentation).
 
 ```console
 poetry install
