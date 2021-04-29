@@ -516,16 +516,39 @@
       var displayId = "JS9_" + (i + 1);
       var region_url = addBaseUrl('/measurements/' + measurement.image_id + '/' + measurement.ra + ',' +
         measurement.dec +
-        ',20arcmin/region?selection_model=source&selection_id={{ source.id }}&run_id={{ source.run_id }}');
+        ',20arcmin/region/?selection_model=source&selection_id={{ source.id }}&run_id={{ source.run_id }}');
       var opts = Object.assign({}, JS9.Regions.opts);
       opts.tooltip = "$xreg.data.text";
-      JS9.NewShapeLayer("components", opts, {
+      // create a shape layer for the components belonging to other sources
+      JS9.NewShapeLayer("other_components", opts, {
         display: displayId
       });
-      $.get(region_url, regions => {
-        JS9.AddShapes("components", regions, {
+      // create a shape layer for the components belonging to the current source
+      JS9.NewShapeLayer("source_components", opts, {
+        display: displayId
+      });
+      // get the region file and add them to the appropriate shape layer
+      $.get(region_url, regionStr => {
+        var regionArray = regionStr.split("\n")
+        var selectedSourceRegions = [];
+        var otherSourceRegions = [];
+        // add red regions to the selected source region array
+        regionArray.forEach(region => {
+          if (/"color": "#FF0000"/.test(region)) {
+            selectedSourceRegions.push(region);
+          } else {
+            otherSourceRegions.push(region);
+          }
+        });
+        JS9.AddShapes("other_components", otherSourceRegions.join("\n"), {
           changeable: false,
-          strokeWidth: 1
+          strokeWidth: 2
+        }, {
+          display: displayId
+        });
+        JS9.AddShapes("source_components", selectedSourceRegions.join("\n"), {
+          changeable: false,
+          strokeWidth: 2
         }, {
           display: displayId
         });
