@@ -57,7 +57,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
-- Fixed JS9 regions so that the selected source components are always on top [#XXX](https://github.com/askap-vast/vast-pipeline/pull/XXX)
+- Fixed JS9 regions so that the selected source components are always on top [#508](https://github.com/askap-vast/vast-pipeline/pull/508)
 - Fixed docstring in config.py [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
 - Fixed arrow files being generated via the website [#503](https://github.com/askap-vast/vast-pipeline/pull/503).
 - Fixed a bug that returned all sources when performing a cone search where one of the coords = 0 [#501](https://github.com/askap-vast/vast-pipeline/pull/501)
@@ -85,7 +85,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
-- [#XXX](https://github.com/askap-vast/vast-pipeline/pull/XXX) fix: Draw selected source components on top in JS9.
+- [#508](https://github.com/askap-vast/vast-pipeline/pull/508) fix: Draw selected source components on top in JS9.
 - [#507](https://github.com/askap-vast/vast-pipeline/pull/507) fix: set default auto field model.
 - [#494](https://github.com/askap-vast/vast-pipeline/pull/494) doc, dep: Docs: Added lightgallery support, layout update, minor fixes and additions.
 - [#503](https://github.com/askap-vast/vast-pipeline/pull/503) fix, dep: Change arrow file generation from vaex to pyarrow.
