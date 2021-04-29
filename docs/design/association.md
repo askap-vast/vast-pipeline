@@ -106,7 +106,7 @@ For an example consider the source below:
 ![!An example of a source that changes from one component to two between epochs.](../img/association_false_variability_stamps.png){: loading=lazy }
 ![!The lightcurve of the example source that changes from one component to two between epochs.](../img/association_false_variability_lc.png){: loading=lazy }
 
-In epochs 3, 7 and 8, the source is detected as an island with two Gaussian components, as opposed to the one component in all other epochs.
+In the 3rd, 7th, and 8th measurement (EPOCH02, EPOCH09, and EPOCH12), the source is detected as an island with two Gaussian components, as opposed to the one component in all other epochs.
 The source lightcurve shows how the flux has reduced by approximately 50% in these three epochs, which makes the source appear variable.
 The pipeline provides information for each source that allows for these kind of situations to be swiftly identified:
 
