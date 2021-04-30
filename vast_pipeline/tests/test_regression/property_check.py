@@ -66,7 +66,7 @@ def test_most_relations(relations: pd.DataFrame, sources: pd.DataFrame,
     pd.testing.assert_frame_equal(
         highest_relations,
         expected,
-        check_less_precise=4
+        rtol=1e-04,
     )
 
 def known_source(sources: pd.DataFrame) -> int:
