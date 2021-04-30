@@ -163,7 +163,7 @@ class AdvancedEpochTest(TestCase):
         expected = pd.DataFrame(
             [
                 [321.899517, -4.201971, 3],
-                [321.900505, -4.201181, 2],
+                [321.901243, -4.200636, 2],
             ],
             columns=["wavg_ra", "wavg_dec", "relations"],
         )
