@@ -161,9 +161,11 @@ class AdvancedEpochTest(TestCase):
         '''
         # this is the expected highest relation sources
         expected = pd.DataFrame(
-            [[321.899517, -4.201971, 3],
-             [321.900505, -4.201181, 3]],
-             columns = ['wavg_ra', 'wavg_dec', 'relations']
+            [
+                [321.899517, -4.201971, 3],
+                [321.900505, -4.201181, 2],
+            ],
+            columns=["wavg_ra", "wavg_dec", "relations"],
         )
 
         property_check.test_most_relations(self.relations, self.sources, 2, expected)
