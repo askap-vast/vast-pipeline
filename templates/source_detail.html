@@ -519,15 +519,11 @@
         ',20arcmin/region/?selection_model=source&selection_id={{ source.id }}&run_id={{ source.run_id }}');
       var opts = Object.assign({}, JS9.Regions.opts);
       opts.tooltip = "$xreg.data.text";
-      // create a shape layer for the components belonging to other sources
-      JS9.NewShapeLayer("other_components", opts, {
+      // create a shape layer for the components
+      JS9.NewShapeLayer("components", opts, {
         display: displayId
       });
-      // create a shape layer for the components belonging to the current source
-      JS9.NewShapeLayer("source_components", opts, {
-        display: displayId
-      });
-      // get the region file and add them to the appropriate shape layer
+      // get the region file, put the selected components on top, and add them
       $.get(region_url, regionStr => {
         var regionArray = regionStr.split("\n")
         var selectedSourceRegions = [];
@@ -540,13 +536,7 @@
             otherSourceRegions.push(region);
           }
         });
-        JS9.AddShapes("other_components", otherSourceRegions.join("\n"), {
-          changeable: false,
-          strokeWidth: 2
-        }, {
-          display: displayId
-        });
-        JS9.AddShapes("source_components", selectedSourceRegions.join("\n"), {
+        JS9.AddShapes("components", otherSourceRegions.concat(selectedSourceRegions).join("\n"), {
           changeable: false,
           strokeWidth: 2
         }, {
