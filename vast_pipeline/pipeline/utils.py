@@ -346,7 +346,7 @@ def _load_measurements(
 
     Returns:
         The measurements of the image with some extra values set ready for
-        assoication.
+        association .
     """
     image_centre = SkyCoord(
         image.ra,
@@ -383,9 +383,9 @@ def prep_skysrc_df(
     ini_df: bool = False
 ) -> pd.DataFrame:
     '''
-    Initiliase the source dataframe to use in association logic by
+    Initialise the source dataframe to use in association logic by
     reading the measurement parquet file and creating columns. When epoch
-    based assoication is used it will also remove duplicate measurements from
+    based association is used it will also remove duplicate measurements from
     the list of sources.
 
     Args:
@@ -406,7 +406,7 @@ def prep_skysrc_df(
 
     Returns:
         The measurements of the image(s) with some extra values set ready for
-        assoication and duplicates removed if necessary.
+        association and duplicates removed if necessary.
     '''
     cols = [
         'id',
@@ -463,7 +463,7 @@ def add_new_one_to_many_relations(
 
     Args:
         row:
-            The relation information Series from the assoication dataframe.
+            The relation information Series from the association dataframe.
             Only the columns ['related_skyc1', 'source_skyc1'] are required
             for advanced, these are instead called ['related', 'source']
             for basic.
@@ -521,7 +521,7 @@ def add_new_many_to_one_relations(row: pd.Series) -> List[int]:
 
     Args:
         row:
-            The relation information Series from the assoication dataframe.
+            The relation information Series from the association dataframe.
             Only the columns ['related_skyc1', 'new_relations'] are required.
 
     Returns:
@@ -561,10 +561,10 @@ def get_eta_metric(
     '''
     Calculates the eta variability metric of a source.
     Works on the grouped by dataframe using the fluxes
-    of the assoicated measurements.
+    of the associated measurements.
 
     Args:
-        row: Dictionary containg statistics for the current source.
+        row: Dictionary containing statistics for the current source.
         df: The grouped by sources dataframe of the measurements containing all
             the flux and flux error information,
         peak: Whether to use peak_flux for the calculation. If False then the
@@ -898,8 +898,8 @@ def get_src_skyregion_merged_df(
 
     Args:
         sources_df:
-            The output of the assoication step containing the
-            measurements assoicated into sources.
+            The output of the association  step containing the
+            measurements associated into sources.
         images_df:
             Contains the images of the pipeline run. I.e. all image
             objects for the run loaded into a dataframe.
@@ -1109,7 +1109,7 @@ def _get_skyregion_relations(
         ids: The sky regions ids that match the coords.
 
     Returns:
-        A list of other sky regions (including self) that are withing the
+        A list of other sky regions (including self) that are within the
         'xtr_radius' of the sky region in the row.
     '''
     target = SkyCoord(
