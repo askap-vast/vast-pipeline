@@ -33,6 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Updated tests to account for relation fix [#510](https://github.com/askap-vast/vast-pipeline/pull/510).
 - All file examples in docs are now enclosed in an example admonition [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
 - Further changes to layout of documentation [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
 - Changed arrow file generation from `vaex` to `pyarrow` [#503](https://github.com/askap-vast/vast-pipeline/pull/503).
