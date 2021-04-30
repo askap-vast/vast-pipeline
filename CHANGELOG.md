@@ -58,6 +58,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed rogue relations being created during one-to-many functions [#510](https://github.com/askap-vast/vast-pipeline/pull/510).
 - Fixed docstring in config.py [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
 - Fixed arrow files being generated via the website [#503](https://github.com/askap-vast/vast-pipeline/pull/503).
 - Fixed a bug that returned all sources when performing a cone search where one of the coords = 0 [#501](https://github.com/askap-vast/vast-pipeline/pull/501)
@@ -85,6 +86,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#510](https://github.com/askap-vast/vast-pipeline/pull/510) fix: Fix rogue relations.
 - [#504](https://github.com/askap-vast/vast-pipeline/pull/504) feat: Add glob expression support to yaml run config.
 - [#507](https://github.com/askap-vast/vast-pipeline/pull/507) fix: set default auto field model.
 - [#494](https://github.com/askap-vast/vast-pipeline/pull/494) doc, dep: Docs: Added lightgallery support, layout update, minor fixes and additions.
