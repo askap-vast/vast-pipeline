@@ -16,17 +16,17 @@ def test_num_sources(testcase: TestCase, sources: pd.DataFrame, num: int):
     testcase : class
         Test class.
     sources : pd.DataFrame
-        Dataframe containing identified sources. 
+        Dataframe containing identified sources.
     num : int
         Number of identified sources.
     '''
 
     testcase.assertEqual(len(sources.index), num)
 
-def test_most_relations(relations: pd.DataFrame, sources: pd.DataFrame, 
+def test_most_relations(relations: pd.DataFrame, sources: pd.DataFrame,
     rows: int, expected: pd.DataFrame):
     '''
-    Test that the highest relation source is the same, and in general the 
+    Test that the highest relation source is the same, and in general the
     top sources with the most relations are correct.
 
     Parameters
@@ -34,39 +34,33 @@ def test_most_relations(relations: pd.DataFrame, sources: pd.DataFrame,
     relations : pd.DataFrame
         The relations of the sources.
     sources : pd.DataFrame
-        The sources identified. 
+        The sources identified.
     rows : int
         The number of rows to take of the most relations.
     expected : pd.DataFrame
-        The expected most relations sources. 
+        The expected most relations sources.
     '''
-    # count relations
+    # count relations and order by number of relations and then index
     relations = (
         relations.pivot_table(index=['from_source_id'], aggfunc='size')
-        .sort_values(ascending=False)
-        .iloc[:rows]
         .to_frame('relations')
     )
 
     # get sources with highest relations
     sources = sources.loc[relations.index, ['wavg_ra', 'wavg_dec']]
 
-    # merge the dataframes
-    highest_relations = pd.merge(sources, relations, on='from_source_id')
     highest_relations = (
-        highest_relations.sort_values(
-            by=['relations', 'wavg_ra'],
-            ascending=[False, True]
-        )
-        .reset_index()
-        .drop('from_source_id', axis=1)
+        pd.merge(sources, relations, left_index=True, right_index=True)
+        .sort_values(['relations', 'wavg_ra'], ascending=[False, True])
+        .reset_index(drop=True)
+        .iloc[:rows]
     )
 
     # only checks that the first 4 decimal places are equal
     pd.testing.assert_frame_equal(
         highest_relations,
         expected,
-        check_less_precise=4
+        rtol=1e-04,
     )
 
 def known_source(sources: pd.DataFrame) -> int:
@@ -77,7 +71,7 @@ def known_source(sources: pd.DataFrame) -> int:
     ----------
     sources : pd.DataFrame
         The sources to search through. Indicies must be reset.
-    
+
     Returns
     -------
     id_match : int
@@ -102,7 +96,7 @@ def known_source(sources: pd.DataFrame) -> int:
 
 def test_known_source(testcase: TestCase, sources: pd.DataFrame, high_sigma: float):
     '''
-    Check that PSR J2129-04 is detected as a new source and has correct 
+    Check that PSR J2129-04 is detected as a new source and has correct
     new_high_sigma.
 
     Parameters
@@ -123,7 +117,7 @@ def test_known_source(testcase: TestCase, sources: pd.DataFrame, high_sigma: flo
         abs(sources.loc[id_match, 'new_high_sigma'] - high_sigma) < 1e-3
     )
 
-def test_known_in_forced(testcase: TestCase, forced: dict, sources: pd.DataFrame, 
+def test_known_in_forced(testcase: TestCase, forced: dict, sources: pd.DataFrame,
     associations: pd.DataFrame, num: int, exp_forced: List[str]):
     '''
     Find if PSR J2129-04 appears in the correct forced files and has the
@@ -134,7 +128,7 @@ def test_known_in_forced(testcase: TestCase, forced: dict, sources: pd.DataFrame
     testcase : class
         Test class.
     forced : dict
-        The forced extractions. 
+        The forced extractions.
     sources : pd.DataFrame
         The sources to search through.
     associations : pd.DataFrame

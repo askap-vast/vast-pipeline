@@ -300,6 +300,9 @@ def one_to_many_basic(
     # Apply the new_source_id
     sources_to_copy['source'] = duplicated_skyc2['new_source_id'].values
 
+    # Reset the related column to avoid rogue relations
+    sources_to_copy['related'] = None
+
     # and finally append.
     sources_df = sources_df.append(
         sources_to_copy,
@@ -441,6 +444,10 @@ def one_to_many_advanced(
     # Assign the new IDs to those that need to be changed.
     duplicated_skyc1.loc[idx_to_change, 'new_source_id'] = new_source_ids
 
+    # We also need to clear the relations for these 'new' sources
+    # otherwise it will inherit rogue relations from the original relation
+    duplicated_skyc1.loc[idx_to_change, 'related_skyc1'] = None
+
     # Now we need to sort out the related, essentially here the 'original'
     # and 'non original' need to be treated differently.
     # The original source need all the assoicated new ids appended to the
@@ -581,6 +588,9 @@ def one_to_many_advanced(
 
     # Apply the new_source_id
     sources_to_copy['source'] = duplicated_skyc1['new_source_id'].values
+
+    # Reset the related column to avoid rogue relations
+    sources_to_copy['related'] = None
 
     # and finally append.
     sources_df = sources_df.append(

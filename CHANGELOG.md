@@ -33,6 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Updated tests to account for relation fix [#510](https://github.com/askap-vast/vast-pipeline/pull/510).
 - All file examples in docs are now enclosed in an example admonition [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
 - Further changes to layout of documentation [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
 - Changed arrow file generation from `vaex` to `pyarrow` [#503](https://github.com/askap-vast/vast-pipeline/pull/503).
@@ -58,6 +59,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed rogue relations being created during one-to-many functions [#510](https://github.com/askap-vast/vast-pipeline/pull/510).
 - Fixed JS9 regions so that the selected source components are always on top [#508](https://github.com/askap-vast/vast-pipeline/pull/508)
 - Fixed docstring in config.py [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
 - Fixed arrow files being generated via the website [#503](https://github.com/askap-vast/vast-pipeline/pull/503).
@@ -86,6 +88,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#510](https://github.com/askap-vast/vast-pipeline/pull/510) fix: Fix rogue relations.
 - [#508](https://github.com/askap-vast/vast-pipeline/pull/508) fix: Draw selected source components on top in JS9.
 - [#504](https://github.com/askap-vast/vast-pipeline/pull/504) feat: Add glob expression support to yaml run config.
 - [#507](https://github.com/askap-vast/vast-pipeline/pull/507) fix: set default auto field model.
