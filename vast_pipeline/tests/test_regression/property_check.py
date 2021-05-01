@@ -41,26 +41,19 @@ def test_most_relations(relations: pd.DataFrame, sources: pd.DataFrame,
         The expected most relations sources.
     '''
     # count relations and order by number of relations and then index
-    relations = relations.pivot_table(index=['from_source_id'], aggfunc='size')
     relations = (
-        relations
-        .iloc[np.lexsort((relations.index, -relations.values))]
-        .iloc[:rows]
+        relations.pivot_table(index=['from_source_id'], aggfunc='size')
         .to_frame('relations')
     )
 
     # get sources with highest relations
     sources = sources.loc[relations.index, ['wavg_ra', 'wavg_dec']]
 
-    # merge the dataframes
-    highest_relations = pd.merge(sources, relations, on='from_source_id')
     highest_relations = (
-        highest_relations.sort_values(
-            by=['relations', 'wavg_ra'],
-            ascending=[False, True]
-        )
-        .reset_index()
-        .drop('from_source_id', axis=1)
+        pd.merge(sources, relations, left_index=True, right_index=True)
+        .sort_values(['relations', 'wavg_ra'], ascending=[False, True])
+        .reset_index(drop=True)
+        .iloc[:rows]
     )
 
     # only checks that the first 4 decimal places are equal
