@@ -167,6 +167,8 @@ nav:
 
 plugins:
   - search
+  - git-revision-date-localized:
+      fallback_to_build_date: true
   - gen-files:
       scripts:
       # - docs/gen_credits.py
