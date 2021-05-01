@@ -516,16 +516,29 @@
       var displayId = "JS9_" + (i + 1);
       var region_url = addBaseUrl('/measurements/' + measurement.image_id + '/' + measurement.ra + ',' +
         measurement.dec +
-        ',20arcmin/region?selection_model=source&selection_id={{ source.id }}&run_id={{ source.run_id }}');
+        ',20arcmin/region/?selection_model=source&selection_id={{ source.id }}&run_id={{ source.run_id }}');
       var opts = Object.assign({}, JS9.Regions.opts);
       opts.tooltip = "$xreg.data.text";
+      // create a shape layer for the components
       JS9.NewShapeLayer("components", opts, {
         display: displayId
       });
-      $.get(region_url, regions => {
-        JS9.AddShapes("components", regions, {
+      // get the region file, put the selected components on top, and add them
+      $.get(region_url, regionStr => {
+        var regionArray = regionStr.split("\n")
+        var selectedSourceRegions = [];
+        var otherSourceRegions = [];
+        // add red regions to the selected source region array
+        regionArray.forEach(region => {
+          if (/"color": "#FF0000"/.test(region)) {
+            selectedSourceRegions.push(region);
+          } else {
+            otherSourceRegions.push(region);
+          }
+        });
+        JS9.AddShapes("components", otherSourceRegions.concat(selectedSourceRegions).join("\n"), {
           changeable: false,
-          strokeWidth: 1
+          strokeWidth: 2
         }, {
           display: displayId
         });
