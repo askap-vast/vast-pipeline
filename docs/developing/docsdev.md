@@ -89,7 +89,7 @@ docs/theme
 │   ├── lg-zoom.js
 │   └── lightgallery.min.js
 ├── partials
-│   ├── source-date.html
+│   └── source-date.html
 └── main.html
 ```
 
