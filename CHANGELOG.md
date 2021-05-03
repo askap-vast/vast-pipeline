@@ -59,6 +59,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Removed excess whitespace from coordinates that get copied to the clipboard [#515](https://github.com/askap-vast/vast-pipeline/pull/515)
 - Fixed rogue relations being created during one-to-many functions [#510](https://github.com/askap-vast/vast-pipeline/pull/510).
 - Fixed JS9 regions so that the selected source components are always on top [#508](https://github.com/askap-vast/vast-pipeline/pull/508)
 - Fixed docstring in config.py [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
@@ -88,6 +89,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#515](https://github.com/askap-vast/vast-pipeline/pull/515) fix: remove linebreaks from coordinates.
 - [#510](https://github.com/askap-vast/vast-pipeline/pull/510) fix: Fix rogue relations.
 - [#508](https://github.com/askap-vast/vast-pipeline/pull/508) fix: Draw selected source components on top in JS9.
 - [#504](https://github.com/askap-vast/vast-pipeline/pull/504) feat: Add glob expression support to yaml run config.
