@@ -455,7 +455,7 @@ django = ">=2.2"
 
 [[package]]
 name = "djangorestframework-datatables"
-version = "0.5.2"
+version = "0.5.1"
 description = "Seamless integration between Django REST framework and Datatables (https://datatables.net)"
 category = "main"
 optional = false
@@ -1744,7 +1744,7 @@ prod = ["gevent", "gunicorn"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.1"
-content-hash = "b0f95397801a57d652b49a878205f736f070169d8e75ed05c6f94f6761301b63"
+content-hash = "58ebefbacba054c4144b77d284b1725f964fe2de1985efc720b4eddf2894af9e"
 
 [metadata.files]
 ansicon = [
@@ -1953,8 +1953,8 @@ djangorestframework = [
     {file = "djangorestframework-3.12.4.tar.gz", hash = "sha256:f747949a8ddac876e879190df194b925c177cdeb725a099db1460872f7c0a7f2"},
 ]
 djangorestframework-datatables = [
-    {file = "djangorestframework-datatables-0.5.2.tar.gz", hash = "sha256:a293a081f8b5b9a0e7f13ab159fb6e93f88d535b0f3e1ab6e77643a566ab2ec0"},
-    {file = "djangorestframework_datatables-0.5.2-py2.py3-none-any.whl", hash = "sha256:29fce9319c8b3e2ee72c9cda68139408f906db60537dda5835e1bd17520eaa7e"},
+    {file = "djangorestframework-datatables-0.5.1.tar.gz", hash = "sha256:6eedec2ab10772bf435c82652def29f8b245f5ef217bd5218e9b441c7545bf31"},
+    {file = "djangorestframework_datatables-0.5.1-py2.py3-none-any.whl", hash = "sha256:cd76fca59c9bb96f1dd92838a82649922ae0deaaa27c11b20d6b1dc60be7ef37"},
 ]
 flake8 = [
     {file = "flake8-3.9.1-py2.py3-none-any.whl", hash = "sha256:3b9f848952dddccf635be78098ca75010f073bfe14d2c6bda867154bea728d2a"},
