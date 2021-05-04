@@ -92,12 +92,9 @@
               target="_blank">{{ source.run_name }}</a>
           </p>
           <p>
-            <strong>Position: </strong><span class="clipboard-copy">{{ source.wavg_ra_hms }}
-              {{ source.wavg_dec_dms }}</span><br>
-            <strong>Position (Decimal): </strong><span class="clipboard-copy">{{ source.wavg_ra|floatformat:6 }}
-              {{ source.wavg_dec|floatformat:6 }}</span><br>
-            <strong>Position (Galactic): </strong><span class="clipboard-copy">{{ source.wavg_l|floatformat:6 }}
-              {{ source.wavg_b|floatformat:6 }}</span>
+            <strong>Position: </strong><span class="clipboard-copy">{{ source.wavg_ra_hms }} {{ source.wavg_dec_dms }}</span><br>
+            <strong>Position (Decimal): </strong><span class="clipboard-copy">{{ source.wavg_ra|floatformat:6 }} {{ source.wavg_dec|floatformat:6 }}</span><br>
+            <strong>Position (Galactic): </strong><span class="clipboard-copy">{{ source.wavg_l|floatformat:6 }} {{ source.wavg_b|floatformat:6 }}</span>
           </p>
           <p>
             <div class="row">
