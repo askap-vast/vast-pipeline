@@ -63,6 +63,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed the broken link to the image detail page on measurement detail pages [#528](https://github.com/askap-vast/vast-pipeline/pull/528).
 - Fixed simbad and ned external search results table nan values [#523](https://github.com/askap-vast/vast-pipeline/pull/523).
 - Fixed inaccurate total results reported by some paginators [#517](https://github.com/askap-vast/vast-pipeline/pull/517).
 - Removed excess whitespace from coordinates that get copied to the clipboard [#515](https://github.com/askap-vast/vast-pipeline/pull/515)
@@ -95,6 +96,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#528](https://github.com/askap-vast/vast-pipeline/pull/528) fix: fixed broken image detail link.
 - [#526](https://github.com/askap-vast/vast-pipeline/pull/526) feat: Updated source detail page layout.
 - [#518](https://github.com/askap-vast/vast-pipeline/pull/518) dep: Updated mkdocs-material for native creation date support.
 - [#523](https://github.com/askap-vast/vast-pipeline/pull/523) fix: Fixed external search results table nan values.
