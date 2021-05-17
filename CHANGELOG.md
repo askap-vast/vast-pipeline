@@ -35,6 +35,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### Changed
 
 - Changed layout of source detail page [#526](https://github.com/askap-vast/vast-pipeline/pull/526).
+- Updated mkdocs-material to 7.1.4 for native creation date support [#518](https://github.com/askap-vast/vast-pipeline/pull/518).
+- Updated developing docs to specify the main development branch as dev instead of master [#521](https://github.com/askap-vast/vast-pipeline/pull/521).
 - Updated tests to account for relation fix [#510](https://github.com/askap-vast/vast-pipeline/pull/510).
 - All file examples in docs are now enclosed in an example admonition [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
 - Further changes to layout of documentation [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
@@ -61,6 +63,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed simbad and ned external search results table nan values [#523](https://github.com/askap-vast/vast-pipeline/pull/523).
 - Fixed inaccurate total results reported by some paginators [#517](https://github.com/askap-vast/vast-pipeline/pull/517).
 - Removed excess whitespace from coordinates that get copied to the clipboard [#515](https://github.com/askap-vast/vast-pipeline/pull/515)
 - Fixed rogue relations being created during one-to-many functions [#510](https://github.com/askap-vast/vast-pipeline/pull/510).
@@ -93,6 +96,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### List of PRs
 
 - [#526](https://github.com/askap-vast/vast-pipeline/pull/526) feat: Updated source detail page layout.
+- [#518](https://github.com/askap-vast/vast-pipeline/pull/518) dep: Updated mkdocs-material for native creation date support.
+- [#523](https://github.com/askap-vast/vast-pipeline/pull/523) fix: Fixed external search results table nan values.
+- [#521](https://github.com/askap-vast/vast-pipeline/pull/521) doc: update doc related to default dev branch.
 - [#517](https://github.com/askap-vast/vast-pipeline/pull/517) fix: pin djangorestframework-datatables to 0.5.1.
 - [#515](https://github.com/askap-vast/vast-pipeline/pull/515) fix: remove linebreaks from coordinates.
 - [#514](https://github.com/askap-vast/vast-pipeline/pull/514) dep: Added created and updated dates to doc pages.

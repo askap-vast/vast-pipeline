@@ -2066,10 +2066,6 @@ class UtilitiesSet(ViewSet):
             simbad_results_df = simbad_result_table[
                 ["MAIN_ID", "DISTANCE_RESULT", "OTYPE_S", "OTYPE_V", "RA", "DEC"]
             ].to_pandas()
-            # bytestring_fields = ["MAIN_ID", "OTYPE_S", "OTYPE_V"]
-            # simbad_results_df[bytestring_fields] = simbad_results_df[
-            #     bytestring_fields
-            # ].apply(lambda col: col.str.decode("utf-8"))
             simbad_results_df = simbad_results_df.rename(
                 columns={
                     "MAIN_ID": "object_name",
@@ -2098,10 +2094,6 @@ class UtilitiesSet(ViewSet):
             ned_results_df = ned_result_table[
                 ["Object Name", "Separation", "Type", "RA", "DEC"]
             ].to_pandas()
-            # bytestring_fields = ["Object Name", "Type"]
-            # ned_results_df[bytestring_fields] = ned_results_df[bytestring_fields].apply(
-            #     lambda col: col.str.decode("utf-8")
-            # )
             ned_results_df = ned_results_df.rename(
                 columns={
                     "Object Name": "object_name",
