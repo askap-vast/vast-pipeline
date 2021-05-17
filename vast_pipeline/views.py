@@ -1333,6 +1333,9 @@ def SourceDetail(request, pk):
             frequency=F('image__band__frequency'),
         ).order_by('datetime').values(*tuple(cols))
     )
+
+    first_det_meas_index = [i['forced'] for i in measurements].index(False)
+
     for one_m in measurements:
         one_m['datetime'] = one_m['datetime'].isoformat()
 
@@ -1444,6 +1447,7 @@ def SourceDetail(request, pk):
         'source': source,
         'source_next_id': source_next_id,
         'source_previous_id': source_previous_id,
+        'first_det_meas_index': first_det_meas_index,
         'datatables': [measurements, related_datatables],
         # flag to deactivate starring and render yellow star
         'sourcefav': (

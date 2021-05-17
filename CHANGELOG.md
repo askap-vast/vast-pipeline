@@ -34,6 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Changed layout of source detail page [#526](https://github.com/askap-vast/vast-pipeline/pull/526).
 - Updated mkdocs-material to 7.1.4 for native creation date support [#518](https://github.com/askap-vast/vast-pipeline/pull/518).
 - Updated developing docs to specify the main development branch as dev instead of master [#521](https://github.com/askap-vast/vast-pipeline/pull/521).
 - Updated tests to account for relation fix [#510](https://github.com/askap-vast/vast-pipeline/pull/510).
@@ -96,6 +97,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### List of PRs
 
 - [#528](https://github.com/askap-vast/vast-pipeline/pull/528) fix: fixed broken image detail link.
+- [#526](https://github.com/askap-vast/vast-pipeline/pull/526) feat: Updated source detail page layout.
 - [#518](https://github.com/askap-vast/vast-pipeline/pull/518) dep: Updated mkdocs-material for native creation date support.
 - [#523](https://github.com/askap-vast/vast-pipeline/pull/523) fix: Fixed external search results table nan values.
 - [#521](https://github.com/askap-vast/vast-pipeline/pull/521) doc: update doc related to default dev branch.

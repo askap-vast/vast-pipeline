@@ -254,7 +254,7 @@ $(document).ready(function() {
     */
     .DataTable({
       "searching": false,
-      "pageLength": 5,
+      "pageLength": 15,
       "lengthChange": false,
       // need a different dom for external results table
       "dom": (
