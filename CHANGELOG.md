@@ -34,6 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Changed layout of source detail page [#526](https://github.com/askap-vast/vast-pipeline/pull/526).
 - Updated tests to account for relation fix [#510](https://github.com/askap-vast/vast-pipeline/pull/510).
 - All file examples in docs are now enclosed in an example admonition [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
 - Further changes to layout of documentation [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
@@ -91,6 +92,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#526](https://github.com/askap-vast/vast-pipeline/pull/526) feat: Updated source detail page layout.
 - [#517](https://github.com/askap-vast/vast-pipeline/pull/517) fix: pin djangorestframework-datatables to 0.5.1.
 - [#515](https://github.com/askap-vast/vast-pipeline/pull/515) fix: remove linebreaks from coordinates.
 - [#514](https://github.com/askap-vast/vast-pipeline/pull/514) dep: Added created and updated dates to doc pages.
