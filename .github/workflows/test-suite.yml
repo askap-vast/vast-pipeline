@@ -17,11 +17,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Use ssh instead of https when cloning from github
-      run: |
-        git config --global url.ssh://git@github.com/.insteadOf https://github.com/;
-        git config --global core.sshCommand 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
-
     - name: Create dev database
       uses: ./.github/actions/create-dev-database
       with:
