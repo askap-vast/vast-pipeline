@@ -73,6 +73,7 @@ TEMPLATES = [
                 'social_django.context_processors.backends',
                 'social_django.context_processors.login_redirect',
                 'vast_pipeline.context_processors.maintainance_banner',
+                'vast_pipeline.context_processors.pipeline_version',
             ],
             'libraries': {
                 'unit_tags': 'vast_pipeline.utils.unit_tags'
