@@ -21,7 +21,7 @@ from vast_pipeline.models import (
 )
 from vast_pipeline.pipeline.config import PipelineConfig
 from vast_pipeline.pipeline.utils import (
-    get_create_img, get_create_img_band
+    get_create_img, get_create_img_band, add_run_to_img
 )
 from vast_pipeline.utils.utils import StopWatch
 
@@ -69,7 +69,7 @@ def bulk_upload_model(
 
 
 def make_upload_images(
-    paths: Dict[str, Dict[str, str]], config: PipelineConfig, pipeline_run: Run
+    paths: Dict[str, Dict[str, str]], config: PipelineConfig, pipeline_run: Run=None
 ) -> Tuple[List[Image], pd.DataFrame]:
     '''
     Carry the first part of the pipeline, by uploading all the images
@@ -112,14 +112,16 @@ def make_upload_images(
 
         # 1.2 create image and skyregion entry in DB
         with transaction.atomic():
-            img, skyreg, exists_f = get_create_img(
-                pipeline_run, band.id, image
-            )
+            img, exists_f = get_create_img(band.id, image)
+            skyreg = img.skyreg
+            if pipeline_run:
+                add_run_to_img(pipeline_run, img)
 
         # add image and skyregion to respective lists
         images.append(img)
         if skyreg not in skyregions:
             skyregions.append(skyreg)
+
         if exists_f:
             logger.info(
                 'Image %s already processed, grab measurements',
@@ -157,27 +159,30 @@ def make_upload_images(
         )
         del measurements, image, band, img
 
-    # write images parquet file under pipeline run folder
-    images_df = pd.DataFrame(map(lambda x: x.__dict__, images))
-    images_df = images_df.drop('_state', axis=1)
-    images_df.to_parquet(
-        os.path.join(config["run"]["path"], 'images.parquet'),
-        index=False
-    )
-    # write skyregions parquet file under pipeline run folder
-    skyregs_df = pd.DataFrame(map(lambda x: x.__dict__, skyregions))
-    skyregs_df = skyregs_df.drop('_state', axis=1)
-    skyregs_df.to_parquet(
-        os.path.join(config["run"]["path"], 'skyregions.parquet'),
-        index=False
-    )
-    # write skyregions parquet file under pipeline run folder
-    bands_df = pd.DataFrame(map(lambda x: x.__dict__, bands))
-    bands_df = bands_df.drop('_state', axis=1)
-    bands_df.to_parquet(
-        os.path.join(config["run"]["path"], 'bands.parquet'),
-        index=False
-    )
+    if pipeline_run:
+        # write images parquet file under pipeline run folder
+        images_df = pd.DataFrame(map(lambda x: x.__dict__, images))
+        images_df = images_df.drop('_state', axis=1)
+        images_df.to_parquet(
+            os.path.join(config["run"]["path"], 'images.parquet'),
+            index=False
+        )
+        # write skyregions parquet file under pipeline run folder
+        skyregs_df = pd.DataFrame(map(lambda x: x.__dict__, skyregions))
+        skyregs_df = skyregs_df.drop('_state', axis=1)
+        skyregs_df.to_parquet(
+            os.path.join(config["run"]["path"], 'skyregions.parquet'),
+            index=False
+        )
+        # write skyregions parquet file under pipeline run folder
+        bands_df = pd.DataFrame(map(lambda x: x.__dict__, bands))
+        bands_df = bands_df.drop('_state', axis=1)
+        bands_df.to_parquet(
+            os.path.join(config["run"]["path"], 'bands.parquet'),
+            index=False
+        )
+    else:
+        skyregs_df = None
 
     logger.info(
         'Total images upload/loading time: %.2f seconds',
