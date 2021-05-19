@@ -1,24 +1,32 @@
 # GitHub Platform Guidelines
 
-This section explains how to interact with GitHub platform for opening issues and pull requests (PR), and some notes how to make a release of the pipeline if you are a maintainer of the code base.
+This section explains how to interact with GitHub platform for opening issues, starting discussions, creating pull requests (PR), and some notes how to make a release of the pipeline if you are a maintainer of the code base.
 
 The VAST team uses the "git flow" branching model. There are two main branches, `master` and `dev`, both with infinite lifetimes (i.e. they are never deleted). The `master` branch contains stable production-ready code for releases, and `dev` contains the latest reviewed updates for the next release. When `dev` is in a stable state and the software is ready for a new release, the changes are merged into `master` and a new version tag is created to mark it. Development of new features branch off `dev` and merge back into `dev` once completed. Critical bug fixes for released code are done in "hotfix" branches that branch off `master` and merge back into both `master` and `dev` when completed. Finally, "release" branches are made to prepare for a new release and are branched off `dev` and merged into `master` and `dev` when completed. More information on this git flow model can be found [here](https://nvie.com/posts/a-successful-git-branching-model/).
 
-## Issues Guidelines
+## Issues
 
-* Please search for a similar issue before opening a new one by run a search on the [issue page](https://github.com/askap-vast/vast-pipeline/issues){:target="_blank"} with specific key-words.
-* When opening a new issue, please specify the issue type (e.g. bug, feature, etc.) and provide a detailed description with use cases if applied.
+An issue can be created by anyone with access to the repository. Users are encouraged to create issues for problems they encounter while using the pipeline or to request a new feature be added to the software. Issues are created by clicking the "New issue" button near the top-right of the [issues page](https://github.com/askap-vast/vast-pipeline/issues){:target="_blank"}.
 
-## Pull Request Guidelines
+When creating a new issue, please consider the following:
+
+* Search for a similar issue before opening a new one by using the search box near the top of the issues page.
+* When opening a new issue, please specify the issue type (e.g. bug, feature, etc.) and provide a detailed description with use cases when appropriate.
+
+## Discussions
+
+GitHub repositories also have a discussions page which serves as a collaborative forum to discuss ideas and ask questions. Users are encouraged to ask general questions, or start a conversation about potential new features to the software by creating a new discussion thread on the [discussions page](https://github.com/askap-vast/vast-pipeline/discussions){:target="_blank"}. Note that new software features may also be requested by creating an issue, but a discussion thread is more appropriate if the details of the new feature are still yet to be determined or require wider discussion – issues can be created from discussions once a consensus is reached.
+
+## Pull Requests
+
+Pull requests are created when a developer wishes to merge changes they have made in a branch into another branch. They enable others to review the changes and make comments. While issues typically describe in detail a specific problem or proposed feature, pull requests contain a detailed description and the required code changes for a solution to a problem or implementation of a new feature.
 
 ### Opening a PR
 
-!!! tip "First consider . . ."
+!!! tip "First consider ..."
 
-    1. search among the issues for similar problems/bugs/etc
-    2. opening an issue before creating/issuing the PR.
-
-    So we can separate problems from solutions.
+    1. Search existing issues for similar problems or feature proposals.
+    2. Opening an issue to describe the problem or feature before creating a PR. This will help separate problems from solutions.
 
 Steps to issue a pull request:
 
@@ -44,7 +52,7 @@ The guidelines to dealing with reviews and conversations on GitHub are essential
 * The PR author will re-request the review by clicking on the :octicons-sync-16: on the top right corner and might ping the reviewer on a comment if necessary with `@github_name`.
 * When the PR is approved by at least one reviewer you might want to merge it to dev (you should have that privileges), unless you want to make sure that such PR is reviewed by another reviewer (e.g. you are doing big changes or important changes or you want to make sure that other person is aware/updated about the changes in that PR).
 
-## Release Guidelines
+## Releases
 
 In to order to make a release, please follow these steps:
 
@@ -58,7 +66,11 @@ In to order to make a release, please follow these steps:
 8. Commit all the changes made above to the new branch and push it to GitHub.
 9. Open a PR to merge the new branch into `master`. Note that the default target branch is `dev` so you will need to change this to `master` when creating the PR.
 10. Once the PR has been reviewed and approved, merge the branch into `master`. This can only be done by administrators of the repository.
-11. Tag the merge commit on `master` with the version, i.e. `git tag vX.Y.Z`. **IMPORTANT:** if you merged the release branch into `master` with the GitHub web UI, you will need to sync that merge to your local copy and checkout `master` before creating the tag. You cannot create tags with the GitHub web UI.
+11. Tag the merge commit on `master` with the version, i.e. `git tag vX.Y.Z`.
+
+    !!! warning
+        If you merged the release branch into `master` with the GitHub web UI, you will need to sync that merge to your local copy and checkout `master` before creating the tag. You cannot create tags with the GitHub web UI.
+
 12. Push the tag to GitHub, i.e. `git push origin vX.Y.Z`.
 13. Merge the release branch into `dev`, resolving any conflicts.
 14. Append "dev" to the version numbers in `pyproject.toml`, `package.json` and `vast_pipeline/_version.py` and commit the change to `dev`.  This can either be done as a new commit, or while resolving merge conflicts in the previous step, if appropriate.
