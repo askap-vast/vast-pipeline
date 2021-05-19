@@ -2,7 +2,16 @@
 
 This section explains how to interact with GitHub platform for opening issues, starting discussions, creating pull requests (PR), and some notes how to make a release of the pipeline if you are a maintainer of the code base.
 
-The VAST team uses the "git flow" branching model. There are two main branches, `master` and `dev`, both with infinite lifetimes (i.e. they are never deleted). The `master` branch contains stable production-ready code for releases, and `dev` contains the latest reviewed updates for the next release. When `dev` is in a stable state and the software is ready for a new release, the changes are merged into `master` and a new version tag is created to mark it. Development of new features branch off `dev` and merge back into `dev` once completed. Critical bug fixes for released code are done in "hotfix" branches that branch off `master` and merge back into both `master` and `dev` when completed. Finally, "release" branches are made to prepare for a new release and are branched off `dev` and merged into `master` and `dev` when completed. More information on this git flow model can be found [here](https://nvie.com/posts/a-successful-git-branching-model/).
+The VAST team uses the "git flow" branching model which we briefly summarise here. More detail can be found [here](https://nvie.com/posts/a-successful-git-branching-model/).
+
+There are two main branches, both with infinite lifetimes (they are never deleted):
+
+- `master` for stable, production-ready code that has been released, and
+- `dev` for the latest reviewed updates for the next release.
+
+Other branches for bug fixes and new features are created as needed, branching off and merging back into `dev`. An exception to this is for critical patches for a released version called a "hotfix". These are branched off `master` and merged back into both `master` and `dev`.
+
+Branches are also created for each new release candidate, which are branched off `dev` and merged into `master` and `dev` when completed. See the [Releases](#releases) section below for more information.
 
 ## Issues
 
