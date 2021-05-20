@@ -123,19 +123,7 @@ def make_upload_images(
             skyregions.append(skyreg)
 
         if exists_f:
-            logger.info(
-                'Image %s already processed, grab measurements',
-                img.name
-            )
-            # grab the measurements and skip to process next image
-            measurements = (
-                pd.Series(
-                    Measurement.objects.filter(forced=False, image__id=img.id),
-                    name='meas_dj'
-                )
-                .to_frame()
-            )
-            measurements['id'] = measurements['meas_dj'].apply(lambda x: x.id)
+            logger.info('Image %s already processed', img.name)
             continue
 
         # 1.3 get the image measurements and save them in DB
