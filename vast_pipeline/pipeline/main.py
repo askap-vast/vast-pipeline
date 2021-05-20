@@ -130,7 +130,7 @@ class Pipeline():
         # upload/retrieve image data
         images, skyregions, bands = make_upload_images(
             self.img_paths,
-            self.config.image_config(),
+            self.config.image_opts(),
             p_run
         )
 

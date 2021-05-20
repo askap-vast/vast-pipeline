@@ -251,7 +251,7 @@ class PipelineConfig:
             PipelineConfigError: The run config YAML file fails schema validation.
 
         """
-        schema = PipelineConfig.SCHEMA if validate else yaml.Any()
+        schema = cls.SCHEMA if validate else yaml.Any()
         with open(yaml_path) as fh:
             config_str = fh.read()
         try:
@@ -349,7 +349,7 @@ class PipelineConfig:
         2. The number of input files does not exceed the configured pipeline maximum.
             This is only enforced if a regular user (not staff/admin) created the run.
         3. There are at least two input images.
-        4. Background input images are required is source monitoring is turned on.
+        4. Background input images are required if source monitoring is turned on.
         5. All input files exist.
 
         Args:
@@ -534,7 +534,7 @@ class PipelineConfig:
             return False
         return True
 
-    def image_config(self) -> Dict:
+    def image_opts(self) -> Dict:
         """
         Get the config options required for image ingestion only.
         Namely:
@@ -553,3 +553,25 @@ class PipelineConfig:
             "dec_uncertainty"
         ]
         return {key: self["measurements"][key] for key in keys}
+
+
+class ImageIngestConfig(PipelineConfig):
+    # path to default image ingest config template
+    TEMPLATE_PATH: str = os.path.join(
+        settings.BASE_DIR, "vast_pipeline", "ingest_config_template.yaml.j2"
+    )
+    _VALID_ASSOC_METHODS = None
+    SCHEMA = yaml.Map(
+        {
+            "inputs": yaml.Map(PipelineConfig._SCHEMA_INPUTS),
+            "source_monitoring": yaml.Map({"monitor": yaml.Bool()}),
+            "measurements": yaml.Map(
+                {
+                    "condon_errors": yaml.Bool(),
+                    "selavy_local_rms_fill_value": yaml.Float(),
+                    "ra_uncertainty": yaml.Float(),
+                    "dec_uncertainty": yaml.Float(),
+                }
+            ),
+        }
+    )
