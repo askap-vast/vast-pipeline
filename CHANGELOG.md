@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added `vast_pipeline/_version.py` to store the current software version and updated release documentation [#532](https://github.com/askap-vast/vast-pipeline/pull/532).
 - Added created and last updated dates to doc pages using mkdocs-git-revision-date-localized-plugin [#514](https://github.com/askap-vast/vast-pipeline/pull/514).
 - Added support for glob expressions when specifying input files in the run config file [#504](https://github.com/askap-vast/vast-pipeline/pull/504)
 - Added `DEFAULT_AUTO_FIELD` to `settings.py` to silence Django 3.2 warnings [#507](https://github.com/askap-vast/vast-pipeline/pull/507)
@@ -96,6 +97,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#532](https://github.com/askap-vast/vast-pipeline/pull/532) feat, doc: Versioning.
 - [#528](https://github.com/askap-vast/vast-pipeline/pull/528) fix: fixed broken image detail link.
 - [#526](https://github.com/askap-vast/vast-pipeline/pull/526) feat: Updated source detail page layout.
 - [#518](https://github.com/askap-vast/vast-pipeline/pull/518) dep: Updated mkdocs-material for native creation date support.
