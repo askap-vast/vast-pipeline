@@ -7,11 +7,11 @@
 <!-- TODO: replace above with this below when repo is public -->
 <!-- ![Tests](https://img.shields.io/github/workflow/status/askap-vast/vast-pipeline/test-suite/master?label=Test%20Suite&logo=github) -->
 
-This repository holds the code of the Radio Transient detection pipeline for the VAST project.
-
-[![VAST Pipeline Login](https://github.com/askap-vast/vast-pipeline/blob/master/docs/img/login.png)](https://github.com/askap-vast/vast-pipeline/blob/master/docs/img/login.png)
+This repository holds the code of the VAST Pipeline, a radio transient detection pipeline for the ASKAP survey science project, VAST.
 
 Please read the [Installation Instructions](https://vast-survey.org/vast-pipeline/quickstart/installation/). If you have any questions or feedback, we welcome you to open an [issue](https://github.com/askap-vast/vast-pipeline/issues). If you are interested in contributing to the code, please read and follow the [Contributing and Developing Guidelines](https://vast-survey.org/vast-pipeline/developing/intro/).
+
+If using this tool in your research, please cite Murphy, et al. (2021).
 
 ## Features
 
@@ -30,24 +30,24 @@ Please read the [Installation Instructions](https://vast-survey.org/vast-pipelin
 
 [![VAST Pipeline Overview](https://github.com/askap-vast/vast-pipeline/blob/master/docs/img/vast_pipeline_overview1.gif)](https://github.com/askap-vast/vast-pipeline/blob/master/docs/img/vast_pipeline_overview1.gif)
 
-## Credits & Acknowledgements
+## Contributors
 
-This tool was developed by Sergio Pintaldi from the [Sydney Informatics Hub](https://informatics.sydney.edu.au) – a core research facility of [The University of Sydney](https://www.sydney.edu.au/) – together with Adam Stewart from the [Sydney Institute for Astronomy](https://sifa.sydney.edu.au/), Andrew O'Brien and David Kaplan from the [Department of Physics, University of Wisconsin-Milwaukee](https://uwm.edu/physics/research/astronomy-gravitation-cosmology/). Substantial contributions have been made by the [ADACS team](https://adacs.org.au/who-we-are/our-team/) Shibli Saleheen, David Liptai, Ella Xi Wang.
+* Sergio Pintaldi – [Sydney Informatics Hub](https://informatics.sydney.edu.au)
+* Adam Stewart – [Sydney Institute for Astronomy](https://sifa.sydney.edu.au/)
+* Andrew O'Brien – [Department of Physics, University of Wisconsin-Milwaukee](https://uwm.edu/physics/research/astronomy-gravitation-cosmology/)
+* Tara Murphy – [Sydney Institute for Astronomy](https://sifa.sydney.edu.au/)
+* David Kaplan – [Department of Physics, University of Wisconsin-Milwaukee](https://uwm.edu/physics/research/astronomy-gravitation-cosmology/)
+* Shibli Saleheen – [ADACS](https://adacs.org.au/who-we-are/our-team/)
+* David Liptai – [ADACS](https://adacs.org.au/who-we-are/our-team/)
+* Ella Xi Wang – [ADACS](https://adacs.org.au/who-we-are/our-team/)
+
+## Acknowledgements
+
+The VAST Pipeline development was supported by:
+
+* The Australian Research Council through grants FT150100099 and DP190100561.
+* The Sydney Informatics Hub (SIH), a core research facility at the University of Sydney.
+* Software support resources awarded under the Astronomy Data and Computing Services (ADACS) Merit Allocation Program. ADACS is funded from the Astronomy National Collaborative Research Infrastructure Strategy (NCRIS) allocation provided by the Australian Government and managed by Astronomy Australia Limited (AAL).
+* NSF grant AST-1816492.
 
 The developers thank the creators of [SB Admin 2](https://github.com/StartBootstrap/startbootstrap-sb-admin-2) to make the dashboard template freely available.
-
-If using this tool in your research, please acknowledge the [Sydney Informatics Hub](https://informatics.sydney.edu.au) in publications.
-
-```console
-
-         /  /\        ___          /__/\
-        /  /:/_      /  /\         \  \:\
-       /  /:/ /\    /  /:/          \__\:\
-      /  /:/ /::\  /__/::\      ___ /  /::\
-     /__/:/ /:/\:\ \__\/\:\__  /__/\  /:/\:\
-     \  \:\/:/~/:/    \  \:\/\ \  \:\/:/__\/
-      \  \::/ /:/      \__\::/  \  \::/
-       \__\/ /:/       /__/:/    \  \:\
-         /__/:/ please \__\/      \  \:\
-         \__\/ acknowledge your use\__\/
-```

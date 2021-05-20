@@ -115,11 +115,11 @@ nav:
     - Benchmarks: developing/profiling.md
   #   - Tips: developing/tips.md like this https://stackoverflow.com/questions/60160823/how-to-properly-parallelize-generic-code-with-numba-dask
   - FAQ: faq.md
+  - Help and Acknowledgements: help_and_acknowledgements.md
   - Reference:
     - Changelog: changelog.md
     - Code of Conduct: code_of_conduct.md
     - License: license.md
-    - Credit and Acknowledgements: reference/acknowledgements.md
     - Code Reference:
       - vast_pipeline:
         - image:
@@ -203,8 +203,5 @@ extra:
       name: vast-pipeline source on GitHub
     - icon: fontawesome/brands/slack
       link: https://askap-vast.slack.com/
-    - icon: fontawesome/solid/paper-plane
-      link: mailto:transients@mailman.sydney.edu.au
-      name: Email ASKAP VAST
     - icon: fontawesome/solid/globe
       link: https://vast-survey.org
