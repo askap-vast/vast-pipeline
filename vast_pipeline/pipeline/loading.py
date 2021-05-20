@@ -21,7 +21,7 @@ from vast_pipeline.models import (
 )
 from vast_pipeline.pipeline.config import PipelineConfig
 from vast_pipeline.pipeline.utils import (
-    get_create_img, get_create_img_band, add_run_to_img
+    get_create_img, get_create_img_band, add_run_to_img, write_parquets
 )
 from vast_pipeline.utils.utils import StopWatch
 
@@ -150,27 +150,7 @@ def make_upload_images(
         del measurements, image, band, img
 
     if pipeline_run:
-        # write images parquet file under pipeline run folder
-        images_df = pd.DataFrame(map(lambda x: x.__dict__, images))
-        images_df = images_df.drop('_state', axis=1)
-        images_df.to_parquet(
-            os.path.join(config["run"]["path"], 'images.parquet'),
-            index=False
-        )
-        # write skyregions parquet file under pipeline run folder
-        skyregs_df = pd.DataFrame(map(lambda x: x.__dict__, skyregions))
-        skyregs_df = skyregs_df.drop('_state', axis=1)
-        skyregs_df.to_parquet(
-            os.path.join(config["run"]["path"], 'skyregions.parquet'),
-            index=False
-        )
-        # write skyregions parquet file under pipeline run folder
-        bands_df = pd.DataFrame(map(lambda x: x.__dict__, bands))
-        bands_df = bands_df.drop('_state', axis=1)
-        bands_df.to_parquet(
-            os.path.join(config["run"]["path"], 'bands.parquet'),
-            index=False
-        )
+        skyregs_df = write_parquets(images, skyregions, bands, config["run"]["path"])
     else:
         skyregs_df = None
 

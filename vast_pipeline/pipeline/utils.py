@@ -1808,3 +1808,47 @@ def reconstruct_associtaion_dfs(
     ], axis=1).reset_index(drop=True)
 
     return sources_df, skyc1_srcs
+
+
+def write_parquets(
+    images: List[Image],
+    skyregions: List[SkyRegion],
+    bands: List[Band],
+    run_path: str
+) -> pd.DataFrame:
+    """
+    This function saves images, skyregions and bands to parquet files.
+    It also returns the skyregions dataframe.
+
+    Args:
+        images: list of image Django ORM objects.
+        skyregions: list sky region Django ORM objects.
+        bands: list of band Django ORM objects.
+        run_path: directory to save parquets to.
+
+    Returns:
+        Sky regions as pandas data frame
+    """
+    # write images parquet file under pipeline run folder
+    images_df = pd.DataFrame(map(lambda x: x.__dict__, images))
+    images_df = images_df.drop('_state', axis=1)
+    images_df.to_parquet(
+        os.path.join(run_path, 'images.parquet'),
+        index=False
+    )
+    # write skyregions parquet file under pipeline run folder
+    skyregs_df = pd.DataFrame(map(lambda x: x.__dict__, skyregions))
+    skyregs_df = skyregs_df.drop('_state', axis=1)
+    skyregs_df.to_parquet(
+        os.path.join(run_path, 'skyregions.parquet'),
+        index=False
+    )
+    # write skyregions parquet file under pipeline run folder
+    bands_df = pd.DataFrame(map(lambda x: x.__dict__, bands))
+    bands_df = bands_df.drop('_state', axis=1)
+    bands_df.to_parquet(
+        os.path.join(run_path, 'bands.parquet'),
+        index=False
+    )
+
+    return skyregs_df
