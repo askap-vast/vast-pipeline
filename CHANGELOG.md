@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- When searching by source names, any "VAST" prefix on the name will be silently removed to make searching for published VAST sources easier [#536](https://github.com/askap-vast/vast-pipeline/pull/536).
 - Added `vast_pipeline/_version.py` to store the current software version and updated release documentation [#532](https://github.com/askap-vast/vast-pipeline/pull/532).
 - Added created and last updated dates to doc pages using mkdocs-git-revision-date-localized-plugin [#514](https://github.com/askap-vast/vast-pipeline/pull/514).
 - Added support for glob expressions when specifying input files in the run config file [#504](https://github.com/askap-vast/vast-pipeline/pull/504)
@@ -35,6 +36,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Changed source naming convention to `Jhhmmss.s(+/-)ddmmss` to match VAST-P1 paper (Murphy, et al. 2021) convention [#536](https://github.com/askap-vast/vast-pipeline/pull/536)
 - Updated npm packages to resolve dependabot security alert [#533](https://github.com/askap-vast/vast-pipeline/pull/533).
 - Updated homepage text to reflect new features and documentation [#534](https://github.com/askap-vast/vast-pipeline/pull/534).
 - Changed layout of source detail page [#526](https://github.com/askap-vast/vast-pipeline/pull/526).
@@ -100,6 +102,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#536](https://github.com/askap-vast/vast-pipeline/pull/536) feat: changed source naming convention.
 - [#534](https://github.com/askap-vast/vast-pipeline/pull/534) feat: Update homepage text.
 - [#532](https://github.com/askap-vast/vast-pipeline/pull/532) feat, doc: Versioning.
 - [#533](https://github.com/askap-vast/vast-pipeline/pull/533) dep: updated npm deps; removed bootstrap.
