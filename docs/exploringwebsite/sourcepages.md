@@ -66,7 +66,7 @@ Users can attach tags to sources (see [Source Tags and Favourites](sourcetagsfav
 
 Here specific sources can be searched for by entering the source names, or source database `id` values, in a comma-separated list. For example:
 
-* `ASKAP_011816.05-730747.77,ASKAP_011816.05-730747.77,ASKAP_213221.21-040900.42`
+* `J011816.05-730747.77,J011816.05-730747.77,J213221.21-040900.42`
 * `1031,1280,52`
 
 are valid entries to this search field. Use the dropdown menu to declare whether `name` (default) or `id` values are being searched.

@@ -57,9 +57,9 @@ def source_models_generator(
     """
     for i, row in src_df.iterrows():
         name = (
-            f"ASKAP_{deg2hms(row['wavg_ra'])}"
-            f"{deg2dms(row['wavg_dec'])}".replace(":", "")
-        )
+            f"J{deg2hms(row['wavg_ra'], precision=1)}"
+            f"{deg2dms(row['wavg_dec'], precision=0)}"
+        ).replace(":", "")
         src = Source()
         src.run_id = pipeline_run.id
         src.name = name

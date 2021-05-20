@@ -116,63 +116,68 @@ def deg2sex(deg: float) -> Tuple[int, Tuple[float, float, float]]:
     return (sign, (degf, minsf, secs))
 
 
-def deg2dms(deg: float, dms_format: bool=False) -> str:
-    """Convert angle in degrees into DMS using format. Default: '02d:02d:05.2f'
+def deg2dms(deg: float, dms_format: bool = False, precision: int = 2) -> str:
+    """Convert angle in degrees into a DMS formatted string. e.g.
 
     >>> deg2dms(12.582438888888889)
     '+12:34:56.78'
-
-    >>> deg2dms(2.582438888888889)
-    '+02:34:56.78'
-
-    >>> deg2dms(-12.582438888888889)
-    '-12:34:56.78'
+    >>> deg2dms(2.582438888888889, dms_format=True)
+    '+02d34m56.78s'
+    >>> deg2dms(-12.582438888888889, precision=1)
+    '-12:34:56.8'
 
     Args:
-        deg: The angle in degrees to convert.
-        dms_format: If `True` then the result is returned in dms format, e.g.
-            '+12d34m56.78s'.
+        deg (float): The angle to convert in degrees.
+        dms_format (bool, optional): If `True`, use "d", "m", and "s" as the coorindate
+            separator, otherwise use ":". Defaults to False.
+        precision (int, optional): Floating point precision of the arcseconds component.
+            Can be 0 or a positive integer. Negative values will be interpreted as 0.
+            Defaults to 2.
 
     Returns:
-        The string result.
+        str: `deg` formatted as a DMS string.
     """
 
     sign, sex = deg2sex(deg)
     signchar = "+" if sign == 1 else "-"
+    precision = precision if precision >= 0 else 0
+    sec_width = 3 + precision if precision > 0 else 2
 
     if dms_format:
-        return f'{signchar}{sex[0]:02d}d{sex[1]:02d}m{sex[2]:05.2f}s'
+        return f'{signchar}{sex[0]:02d}d{sex[1]:02d}m{sex[2]:0{sec_width}.{precision}f}s'
 
-    return f'{signchar}{sex[0]:02d}:{sex[1]:02d}:{sex[2]:05.2f}'
+    return f'{signchar}{sex[0]:02d}:{sex[1]:02d}:{sex[2]:0{sec_width}.{precision}f}'
 
 
-def deg2hms(deg: float, hms_format: bool=False) -> str:
-    """Convert angle in degrees into HMS using format. Default: '%d:%d:%.2f'
+def deg2hms(deg: float, hms_format: bool = False, precision: int = 2) -> str:
+    """Convert angle in degrees into a HMS formatted string. e.g.
 
     >>> deg2hms(188.73658333333333)
     '12:34:56.78'
-
-
-    >>> deg2hms(-188.73658333333333)
-    '12:34:56.78'
+    >>> deg2hms(-188.73658333333333, hms_format=True)
+    '12h34m56.78s'
+    >>> deg2hms(188.73658333333333, precision=1)
+    '12:34:56.8'
 
     Args:
-        deg: The angle in degrees to convert.
-        hms_format: If `True` then the result is returned in hms format, e.g.
-            '12h34m56.78s'.
+        deg (float): The angle to convert in degrees.
+        hms_format (bool, optional): If `True`, use "h", "m", and "s" as the coorindate
+            separator, otherwise use ":". Defaults to False.
+        precision (int, optional): Floating point precision of the seconds component.
+            Can be 0 or a positive integer. Negative values will be interpreted as 0.
+            Defaults to 2.
 
     Returns:
-        The string result.
+        str: `deg` formatted as an HMS string.
     """
-    # TODO: why it this?
-    # We only handle positive RA values
-    # assert deg >= 0
     sign, sex = deg2sex(deg / 15.)
+    precision = precision if precision >= 0 else 0
+    sec_width = 3 + precision if precision > 0 else 2
 
     if hms_format:
-        return f'{sex[0]:02d}h{sex[1]:02d}m{sex[2]:05.2f}s'
+        return f'{sex[0]:02d}h{sex[1]:02d}m{sex[2]:0{sec_width}.{precision}f}s'
 
-    return f'{sex[0]:02d}:{sex[1]:02d}:{sex[2]:05.2f}'
+    return f'{sex[0]:02d}:{sex[1]:02d}:{sex[2]:0{sec_width}.{precision}f}'
 
 
 def eq_to_cart(ra: float, dec: float) -> Tuple[float, float, float]:
