@@ -21,9 +21,9 @@
     {% else %}
       <h1 class="h3 mb-4 text-gray-800">Welcome back!</h1>
     {% endif %}
-    <span class="text">
+    <div>
       VAST Pipeline version {% if pipeline_version_url %}<a href={{ pipeline_version_url }}>{% endif %}{{ pipeline_version }}{% if pipeline_version_url %}</a>{% endif %}.
-    </span>
+    </div>
     <a href="https://github.com/askap-vast/vast-pipeline" target="_blank" class="btn btn-sm btn-secondary btn-icon-split shadow-sm">
       <span class="icon text-white-600">
         <i class="fab fa-github fa-lg"></i>
