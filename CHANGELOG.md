@@ -36,6 +36,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### Changed
 
 - Updated npm packages to resolve dependabot security alert [#533](https://github.com/askap-vast/vast-pipeline/pull/533).
+- Updated homepage text to reflect new features and documentation [#534](https://github.com/askap-vast/vast-pipeline/pull/534).
 - Changed layout of source detail page [#526](https://github.com/askap-vast/vast-pipeline/pull/526).
 - Updated mkdocs-material to 7.1.4 for native creation date support [#518](https://github.com/askap-vast/vast-pipeline/pull/518).
 - Updated developing docs to specify the main development branch as dev instead of master [#521](https://github.com/askap-vast/vast-pipeline/pull/521).
@@ -99,6 +100,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#534](https://github.com/askap-vast/vast-pipeline/pull/534) feat: Update homepage text.
 - [#532](https://github.com/askap-vast/vast-pipeline/pull/532) feat, doc: Versioning.
 - [#533](https://github.com/askap-vast/vast-pipeline/pull/533) dep: updated npm deps; removed bootstrap.
 - [#528](https://github.com/askap-vast/vast-pipeline/pull/528) fix: fixed broken image detail link.

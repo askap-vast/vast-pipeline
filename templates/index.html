@@ -21,6 +21,9 @@
     {% else %}
       <h1 class="h3 mb-4 text-gray-800">Welcome back!</h1>
     {% endif %}
+    <span class="text">
+      VAST Pipeline version {% if pipeline_version_url %}<a href={{ pipeline_version_url }}>{% endif %}{{ pipeline_version }}{% if pipeline_version_url %}</a>{% endif %}.
+    </span>
     <a href="https://github.com/askap-vast/vast-pipeline" target="_blank" class="btn btn-sm btn-secondary btn-icon-split shadow-sm">
       <span class="icon text-white-600">
         <i class="fab fa-github fa-lg"></i>
@@ -116,11 +119,11 @@
          <p>Use the navigation sidebar to explore the website. Where to go for common tasks:</p>
           <ul>
             <li>To search for a source by name or coordinates use the <a href="{% url 'vast_pipeline:source_query' %}">Sources Query</a> page.</li><br>
-            <li>To see what pipeline runs are available see the <a href="{% url 'vast_pipeline:run_index' %}">Pipeline Runs</a> page.</li><br>
+            <li>To see what pipeline runs are available or to initialise and launch a run see the <a href="{% url 'vast_pipeline:run_index' %}">Pipeline Runs</a> page.</li><br>
           </ul>
-        <p>If you find an issue please use the <a target="_blank" href="https://github.com/askap-vast/vast-pipeline/issues/new">raise an issue on Github</a>. This link is always available via the sidebar.</p>
+        <p>If you find an issue please <a target="_blank" href="https://github.com/askap-vast/vast-pipeline/issues/new">raise an issue on Github</a>. This link is always available via the sidebar. For ideas or features that require more discussion, or to ask a general question about the pipeline, there is also a link to <a target="_blank" href="https://github.com/askap-vast/vast-pipeline/discussions/new/">start a discussion on Github</a>.</p>
         <p>Links to other VAST servies such as the <a target="_blank" href="https://data.vast-survey.org">JupyterHub</a> or <a target="_blank" href="https://github.com/askap-vast/vast-project/wiki">Wiki</a> can be found under 'VAST Links' in the sidebar.</p>
-        <p>Currently users are unable to launch processing of their own run from the website. This feature is coming soon. In the meantime please contact the admin team if you wish to process your own run.</p>
+        <p>Full pipeline documentation is available on the <a target="_blank" href="https://vast-survey.org/vast-pipeline/">documentation website</a>.</p>
         </div>
       </div>
     </div>
