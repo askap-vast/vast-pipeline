@@ -69,8 +69,17 @@
   justify-content: flex-end;
 }
 
+// make the breadcrumb truncate instead of wrap on narrow viewports
 #content > nav > ol.breadcrumb {
   margin-bottom: 0rem;
+  flex-wrap: nowrap !important;
+
+  .breadcrumb-item {
+    display: list-item;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 .sidebar {
