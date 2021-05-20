@@ -533,3 +533,23 @@ class PipelineConfig:
         if images_changed and settings_check:
             return False
         return True
+
+    def image_config(self) -> Dict:
+        """
+        Get the config options required for image ingestion only.
+        Namely:
+            - selavy_local_rms_fill_value
+            - condon_errors
+            - ra_uncertainty
+            - dec_uncertainty
+
+        Returns:
+            Dict: the relevant key value pairs
+        """
+        keys = [
+            "selavy_local_rms_fill_value",
+            "condon_errors",
+            "ra_uncertainty",
+            "dec_uncertainty"
+        ]
+        return {key: self["measurements"][key] for key in keys}

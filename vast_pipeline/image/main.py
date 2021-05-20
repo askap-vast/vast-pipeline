@@ -16,7 +16,6 @@ from typing import Dict
 from .utils import calc_error_radius
 from .utils import calc_condon_flux_errors
 
-from vast_pipeline.pipeline.config import PipelineConfig
 from vast_pipeline import models
 from vast_pipeline.survey.translators import tr_selavy
 
@@ -244,13 +243,13 @@ class SelavyImage(FitsImage):
             with the image.
         background_path (str): The system path to the background image
             associated with the image.
-        config (PipelineConfig): The pipeline configuration settings.
+        config (Dict): The image configuration settings.
     """
     def __init__(
         self,
         path: str,
         paths: Dict[str, Dict[str, str]],
-        config: PipelineConfig,
+        config: Dict,
         hdu_index: int = 0,
     ) -> None:
         """
@@ -261,7 +260,7 @@ class SelavyImage(FitsImage):
             paths: Dictionary containing the system paths to the associated
                 image products and selavy catalogue. The keys are 'selavy',
                 'noise', 'background'.
-            config: Configuration settings for the pipeline.
+            config: Configuration settings for the image ingestion.
             hdu_index: The index number to use to access the header from the
                 hdu object.
 
@@ -272,7 +271,7 @@ class SelavyImage(FitsImage):
         self.selavy_path = paths['selavy'][path]
         self.noise_path = paths['noise'].get(path, '')
         self.background_path = paths['background'].get(path, '')
-        self.config: PipelineConfig = config
+        self.config: Dict = config
         super().__init__(path, hdu_index)
 
     def read_selavy(self, dj_image: models.Image) -> pd.DataFrame:
@@ -354,12 +353,12 @@ class SelavyImage(FitsImage):
         # replace 0 local_rms values using user config value
         df.loc[
             df['local_rms'] == 0., 'local_rms'
-        ] = self.config["measurements"]["selavy_local_rms_fill_value"]
+        ] = self.config["selavy_local_rms_fill_value"]
 
         df['snr'] = df['flux_peak'].values / df['local_rms'].values
         df['compactness'] = df['flux_int'].values / df['flux_peak'].values
 
-        if self.config["measurements"]["condon_errors"]:
+        if self.config["condon_errors"]:
             logger.debug("Calculating Condon '97 errors...")
             theta_B = dj_image.beam_bmaj
             theta_b = dj_image.beam_bmin
@@ -391,8 +390,8 @@ class SelavyImage(FitsImage):
 
         logger.debug("Calculating positional errors...")
         # TODO: avoid extra column given that it is a single value
-        df['ew_sys_err'] = self.config["measurements"]["ra_uncertainty"] / 3600.
-        df['ns_sys_err'] = self.config["measurements"]["dec_uncertainty"] / 3600.
+        df['ew_sys_err'] = self.config["ra_uncertainty"] / 3600.
+        df['ns_sys_err'] = self.config["dec_uncertainty"] / 3600.
 
         df['error_radius'] = calc_error_radius(
             df['ra'].values,

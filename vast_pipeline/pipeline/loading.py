@@ -95,12 +95,14 @@ def make_upload_images(
     skyregions = []
     bands = []
 
+    image_config = config.image_config()
+
     for path in paths['selavy']:
         # STEP #1: Load image and measurements
         image = SelavyImage(
             path,
             paths,
-            config
+            image_config
         )
         logger.info('Reading image %s ...', image.name)
 
