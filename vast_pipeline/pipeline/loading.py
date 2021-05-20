@@ -16,12 +16,11 @@ from vast_pipeline.pipeline.model_generator import (
     measurement_pair_models_generator,
 )
 from vast_pipeline.models import (
-    Association, Measurement, Source, RelatedSource,
+    Association, Band, Measurement, SkyRegion, Source, RelatedSource,
     MeasurementPair, Run, Image
 )
-from vast_pipeline.pipeline.config import PipelineConfig
 from vast_pipeline.pipeline.utils import (
-    get_create_img, get_create_img_band, add_run_to_img, write_parquets
+    get_create_img, get_create_img_band, add_run_to_img
 )
 from vast_pipeline.utils.utils import StopWatch
 
@@ -69,11 +68,13 @@ def bulk_upload_model(
 
 
 def make_upload_images(
-    paths: Dict[str, Dict[str, str]], config: PipelineConfig, pipeline_run: Run=None
-) -> Tuple[List[Image], pd.DataFrame]:
+    paths: Dict[str, Dict[str, str]], image_config: Dict, pipeline_run: Run=None
+) -> Tuple[List[Image], List[SkyRegion], List[Band]]:
     '''
     Carry the first part of the pipeline, by uploading all the images
     to the image table and populated band and skyregion objects.
+    If called as part of a pipeline run, it will associate each image
+    and skyregion with it.
 
     Args:
         paths:
@@ -81,21 +82,18 @@ def make_upload_images(
             the images in the pipeline run. The primary keys are `selavy`,
             'noise' and 'background' with the secondary key being the image
             name.
-        config (config):
-            The config object of the pipeline run.
+        image_config:
+            Dictionary of configuration options for the image ingestion.
         pipeline_run:
-            The pipeline run object.
+            The pipeline run object. Default: None
 
     Returns:
-        A list of image objects that have been uploaded along with a DataFrame
-        containing the information of the sky regions associated with the run.
+        A list of image, sky region and band objects that have been uploaded.
     '''
     timer = StopWatch()
     images = []
     skyregions = []
     bands = []
-
-    image_config = config.image_config()
 
     for path in paths['selavy']:
         # STEP #1: Load image and measurements
@@ -149,17 +147,12 @@ def make_upload_images(
         )
         del measurements, image, band, img
 
-    if pipeline_run:
-        skyregs_df = write_parquets(images, skyregions, bands, config["run"]["path"])
-    else:
-        skyregs_df = None
-
     logger.info(
         'Total images upload/loading time: %.2f seconds',
         timer.reset_init()
     )
 
-    return images, skyregs_df
+    return images, skyregions, bands
 
 
 def make_upload_sources(

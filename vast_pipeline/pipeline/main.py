@@ -26,7 +26,8 @@ from .loading import make_upload_images
 from .utils import (
     get_src_skyregion_merged_df,
     group_skyregions,
-    get_parallel_assoc_image_df
+    get_parallel_assoc_image_df,
+    write_parquets
 )
 
 from .errors import MaxPipelineRunsError
@@ -127,11 +128,14 @@ class Pipeline():
         self.match_images_to_data()
 
         # upload/retrieve image data
-        images, skyregs_df = make_upload_images(
+        images, skyregions, bands = make_upload_images(
             self.img_paths,
-            self.config,
+            self.config.image_config(),
             p_run
         )
+
+        # write parquet files and retrieve skyregions as a dataframe
+        skyregs_df = write_parquets(images, skyregions, bands, self.config["run"]["path"])
 
         # STEP #2: measurements association
         # order images by time

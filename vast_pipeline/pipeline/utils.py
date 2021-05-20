@@ -1818,7 +1818,8 @@ def write_parquets(
 ) -> pd.DataFrame:
     """
     This function saves images, skyregions and bands to parquet files.
-    It also returns the skyregions dataframe.
+    It also returns a DataFrame containing containing the information
+    of the sky regions associated with the current run.
 
     Args:
         images: list of image Django ORM objects.
@@ -1827,7 +1828,7 @@ def write_parquets(
         run_path: directory to save parquets to.
 
     Returns:
-        Sky regions as pandas data frame
+        Sky regions as pandas DataFrame
     """
     # write images parquet file under pipeline run folder
     images_df = pd.DataFrame(map(lambda x: x.__dict__, images))
