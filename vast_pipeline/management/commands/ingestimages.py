@@ -25,7 +25,7 @@ class _DummyPipeline(object):
 
 class Command(BaseCommand):
     """
-    This script injects an image into the database along with extracting,
+    This script ingests images into the database along with extracting,
     correcting and saving the measurements and obtaining estimates of the rms.
     """
     help = (

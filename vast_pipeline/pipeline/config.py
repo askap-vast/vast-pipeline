@@ -556,6 +556,16 @@ class PipelineConfig:
 
 
 class ImageIngestConfig(PipelineConfig):
+    """Image ingest configuration derived from PipelineConfig.
+
+    Attributes:
+        SCHEMA: class attribute containing the YAML schema for the image ingest config.
+        TEMPLATE_PATH: class attribute containing the path to the default Jinja2 image ingest
+            config template file.
+
+    Raises:
+        PipelineConfigError: the input YAML config violates the schema.
+    """
     # path to default image ingest config template
     TEMPLATE_PATH: str = os.path.join(
         settings.BASE_DIR, "vast_pipeline", "ingest_config_template.yaml.j2"
