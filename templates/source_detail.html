@@ -78,9 +78,8 @@
   </div>
 
   <div class="row">
-
-    <!-- Basic Card Example -->
-    <div class="col-xl-4 col-lg-6 mb-4">
+    <!-- General details -->
+    <div class="col-xl-4 mb-4">
       <div class="card shadow mb-4 h-100">
         <div class="card-header py-3">
           <h6 class="m-0 font-weight-bold text-primary">Details</h6>
@@ -89,80 +88,41 @@
           <p>
             <strong>Name: </strong>{{ source.name }}<br>
             <strong>Pipeline Run: </strong><a href="{% url 'vast_pipeline:run_detail' source.run_id %}"
-              target="_blank">{{ source.run_name }}</a>
+            target="_blank">{{ source.run_name }}</a>
           </p>
           <p>
-            <strong>Position: </strong><span class="clipboard-copy">{{ source.wavg_ra_hms }}
-              {{ source.wavg_dec_dms }}</span><br>
-            <strong>Position (Decimal): </strong><span class="clipboard-copy">{{ source.wavg_ra|floatformat:6 }}
-              {{ source.wavg_dec|floatformat:6 }}</span><br>
-            <strong>Position (Galactic): </strong><span class="clipboard-copy">{{ source.wavg_l|floatformat:6 }}
-              {{ source.wavg_b|floatformat:6 }}</span>
+            <strong>Position: </strong><span class="clipboard-copy">{{ source.wavg_ra_hms }} {{ source.wavg_dec_dms }}</span><br>
+            <strong>Position (Decimal): </strong><span class="clipboard-copy">{{ source.wavg_ra|floatformat:6 }} {{ source.wavg_dec|floatformat:6 }}</span><br>
+            <strong>Position (Galactic): </strong><span class="clipboard-copy">{{ source.wavg_l|floatformat:6 }} {{ source.wavg_b|floatformat:6 }}</span>
           </p>
-          <p>
-            <div class="row">
-            <div class="col-xl">
-              <p>
-                <strong>Avg. Int. Flux: </strong>{{ source.avg_flux_int|floatformat:3 }} mJy<br>
-                <strong>Min. Int. Flux: </strong>{{ source.min_flux_int|floatformat:3 }} mJy<br>
-                <strong>Max Int. Flux: </strong>{{ source.max_flux_int|floatformat:3 }} mJy<br>
-                <strong>Min Int. Flux Isl. Ratio: </strong>{{ source.min_flux_int_isl_ratio|floatformat:2 }}
-              </p>
-            </div>
-            <div class="col-xl">
-              <p>
-                <strong>Avg. Peak Flux: </strong>{{ source.avg_flux_peak|floatformat:3 }} mJy/beam<br>
-                <strong>Min. Peak Flux: </strong>{{ source.min_flux_peak|floatformat:3 }} mJy/beam<br>
-                <strong>Max Peak Flux: </strong>{{ source.max_flux_peak|floatformat:3 }} mJy/beam<br>
-                <strong>Min Peak Flux Isl. Ratio: </strong>{{ source.min_flux_peak_isl_ratio|floatformat:2 }}
-              </p>
-            </div>
-          </div>
           <div class="row">
             <div class="col-xl">
               <p>
-                <strong>W. Avg RA Err: </strong>{{ source.wavg_uncertainty_ew|deg_to_arcsec|floatformat:3 }}&Prime;<br>
-                <strong>W. Avg Dec Err: </strong>
-                {{ source.wavg_uncertainty_ns|deg_to_arcsec|floatformat:3 }}&Prime;<br>
-                <strong>Avg. Compactness: </strong>{{ source.avg_compactness|floatformat:3 }}<br>
-                <strong>Neighbour Dist: </strong>{{ source.n_neighbour_dist|deg_to_arcmin|floatformat:2 }}&prime;
-              </p>
-              <p>
-                <strong>Max SNR: </strong>{{ source.max_snr|floatformat:2 }}<br>
-                <strong>Min SNR: </strong>{{ source.min_snr|floatformat:2 }}
-              </p>
-              <p>
                 <strong>Nr Datapoints: </strong>{{ source.n_meas }} (<a href="#measurementsHeader">Table</a>)<br>
                 <strong>Nr Selavy: </strong>{{ source.n_meas_sel }}<br>
-                <strong>Nr Forced: </strong>{{ source.n_meas_forced }}
-              </p>
-              <p>
+                <strong>Nr Forced: </strong>{{ source.n_meas_forced }}<br>
                 <strong>Nr Relations: </strong>{{ source.n_rel }}
                 {% if source.n_rel > 0 %}(<a href="#relatedHeader">Table</a>){% endif %}<br>
                 <strong>Nr Siblings: </strong>{{ source.n_sibl }}
               </p>
+              <p>
+                <strong>W. Avg RA Err: </strong>{{ source.wavg_uncertainty_ew|deg_to_arcsec|floatformat:3 }}&Prime;<br>
+                <strong>W. Avg Dec Err: </strong>
+                {{ source.wavg_uncertainty_ns|deg_to_arcsec|floatformat:3 }}&Prime;<br>
+              </p>
             </div>
             <div class="col-xl">
               <p>
-                <strong>V (Int. Flux): </strong>{{ source.v_int|floatformat:2 }}<br>
-                <strong>V (Peak Flux): </strong>{{ source.v_peak|floatformat:2 }}<br>
-                <strong>&eta; (Int. Flux): </strong>{{ source.eta_int|floatformat:2 }}<br>
-                <strong>&eta; (Peak Flux): </strong>{{ source.eta_peak|floatformat:2 }}
+                <strong>Avg. Compactness: </strong>{{ source.avg_compactness|floatformat:3 }}<br>
+                <strong>Neighbour Dist: </strong>{{ source.n_neighbour_dist|deg_to_arcmin|floatformat:2 }}&prime;<br>
+                <strong>Max SNR: </strong>{{ source.max_snr|floatformat:2 }}<br>
+                <strong>Min SNR: </strong>{{ source.min_snr|floatformat:2 }}
               </p>
               <p>
+                <br>
                 <strong>New Source: </strong>{{ source.new }}<br>
                 <strong>New High Sigma:
                 </strong>{% if source.new %}{{ source.new_high_sigma|floatformat:2 }}{% else %}N/A{% endif %}
-              </p>
-              <p>
-                <strong>Max |Vs| metric (peak): </strong>{{ source.vs_abs_significant_max_peak|floatformat:2 }}<br>
-                <strong>Max |Vs| metric (int): </strong>{{ source.vs_abs_significant_max_int|floatformat:2 }}<br>
-                <strong>Max |m| metric (peak): </strong>{{ source.m_abs_significant_max_peak|floatformat:2 }}<br>
-                <strong>Max |m| metric (int): </strong>{{ source.m_abs_significant_max_int|floatformat:2 }}
-              </p>
-              <p>
-                <a href="#lightcurveHeader">Lightcurve</a><br>
-                <a href="#postageHeader">Postage stamps</a>
               </p>
             </div>
           </div>
@@ -170,23 +130,79 @@
       </div>
     </div>
 
-    <div class="col-xl-4 col-lg-6 mb-4">
-      <!-- Comments -->
-      {% include "comments_component.html" %}
+    <!-- JS9 First Detection -->
+    <div class="col-xl-4 d-flex">
+      <div class="card shadow mb-4 flex-fill">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">First Detection Postage Stamp</h6>
+        </div>
+        <div class="card-body">
+          <div class="JS9" id="JS9_{{ source.n_meas|add:"1" }}" data-width="450px" data-height="360px"></div>
+        </div>
+      </div>
     </div>
 
-    <!-- Aladin viz tile -->
-    <div class="col-xl-4 mb-4">
-      <div class="card shadow mb-4 h-100" style="min-height: 16em;">
+    <!-- Aladin -->
+    <div class="col-xl-4 d-flex">
+      <div class="card shadow mb-4 flex-fill" style="min-height: 33vh;">
         <div id="aladinViz"></div>
       </div>
     </div>
 
-  </div> <!-- /.row -->
+  </div>
 
   <div class="row">
+    <!-- Flux details -->
+    <div class="col-xl-4 col-lg-6 mb-4">
+      <div class="card shadow mb-4 h-100">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">Flux & Variability Details</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+            <div class="col-xl">
+              <p>
+                <strong>Integrated Flux (mJy)</strong>
+              </p>
+              <p>
+                <strong>Avg. Int. Flux: </strong>{{ source.avg_flux_int|floatformat:3 }}<br>
+                <strong>Min. Int. Flux: </strong>{{ source.min_flux_int|floatformat:3 }}<br>
+                <strong>Max Int. Flux: </strong>{{ source.max_flux_int|floatformat:3 }}<br>
+                <strong>Min Int. Flux Isl. Ratio: </strong>{{ source.min_flux_int_isl_ratio|floatformat:2 }}
+              </p>
+              <p>
+                <strong>Max |Vs| metric (int): </strong>{{ source.vs_abs_significant_max_int|floatformat:2 }}<br>
+                <strong>Max |m| metric (int): </strong>{{ source.m_abs_significant_max_int|floatformat:2 }}
+              </p>
+              <p>
+                <strong>V (Int. Flux): </strong>{{ source.v_int|floatformat:2 }}<br>
+                <strong>&eta; (Int. Flux): </strong>{{ source.eta_int|floatformat:2 }}<br>
+              </p>
+            </div>
+            <div class="col-xl">
+              <p>
+                <strong>Peak Flux (mJy/beam)</strong>
+              </p>
+              <p>
+                <strong>Avg. Peak Flux: </strong>{{ source.avg_flux_peak|floatformat:3 }}<br>
+                <strong>Min. Peak Flux: </strong>{{ source.min_flux_peak|floatformat:3 }}<br>
+                <strong>Max Peak Flux: </strong>{{ source.max_flux_peak|floatformat:3 }}<br>
+                <strong>Min Peak Flux Isl. Ratio: </strong>{{ source.min_flux_peak_isl_ratio|floatformat:2 }}
+              </p>
+              <p>
+                <strong>Max |Vs| metric (peak): </strong>{{ source.vs_abs_significant_max_peak|floatformat:2 }}<br>
+                <strong>Max |m| metric (peak): </strong>{{ source.m_abs_significant_max_peak|floatformat:2 }}<br>
+              </p>
+              <p>
+                <strong>V (Peak Flux): </strong>{{ source.v_peak|floatformat:2 }}<br>
+                <strong>&eta; (Peak Flux): </strong>{{ source.eta_peak|floatformat:2 }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-    <!-- Area Chart -->
+    <!-- Lightcurve -->
     <div class="col-xl-8 mb-4">
       <div class="card shadow h-100">
         <div class="card-header py-3 clearfix" id="lightcurveHeader">
@@ -215,8 +231,11 @@
       </div>
     </div>
 
+  </div>
+
+  <div class="row">
     <!-- DataTable External Search Results -->
-    <div class="col-xl-4 mb-4">
+    <div class="col-xl-6 mb-4">
       <div class="card shadow mb-4 h-100">
         <div class="card-header py-3">
           <h6 class="m-0 font-weight-bold text-primary">External Search Results (1 arcmin)</h6>
@@ -241,7 +260,11 @@
       </div>
     </div>
 
-  </div> <!-- /.row -->
+    <!-- comments   -->
+    <div class="col mb-4">
+      {% include "comments_component.html" %}
+    </div>
+  </div>
 
   <!-- Postage stamps -->
   <div class="card shadow mb-4">
@@ -400,7 +423,7 @@
 <script src="{% static 'vendor/jquery-easing/jquery.easing.min.js' %}"></script>
 
 <!-- Custom scripts for all pages-->
-<script src="{% static 'js/sb-admin-2.min.js' %}"></script>
+ <script src="{% static 'vendor/startbootstrap-sb-admin-2/sb-admin-2.min.js' %}"></script>
 
 <!-- Toasts script -->
 <script src="{% static 'js/toasts.min.js' %}"></script>
@@ -501,9 +524,11 @@
         return Bokeh.embed.embed_item(item, "lightCurveBokeh")
       })
   }
+
   // when JS9 is ready, load the cutout images into the correct display panels
   $(document).on("JS9:ready", async function () {
     var measurementData = JSON.parse(document.getElementById("data-js9").textContent);
+    measurementData.push(measurementData[{{ first_det_meas_index }}]);
     // load all images and wait until they're all done
     await Promise.all(measurementData.map((measurement, i) => {
       var displayId = "JS9_" + (i + 1);
@@ -516,16 +541,29 @@
       var displayId = "JS9_" + (i + 1);
       var region_url = addBaseUrl('/measurements/' + measurement.image_id + '/' + measurement.ra + ',' +
         measurement.dec +
-        ',20arcmin/region?selection_model=source&selection_id={{ source.id }}&run_id={{ source.run_id }}');
+        ',20arcmin/region/?selection_model=source&selection_id={{ source.id }}&run_id={{ source.run_id }}');
       var opts = Object.assign({}, JS9.Regions.opts);
       opts.tooltip = "$xreg.data.text";
+      // create a shape layer for the components
       JS9.NewShapeLayer("components", opts, {
         display: displayId
       });
-      $.get(region_url, regions => {
-        JS9.AddShapes("components", regions, {
+      // get the region file, put the selected components on top, and add them
+      $.get(region_url, regionStr => {
+        var regionArray = regionStr.split("\n")
+        var selectedSourceRegions = [];
+        var otherSourceRegions = [];
+        // add red regions to the selected source region array
+        regionArray.forEach(region => {
+          if (/"color": "#FF0000"/.test(region)) {
+            selectedSourceRegions.push(region);
+          } else {
+            otherSourceRegions.push(region);
+          }
+        });
+        JS9.AddShapes("components", otherSourceRegions.concat(selectedSourceRegions).join("\n"), {
           changeable: false,
-          strokeWidth: 1
+          strokeWidth: 2
         }, {
           display: displayId
         });

@@ -75,7 +75,7 @@
           <p>
             <strong>Name: </strong>{{ measurement.name }}<br>
             <strong>Island ID: </strong>{{ measurement.island_id }}<br>
-            <strong>Image: </strong><a href="/images/{{ measurement.image_id }}"
+            <strong>Image: </strong><a href="{% url 'vast_pipeline:image_detail' measurement.image_id %}"
               target="_blank">{{ measurement.image_name }}</a>
           </p>
           <p>
@@ -83,12 +83,9 @@
               Table</a>)
           </p>
           <p>
-            <strong>Position: </strong><span class="clipboard-copy">{{ measurement.ra_hms }}
-              {{ measurement.dec_dms }}</span><br>
-            <strong>Position (Decimal): </strong><span class="clipboard-copy">{{ measurement.ra }}
-              {{ measurement.dec }}</span><br>
-            <strong>Position (Galactic): </strong><span class="clipboard-copy">{{ measurement.l|floatformat:6 }}
-              {{ measurement.b|floatformat:6 }}</span>
+            <strong>Position: </strong><span class="clipboard-copy">{{ measurement.ra_hms }} {{ measurement.dec_dms }}</span><br>
+            <strong>Position (Decimal): </strong><span class="clipboard-copy">{{ measurement.ra }} {{ measurement.dec }}</span><br>
+            <strong>Position (Galactic): </strong><span class="clipboard-copy">{{ measurement.l|floatformat:6 }} {{ measurement.b|floatformat:6 }}</span>
           </p>
           <div class="row">
             <div class="col-md">
@@ -139,13 +136,6 @@
       </div>
     </div>
 
-    <!-- Aladin viz tile -->
-    <div class="col-xl-4 d-flex">
-      <div class="card shadow mb-4 flex-fill" style="min-height: 33vh;">
-        <div id="aladinViz"></div>
-      </div>
-    </div>
-
     <div class="col-xl-4 d-flex">
       <div class="card shadow mb-4 flex-fill">
         <div class="card-header py-3">
@@ -157,6 +147,15 @@
         </div>
       </div>
     </div>
+
+    <!-- Aladin viz tile -->
+    <div class="col-xl-4 d-flex">
+      <div class="card shadow mb-4 flex-fill" style="min-height: 33vh;">
+        <div id="aladinViz"></div>
+      </div>
+    </div>
+
+
   </div>
 
   <div class="row">
@@ -267,7 +266,7 @@
   <script src="{% static 'vendor/jquery-easing/jquery.easing.min.js' %}"></script>
 
   <!-- Custom scripts for all pages-->
-  <script src="{% static 'js/sb-admin-2.min.js' %}"></script>
+   <script src="{% static 'vendor/startbootstrap-sb-admin-2/sb-admin-2.min.js' %}"></script>
 
   <!-- Toasts script for all pages-->
   <script src="{% static 'js/toasts.min.js' %}"></script>

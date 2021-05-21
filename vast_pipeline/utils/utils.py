@@ -2,19 +2,17 @@
 This module contains general pipeline utility functions.
 """
 
+import collections
+from datetime import datetime
 import os
 import logging
 import math as m
-import pandas as pd
-import numpy as np
+from typing import Any, Dict, Tuple
 
-from typing import Dict, Any, List, Tuple
-from astroquery.ned import Ned
-from astroquery.simbad import Simbad
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from datetime import datetime
-from typing import Tuple, Optional
+import numpy as np
+import pandas as pd
 
 
 logger = logging.getLogger(__name__)
@@ -89,23 +87,20 @@ def check_read_write_perm(path: str, perm: str='W') -> None:
 
 def deg2sex(deg: float) -> Tuple[int, Tuple[float, float, float]]:
     """
-    Converts angle in degrees to sexagesimal notation
-    Returns tuple containing (sign, (degrees, minutes & seconds))
-    sign is -1 or 1
-
-    >>> deg2sex(12.582438888888889)
-    (12, 34, 56.78000000000182)
-
-    >>> deg2sex(-12.582438888888889)
-    (-12, 34, 56.78000000000182)
+    Converts an angle in degrees to a tuple containing its sexagesimal components.
 
     Args:
         deg: The angle to convert in degrees.
 
     Returns:
-        A nested tuple with the sign as the 0th value followed by the
-        sexagesimal values tuple.
+        A nested tuple in the form (sign, (degrees, minutes, seconds)), where sign is
+        either -1 or 1.
 
+    Example:
+        >>> deg2sex(12.582438888888889)
+        (12, 34, 56.78000000000182)
+        >>> deg2sex(-12.582438888888889)
+        (-12, 34, 56.78000000000182)
     """
 
     sign = -1 if deg < 0 else 1
@@ -118,63 +113,70 @@ def deg2sex(deg: float) -> Tuple[int, Tuple[float, float, float]]:
     return (sign, (degf, minsf, secs))
 
 
-def deg2dms(deg: float, dms_format: bool=False) -> str:
-    """Convert angle in degrees into DMS using format. Default: '02d:02d:05.2f'
-
-    >>> deg2dms(12.582438888888889)
-    '+12:34:56.78'
-
-    >>> deg2dms(2.582438888888889)
-    '+02:34:56.78'
-
-    >>> deg2dms(-12.582438888888889)
-    '-12:34:56.78'
+def deg2dms(deg: float, dms_format: bool = False, precision: int = 2) -> str:
+    """Convert angle in degrees into a DMS formatted string. e.g.
 
     Args:
-        deg: The angle in degrees to convert.
-        dms_format: If `True` then the result is returned in dms format, e.g.
-            '+12d34m56.78s'.
+        deg: The angle to convert in degrees.
+        dms_format (optional): If `True`, use "d", "m", and "s" as the coorindate
+            separator, otherwise use ":". Defaults to False.
+        precision (optional): Floating point precision of the arcseconds component.
+            Can be 0 or a positive integer. Negative values will be interpreted as 0.
+            Defaults to 2.
 
     Returns:
-        The string result.
+        `deg` formatted as a DMS string.
+
+    Example:
+        >>> deg2dms(12.582438888888889)
+        '+12:34:56.78'
+        >>> deg2dms(2.582438888888889, dms_format=True)
+        '+02d34m56.78s'
+        >>> deg2dms(-12.582438888888889, precision=1)
+        '-12:34:56.8'
     """
 
     sign, sex = deg2sex(deg)
     signchar = "+" if sign == 1 else "-"
+    precision = precision if precision >= 0 else 0
+    sec_width = 3 + precision if precision > 0 else 2
 
     if dms_format:
-        return f'{signchar}{sex[0]:02d}d{sex[1]:02d}m{sex[2]:05.2f}s'
+        return f'{signchar}{sex[0]:02d}d{sex[1]:02d}m{sex[2]:0{sec_width}.{precision}f}s'
 
-    return f'{signchar}{sex[0]:02d}:{sex[1]:02d}:{sex[2]:05.2f}'
-
-
-def deg2hms(deg: float, hms_format: bool=False) -> str:
-    """Convert angle in degrees into HMS using format. Default: '%d:%d:%.2f'
-
-    >>> deg2hms(188.73658333333333)
-    '12:34:56.78'
+    return f'{signchar}{sex[0]:02d}:{sex[1]:02d}:{sex[2]:0{sec_width}.{precision}f}'
 
 
-    >>> deg2hms(-188.73658333333333)
-    '12:34:56.78'
+def deg2hms(deg: float, hms_format: bool = False, precision: int = 2) -> str:
+    """Convert angle in degrees into a HMS formatted string. e.g.
 
     Args:
-        deg: The angle in degrees to convert.
-        hms_format: If `True` then the result is returned in hms format, e.g.
-            '12h34m56.78s'.
+        deg: The angle to convert in degrees.
+        hms_format (optional): If `True`, use "h", "m", and "s" as the coorindate
+            separator, otherwise use ":". Defaults to False.
+        precision (optional): Floating point precision of the seconds component.
+            Can be 0 or a positive integer. Negative values will be interpreted as 0.
+            Defaults to 2.
 
     Returns:
-        The string result.
+        `deg` formatted as an HMS string.
+
+    Example:
+        >>> deg2hms(188.73658333333333)
+        '12:34:56.78'
+        >>> deg2hms(-188.73658333333333, hms_format=True)
+        '12h34m56.78s'
+        >>> deg2hms(188.73658333333333, precision=1)
+        '12:34:56.8'
     """
-    # TODO: why it this?
-    # We only handle positive RA values
-    # assert deg >= 0
     sign, sex = deg2sex(deg / 15.)
+    precision = precision if precision >= 0 else 0
+    sec_width = 3 + precision if precision > 0 else 2
 
     if hms_format:
-        return f'{sex[0]:02d}h{sex[1]:02d}m{sex[2]:05.2f}s'
+        return f'{sex[0]:02d}h{sex[1]:02d}m{sex[2]:0{sec_width}.{precision}f}s'
 
-    return f'{sex[0]:02d}:{sex[1]:02d}:{sex[2]:05.2f}'
+    return f'{sex[0]:02d}:{sex[1]:02d}:{sex[2]:0{sec_width}.{precision}f}'
 
 
 def eq_to_cart(ra: float, dec: float) -> Tuple[float, float, float]:
@@ -310,18 +312,39 @@ def optimize_ints(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def convert_list_to_dict(l: List[Any]) -> Dict[int, Any]:
-    """
-    Converts a list to a dictionary where the keys
-    are the enumerate iterator + 1.
+def dict_merge(dct: Dict[Any, Any], merge_dct: Dict[Any, Any], add_keys=True) -> Dict[Any, Any]:
+    """Recursive dict merge. Inspired by dict.update(), instead of
+    updating only top-level keys, dict_merge recurses down into dicts nested
+    to an arbitrary depth, updating keys. The `merge_dct` is merged into
+    `dct`.
+
+    This version will return a copy of the dictionary and leave the original
+    arguments untouched.
+
+    The optional argument `add_keys`, determines whether keys which are
+    present in `merge_dict` but not `dct` should be included in the
+    new dict.
 
     Args:
-        l:
-            input dataframe, no specific columns.
+        dct (dict): onto which the merge is executed
+        merge_dct (dict): dct merged into dct
+        add_keys (bool): whether to add new keys
 
     Returns:
-        A dictionary containing the list values.
+        dict: updated dict
     """
-    conversion = {i + 1: [val] for i, val in enumerate(l)}
+    dct = dct.copy()
+    if not add_keys:
+        merge_dct = {k: merge_dct[k] for k in set(dct).intersection(set(merge_dct))}
 
-    return conversion
+    for k, v in merge_dct.items():
+        if (
+            k in dct
+            and isinstance(dct[k], dict)
+            and isinstance(merge_dct[k], collections.Mapping)
+        ):
+            dct[k] = dict_merge(dct[k], merge_dct[k], add_keys=add_keys)
+        else:
+            dct[k] = merge_dct[k]
+
+    return dct

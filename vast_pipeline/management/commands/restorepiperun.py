@@ -16,6 +16,7 @@ from vast_pipeline.models import (
     Run, Source, Measurement, Image, Association, MeasurementPair
 )
 from vast_pipeline.pipeline.loading import update_sources
+from vast_pipeline.pipeline.config import PipelineConfig
 from vast_pipeline.pipeline.main import Pipeline
 from ..helpers import get_p_run_name
 
@@ -44,24 +45,23 @@ def yesno(question: str) -> bool:
     return False
 
 
-def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config) -> None:
+def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config: PipelineConfig) -> None:
     """
     Restores the pipeline to the backup files version.
-    TODO: Update prev_config type hint.
 
     Args:
         p_run (Run):
             The run model object.
         bak_files (Dict[str, str]):
             Dictionary containing the paths to the .bak files.
-        prev_config (config):
-            Module object that represents the back up run configuration.
+        prev_config (PipelineConfig):
+            Back up run configuration.
 
     Returns:
         None
     """
     # check images match
-    img_f_list = getattr(prev_config, 'IMAGE_FILES')
+    img_f_list = prev_config["inputs"]["image"]
     if isinstance(img_f_list, dict):
         img_f_list = [
             item for sublist in img_f_list.values() for item in sublist
@@ -80,7 +80,7 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config) -> None:
         )
 
     # check forced measurements
-    monitor = getattr(prev_config, 'MONITOR')
+    monitor = prev_config["source_monitoring"]["monitor"]
     if monitor:
         forced_parquets = glob(os.path.join(
             p_run.path, 'forced_*.parquet.bak'
@@ -88,7 +88,7 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config) -> None:
 
         if not forced_parquets:
             raise CommandError(
-                'Monitor is \'True\' in the previous configuration but'
+                'source_monitoring.monitor is \'True\' in the previous configuration but'
                 ' no .bak forced parquet files have been found.'
                 ' Cannot restore pipeline run.'
             )
@@ -96,7 +96,7 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config) -> None:
             # load old associations
             bak_meas_id = pd.read_parquet(
                 bak_files['associations'],
-                columns = ['meas_id']
+                columns=['meas_id']
             )['meas_id'].unique()
 
             # load backup forced measurements
@@ -235,7 +235,7 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config) -> None:
             )
             logger.debug('(type, #deleted): %s', detail_del)
 
-    logger.info(f'Restoring run metrics.')
+    logger.info('Restoring run metrics.')
     p_run.n_images = prev_images.shape[0]
     p_run.n_sources = bak_sources.shape[0]
     p_run.n_selavy_measurements = meas.shape[0]
@@ -246,11 +246,11 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config) -> None:
         p_run.save()
 
     # switch files and delete backups
-    logger.info(f'Restoring parquet files and removing .bak files.')
+    logger.info('Restoring parquet files and removing .bak files.')
     for i in bak_files:
         bak_file = bak_files[i]
         if i == 'config':
-            actual_file = bak_file.replace('.py.bak', '_prev.py')
+            actual_file = bak_file.replace('.yaml.bak', '_prev.yaml')
         else:
             actual_file = bak_file.replace('.bak', '')
         shutil.copy(bak_file, actual_file)
@@ -344,28 +344,28 @@ class Command(BaseCommand):
             path = p_run.path
             pipeline = Pipeline(
                 name=p_run_name,
-                config_path=os.path.join(path, 'config.py')
+                config_path=os.path.join(path, 'config.yaml')
             )
             try:
                 # update pipeline run status to restoring
                 prev_status = p_run.status
                 pipeline.set_status('RES')
 
-                prev_config_file = os.path.join(p_run.path, 'config.py.bak')
+                prev_config_file = os.path.join(p_run.path, 'config.yaml.bak')
 
                 if os.path.isfile(prev_config_file):
                     shutil.copy(
                         prev_config_file,
-                        prev_config_file.replace('.py.bak', '.bak.py')
+                        prev_config_file.replace('.yaml.bak', '.bak.yaml')
                     )
                     prev_config_file = prev_config_file.replace(
-                        '.py.bak', '.bak.py'
+                        '.yaml.bak', '.bak.yaml'
                     )
-                    prev_config = Pipeline.load_cfg(prev_config_file)
+                    prev_config = PipelineConfig.from_file(prev_config_file)
                     os.remove(prev_config_file)
                 else:
                     raise CommandError(
-                        f'Previous config file does not exist.'
+                        'Previous config file does not exist.'
                         ' Cannot restore pipeline run.'
                     )
 
@@ -375,7 +375,7 @@ class Command(BaseCommand):
                     'relations', 'skyregions', 'sources', 'config'
                 ]:
                     if i == 'config':
-                        f_name = os.path.join(p_run.path, f'{i}.py.bak')
+                        f_name = os.path.join(p_run.path, f'{i}.yaml.bak')
                     else:
                         f_name = os.path.join(p_run.path, f'{i}.parquet.bak')
 
@@ -387,15 +387,8 @@ class Command(BaseCommand):
                             ' Cannot restore pipeline run.'
                         )
 
-                logger_msg = "Will restore the run to the following config:"
-
-                keys = settings.PIPE_RUN_CONFIG_DEFAULTS.keys()
-
-                for i in keys:
-                    setting_val = getattr(prev_config, i.upper())
-                    logger_msg += f"\n{i.upper():.<50s}{setting_val}"
-
-                logger.info(logger_msg)
+                logger_msg = "Will restore the run to the following config:\n"
+                logger.info(logger_msg + prev_config._yaml.as_yaml())
 
                 user_continue = True if options['no_confirm'] else yesno("Would you like to restore the run")
 

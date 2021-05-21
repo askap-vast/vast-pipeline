@@ -16,6 +16,7 @@ from typing import Optional
 from django.db import transaction
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand, CommandError
+from vast_pipeline._version import __version__ as pipeline_version
 from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
 from vast_pipeline.pipeline.main import Pipeline
 from vast_pipeline.pipeline.utils import (
@@ -26,7 +27,7 @@ from vast_pipeline.utils.utils import StopWatch
 from vast_pipeline.models import Run
 from ..helpers import get_p_run_name
 from astropy.utils.exceptions import AstropyWarning
-from vast_pipeline.pipeline.errors import PipelineError, PipelineConfigError
+from vast_pipeline.pipeline.errors import PipelineConfigError
 
 
 logger = logging.getLogger(__name__)
@@ -36,7 +37,7 @@ def run_pipe(
     name: str, path_name: Optional[str] = None,
     run_dj_obj: Optional[Run] = None, cli: bool = True,
     debug: bool = False, user: Optional[User] = None, full_rerun: bool = False,
-    prev_ui_status: str='END'
+    prev_ui_status: str = 'END'
 ) -> bool:
     '''
     Main function to run the pipeline.
@@ -68,10 +69,6 @@ def run_pipe(
         failures a CommandError is returned.
     '''
     path = run_dj_obj.path if run_dj_obj else path_name
-    pipeline = Pipeline(
-        name=run_dj_obj.name if run_dj_obj else name,
-        config_path=os.path.join(path, 'config.py')
-    )
     # set up logging for running pipeline from UI
     if not cli:
         # set up the logger for the UI job
@@ -85,23 +82,29 @@ def run_pipe(
         f_handler.setFormatter(root_logger.handlers[0].formatter)
         root_logger.addHandler(f_handler)
 
+    pipeline = Pipeline(
+        name=run_dj_obj.name if run_dj_obj else name,
+        config_path=os.path.join(path, 'config.yaml'),
+        validate_config=False,  # delay validation
+    )
+
     # Create the pipeline run in DB
     p_run, flag_exist = get_create_p_run(
         pipeline.name,
-        pipeline.config.PIPE_RUN_PATH
+        pipeline.config["run"]["path"],
     )
 
     # copy across config file at the start
     logger.debug("Copying temp config file.")
     shutil.copyfile(
-        os.path.join(p_run.path, 'config.py'),
-        os.path.join(p_run.path, 'config_temp.py')
+        os.path.join(p_run.path, 'config.yaml'),
+        os.path.join(p_run.path, 'config_temp.yaml')
     )
 
-    # load and validate run configs
+    # validate run configuration
     try:
-        pipeline.validate_cfg(user=user)
-    except Exception as e:
+        pipeline.config.validate(user=user)
+    except PipelineConfigError as e:
         if debug:
             traceback.print_exc()
         logger.exception('Config error:\n%s', e)
@@ -149,17 +152,18 @@ def run_pipe(
         # exists - if it doesn't exist it means the run has failed during
         # the first run. In this case we want to clear anything that has gone
         # on before so to do that `complete-rerun` mode is activated.
-        if p_run.status == 'ERR' and not os.path.isfile(
-            os.path.join(p_run.path, 'config_prev.py')):
+        if p_run.status == "ERR" and not os.path.isfile(
+            os.path.join(p_run.path, "config_prev.yaml")
+        ):
             full_rerun = True
 
         # Backup the previous run config
         if os.path.isfile(
-            os.path.join(p_run.path, 'config_prev.py')
+            os.path.join(p_run.path, 'config_prev.yaml')
         ):
             shutil.copy(
-                os.path.join(p_run.path, 'config_prev.py'),
-                os.path.join(p_run.path, 'config.py.bak')
+                os.path.join(p_run.path, 'config_prev.yaml'),
+                os.path.join(p_run.path, 'config.yaml.bak')
             )
 
         # Check if the run has only been initialised, if so we don't want to do
@@ -175,7 +179,7 @@ def run_pipe(
         if initial_run is False:
             parquets = (
                 glob.glob(os.path.join(p_run.path, "*.parquet"))
-                # TODO Remove arrow when vaex support is dropped.
+                # TODO Remove arrow when arrow files are no longer needed.
                 + glob.glob(os.path.join(p_run.path, "*.arrow"))
             )
 
@@ -202,8 +206,8 @@ def run_pipe(
                         os.remove(bf)
 
                 # remove previous config if it exists
-                if os.path.isfile(os.path.join(p_run.path, 'config_prev.py')):
-                    os.remove(os.path.join(p_run.path, 'config_prev.py'))
+                if os.path.isfile(os.path.join(p_run.path, 'config_prev.yaml')):
+                    os.remove(os.path.join(p_run.path, 'config_prev.yaml'))
 
                 # reset epoch_based flag
                 with transaction.atomic():
@@ -213,7 +217,7 @@ def run_pipe(
                 # Before parquets are started to be copied and backed up, a
                 # check is run to see if anything has actually changed in
                 # the config
-                config_diff = pipeline.check_prev_config_diff(p_run.path)
+                config_diff = pipeline.config.check_prev_config_diff()
                 if config_diff:
                     logger.info(
                         "The config file has either not changed since the"
@@ -221,18 +225,18 @@ def run_pipe(
                         " that a new or complete re-run should be performed"
                         " instead. Performing no actions. Exiting."
                     )
-                    os.remove(os.path.join(p_run.path, 'config_temp.py'))
+                    os.remove(os.path.join(p_run.path, 'config_temp.yaml'))
                     pipeline.set_status(p_run, 'END')
 
                     return True
 
-                if pipeline.epoch_based != p_run.epoch_based:
+                if pipeline.config.epoch_based != p_run.epoch_based:
                     logger.info(
                         "The 'epoch based' setting has changed since the"
                         " previous run. A complete re-run is required if"
                         " changing to epoch based mode or vice versa."
                     )
-                    os.remove(os.path.join(p_run.path, 'config_temp.py'))
+                    os.remove(os.path.join(p_run.path, 'config_temp.yaml'))
                     pipeline.set_status(p_run, 'END')
                     return True
 
@@ -249,21 +253,48 @@ def run_pipe(
                     pipeline.previous_parquets[i] = os.path.join(
                         p_run.path, f'{i}.parquet.bak')
 
-    if pipeline.config.CREATE_MEASUREMENTS_ARROW_FILES and cli is False:
-        logger.warning(
-            'The creation of arrow files is currently unavailable when running'
-            ' through the UI. Please ask an admin to complete this step for'
-            ' you upon a successful completion.'
-        )
-        logger.warning("Setting 'CREATE_MEASUREMENTS_ARROW_FILES' to 'False'.")
-        pipeline.config.CREATE_MEASUREMENTS_ARROW_FILES = False
-
-    if pipeline.config.SUPPRESS_ASTROPY_WARNINGS:
+    if pipeline.config["run"]["suppress_astropy_warnings"]:
         warnings.simplefilter("ignore", category=AstropyWarning)
 
-    logger.info("Source finder: %s", pipeline.config.SOURCE_FINDER)
+    logger.info("VAST Pipeline version: %s", pipeline_version)
+    logger.info("Source finder: %s", pipeline.config["measurements"]["source_finder"])
     logger.info("Using pipeline run '%s'", pipeline.name)
-    logger.info("Source monitoring: %s", pipeline.config.MONITOR)
+    logger.info("Source monitoring: %s", pipeline.config["source_monitoring"]["monitor"])
+
+    # log the list of input data files for posterity
+    input_image_list = [
+        image
+        for image_list in pipeline.config["inputs"]["image"].values()
+        for image in image_list
+    ]
+    input_selavy_list = [
+        selavy
+        for selavy_list in pipeline.config["inputs"]["selavy"].values()
+        for selavy in selavy_list
+    ]
+    input_noise_list = [
+        noise
+        for noise_list in pipeline.config["inputs"]["noise"].values()
+        for noise in noise_list
+    ]
+    if "background" in pipeline.config["inputs"].keys():
+        input_background_list = [
+            background
+            for background_list in pipeline.config["inputs"]["background"].values()
+            for background in background_list
+        ]
+    else:
+        input_background_list = ["N/A", ] * len(input_image_list)
+    for image, selavy, noise, background in zip(
+        input_image_list, input_selavy_list, input_noise_list, input_background_list
+    ):
+        logger.info(
+            "Matched inputs - image: %s, selavy: %s, noise: %s, background: %s",
+            image,
+            selavy,
+            noise,
+            background,
+        )
 
     stopwatch = StopWatch()
 
@@ -275,7 +306,7 @@ def run_pipe(
         pipeline.set_status(p_run, 'RUN')
         pipeline.process_pipeline(p_run)
         # Create arrow file after success if selected.
-        if pipeline.config.CREATE_MEASUREMENTS_ARROW_FILES:
+        if pipeline.config["measurements"]["write_arrow_files"]:
             create_measurements_arrow_file(p_run)
             create_measurement_pairs_arrow_file(p_run)
     except Exception as e:
@@ -287,9 +318,9 @@ def run_pipe(
     # copy across config file now that it is successful
     logger.debug("Copying and cleaning temp config file.")
     shutil.copyfile(
-        os.path.join(p_run.path, 'config_temp.py'),
-        os.path.join(p_run.path, 'config_prev.py'))
-    os.remove(os.path.join(p_run.path, 'config_temp.py'))
+        os.path.join(p_run.path, 'config_temp.yaml'),
+        os.path.join(p_run.path, 'config_prev.yaml'))
+    os.remove(os.path.join(p_run.path, 'config_temp.yaml'))
 
     # set the pipeline status as completed
     pipeline.set_status(p_run, 'END')
@@ -375,7 +406,11 @@ class Command(BaseCommand):
 
         debug_flag = True if options['verbosity'] > 1 else False
 
-        done = run_pipe(p_run_name, path_name=run_folder,
-            debug=debug_flag, full_rerun=options['full_rerun'])
+        _ = run_pipe(
+            p_run_name,
+            path_name=run_folder,
+            debug=debug_flag,
+            full_rerun=options["full_rerun"],
+        )
 
         self.stdout.write(self.style.SUCCESS('Finished'))

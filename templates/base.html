@@ -279,7 +279,7 @@
       <footer class="sticky-footer bg-white">
         <div class="container my-auto">
           <div class="copyright text-center my-auto">
-            <span>Copyright &copy; VAST Development Team 2020 - All rights reserved</span>
+            <span>VAST Pipeline version {% if pipeline_version_url %}<a href={{ pipeline_version_url }}>{% endif %}{{ pipeline_version }}{% if pipeline_version_url %}</a>{% endif %}. Copyright &copy; VAST Development Team 2020 - All rights reserved.</span>
           </div>
         </div>
       </footer>
@@ -308,7 +308,7 @@
   <script src="{% static 'vendor/jquery-easing/jquery.easing.min.js' %}"></script>
 
   <!-- Custom scripts for all pages-->
-  <script src="{% static 'js/sb-admin-2.min.js' %}"></script>
+  <script src="{% static 'vendor/startbootstrap-sb-admin-2/sb-admin-2.min.js' %}"></script>
 
   <!-- Toasts script for all pages-->
   <script src="{% static 'js/toasts.min.js' %}"></script>

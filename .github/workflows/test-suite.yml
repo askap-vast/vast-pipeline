@@ -17,15 +17,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - uses: webfactory/ssh-agent@v0.4.1
-      with:
-        ssh-private-key: ${{ secrets.FORCED_PHOT_DEPLOY_KEY }}
-
-    - name: Use ssh instead of https when cloning from github
-      run: |
-        git config --global url.ssh://git@github.com/.insteadOf https://github.com/;
-        git config --global core.sshCommand 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
-
     - name: Create dev database
       uses: ./.github/actions/create-dev-database
       with:
@@ -68,7 +59,7 @@ jobs:
         vast vastpsw vastdb
 
     - name: Make relevant directories
-      run: mkdir pipeline-runs && mkdir reference-surveys
+      run: mkdir pipeline-runs
 
     - name: Download regression test data
       run: bash -e ./download.sh

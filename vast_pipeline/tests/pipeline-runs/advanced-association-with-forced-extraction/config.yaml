@@ -1,0 +1,43 @@
+run:
+  suppress_astropy_warnings: true
+inputs:
+  image:
+  - vast_pipeline/tests/data/epoch01.fits
+  - vast_pipeline/tests/data/epoch02.fits
+  - vast_pipeline/tests/data/epoch03.fits
+  - vast_pipeline/tests/data/epoch04.fits
+  selavy:
+  - vast_pipeline/tests/data/epoch01.selavy.components.txt
+  - vast_pipeline/tests/data/epoch02.selavy.components.txt
+  - vast_pipeline/tests/data/epoch03.selavy.components.txt
+  - vast_pipeline/tests/data/epoch04.selavy.components.txt
+  noise:
+  - vast_pipeline/tests/data/epoch01.noiseMap.fits
+  - vast_pipeline/tests/data/epoch02.noiseMap.fits
+  - vast_pipeline/tests/data/epoch03.noiseMap.fits
+  - vast_pipeline/tests/data/epoch04.noiseMap.fits
+  background:
+  - vast_pipeline/tests/data/epoch01.meanMap.fits
+  - vast_pipeline/tests/data/epoch02.meanMap.fits
+  - vast_pipeline/tests/data/epoch03.meanMap.fits
+  - vast_pipeline/tests/data/epoch04.meanMap.fits
+source_monitoring:
+  monitor: true
+  min_sigma: 3.0
+  edge_buffer_scale: 1.2
+  cluster_threshold: 3.0
+  allow_nan: false
+source_association:
+  method: advanced
+  radius: 15.0
+new_sources:
+  min_sigma: 5.0
+measurements:
+  source_finder: selavy
+  flux_fractional_error: 0.0
+  condon_errors: true
+  selavy_local_rms_fill_value: 0.2
+  ra_uncertainty: 1
+  dec_uncertainty: 1
+variability:
+  source_aggregate_pair_metrics_min_abs_vs: 4.3

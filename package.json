@@ -1,6 +1,6 @@
 {
   "name": "vast-pipeline",
-  "version": "99.99.99dev",
+  "version": "1.0.0",
   "description": "Vast Pipeline code base for processing and analysing telescope images from the Square Kilometre Pathfinder",
   "main": "gulpfile.js",
   "scripts": {
@@ -36,26 +36,26 @@
   },
   "homepage": "https://github.com/askap-vast/vast-pipeline#readme",
   "dependencies": {
-    "@bokeh/bokehjs": "2.2.0",
+    "@bokeh/bokehjs": "2.3.0",
     "@fortawesome/fontawesome-free": "5.12.0",
-    "bootstrap": "4.4.1",
     "bootstrap-select": "^1.13.18",
     "bootstrap4-toggle": "3.6.1",
-    "d3-celestial": "^0.7.34",
+    "d3-celestial": "^0.7.35",
     "datatables.net-bs4": "1.10.22",
     "datatables.net-buttons-bs4": "1.6.5",
-    "dotenv": "^8.2.0",
-    "jquery": "^3.5.1",
+    "dotenv": "^8.6.0",
+    "jquery": "^3.6.0",
     "jquery.easing": "^1.4.1",
-    "js9": "git+https://github.com/ericmandel/js9.git#v3.0",
+    "js9": "^3.4.0",
     "jszip": "3.5.0",
     "particles.js": "^2.0.0",
     "prismjs": "^1.23.0",
-    "startbootstrap-sb-admin-2": "^4.1.2"
+    "startbootstrap-sb-admin-2": "^4.1.4"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.3",
-    "@babel/preset-env": "^7.12.1",
+    "@babel/core": "^7.14.3",
+    "@babel/preset-env": "^7.14.2",
+    "@mr-hope/gulp-sass": "^2.0.0",
     "browser-sync": "^2.26.14",
     "del": "5.1.0",
     "gulp": "4.0.2",
@@ -64,7 +64,6 @@
     "gulp-clean-css": "4.2.0",
     "gulp-rename": "2.0.0",
     "gulp-run-command": "0.0.10",
-    "@mr-hope/gulp-sass": "^2.0.0",
     "gulp-sourcemaps": "^2.6.5",
     "gulp-uglify": "3.0.2",
     "merge-stream": "2.0.0"

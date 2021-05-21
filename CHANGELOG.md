@@ -1,13 +1,38 @@
-# Change Log
+# Changelog
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), with an added `List of PRs` section and links to the relevant PRs on the individal updates. This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/0.2.0...HEAD)
+## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/v1.0.0...HEAD)
 
 #### Added
 
+#### Changed
+
+#### Fixed
+
+#### Removed
+
+#### List of PRs
+
+## [1.0.0](https://github.com/askap-vast/vast-pipeline/releases/v1.0.0) (2021-05-21)
+
+#### Added
+
+- When searching by source names, any "VAST" prefix on the name will be silently removed to make searching for published VAST sources easier [#536](https://github.com/askap-vast/vast-pipeline/pull/536).
+- Added acknowledgements and help section to docs [#535](https://github.com/askap-vast/vast-pipeline/pull/535).
+- Added `vast_pipeline/_version.py` to store the current software version and updated release documentation [#532](https://github.com/askap-vast/vast-pipeline/pull/532).
+- Added created and last updated dates to doc pages using mkdocs-git-revision-date-localized-plugin [#514](https://github.com/askap-vast/vast-pipeline/pull/514).
+- Added support for glob expressions when specifying input files in the run config file [#504](https://github.com/askap-vast/vast-pipeline/pull/504)
+- Added `DEFAULT_AUTO_FIELD` to `settings.py` to silence Django 3.2 warnings [#507](https://github.com/askap-vast/vast-pipeline/pull/507)
+- Added lightgallery support for all images in the documentation [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
+- Added new entries in the documentation contributing section [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
+- Added new entries in the documentation FAQ section [#491](https://github.com/askap-vast/vast-pipeline/pull/491).
+- Added new home page for documentation [#491](https://github.com/askap-vast/vast-pipeline/pull/491).
+- Added dark mode switch on documentation [#487](https://github.com/askap-vast/vast-pipeline/pull/487).
+- Added .env file information to documentation [#487](https://github.com/askap-vast/vast-pipeline/pull/487).
+- Added further epoch based association information to documentation page [#487](https://github.com/askap-vast/vast-pipeline/pull/487).
 - Added script to auto-generate code reference documentation pages [#480](https://github.com/askap-vast/vast-pipeline/pull/480).
 - Added code reference section to documentation [#480](https://github.com/askap-vast/vast-pipeline/pull/480).
 - Added new pages and sections to documentation [#471](https://github.com/askap-vast/vast-pipeline/pull/471)
@@ -24,6 +49,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Changed source naming convention to `Jhhmmss.s(+/-)ddmmss` to match VAST-P1 paper (Murphy, et al. 2021) convention [#536](https://github.com/askap-vast/vast-pipeline/pull/536)
+- Updated npm packages to resolve dependabot security alert [#533](https://github.com/askap-vast/vast-pipeline/pull/533).
+- Updated homepage text to reflect new features and documentation [#534](https://github.com/askap-vast/vast-pipeline/pull/534).
+- Changed layout of source detail page [#526](https://github.com/askap-vast/vast-pipeline/pull/526).
+- Updated mkdocs-material to 7.1.4 for native creation date support [#518](https://github.com/askap-vast/vast-pipeline/pull/518).
+- Updated developing docs to specify the main development branch as dev instead of master [#521](https://github.com/askap-vast/vast-pipeline/pull/521).
+- Updated tests to account for relation fix [#510](https://github.com/askap-vast/vast-pipeline/pull/510).
+- All file examples in docs are now enclosed in an example admonition [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
+- Further changes to layout of documentation [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
+- Changed arrow file generation from `vaex` to `pyarrow` [#503](https://github.com/askap-vast/vast-pipeline/pull/503).
+- Changed layout of documentation to use tabs [#491](https://github.com/askap-vast/vast-pipeline/pull/491).
+- Dependabot: Bump y18n from 3.2.1 to 3.2.2 [#482](https://github.com/askap-vast/vast-pipeline/pull/482).
+- Replaced run config .py format with .yaml [#483](https://github.com/askap-vast/vast-pipeline/pull/483).
+- Changed docs VAST logo to icon format to avoid stretched appearence [#487](https://github.com/askap-vast/vast-pipeline/pull/487).
 - Bumped Browsersync from 2.26.13 to 2.26.14 [#481](https://github.com/askap-vast/vast-pipeline/pull/481).
 - Dependabot: Bump prismjs from 1.22.0 to 1.23.0 [#469](https://github.com/askap-vast/vast-pipeline/pull/469).
 - Changed non-google format docstrings to google format [#480](https://github.com/askap-vast/vast-pipeline/pull/480).
@@ -42,6 +81,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed the broken link to the image detail page on measurement detail pages [#528](https://github.com/askap-vast/vast-pipeline/pull/528).
+- Fixed simbad and ned external search results table nan values [#523](https://github.com/askap-vast/vast-pipeline/pull/523).
+- Fixed inaccurate total results reported by some paginators [#517](https://github.com/askap-vast/vast-pipeline/pull/517).
+- Removed excess whitespace from coordinates that get copied to the clipboard [#515](https://github.com/askap-vast/vast-pipeline/pull/515)
+- Fixed rogue relations being created during one-to-many functions [#510](https://github.com/askap-vast/vast-pipeline/pull/510).
+- Fixed JS9 regions so that the selected source components are always on top [#508](https://github.com/askap-vast/vast-pipeline/pull/508)
+- Fixed docstring in config.py [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
+- Fixed arrow files being generated via the website [#503](https://github.com/askap-vast/vast-pipeline/pull/503).
+- Fixed a bug that returned all sources when performing a cone search where one of the coords = 0 [#501](https://github.com/askap-vast/vast-pipeline/pull/501)
+- Fixed the missing hover tool for lightcurve plots of non-variable sources [#493](https://github.com/askap-vast/vast-pipeline/pull/493)
 - Fixed the default Dask multiprocessing context to "fork" [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
 - Fixed Selavy catalogue ingest to discard the unit row before reading the data [#473](https://github.com/askap-vast/vast-pipeline/pull/473).
 - Fixed initial job processing from the UI [#466](https://github.com/askap-vast/vast-pipeline/pull/466).
@@ -56,6 +105,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Removed
 
+- Removed `SURVEYS_WORKING_DIR` from settings and env file [#538](https://github.com/askap-vast/vast-pipeline/pull/538).
+- Removed `default_survey` from run configuration file [#538](https://github.com/askap-vast/vast-pipeline/pull/538).
+- Removed importsurvey command and catalogue.py [#538](https://github.com/askap-vast/vast-pipeline/pull/538).
+- Removed SurveySource, Survey and SurveySourceQuerySet models [#538](https://github.com/askap-vast/vast-pipeline/pull/538).
+- Removed email and Slack links from docs footer [#535](https://github.com/askap-vast/vast-pipeline/pull/535).
+- Removed bootstrap as the required version is bundled with startbootstrap-sb-admin-2 [#533](https://github.com/askap-vast/vast-pipeline/pull/533).
+- Removed `docs/readme.md` softlink as it is no longer used [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
+- Removed `vaex-arrow` from the dependancies [#503](https://github.com/askap-vast/vast-pipeline/pull/503).
 - Removed `requirements/*.txt` files. Development dependency management moved to Poetry [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
 - Removed `init-tools/init-db.sh` [#472](https://github.com/askap-vast/vast-pipeline/pull/472).
 - Removed `INSTALL.md`, `PROFILE.md` and `static/README.md` [#433](https://github.com/askap-vast/vast-pipeline/pull/433)
@@ -63,6 +120,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#538](https://github.com/askap-vast/vast-pipeline/pull/538) feat: Removed survey source models, commands and references.
+- [#536](https://github.com/askap-vast/vast-pipeline/pull/536) feat: changed source naming convention.
+- [#535](https://github.com/askap-vast/vast-pipeline/pull/535) doc: added help and acknowledgement doc page.
+- [#534](https://github.com/askap-vast/vast-pipeline/pull/534) feat: Update homepage text.
+- [#532](https://github.com/askap-vast/vast-pipeline/pull/532) feat, doc: Versioning.
+- [#533](https://github.com/askap-vast/vast-pipeline/pull/533) dep: updated npm deps; removed bootstrap.
+- [#528](https://github.com/askap-vast/vast-pipeline/pull/528) fix: fixed broken image detail link.
+- [#526](https://github.com/askap-vast/vast-pipeline/pull/526) feat: Updated source detail page layout.
+- [#518](https://github.com/askap-vast/vast-pipeline/pull/518) dep: Updated mkdocs-material for native creation date support.
+- [#523](https://github.com/askap-vast/vast-pipeline/pull/523) fix: Fixed external search results table nan values.
+- [#521](https://github.com/askap-vast/vast-pipeline/pull/521) doc: update doc related to default dev branch.
+- [#517](https://github.com/askap-vast/vast-pipeline/pull/517) fix: pin djangorestframework-datatables to 0.5.1.
+- [#515](https://github.com/askap-vast/vast-pipeline/pull/515) fix: remove linebreaks from coordinates.
+- [#514](https://github.com/askap-vast/vast-pipeline/pull/514) dep: Added created and updated dates to doc pages.
+- [#510](https://github.com/askap-vast/vast-pipeline/pull/510) fix: Fix rogue relations.
+- [#508](https://github.com/askap-vast/vast-pipeline/pull/508) fix: Draw selected source components on top in JS9.
+- [#504](https://github.com/askap-vast/vast-pipeline/pull/504) feat: Add glob expression support to yaml run config.
+- [#507](https://github.com/askap-vast/vast-pipeline/pull/507) fix: set default auto field model.
+- [#494](https://github.com/askap-vast/vast-pipeline/pull/494) doc, dep: Docs: Added lightgallery support, layout update, minor fixes and additions.
+- [#503](https://github.com/askap-vast/vast-pipeline/pull/503) fix, dep: Change arrow file generation from vaex to pyarrow.
+- [#501](https://github.com/askap-vast/vast-pipeline/pull/501) fix: fix broken cone search when coord = 0
+- [#491](https://github.com/askap-vast/vast-pipeline/pull/491) doc: Updated the docs layout, home page and FAQs.
+- [#493](https://github.com/askap-vast/vast-pipeline/pull/493) fix: Fix bokeh hover tool for lightcurve plots.
+- [#482](https://github.com/askap-vast/vast-pipeline/pull/482) dep: Bump y18n from 3.2.1 to 3.2.2.
+- [#483](https://github.com/askap-vast/vast-pipeline/pull/483) feat: replace run config .py files with .yaml.
+- [#487](https://github.com/askap-vast/vast-pipeline/pull/487) doc: Minor documentation improvements.
 - [#481](https://github.com/askap-vast/vast-pipeline/pull/481) dep: Bump Browsersync from 2.26.13 to 2.26.14.
 - [#469](https://github.com/askap-vast/vast-pipeline/pull/469) dep: Bump prismjs from 1.22.0 to 1.23.0.
 - [#480](https://github.com/askap-vast/vast-pipeline/pull/480) feat: Code reference documentation update.
@@ -82,7 +165,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [#429](https://github.com/askap-vast/vast-pipeline/pull/429) fix: Fixed sources table on measurement detail page.
 - [#427](https://github.com/askap-vast/vast-pipeline/pull/427) fix: Fixed missing meta columns in parallel association.
 
-## [0.2.0](https://github.com/askap-vast/vast-pipeline/releases/0.2.0) (2020-11-30)
+## [0.2.0](https://github.com/askap-vast/vast-pipeline/releases/v0.2.0) (2020-11-30)
 
 #### Added
 
@@ -242,7 +325,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [#305](https://github.com/askap-vast/vast-pipeline/pull/305) feat: 2 epoch metrics
 - [#345](https://github.com/askap-vast/vast-pipeline/pull/345) feat, fix: Website improvements.
 
-## [0.1.0](https://github.com/askap-vast/vast-pipeline/releases/0.1.0) (2020-09-27)
+## [0.1.0](https://github.com/askap-vast/vast-pipeline/releases/v0.1.0) (2020-09-27)
 
 First release of the Vast Pipeline. This was able to process 707 images (EPOCH01 to EPOCH11x) on a machine with 64 GB of RAM.
 

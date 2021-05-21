@@ -7,7 +7,7 @@ import dask.dataframe as dd
 import dask.bag as db
 import pandas as pd
 
-from typing import Dict, Any, Tuple
+from typing import Dict, Any, Tuple, List
 from glob import glob
 from itertools import tee
 
@@ -61,6 +61,7 @@ from vast_pipeline.utils.utils import deg2dms, deg2hms, parse_coord, equ2gal
 from vast_pipeline.utils.view import generate_colsfields, get_skyregions_collection
 from vast_pipeline.management.commands.initpiperun import initialise_run
 from vast_pipeline.forms import PipelineRunForm, CommentForm, TagWithCommentsForm
+from vast_pipeline.pipeline.config import PipelineConfig
 from vast_pipeline.pipeline.main import Pipeline
 from vast_pipeline.pipeline.utils import get_create_p_run
 
@@ -132,20 +133,14 @@ def RunIndex(request):
         # this POST section is for initialise a pipeline run
         form = PipelineRunForm(request.POST)
         if form.is_valid():
-            # TODO: re-write files lists into the form, couldn't get it to work
             cfg_data = form.cleaned_data
 
-            # get the user data
-            run_dict = {
-                key: val for key, val in cfg_data.items() if 'run' in key
-            }
+            run_name = cfg_data.pop("run_name")
+            run_description = cfg_data.pop("run_description")
 
-            # remove user data from run config data
-            for key in run_dict.keys():
-                cfg_data.pop(key)
-
-            run_dict['user'] = request.user
-
+            # Get the lists of user-provided file paths. These aren't in PipelineRunForm
+            # but rather manually defined in the template. We should fix that.
+            # TODO move file fields from the template into PipelineRunForm
             f_list = [
                 'image_files', 'selavy_files', 'background_files',
                 'noise_files'
@@ -155,8 +150,10 @@ def RunIndex(request):
 
             try:
                 p_run = initialise_run(
-                    **run_dict,
-                    config=cfg_data
+                    run_name,
+                    run_description=run_description,
+                    user=request.user,
+                    config=cfg_data,
                 )
                 messages.success(
                     request,
@@ -383,7 +380,7 @@ def RunDetail(request, id):
         p_run['new_srcs'] = 'N/A'
 
     # read run config
-    f_path = os.path.join(p_run['path'], 'config.py')
+    f_path = os.path.join(p_run['path'], 'config.yaml')
     if os.path.exists(f_path):
         with open(f_path) as fp:
             p_run['config_txt'] = fp.read()
@@ -1122,9 +1119,10 @@ class SourceViewSet(ModelViewSet):
 
         if 'source_selection' in self.request.query_params:
             selection_type = self.request.query_params['source_selection_type']
-            selection = (
+            selection: List[str] = (
                 self.request.query_params['source_selection']
                 .replace(" ", "")
+                .replace("VAST", "")  # remove published source prefix if present
                 .split(",")
             )
             if selection_type == 'name':
@@ -1163,7 +1161,7 @@ class SourceViewSet(ModelViewSet):
             wavg_ra = coord.ra.deg
             wavg_dec = coord.dec.deg
 
-        if wavg_ra and wavg_dec and radius:
+        if None not in (wavg_ra, wavg_dec, radius):
             radius = float(radius) / radius_conversions[radiusUnit]
             qs = qs.cone_search(wavg_ra, wavg_dec, radius)
 
@@ -1336,6 +1334,9 @@ def SourceDetail(request, pk):
             frequency=F('image__band__frequency'),
         ).order_by('datetime').values(*tuple(cols))
     )
+
+    first_det_meas_index = [i['forced'] for i in measurements].index(False)
+
     for one_m in measurements:
         one_m['datetime'] = one_m['datetime'].isoformat()
 
@@ -1447,6 +1448,7 @@ def SourceDetail(request, pk):
         'source': source,
         'source_next_id': source_next_id,
         'source_previous_id': source_previous_id,
+        'first_det_meas_index': first_det_meas_index,
         'datatables': [measurements, related_datatables],
         # flag to deactivate starring and render yellow star
         'sourcefav': (
@@ -1772,7 +1774,7 @@ class RunConfigSet(ViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         p_run = get_object_or_404(self.queryset, pk=pk)
-        path = os.path.join(p_run.path, 'config.py')
+        path = os.path.join(p_run.path, 'config.yaml')
 
         if not os.path.exists(path):
             return Response(
@@ -1789,25 +1791,28 @@ class RunConfigSet(ViewSet):
             )
 
         try:
-            pipeline = Pipeline(name=p_run.name, config_path=path)
-            pipeline.validate_cfg(user=request.user)
+            pipeline_config = PipelineConfig.from_file(path)
+            pipeline_config.validate(user=request.user)
         except Exception as e:
             trace = traceback.format_exc().splitlines()
             trace = '\n'.join(trace[-4:])
             msg = {
                 'message': {
-                'severity': 'danger',
-                'text': (
-                    f'Error in config validation:\n{e}\n{trace}'
-                ).split('\n')
+                    'severity': 'danger',
+                    'text': (
+                        'Error in config validation\n'
+                        f'{e}\n\n'
+                        'Debug trace:\n'
+                        f'{trace}'
+                    ).split('\n'),
                 }
             }
             return Response(msg, status=status.HTTP_400_BAD_REQUEST)
 
         msg = {
             'message': {
-            'severity': 'success',
-            'text': ['Configuration is valid.']
+                'severity': 'success',
+                'text': ['Configuration is valid.'],
             }
         }
 
@@ -1816,7 +1821,7 @@ class RunConfigSet(ViewSet):
     @rest_framework.decorators.action(detail=True, methods=['post'])
     def write(self, request, pk=None):
         # this post is for writing the config text (modified or not)
-        # from the UI to a config.py file
+        # from the UI to a config.yaml file
         if not pk:
             messages.error(
                 request,
@@ -1832,7 +1837,7 @@ class RunConfigSet(ViewSet):
 
         config_text = request.POST.get('config_text', None)
         if config_text:
-            f_path = os.path.join(p_run.path, 'config.py')
+            f_path = os.path.join(p_run.path, 'config.yaml')
             try:
                 with open(f_path, 'w') as fp:
                     fp.write(config_text)
@@ -2062,10 +2067,6 @@ class UtilitiesSet(ViewSet):
             simbad_results_df = simbad_result_table[
                 ["MAIN_ID", "DISTANCE_RESULT", "OTYPE_S", "OTYPE_V", "RA", "DEC"]
             ].to_pandas()
-            bytestring_fields = ["MAIN_ID", "OTYPE_S", "OTYPE_V"]
-            simbad_results_df[bytestring_fields] = simbad_results_df[
-                bytestring_fields
-            ].apply(lambda col: col.str.decode("utf-8"))
             simbad_results_df = simbad_results_df.rename(
                 columns={
                     "MAIN_ID": "object_name",
@@ -2094,10 +2095,6 @@ class UtilitiesSet(ViewSet):
             ned_results_df = ned_result_table[
                 ["Object Name", "Separation", "Type", "RA", "DEC"]
             ].to_pandas()
-            bytestring_fields = ["Object Name", "Type"]
-            ned_results_df[bytestring_fields] = ned_results_df[bytestring_fields].apply(
-                lambda col: col.str.decode("utf-8")
-            )
             ned_results_df = ned_results_df.rename(
                 columns={
                     "Object Name": "object_name",

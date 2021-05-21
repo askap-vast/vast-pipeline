@@ -20,6 +20,7 @@ from .utils import (
     reconstruct_associtaion_dfs
 )
 from vast_pipeline.models import Association
+from vast_pipeline.pipeline.config import PipelineConfig
 from vast_pipeline.utils.utils import StopWatch
 
 
@@ -299,6 +300,9 @@ def one_to_many_basic(
     # Apply the new_source_id
     sources_to_copy['source'] = duplicated_skyc2['new_source_id'].values
 
+    # Reset the related column to avoid rogue relations
+    sources_to_copy['related'] = None
+
     # and finally append.
     sources_df = sources_df.append(
         sources_to_copy,
@@ -440,6 +444,10 @@ def one_to_many_advanced(
     # Assign the new IDs to those that need to be changed.
     duplicated_skyc1.loc[idx_to_change, 'new_source_id'] = new_source_ids
 
+    # We also need to clear the relations for these 'new' sources
+    # otherwise it will inherit rogue relations from the original relation
+    duplicated_skyc1.loc[idx_to_change, 'related_skyc1'] = None
+
     # Now we need to sort out the related, essentially here the 'original'
     # and 'non original' need to be treated differently.
     # The original source need all the assoicated new ids appended to the
@@ -580,6 +588,9 @@ def one_to_many_advanced(
 
     # Apply the new_source_id
     sources_to_copy['source'] = duplicated_skyc1['new_source_id'].values
+
+    # Reset the related column to avoid rogue relations
+    sources_to_copy['related'] = None
 
     # and finally append.
     sources_df = sources_df.append(
@@ -1017,7 +1028,7 @@ def advanced_association(
 
 
 def association(images_df: pd.DataFrame, limit: Angle, dr_limit: float,
-    bw_limit: float, duplicate_limit: Angle, config, add_mode: bool,
+    bw_limit: float, duplicate_limit: Angle, config: PipelineConfig, add_mode: bool,
     previous_parquets: Dict[str, str], done_images_df: pd.DataFrame,
     id_incr_par_assoc: int=0, parallel: bool=False) -> pd.DataFrame:
     '''
@@ -1075,7 +1086,7 @@ def association(images_df: pd.DataFrame, limit: Angle, dr_limit: float,
         skyreg_group = -1
         skyreg_tag = ""
 
-    method = config.ASSOCIATION_METHOD
+    method = config["source_association"]["method"]
 
     logger.info('Starting association%s.', skyreg_tag)
     logger.info('Association mode selected: %s.', method)
@@ -1087,8 +1098,10 @@ def association(images_df: pd.DataFrame, limit: Angle, dr_limit: float,
         # are filtered out.
         image_mask = images_df['image_name'].isin(done_images_df['name'])
         images_df_done = images_df[image_mask].copy()
-        sources_df, skyc1_srcs = reconstruct_associtaion_dfs(images_df_done,
-            previous_parquets)
+        sources_df, skyc1_srcs = reconstruct_associtaion_dfs(
+            images_df_done,
+            previous_parquets,
+        )
         images_df = images_df.loc[~image_mask]
         if images_df.empty:
             logger.info(
@@ -1122,7 +1135,7 @@ def association(images_df: pd.DataFrame, limit: Angle, dr_limit: float,
         # initialise sky source dataframe
         skyc1_srcs = prep_skysrc_df(
             first_images,
-            config.FLUX_PERC_ERROR,
+            config["measurements"]["flux_fractional_error"],
             duplicate_limit,
             ini_df=True
         )
@@ -1180,7 +1193,7 @@ def association(images_df: pd.DataFrame, limit: Angle, dr_limit: float,
         )
         skyc2_srcs = prep_skysrc_df(
             images,
-            config.FLUX_PERC_ERROR,
+            config["measurements"]["flux_fractional_error"],
             duplicate_limit
         )
 
@@ -1468,8 +1481,7 @@ def parallel_association(
     dr_limit: float,
     bw_limit: float,
     duplicate_limit: Angle,
-    # TODO update config typing.
-    config, # a 'module` typing.
+    config: PipelineConfig,
     n_skyregion_groups: int,
     add_mode: bool,
     previous_parquets: Dict[str, str],

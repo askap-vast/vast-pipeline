@@ -29,7 +29,7 @@ from ..utils.utils import StopWatch
 logger = logging.getLogger(__name__)
 
 
-def remove_forced_meas(run_path) -> None:
+def remove_forced_meas(run_path: str) -> None:
     '''
     Remove forced measurements from the database if forced parquet files
     are found.

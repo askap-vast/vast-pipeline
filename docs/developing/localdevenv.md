@@ -6,7 +6,7 @@ This section describes how to set up a local development environment more in det
 
 ### Installation
 
-The installation instructions are the same as the ones describes in the [quickstart section](../quickstart/installation.md) with one key difference. Rather than installing the Python dependencies with pip, you will need to install and use [Poetry](https://python-poetry.org){:target="_blank"}. After installing Poetry, running the command below will install the pipeline dependencies defined in `poetry.lock` into a virtual environment. The main difference between using Poetry and pip is that pip will only install the dependencies necessary for using the pipeline, whereas Poetry will also install development dependencies required for contributing (e.g. tools to build the documentation).
+The installation instructions are the same as the ones describes in the [Getting Started section](../gettingstarted/installation.md) with one key difference. Rather than installing the Python dependencies with pip, you will need to install and use [Poetry](https://python-poetry.org){:target="_blank"}. After installing Poetry, running the command below will install the pipeline dependencies defined in `poetry.lock` into a virtual environment. The main difference between using Poetry and pip is that pip will only install the dependencies necessary for using the pipeline, whereas Poetry will also install development dependencies required for contributing (e.g. tools to build the documentation).
 
 ```console
 poetry install
@@ -15,99 +15,11 @@ poetry install
 !!! note
     Poetry will automatically create a virtual environment if it detects that your shell isn't currently using one. This should be fine for most users. If you prefer to use an alternative virtual environment manager (e.g. Miniconda), you can [prevent Poetry from creating virtual environments](https://python-poetry.org/docs/faq/#i-dont-want-poetry-to-manage-my-virtual-environments-can-i-disable-it){:target="_blank"}. However, even if you are using something like Miniconda, allowing Poetry to manage the virtualenv (the default behaviour) is fine. The development team only uses this option during our automated testing since our test runner machines only contain a single Python environment so using virtualenvs is redundant.
 
-### Solving your `models.py`/migrations issues
+### Changes to the data models
 
-First of all the `makemigrations` command must be run only if you modified the `models.py` or you pull down changes (i.e. `git pull`) that modify `models.py`. So please refer to the cases below:
+When changes are made to the data models defined in `vast_pipeline/models.py`, the database schema needs to be updated to reflect those changes. Django can handle this for you by generating migration files that contain the necessary code to update the schema. Migration files are generated with the Django management command `python manage.py makemigrations` and applied to the database with `python manage.py migrate`. Depending on the nature of the changes, this may break backward compatibility, i.e. runs created with previous versions of the pipeline may not be compatible with your changes.
 
-#### 1. You modify `models.py`
-
-In this case there are 2 situations that arise:
-
-1. You currently don't have a production environment and/or you are comfortable in dropping all the data in the database. In this case, you don't need to update the production environment with multiple migration files even though Django docs promote making as many migrations as you need to ([see Django migration guidelines](https://docs.djangoproject.com/en/3.0/topics/migrations/#squashing-migrations){:target="_blank"}). For such reasons please consider doing the following steps:
-
-    1.1. Make your changes to `models.py`.
-
-    1.2. Remove all the migration files including `0002_q3c.py`.
-
-    1.3. Run `./manage.py makemigrations`. This  will generate a __NEW__ `0001_initial.py` file.
-
-    1.4. Commit the new migraton file `0001_initial.py` as well as `models.py` within a single commit, and add an appropriate message (e.g. add field X to model Y). __DO NOT__ commit the removal of `0002_q3c.py`.
-
-    1.5. Get back the Q3C migration file `git checkout pipeline/migrations/0002_q3c.py`.
-
-2. You currently have a production environment and/or you do not want to lose all the data in the database. In this situation, you need to be careful not to mess up with the producation database, so please consider doing the following steps:
-
-    2.1. Make a copy ("dump") of the production database as it is, e.g. (by logging remotely to the server) `pg_dump -h DBHOST_PROD -p DBPORT_PROD -U DBUSER_PROD -Fc -o DBNAME_PROD > prod-backup-$(date +"%F_%H%M").sql`.
-
-    2.2. Upload the copy to your local development database, e.g. `pg_restore -h DBHOST_DEV -p DBPORT_DEV --verbose --clean --no-acl --no-owner -U DBUSER_DEV -d DBNAME_DEV prod-backup.sql`.
-
-    2.3. Make your changes to `models.py`.
-
-    2.4. Run `./manage.py makemigrations` with optional but strongly recommended `-n 'my_migration_name'`. This will generate a new migration file `000X_my_migration_name.py` where X is incremented by 1 with respect the last migration file.
-
-    2.5. Commit the new migraton file `000X_my_migration_name.py` as well as `models.py` within a single commit, and add an appropriate message (e.g. add field X to model Y)
-
-    !!! warning
-        Do not modify the `0002_q3c.py` file as it relates to migration operations for using Q3C plugin and related functions!
-
-#### 2. Someone else modified `models.py` and you pull the changes
-
-Situation:
-
-```console
-~/vast-pipeline [master]$ git fetch && git pull
-Updating abc123..321cba
-Fast-forward
- pipeline/models.py | 4 +++-
- pipeline/migrations/0001_initial.py | 5 ++++-
- 2 file changed, 9 insertions(+), 2 deletions(-)
-```
-
-You realise that you are in this situation when:
-
-- In the command above you see changes (i.e. `+` or `-`) in `models.py` and/or in migrations (i.e. `XXXX_some_migration.py`)
-
-- Running the webserver, a message reports
-
-    ```console
-    You have unapplied migrations;
-    your app may not work properly until they are applied.
-    Run 'python manage.py migrate' to apply them.
-    ```
-
-- Running the pipeline you have errors related to the database models
-
-Solutions to such scenario:
-
-If you don't mind losing all the data in your database just follow the [Reset the database](#reset-the-database) instructions to drop all the data. But if you want to keep your data, you have to fix these changes by trying to run `makemigrations` and `migrate`. But ideally you should follow the following steps:
-
-1. Identify the previous commit before pulling the changes (when your migration and model files were working):
-
-    ```console
-    ~/vast-pipeline [master]$ git show -1 pipeline/models.py #OR
-    ~/vast-pipeline [master]$ git show -2 pipeline/models.py #OR
-    ~/vast-pipeline [master]$ git show -1 pipeline/migrations/XXXX_my_migration.py
-    ```
-
-    Or even better
-
-    ```console
-    ~/vast-pipeline [master]$ git log -p pipeline/models.py
-    ```
-
-2. Take note of the commit hash of the old changes (i.e. before pulling down the new changes). Checkout __ONLY__ your old migration files, for example like this:
-
-    ```console
-    ~/vast-pipeline [master]$ git checkout 37cabac84785742437927c785b63a767aa8ac5ff pipeline/migrations/0001_initial.py
-    ```
-
-3. Make the migrations `./manage.py makemigrations && ./manage.py migrate`
-
-4. Run the pipeline and the webserver to see that everything is working fine
-
-5. Squash the migrations using [Django migration guidelines](https://docs.djangoproject.com/en/3.0/topics/migrations/#squashing-migrations){:target="_blank"}
-
-6. Continue with the normal development cycle (i.e. branch off master, do changes, commit everything, _including your changes in the models/migrations even done with the squashing!_)
+Database migrations must be committed to source control so that others can pull in your model changes. They can sometimes be complex and require additional attention. If you have any difficulty with migrations, please contact the VAST development team for help. More information can be found in the [Django documentation on migrations](https://docs.djangoproject.com/en/3.2/topics/migrations/).
 
 ### Removing/Clearing Data
 
@@ -175,7 +87,7 @@ npm ci
 ...
 ```
 
-For installing future additional dependecies you can run `npm install --save my-package` or `npm install --save-dev my-dev-package` (to save a development module), and after that commit __both__ `package.json` and `package-lock.json` files. For details about the installed packages and npm scripts see [`package.json`](https://github.com/apache/incubator-superset/blob/master/package.json){:target="_blank"}.
+For installing future additional dependencies you can run `npm install --save my-package` or `npm install --save-dev my-dev-package` (to save a development module), and after that commit __both__ `package.json` and `package-lock.json` files. For details about the installed packages and npm scripts see [`package.json`](https://github.com/apache/incubator-superset/blob/master/package.json){:target="_blank"}.
 
 ### FrontEnd Tasks with `gulp`
 
@@ -183,7 +95,7 @@ Using `gulp` and `npm` scripts you can:
 
 1. Install dependencies under the `./static/vendor` folder.
 2. Building (e.g. minify/uglify) CSS and/or Javascript files.
-3. Run a developement server that "hot-reload" your web page when any HTML, CSS or Javascript file is modified.
+3. Run a development server that "hot-reload" your web page when any HTML, CSS or Javascript file is modified.
 
 The command to list all the `gulp` "tasks" and sub-tasks is (you might need `gulp-cli` installed globally, i.e. `npm i --global gulp-cli`, more info [here](https://gulpjs.com/docs/en/getting-started/quick-start){:target="_blank"}):
 
@@ -297,7 +209,7 @@ gulp css
 
 to run just the minification of the CSS files.
 
-#### 3. Run Developement Server
+#### 3. Run Development Server
 
 Start your normal Django server with (__NOTE__: do not change the default port!):
 
@@ -317,7 +229,7 @@ The latter will open your dev server, that will auto reload and apply your lates
 
 #### 4. Debug Task
 
-This task is for debugging the paths used in the others task, but also serve as a palce hodler to debug commands.
+This task is for debugging the paths used in the others task, but also serve as a place holder to debug commands.
 
 ```bash
 npm run debug
@@ -347,4 +259,4 @@ This command will collect all static assets (Javascript and CSS files) and copy 
 
 The `js9staticprod` gulp task is necessary if you specify a `STATIC_URL` and a `BASE_URL` different than the default, for example if you need to prefix the site `/` with a base url because you are running another webserver (e.g. another web server is running on `https://my-astro-platform.com/` so you want to run the pipeline on the same server/domain `https://my-astro-platform.com/pipeline`, so you need to set `BASE_URL='/pipeline/'` and `STATIC_URL=/pipeline-static/` in `settings.py`). __We recommend to run this in any case!__
 
-Then you can move that folder to where it can be served by the production static files server ([Ningx](https://www.nginx.com/){:target="_blank"} or [Apache](https://httpd.apache.org/){:target="_blank"} are usually good choices, in case refere to the [Django documentation](https://docs.djangoproject.com/en/3.1/howto/deployment/){:target="_blank"}).
+Then you can move that folder to where it can be served by the production static files server ([Ningx](https://www.nginx.com/){:target="_blank"} or [Apache](https://httpd.apache.org/){:target="_blank"} are usually good choices, in case refer to the [Django documentation](https://docs.djangoproject.com/en/3.1/howto/deployment/){:target="_blank"}).
