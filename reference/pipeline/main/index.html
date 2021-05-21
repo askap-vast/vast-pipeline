@@ -1,0 +1,567 @@
+<!doctype html><html lang=en class=no-js> <head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="VAST Pipeline platform to enable processing of astronomical sources extracted from the ASKAP telescope for radio transient detection science"><meta name=author content="VAST Development Team"><link rel=icon href=../../../img/favicon.png><meta name=generator content="mkdocs-1.1.2, mkdocs-material-7.0.6"><title>main.py - VAST Pipeline</title><link rel=stylesheet href=../../../assets/stylesheets/main.2c0c5eaf.min.css><link rel=stylesheet href=../../../assets/stylesheets/palette.7fa14f5b.min.css><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback"><style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style><link rel=stylesheet href=../../../assets/_mkdocstrings.css><link rel=stylesheet href=../../../theme/css/extra.css></head> <body dir=ltr data-md-color-scheme data-md-color-primary=none data-md-color-accent=none> <input class=md-toggle data-md-toggle=drawer type=checkbox id=__drawer autocomplete=off> <input class=md-toggle data-md-toggle=search type=checkbox id=__search autocomplete=off> <label class=md-overlay for=__drawer></label> <div data-md-component=skip> <a href=#vast_pipeline.pipeline.main class=md-skip> Skip to content </a> </div> <div data-md-component=announce> </div> <header class=md-header data-md-component=header> <nav class="md-header__inner md-grid" aria-label=Header> <a href=../../.. title="VAST Pipeline" class="md-header__button md-logo" aria-label="VAST Pipeline" data-md-component=logo> <img src=../../../img/vast.png alt=logo> </a> <label class="md-header__button md-icon" for=__drawer> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg> </label> <div class=md-header__title data-md-component=header-title> <div class=md-header__ellipsis> <div class=md-header__topic> <span class=md-ellipsis> VAST Pipeline </span> </div> <div class=md-header__topic data-md-component=header-topic> <span class=md-ellipsis> main.py </span> </div> </div> </div> <div class=md-header__options> </div> <label class="md-header__button md-icon" for=__search> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg> </label> <div class=md-search data-md-component=search role=dialog> <label class=md-search__overlay for=__search></label> <div class=md-search__inner role=search> <form class=md-search__form name=search> <input type=text class=md-search__input name=query aria-label=Search placeholder=Search autocapitalize=off autocorrect=off autocomplete=off spellcheck=false data-md-component=search-query data-md-state=active required> <label class="md-search__icon md-icon" for=__search> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg> </label> <button type=reset class="md-search__icon md-icon" aria-label=Clear tabindex=-1> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg> </button> </form> <div class=md-search__output> <div class=md-search__scrollwrap data-md-scrollfix> <div class=md-search-result data-md-component=search-result> <div class=md-search-result__meta> Initializing search </div> <ol class=md-search-result__list></ol> </div> </div> </div> </div> </div> <div class=md-header__source> <a href=https://github.com/askap-vast/vast-pipeline title="Go to repository" class=md-source data-md-component=source> <div class="md-source__icon md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg> </div> <div class=md-source__repository> askap-vast/vast-pipeline </div> </a> </div> </nav> </header> <div class=md-container data-md-component=container> <main class=md-main data-md-component=main> <div class="md-main__inner md-grid"> <div class="md-sidebar md-sidebar--primary" data-md-component=sidebar data-md-type=navigation> <div class=md-sidebar__scrollwrap> <div class=md-sidebar__inner> <nav class="md-nav md-nav--primary" aria-label=Navigation data-md-level=0> <label class=md-nav__title for=__drawer> <a href=../../.. title="VAST Pipeline" class="md-nav__button md-logo" aria-label="VAST Pipeline" data-md-component=logo> <img src=../../../img/vast.png alt=logo> </a> VAST Pipeline </label> <div class=md-nav__source> <a href=https://github.com/askap-vast/vast-pipeline title="Go to repository" class=md-source data-md-component=source> <div class="md-source__icon md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg> </div> <div class=md-source__repository> askap-vast/vast-pipeline </div> </a> </div> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../.. class=md-nav__link> Home </a> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_2 type=checkbox id=__nav_2> <label class=md-nav__link for=__nav_2> Quickstart <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label=Quickstart data-md-level=1> <label class=md-nav__title for=__nav_2> <span class="md-nav__icon md-icon"></span> Quickstart </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../../quickstart/installation/ class=md-nav__link> Installation </a> </li> <li class=md-nav__item> <a href=../../../quickstart/configuration/ class=md-nav__link> Configuration </a> </li> <li class=md-nav__item> <a href=../../../quickstart/deployment/ class=md-nav__link> Deployment </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_3 type=checkbox id=__nav_3> <label class=md-nav__link for=__nav_3> Admin Usage <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label="Admin Usage" data-md-level=1> <label class=md-nav__title for=__nav_3> <span class="md-nav__icon md-icon"></span> Admin Usage </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../../adminusage/cli/ class=md-nav__link> CLI </a> </li> <li class=md-nav__item> <a href=../../../adminusage/app/ class=md-nav__link> Web App </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_4 type=checkbox id=__nav_4> <label class=md-nav__link for=__nav_4> Pipeline Features and Design <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label="Pipeline Features and Design" data-md-level=1> <label class=md-nav__title for=__nav_4> <span class="md-nav__icon md-icon"></span> Pipeline Features and Design </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../../design/overview/ class=md-nav__link> Pipeline Steps Overview </a> </li> <li class=md-nav__item> <a href=../../../design/imageingest/ class=md-nav__link> Image & Selavy Catalogue Ingest </a> </li> <li class=md-nav__item> <a href=../../../design/association/ class=md-nav__link> Source Association </a> </li> <li class=md-nav__item> <a href=../../../design/newsources/ class=md-nav__link> New Sources </a> </li> <li class=md-nav__item> <a href=../../../design/monitor/ class=md-nav__link> Forced Measurements </a> </li> <li class=md-nav__item> <a href=../../../design/sourcestats/ class=md-nav__link> Source Statistics </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_5 type=checkbox id=__nav_5> <label class=md-nav__link for=__nav_5> Using the Pipeline <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label="Using the Pipeline" data-md-level=1> <label class=md-nav__title for=__nav_5> <span class="md-nav__icon md-icon"></span> Using the Pipeline </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../../using/access/ class=md-nav__link> Accessing the Pipeline </a> </li> <li class=md-nav__item> <a href=../../../using/initrun/ class=md-nav__link> Initialising a Run </a> </li> <li class=md-nav__item> <a href=../../../using/runconfig/ class=md-nav__link> Run Configuration </a> </li> <li class=md-nav__item> <a href=../../../using/processrun/ class=md-nav__link> Processing a Run </a> </li> <li class=md-nav__item> <a href=../../../using/addtorun/ class=md-nav__link> Adding Images to a Run </a> </li> <li class=md-nav__item> <a href=../../../using/deleterun/ class=md-nav__link> Deleting a Run </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_6 type=checkbox id=__nav_6> <label class=md-nav__link for=__nav_6> Exploring the Pipeline Website <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label="Exploring the Pipeline Website" data-md-level=1> <label class=md-nav__title for=__nav_6> <span class="md-nav__icon md-icon"></span> Exploring the Pipeline Website </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../../exploringwebsite/websiteoverview/ class=md-nav__link> Overview </a> </li> <li class=md-nav__item> <a href=../../../exploringwebsite/admintools/ class=md-nav__link> Admin Tools </a> </li> <li class=md-nav__item> <a href=../../../exploringwebsite/runpages/ class=md-nav__link> Pipeline Run Pages </a> </li> <li class=md-nav__item> <a href=../../../exploringwebsite/sourcepages/ class=md-nav__link> Source Pages </a> </li> <li class=md-nav__item> <a href=../../../exploringwebsite/measurementpages/ class=md-nav__link> Measurement Pages </a> </li> <li class=md-nav__item> <a href=../../../exploringwebsite/imagepages/ class=md-nav__link> Image Pages </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_7 type=checkbox id=__nav_7> <label class=md-nav__link for=__nav_7> Pipeline Outputs <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label="Pipeline Outputs" data-md-level=1> <label class=md-nav__title for=__nav_7> <span class="md-nav__icon md-icon"></span> Pipeline Outputs </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../../outputs/outputs/ class=md-nav__link> Outputs Overview </a> </li> <li class=md-nav__item> <a href=../../../outputs/usingoutputs/ class=md-nav__link> Using the Outputs </a> </li> <li class=md-nav__item> <a href=../../../outputs/coldesc/ class=md-nav__link> Column Descriptions </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_8 type=checkbox id=__nav_8> <label class=md-nav__link for=__nav_8> Contributing and Developing <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label="Contributing and Developing" data-md-level=1> <label class=md-nav__title for=__nav_8> <span class="md-nav__icon md-icon"></span> Contributing and Developing </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../../developing/intro/ class=md-nav__link> Intro </a> </li> <li class=md-nav__item> <a href=../../../developing/github/ class=md-nav__link> GitHub Platform </a> </li> <li class=md-nav__item> <a href=../../../developing/localdevenv/ class=md-nav__link> Local Development Environment </a> </li> <li class=md-nav__item> <a href=../../../developing/tests/ class=md-nav__link> Tests </a> </li> <li class=md-nav__item> <a href=../../../developing/docsdev/ class=md-nav__link> Docs </a> </li> <li class=md-nav__item> <a href=../../../developing/profiling/ class=md-nav__link> Bechmarks </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--active md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_9 type=checkbox id=__nav_9 checked> <label class=md-nav__link for=__nav_9> Code Reference <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label="Code Reference" data-md-level=1> <label class=md-nav__title for=__nav_9> <span class="md-nav__icon md-icon"></span> Code Reference </label> <ul class=md-nav__list data-md-scrollfix> <li class="md-nav__item md-nav__item--active md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_9_1 type=checkbox id=__nav_9_1 checked> <label class=md-nav__link for=__nav_9_1> vast_pipeline <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label=vast_pipeline data-md-level=2> <label class=md-nav__title for=__nav_9_1> <span class="md-nav__icon md-icon"></span> vast_pipeline </label> <ul class=md-nav__list data-md-scrollfix> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_9_1_1 type=checkbox id=__nav_9_1_1> <label class=md-nav__link for=__nav_9_1_1> image <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label=image data-md-level=3> <label class=md-nav__title for=__nav_9_1_1> <span class="md-nav__icon md-icon"></span> image </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../image/main/ class=md-nav__link> main.py </a> </li> <li class=md-nav__item> <a href=../../image/utils/ class=md-nav__link> utils.py </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_9_1_2 type=checkbox id=__nav_9_1_2> <label class=md-nav__link for=__nav_9_1_2> management <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label=management data-md-level=3> <label class=md-nav__title for=__nav_9_1_2> <span class="md-nav__icon md-icon"></span> management </label> <ul class=md-nav__list data-md-scrollfix> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_9_1_2_1 type=checkbox id=__nav_9_1_2_1> <label class=md-nav__link for=__nav_9_1_2_1> commands <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label=commands data-md-level=4> <label class=md-nav__title for=__nav_9_1_2_1> <span class="md-nav__icon md-icon"></span> commands </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../management/commands/clearpiperun/ class=md-nav__link> clearpiperun.py </a> </li> <li class=md-nav__item> <a href=../../management/commands/createmeasarrow/ class=md-nav__link> createmeasarrow.py </a> </li> <li class=md-nav__item> <a href=../../management/commands/debugrun/ class=md-nav__link> debugrun.py </a> </li> <li class=md-nav__item> <a href=../../management/commands/importsurvey/ class=md-nav__link> importsurvey.py </a> </li> <li class=md-nav__item> <a href=../../management/commands/initpiperun/ class=md-nav__link> initpiperun.py </a> </li> <li class=md-nav__item> <a href=../../management/commands/restorepiperun/ class=md-nav__link> restorepiperun.py </a> </li> <li class=md-nav__item> <a href=../../management/commands/runpipeline/ class=md-nav__link> runpipeline.py </a> </li> </ul> </nav> </li> <li class=md-nav__item> <a href=../../management/helpers/ class=md-nav__link> helpers.py </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--active md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_9_1_3 type=checkbox id=__nav_9_1_3 checked> <label class=md-nav__link for=__nav_9_1_3> pipeline <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label=pipeline data-md-level=3> <label class=md-nav__title for=__nav_9_1_3> <span class="md-nav__icon md-icon"></span> pipeline </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../association/ class=md-nav__link> association.py </a> </li> <li class=md-nav__item> <a href=../errors/ class=md-nav__link> errors.py </a> </li> <li class=md-nav__item> <a href=../finalise/ class=md-nav__link> finalise.py </a> </li> <li class=md-nav__item> <a href=../forced_extraction/ class=md-nav__link> forced_extraction.py </a> </li> <li class=md-nav__item> <a href=../loading/ class=md-nav__link> loading.py </a> </li> <li class="md-nav__item md-nav__item--active"> <input class="md-nav__toggle md-toggle" data-md-toggle=toc type=checkbox id=__toc> <label class="md-nav__link md-nav__link--active" for=__toc> main.py <span class="md-nav__icon md-icon"></span> </label> <a href=./ class="md-nav__link md-nav__link--active"> main.py </a> <nav class="md-nav md-nav--secondary" aria-label="Table of contents"> <label class=md-nav__title for=__toc> <span class="md-nav__icon md-icon"></span> Table of contents </label> <ul class=md-nav__list data-md-component=toc data-md-scrollfix> <li class=md-nav__item> <a href=#vast_pipeline.pipeline.main class=md-nav__link> vast_pipeline.pipeline.main </a> </li> <li class=md-nav__item> <a href=#vast_pipeline.pipeline.main.Pipeline class=md-nav__link> Pipeline </a> <nav class=md-nav aria-label=Pipeline> <ul class=md-nav__list> <li class=md-nav__item> <a href=#vast_pipeline.pipeline.main.Pipeline.__init__ class=md-nav__link> __init__() </a> </li> <li class=md-nav__item> <a href=#vast_pipeline.pipeline.main.Pipeline.check_current_runs class=md-nav__link> check_current_runs() </a> </li> <li class=md-nav__item> <a href=#vast_pipeline.pipeline.main.Pipeline.check_for_epoch_based class=md-nav__link> check_for_epoch_based() </a> </li> <li class=md-nav__item> <a href=#vast_pipeline.pipeline.main.Pipeline.check_prev_config_diff class=md-nav__link> check_prev_config_diff() </a> </li> <li class=md-nav__item> <a href=#vast_pipeline.pipeline.main.Pipeline.load_cfg class=md-nav__link> load_cfg() </a> </li> <li class=md-nav__item> <a href=#vast_pipeline.pipeline.main.Pipeline.match_images_to_data class=md-nav__link> match_images_to_data() </a> </li> <li class=md-nav__item> <a href=#vast_pipeline.pipeline.main.Pipeline.process_pipeline class=md-nav__link> process_pipeline() </a> </li> <li class=md-nav__item> <a href=#vast_pipeline.pipeline.main.Pipeline.set_status class=md-nav__link> set_status() </a> </li> <li class=md-nav__item> <a href=#vast_pipeline.pipeline.main.Pipeline.validate_cfg class=md-nav__link> validate_cfg() </a> </li> </ul> </nav> </li> </ul> </nav> </li> <li class=md-nav__item> <a href=../model_generator/ class=md-nav__link> model_generator.py </a> </li> <li class=md-nav__item> <a href=../new_sources/ class=md-nav__link> new_sources.py </a> </li> <li class=md-nav__item> <a href=../utils/ class=md-nav__link> utils.py </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_9_1_4 type=checkbox id=__nav_9_1_4> <label class=md-nav__link for=__nav_9_1_4> survey <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label=survey data-md-level=3> <label class=md-nav__title for=__nav_9_1_4> <span class="md-nav__icon md-icon"></span> survey </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../survey/catalogue/ class=md-nav__link> catalogue.py </a> </li> <li class=md-nav__item> <a href=../../survey/translators/ class=md-nav__link> translators.py </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_9_1_5 type=checkbox id=__nav_9_1_5> <label class=md-nav__link for=__nav_9_1_5> utils <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label=utils data-md-level=3> <label class=md-nav__title for=__nav_9_1_5> <span class="md-nav__icon md-icon"></span> utils </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../utils/auth/ class=md-nav__link> auth.py </a> </li> <li class=md-nav__item> <a href=../../utils/unit_tags/ class=md-nav__link> unit_tags.py </a> </li> <li class=md-nav__item> <a href=../../utils/utils/ class=md-nav__link> utils.py </a> </li> <li class=md-nav__item> <a href=../../utils/view/ class=md-nav__link> view.py </a> </li> </ul> </nav> </li> <li class=md-nav__item> <a href=../../admin/ class=md-nav__link> admin.py </a> </li> <li class=md-nav__item> <a href=../../apps/ class=md-nav__link> apps.py </a> </li> <li class=md-nav__item> <a href=../../context_processors/ class=md-nav__link> context_processors.py </a> </li> <li class=md-nav__item> <a href=../../converters/ class=md-nav__link> converters.py </a> </li> <li class=md-nav__item> <a href=../../forms/ class=md-nav__link> forms.py </a> </li> <li class=md-nav__item> <a href=../../models/ class=md-nav__link> models.py </a> </li> <li class=md-nav__item> <a href=../../plots/ class=md-nav__link> plots.py </a> </li> <li class=md-nav__item> <a href=../../urls/ class=md-nav__link> urls.py </a> </li> </ul> </nav> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_10 type=checkbox id=__nav_10> <label class=md-nav__link for=__nav_10> Architecture <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label=Architecture data-md-level=1> <label class=md-nav__title for=__nav_10> <span class="md-nav__icon md-icon"></span> Architecture </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../../architecture/intro/ class=md-nav__link> Architecture Intro </a> </li> <li class=md-nav__item> <a href=../../../architecture/database/ class=md-nav__link> Database Schema </a> </li> </ul> </nav> </li> <li class=md-nav__item> <a href=../../../faqs/ class=md-nav__link> FAQs </a> </li> <li class=md-nav__item> <a href=../../../changelog/ class=md-nav__link> Changelog </a> </li> <li class=md-nav__item> <a href=../../../code_of_conduct/ class=md-nav__link> Code of Conduct </a> </li> <li class=md-nav__item> <a href=../../../license/ class=md-nav__link> License </a> </li> </ul> </nav> </div> </div> </div> <div class="md-sidebar md-sidebar--secondary" data-md-component=sidebar data-md-type=toc> <div class=md-sidebar__scrollwrap> <div class=md-sidebar__inner> <nav class="md-nav md-nav--secondary" aria-label="Table of contents"> <label class=md-nav__title for=__toc> <span class="md-nav__icon md-icon"></span> Table of contents </label> <ul class=md-nav__list data-md-component=toc data-md-scrollfix> <li class=md-nav__item> <a href=#vast_pipeline.pipeline.main class=md-nav__link> vast_pipeline.pipeline.main </a> </li> <li class=md-nav__item> <a href=#vast_pipeline.pipeline.main.Pipeline class=md-nav__link> Pipeline </a> <nav class=md-nav aria-label=Pipeline> <ul class=md-nav__list> <li class=md-nav__item> <a href=#vast_pipeline.pipeline.main.Pipeline.__init__ class=md-nav__link> __init__() </a> </li> <li class=md-nav__item> <a href=#vast_pipeline.pipeline.main.Pipeline.check_current_runs class=md-nav__link> check_current_runs() </a> </li> <li class=md-nav__item> <a href=#vast_pipeline.pipeline.main.Pipeline.check_for_epoch_based class=md-nav__link> check_for_epoch_based() </a> </li> <li class=md-nav__item> <a href=#vast_pipeline.pipeline.main.Pipeline.check_prev_config_diff class=md-nav__link> check_prev_config_diff() </a> </li> <li class=md-nav__item> <a href=#vast_pipeline.pipeline.main.Pipeline.load_cfg class=md-nav__link> load_cfg() </a> </li> <li class=md-nav__item> <a href=#vast_pipeline.pipeline.main.Pipeline.match_images_to_data class=md-nav__link> match_images_to_data() </a> </li> <li class=md-nav__item> <a href=#vast_pipeline.pipeline.main.Pipeline.process_pipeline class=md-nav__link> process_pipeline() </a> </li> <li class=md-nav__item> <a href=#vast_pipeline.pipeline.main.Pipeline.set_status class=md-nav__link> set_status() </a> </li> <li class=md-nav__item> <a href=#vast_pipeline.pipeline.main.Pipeline.validate_cfg class=md-nav__link> validate_cfg() </a> </li> </ul> </nav> </li> </ul> </nav> </div> </div> </div> <div class=md-content data-md-component=content> <article class="md-content__inner md-typeset"> <h1>main.py</h1> <div class="doc doc-object doc-module"> <a id=vast_pipeline.pipeline.main></a> <div class="doc doc-contents first"> <p>This module contains the main pipeline class used for processing a pipeline run.</p> <div class="doc doc-children"> <div class="doc doc-object doc-class"> <h2 id=vast_pipeline.pipeline.main.Pipeline class="doc doc-heading"> <code>Pipeline</code> <a href=#vast_pipeline.pipeline.main.Pipeline class=headerlink title="Permanent link">&para;</a></h2> <div class="doc doc-contents "> <p>Instance of a pipeline. All the methods run stages of the pipeline processing.</p> <p><strong>Attributes:</strong></p> <table> <thead> <tr> <th>Name</th> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td><code>name</code></td> <td><code>str</code></td> <td><p>The name of the pipeline run.</p></td> </tr> <tr> <td><code>config</code></td> <td><code>config</code></td> <td><p>The configuration options of the pipeline run.</p></td> </tr> <tr> <td><code>epoch_based</code></td> <td><code>bool</code></td> <td><p>Whether the pipeline run is in epoch_based mode or not.</p></td> </tr> </tbody> </table> <div class="doc doc-children"> <div class="doc doc-object doc-method"> <h3 id=vast_pipeline.pipeline.main.Pipeline.__init__ class="doc doc-heading"> <code class="highlight language-python"><span class=fm>__init__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>name</span><span class=p>,</span> <span class=n>config_path</span><span class=p>)</span></code> <span class="doc doc-properties"> <small class="doc doc-property doc-property-special"><code>special</code></small> </span> <a href=#vast_pipeline.pipeline.main.Pipeline.__init__ class=headerlink title="Permanent link">&para;</a></h3> <div class="doc doc-contents "> <p>Initialise the pipeline with attributed such as configuration file path, name, and list of images and related files (e.g. selavy)</p> <p><strong>Parameters:</strong></p> <table> <thead> <tr> <th>Name</th> <th>Type</th> <th>Description</th> <th>Default</th> </tr> </thead> <tbody> <tr> <td><code>name</code></td> <td><code>str</code></td> <td><p>The pipeline name.</p></td> <td><em>required</em></td> </tr> <tr> <td><code>config_path</code></td> <td><code>str</code></td> <td><p>The system path to the configuration file.</p></td> <td><em>required</em></td> </tr> </tbody> </table> <p><strong>Returns:</strong></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td><code>None</code></td> <td><p>None.</p></td> </tr> </tbody> </table> <details class=quote> <summary>Source code in <code>vast_pipeline/pipeline/main.py</code></summary> <div class=highlight><pre><span></span><code><span class=k>def</span> <span class=fm>__init__</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>name</span><span class=p>:</span> <span class=nb>str</span><span class=p>,</span> <span class=n>config_path</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=kc>None</span><span class=p>:</span>
+    <span class=sd>&#39;&#39;&#39;</span>
+<span class=sd>    Initialise the pipeline with attributed such as configuration file</span>
+<span class=sd>    path, name, and list of images and related files (e.g. selavy)</span>
+
+<span class=sd>    Args:</span>
+<span class=sd>        name: The pipeline name.</span>
+<span class=sd>        config_path: The system path to the configuration file.</span>
+
+<span class=sd>    Returns:</span>
+<span class=sd>        None.</span>
+<span class=sd>    &#39;&#39;&#39;</span>
+    <span class=bp>self</span><span class=o>.</span><span class=n>name</span> <span class=o>=</span> <span class=n>name</span>
+    <span class=bp>self</span><span class=o>.</span><span class=n>config</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>load_cfg</span><span class=p>(</span><span class=n>config_path</span><span class=p>)</span>
+    <span class=c1># The epoch_based parameter below is for</span>
+    <span class=c1># if the user has entered just lists we don&#39;t have</span>
+    <span class=c1># access to the dates until the Image instances are</span>
+    <span class=c1># created. So we flag this as true so that we can</span>
+    <span class=c1># reorder the epochs once the date information is available.</span>
+    <span class=c1># It is also recorded in the database such that there is a record</span>
+    <span class=c1># of the fact that the run was processed in an epoch based mode.</span>
+    <span class=bp>self</span><span class=o>.</span><span class=n>epoch_based</span> <span class=o>=</span> <span class=kc>False</span>
+
+    <span class=c1># Check if provided files are lists and convert to</span>
+    <span class=c1># dictionaries if so</span>
+    <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=p>,</span> <span class=bp>self</span><span class=o>.</span><span class=n>epoch_based</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>check_for_epoch_based</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=p>)</span>
+</code></pre></div> </details> </div> </div> <div class="doc doc-object doc-method"> <h3 id=vast_pipeline.pipeline.main.Pipeline.check_current_runs class="doc doc-heading"> <code class="highlight language-python"><span class=n>check_current_runs</span><span class=p>()</span></code> <span class="doc doc-properties"> <small class="doc doc-property doc-property-staticmethod"><code>staticmethod</code></small> </span> <a href=#vast_pipeline.pipeline.main.Pipeline.check_current_runs class=headerlink title="Permanent link">&para;</a></h3> <div class="doc doc-contents "> <p>Checks the number of pipeline runs currently being processed.</p> <p><strong>Returns:</strong></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td><code>None</code></td> <td><p>None</p></td> </tr> </tbody> </table> <p><strong>Exceptions:</strong></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td><code>MaxPipelineRunsError</code></td> <td><p>Raised if the number of pipeline runs currently being processed is larger than the allowed maximum.</p></td> </tr> </tbody> </table> <details class=quote> <summary>Source code in <code>vast_pipeline/pipeline/main.py</code></summary> <div class=highlight><pre><span></span><code><span class=nd>@staticmethod</span>
+<span class=k>def</span> <span class=nf>check_current_runs</span><span class=p>()</span> <span class=o>-&gt;</span> <span class=kc>None</span><span class=p>:</span>
+    <span class=sd>&quot;&quot;&quot;</span>
+<span class=sd>    Checks the number of pipeline runs currently being processed.</span>
+
+<span class=sd>    Returns:</span>
+<span class=sd>        None</span>
+
+<span class=sd>    Raises:</span>
+<span class=sd>        MaxPipelineRunsError: Raised if the number of pipeline runs</span>
+<span class=sd>            currently being processed is larger than the allowed</span>
+<span class=sd>            maximum.</span>
+<span class=sd>    &quot;&quot;&quot;</span>
+    <span class=k>if</span> <span class=n>Run</span><span class=o>.</span><span class=n>objects</span><span class=o>.</span><span class=n>check_max_runs</span><span class=p>(</span><span class=n>settings</span><span class=o>.</span><span class=n>MAX_PIPELINE_RUNS</span><span class=p>):</span>
+        <span class=k>raise</span> <span class=n>MaxPipelineRunsError</span>
+</code></pre></div> </details> </div> </div> <div class="doc doc-object doc-method"> <h3 id=vast_pipeline.pipeline.main.Pipeline.check_for_epoch_based class="doc doc-heading"> <code class="highlight language-python"><span class=n>check_for_epoch_based</span><span class=p>(</span><span class=n>cfg</span><span class=p>)</span></code> <span class="doc doc-properties"> <small class="doc doc-property doc-property-staticmethod"><code>staticmethod</code></small> </span> <a href=#vast_pipeline.pipeline.main.Pipeline.check_for_epoch_based class=headerlink title="Permanent link">&para;</a></h3> <div class="doc doc-contents "> <p>Checks whether the images have been provided in a Dictionary format which means that epoch_based has been requested. If they have been provided with just lists then the inputs are converted to dictionaries with an epoch defined for each individual image.</p> <p><strong>Parameters:</strong></p> <table> <thead> <tr> <th>Name</th> <th>Type</th> <th>Description</th> <th>Default</th> </tr> </thead> <tbody> <tr> <td><code>cfg</code></td> <td><code>module</code></td> <td><p>The config object.</p></td> <td><em>required</em></td> </tr> </tbody> </table> <p><strong>Returns:</strong></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td><code>Tuple[module, bool]</code></td> <td><p>The config (with converted List -&gt; Dict inputs if required) and epoch_based boolean flag.</p></td> </tr> </tbody> </table> <p><strong>Exceptions:</strong></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td><code>PipelineConfigError</code></td> <td><p>Raised if the images are entered into the configuration file in a format that cannot be read.</p></td> </tr> </tbody> </table> <details class=quote> <summary>Source code in <code>vast_pipeline/pipeline/main.py</code></summary> <div class=highlight><pre><span></span><code><span class=nd>@staticmethod</span>
+<span class=k>def</span> <span class=nf>check_for_epoch_based</span><span class=p>(</span><span class=n>cfg</span><span class=p>:</span> <span class=n>ModuleType</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Tuple</span><span class=p>[</span><span class=n>ModuleType</span><span class=p>,</span> <span class=nb>bool</span><span class=p>]:</span>
+    <span class=c1># Config typing above is unknown what to put.</span>
+    <span class=sd>&quot;&quot;&quot;</span>
+<span class=sd>    Checks whether the images have been provided in a Dictionary format</span>
+<span class=sd>    which means that epoch_based has been requested. If they have been</span>
+<span class=sd>    provided with just lists then the inputs are converted to dictionaries</span>
+<span class=sd>    with an epoch defined for each individual image.</span>
+
+<span class=sd>    Args:</span>
+<span class=sd>        cfg:</span>
+<span class=sd>            The config object.</span>
+
+<span class=sd>    Returns:</span>
+<span class=sd>        The config (with converted List -&gt; Dict inputs if required) and</span>
+<span class=sd>        epoch_based boolean flag.</span>
+
+<span class=sd>    Raises:</span>
+<span class=sd>        PipelineConfigError: Raised if the images are entered into the</span>
+<span class=sd>            configuration file in a format that cannot be read.</span>
+<span class=sd>    &quot;&quot;&quot;</span>
+    <span class=n>epoch_based</span> <span class=o>=</span> <span class=kc>False</span>
+
+    <span class=k>for</span> <span class=n>cfg_key</span> <span class=ow>in</span> <span class=p>[</span>
+        <span class=s1>&#39;IMAGE_FILES&#39;</span><span class=p>,</span> <span class=s1>&#39;SELAVY_FILES&#39;</span><span class=p>,</span>
+        <span class=s1>&#39;BACKGROUND_FILES&#39;</span><span class=p>,</span> <span class=s1>&#39;NOISE_FILES&#39;</span>
+    <span class=p>]:</span>
+        <span class=k>if</span> <span class=nb>isinstance</span><span class=p>(</span><span class=nb>getattr</span><span class=p>(</span><span class=n>cfg</span><span class=p>,</span> <span class=n>cfg_key</span><span class=p>),</span> <span class=nb>list</span><span class=p>):</span>
+            <span class=nb>setattr</span><span class=p>(</span>
+                <span class=n>cfg</span><span class=p>,</span>
+                <span class=n>cfg_key</span><span class=p>,</span>
+                <span class=n>convert_list_to_dict</span><span class=p>(</span><span class=nb>getattr</span><span class=p>(</span><span class=n>cfg</span><span class=p>,</span> <span class=n>cfg_key</span><span class=p>))</span>
+            <span class=p>)</span>
+        <span class=k>elif</span> <span class=nb>isinstance</span><span class=p>(</span><span class=nb>getattr</span><span class=p>(</span><span class=n>cfg</span><span class=p>,</span> <span class=n>cfg_key</span><span class=p>),</span> <span class=nb>dict</span><span class=p>):</span>
+            <span class=c1># Set to True if dictionaries are passed.</span>
+            <span class=n>epoch_based</span> <span class=o>=</span> <span class=kc>True</span>
+        <span class=k>else</span><span class=p>:</span>
+            <span class=k>raise</span> <span class=n>PipelineConfigError</span><span class=p>((</span>
+                <span class=s1>&#39;Unknown images entry format!&#39;</span>
+                <span class=sa>f</span><span class=s1>&#39; Must be a list or dictionary.&#39;</span>
+            <span class=p>))</span>
+
+    <span class=k>return</span> <span class=n>cfg</span><span class=p>,</span> <span class=n>epoch_based</span>
+</code></pre></div> </details> </div> </div> <div class="doc doc-object doc-method"> <h3 id=vast_pipeline.pipeline.main.Pipeline.check_prev_config_diff class="doc doc-heading"> <code class="highlight language-python"><span class=n>check_prev_config_diff</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>p_run_path</span><span class=p>)</span></code> <a href=#vast_pipeline.pipeline.main.Pipeline.check_prev_config_diff class=headerlink title="Permanent link">&para;</a></h3> <div class="doc doc-contents "> <p>Checks if the previous config file differs from the current config file. Used in add mode. Only returns true if the images are different and the other general settings are the same (the requirement for add mode). Otherwise False is returned.</p> <p><strong>Parameters:</strong></p> <table> <thead> <tr> <th>Name</th> <th>Type</th> <th>Description</th> <th>Default</th> </tr> </thead> <tbody> <tr> <td><code>p_run_path</code></td> <td><code>str</code></td> <td><p>The path of the pipeline run where the parquets are stored.</p></td> <td><em>required</em></td> </tr> </tbody> </table> <p><strong>Returns:</strong></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td><code>bool</code></td> <td><p>True if images are different but general settings are the same. Otherwise False is returned.</p></td> </tr> </tbody> </table> <details class=quote> <summary>Source code in <code>vast_pipeline/pipeline/main.py</code></summary> <div class=highlight><pre><span></span><code><span class=k>def</span> <span class=nf>check_prev_config_diff</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>p_run_path</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=nb>bool</span><span class=p>:</span>
+    <span class=sd>&quot;&quot;&quot;</span>
+<span class=sd>    Checks if the previous config file differs from the current config</span>
+<span class=sd>    file. Used in add mode. Only returns true if the images are different</span>
+<span class=sd>    and the other general settings are the same (the requirement for add</span>
+<span class=sd>    mode). Otherwise False is returned.</span>
+
+<span class=sd>    Args:</span>
+<span class=sd>        p_run_path:</span>
+<span class=sd>            The path of the pipeline run where the parquets are stored.</span>
+
+<span class=sd>    Returns:</span>
+<span class=sd>        True if images are different but general settings are the same.</span>
+<span class=sd>        Otherwise False is returned.</span>
+<span class=sd>    &quot;&quot;&quot;</span>
+    <span class=n>valid_keys</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>_get_valid_keys</span><span class=p>(</span><span class=n>upper</span><span class=o>=</span><span class=kc>True</span><span class=p>)</span>
+
+    <span class=n>prev_config</span><span class=p>,</span> <span class=n>_</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>check_for_epoch_based</span><span class=p>(</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>load_cfg</span><span class=p>(</span><span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>join</span><span class=p>(</span><span class=n>p_run_path</span><span class=p>,</span> <span class=s1>&#39;config_prev.py&#39;</span><span class=p>)))</span>
+    <span class=n>prev_config_dict</span> <span class=o>=</span> <span class=p>{</span><span class=n>k</span><span class=p>:</span> <span class=nb>getattr</span><span class=p>(</span><span class=n>prev_config</span><span class=p>,</span> <span class=n>k</span><span class=p>)</span> <span class=k>for</span> <span class=n>k</span> <span class=ow>in</span> <span class=n>valid_keys</span><span class=p>}</span>
+
+    <span class=n>current_config_dict</span> <span class=o>=</span> <span class=p>{</span><span class=n>k</span><span class=p>:</span> <span class=nb>getattr</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=p>,</span> <span class=n>k</span><span class=p>)</span> <span class=k>for</span> <span class=n>k</span> <span class=ow>in</span> <span class=n>valid_keys</span><span class=p>}</span>
+
+    <span class=k>if</span> <span class=n>prev_config_dict</span> <span class=o>==</span> <span class=n>current_config_dict</span><span class=p>:</span>
+        <span class=k>return</span> <span class=kc>True</span>
+
+    <span class=n>image_check</span> <span class=o>=</span> <span class=p>(</span>
+        <span class=n>prev_config_dict</span><span class=p>[</span><span class=s1>&#39;IMAGE_FILES&#39;</span><span class=p>]</span>
+        <span class=o>==</span> <span class=n>current_config_dict</span><span class=p>[</span><span class=s1>&#39;IMAGE_FILES&#39;</span><span class=p>]</span>
+    <span class=p>)</span>
+
+    <span class=k>for</span> <span class=n>i</span> <span class=ow>in</span> <span class=p>[</span>
+        <span class=s1>&#39;IMAGE_FILES&#39;</span><span class=p>,</span> <span class=s1>&#39;SELAVY_FILES&#39;</span><span class=p>,</span> <span class=s1>&#39;NOISE_FILES&#39;</span><span class=p>,</span> <span class=s1>&#39;BACKGROUND_FILES&#39;</span>
+    <span class=p>]:</span>
+        <span class=n>prev_config_dict</span><span class=o>.</span><span class=n>pop</span><span class=p>(</span><span class=n>i</span><span class=p>)</span>
+        <span class=n>current_config_dict</span><span class=o>.</span><span class=n>pop</span><span class=p>(</span><span class=n>i</span><span class=p>)</span>
+
+    <span class=n>settings_check</span> <span class=o>=</span> <span class=n>prev_config_dict</span> <span class=o>==</span> <span class=n>current_config_dict</span>
+
+    <span class=k>if</span> <span class=ow>not</span> <span class=n>image_check</span> <span class=ow>and</span> <span class=n>settings_check</span><span class=p>:</span>
+        <span class=k>return</span> <span class=kc>False</span>
+
+    <span class=k>return</span> <span class=kc>True</span>
+</code></pre></div> </details> </div> </div> <div class="doc doc-object doc-method"> <h3 id=vast_pipeline.pipeline.main.Pipeline.load_cfg class="doc doc-heading"> <code class="highlight language-python"><span class=n>load_cfg</span><span class=p>(</span><span class=n>cfg</span><span class=p>)</span></code> <span class="doc doc-properties"> <small class="doc doc-property doc-property-staticmethod"><code>staticmethod</code></small> </span> <a href=#vast_pipeline.pipeline.main.Pipeline.load_cfg class=headerlink title="Permanent link">&para;</a></h3> <div class="doc doc-contents "> <p>Check the given Config path. Throw exception if any problems return the config object as module/class.</p> <p><strong>Parameters:</strong></p> <table> <thead> <tr> <th>Name</th> <th>Type</th> <th>Description</th> <th>Default</th> </tr> </thead> <tbody> <tr> <td><code>cfg</code></td> <td><code>str</code></td> <td><p>The system path to the pipeline run configuration file.</p></td> <td><em>required</em></td> </tr> </tbody> </table> <p><strong>Returns:</strong></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td><code>module</code></td> <td><p>The configuration options read from the input file.</p></td> </tr> </tbody> </table> <p><strong>Exceptions:</strong></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td><code>PipelineConfigError</code></td> <td><p>Raised if the configuration file cannot be found.</p></td> </tr> </tbody> </table> <details class=quote> <summary>Source code in <code>vast_pipeline/pipeline/main.py</code></summary> <div class=highlight><pre><span></span><code><span class=nd>@staticmethod</span>
+<span class=k>def</span> <span class=nf>load_cfg</span><span class=p>(</span><span class=n>cfg</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>ModuleType</span><span class=p>:</span>
+    <span class=sd>&quot;&quot;&quot;</span>
+<span class=sd>    Check the given Config path. Throw exception if any problems</span>
+<span class=sd>    return the config object as module/class.</span>
+
+<span class=sd>    Args:</span>
+<span class=sd>        cfg: The system path to the pipeline run configuration file.</span>
+
+<span class=sd>    Returns:</span>
+<span class=sd>        The configuration options read from the input file.</span>
+
+<span class=sd>    Raises:</span>
+<span class=sd>        PipelineConfigError: Raised if the configuration file cannot be</span>
+<span class=sd>            found.</span>
+<span class=sd>    &quot;&quot;&quot;</span>
+    <span class=k>if</span> <span class=ow>not</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>exists</span><span class=p>(</span><span class=n>cfg</span><span class=p>):</span>
+        <span class=k>raise</span> <span class=n>PipelineConfigError</span><span class=p>(</span>
+            <span class=s1>&#39;pipeline run config file not existent&#39;</span>
+        <span class=p>)</span>
+
+    <span class=c1># load the run config as a Python module</span>
+    <span class=n>spec</span> <span class=o>=</span> <span class=n>spec_from_file_location</span><span class=p>(</span><span class=s1>&#39;run_config&#39;</span><span class=p>,</span> <span class=n>cfg</span><span class=p>)</span>
+    <span class=n>mod</span> <span class=o>=</span> <span class=n>module_from_spec</span><span class=p>(</span><span class=n>spec</span><span class=p>)</span>
+    <span class=n>spec</span><span class=o>.</span><span class=n>loader</span><span class=o>.</span><span class=n>exec_module</span><span class=p>(</span><span class=n>mod</span><span class=p>)</span>
+
+    <span class=k>return</span> <span class=n>mod</span>
+</code></pre></div> </details> </div> </div> <div class="doc doc-object doc-method"> <h3 id=vast_pipeline.pipeline.main.Pipeline.match_images_to_data class="doc doc-heading"> <code class="highlight language-python"><span class=n>match_images_to_data</span><span class=p>(</span><span class=bp>self</span><span class=p>)</span></code> <a href=#vast_pipeline.pipeline.main.Pipeline.match_images_to_data class=headerlink title="Permanent link">&para;</a></h3> <div class="doc doc-contents "> <p>Loops through images and matches the selavy, noise and bkg images. Assumes that user has enteted images and other data in the same order.</p> <p><strong>Returns:</strong></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td><code>None</code></td> <td><p>None</p></td> </tr> </tbody> </table> <details class=quote> <summary>Source code in <code>vast_pipeline/pipeline/main.py</code></summary> <div class=highlight><pre><span></span><code><span class=k>def</span> <span class=nf>match_images_to_data</span><span class=p>(</span><span class=bp>self</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=kc>None</span><span class=p>:</span>
+    <span class=sd>&quot;&quot;&quot;</span>
+<span class=sd>    Loops through images and matches the selavy, noise and bkg images.</span>
+<span class=sd>    Assumes that user has enteted images and other data in the same order.</span>
+
+<span class=sd>    Returns:</span>
+<span class=sd>        None</span>
+<span class=sd>    &quot;&quot;&quot;</span>
+    <span class=bp>self</span><span class=o>.</span><span class=n>img_paths</span> <span class=o>=</span> <span class=p>{</span>
+        <span class=s1>&#39;selavy&#39;</span><span class=p>:</span> <span class=p>{},</span>
+        <span class=s1>&#39;noise&#39;</span><span class=p>:</span> <span class=p>{},</span>
+        <span class=s1>&#39;background&#39;</span><span class=p>:</span> <span class=p>{}</span>
+    <span class=p>}</span>
+    <span class=bp>self</span><span class=o>.</span><span class=n>img_epochs</span> <span class=o>=</span> <span class=p>{}</span>
+
+    <span class=k>for</span> <span class=n>key</span> <span class=ow>in</span> <span class=nb>sorted</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=o>.</span><span class=n>IMAGE_FILES</span><span class=o>.</span><span class=n>keys</span><span class=p>()):</span>
+        <span class=k>for</span> <span class=n>x</span><span class=p>,</span><span class=n>y</span> <span class=ow>in</span> <span class=nb>zip</span><span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=o>.</span><span class=n>IMAGE_FILES</span><span class=p>[</span><span class=n>key</span><span class=p>],</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=o>.</span><span class=n>SELAVY_FILES</span><span class=p>[</span><span class=n>key</span><span class=p>]</span>
+        <span class=p>):</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>img_paths</span><span class=p>[</span><span class=s1>&#39;selavy&#39;</span><span class=p>][</span><span class=n>x</span><span class=p>]</span> <span class=o>=</span> <span class=n>y</span>
+
+        <span class=k>for</span> <span class=n>x</span><span class=p>,</span><span class=n>y</span> <span class=ow>in</span> <span class=nb>zip</span><span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=o>.</span><span class=n>IMAGE_FILES</span><span class=p>[</span><span class=n>key</span><span class=p>],</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=o>.</span><span class=n>NOISE_FILES</span><span class=p>[</span><span class=n>key</span><span class=p>]</span>
+        <span class=p>):</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>img_paths</span><span class=p>[</span><span class=s1>&#39;noise&#39;</span><span class=p>][</span><span class=n>x</span><span class=p>]</span> <span class=o>=</span> <span class=n>y</span>
+
+        <span class=c1># check if backgound files have been given before</span>
+        <span class=c1># attempting to match</span>
+        <span class=k>if</span> <span class=n>key</span> <span class=ow>in</span> <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=o>.</span><span class=n>BACKGROUND_FILES</span><span class=p>:</span>
+            <span class=k>for</span> <span class=n>x</span><span class=p>,</span><span class=n>y</span> <span class=ow>in</span> <span class=nb>zip</span><span class=p>(</span>
+                <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=o>.</span><span class=n>IMAGE_FILES</span><span class=p>[</span><span class=n>key</span><span class=p>],</span>
+                <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=o>.</span><span class=n>BACKGROUND_FILES</span><span class=p>[</span><span class=n>key</span><span class=p>]</span>
+            <span class=p>):</span>
+                <span class=bp>self</span><span class=o>.</span><span class=n>img_paths</span><span class=p>[</span><span class=s1>&#39;background&#39;</span><span class=p>][</span><span class=n>x</span><span class=p>]</span> <span class=o>=</span> <span class=n>y</span>
+
+        <span class=k>for</span> <span class=n>x</span> <span class=ow>in</span> <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=o>.</span><span class=n>IMAGE_FILES</span><span class=p>[</span><span class=n>key</span><span class=p>]:</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>img_epochs</span><span class=p>[</span><span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>basename</span><span class=p>(</span><span class=n>x</span><span class=p>)]</span> <span class=o>=</span> <span class=n>key</span>
+</code></pre></div> </details> </div> </div> <div class="doc doc-object doc-method"> <h3 id=vast_pipeline.pipeline.main.Pipeline.process_pipeline class="doc doc-heading"> <code class="highlight language-python"><span class=n>process_pipeline</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>p_run</span><span class=p>)</span></code> <a href=#vast_pipeline.pipeline.main.Pipeline.process_pipeline class=headerlink title="Permanent link">&para;</a></h3> <div class="doc doc-contents "> <p>The function that performs the processing operations of the pipeline run.</p> <p><strong>Parameters:</strong></p> <table> <thead> <tr> <th>Name</th> <th>Type</th> <th>Description</th> <th>Default</th> </tr> </thead> <tbody> <tr> <td><code>p_run</code></td> <td><code>Run</code></td> <td><p>The pipeline run model object.</p></td> <td><em>required</em></td> </tr> </tbody> </table> <p><strong>Returns:</strong></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td><code>None</code></td> <td><p>None</p></td> </tr> </tbody> </table> <details class=quote> <summary>Source code in <code>vast_pipeline/pipeline/main.py</code></summary> <div class=highlight><pre><span></span><code><span class=k>def</span> <span class=nf>process_pipeline</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>p_run</span><span class=p>:</span> <span class=n>Run</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=kc>None</span><span class=p>:</span>
+    <span class=sd>&quot;&quot;&quot;</span>
+<span class=sd>    The function that performs the processing operations of the pipeline</span>
+<span class=sd>    run.</span>
+
+<span class=sd>    Args:</span>
+<span class=sd>        p_run: The pipeline run model object.</span>
+
+<span class=sd>    Returns:</span>
+<span class=sd>        None</span>
+<span class=sd>    &quot;&quot;&quot;</span>
+    <span class=n>logger</span><span class=o>.</span><span class=n>info</span><span class=p>(</span><span class=sa>f</span><span class=s1>&#39;Epoch based association: </span><span class=si>{</span><span class=bp>self</span><span class=o>.</span><span class=n>epoch_based</span><span class=si>}</span><span class=s1>&#39;</span><span class=p>)</span>
+    <span class=k>if</span> <span class=bp>self</span><span class=o>.</span><span class=n>add_mode</span><span class=p>:</span>
+        <span class=n>logger</span><span class=o>.</span><span class=n>info</span><span class=p>(</span><span class=s1>&#39;Running in image add mode.&#39;</span><span class=p>)</span>
+
+    <span class=c1># Update epoch based flag to not cause user confusion when running</span>
+    <span class=c1># the pipeline (i.e. if it was only updated at the end). It is not</span>
+    <span class=c1># updated if the pipeline is being run in add mode.</span>
+    <span class=k>if</span> <span class=bp>self</span><span class=o>.</span><span class=n>epoch_based</span> <span class=ow>and</span> <span class=ow>not</span> <span class=bp>self</span><span class=o>.</span><span class=n>add_mode</span><span class=p>:</span>
+        <span class=k>with</span> <span class=n>transaction</span><span class=o>.</span><span class=n>atomic</span><span class=p>():</span>
+            <span class=n>p_run</span><span class=o>.</span><span class=n>epoch_based</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>epoch_based</span>
+            <span class=n>p_run</span><span class=o>.</span><span class=n>save</span><span class=p>()</span>
+
+    <span class=c1># Match the image files to the respective selavy, noise and bkg files.</span>
+    <span class=c1># Do this after validation is successful.</span>
+    <span class=bp>self</span><span class=o>.</span><span class=n>match_images_to_data</span><span class=p>()</span>
+
+    <span class=c1># upload/retrieve image data</span>
+    <span class=n>images</span><span class=p>,</span> <span class=n>skyregs_df</span> <span class=o>=</span> <span class=n>make_upload_images</span><span class=p>(</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>img_paths</span><span class=p>,</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=p>,</span>
+        <span class=n>p_run</span>
+    <span class=p>)</span>
+
+    <span class=c1># STEP #2: measurements association</span>
+    <span class=c1># order images by time</span>
+    <span class=n>images</span><span class=o>.</span><span class=n>sort</span><span class=p>(</span><span class=n>key</span><span class=o>=</span><span class=n>operator</span><span class=o>.</span><span class=n>attrgetter</span><span class=p>(</span><span class=s1>&#39;datetime&#39;</span><span class=p>))</span>
+
+    <span class=c1># If the user has given lists we need to reorder the</span>
+    <span class=c1># image epochs such that they are in date order.</span>
+    <span class=k>if</span> <span class=bp>self</span><span class=o>.</span><span class=n>epoch_based</span> <span class=ow>is</span> <span class=kc>False</span><span class=p>:</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>img_epochs</span> <span class=o>=</span> <span class=p>{}</span>
+        <span class=k>for</span> <span class=n>i</span><span class=p>,</span> <span class=n>img</span> <span class=ow>in</span> <span class=nb>enumerate</span><span class=p>(</span><span class=n>images</span><span class=p>):</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>img_epochs</span><span class=p>[</span><span class=n>img</span><span class=o>.</span><span class=n>name</span><span class=p>]</span> <span class=o>=</span> <span class=n>i</span> <span class=o>+</span> <span class=mi>1</span>
+
+    <span class=n>image_epochs</span> <span class=o>=</span> <span class=p>[</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>img_epochs</span><span class=p>[</span><span class=n>img</span><span class=o>.</span><span class=n>name</span><span class=p>]</span> <span class=k>for</span> <span class=n>img</span> <span class=ow>in</span> <span class=n>images</span>
+    <span class=p>]</span>
+    <span class=n>limit</span> <span class=o>=</span> <span class=n>Angle</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=o>.</span><span class=n>ASSOCIATION_RADIUS</span> <span class=o>*</span> <span class=n>u</span><span class=o>.</span><span class=n>arcsec</span><span class=p>)</span>
+    <span class=n>dr_limit</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=o>.</span><span class=n>ASSOCIATION_DE_RUITER_RADIUS</span>
+    <span class=n>bw_limit</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=o>.</span><span class=n>ASSOCIATION_BEAMWIDTH_LIMIT</span>
+    <span class=n>duplicate_limit</span> <span class=o>=</span> <span class=n>Angle</span><span class=p>(</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=o>.</span><span class=n>ASSOCIATION_EPOCH_DUPLICATE_RADIUS</span> <span class=o>*</span> <span class=n>u</span><span class=o>.</span><span class=n>arcsec</span>
+    <span class=p>)</span>
+
+    <span class=c1># 2.1 Check if sky regions to be associated can be</span>
+    <span class=c1># split into connected point groups</span>
+    <span class=n>skyregion_groups</span> <span class=o>=</span> <span class=n>group_skyregions</span><span class=p>(</span>
+        <span class=n>skyregs_df</span><span class=p>[[</span><span class=s1>&#39;id&#39;</span><span class=p>,</span> <span class=s1>&#39;centre_ra&#39;</span><span class=p>,</span> <span class=s1>&#39;centre_dec&#39;</span><span class=p>,</span> <span class=s1>&#39;xtr_radius&#39;</span><span class=p>]]</span>
+    <span class=p>)</span>
+    <span class=n>n_skyregion_groups</span> <span class=o>=</span> <span class=n>skyregion_groups</span><span class=p>[</span>
+        <span class=s1>&#39;skyreg_group&#39;</span>
+    <span class=p>]</span><span class=o>.</span><span class=n>unique</span><span class=p>()</span><span class=o>.</span><span class=n>shape</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span>
+
+    <span class=c1># Get already done images if in add mode</span>
+    <span class=k>if</span> <span class=bp>self</span><span class=o>.</span><span class=n>add_mode</span><span class=p>:</span>
+        <span class=n>done_images_df</span> <span class=o>=</span> <span class=n>pd</span><span class=o>.</span><span class=n>read_parquet</span><span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>previous_parquets</span><span class=p>[</span><span class=s1>&#39;images&#39;</span><span class=p>],</span> <span class=n>columns</span><span class=o>=</span><span class=p>[</span><span class=s1>&#39;id&#39;</span><span class=p>,</span> <span class=s1>&#39;name&#39;</span><span class=p>]</span>
+        <span class=p>)</span>
+        <span class=n>done_source_ids</span> <span class=o>=</span> <span class=n>pd</span><span class=o>.</span><span class=n>read_parquet</span><span class=p>(</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>previous_parquets</span><span class=p>[</span><span class=s1>&#39;sources&#39;</span><span class=p>],</span>
+            <span class=n>columns</span><span class=o>=</span><span class=p>[</span><span class=s1>&#39;wavg_ra&#39;</span><span class=p>]</span>
+        <span class=p>)</span><span class=o>.</span><span class=n>index</span><span class=o>.</span><span class=n>tolist</span><span class=p>()</span>
+    <span class=k>else</span><span class=p>:</span>
+        <span class=n>done_images_df</span> <span class=o>=</span> <span class=kc>None</span>
+        <span class=n>done_source_ids</span> <span class=o>=</span> <span class=kc>None</span>
+
+    <span class=c1># 2.2 Associate with other measurements</span>
+    <span class=k>if</span> <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=o>.</span><span class=n>ASSOCIATION_PARALLEL</span> <span class=ow>and</span> <span class=n>n_skyregion_groups</span> <span class=o>&gt;</span> <span class=mi>1</span><span class=p>:</span>
+        <span class=n>images_df</span> <span class=o>=</span> <span class=n>get_parallel_assoc_image_df</span><span class=p>(</span>
+            <span class=n>images</span><span class=p>,</span> <span class=n>skyregion_groups</span>
+        <span class=p>)</span>
+        <span class=n>images_df</span><span class=p>[</span><span class=s1>&#39;epoch&#39;</span><span class=p>]</span> <span class=o>=</span> <span class=n>image_epochs</span>
+
+        <span class=n>sources_df</span> <span class=o>=</span> <span class=n>parallel_association</span><span class=p>(</span>
+            <span class=n>images_df</span><span class=p>,</span>
+            <span class=n>limit</span><span class=p>,</span>
+            <span class=n>dr_limit</span><span class=p>,</span>
+            <span class=n>bw_limit</span><span class=p>,</span>
+            <span class=n>duplicate_limit</span><span class=p>,</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=p>,</span>
+            <span class=n>n_skyregion_groups</span><span class=p>,</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>add_mode</span><span class=p>,</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>previous_parquets</span><span class=p>,</span>
+            <span class=n>done_images_df</span><span class=p>,</span>
+            <span class=n>done_source_ids</span>
+        <span class=p>)</span>
+    <span class=k>else</span><span class=p>:</span>
+        <span class=n>images_df</span> <span class=o>=</span> <span class=n>pd</span><span class=o>.</span><span class=n>DataFrame</span><span class=o>.</span><span class=n>from_dict</span><span class=p>(</span>
+            <span class=p>{</span>
+                <span class=s1>&#39;image_dj&#39;</span><span class=p>:</span> <span class=n>images</span><span class=p>,</span>
+                <span class=s1>&#39;epoch&#39;</span><span class=p>:</span> <span class=n>image_epochs</span>
+            <span class=p>}</span>
+        <span class=p>)</span>
+
+        <span class=n>images_df</span><span class=p>[</span><span class=s1>&#39;skyreg_id&#39;</span><span class=p>]</span> <span class=o>=</span> <span class=n>images_df</span><span class=p>[</span><span class=s1>&#39;image_dj&#39;</span><span class=p>]</span><span class=o>.</span><span class=n>apply</span><span class=p>(</span>
+            <span class=k>lambda</span> <span class=n>x</span><span class=p>:</span> <span class=n>x</span><span class=o>.</span><span class=n>skyreg_id</span>
+        <span class=p>)</span>
+
+        <span class=n>images_df</span><span class=p>[</span><span class=s1>&#39;image_name&#39;</span><span class=p>]</span> <span class=o>=</span> <span class=n>images_df</span><span class=p>[</span><span class=s1>&#39;image_dj&#39;</span><span class=p>]</span><span class=o>.</span><span class=n>apply</span><span class=p>(</span>
+            <span class=k>lambda</span> <span class=n>x</span><span class=p>:</span> <span class=n>x</span><span class=o>.</span><span class=n>name</span>
+        <span class=p>)</span>
+
+        <span class=n>sources_df</span> <span class=o>=</span> <span class=n>association</span><span class=p>(</span>
+            <span class=n>images_df</span><span class=p>,</span>
+            <span class=n>limit</span><span class=p>,</span>
+            <span class=n>dr_limit</span><span class=p>,</span>
+            <span class=n>bw_limit</span><span class=p>,</span>
+            <span class=n>duplicate_limit</span><span class=p>,</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=p>,</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>add_mode</span><span class=p>,</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>previous_parquets</span><span class=p>,</span>
+            <span class=n>done_images_df</span>
+        <span class=p>)</span>
+
+    <span class=c1># 2.3 Associate Measurements with reference survey sources</span>
+    <span class=k>if</span> <span class=n>SurveySource</span><span class=o>.</span><span class=n>objects</span><span class=o>.</span><span class=n>exists</span><span class=p>():</span>
+        <span class=k>pass</span>
+
+    <span class=c1># Obtain the number of selavy measurements for the run</span>
+    <span class=c1># n_selavy_measurements = sources_df.</span>
+    <span class=n>nr_selavy_measurements</span> <span class=o>=</span> <span class=n>sources_df</span><span class=p>[</span><span class=s1>&#39;id&#39;</span><span class=p>]</span><span class=o>.</span><span class=n>unique</span><span class=p>()</span><span class=o>.</span><span class=n>shape</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span>
+
+    <span class=c1># STEP #3: Merge sky regions and sources ready for</span>
+    <span class=c1># steps 4 and 5 below.</span>
+    <span class=n>missing_source_cols</span> <span class=o>=</span> <span class=p>[</span>
+        <span class=s1>&#39;source&#39;</span><span class=p>,</span> <span class=s1>&#39;datetime&#39;</span><span class=p>,</span> <span class=s1>&#39;image&#39;</span><span class=p>,</span> <span class=s1>&#39;epoch&#39;</span><span class=p>,</span>
+        <span class=s1>&#39;interim_ew&#39;</span><span class=p>,</span> <span class=s1>&#39;weight_ew&#39;</span><span class=p>,</span> <span class=s1>&#39;interim_ns&#39;</span><span class=p>,</span> <span class=s1>&#39;weight_ns&#39;</span>
+    <span class=p>]</span>
+    <span class=c1># need to make sure no forced measurments are being passed which</span>
+    <span class=c1># could happen in add mode, otherwise the wrong detection image is</span>
+    <span class=c1># assigned.</span>
+    <span class=n>missing_sources_df</span> <span class=o>=</span> <span class=n>get_src_skyregion_merged_df</span><span class=p>(</span>
+        <span class=n>sources_df</span><span class=o>.</span><span class=n>loc</span><span class=p>[</span><span class=n>sources_df</span><span class=p>[</span><span class=s1>&#39;forced&#39;</span><span class=p>]</span> <span class=o>==</span> <span class=kc>False</span><span class=p>,</span> <span class=n>missing_source_cols</span><span class=p>],</span>
+        <span class=n>images_df</span><span class=p>,</span>
+        <span class=n>skyregs_df</span><span class=p>,</span>
+    <span class=p>)</span>
+
+    <span class=c1># STEP #4 New source analysis</span>
+    <span class=n>new_sources_df</span> <span class=o>=</span> <span class=n>new_sources</span><span class=p>(</span>
+        <span class=n>sources_df</span><span class=p>,</span>
+        <span class=n>missing_sources_df</span><span class=p>,</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=o>.</span><span class=n>NEW_SOURCE_MIN_SIGMA</span><span class=p>,</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=o>.</span><span class=n>MONITOR_EDGE_BUFFER_SCALE</span><span class=p>,</span>
+        <span class=n>p_run</span>
+    <span class=p>)</span>
+
+    <span class=c1># Drop column no longer required in missing_sources_df.</span>
+    <span class=n>missing_sources_df</span> <span class=o>=</span> <span class=p>(</span>
+        <span class=n>missing_sources_df</span><span class=o>.</span><span class=n>drop</span><span class=p>([</span><span class=s1>&#39;in_primary&#39;</span><span class=p>],</span> <span class=n>axis</span><span class=o>=</span><span class=mi>1</span><span class=p>)</span>
+    <span class=p>)</span>
+
+    <span class=c1># STEP #5: Run forced extraction/photometry if asked</span>
+    <span class=k>if</span> <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=o>.</span><span class=n>MONITOR</span><span class=p>:</span>
+        <span class=p>(</span>
+            <span class=n>sources_df</span><span class=p>,</span>
+            <span class=n>nr_forced_measurements</span>
+        <span class=p>)</span> <span class=o>=</span> <span class=n>forced_extraction</span><span class=p>(</span>
+            <span class=n>sources_df</span><span class=p>,</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=o>.</span><span class=n>ASTROMETRIC_UNCERTAINTY_RA</span> <span class=o>/</span> <span class=mf>3600.</span><span class=p>,</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=o>.</span><span class=n>ASTROMETRIC_UNCERTAINTY_DEC</span> <span class=o>/</span> <span class=mf>3600.</span><span class=p>,</span>
+            <span class=n>p_run</span><span class=p>,</span>
+            <span class=n>missing_sources_df</span><span class=p>,</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=o>.</span><span class=n>MONITOR_MIN_SIGMA</span><span class=p>,</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=o>.</span><span class=n>MONITOR_EDGE_BUFFER_SCALE</span><span class=p>,</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=o>.</span><span class=n>MONITOR_CLUSTER_THRESHOLD</span><span class=p>,</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=o>.</span><span class=n>MONITOR_ALLOW_NAN</span><span class=p>,</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>add_mode</span><span class=p>,</span>
+            <span class=n>done_images_df</span><span class=p>,</span>
+            <span class=n>done_source_ids</span>
+        <span class=p>)</span>
+
+    <span class=k>del</span> <span class=n>missing_sources_df</span>
+
+    <span class=c1># STEP #6: finalise the df getting unique sources, calculating</span>
+    <span class=c1># metrics and upload data to database</span>
+    <span class=n>nr_sources</span> <span class=o>=</span> <span class=n>final_operations</span><span class=p>(</span>
+        <span class=n>sources_df</span><span class=p>,</span>
+        <span class=n>p_run</span><span class=p>,</span>
+        <span class=n>new_sources_df</span><span class=p>,</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=o>.</span><span class=n>SOURCE_AGGREGATE_PAIR_METRICS_MIN_ABS_VS</span><span class=p>,</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>add_mode</span><span class=p>,</span>
+        <span class=n>done_source_ids</span><span class=p>,</span>
+        <span class=bp>self</span><span class=o>.</span><span class=n>previous_parquets</span>
+    <span class=p>)</span>
+
+    <span class=c1># calculate number processed images</span>
+    <span class=n>nr_img_processed</span> <span class=o>=</span> <span class=nb>len</span><span class=p>(</span><span class=n>images</span><span class=p>)</span>
+
+    <span class=c1># update pipeline run with the nr images and sources</span>
+    <span class=k>with</span> <span class=n>transaction</span><span class=o>.</span><span class=n>atomic</span><span class=p>():</span>
+        <span class=n>p_run</span><span class=o>.</span><span class=n>n_images</span> <span class=o>=</span> <span class=n>nr_img_processed</span>
+        <span class=n>p_run</span><span class=o>.</span><span class=n>n_sources</span> <span class=o>=</span> <span class=n>nr_sources</span>
+        <span class=n>p_run</span><span class=o>.</span><span class=n>n_selavy_measurements</span> <span class=o>=</span> <span class=n>nr_selavy_measurements</span>
+        <span class=n>p_run</span><span class=o>.</span><span class=n>n_forced_measurements</span> <span class=o>=</span> <span class=p>(</span>
+            <span class=n>nr_forced_measurements</span> <span class=k>if</span> <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=o>.</span><span class=n>MONITOR</span> <span class=k>else</span> <span class=mi>0</span>
+        <span class=p>)</span>
+        <span class=n>p_run</span><span class=o>.</span><span class=n>save</span><span class=p>()</span>
+
+    <span class=k>pass</span>
+</code></pre></div> </details> </div> </div> <div class="doc doc-object doc-method"> <h3 id=vast_pipeline.pipeline.main.Pipeline.set_status class="doc doc-heading"> <code class="highlight language-python"><span class=n>set_status</span><span class=p>(</span><span class=n>pipe_run</span><span class=p>,</span> <span class=n>status</span><span class=o>=</span><span class=kc>None</span><span class=p>)</span></code> <span class="doc doc-properties"> <small class="doc doc-property doc-property-staticmethod"><code>staticmethod</code></small> </span> <a href=#vast_pipeline.pipeline.main.Pipeline.set_status class=headerlink title="Permanent link">&para;</a></h3> <div class="doc doc-contents "> <p>Function to change the status of a pipeline run model object and save to the database.</p> <p><strong>Parameters:</strong></p> <table> <thead> <tr> <th>Name</th> <th>Type</th> <th>Description</th> <th>Default</th> </tr> </thead> <tbody> <tr> <td><code>pipe_run</code></td> <td><code>Run</code></td> <td><p>The pipeline run model object.</p></td> <td><em>required</em></td> </tr> <tr> <td><code>status</code></td> <td><code>str</code></td> <td><p>The status to set.</p></td> <td><code>None</code></td> </tr> </tbody> </table> <p><strong>Returns:</strong></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td><code>None</code></td> <td><p>None</p></td> </tr> </tbody> </table> <details class=quote> <summary>Source code in <code>vast_pipeline/pipeline/main.py</code></summary> <div class=highlight><pre><span></span><code><span class=nd>@staticmethod</span>
+<span class=k>def</span> <span class=nf>set_status</span><span class=p>(</span><span class=n>pipe_run</span><span class=p>:</span> <span class=n>Run</span><span class=p>,</span> <span class=n>status</span><span class=p>:</span> <span class=nb>str</span><span class=o>=</span><span class=kc>None</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=kc>None</span><span class=p>:</span>
+    <span class=sd>&quot;&quot;&quot;</span>
+<span class=sd>    Function to change the status of a pipeline run model object and save</span>
+<span class=sd>    to the database.</span>
+
+<span class=sd>    Args:</span>
+<span class=sd>        pipe_run: The pipeline run model object.</span>
+<span class=sd>        status: The status to set.</span>
+
+<span class=sd>    Returns:</span>
+<span class=sd>        None</span>
+<span class=sd>    &quot;&quot;&quot;</span>
+    <span class=c1>#TODO: This function gives no feedback if the status is not accepted?</span>
+    <span class=n>choices</span> <span class=o>=</span> <span class=p>[</span><span class=n>x</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span> <span class=k>for</span> <span class=n>x</span> <span class=ow>in</span> <span class=n>Run</span><span class=o>.</span><span class=n>_meta</span><span class=o>.</span><span class=n>get_field</span><span class=p>(</span><span class=s1>&#39;status&#39;</span><span class=p>)</span><span class=o>.</span><span class=n>choices</span><span class=p>]</span>
+    <span class=k>if</span> <span class=n>status</span> <span class=ow>and</span> <span class=n>status</span> <span class=ow>in</span> <span class=n>choices</span> <span class=ow>and</span> <span class=n>pipe_run</span><span class=o>.</span><span class=n>status</span> <span class=o>!=</span> <span class=n>status</span><span class=p>:</span>
+        <span class=k>with</span> <span class=n>transaction</span><span class=o>.</span><span class=n>atomic</span><span class=p>():</span>
+            <span class=n>pipe_run</span><span class=o>.</span><span class=n>status</span> <span class=o>=</span> <span class=n>status</span>
+            <span class=n>pipe_run</span><span class=o>.</span><span class=n>save</span><span class=p>()</span>
+</code></pre></div> </details> </div> </div> <div class="doc doc-object doc-method"> <h3 id=vast_pipeline.pipeline.main.Pipeline.validate_cfg class="doc doc-heading"> <code class="highlight language-python"><span class=n>validate_cfg</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>user</span><span class=o>=</span><span class=kc>None</span><span class=p>)</span></code> <a href=#vast_pipeline.pipeline.main.Pipeline.validate_cfg class=headerlink title="Permanent link">&para;</a></h3> <div class="doc doc-contents "> <p>Validates a pipeline run configuration against default parameters and for different settings (e.g. force extraction).</p> <p><strong>Parameters:</strong></p> <table> <thead> <tr> <th>Name</th> <th>Type</th> <th>Description</th> <th>Default</th> </tr> </thead> <tbody> <tr> <td><code>user</code></td> <td><code>User</code></td> <td><p>The User of the request if made through the UI. Defaults to None.</p></td> <td><code>None</code></td> </tr> </tbody> </table> <p><strong>Returns:</strong></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td><code>None</code></td> <td><p>None</p></td> </tr> </tbody> </table> <p><strong>Exceptions:</strong></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td><code>PipelineConfigError</code></td> <td><p>Raised if any errors are encountered during the configuration validation.</p></td> </tr> </tbody> </table> <details class=quote> <summary>Source code in <code>vast_pipeline/pipeline/main.py</code></summary> <div class=highlight><pre><span></span><code><span class=k>def</span> <span class=nf>validate_cfg</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>user</span><span class=p>:</span> <span class=n>User</span> <span class=o>=</span> <span class=kc>None</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=kc>None</span><span class=p>:</span>
+    <span class=sd>&quot;&quot;&quot;</span>
+<span class=sd>    Validates a pipeline run configuration against default parameters and</span>
+<span class=sd>    for different settings (e.g. force extraction).</span>
+
+<span class=sd>    Args:</span>
+<span class=sd>        user:</span>
+<span class=sd>            The User of the request if made through the UI. Defaults to</span>
+<span class=sd>            None.</span>
+
+<span class=sd>    Returns:</span>
+<span class=sd>        None</span>
+
+<span class=sd>    Raises:</span>
+<span class=sd>        PipelineConfigError: Raised if any errors are encountered during</span>
+<span class=sd>            the configuration validation.</span>
+<span class=sd>    &quot;&quot;&quot;</span>
+    <span class=c1># validate every config from the config template</span>
+    <span class=n>config_keys</span> <span class=o>=</span> <span class=p>[</span><span class=n>k</span> <span class=k>for</span> <span class=n>k</span> <span class=ow>in</span> <span class=nb>dir</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=p>)</span> <span class=k>if</span> <span class=n>k</span><span class=o>.</span><span class=n>isupper</span><span class=p>()]</span>
+    <span class=n>valid_keys</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>_get_valid_keys</span><span class=p>()</span>
+
+    <span class=c1># Check that there are no &#39;unknown&#39; options given by the user</span>
+    <span class=k>for</span> <span class=n>key</span> <span class=ow>in</span> <span class=n>config_keys</span><span class=p>:</span>
+        <span class=k>if</span> <span class=n>key</span><span class=o>.</span><span class=n>lower</span><span class=p>()</span> <span class=ow>not</span> <span class=ow>in</span> <span class=n>valid_keys</span><span class=p>:</span>
+            <span class=k>raise</span> <span class=n>PipelineConfigError</span><span class=p>(</span>
+                <span class=sa>f</span><span class=s1>&#39;Configuration not valid, unknown option: </span><span class=si>{</span><span class=n>key</span><span class=si>}</span><span class=s1>!&#39;</span>
+            <span class=p>)</span>
+    <span class=c1># Check that all options are provided by the user</span>
+    <span class=k>for</span> <span class=n>key</span> <span class=ow>in</span> <span class=n>settings</span><span class=o>.</span><span class=n>PIPE_RUN_CONFIG_DEFAULTS</span><span class=o>.</span><span class=n>keys</span><span class=p>():</span>
+        <span class=k>if</span> <span class=n>key</span><span class=o>.</span><span class=n>upper</span><span class=p>()</span> <span class=ow>not</span> <span class=ow>in</span> <span class=n>config_keys</span><span class=p>:</span>
+            <span class=k>raise</span> <span class=n>PipelineConfigError</span><span class=p>(</span>
+                <span class=sa>f</span><span class=s1>&#39;Configuration not valid, missing option: </span><span class=si>{</span><span class=n>key</span><span class=o>.</span><span class=n>upper</span><span class=p>()</span><span class=si>}</span><span class=s1>!&#39;</span>
+            <span class=p>)</span>
+
+    <span class=c1># do sanity checks</span>
+    <span class=k>if</span> <span class=p>(</span>
+        <span class=nb>getattr</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=p>,</span> <span class=s1>&#39;IMAGE_FILES&#39;</span><span class=p>)</span> <span class=ow>and</span>
+        <span class=nb>getattr</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=p>,</span> <span class=s1>&#39;SELAVY_FILES&#39;</span><span class=p>)</span> <span class=ow>and</span>
+        <span class=nb>getattr</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=p>,</span> <span class=s1>&#39;NOISE_FILES&#39;</span><span class=p>)</span>
+    <span class=p>):</span>
+        <span class=n>img_f_list</span> <span class=o>=</span> <span class=nb>getattr</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=p>,</span> <span class=s1>&#39;IMAGE_FILES&#39;</span><span class=p>)</span>
+        <span class=n>img_f_list</span> <span class=o>=</span> <span class=p>[</span>
+            <span class=n>item</span> <span class=k>for</span> <span class=n>sublist</span> <span class=ow>in</span> <span class=n>img_f_list</span><span class=o>.</span><span class=n>values</span><span class=p>()</span> <span class=k>for</span> <span class=n>item</span> <span class=ow>in</span> <span class=n>sublist</span>
+        <span class=p>]</span> <span class=c1># creates a flat list of all the dictionary value lists</span>
+        <span class=n>len_img_f_list</span> <span class=o>=</span> <span class=nb>len</span><span class=p>(</span><span class=n>img_f_list</span><span class=p>)</span>
+        <span class=c1># maximum number of images check. If the user is `None` then it</span>
+        <span class=c1># means the run was initiated through the command line hence no</span>
+        <span class=c1># check is performed.</span>
+        <span class=k>if</span> <span class=p>(</span>
+            <span class=n>user</span> <span class=ow>is</span> <span class=ow>not</span> <span class=kc>None</span>
+            <span class=ow>and</span> <span class=n>len_img_f_list</span> <span class=o>&gt;</span> <span class=n>settings</span><span class=o>.</span><span class=n>MAX_PIPERUN_IMAGES</span>
+        <span class=p>):</span>
+            <span class=k>if</span> <span class=n>user</span><span class=o>.</span><span class=n>is_staff</span><span class=p>:</span>
+                <span class=n>logger</span><span class=o>.</span><span class=n>warning</span><span class=p>(</span>
+                    <span class=s1>&#39;Maximum number of images&#39;</span>
+                    <span class=sa>f</span><span class=s1>&#39; (</span><span class=si>{</span><span class=n>settings</span><span class=o>.</span><span class=n>MAX_PIPERUN_IMAGES</span><span class=si>}</span><span class=s1>) rule bypassed with&#39;</span>
+                    <span class=s1>&#39; admin status.&#39;</span>
+                <span class=p>)</span>
+            <span class=k>else</span><span class=p>:</span>
+                <span class=k>raise</span> <span class=n>PipelineConfigError</span><span class=p>(</span>
+                    <span class=sa>f</span><span class=s1>&#39;The number of images entered (</span><span class=si>{</span><span class=n>len_img_f_list</span><span class=si>}</span><span class=s1>)&#39;</span>
+                    <span class=s1>&#39; exceeds the maximum number of images currently&#39;</span>
+                    <span class=sa>f</span><span class=s1>&#39; allowed (</span><span class=si>{</span><span class=n>settings</span><span class=o>.</span><span class=n>MAX_PIPERUN_IMAGES</span><span class=si>}</span><span class=s1>). Please ask&#39;</span>
+                    <span class=s1>&#39; an administrator for advice on processing your run&#39;</span>
+                <span class=p>)</span>
+        <span class=k>for</span> <span class=n>lst</span> <span class=ow>in</span> <span class=p>[</span><span class=s1>&#39;IMAGE_FILES&#39;</span><span class=p>,</span> <span class=s1>&#39;SELAVY_FILES&#39;</span><span class=p>,</span> <span class=s1>&#39;NOISE_FILES&#39;</span><span class=p>]:</span>
+            <span class=n>cfg_list</span> <span class=o>=</span> <span class=nb>getattr</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=p>,</span> <span class=n>lst</span><span class=p>)</span>
+            <span class=n>cfg_list</span> <span class=o>=</span> <span class=p>[</span>
+                <span class=n>item</span> <span class=k>for</span> <span class=n>sublist</span> <span class=ow>in</span> <span class=n>cfg_list</span><span class=o>.</span><span class=n>values</span><span class=p>()</span> <span class=k>for</span> <span class=n>item</span> <span class=ow>in</span> <span class=n>sublist</span>
+            <span class=p>]</span>
+
+            <span class=c1># checks for duplicates in each list</span>
+            <span class=k>if</span> <span class=nb>len</span><span class=p>(</span><span class=nb>set</span><span class=p>(</span><span class=n>cfg_list</span><span class=p>))</span> <span class=o>!=</span> <span class=nb>len</span><span class=p>(</span><span class=n>cfg_list</span><span class=p>):</span>
+                <span class=k>raise</span> <span class=n>PipelineConfigError</span><span class=p>(</span><span class=sa>f</span><span class=s1>&#39;Duplicated files in: </span><span class=se>\n</span><span class=si>{</span><span class=n>lst</span><span class=si>}</span><span class=s1>&#39;</span><span class=p>)</span>
+
+            <span class=c1># check if nr of files match nr of images</span>
+            <span class=k>if</span> <span class=nb>len</span><span class=p>(</span><span class=n>cfg_list</span><span class=p>)</span> <span class=o>!=</span> <span class=n>len_img_f_list</span><span class=p>:</span>
+                <span class=k>raise</span> <span class=n>PipelineConfigError</span><span class=p>(</span>
+                    <span class=sa>f</span><span class=s1>&#39;Number of </span><span class=si>{</span><span class=n>lst</span><span class=si>}</span><span class=s1> files not matching number of images&#39;</span>
+                <span class=p>)</span>
+
+            <span class=k>for</span> <span class=n>key</span> <span class=ow>in</span> <span class=nb>getattr</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=p>,</span> <span class=n>lst</span><span class=p>):</span>
+                <span class=k>for</span> <span class=n>file</span> <span class=ow>in</span> <span class=nb>getattr</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=p>,</span> <span class=n>lst</span><span class=p>)[</span><span class=n>key</span><span class=p>]:</span>
+                    <span class=k>if</span> <span class=ow>not</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>exists</span><span class=p>(</span><span class=n>file</span><span class=p>):</span>
+                        <span class=k>raise</span> <span class=n>PipelineConfigError</span><span class=p>(</span>
+                            <span class=sa>f</span><span class=s1>&#39;file:</span><span class=se>\n</span><span class=si>{</span><span class=n>file</span><span class=si>}</span><span class=se>\n</span><span class=s1>does not exists!&#39;</span>
+                        <span class=p>)</span>
+    <span class=k>else</span><span class=p>:</span>
+        <span class=k>raise</span> <span class=n>PipelineConfigError</span><span class=p>(</span>
+            <span class=s1>&#39;No image and/or Selavy and/or noise file paths passed!&#39;</span>
+        <span class=p>)</span>
+
+    <span class=c1># need more than 1 image file to generate a lightcurve</span>
+    <span class=k>if</span> <span class=nb>len</span><span class=p>(</span><span class=nb>getattr</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=p>,</span> <span class=s1>&#39;IMAGE_FILES&#39;</span><span class=p>))</span> <span class=o>&lt;</span> <span class=mi>2</span><span class=p>:</span>
+        <span class=k>raise</span> <span class=n>PipelineConfigError</span><span class=p>(</span>
+            <span class=s1>&#39;Number of image files needs to be larger than 1!&#39;</span>
+    <span class=p>)</span>
+
+    <span class=n>source_finder_names</span> <span class=o>=</span> <span class=n>settings</span><span class=o>.</span><span class=n>SOURCE_FINDERS</span>
+    <span class=k>if</span> <span class=nb>getattr</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=p>,</span> <span class=s1>&#39;SOURCE_FINDER&#39;</span><span class=p>)</span> <span class=ow>not</span> <span class=ow>in</span> <span class=n>source_finder_names</span><span class=p>:</span>
+        <span class=k>raise</span> <span class=n>PipelineConfigError</span><span class=p>((</span>
+            <span class=sa>f</span><span class=s2>&quot;Invalid source finder </span><span class=si>{</span><span class=nb>getattr</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=p>,</span> <span class=s1>&#39;SOURCE_FINDER&#39;</span><span class=p>)</span><span class=si>}</span><span class=s2>.&quot;</span>
+            <span class=sa>f</span><span class=s1>&#39; Choices are </span><span class=si>{</span><span class=n>source_finder_names</span><span class=si>}</span><span class=s1>&#39;</span>
+        <span class=p>))</span>
+
+    <span class=n>association_methods</span> <span class=o>=</span> <span class=n>settings</span><span class=o>.</span><span class=n>DEFAULT_ASSOCIATION_METHODS</span>
+    <span class=k>if</span> <span class=nb>getattr</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=p>,</span> <span class=s1>&#39;ASSOCIATION_METHOD&#39;</span><span class=p>)</span> <span class=ow>not</span> <span class=ow>in</span> <span class=n>association_methods</span><span class=p>:</span>
+        <span class=k>raise</span> <span class=n>PipelineConfigError</span><span class=p>((</span>
+            <span class=s1>&#39;ASSOCIATION_METHOD is not valid!&#39;</span>
+            <span class=sa>f</span><span class=s1>&#39; Must be a value contained in: </span><span class=si>{</span><span class=n>association_methods</span><span class=si>}</span><span class=s1>.&#39;</span>
+        <span class=p>))</span>
+
+    <span class=c1># validate Forced extraction settings</span>
+    <span class=k>if</span> <span class=nb>getattr</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=p>,</span> <span class=s1>&#39;MONITOR&#39;</span><span class=p>):</span>
+        <span class=k>if</span> <span class=ow>not</span> <span class=nb>getattr</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=p>,</span> <span class=s1>&#39;BACKGROUND_FILES&#39;</span><span class=p>):</span>
+            <span class=k>raise</span> <span class=n>PipelineConfigError</span><span class=p>(</span>
+                <span class=s1>&#39;Expecting list of background MAP files!&#39;</span>
+            <span class=p>)</span>
+
+    <span class=c1># if defined, check background files regardless of monitor</span>
+    <span class=k>if</span> <span class=nb>getattr</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=p>,</span> <span class=s1>&#39;BACKGROUND_FILES&#39;</span><span class=p>):</span>
+        <span class=c1># check for duplicated values</span>
+        <span class=n>backgrd_f_list</span> <span class=o>=</span> <span class=nb>getattr</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=p>,</span> <span class=s1>&#39;BACKGROUND_FILES&#39;</span><span class=p>)</span>
+        <span class=n>backgrd_f_list</span> <span class=o>=</span> <span class=p>[</span>
+            <span class=n>item</span> <span class=k>for</span> <span class=n>sublist</span> <span class=ow>in</span> <span class=n>backgrd_f_list</span><span class=o>.</span><span class=n>values</span><span class=p>()</span> <span class=k>for</span> <span class=n>item</span> <span class=ow>in</span> <span class=n>sublist</span>
+        <span class=p>]</span>
+        <span class=k>if</span> <span class=nb>len</span><span class=p>(</span><span class=nb>set</span><span class=p>(</span><span class=n>backgrd_f_list</span><span class=p>))</span> <span class=o>!=</span> <span class=nb>len</span><span class=p>(</span><span class=n>backgrd_f_list</span><span class=p>):</span>
+            <span class=k>raise</span> <span class=n>PipelineConfigError</span><span class=p>(</span>
+                <span class=s1>&#39;Duplicated files in: BACKGROUND_FILES list&#39;</span>
+            <span class=p>)</span>
+        <span class=c1># check if provided more background files than images</span>
+        <span class=k>if</span> <span class=nb>len</span><span class=p>(</span><span class=n>backgrd_f_list</span><span class=p>)</span> <span class=o>!=</span> <span class=n>len_img_f_list</span><span class=p>:</span>
+            <span class=k>raise</span> <span class=n>PipelineConfigError</span><span class=p>((</span>
+                <span class=s1>&#39;Number of BACKGROUND_FILES different from number of&#39;</span>
+                <span class=s1>&#39; IMAGE_FILES files&#39;</span>
+            <span class=p>))</span>
+
+        <span class=k>for</span> <span class=n>key</span> <span class=ow>in</span> <span class=nb>getattr</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=p>,</span> <span class=s1>&#39;BACKGROUND_FILES&#39;</span><span class=p>):</span>
+            <span class=k>for</span> <span class=n>file</span> <span class=ow>in</span> <span class=nb>getattr</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=p>,</span> <span class=s1>&#39;BACKGROUND_FILES&#39;</span><span class=p>)[</span><span class=n>key</span><span class=p>]:</span>
+                <span class=k>if</span> <span class=ow>not</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>exists</span><span class=p>(</span><span class=n>file</span><span class=p>):</span>
+                    <span class=k>raise</span> <span class=n>PipelineConfigError</span><span class=p>(</span>
+                        <span class=sa>f</span><span class=s1>&#39;file:</span><span class=se>\n</span><span class=si>{</span><span class=n>file</span><span class=si>}</span><span class=se>\n</span><span class=s1>does not exists!&#39;</span>
+                    <span class=p>)</span>
+    <span class=k>pass</span>
+</code></pre></div> </details> </div> </div> </div> </div> </div> </div> </div> </div> </article> </div> </div> </main> <footer class=md-footer> <nav class="md-footer__inner md-grid" aria-label=Footer> <a href=../loading/ class="md-footer__link md-footer__link--prev" rel=prev> <div class="md-footer__button md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg> </div> <div class=md-footer__title> <div class=md-ellipsis> <span class=md-footer__direction> Previous </span> loading.py </div> </div> </a> <a href=../model_generator/ class="md-footer__link md-footer__link--next" rel=next> <div class=md-footer__title> <div class=md-ellipsis> <span class=md-footer__direction> Next </span> model_generator.py </div> </div> <div class="md-footer__button md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg> </div> </a> </nav> <div class="md-footer-meta md-typeset"> <div class="md-footer-meta__inner md-grid"> <div class=md-footer-copyright> <div class=md-footer-copyright__highlight> Copyright &copy; 2020 - 2025 Vast Development Team, University of Sydney - all right reserved </div> Made with <a href=https://squidfunk.github.io/mkdocs-material/ target=_blank rel=noopener> Material for MkDocs </a> </div> <div class=md-footer-social> <a href=https://github.com/askap-vast/vast-pipeline target=_blank rel=noopener title="vast-pipeline source on GitHub" class=md-footer-social__link> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 496 512"><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg> </a> <a href=https://askap-vast.slack.com/ target=_blank rel=noopener title=askap-vast.slack.com class=md-footer-social__link> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 448 512"><path d="M94.12 315.1c0 25.9-21.16 47.06-47.06 47.06S0 341 0 315.1c0-25.9 21.16-47.06 47.06-47.06h47.06v47.06zm23.72 0c0-25.9 21.16-47.06 47.06-47.06s47.06 21.16 47.06 47.06v117.84c0 25.9-21.16 47.06-47.06 47.06s-47.06-21.16-47.06-47.06V315.1zm47.06-188.98c-25.9 0-47.06-21.16-47.06-47.06S139 32 164.9 32s47.06 21.16 47.06 47.06v47.06H164.9zm0 23.72c25.9 0 47.06 21.16 47.06 47.06s-21.16 47.06-47.06 47.06H47.06C21.16 243.96 0 222.8 0 196.9s21.16-47.06 47.06-47.06H164.9zm188.98 47.06c0-25.9 21.16-47.06 47.06-47.06 25.9 0 47.06 21.16 47.06 47.06s-21.16 47.06-47.06 47.06h-47.06V196.9zm-23.72 0c0 25.9-21.16 47.06-47.06 47.06-25.9 0-47.06-21.16-47.06-47.06V79.06c0-25.9 21.16-47.06 47.06-47.06 25.9 0 47.06 21.16 47.06 47.06V196.9zM283.1 385.88c25.9 0 47.06 21.16 47.06 47.06 0 25.9-21.16 47.06-47.06 47.06-25.9 0-47.06-21.16-47.06-47.06v-47.06h47.06zm0-23.72c-25.9 0-47.06-21.16-47.06-47.06 0-25.9 21.16-47.06 47.06-47.06h117.84c25.9 0 47.06 21.16 47.06 47.06 0 25.9-21.16 47.06-47.06 47.06H283.1z"/></svg> </a> <a href=mailto:transients@mailman.sydney.edu.au target=_blank rel=noopener title="Email ASKAP VAST" class=md-footer-social__link> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 512 512"><path d="M476 3.2L12.5 270.6c-18.1 10.4-15.8 35.6 2.2 43.2L121 358.4l287.3-253.2c5.5-4.9 13.3 2.6 8.6 8.3L176 407v80.5c0 23.6 28.5 32.9 42.5 15.8L282 426l124.6 52.2c14.2 6 30.4-2.9 33-18.2l72-432C515 7.8 493.3-6.8 476 3.2z"/></svg> </a> <a href=https://vast-survey.org target=_blank rel=noopener title=vast-survey.org class=md-footer-social__link> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 496 512"><path d="M336.5 160C322 70.7 287.8 8 248 8s-74 62.7-88.5 152h177zM152 256c0 22.2 1.2 43.5 3.3 64h185.3c2.1-20.5 3.3-41.8 3.3-64s-1.2-43.5-3.3-64H155.3c-2.1 20.5-3.3 41.8-3.3 64zm324.7-96c-28.6-67.9-86.5-120.4-158-141.6 24.4 33.8 41.2 84.7 50 141.6h108zM177.2 18.4C105.8 39.6 47.8 92.1 19.3 160h108c8.7-56.9 25.5-107.8 49.9-141.6zM487.4 192H372.7c2.1 21 3.3 42.5 3.3 64s-1.2 43-3.3 64h114.6c5.5-20.5 8.6-41.8 8.6-64s-3.1-43.5-8.5-64zM120 256c0-21.5 1.2-43 3.3-64H8.6C3.2 212.5 0 233.8 0 256s3.2 43.5 8.6 64h114.6c-2-21-3.2-42.5-3.2-64zm39.5 96c14.5 89.3 48.7 152 88.5 152s74-62.7 88.5-152h-177zm159.3 141.6c71.4-21.2 129.4-73.7 158-141.6h-108c-8.8 56.9-25.6 107.8-50 141.6zM19.3 352c28.6 67.9 86.5 120.4 158 141.6-24.4-33.8-41.2-84.7-50-141.6h-108z"/></svg> </a> </div> </div> </div> </footer> </div> <div class=md-dialog data-md-component=dialog> <div class="md-dialog__inner md-typeset"></div> </div> <script id=__config type=application/json>{"base": "../../..", "features": ["navigation.instant"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "../../../assets/javascripts/workers/search.fb4a9340.min.js", "version": null}</script> <script src=../../../assets/javascripts/bundle.a1c7c35e.min.js></script> <script src=../../../theme/js/extra.min.js></script> <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script> <script src=https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js></script> </body> </html>
