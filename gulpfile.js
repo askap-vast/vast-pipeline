@@ -168,8 +168,8 @@ function clean() {
 
 // Bring third party dependencies from node_modules into vendor directory
 function modules() {
-  // Bootstrap JS
-  var bootstrapJS = gulp.src('./node_modules/bootstrap/dist/js/*')
+  // Bootstrap JS 
+  var bootstrapJS = gulp.src('./node_modules/startbootstrap-sb-admin-2/vendor/bootstrap/js/*')
     .pipe(gulp.dest(paths.vendor + '/bootstrap/js'));
 
   // Bootstrap Select
