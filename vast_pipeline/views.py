@@ -7,7 +7,7 @@ import dask.dataframe as dd
 import dask.bag as db
 import pandas as pd
 
-from typing import Dict, Any, Tuple
+from typing import Dict, Any, Tuple, List
 from glob import glob
 from itertools import tee
 
@@ -1119,9 +1119,10 @@ class SourceViewSet(ModelViewSet):
 
         if 'source_selection' in self.request.query_params:
             selection_type = self.request.query_params['source_selection_type']
-            selection = (
+            selection: List[str] = (
                 self.request.query_params['source_selection']
                 .replace(" ", "")
+                .replace("VAST", "")  # remove published source prefix if present
                 .split(",")
             )
             if selection_type == 'name':

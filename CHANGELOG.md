@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- When searching by source names, any "VAST" prefix on the name will be silently removed to make searching for published VAST sources easier [#536](https://github.com/askap-vast/vast-pipeline/pull/536).
+- Added acknowledgements and help section to docs [#535](https://github.com/askap-vast/vast-pipeline/pull/535).
 - Added `vast_pipeline/_version.py` to store the current software version and updated release documentation [#532](https://github.com/askap-vast/vast-pipeline/pull/532).
 - Added created and last updated dates to doc pages using mkdocs-git-revision-date-localized-plugin [#514](https://github.com/askap-vast/vast-pipeline/pull/514).
 - Added support for glob expressions when specifying input files in the run config file [#504](https://github.com/askap-vast/vast-pipeline/pull/504)
@@ -35,6 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Changed source naming convention to `Jhhmmss.s(+/-)ddmmss` to match VAST-P1 paper (Murphy, et al. 2021) convention [#536](https://github.com/askap-vast/vast-pipeline/pull/536)
 - Updated npm packages to resolve dependabot security alert [#533](https://github.com/askap-vast/vast-pipeline/pull/533).
 - Updated homepage text to reflect new features and documentation [#534](https://github.com/askap-vast/vast-pipeline/pull/534).
 - Changed layout of source detail page [#526](https://github.com/askap-vast/vast-pipeline/pull/526).
@@ -92,6 +95,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - Removed importsurvey command and catalogue.py [#538](https://github.com/askap-vast/vast-pipeline/pull/538).
 - Removed SurveySource, Survey and SurveySourceQuerySet models [#538](https://github.com/askap-vast/vast-pipeline/pull/538).
+- Removed email and Slack links from docs footer [#535](https://github.com/askap-vast/vast-pipeline/pull/535).
 - Removed bootstrap as the required version is bundled with startbootstrap-sb-admin-2 [#533](https://github.com/askap-vast/vast-pipeline/pull/533).
 - Removed `docs/readme.md` softlink as it is no longer used [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
 - Removed `vaex-arrow` from the dependancies [#503](https://github.com/askap-vast/vast-pipeline/pull/503).
@@ -103,6 +107,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### List of PRs
 
 - [#538](https://github.com/askap-vast/vast-pipeline/pull/538) feat: Removed survey source models, commands and references.
+- [#536](https://github.com/askap-vast/vast-pipeline/pull/536) feat: changed source naming convention.
+- [#535](https://github.com/askap-vast/vast-pipeline/pull/535) doc: added help and acknowledgement doc page.
 - [#534](https://github.com/askap-vast/vast-pipeline/pull/534) feat: Update homepage text.
 - [#532](https://github.com/askap-vast/vast-pipeline/pull/532) feat, doc: Versioning.
 - [#533](https://github.com/askap-vast/vast-pipeline/pull/533) dep: updated npm deps; removed bootstrap.
