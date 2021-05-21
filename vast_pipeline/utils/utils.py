@@ -127,15 +127,15 @@ def deg2dms(deg: float, dms_format: bool = False, precision: int = 2) -> str:
     '-12:34:56.8'
 
     Args:
-        deg (float): The angle to convert in degrees.
-        dms_format (bool, optional): If `True`, use "d", "m", and "s" as the coorindate
+        deg: The angle to convert in degrees.
+        dms_format (optional): If `True`, use "d", "m", and "s" as the coorindate
             separator, otherwise use ":". Defaults to False.
-        precision (int, optional): Floating point precision of the arcseconds component.
+        precision (optional): Floating point precision of the arcseconds component.
             Can be 0 or a positive integer. Negative values will be interpreted as 0.
             Defaults to 2.
 
     Returns:
-        str: `deg` formatted as a DMS string.
+        `deg` formatted as a DMS string.
     """
 
     sign, sex = deg2sex(deg)
@@ -160,15 +160,15 @@ def deg2hms(deg: float, hms_format: bool = False, precision: int = 2) -> str:
     '12:34:56.8'
 
     Args:
-        deg (float): The angle to convert in degrees.
-        hms_format (bool, optional): If `True`, use "h", "m", and "s" as the coorindate
+        deg: The angle to convert in degrees.
+        hms_format (optional): If `True`, use "h", "m", and "s" as the coorindate
             separator, otherwise use ":". Defaults to False.
-        precision (int, optional): Floating point precision of the seconds component.
+        precision (optional): Floating point precision of the seconds component.
             Can be 0 or a positive integer. Negative values will be interpreted as 0.
             Defaults to 2.
 
     Returns:
-        str: `deg` formatted as an HMS string.
+        `deg` formatted as an HMS string.
     """
     sign, sex = deg2sex(deg / 15.)
     precision = precision if precision >= 0 else 0
