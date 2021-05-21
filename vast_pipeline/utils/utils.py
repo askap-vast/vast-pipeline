@@ -87,23 +87,20 @@ def check_read_write_perm(path: str, perm: str='W') -> None:
 
 def deg2sex(deg: float) -> Tuple[int, Tuple[float, float, float]]:
     """
-    Converts angle in degrees to sexagesimal notation
-    Returns tuple containing (sign, (degrees, minutes & seconds))
-    sign is -1 or 1
-
-    >>> deg2sex(12.582438888888889)
-    (12, 34, 56.78000000000182)
-
-    >>> deg2sex(-12.582438888888889)
-    (-12, 34, 56.78000000000182)
+    Converts an angle in degrees to a tuple containing its sexagesimal components.
 
     Args:
         deg: The angle to convert in degrees.
 
     Returns:
-        A nested tuple with the sign as the 0th value followed by the
-        sexagesimal values tuple.
+        A nested tuple in the form (sign, (degrees, minutes, seconds)), where sign is
+        either -1 or 1.
 
+    Example:
+        >>> deg2sex(12.582438888888889)
+        (12, 34, 56.78000000000182)
+        >>> deg2sex(-12.582438888888889)
+        (-12, 34, 56.78000000000182)
     """
 
     sign = -1 if deg < 0 else 1
@@ -119,13 +116,6 @@ def deg2sex(deg: float) -> Tuple[int, Tuple[float, float, float]]:
 def deg2dms(deg: float, dms_format: bool = False, precision: int = 2) -> str:
     """Convert angle in degrees into a DMS formatted string. e.g.
 
-    >>> deg2dms(12.582438888888889)
-    '+12:34:56.78'
-    >>> deg2dms(2.582438888888889, dms_format=True)
-    '+02d34m56.78s'
-    >>> deg2dms(-12.582438888888889, precision=1)
-    '-12:34:56.8'
-
     Args:
         deg: The angle to convert in degrees.
         dms_format (optional): If `True`, use "d", "m", and "s" as the coorindate
@@ -136,6 +126,14 @@ def deg2dms(deg: float, dms_format: bool = False, precision: int = 2) -> str:
 
     Returns:
         `deg` formatted as a DMS string.
+
+    Example:
+        >>> deg2dms(12.582438888888889)
+        '+12:34:56.78'
+        >>> deg2dms(2.582438888888889, dms_format=True)
+        '+02d34m56.78s'
+        >>> deg2dms(-12.582438888888889, precision=1)
+        '-12:34:56.8'
     """
 
     sign, sex = deg2sex(deg)
@@ -152,13 +150,6 @@ def deg2dms(deg: float, dms_format: bool = False, precision: int = 2) -> str:
 def deg2hms(deg: float, hms_format: bool = False, precision: int = 2) -> str:
     """Convert angle in degrees into a HMS formatted string. e.g.
 
-    >>> deg2hms(188.73658333333333)
-    '12:34:56.78'
-    >>> deg2hms(-188.73658333333333, hms_format=True)
-    '12h34m56.78s'
-    >>> deg2hms(188.73658333333333, precision=1)
-    '12:34:56.8'
-
     Args:
         deg: The angle to convert in degrees.
         hms_format (optional): If `True`, use "h", "m", and "s" as the coorindate
@@ -169,6 +160,14 @@ def deg2hms(deg: float, hms_format: bool = False, precision: int = 2) -> str:
 
     Returns:
         `deg` formatted as an HMS string.
+
+    Example:
+        >>> deg2hms(188.73658333333333)
+        '12:34:56.78'
+        >>> deg2hms(-188.73658333333333, hms_format=True)
+        '12h34m56.78s'
+        >>> deg2hms(188.73658333333333, precision=1)
+        '12:34:56.8'
     """
     sign, sex = deg2sex(deg / 15.)
     precision = precision if precision >= 0 else 0
