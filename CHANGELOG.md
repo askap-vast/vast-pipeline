@@ -4,7 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), with an added `List of PRs` section and links to the relevant PRs on the individal updates. This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/0.2.0...HEAD)
+## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/v1.0.0...HEAD)
+
+#### Added
+
+#### Changed
+
+#### Fixed
+
+#### Removed
+
+#### List of PRs
+
+## [1.0.0](https://github.com/askap-vast/vast-pipeline/releases/v1.0.0) (2021-05-21)
 
 #### Added
 
@@ -153,7 +165,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [#429](https://github.com/askap-vast/vast-pipeline/pull/429) fix: Fixed sources table on measurement detail page.
 - [#427](https://github.com/askap-vast/vast-pipeline/pull/427) fix: Fixed missing meta columns in parallel association.
 
-## [0.2.0](https://github.com/askap-vast/vast-pipeline/releases/0.2.0) (2020-11-30)
+## [0.2.0](https://github.com/askap-vast/vast-pipeline/releases/v0.2.0) (2020-11-30)
 
 #### Added
 
@@ -313,7 +325,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [#305](https://github.com/askap-vast/vast-pipeline/pull/305) feat: 2 epoch metrics
 - [#345](https://github.com/askap-vast/vast-pipeline/pull/345) feat, fix: Website improvements.
 
-## [0.1.0](https://github.com/askap-vast/vast-pipeline/releases/0.1.0) (2020-09-27)
+## [0.1.0](https://github.com/askap-vast/vast-pipeline/releases/v0.1.0) (2020-09-27)
 
 First release of the Vast Pipeline. This was able to process 707 images (EPOCH01 to EPOCH11x) on a machine with 64 GB of RAM.
 
