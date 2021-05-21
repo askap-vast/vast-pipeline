@@ -29,13 +29,6 @@ These buttons do the following:
 
 A text representation of details of the measurement.
 
-### Aladin Lite Viewer
-
-[Aladin Lite Documentation](https://aladin.u-strasbg.fr/AladinLite/doc/){ target=_blank }.
-
-The central panel contains an Aladin Lite viewer, which by default displays the HIPS image from the [Rapid ASKAP Continuum Survey](https://research.csiro.au/racs/){ target=_blank }, centred on the location of the measurement.
-Other surveys are available such as all epochs of the VAST Pilot Survey (including Stokes V) and other wavelength surveys such as 2MASS.
-
 ### JS9 Viewer
 
 [JS9 website](https://js9.si.edu){ target=_blank }.
@@ -44,6 +37,13 @@ The right panel contains a JS9 viewer showing the postage stamp FITS image of th
 
 !!! note
     If the image data is removed from its location when the pipeline run was processed the JS9 viewer will no longer work.
+
+### Aladin Lite Viewer
+
+[Aladin Lite Documentation](https://aladin.u-strasbg.fr/AladinLite/doc/){ target=_blank }.
+
+The central panel contains an Aladin Lite viewer, which by default displays the HIPS image from the [Rapid ASKAP Continuum Survey](https://research.csiro.au/racs/){ target=_blank }, centred on the location of the measurement.
+Other surveys are available such as all epochs of the VAST Pilot Survey (including Stokes V) and other wavelength surveys such as 2MASS.
 
 ### User Comments
 

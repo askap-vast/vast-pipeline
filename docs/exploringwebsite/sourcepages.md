@@ -97,11 +97,11 @@ These buttons do the following:
 
 ### Details
 
-A text representation of details of the measurement.
+A text representation of details of the source, including position, number of measurements and whether the source is defined as `new`.
 
-### User Comments & Tags
+### First Detection Postage Stamp
 
-Users are able to read and post comments on a measurement using this form, in addition to adding and removing tags, see [Source Tags and Favourites](sourcetagsfavs.md).
+Shown in this panel is a postage stamp of the first detection of the source in the pipeline run. Postage stamps of all measurements can be seen in the [main postage stamp section](#js9-viewer-postage-stamps) lower on the page.
 
 ### Aladin Lite Viewer
 
@@ -110,11 +110,15 @@ Users are able to read and post comments on a measurement using this form, in ad
 The central panel contains an Aladin Lite viewer, which by default displays the HIPS image from the [Rapid ASKAP Continuum Survey](https://research.csiro.au/racs/){ target=_blank }, centred on the location of the source.
 Other surveys are available such as all epochs of the VAST Pilot Survey (including Stokes V) and other wavelength surveys such as 2MASS.
 
+### Flux & Variability Details
+
+The flux details, both integrated and peak, of the source. Also shown are the variability parameters calculated by the pipeline.
+
+![!Source detail page: Flux and variability details, light curve and the node graph.](../img/source-detail2.png){: loading=lazy }
+
 ### Light Curve
 
 The light curve of the source is shown. The peak or integrated flux can be selected by using the radio selection buttons.
-
-![!Source detail page: light curve, node graph and external search results.](../img/source-detail2.png){: loading=lazy }
 
 ### Two-epoch Node Graph
 
@@ -126,6 +130,12 @@ If an epoch pairing is significant then they are joined by a line on the graph. 
 This table shows the result of a query to the SIMBAD and NED services for astronomical sources within 1 arcmin of the source location. 
 Along with the name and coordinate of the matches, the on-sky separation between the source is shown along with the source type.
 
+![!Source detail page: External results table and the user comments field.](../img/source-detail3.png){: loading=lazy }
+
+### User Comments & Tags
+
+Users are able to read and post comments on a measurement using this form, in addition to adding and removing tags, see [Source Tags and Favourites](sourcetagsfavs.md).
+
 ### JS9 Viewer Postage Stamps
 
 [JS9 website](https://js9.si.edu){ target=_blank }.
@@ -135,13 +145,13 @@ The JS9 viewer is used to show the postage stamp FITS images of the measurements
 !!! note
     If the image data is removed from its location when the pipeline run was processed the JS9 viewer will no longer work.
 
-![!Source detail page: postage stamps.](../img/source-detail3.png){: loading=lazy }
+![!Source detail page: postage stamps.](../img/source-detail4.png){: loading=lazy }
 
 ### Source Measurements Table
 
 This table displays the measurements that are associated with the source. The detail page for the measurement can be reached by clicking the name of the respective measurement.
 
-![!Source detail page: measurement and related tables.](../img/source-detail4.png){: loading=lazy }
+![!Source detail page: measurement and related tables.](../img/source-detail5.png){: loading=lazy }
 
 ### Related Sources Table
 
