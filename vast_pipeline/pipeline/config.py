@@ -69,7 +69,6 @@ class PipelineConfig:
             "run": yaml.Map(
                 {
                     "path": yaml.Str(),
-                    "default_survey": yaml.Str(),
                     "suppress_astropy_warnings": yaml.Bool(),
                 }
             ),

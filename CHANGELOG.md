@@ -93,6 +93,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Removed
 
+- Removed `SURVEYS_WORKING_DIR` from settings and env file [#538](https://github.com/askap-vast/vast-pipeline/pull/538).
+- Removed `default_survey` from run configuration file [#538](https://github.com/askap-vast/vast-pipeline/pull/538).
 - Removed importsurvey command and catalogue.py [#538](https://github.com/askap-vast/vast-pipeline/pull/538).
 - Removed SurveySource, Survey and SurveySourceQuerySet models [#538](https://github.com/askap-vast/vast-pipeline/pull/538).
 - Removed email and Slack links from docs footer [#535](https://github.com/askap-vast/vast-pipeline/pull/535).

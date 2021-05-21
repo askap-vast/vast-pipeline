@@ -77,7 +77,6 @@ The following instructions, will get you started in setting up the database and 
 5. Create the pipeline data directories. The pipeline has several directories that can be configured in `webinterface/.env`:
 
     * `PIPELINE_WORKING_DIR`: location to store various pipeline output files.
-    * `SURVEYS_WORKING_DIR`: location of reference survey catalogues, e.g. NVSS, SUMSS.
     * `RAW_IMAGE_DIR`: default location that the pipeline will search for input images and catalogues to ingest during a pipeline run. Data inputs can also be defined as absolute paths in a pipeline run configuration file, so this setting only affects relative paths in the pipeline run configuration.
     * `HOME_DATA_DIR`: additional location to search for input images and catalogues that is relative to the user's home directory. Intended for multi-user server deployments and unlikely to be useful for local installations.
 
@@ -86,7 +85,6 @@ The following instructions, will get you started in setting up the database and 
     ```console
     mkdir -p /data/vast-pipeline
     mkdir /data/vast-pipeline/pipeline-runs
-    mkdir /data/vast-pipeline/reference-surveys
     mkdir /data/vast-pipeline/raw-images
     mkdir /data/vast-pipeline/vast-pipeline-extra-data
     ```
@@ -95,7 +93,6 @@ The following instructions, will get you started in setting up the database and 
 
     ```bash
     PIPELINE_WORKING_DIR=/data/vast-pipeline/pipeline-runs
-    SURVEYS_WORKING_DIR=/data/vast-pipeline/reference-surveys
     RAW_IMAGE_DIR=/data/vast-pipeline/raw-images
     HOME_DATA_DIR=/data/vast-pipeline/vast-pipeline-extra-data
     ```
@@ -129,7 +126,6 @@ Shown below is the [`.env.template`](https://github.com/askap-vast/vast-pipeline
 
     # Pipeline
     PIPELINE_WORKING_DIR=pipeline-runs
-    SURVEYS_WORKING_DIR=reference-surveys
     FLUX_DEFAULT_MIN_ERROR=0.001
     POS_DEFAULT_MIN_ERROR=0.01
     RAW_IMAGE_DIR=raw-images
@@ -167,7 +163,6 @@ These settings apply to various aspects of the VAST pipeline itself. The table b
 | Setting <img width=440/> | Default Value | Description |
 | ------------------------ | ------- | ----------- |
 | `PIPELINE_WORKING_DIR`   | pipeline-runs | The name of the working directory where pipeline run directories are created. The pipeline location acts as the root directory. |
-| `SURVEYS_WORKING_DIR`    | reference-surveys | Not currently used. Safe to ignore. |
 | `FLUX_DEFAULT_MIN_ERROR` | 0.001 | In the event a measurement is ingested with a flux error of 0 from Selavy, the error is replaced with this default value (mJy). |
 | `POS_DEFAULT_MIN_ERROR` | 0.01 | In the event a measurement is ingested with an positional error of 0 from Selavy, the error is replaced with this default value (arcsec). |
 | `RAW_IMAGE_DIR` | raw-images | Directory where the majority of raw ASKAP FITS images are expected to be stored. This directory is scanned to provide user with an image list when configuration a job using the website interface. |

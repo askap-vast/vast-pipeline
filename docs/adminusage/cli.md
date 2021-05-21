@@ -289,7 +289,6 @@ Example usage:
 2021-04-02 21:24:20,497 restorepiperun INFO Will restore the run to the following config:
 run:
   path: /Users/obrienan/sandbox/vast-pipeline-dirs/pipeline-runs/docs_example_run
-  default_survey: None
   suppress_astropy_warnings: yes
 inputs:
   image:

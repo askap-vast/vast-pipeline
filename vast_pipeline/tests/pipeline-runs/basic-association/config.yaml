@@ -1,6 +1,5 @@
 run:
   path: vast_pipeline/tests/pipeline-runs/basic-association
-  default_survey: none
   suppress_astropy_warnings: true
 inputs:
   image:
