@@ -201,7 +201,5 @@ extra:
     - icon: fontawesome/brands/github
       link: https://github.com/askap-vast/vast-pipeline
       name: vast-pipeline source on GitHub
-    - icon: fontawesome/brands/slack
-      link: https://askap-vast.slack.com/
     - icon: fontawesome/solid/globe
       link: https://vast-survey.org

@@ -6,8 +6,8 @@ The best way to get help with the VAST Pipeline software is to contact the devel
 
 General enquiries may also be sent via email to the VAST project Principal Investigators:
 
-* Tara Murphy <tara.murphy@sydney.edu.au>
-* David Kaplan <kaplan@uwm.edu>
+* [Tara Murphy](mailto:tara.murphy@sydney.edu.au)
+* [David Kaplan](mailto:kaplan@uwm.edu)
 
 ## Contributors
 
