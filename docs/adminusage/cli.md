@@ -19,7 +19,6 @@ Output:
   clearpiperun
   createmeasarrow
   debugrun
-  importsurvey
   initpiperun
   restorepiperun
   runpipeline
@@ -27,13 +26,51 @@ Output:
  ...
 ```
 
-There are 7 commands, described in detail below.
+There are 6 commands, described in detail below.
 
 ### clearpiperun
 
-Detailed commands for resetting the database can be found in [Contributing and Developing Guidelines](../developing/localdevenv.md#reset-the-database).
-
 Resetting a pipeline run can be done using the `clearpiperun` command. This will delete all images and related objects such as sources associated with that pipeline run. Images that have been used in other pipeline runs will not be deleted.
+
+```terminal
+./manage.py clearpiperun --help
+usage: manage.py clearpiperun [-h] [--keep-parquet] [--remove-all] [--version]
+                              [-v {0,1,2,3}] [--settings SETTINGS]
+                              [--pythonpath PYTHONPATH] [--traceback]
+                              [--no-color] [--force-color] [--skip-checks]
+                              piperuns [piperuns ...]
+
+Delete a pipeline run and all related images, sources, etc. Will not delete
+objects if they are also related to another pipeline run.
+
+positional arguments:
+  piperuns              Name or path of pipeline run(s) to delete. Pass
+                        "clearall" to delete all the runs.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --keep-parquet        Flag to keep the pipeline run(s) parquet files. Will
+                        also apply to arrow files if present.
+  --remove-all          Flag to remove all the content of the pipeline run(s)
+                        folder.
+  --version             show program's version number and exit
+  -v {0,1,2,3}, --verbosity {0,1,2,3}
+                        Verbosity level; 0=minimal output, 1=normal output,
+                        2=verbose output, 3=very verbose output
+  --settings SETTINGS   The Python path to a settings module, e.g.
+                        "myproject.settings.main". If this isn't provided, the
+                        DJANGO_SETTINGS_MODULE environment variable will be
+                        used.
+  --pythonpath PYTHONPATH
+                        A directory to add to the Python path, e.g.
+                        "/home/djangoprojects/myproject".
+  --traceback           Raise on CommandError exceptions
+  --no-color            Don't colorize the command output.
+  --force-color         Force colorization of the command output.
+  --skip-checks         Skip system checks.
+```
+
+Example usage:
 
 ```terminal
 (pipeline_env)$ ./manage.py clearpiperun path/to/my_pipe_run
@@ -41,7 +78,8 @@ Resetting a pipeline run can be done using the `clearpiperun` command. This will
 (pipeline_env)$ ./manage.py clearpiperun my_pipe_run
 ```
 
-More details on the `clearpiperun` command can be found in the [Contributing and Developing Guidelines](../developing/localdevenv.md#clearing-run-data).
+!!!tip
+    Further information on clearing a specific run, or resetting the database, can be found in the [Contributing and Developing](../developing/localdevenv.md#removingclearing-data) section.
 
 ### createmeasarrow
 
@@ -141,10 +179,6 @@ Nr of sources: 557
 Nr of association: 3276
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 ```
-
-### importsurvey
-
-This functionality is not yet available.
 
 ### initpiperun
 
