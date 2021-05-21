@@ -192,6 +192,7 @@ def get_create_p_run(
 
     return p_run, False
 
+
 def add_run_to_img(pipeline_run: Run, img: Image) -> None:
     """
     Add a pipeline run to an Image (and corresponding SkyRegion) in the db
@@ -214,6 +215,7 @@ def add_run_to_img(pipeline_run: Run, img: Image) -> None:
     if pipeline_run not in skyreg.run.all():
         logger.info('Adding %s to sky region %s', pipeline_run, skyreg)
         skyreg.run.add(pipeline_run)
+
 
 def remove_duplicate_measurements(
     sources_df: pd.DataFrame,

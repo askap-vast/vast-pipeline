@@ -19,9 +19,7 @@ from vast_pipeline.models import (
     Association, Band, Measurement, SkyRegion, Source, RelatedSource,
     MeasurementPair, Run, Image
 )
-from vast_pipeline.pipeline.utils import (
-    get_create_img, get_create_img_band, add_run_to_img
-)
+from vast_pipeline.pipeline.utils import get_create_img, get_create_img_band
 from vast_pipeline.utils.utils import StopWatch
 
 
@@ -68,13 +66,11 @@ def bulk_upload_model(
 
 
 def make_upload_images(
-    paths: Dict[str, Dict[str, str]], image_config: Dict, pipeline_run: Run=None
+    paths: Dict[str, Dict[str, str]], image_config: Dict
 ) -> Tuple[List[Image], List[SkyRegion], List[Band]]:
     '''
     Carry the first part of the pipeline, by uploading all the images
     to the image table and populated band and skyregion objects.
-    If called as part of a pipeline run, it will associate each image
-    and skyregion with it.
 
     Args:
         paths:
@@ -84,8 +80,6 @@ def make_upload_images(
             name.
         image_config:
             Dictionary of configuration options for the image ingestion.
-        pipeline_run:
-            The pipeline run object. Default: None
 
     Returns:
         A list of image, sky region and band objects that have been uploaded.
@@ -114,8 +108,6 @@ def make_upload_images(
         with transaction.atomic():
             img, exists_f = get_create_img(band.id, image)
             skyreg = img.skyreg
-            if pipeline_run:
-                add_run_to_img(pipeline_run, img)
 
         # add image and skyregion to respective lists
         images.append(img)

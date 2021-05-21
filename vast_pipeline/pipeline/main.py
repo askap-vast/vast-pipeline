@@ -17,6 +17,7 @@ from django.conf import settings
 from django.db import transaction
 
 from vast_pipeline.models import Run, SurveySource
+from vast_pipeline.pipeline.utils import add_run_to_img
 from .association import association, parallel_association
 from .config import PipelineConfig
 from .new_sources import new_sources
@@ -130,9 +131,13 @@ class Pipeline():
         # upload/retrieve image data
         images, skyregions, bands = make_upload_images(
             self.img_paths,
-            self.config.image_opts(),
-            p_run
+            self.config.image_opts()
         )
+
+        # associate the pipeline run with each image
+        with transaction.atomic():
+            for img in images:
+                add_run_to_img(p_run, img)
 
         # write parquet files and retrieve skyregions as a dataframe
         skyregs_df = write_parquets(images, skyregions, bands, self.config["run"]["path"])

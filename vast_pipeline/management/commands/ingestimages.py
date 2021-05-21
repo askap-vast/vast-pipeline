@@ -57,4 +57,4 @@ class Command(BaseCommand):
 
         d = _DummyPipeline(image_config)
 
-        make_upload_images(d.img_paths,image_config.image_opts(),pipeline_run=None)
+        make_upload_images(d.img_paths,image_config.image_opts())
