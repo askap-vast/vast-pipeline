@@ -1,4 +1,4 @@
-# Change Log
+# Changelog
 
 All notable changes to this project will be documented in this file.
 
@@ -93,6 +93,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Removed
 
+- Removed `SURVEYS_WORKING_DIR` from settings and env file [#538](https://github.com/askap-vast/vast-pipeline/pull/538).
+- Removed `default_survey` from run configuration file [#538](https://github.com/askap-vast/vast-pipeline/pull/538).
+- Removed importsurvey command and catalogue.py [#538](https://github.com/askap-vast/vast-pipeline/pull/538).
+- Removed SurveySource, Survey and SurveySourceQuerySet models [#538](https://github.com/askap-vast/vast-pipeline/pull/538).
 - Removed email and Slack links from docs footer [#535](https://github.com/askap-vast/vast-pipeline/pull/535).
 - Removed bootstrap as the required version is bundled with startbootstrap-sb-admin-2 [#533](https://github.com/askap-vast/vast-pipeline/pull/533).
 - Removed `docs/readme.md` softlink as it is no longer used [#494](https://github.com/askap-vast/vast-pipeline/pull/494).
@@ -104,6 +108,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#538](https://github.com/askap-vast/vast-pipeline/pull/538) feat: Removed survey source models, commands and references.
 - [#536](https://github.com/askap-vast/vast-pipeline/pull/536) feat: changed source naming convention.
 - [#535](https://github.com/askap-vast/vast-pipeline/pull/535) doc: added help and acknowledgement doc page.
 - [#534](https://github.com/askap-vast/vast-pipeline/pull/534) feat: Update homepage text.

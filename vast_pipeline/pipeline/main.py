@@ -16,7 +16,7 @@ import pandas as pd
 from django.conf import settings
 from django.db import transaction
 
-from vast_pipeline.models import Run, SurveySource
+from vast_pipeline.models import Run
 from .association import association, parallel_association
 from .config import PipelineConfig
 from .new_sources import new_sources
@@ -223,10 +223,6 @@ class Pipeline():
                 self.previous_parquets,
                 done_images_df
             )
-
-        # 2.3 Associate Measurements with reference survey sources
-        if SurveySource.objects.exists():
-            pass
 
         # Obtain the number of selavy measurements for the run
         # n_selavy_measurements = sources_df.

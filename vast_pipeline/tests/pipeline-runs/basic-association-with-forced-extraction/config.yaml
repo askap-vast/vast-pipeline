@@ -1,5 +1,4 @@
 run:
-  default_survey: none
   suppress_astropy_warnings: true
 inputs:
   image:

@@ -130,7 +130,6 @@ nav:
             - clearpiperun.py: reference/management/commands/clearpiperun.md
             - createmeasarrow.py: reference/management/commands/createmeasarrow.md
             - debugrun.py: reference/management/commands/debugrun.md
-            - importsurvey.py: reference/management/commands/importsurvey.md
             - initpiperun.py: reference/management/commands/initpiperun.md
             - restorepiperun.py: reference/management/commands/restorepiperun.md
             - runpipeline.py: reference/management/commands/runpipeline.md
@@ -147,7 +146,6 @@ nav:
           - new_sources.py: reference/pipeline/new_sources.md
           - utils.py: reference/pipeline/utils.md
         - survey:
-          - catalogue.py: reference/survey/catalogue.md
           - translators.py: reference/survey/translators.md
         - utils:
           - auth.py: reference/utils/auth.md

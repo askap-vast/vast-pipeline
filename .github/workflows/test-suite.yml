@@ -59,7 +59,7 @@ jobs:
         vast vastpsw vastdb
 
     - name: Make relevant directories
-      run: mkdir pipeline-runs && mkdir reference-surveys
+      run: mkdir pipeline-runs
 
     - name: Download regression test data
       run: bash -e ./download.sh

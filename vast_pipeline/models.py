@@ -51,127 +51,6 @@ class CommentableModel(models.Model):
         abstract = True
 
 
-class Survey(models.Model):
-    """An external survey eg NVSS, SUMSS"""
-    name = models.CharField(
-        max_length=32,
-        unique=True,
-        help_text='Name of the Survey e.g. NVSS.'
-    )
-    comment = models.TextField(max_length=1000, default='', blank=True)
-    frequency = models.IntegerField(
-        help_text='Frequency of the survey.'
-    )
-
-    class Meta:
-        ordering = ['name']
-
-    def __str__(self):
-        return self.name
-
-
-class SurveySourceQuerySet(models.QuerySet):
-
-    def cone_search(
-        self, ra: float, dec: float, radius_deg: float
-    ) -> models.QuerySet:
-        """
-        Return all the survey sources withing radius_deg of (ra,dec).
-        Returns a QuerySet of survey sources, ordered by distance from
-        (ra,dec) ascending.
-
-        Args:
-            ra: The right ascension value of the cone search central
-                coordinate.
-            dec: The declination value of the cone search central coordinate.
-            radius_deg: The radius over which to perform the cone search.
-
-        Returns:
-            Sources found withing the cone search area.
-        """
-        return (
-            self.extra(
-                select={
-                    "distance": "q3c_dist(ra, dec, %s, %s) * 3600"
-                },
-                select_params=[ra, dec],
-                where=["q3c_radial_query(ra, dec, %s, %s, %s)"],
-                params=[ra, dec, radius_deg],
-            )
-            .order_by("distance")
-        )
-
-
-class SurveySource(models.Model):
-    """A source from a survey catalogue eg NVSS, SUMSS"""
-    # An index on the survey_id field causes queries to perform much worse
-    # because there are so few unique surveys, it's a poor field to index.
-    survey = models.ForeignKey(Survey, on_delete=models.CASCADE)
-
-    name = models.CharField(
-        max_length=100,
-        help_text='Name of the survey source.'
-    )
-
-    ra = models.FloatField(
-        help_text='RA of the survey source (Deg).'
-    )# degrees
-    ra_err = models.FloatField(
-        help_text='RA error of the survey source (Deg).'
-        )# degrees
-    dec = models.FloatField(
-        help_text='DEC of the survey source (Deg).'
-    )# degrees
-    dec_err = models.FloatField(
-        help_text='DEC error of the survey source (Deg).'
-    )# degrees
-
-    bmaj = models.FloatField(
-        help_text=(
-            'The major axis of the Gaussian fit to the survey source '
-            '(arcsecs).'
-        )
-    )
-    bmin = models.FloatField(
-        help_text=(
-            'The minor axis of the Gaussian fit to the survey source '
-            '(arcsecs).'
-        )
-    )
-    pa = models.FloatField(
-        help_text=(
-            'Position angle of Gaussian fit east of north to bmaj '
-            '(Deg).'
-        )
-    )
-
-    flux_peak = models.FloatField(
-        help_text='Peak flux of the Guassian fit (Jy).'
-    )# Jy/beam
-    flux_peak_err = models.FloatField(
-        help_text='Peak flux error of the Gaussian fit (Jy).'
-    )# Jy/beam
-    flux_int = models.FloatField(
-        help_text='Integrated flux of the Guassian fit (Jy).'
-    )# total flux Jy
-    flux_int_err = models.FloatField(
-        help_text='Integrated flux of the Guassian fit (Jy).'
-    )# Jy
-
-    alpha = models.FloatField(default=0,
-        help_text='Spectral index of the survey source.'
-    )
-    image_name = models.CharField(max_length=100,
-        blank=True,
-        help_text='Name of survey image where measurement was made.'
-    )
-
-    objects = SurveySourceQuerySet.as_manager()
-
-    def __str__(self):
-        return f"{self.id} {self.name}"
-
-
 class RunQuerySet(models.QuerySet):
 
     def check_max_runs(self, max_runs: int = 5) -> int:
@@ -350,11 +229,6 @@ class SourceQuerySet(models.QuerySet):
 
 class Source(CommentableModel):
     run = models.ForeignKey(Run, on_delete=models.CASCADE, null=True,)
-    cross_match_sources = models.ManyToManyField(
-        SurveySource,
-        through='CrossMatch',
-        through_fields=('source', 'survey_source')
-    )
     related = models.ManyToManyField(
         'self',
         through='RelatedSource',
@@ -821,31 +695,6 @@ class Measurement(CommentableModel):
 
     def __str__(self):
         return self.name
-
-
-class CrossMatch(models.Model):
-    """
-    An association between a pipeline source and a survey catalogue source.
-    Each pipeline source may be associated with many sources from each
-    survey catalogue as multiple survey sources may fit inside the beam of
-    the pipeline telescope esp. MWA. The source and survey source rows are
-    referenced by name instead of ID so these records can be retained
-    between pipeline reprocessing runs that produce different IDs.
-    """
-    # Foreign keys have on_delete as 'CASCADE' so that we can directly
-    # delete things from the source/survey_source tables without having
-    # to think about this crossmatch table
-    source = models.ForeignKey(
-        Source, on_delete=models.CASCADE
-    )
-    survey_source = models.ForeignKey(
-        SurveySource, on_delete=models.CASCADE
-    )
-
-    manual = models.BooleanField()# a manual cross-match (vs automatic)
-    distance = models.FloatField()# distance source to survey source (degrees)
-    probability = models.FloatField()# probability of association
-    comment = models.TextField(max_length=1000, default='', blank=True)
 
 
 class Association(models.Model):

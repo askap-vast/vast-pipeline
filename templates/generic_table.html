@@ -265,17 +265,6 @@
                 <input id="localRmsZeroFillSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.selavy_local_rms_zero_fill_value }}" min="0" step="0.01" aria-label="localRmsZeroFillSearch" aria-describedby="basic-addon2" name="selavy_local_rms_zero_fill_value">
               </div>
               <div class="col">
-                <label class="col-form-label font-weight-bold text-gray-800" for="surveySelect">Default Survey (TBC)</label>
-                <a href="#" data-toggle="tooltip" data-placement="top" title=
-                    "Feature coming soon."
-                ><i class="fas fa-info-circle"></i></a>
-                <select id="surveySelect" class="form-control bg-light border-0" aria-label="surveySearch" aria-describedby="basic-addon2" name="default_survey" readonly>
-                  <option value="{{ runconfig.default_survey }}" selected>None</option>
-                </select>
-              </div>
-            </div>
-            <div class="row align-items-center">
-              <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="sourceAggPairMetricsMinVsInput">Source aggregate pair metrics minimum Vs</label>
                 <a href="#" data-toggle="tooltip" data-placement="top" title="Only measurement pairs where the Vs metric exceeds this value are selected for the aggregate pair metrics that are stored in Source objects."><i class="fas fa-info-circle"></i></a>
                 <input id="sourceAggPairMetricsMinVsInput" type="number" class="form-control bg-light border-0" value="{{ runconfig.source_aggregate_pair_metrics_min_abs_vs }}" min="0" step="0.01" aria-label="sourceAggPairMetricsMinVsInput" aria-describedby="basic-addon2" name="source_aggregate_pair_metrics_min_abs_vs">

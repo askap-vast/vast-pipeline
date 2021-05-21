@@ -278,11 +278,6 @@ PIPELINE_WORKING_DIR = env('PIPELINE_WORKING_DIR', cast=str, default=os.path.joi
 if '/' not in PIPELINE_WORKING_DIR:
     PIPELINE_WORKING_DIR = os.path.join(BASE_DIR, PIPELINE_WORKING_DIR)
 
-# reference surveys default folder
-SURVEYS_WORKING_DIR = env('SURVEYS_WORKING_DIR', cast=str, default=os.path.join(BASE_DIR, 'reference-surveys'))
-if '/' not in SURVEYS_WORKING_DIR:
-    SURVEYS_WORKING_DIR = os.path.join(BASE_DIR, SURVEYS_WORKING_DIR)
-
 # raw image data folder (containing FITS files, selavy, etc)
 RAW_IMAGE_DIR = env('RAW_IMAGE_DIR', cast=str, default=os.path.join(BASE_DIR, 'raw-images'))
 if '/' not in RAW_IMAGE_DIR:
@@ -327,7 +322,6 @@ PIPE_RUN_CONFIG_DEFAULTS = {
     'association_de_ruiter_radius': 5.68,
     'association_beamwidth_limit': 1.5,
     'new_source_min_sigma': 5.0,
-    'default_survey': None,
     'flux_perc_error': 0,
     'use_condon_errors': True,
     'selavy_local_rms_zero_fill_value': 0.2,
