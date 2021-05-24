@@ -9,7 +9,7 @@
 
 This repository holds the code of the VAST Pipeline, a radio transient detection pipeline for the ASKAP survey science project, VAST.
 
-Please read the [Installation Instructions](https://vast-survey.org/vast-pipeline/quickstart/installation/). If you have any questions or feedback, we welcome you to open an [issue](https://github.com/askap-vast/vast-pipeline/issues). If you are interested in contributing to the code, please read and follow the [Contributing and Developing Guidelines](https://vast-survey.org/vast-pipeline/developing/intro/).
+Please read the [Installation Instructions](https://vast-survey.org/vast-pipeline/gettingstarted/installation/). If you have any questions or feedback, we welcome you to open an [issue](https://github.com/askap-vast/vast-pipeline/issues). If you are interested in contributing to the code, please read and follow the [Contributing and Developing Guidelines](https://vast-survey.org/vast-pipeline/developing/intro/).
 
 If using this tool in your research, please cite Murphy, et al. (2021).
 
