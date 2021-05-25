@@ -9,7 +9,7 @@
 
 This repository holds the code of the VAST Pipeline, a radio transient detection pipeline for the ASKAP survey science project, VAST.
 
-Please read the [Installation Instructions](https://vast-survey.org/vast-pipeline/quickstart/installation/). If you have any questions or feedback, we welcome you to open an [issue](https://github.com/askap-vast/vast-pipeline/issues). If you are interested in contributing to the code, please read and follow the [Contributing and Developing Guidelines](https://vast-survey.org/vast-pipeline/developing/intro/).
+Please read the [Installation Instructions](https://vast-survey.org/vast-pipeline/gettingstarted/installation/). If you have any questions or feedback, we welcome you to open an [issue](https://github.com/askap-vast/vast-pipeline/issues). If you are interested in contributing to the code, please read and follow the [Contributing and Developing Guidelines](https://vast-survey.org/vast-pipeline/developing/intro/).
 
 If using this tool in your research, please cite Murphy, et al. (2021).
 
@@ -49,5 +49,7 @@ The VAST Pipeline development was supported by:
 * The Sydney Informatics Hub (SIH), a core research facility at the University of Sydney.
 * Software support resources awarded under the Astronomy Data and Computing Services (ADACS) Merit Allocation Program. ADACS is funded from the Astronomy National Collaborative Research Infrastructure Strategy (NCRIS) allocation provided by the Australian Government and managed by Astronomy Australia Limited (AAL).
 * NSF grant AST-1816492.
+
+We also acknowledge the [LOFAR Transients Pipeline (TraP)](https://ascl.net/1412.011) ([Swinbank, et al. 2015](https://ui.adsabs.harvard.edu/abs/2015A%26C....11...25S/abstract)) from which various concepts and design choices have been implemented in the VAST Pipeline.
 
 The developers thank the creators of [SB Admin 2](https://github.com/StartBootstrap/startbootstrap-sb-admin-2) to make the dashboard template freely available.
