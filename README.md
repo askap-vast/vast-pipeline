@@ -50,4 +50,6 @@ The VAST Pipeline development was supported by:
 * Software support resources awarded under the Astronomy Data and Computing Services (ADACS) Merit Allocation Program. ADACS is funded from the Astronomy National Collaborative Research Infrastructure Strategy (NCRIS) allocation provided by the Australian Government and managed by Astronomy Australia Limited (AAL).
 * NSF grant AST-1816492.
 
+We also acknowledge the [LOFAR Transients Pipeline (TraP)](https://ascl.net/1412.011) ([Swinbank, et al. 2015](https://ui.adsabs.harvard.edu/abs/2015A%26C....11...25S/abstract)) from which various concepts and design choices have been implemented in the VAST Pipeline.
+
 The developers thank the creators of [SB Admin 2](https://github.com/StartBootstrap/startbootstrap-sb-admin-2) to make the dashboard template freely available.
