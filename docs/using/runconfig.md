@@ -19,9 +19,6 @@ Below is an example of a default `config.yaml` file. Note that no images or othe
       # Path of the pipeline run
       path: ... # auto-filled by pipeline initpiperun command
 
-      # Default survey used by the website for analysis plots. Currently not used.
-      default_survey: None
-
       # Hide astropy warnings during the run execution.
       suppress_astropy_warnings: True
 
@@ -138,9 +135,6 @@ Below is an example of a default `config.yaml` file. Note that no images or othe
 
 **`run.path`**
 Path to the directory for the pipeline run. This parameter will be automatically filled if the configuration file is generate with the [`initpiperun` management command](../adminusage/cli.md#initpiperun) or if the run was created with the web interface.
-
-**`run.default_survey`**
-Currently not used hence this option can be safely ignored.
 
 **`run.suppress_astropy_warnings`**
 Boolean. Astropy warnings are suppressed in the logging output if set to `True`. Defaults to `True`.

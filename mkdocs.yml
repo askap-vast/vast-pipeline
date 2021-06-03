@@ -3,6 +3,7 @@ site_description: >-
   VAST Pipeline platform to enable processing of astronomical sources
   extracted from the ASKAP telescope for radio transient detection science
 site_author: VAST Development Team
+site_url: https://vast-survey.org/vast-pipeline/
 copyright: Copyright &copy; 2020 - 2025 Vast Development Team, University of Sydney - all right reserved
 
 repo_url: https://github.com/askap-vast/vast-pipeline
@@ -115,11 +116,11 @@ nav:
     - Benchmarks: developing/profiling.md
   #   - Tips: developing/tips.md like this https://stackoverflow.com/questions/60160823/how-to-properly-parallelize-generic-code-with-numba-dask
   - FAQ: faq.md
+  - Help and Acknowledgements: help_and_acknowledgements.md
   - Reference:
     - Changelog: changelog.md
     - Code of Conduct: code_of_conduct.md
     - License: license.md
-    - Credit and Acknowledgements: reference/acknowledgements.md
     - Code Reference:
       - vast_pipeline:
         - image:
@@ -130,7 +131,6 @@ nav:
             - clearpiperun.py: reference/management/commands/clearpiperun.md
             - createmeasarrow.py: reference/management/commands/createmeasarrow.md
             - debugrun.py: reference/management/commands/debugrun.md
-            - importsurvey.py: reference/management/commands/importsurvey.md
             - initpiperun.py: reference/management/commands/initpiperun.md
             - restorepiperun.py: reference/management/commands/restorepiperun.md
             - runpipeline.py: reference/management/commands/runpipeline.md
@@ -147,7 +147,6 @@ nav:
           - new_sources.py: reference/pipeline/new_sources.md
           - utils.py: reference/pipeline/utils.md
         - survey:
-          - catalogue.py: reference/survey/catalogue.md
           - translators.py: reference/survey/translators.md
         - utils:
           - auth.py: reference/utils/auth.md
@@ -201,10 +200,5 @@ extra:
     - icon: fontawesome/brands/github
       link: https://github.com/askap-vast/vast-pipeline
       name: vast-pipeline source on GitHub
-    - icon: fontawesome/brands/slack
-      link: https://askap-vast.slack.com/
-    - icon: fontawesome/solid/paper-plane
-      link: mailto:transients@mailman.sydney.edu.au
-      name: Email ASKAP VAST
     - icon: fontawesome/solid/globe
       link: https://vast-survey.org

@@ -118,7 +118,7 @@ class SourceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Source
-        exclude = ['cross_match_sources']
+        fields = "__all__"
         datatables_always_serialize = ('id',)
 
     def get_wavg_ra(self, source):

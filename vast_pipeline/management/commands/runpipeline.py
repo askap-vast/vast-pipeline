@@ -16,6 +16,7 @@ from typing import Optional
 from django.db import transaction
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand, CommandError
+from vast_pipeline._version import __version__ as pipeline_version
 from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
 from vast_pipeline.pipeline.main import Pipeline
 from vast_pipeline.pipeline.utils import (
@@ -255,6 +256,7 @@ def run_pipe(
     if pipeline.config["run"]["suppress_astropy_warnings"]:
         warnings.simplefilter("ignore", category=AstropyWarning)
 
+    logger.info("VAST Pipeline version: %s", pipeline_version)
     logger.info("Source finder: %s", pipeline.config["measurements"]["source_finder"])
     logger.info("Using pipeline run '%s'", pipeline.name)
     logger.info("Source monitoring: %s", pipeline.config["source_monitoring"]["monitor"])
