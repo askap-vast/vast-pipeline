@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Gulp will only read `webinterface/.env` if the required vars are undefined in the current environment [#548](https://github.com/askap-vast/vast-pipeline/pull/548).
+
 #### Fixed
 
 - Fixed outdated installation link in README [#543](https://github.com/askap-vast/vast-pipeline/pull/543).
@@ -20,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#548](https://github.com/askap-vast/vast-pipeline/pull/548): fix: only read .env if required vars are undefined.
 - [#543](https://github.com/askap-vast/vast-pipeline/pull/543): fix, doc: Fix README link and documentation 404 assets.
 
 ## [1.0.0](https://github.com/askap-vast/vast-pipeline/releases/v1.0.0) (2021-05-21)
