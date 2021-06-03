@@ -3,7 +3,6 @@ import os
 import json
 import logging
 import traceback
-import dask.dataframe as dd
 import dask.bag as db
 import pandas as pd
 
@@ -62,8 +61,6 @@ from vast_pipeline.utils.view import generate_colsfields, get_skyregions_collect
 from vast_pipeline.management.commands.initpiperun import initialise_run
 from vast_pipeline.forms import PipelineRunForm, CommentForm, TagWithCommentsForm
 from vast_pipeline.pipeline.config import PipelineConfig
-from vast_pipeline.pipeline.main import Pipeline
-from vast_pipeline.pipeline.utils import get_create_p_run
 
 
 logger = logging.getLogger(__name__)

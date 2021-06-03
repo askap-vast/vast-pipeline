@@ -1,4 +1,3 @@
-import os
 import logging
 import pandas as pd
 import numpy as np
@@ -10,7 +9,6 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.wcs.utils import (
-    skycoord_to_pixel,
     proj_plane_pixel_scales
 )
 

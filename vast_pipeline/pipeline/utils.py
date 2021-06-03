@@ -24,11 +24,10 @@ from psutil import cpu_count
 from itertools import chain, combinations
 
 from vast_pipeline.utils.utils import (
-    deg2hms, deg2dms, eq_to_cart, StopWatch,
-    optimize_ints, optimize_floats
+    eq_to_cart, StopWatch, optimize_ints, optimize_floats
 )
 from vast_pipeline.models import (
-    Band, Image, Measurement, Run, Source, SkyRegion
+    Band, Image, Run, SkyRegion
 )
 from vast_pipeline.image.utils import on_sky_sep
 
