@@ -20,7 +20,7 @@ class Command(BaseCommand):
             'file',
             nargs=1,
             type=str,
-            help=('File to write to.')
+            help=('Filename to write template ingest configuration to.')
         )
 
     def handle(self, *args, **options):
