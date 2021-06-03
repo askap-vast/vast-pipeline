@@ -18,7 +18,11 @@ jobs:
         use-isort: false
         extra-pylint-options: ""
         extra-pycodestyle-options: ""
-        extra-flake8-options: "--select=F401"
+        extra-flake8-options: "--select=W291,W292,F401"
+        # flake8 options being used:
+        #   - W291 trailing whitespace
+        #   - W292 no newline at end of file
+        #   - F401 module imported but unused
         extra-black-options: ""
         extra-mypy-options: ""
         extra-isort-options: ""

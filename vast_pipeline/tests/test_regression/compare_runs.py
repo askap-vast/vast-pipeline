@@ -6,7 +6,7 @@ from django.test import TestCase
 
 def test_inc_assoc(testcase: TestCase, ass_add: pd.DataFrame, ass_backup: pd.DataFrame):
     '''
-    Test that the number of associations increased or equal with added 
+    Test that the number of associations increased or equal with added
     images.
 
     Parameters
@@ -22,7 +22,7 @@ def test_inc_assoc(testcase: TestCase, ass_add: pd.DataFrame, ass_backup: pd.Dat
     testcase.assertTrue(len(ass_add) >= len(ass_backup))
 
 def test_update_source(
-    testcase: TestCase, sources_backup: pd.DataFrame, sources_backup_db: pd.DataFrame, 
+    testcase: TestCase, sources_backup: pd.DataFrame, sources_backup_db: pd.DataFrame,
     sources_add: pd.DataFrame, sources_add_db: pd.DataFrame
     ):
     '''
@@ -55,22 +55,22 @@ def test_update_source(
 
 def test_sources(sources_1: pd.DataFrame, sources_2: pd.DataFrame):
     '''
-    Test that the sources are the same between two different runs. 
+    Test that the sources are the same between two different runs.
 
     Parameters
     ----------
     sources_1 : pd.DataFrame
-        The sources found in one run. 
+        The sources found in one run.
     sources_2 : pd.DataFrame
         The sources found in a different run.
     '''
     sources_1 = (
-        sources_1  
+        sources_1
         .sort_values(by=['wavg_ra', 'wavg_dec'])
         .reset_index(drop=True)
     )
     sources_2 = (
-        sources_2  
+        sources_2
         .sort_values(by=['wavg_ra', 'wavg_dec'])
         .reset_index(drop=True)
     )
@@ -81,7 +81,7 @@ def test_sources(sources_1: pd.DataFrame, sources_2: pd.DataFrame):
         check_less_precise=4
     )
 
-def test_relations(testcase: TestCase, relations_1: pd.DataFrame, 
+def test_relations(testcase: TestCase, relations_1: pd.DataFrame,
     relations_2: pd.DataFrame):
     '''
     Test that the number relations are the same between two different runs.
@@ -91,7 +91,7 @@ def test_relations(testcase: TestCase, relations_1: pd.DataFrame,
     testcase : class
         Test class.
     relations_1 : pd.DataFrame
-        The relations found in one run. 
+        The relations found in one run.
     relations_2 : pd.DataFrame
         The relations found in a different run.
     '''
