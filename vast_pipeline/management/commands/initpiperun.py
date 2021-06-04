@@ -8,7 +8,6 @@ import os
 import logging
 from typing import Any, Dict, Optional
 
-from argparse import ArgumentParser
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings as sett
 from django.contrib.auth.models import User

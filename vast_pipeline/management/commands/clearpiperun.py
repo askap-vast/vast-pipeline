@@ -138,4 +138,3 @@ class Command(BaseCommand):
                         f'Issues in removing run folder: {e}'
                     ))
                     pass
-

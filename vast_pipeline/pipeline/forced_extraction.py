@@ -16,13 +16,9 @@ from pyarrow.parquet import read_schema
 from typing import List, Tuple, Dict
 
 from vast_pipeline.models import Image, Measurement, Run
-from vast_pipeline.image.utils import on_sky_sep
 from vast_pipeline.pipeline.loading import make_upload_measurements
 
 from forced_phot import ForcedPhot
-from .utils import (
-    cross_join, parallel_groupby_coord
-)
 from ..utils.utils import StopWatch
 
 

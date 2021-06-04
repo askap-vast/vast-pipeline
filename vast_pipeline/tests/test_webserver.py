@@ -1,7 +1,5 @@
-from django.conf import settings as s
 from django.test import Client
 from django.test import SimpleTestCase, override_settings
-from django.urls import reverse
 
 
 @override_settings(

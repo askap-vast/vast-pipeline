@@ -11,7 +11,6 @@ from django.conf import settings as s
 from django.test import TestCase, override_settings
 from django.core.management import call_command
 
-from vast_pipeline.models import Source
 
 
 TEST_ROOT = os.path.join(s.BASE_DIR, 'vast_pipeline', 'tests')

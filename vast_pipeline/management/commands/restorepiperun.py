@@ -6,7 +6,6 @@ import pandas as pd
 
 from argparse import ArgumentParser
 from glob import glob
-from django.conf import settings
 from django.db.models import Q
 from django.db import transaction
 from django.core.management.base import BaseCommand, CommandError
