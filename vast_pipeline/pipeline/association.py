@@ -19,7 +19,6 @@ from .utils import (
     add_new_many_to_one_relations,
     reconstruct_associtaion_dfs
 )
-from vast_pipeline.models import Association
 from vast_pipeline.pipeline.config import PipelineConfig
 from vast_pipeline.utils.utils import StopWatch
 

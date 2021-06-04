@@ -9,7 +9,7 @@ from astropy.coordinates import Angle
 from django.test import SimpleTestCase
 
 from vast_pipeline.pipeline.association import (
-    one_to_many_basic, 
+    one_to_many_basic,
     one_to_many_advanced,
     many_to_many_advanced,
     many_to_one_advanced,
@@ -33,7 +33,7 @@ def parse_or_nan(x):
     ----------
     s : str
         String to parse.
-    
+
     Returns
     -------
     The parsed string, or NaN if it couldn't be parsed.
@@ -46,7 +46,7 @@ def parse_or_nan(x):
 
 class OneToManyBasicTest(SimpleTestCase):
     '''
-    Tests for one_to_many_basic in association.py 
+    Tests for one_to_many_basic in association.py
     '''
 
     @classmethod
@@ -56,35 +56,35 @@ class OneToManyBasicTest(SimpleTestCase):
         '''
         super().setUpClass()
         self.skyc2_srcs_nodup = pd.read_csv(
-            os.path.join(DATA_PATH, 'skyc2_srcs_nodup.csv'), 
+            os.path.join(DATA_PATH, 'skyc2_srcs_nodup.csv'),
             header=0
         )
         self.skyc2_srcs_out = pd.read_csv(
-            os.path.join(DATA_PATH, 'skyc2_srcs_out.csv'), 
+            os.path.join(DATA_PATH, 'skyc2_srcs_out.csv'),
             header=0,
             converters={'related': parse_or_nan}
         )
         self.sources_df_in = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_in.csv'), 
+            os.path.join(DATA_PATH, 'sources_df_in.csv'),
             header=0
         )
         self.sources_df_out = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_out.csv'), 
+            os.path.join(DATA_PATH, 'sources_df_out.csv'),
             header=0
         )
 
     def test_duplicated_skyc2_empty(self):
         '''
-        Test if one_to_many_basic will return the input dataframes unchanged 
+        Test if one_to_many_basic will return the input dataframes unchanged
         when there are no duplicate sources in skyc2_srcs. Repeated values in
-        source are duplicates, ignoring -1 values. 
+        source are duplicates, ignoring -1 values.
         '''
         skyc2_srcs = pd.read_csv(
-            os.path.join(DATA_PATH, 'skyc2_srcs_nodup.csv'), 
+            os.path.join(DATA_PATH, 'skyc2_srcs_nodup.csv'),
             header=0
         )
         sources_df = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_in.csv'), 
+            os.path.join(DATA_PATH, 'sources_df_in.csv'),
             header=0
         )
 
@@ -95,13 +95,13 @@ class OneToManyBasicTest(SimpleTestCase):
 
     def test_duplicated_skyc2_nonempty(self):
         '''
-        Test if one_to_many_basic correctly identifies duplicate sources and 
+        Test if one_to_many_basic correctly identifies duplicate sources and
         relates them.
 
-        skyc2_srcs: all duplicate sources should have new unique source ids, 
+        skyc2_srcs: all duplicate sources should have new unique source ids,
         the new ids are assigned in order of d2d - min d2d retains original id,
-        duplicate sources should have related sources listed using new source 
-        ids, if >2 duplicates of 1 source then the sources with new ids will 
+        duplicate sources should have related sources listed using new source
+        ids, if >2 duplicates of 1 source then the sources with new ids will
         be related to the old id whilst the old id will be related to all new
         ids, and other columns should remain unchanged.
         sources_df: must contain at least all source ids present in skyc2_src,
@@ -113,7 +113,7 @@ class OneToManyBasicTest(SimpleTestCase):
             header=0
         )
         sources_df = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_in.csv'), 
+            os.path.join(DATA_PATH, 'sources_df_in.csv'),
             header=0
         )
 
@@ -139,29 +139,29 @@ class OneToManyAdvancedTest(SimpleTestCase):
             header=0
         )
         self.temp_srcs_advanced_out = pd.read_csv(
-            os.path.join(DATA_PATH, 'temp_srcs_advanced_out.csv'), 
+            os.path.join(DATA_PATH, 'temp_srcs_advanced_out.csv'),
             header=0,
             converters={'related_skyc1': parse_or_nan}
         )
         self.temp_srcs_deruiter_out = pd.read_csv(
-            os.path.join(DATA_PATH, 'temp_srcs_deruiter_out.csv'), 
+            os.path.join(DATA_PATH, 'temp_srcs_deruiter_out.csv'),
             header=0,
             converters={'related_skyc1': parse_or_nan}
         )
         self.sources_df_in = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_in.csv'), 
+            os.path.join(DATA_PATH, 'sources_df_in.csv'),
             header=0
         )
         self.sources_df_out = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_out.csv'), 
+            os.path.join(DATA_PATH, 'sources_df_out.csv'),
             header=0
         )
 
     def test_duplicated_skyc1_empty(self):
         '''
         Test if one_to_many_advanced will return the input dataframes unchanged
-        when there are no duplicate sources in temp_srcs. Repeated values in 
-        source_skyc1 are duplicates. 
+        when there are no duplicate sources in temp_srcs. Repeated values in
+        source_skyc1 are duplicates.
         '''
 
         temp_srcs = pd.read_csv(
@@ -169,13 +169,13 @@ class OneToManyAdvancedTest(SimpleTestCase):
             header=0
         )
         sources_df = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_in.csv'), 
+            os.path.join(DATA_PATH, 'sources_df_in.csv'),
             header=0
         )
 
         temp_srcs, sources_df = one_to_many_advanced(
-            temp_srcs, 
-            sources_df, 
+            temp_srcs,
+            sources_df,
             method='advanced'
         )
 
@@ -186,12 +186,12 @@ class OneToManyAdvancedTest(SimpleTestCase):
     def test_method_advanced(self):
         '''
         Test if one_to_many_advanced correctly identifies duplicate sources and
-        relates them for method=advanced. 
+        relates them for method=advanced.
 
-        temp_srcs: all duplicate sources should have new unique source ids, 
+        temp_srcs: all duplicate sources should have new unique source ids,
         the new ids are assigned in order of d2d_skyc2 - min d2d_skyc2 retains
-        original id, duplicate sources should have related sources listed using 
-        new source ids, if >2 duplicates of 1 source then the sources with new 
+        original id, duplicate sources should have related sources listed using
+        new source ids, if >2 duplicates of 1 source then the sources with new
         ids will be related to the old id whilst the old id will be related to
         all new ids, and other columns should remain unchanged.
         sources_df: must contain at least all source ids present in temp_src,
@@ -199,17 +199,17 @@ class OneToManyAdvancedTest(SimpleTestCase):
         assigned to the new id.
         '''
         temp_srcs = pd.read_csv(
-            os.path.join(DATA_PATH, 'temp_srcs_dup.csv'), 
+            os.path.join(DATA_PATH, 'temp_srcs_dup.csv'),
             header=0
         )
         sources_df = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_in.csv'), 
+            os.path.join(DATA_PATH, 'sources_df_in.csv'),
             header=0
         )
 
         temp_srcs, sources_df = one_to_many_advanced(
-            temp_srcs, 
-            sources_df, 
+            temp_srcs,
+            sources_df,
             method='advanced'
         )
 
@@ -219,30 +219,30 @@ class OneToManyAdvancedTest(SimpleTestCase):
     def test_method_deruiter(self):
         '''
         Test if one_to_many_advanced correctly identifies duplicate sources and
-        relates them for method=deruiter. 
+        relates them for method=deruiter.
 
-        temp_srcs: all duplicate sources should have new unique source ids, 
-        the new ids are assigned in order of dr - min dr retains original id, 
-        duplicate sources should have related sources listed using new source 
-        ids, if >2 duplicates of 1 source then the sources with new ids will be 
-        related to the old id whilst the old id will be related to all new ids, 
+        temp_srcs: all duplicate sources should have new unique source ids,
+        the new ids are assigned in order of dr - min dr retains original id,
+        duplicate sources should have related sources listed using new source
+        ids, if >2 duplicates of 1 source then the sources with new ids will be
+        related to the old id whilst the old id will be related to all new ids,
         and other columns should remain unchanged.
         sources_df: must contain at least all source ids present in temp_src,
         rows with same id as duplicates in temp_srcs will be duplicated and
         assigned to the new id.
         '''
         temp_srcs = pd.read_csv(
-            os.path.join(DATA_PATH, 'temp_srcs_dup.csv'), 
+            os.path.join(DATA_PATH, 'temp_srcs_dup.csv'),
             header=0
         )
         sources_df = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_in.csv'), 
+            os.path.join(DATA_PATH, 'sources_df_in.csv'),
             header=0
         )
 
         temp_srcs, sources_df = one_to_many_advanced(
-            temp_srcs, 
-            sources_df, 
+            temp_srcs,
+            sources_df,
             method='deruiter'
         )
 
@@ -262,7 +262,7 @@ class ManyToManyAdvancedTest(SimpleTestCase):
         '''
         super().setUpClass()
         self.temp_srcs_nodup = pd.read_csv(
-            os.path.join(DATA_PATH, 'temp_srcs_nodup.csv'), 
+            os.path.join(DATA_PATH, 'temp_srcs_nodup.csv'),
             header=0
         )
         self.temp_srcs_advanced_drop = pd.read_csv(
@@ -270,10 +270,10 @@ class ManyToManyAdvancedTest(SimpleTestCase):
             header=0
         )
         self.temp_srcs_deruiter_drop = pd.read_csv(
-            os.path.join(DATA_PATH, 'temp_srcs_deruiter_drop.csv'), 
+            os.path.join(DATA_PATH, 'temp_srcs_deruiter_drop.csv'),
             header=0
         )
-    
+
     def test_m_to_m_empty(self):
         '''
         Test if many_to_many_advanced will return the input dataframe unchanged
@@ -281,7 +281,7 @@ class ManyToManyAdvancedTest(SimpleTestCase):
         and souce_skyc1 need to be repeated for it to be a duplicate source.
         '''
         temp_srcs = pd.read_csv(
-            os.path.join(DATA_PATH, 'temp_srcs_nodup.csv'), 
+            os.path.join(DATA_PATH, 'temp_srcs_nodup.csv'),
             header=0
         )
 
@@ -292,16 +292,16 @@ class ManyToManyAdvancedTest(SimpleTestCase):
     def test_method_advanced(self):
         '''
         Testing if many_to_many_advanced drops the correct rows for duplicate
-        sources when method=advanced. Duplicates are when both index_old_skyc2 
-        and souce_skyc1 are repeated. The duplicate rows with 
+        sources when method=advanced. Duplicates are when both index_old_skyc2
+        and souce_skyc1 are repeated. The duplicate rows with
         d2d_skyc2 > min(d2d_skyc2) will be dropped.
 
-        This test assumes that the index of the dataframe doesn't matter. 
+        This test assumes that the index of the dataframe doesn't matter.
         '''
         temp_srcs = pd.read_csv(
             os.path.join(DATA_PATH, 'temp_srcs_dup.csv'),
             header=0
-        ) 
+        )
 
         temp_srcs = many_to_many_advanced(temp_srcs, method='advanced')
         temp_srcs.reset_index(drop=True, inplace=True)
@@ -311,8 +311,8 @@ class ManyToManyAdvancedTest(SimpleTestCase):
     def test_method_deruiter(self):
         '''
         Testing if many_to_many_advanced drops the correct rows for duplicate
-        sources when method=deruiter. Duplicates are when both index_old_skyc2 
-        and souce_skyc1 are repeated. The duplicate rows with dr > min(dr) will 
+        sources when method=deruiter. Duplicates are when both index_old_skyc2
+        and souce_skyc1 are repeated. The duplicate rows with dr > min(dr) will
         be dropped.
 
         This test assumes that the index of the dataframe doesn't matter.
@@ -320,7 +320,7 @@ class ManyToManyAdvancedTest(SimpleTestCase):
         temp_srcs = pd.read_csv(
             os.path.join(DATA_PATH, 'temp_srcs_dup.csv'),
             header=0
-        ) 
+        )
 
         temp_srcs = many_to_many_advanced(temp_srcs, method='deruiter')
         temp_srcs.reset_index(drop=True, inplace=True)
@@ -342,7 +342,7 @@ class ManyToOneAdvancedTest(SimpleTestCase):
         self.temp_srcs_nodup = pd.read_csv(
             os.path.join(DATA_PATH, 'temp_srcs_nodup.csv'),
             header=0
-        ) 
+        )
         self.temp_srcs_ind_rel = pd.read_csv(
             os.path.join(DATA_PATH, 'temp_srcs_ind_rel.csv'),
             header=0,
@@ -358,7 +358,7 @@ class ManyToOneAdvancedTest(SimpleTestCase):
         temp_srcs = pd.read_csv(
             os.path.join(DATA_PATH, 'temp_srcs_nodup.csv'),
             header=0
-        ) 
+        )
 
         temp_srcs = many_to_one_advanced(temp_srcs)
 
@@ -366,16 +366,16 @@ class ManyToOneAdvancedTest(SimpleTestCase):
 
     def test_many_to_one_advanced(self):
         '''
-        Testing if many_to_one_advanced relates the correct sources. Repeated 
-        values in index_old_skyc2 are identified, these rows take the 
-        source_skyc1 value without itself as related_skyc1 values. If there are 
-        no source_skyc1 values except itself, then related_skyc1 is []. If 
-        index_old_skyc2 is unique, then the previous related_skyc1 is retained. 
+        Testing if many_to_one_advanced relates the correct sources. Repeated
+        values in index_old_skyc2 are identified, these rows take the
+        source_skyc1 value without itself as related_skyc1 values. If there are
+        no source_skyc1 values except itself, then related_skyc1 is []. If
+        index_old_skyc2 is unique, then the previous related_skyc1 is retained.
         '''
         temp_srcs = pd.read_csv(
             os.path.join(DATA_PATH, 'temp_srcs_dup.csv'),
             header=0
-        ) 
+        )
 
         temp_srcs_out = many_to_one_advanced(temp_srcs)
 
@@ -384,15 +384,15 @@ class ManyToOneAdvancedTest(SimpleTestCase):
 
 class TestHelpers(SimpleTestCase):
     '''
-    Class which has some helper functions for testing. 
+    Class which has some helper functions for testing.
     '''
 
     def check_col(self, df1, df2, columns=['ra', 'dec', 'source', 'epoch']):
         '''
         Function which checks that certain columns of two DataFrames are
         equal for BasicAssociationTest and AdvancedAssociationTest.
-        
-        Not testing related column, it is used in one_to_many_basic, which is 
+
+        Not testing related column, it is used in one_to_many_basic, which is
         already tested. Not testing d2d column, it is output from Astropy.
 
         Parameters
@@ -425,15 +425,15 @@ class BasicAssociationTest(TestHelpers):
         super().setUpClass()
         self.sources_df_basic_out = pd.read_csv(
             os.path.join(DATA_PATH, 'sources_df_basic_out.csv')
-        ) 
+        )
         self.sources_df_no_new = pd.read_csv(
             os.path.join(DATA_PATH, 'sources_df_no_new.csv')
-        ) 
+        )
         self.sources_df_all = pd.read_csv(
             os.path.join(DATA_PATH, 'sources_df_all.csv')
-        ) 
+        )
         self.skyc1_srcs_in = pd.read_csv(
-            os.path.join(DATA_PATH, 'skyc1_srcs_in.csv'), 
+            os.path.join(DATA_PATH, 'skyc1_srcs_in.csv'),
             header=0
         )
         self.skyc1_srcs_out = pd.read_csv(
@@ -448,29 +448,29 @@ class BasicAssociationTest(TestHelpers):
     def test_no_new_skyc2_srcs(self):
         '''
         Test basic_association returns skyc1_srcs unchanged and sources_df with
-        new same sources under new epoch when given skyc2_srcs with no new 
-        sources. 
+        new same sources under new epoch when given skyc2_srcs with no new
+        sources.
         '''
         sources_df = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_ass_in.csv'), 
+            os.path.join(DATA_PATH, 'sources_df_ass_in.csv'),
             header=0
         )
         skyc1_srcs = pd.read_csv(
-            os.path.join(DATA_PATH, 'skyc1_srcs_in.csv'), 
+            os.path.join(DATA_PATH, 'skyc1_srcs_in.csv'),
             header=0
         )
         skyc1 = SkyCoord(
-            skyc1_srcs['ra'].tolist(), 
-            skyc1_srcs['dec'].tolist(), 
+            skyc1_srcs['ra'].tolist(),
+            skyc1_srcs['dec'].tolist(),
             unit='deg'
         )
         skyc2_srcs = pd.read_csv(
-            os.path.join(DATA_PATH, 'skyc2_srcs_no_new.csv'), 
+            os.path.join(DATA_PATH, 'skyc2_srcs_no_new.csv'),
             header=0
         )
         skyc2 = SkyCoord(
-            skyc2_srcs['ra'].tolist(), 
-            skyc2_srcs['dec'].tolist(), 
+            skyc2_srcs['ra'].tolist(),
+            skyc2_srcs['dec'].tolist(),
             unit='deg'
         )
         limit = Angle(10, unit='arcsec')
@@ -485,28 +485,28 @@ class BasicAssociationTest(TestHelpers):
     def test_zero_limit(self):
         '''
         Test basic_association returns all sources in skyc2_srcs as new sources
-        when the limit is zero. 
+        when the limit is zero.
         '''
         sources_df = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_ass_in.csv'), 
+            os.path.join(DATA_PATH, 'sources_df_ass_in.csv'),
             header=0
         )
         skyc1_srcs = pd.read_csv(
-            os.path.join(DATA_PATH, 'skyc1_srcs_in.csv'), 
+            os.path.join(DATA_PATH, 'skyc1_srcs_in.csv'),
             header=0
         )
         skyc1 = SkyCoord(
-            skyc1_srcs['ra'].tolist(), 
-            skyc1_srcs['dec'].tolist(), 
+            skyc1_srcs['ra'].tolist(),
+            skyc1_srcs['dec'].tolist(),
             unit='deg'
         )
         skyc2_srcs = pd.read_csv(
-            os.path.join(DATA_PATH, 'skyc2_srcs_in.csv'), 
+            os.path.join(DATA_PATH, 'skyc2_srcs_in.csv'),
             header=0
         )
         skyc2 = SkyCoord(
-            skyc2_srcs['ra'].tolist(), 
-            skyc2_srcs['dec'].tolist(), 
+            skyc2_srcs['ra'].tolist(),
+            skyc2_srcs['dec'].tolist(),
             unit='deg'
         )
         limit = Angle(0, unit='arcsec')
@@ -524,25 +524,25 @@ class BasicAssociationTest(TestHelpers):
         skyc1_srcs and sources_df.
         '''
         sources_df = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_ass_in.csv'), 
+            os.path.join(DATA_PATH, 'sources_df_ass_in.csv'),
             header=0
         )
         skyc1_srcs = pd.read_csv(
-            os.path.join(DATA_PATH, 'skyc1_srcs_in.csv'), 
+            os.path.join(DATA_PATH, 'skyc1_srcs_in.csv'),
             header=0
         )
         skyc1 = SkyCoord(
-            skyc1_srcs['ra'].tolist(), 
-            skyc1_srcs['dec'].tolist(), 
+            skyc1_srcs['ra'].tolist(),
+            skyc1_srcs['dec'].tolist(),
             unit='deg'
         )
         skyc2_srcs = pd.read_csv(
-            os.path.join(DATA_PATH, 'skyc2_srcs_in.csv'), 
+            os.path.join(DATA_PATH, 'skyc2_srcs_in.csv'),
             header=0
         )
         skyc2 = SkyCoord(
-            skyc2_srcs['ra'].tolist(), 
-            skyc2_srcs['dec'].tolist(), 
+            skyc2_srcs['ra'].tolist(),
+            skyc2_srcs['dec'].tolist(),
             unit='deg'
         )
         limit = Angle(10, unit='arcsec')
@@ -568,15 +568,15 @@ class AdvancedAssociationTest(TestHelpers):
         super().setUpClass()
         self.sources_df_advanced_out = pd.read_csv(
             os.path.join(DATA_PATH, 'sources_df_advanced_out.csv')
-        ) 
+        )
         self.sources_df_no_new = pd.read_csv(
             os.path.join(DATA_PATH, 'sources_df_no_new.csv')
-        ) 
+        )
         self.sources_df_all = pd.read_csv(
             os.path.join(DATA_PATH, 'sources_df_all.csv')
-        ) 
+        )
         self.skyc1_srcs_in = pd.read_csv(
-            os.path.join(DATA_PATH, 'skyc1_srcs_in.csv'), 
+            os.path.join(DATA_PATH, 'skyc1_srcs_in.csv'),
             header=0
         )
         self.skyc1_srcs_out = pd.read_csv(
@@ -590,37 +590,37 @@ class AdvancedAssociationTest(TestHelpers):
 
     def test_no_new_skyc2_srcs(self):
         '''
-        Test advanced_association returns skyc1_srcs unchanged and sources_df 
-        with new same sources under new epoch when given skyc2_srcs with no new 
-        sources. 
+        Test advanced_association returns skyc1_srcs unchanged and sources_df
+        with new same sources under new epoch when given skyc2_srcs with no new
+        sources.
         '''
         sources_df = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_ass_in.csv'), 
+            os.path.join(DATA_PATH, 'sources_df_ass_in.csv'),
             header=0
         )
         skyc1_srcs = pd.read_csv(
-            os.path.join(DATA_PATH, 'skyc1_srcs_in.csv'), 
+            os.path.join(DATA_PATH, 'skyc1_srcs_in.csv'),
             header=0
         )
         skyc1 = SkyCoord(
-            skyc1_srcs['ra'].tolist(), 
-            skyc1_srcs['dec'].tolist(), 
+            skyc1_srcs['ra'].tolist(),
+            skyc1_srcs['dec'].tolist(),
             unit='deg'
         )
         skyc2_srcs = pd.read_csv(
-            os.path.join(DATA_PATH, 'skyc2_srcs_no_new.csv'), 
+            os.path.join(DATA_PATH, 'skyc2_srcs_no_new.csv'),
             header=0
         )
         skyc2 = SkyCoord(
-            skyc2_srcs['ra'].tolist(), 
-            skyc2_srcs['dec'].tolist(), 
+            skyc2_srcs['ra'].tolist(),
+            skyc2_srcs['dec'].tolist(),
             unit='deg'
         )
         dr_limit = 5.68
         bw_max = Angle(10, unit='arcsec')
 
         sources_df, skyc1_srcs = advanced_association(
-            'advanced', sources_df, skyc1_srcs, skyc1, 
+            'advanced', sources_df, skyc1_srcs, skyc1,
             skyc2_srcs, skyc2, dr_limit, bw_max
         )
 
@@ -629,36 +629,36 @@ class AdvancedAssociationTest(TestHelpers):
 
     def test_zero_bw_max(self):
         '''
-        Test advanced_association returns all sources in skyc2_srcs as new 
-        sources when the limit is zero. 
+        Test advanced_association returns all sources in skyc2_srcs as new
+        sources when the limit is zero.
         '''
         sources_df = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_ass_in.csv'), 
+            os.path.join(DATA_PATH, 'sources_df_ass_in.csv'),
             header=0
         )
         skyc1_srcs = pd.read_csv(
-            os.path.join(DATA_PATH, 'skyc1_srcs_in.csv'), 
+            os.path.join(DATA_PATH, 'skyc1_srcs_in.csv'),
             header=0
         )
         skyc1 = SkyCoord(
-            skyc1_srcs['ra'].tolist(), 
-            skyc1_srcs['dec'].tolist(), 
+            skyc1_srcs['ra'].tolist(),
+            skyc1_srcs['dec'].tolist(),
             unit='deg'
         )
         skyc2_srcs = pd.read_csv(
-            os.path.join(DATA_PATH, 'skyc2_srcs_in.csv'), 
+            os.path.join(DATA_PATH, 'skyc2_srcs_in.csv'),
             header=0
         )
         skyc2 = SkyCoord(
-            skyc2_srcs['ra'].tolist(), 
-            skyc2_srcs['dec'].tolist(), 
+            skyc2_srcs['ra'].tolist(),
+            skyc2_srcs['dec'].tolist(),
             unit='deg'
         )
         dr_limit = 5.68
         bw_max = Angle(0, unit='arcsec')
 
         sources_df, skyc1_srcs = advanced_association(
-            'advanced', sources_df, skyc1_srcs, skyc1, 
+            'advanced', sources_df, skyc1_srcs, skyc1,
             skyc2_srcs, skyc2, dr_limit, bw_max
         )
 
@@ -667,70 +667,70 @@ class AdvancedAssociationTest(TestHelpers):
 
     def test_advanced(self):
         '''
-        Test advanced_association correctly appends the sources in skyc2_srcs 
+        Test advanced_association correctly appends the sources in skyc2_srcs
         into skyc1_srcs and sources_df for method=advanced.
         '''
         sources_df = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_ass_in.csv'), 
+            os.path.join(DATA_PATH, 'sources_df_ass_in.csv'),
             header=0
         )
         skyc1_srcs = pd.read_csv(
-            os.path.join(DATA_PATH, 'skyc1_srcs_in.csv'), 
+            os.path.join(DATA_PATH, 'skyc1_srcs_in.csv'),
             header=0
         )
         skyc1 = SkyCoord(
-            skyc1_srcs['ra'].tolist(), 
-            skyc1_srcs['dec'].tolist(), 
+            skyc1_srcs['ra'].tolist(),
+            skyc1_srcs['dec'].tolist(),
             unit='deg'
         )
         skyc2_srcs = pd.read_csv(
-            os.path.join(DATA_PATH, 'skyc2_srcs_in.csv'), 
+            os.path.join(DATA_PATH, 'skyc2_srcs_in.csv'),
             header=0
         )
         skyc2 = SkyCoord(
-            skyc2_srcs['ra'].tolist(), 
-            skyc2_srcs['dec'].tolist(), 
+            skyc2_srcs['ra'].tolist(),
+            skyc2_srcs['dec'].tolist(),
             unit='deg'
         )
         dr_limit = 5.68
         bw_max = Angle(10, unit='arcsec')
 
         sources_df, skyc1_srcs = advanced_association(
-            'advanced', sources_df, skyc1_srcs, skyc1, 
+            'advanced', sources_df, skyc1_srcs, skyc1,
             skyc2_srcs, skyc2, dr_limit, bw_max
-        ) 
+        )
 
         self.check_col(sources_df, self.sources_df_advanced_out)
         self.check_col(skyc1_srcs, self.skyc1_srcs_out)
 
     def test_deruiter(self):
         '''
-        Test advanced_association correctly appends the sources in skyc2_srcs 
+        Test advanced_association correctly appends the sources in skyc2_srcs
         into skyc1_srcs and sources_df for method=deruiter.
 
-        Note: this test is redundant, method is already tested in other 
+        Note: this test is redundant, method is already tested in other
         functions. Better test would be if dr_limit gives different result.
         '''
         sources_df = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_ass_in.csv'), 
+            os.path.join(DATA_PATH, 'sources_df_ass_in.csv'),
             header=0
         )
         skyc1_srcs = pd.read_csv(
-            os.path.join(DATA_PATH, 'skyc1_srcs_in.csv'), 
+            os.path.join(DATA_PATH, 'skyc1_srcs_in.csv'),
             header=0
         )
         skyc1 = SkyCoord(
-            skyc1_srcs['ra'].tolist(), 
-            skyc1_srcs['dec'].tolist(), 
+            skyc1_srcs['ra'].tolist(),
+            skyc1_srcs['dec'].tolist(),
             unit='deg'
         )
         skyc2_srcs = pd.read_csv(
-            os.path.join(DATA_PATH, 'skyc2_srcs_in.csv'), 
+            os.path.join(DATA_PATH, 'skyc2_srcs_in.csv'),
             header=0
         )
         skyc2 = SkyCoord(
-            skyc2_srcs['ra'].tolist(), 
-            skyc2_srcs['dec'].tolist(), 
+            skyc2_srcs['ra'].tolist(),
+            skyc2_srcs['dec'].tolist(),
             unit='deg'
         )
         dr_limit = 5.68
@@ -759,20 +759,20 @@ class CorrectParallelSourceIdsTest(SimpleTestCase):
             os.path.join(DATA_PATH, 'sources_df_in.csv'),
             header=0,
             converters={'related': parse_or_nan}
-        ) 
+        )
         self.sources_df_out_2 = pd.read_csv(
             os.path.join(DATA_PATH, 'sources_df_out_2.csv'),
             header=0,
             converters={'related': parse_or_nan}
-        ) 
+        )
 
     def test_zero(self):
         '''
-        Test _correct_parallel_source_ids doesn't change the input df when 
+        Test _correct_parallel_source_ids doesn't change the input df when
         correction=0.
         '''
         df = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_in.csv'), 
+            os.path.join(DATA_PATH, 'sources_df_in.csv'),
             header=0,
             converters={'related': parse_or_nan}
         )
@@ -787,8 +787,8 @@ class CorrectParallelSourceIdsTest(SimpleTestCase):
         and relate column by the correction amount.
         '''
         df = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_in.csv'), 
-            header=0, 
+            os.path.join(DATA_PATH, 'sources_df_in.csv'),
+            header=0,
             converters={'related': parse_or_nan}
         )
 

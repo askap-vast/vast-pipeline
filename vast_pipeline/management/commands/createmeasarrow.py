@@ -5,8 +5,6 @@ previously completed pipeline run.
 
 import os
 import logging
-import traceback
-import warnings
 
 from argparse import ArgumentParser
 from django.core.management.base import BaseCommand, CommandError
