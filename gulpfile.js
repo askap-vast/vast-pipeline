@@ -129,13 +129,18 @@ function js9MoveGif() {
 }
 
 function js9FixStaticUrl(bc) {
-  const result = require('dotenv').config({ 'path': './webinterface/.env' })
-  if (result.error) {
-    throw result.error
+  // If STATIC_URL isn't in the env, load it from the .env file. We also need BASE_URL
+  // but since it's optional it may not be set.
+  if (process.env.STATIC_URL === undefined) {
+    const result = require('dotenv').config({ 'path': './webinterface/.env' })
+    // note that .config automatically copies the env vars to process.env
+    if (result.error) {
+      throw result.error
+    }
   }
-  let base_url = result.parsed.BASE_URL || null,
-    static_url = result.parsed.STATIC_URL || '/static/',
-    fileContent = fs.readFileSync(paths.js9Target + '/js9prefs.js', 'utf8')
+  let base_url = process.env.BASE_URL || null
+  let static_url = process.env.STATIC_URL || '/static/'
+  let fileContent = fs.readFileSync(paths.js9Target + '/js9prefs.js', 'utf8')
   let serving_url = (base_url) ? '/' + base_url.split('/').join('') + '/' + static_url.split('/').join('') + '/' : static_url
   return fs.writeFile(
     paths.js9Target + '/js9prefs.js',
