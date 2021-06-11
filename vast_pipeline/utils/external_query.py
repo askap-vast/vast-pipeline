@@ -43,6 +43,73 @@ def simbad(coord: SkyCoord, radius: Angle) -> List[Dict[Any, Any]]:
 
 
 def ned(coord: SkyCoord, radius: Angle) -> List[Dict[Any, Any]]:
+    # NED API doesn't supply the long-form object types.
+    # Copied from https://ned.ipac.caltech.edu/Documents/Guides/Database
+    NED_OTYPES = {
+        "*": "Star or Point Source",
+        "**": "Double star",
+        "*Ass": "Stellar association",
+        "*Cl": "Star cluster",
+        "AbLS": "Absorption line system",
+        "Blue*": "Blue star",
+        "C*": "Carbon star",
+        "EmLS": "Emission line source",
+        "EmObj": "Emission object",
+        "exG*": "Extragalactic star (not a member of an identified galaxy)",
+        "Flare*": "Flare star",
+        "G": "Galaxy",
+        "GammaS": "Gamma ray source",
+        "GClstr": "Cluster of galaxies",
+        "GGroup": "Group of galaxies",
+        "GPair": "Galaxy pair",
+        "GTrpl": "Galaxy triple",
+        "G_Lens": "Lensed image of a galaxy",
+        "HII": "HII region",
+        "IrS": "Infrared source",
+        "MCld": "Molecular cloud",
+        "Neb": "Nebula",
+        "Nova": "Nova",
+        "Other": "Other classification (e.g. comet; plate defect)",
+        "PN": "Planetary nebula",
+        "PofG": "Part of galaxy",
+        "Psr": "Pulsar",
+        "QGroup": "Group of QSOs",
+        "QSO": "Quasi-stellar object",
+        "Q_Lens": "Lensed image of a QSO",
+        "RadioS": "Radio source",
+        "Red*": "Red star",
+        "RfN": "Reflection nebula",
+        "SN": "Supernova",
+        "SNR": "Supernova remnant",
+        "UvES": "Ultraviolet excess source",
+        "UvS": "Ultraviolet source",
+        "V*": "Variable star",
+        "VisS": "Visual source",
+        "WD*": "White dwarf",
+        "WR*": "Wolf-Rayet star",
+        "XrayS": "X-ray source",
+        "!*": "Galactic star",
+        "!**": "Galactic double star",
+        "!*Ass": "Galactic star association",
+        "!*Cl": "Galactic Star cluster",
+        "!Blue*": "Galactic blue star",
+        "!C*": "Galactic carbon star",
+        "!EmObj": "Galactic emission line object",
+        "!Flar*": "Galactic flare star",
+        "!HII": "Galactic HII region",
+        "!MCld": "Galactic molecular cloud",
+        "!Neb": "Galactic nebula",
+        "!Nova": "Galactic nova",
+        "!PN": "Galactic planetary nebula",
+        "!Psr": "Galactic pulsar",
+        "!RfN": "Galactic reflection nebula",
+        "!Red*": "Galactic red star",
+        "!SN": "Galactic supernova",
+        "!SNR": "Galactic supernova remnant",
+        "!V*": "Galactic variable star",
+        "!WD*": "Galactic white dwarf",
+        "!WR*": "Galactic Wolf-Rayet star",
+    }
     ned_result_table = Ned.query_region(coord, radius=radius)
     if ned_result_table is None or len(ned_result_table) == 0:
         ned_results_dict_list = []
@@ -59,7 +126,7 @@ def ned(coord: SkyCoord, radius: Angle) -> List[Dict[Any, Any]]:
                 "DEC": "dec_dms",
             }
         )
-        ned_results_df["otype_long"] = ""  # NED does not supply verbose object types
+        ned_results_df["otype_long"] = ned_results_df.otype.replace(NED_OTYPES)
         # convert NED result separation (arcmin) to arcsec
         ned_results_df["separation_arcsec"] = ned_results_df["separation_arcsec"] * 60
         # convert coordinates to RA (hms) Dec (dms) strings
