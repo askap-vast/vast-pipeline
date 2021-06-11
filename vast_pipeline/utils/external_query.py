@@ -5,7 +5,23 @@ from astroquery.simbad import Simbad
 from astroquery.ned import Ned
 
 
-def simbad(coord: SkyCoord, radius: Angle) -> List[Dict[Any, Any]]:
+def simbad(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
+    """Perform a cone search for sources with SIMBAD.
+
+    Args:
+        coord: the coordinate of the centre of the cone.
+        radius: the radius of the cone in angular units.
+
+    Returns:
+        A list of dicts, where each dict is a query result row with the following keys:
+            object_name: the name of the astronomical object.
+            database: the source of the result, i.e. SIMBAD.
+            separation_arcsec: separation to the query coordinate in arcsec.
+            otype: object type.
+            otype_long: long form of the object type.
+            ra_hms: RA coordinate string in <HH>h<MM>m<SS.SSS>s format.
+            dec_dms: Dec coordinate string in ±<DD>d<MM>m<SS.SSS>s format.
+    """
     CustomSimbad = Simbad()
     CustomSimbad.add_votable_fields(
         "distance_result",
@@ -42,7 +58,23 @@ def simbad(coord: SkyCoord, radius: Angle) -> List[Dict[Any, Any]]:
     return simbad_results_dict_list
 
 
-def ned(coord: SkyCoord, radius: Angle) -> List[Dict[Any, Any]]:
+def ned(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
+    """Perform a cone search for sources with NED.
+
+    Args:
+        coord: the coordinate of the centre of the cone.
+        radius: the radius of the cone in angular units.
+
+    Returns:
+        A list of dicts, where each dict is a query result row with the following keys:
+            object_name: the name of the astronomical object.
+            database: the source of the result, i.e. NED.
+            separation_arcsec: separation to the query coordinate in arcsec.
+            otype: object type.
+            otype_long: long form of the object type.
+            ra_hms: RA coordinate string in <HH>h<MM>m<SS.SSS>s format.
+            dec_dms: Dec coordinate string in ±<DD>d<MM>m<SS.SSS>s format.
+    """
     # NED API doesn't supply the long-form object types.
     # Copied from https://ned.ipac.caltech.edu/Documents/Guides/Database
     NED_OTYPES = {
