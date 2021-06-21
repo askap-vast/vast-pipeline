@@ -70,11 +70,6 @@ inputs:
   {% endfor %}
 {% endif %}
 
-source_monitoring:
-  # Source monitoring can be done both forward and backward in 'time'.
-  # Monitoring backward means re-opening files that were previously processed and can be slow.
-  monitor: {{ monitor }}
-
 measurements:
   # Replace the selavy errors with Condon (1997) errors.
   condon_errors: {{ use_condon_errors }}

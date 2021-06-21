@@ -573,7 +573,6 @@ class ImageIngestConfig(PipelineConfig):
     SCHEMA = yaml.Map(
         {
             "inputs": yaml.Map(PipelineConfig._SCHEMA_INPUTS),
-            "source_monitoring": yaml.Map({"monitor": yaml.Bool()}),
             "measurements": yaml.Map(
                 {
                     "condon_errors": yaml.Bool(),
