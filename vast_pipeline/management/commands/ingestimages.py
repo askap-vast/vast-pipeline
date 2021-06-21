@@ -11,6 +11,12 @@ logger = logging.getLogger(__name__)
 
 
 class _DummyPipeline(object):
+    """
+    Dummy Pipeline class that provides the right methods and attributes
+    for interfacing with the make_upload_images() function.
+
+    Its main purpose is to correctly set the attribute: img_paths
+    """
     make_img_paths = Pipeline.match_images_to_data
 
     def __init__(self,config):
@@ -50,15 +56,19 @@ class Command(BaseCommand):
             # set the traceback on
             options['traceback'] = True
 
+        # Create image ingestion configuration object from input file
         image_config = ImageIngestConfig.from_file(
             options['image_config'][0], validate=False
         )
 
+        # Validate the config
         try:
             image_config.validate()
         except PipelineConfigError as e:
             raise CommandError(e)
 
+        # Create a dummy Pipeline instance using the given image ingestion configuration options
         d = _DummyPipeline(image_config)
 
+        # Read, measure and upload the images listed in the image ingestion config
         make_upload_images(d.img_paths,image_config.image_opts())
