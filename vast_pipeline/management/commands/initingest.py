@@ -16,7 +16,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            'file',
+            'config_file_name',
             nargs=1,
             type=str,
             help=('Filename to write template ingest configuration to.')
@@ -36,7 +36,7 @@ class Command(BaseCommand):
             **settings.PIPE_RUN_CONFIG_DEFAULTS
             )
 
-        fname = options['file'][0]
+        fname = options['config_file_name'][0]
         print("Writing template to: ", fname)
         with open(fname, 'w') as f:
             f.write(template_str+"\n")

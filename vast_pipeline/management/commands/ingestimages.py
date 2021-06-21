@@ -32,19 +32,19 @@ class _DummyPipeline(object):
 
 class Command(BaseCommand):
     """
-    This script ingests images into the database along with extracting,
-    correcting and saving the measurements and obtaining estimates of the rms.
+    This script runs the first part of the pipeline only. It ingests a set of
+    images into the database along with their measurements.
     """
     help = (
-        'Injects an image into the database'
+        'Ingest/add a set of images to the database'
     )
 
     def add_arguments(self, parser):
         parser.add_argument(
-            'image_config',
+            'image_ingest_config',
             nargs=1,
             type=str,
-            help=('Image ingestion configuration file.')
+            help=('Image ingestion configuration filename/path.')
         )
 
     def handle(self, *args, **options):
@@ -58,7 +58,7 @@ class Command(BaseCommand):
 
         # Create image ingestion configuration object from input file
         image_config = ImageIngestConfig.from_file(
-            options['image_config'][0], validate=False
+            options['image_ingest_config'][0], validate=False
         )
 
         # Validate the config

@@ -80,6 +80,7 @@ nav:
     - Processing a Run: using/processrun.md
     - Adding Images to a Run: using/addtorun.md
     - Deleting a Run: using/deleterun.md
+    - Adding new Images: using/ingestimages.md
     - Exploring the Pipeline Website:
       - Overview: exploringwebsite/websiteoverview.md
       - DataTables: exploringwebsite/datatables.md
@@ -131,6 +132,8 @@ nav:
             - clearpiperun.py: reference/management/commands/clearpiperun.md
             - createmeasarrow.py: reference/management/commands/createmeasarrow.md
             - debugrun.py: reference/management/commands/debugrun.md
+            - ingestimages.py: reference/management/commands/ingestimages.md
+            - initingest.py: reference/management/commands/initingest.md
             - initpiperun.py: reference/management/commands/initpiperun.md
             - restorepiperun.py: reference/management/commands/restorepiperun.md
             - runpipeline.py: reference/management/commands/runpipeline.md

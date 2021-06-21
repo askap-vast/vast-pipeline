@@ -19,6 +19,8 @@ Output:
   clearpiperun
   createmeasarrow
   debugrun
+  ingestimages
+  initingest
   initpiperun
   restorepiperun
   runpipeline
@@ -26,7 +28,7 @@ Output:
  ...
 ```
 
-There are 6 commands, described in detail below.
+There are 8 commands, described in detail below.
 
 ### clearpiperun
 
@@ -179,6 +181,103 @@ Nr of sources: 557
 Nr of association: 3276
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 ```
+
+### ingestimages
+
+This command runs the first part of the pipeline only. It ingests/adds a set of images, and their measurements, to the database. It requires an image ingestion configuration file as input. A template ingest configuration file can be generated with the `initigest` command (below).
+
+```terminal
+(pipeline_env)$ ./manage.py ingestimages --help
+```
+
+Output:
+
+```terminal
+usage: manage.py ingestimages [-h] [--version] [-v {0,1,2,3}]
+                              [--settings SETTINGS]
+                              [--pythonpath PYTHONPATH] [--traceback]
+                              [--no-color] [--force-color]
+                              [--skip-checks]
+                              image_ingest_config
+
+Ingest/add a set of images to the database
+
+positional arguments:
+  image_ingest_config   Image ingestion configuration filename/path.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --version             show program's version number and exit
+  -v {0,1,2,3}, --verbosity {0,1,2,3}
+                        Verbosity level; 0=minimal output, 1=normal
+                        output, 2=verbose output, 3=very verbose output
+  --settings SETTINGS   The Python path to a settings module, e.g.
+                        "myproject.settings.main". If this isn't
+                        provided, the DJANGO_SETTINGS_MODULE environment
+                        variable will be used.
+  --pythonpath PYTHONPATH
+                        A directory to add to the Python path, e.g.
+                        "/home/djangoprojects/myproject".
+  --traceback           Raise on CommandError exceptions
+  --no-color            Don't colorize the command output.
+  --force-color         Force colorization of the command output.
+  --skip-checks         Skip system checks.
+```
+
+General usage:
+
+```terminal
+(pipeline_env)$ ./manage.py ingestimages path/to/ingest_config_file
+```
+
+### initingest
+
+This command generates a template configuration file for use with the `ingestimages` command (above).
+
+```terminal
+(pipeline_env)$ ./manage.py initingest --help
+```
+
+Output:
+
+```terminal
+usage: manage.py initingest [-h] [--version] [-v {0,1,2,3}]
+                            [--settings SETTINGS]
+                            [--pythonpath PYTHONPATH] [--traceback]
+                            [--no-color] [--force-color] [--skip-checks]
+                            config_file_name
+
+Create a template image ingestion configuration file
+
+positional arguments:
+  config_file_name      Filename to write template ingest configuration to.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --version             show program's version number and exit
+  -v {0,1,2,3}, --verbosity {0,1,2,3}
+                        Verbosity level; 0=minimal output, 1=normal
+                        output, 2=verbose output, 3=very verbose output
+  --settings SETTINGS   The Python path to a settings module, e.g.
+                        "myproject.settings.main". If this isn't
+                        provided, the DJANGO_SETTINGS_MODULE environment
+                        variable will be used.
+  --pythonpath PYTHONPATH
+                        A directory to add to the Python path, e.g.
+                        "/home/djangoprojects/myproject".
+  --traceback           Raise on CommandError exceptions
+  --no-color            Don't colorize the command output.
+  --force-color         Force colorization of the command output.
+  --skip-checks         Skip system checks.
+```
+
+General usage:
+
+```terminal
+(pipeline_env)$ ./manage.py initigest ingest_file
+```
+
+Then modify the `ingest_file` to your needs.
 
 ### initpiperun
 
