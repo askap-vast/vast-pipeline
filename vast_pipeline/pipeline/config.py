@@ -480,7 +480,12 @@ class PipelineConfig:
             )
 
         # ensure background files are provided if source monitoring is requested
-        if self["source_monitoring"]["monitor"]:
+        try:
+            monitor = self["source_monitoring"]["monitor"]
+        except KeyError:
+            monitor = False
+
+        if monitor:
             inputs_schema = yaml.Map(
                 {
                     k: yaml.UniqueSeq(yaml.Str())
@@ -573,7 +578,6 @@ class ImageIngestConfig(PipelineConfig):
     SCHEMA = yaml.Map(
         {
             "inputs": yaml.Map(PipelineConfig._SCHEMA_INPUTS),
-            "source_monitoring": yaml.Map({"monitor": yaml.Bool()}),
             "measurements": yaml.Map(
                 {
                     "condon_errors": yaml.Bool(),
@@ -584,7 +588,3 @@ class ImageIngestConfig(PipelineConfig):
             ),
         }
     )
-
-    def __init__(self, config_yaml: yaml.YAML):
-        config_yaml["source_monitoring"] = {"monitor": False}
-        super().__init__(config_yaml)
