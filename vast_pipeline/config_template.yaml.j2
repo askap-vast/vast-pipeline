@@ -18,7 +18,7 @@ inputs:
     - {{ image }}
     {% endfor %}
   {% endfor %}
-  
+
   selavy:
   {% for epoch, image_list in selavy_files.items() %}
     '{{ epoch }}':
@@ -26,7 +26,7 @@ inputs:
     - {{ image }}
     {% endfor %}
   {% endfor %}
-  
+
   noise:
   {% for epoch, image_list in noise_files.items() %}
     '{{ epoch }}':
@@ -85,7 +85,7 @@ source_monitoring:
   # Minimum SNR ratio a source has to be if it was placed in the area of minimum rms in
   # the image from which it is to be extracted from. If lower than this value it is skipped
   min_sigma: {{ monitor_min_sigma }}
-  
+
   # Multiplicative scaling factor to the buffer size of the forced photometry from the
   # image edge
   edge_buffer_scale: {{ monitor_edge_buffer_scale }}
@@ -135,20 +135,24 @@ measurements:
   # 0.05 = 5% error, 0 = no minimum error.
   flux_fractional_error: {{ flux_perc_error }}
 
+  # Create 'measurements.arrow' and 'measurement_pairs.arrow' files at the end of
+  # a successful run.
+  write_arrow_files: {{ create_measurements_arrow_files }}
+
   # Replace the selavy errors with Condon (1997) errors.
+  # Only applied to NEW images that are not present in the database.
   condon_errors: {{ use_condon_errors }}
 
   # Sometimes the local rms for a source is reported as 0 by selavy.
   # Choose a value to use for the local rms in these cases in mJy/beam.
+  # Only applied to NEW images that are not present in the database.
   selavy_local_rms_fill_value: {{ selavy_local_rms_zero_fill_value }}
-
-  # Create 'measurements.arrow' and 'measurement_pairs.arrow' files at the end of 
-  # a successful run.
-  write_arrow_files: {{ create_measurements_arrow_files }}
 
   # The positional uncertainty of a measurement is in reality the fitting errors and the
   # astrometric uncertainty of the image/survey/instrument combined in quadrature.
   # These two parameters are the astrometric uncertainty in RA/Dec and they may be different.
+  # Only applied to NEW images that are not present in the database.
+  # Also used in forced extractions.
   ra_uncertainty: {{ astrometric_uncertainty_ra }} # arcsec
   dec_uncertainty: {{ astrometric_uncertainty_dec }}  # arcsec
 
