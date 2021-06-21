@@ -573,6 +573,7 @@ class ImageIngestConfig(PipelineConfig):
     SCHEMA = yaml.Map(
         {
             "inputs": yaml.Map(PipelineConfig._SCHEMA_INPUTS),
+            "source_monitoring": yaml.Map({"monitor": yaml.Bool()}),
             "measurements": yaml.Map(
                 {
                     "condon_errors": yaml.Bool(),
@@ -583,3 +584,7 @@ class ImageIngestConfig(PipelineConfig):
             ),
         }
     )
+
+    def __init__(self, config_yaml: yaml.YAML):
+        config_yaml["source_monitoring"] = {"monitor": False}
+        super().__init__(config_yaml)
