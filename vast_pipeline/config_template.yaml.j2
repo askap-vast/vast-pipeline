@@ -140,19 +140,18 @@ measurements:
   write_arrow_files: {{ create_measurements_arrow_files }}
 
   # Replace the selavy errors with Condon (1997) errors.
-  # Only applied to NEW images that are not present in the database.
+  # Only applied to NEW images that are not already present in the database.
   condon_errors: {{ use_condon_errors }}
 
   # Sometimes the local rms for a source is reported as 0 by selavy.
   # Choose a value to use for the local rms in these cases in mJy/beam.
-  # Only applied to NEW images that are not present in the database.
+  # Only applied to NEW images that are not already present in the database.
   selavy_local_rms_fill_value: {{ selavy_local_rms_zero_fill_value }}
 
   # The positional uncertainty of a measurement is in reality the fitting errors and the
   # astrometric uncertainty of the image/survey/instrument combined in quadrature.
   # These two parameters are the astrometric uncertainty in RA/Dec and they may be different.
-  # Only applied to NEW images that are not present in the database.
-  # Also used in forced extractions.
+  # Only applied to NEW images that are not already present in the database, and to forced extractions.
   ra_uncertainty: {{ astrometric_uncertainty_ra }} # arcsec
   dec_uncertainty: {{ astrometric_uncertainty_dec }}  # arcsec
 
