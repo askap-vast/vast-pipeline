@@ -1,7 +1,8 @@
 import logging
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from vast_pipeline.pipeline.config import ImageIngestConfig
+from vast_pipeline.pipeline.errors import PipelineConfigError
 from vast_pipeline.pipeline.main import Pipeline
 from vast_pipeline.pipeline.loading import make_upload_images
 from typing import Dict
@@ -53,7 +54,10 @@ class Command(BaseCommand):
             options['image_config'][0], validate=False
         )
 
-        image_config.validate()
+        try:
+            image_config.validate()
+        except PipelineConfigError as e:
+            raise CommandError(e)
 
         d = _DummyPipeline(image_config)
 
