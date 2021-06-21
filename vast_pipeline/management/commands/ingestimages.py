@@ -1,5 +1,6 @@
 import logging
 
+from argparse import ArgumentParser
 from django.core.management.base import BaseCommand, CommandError
 from vast_pipeline.pipeline.config import ImageIngestConfig
 from vast_pipeline.pipeline.errors import PipelineConfigError
@@ -12,14 +13,15 @@ logger = logging.getLogger(__name__)
 
 class _DummyPipeline(object):
     """
-    Dummy Pipeline class that provides the right methods and attributes
-    for interfacing with the make_upload_images() function.
+    A stripped down 'dummy' version of the Pipeline class, which
+    provides the right methods and attributes for interfacing with
+    the `make_upload_images()` function.
 
-    Its main purpose is to correctly set the attribute: img_paths
+    Its main purpose is to correctly set the attribute: `img_paths`
     """
     make_img_paths = Pipeline.match_images_to_data
 
-    def __init__(self,config):
+    def __init__(self,config: ImageIngestConfig) -> None:
         self.config = config
         self.img_paths: Dict[str, Dict[str, str]] = {
             'selavy': {},
@@ -39,7 +41,16 @@ class Command(BaseCommand):
         'Ingest/add a set of images to the database'
     )
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: ArgumentParser) -> None:
+        """
+        Enables arguments for the command.
+
+        Args:
+            parser (ArgumentParser): The parser object of the command.
+
+        Returns:
+            None
+        """
         parser.add_argument(
             'image_ingest_config',
             nargs=1,
@@ -47,7 +58,17 @@ class Command(BaseCommand):
             help=('Image ingestion configuration filename/path.')
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args, **options) -> None:
+        """
+        Handle function of the command.
+
+        Args:
+            *args: Variable length argument list.
+            **options: Variable length options.
+
+        Returns:
+            None
+        """
         # configure logging
         if options['verbosity'] > 1:
             # set root logger to use the DEBUG level
