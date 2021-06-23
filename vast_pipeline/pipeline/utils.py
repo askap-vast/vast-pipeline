@@ -978,36 +978,31 @@ def get_src_skyregion_merged_df(
 
     del sources_df
 
-    # create dataframe with all skyregions and sources combinations
-    src_skyrg_df = cross_join(
-        srcs_df.drop(['epoch_list', 'img_list'], axis=1).reset_index(),
-        skyreg_df.drop('skyreg_img_epoch_list', axis=1)
+    # crossmatch sources with sky regions up to the max sky region radius
+    skyreg_coords = SkyCoord(
+        ra=skyreg_df.centre_ra, dec=skyreg_df.centre_dec, unit="deg"
     )
-
-    skyreg_df = skyreg_df.drop(
-        ['centre_ra', 'centre_dec', 'xtr_radius'],
-        axis=1
-    ).set_index('id')
-
-    src_skyrg_df['sep'] = np.rad2deg(
-        on_sky_sep(
-            np.deg2rad(src_skyrg_df['wavg_ra'].values),
-            np.deg2rad(src_skyrg_df['centre_ra'].values),
-            np.deg2rad(src_skyrg_df['wavg_dec'].values),
-            np.deg2rad(src_skyrg_df['centre_dec'].values),
-        )
+    srcs_coords = SkyCoord(ra=srcs_df.wavg_ra, dec=srcs_df.wavg_dec, unit="deg")
+    skyreg_idx, srcs_idx, sep, _ = srcs_coords.search_around_sky(
+        skyreg_coords, skyreg_df.xtr_radius.max() * u.deg
     )
+    skyreg_df = skyreg_df.drop(columns=["centre_ra", "centre_dec"]).set_index("id")
 
     # select rows where separation is less than sky region radius
     # drop not more useful columns and groupby source id
     # compute list of images
     src_skyrg_df = (
-        src_skyrg_df.loc[
-            src_skyrg_df.sep < src_skyrg_df.xtr_radius,
-            ['source', 'id', 'sep']
-        ].merge(skyreg_df, left_on='id', right_index=True)
-        .drop('id', axis=1)
-        .explode('skyreg_img_epoch_list')
+        pd.DataFrame(
+            {
+                "source": srcs_df.iloc[srcs_idx].index,
+                "id": skyreg_df.iloc[skyreg_idx].index,
+                "sep": sep.to("deg").value,
+            }
+        )
+        .merge(skyreg_df, left_on="id", right_index=True)
+        .query("sep < xtr_radius")
+        .drop(columns=["id", "xtr_radius"])
+        .explode("skyreg_img_epoch_list")
     )
 
     del skyreg_df
