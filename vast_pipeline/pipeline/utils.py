@@ -17,7 +17,6 @@ import dask.dataframe as dd
 from typing import List, Optional, Dict, Tuple
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
-from astropy.io import fits
 from django.conf import settings
 from django.contrib.auth.models import User
 from psutil import cpu_count
@@ -29,7 +28,6 @@ from vast_pipeline.utils.utils import (
 from vast_pipeline.models import (
     Band, Image, Run, SkyRegion
 )
-from vast_pipeline.image.utils import on_sky_sep
 
 
 logger = logging.getLogger(__name__)
