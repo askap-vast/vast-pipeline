@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Reduced the memory footprint for computing the ideal source coverages by sky regions [#555](https://github.com/askap-vast/vast-pipeline/pull/555).
 - Gulp will only read `webinterface/.env` if the required vars are undefined in the current environment [#548](https://github.com/askap-vast/vast-pipeline/pull/548).
 
 #### Fixed
@@ -24,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#555](https://github.com/askap-vast/vast-pipeline/pull/555): fix: compute ideal source coverage with astropy xmatch.
 - [#551](https://github.com/askap-vast/vast-pipeline/pull/551): feat: added processing spinner to source query table.
 - [#550](https://github.com/askap-vast/vast-pipeline/pull/550): fix: missing changelog entry
 - [#548](https://github.com/askap-vast/vast-pipeline/pull/548): fix: only read .env if required vars are undefined.
