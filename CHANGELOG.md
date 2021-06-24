@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added processing spinner to source query table [#551](https://github.com/askap-vast/vast-pipeline/pull/551).
 - Added `site_url` to the mkdocs config so static asset URLs have the correct base URL [#543](https://github.com/askap-vast/vast-pipeline/pull/543).
 - Added basic linter to CI/CD [#546](https://github.com/askap-vast/vast-pipeline/pull/546)
 
@@ -25,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### List of PRs
 
 - [#555](https://github.com/askap-vast/vast-pipeline/pull/555): fix: compute ideal source coverage with astropy xmatch.
+- [#551](https://github.com/askap-vast/vast-pipeline/pull/551): feat: added processing spinner to source query table.
 - [#550](https://github.com/askap-vast/vast-pipeline/pull/550): fix: missing changelog entry
 - [#548](https://github.com/askap-vast/vast-pipeline/pull/548): fix: only read .env if required vars are undefined.
 - [#546](https://github.com/askap-vast/vast-pipeline/pull/546): feat, fix: remove unused imports, and added basic linter during CI/CD.
