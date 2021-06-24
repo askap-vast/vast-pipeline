@@ -74,6 +74,14 @@ $(document).ready(function() {
         bFilter: dataConf.search,
         hover: true,
         serverSide: true,
+        processing: true,
+        language: {
+          processing: (
+            '<div class="spinner-border" role="status">' + 
+              '<span class="sr-only">Loading...</span>' + 
+            '</div>'
+          )
+        },
         ajax: {
           url: dataConf.api,
           data: function (data) {
