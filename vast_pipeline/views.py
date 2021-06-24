@@ -1714,8 +1714,15 @@ class RawImageListSet(ViewSet):
         ))
         # add home directory user data for user and jupyter-user (user = github name)
         req_user = request.user.username
-        for user in [f'~{req_user}', f'~jupyter-{req_user}']:
-            user_home_data = os.path.join(os.path.expanduser(user), settings.HOME_DATA_DIR)
+        for user in [f'{req_user}', f'jupyter-{req_user}']:
+            if settings.HOME_DATA_ROOT is not None:
+                user_home_data = os.path.join(
+                    settings.HOME_DATA_ROOT, user, settings.HOME_DATA_DIR
+                )
+            else:
+                user_home_data = os.path.join(
+                    os.path.expanduser(f'~{user}'), settings.HOME_DATA_DIR
+                )
             if settings.HOME_DATA_DIR and os.path.exists(user_home_data):
                 img_regex_list.append(os.path.join(user_home_data, '**' + os.sep + '*.fits'))
                 selavy_regex_list.append(os.path.join(user_home_data, '**' + os.sep + '*.txt'))
@@ -2101,7 +2108,8 @@ class UtilitiesSet(ViewSet):
                     "DEC": "dec_dms",
                 }
             )
-            ned_results_df["otype_long"] = ""  # NED does not supply verbose object types
+            # NED does not supply verbose object types
+            ned_results_df["otype_long"] = ""
             # convert NED result separation (arcmin) to arcsec
             ned_results_df["separation_arcsec"] = (
                 ned_results_df["separation_arcsec"] * 60
