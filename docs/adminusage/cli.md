@@ -184,7 +184,10 @@ Nr of association: 3276
 
 ### ingestimages
 
-This command runs the first part of the pipeline only. It ingests/adds a set of images, and their measurements, to the database. It requires an image ingestion configuration file as input. A template ingest configuration file can be generated with the `initigest` command (below).
+This command runs the first part of the pipeline only.
+It ingests/adds a set of images, and their measurements, to the database.
+It requires an image ingestion configuration file as input.
+A template ingest configuration file can be generated with the [`initingest`](#initingest) command (below).
 
 ```terminal
 (pipeline_env)$ ./manage.py ingestimages --help
@@ -227,12 +230,28 @@ optional arguments:
 General usage:
 
 ```terminal
-(pipeline_env)$ ./manage.py ingestimages path/to/ingest_config_file
+(pipeline_env)$ ./manage.py ingestimages ./ingest_config.yml
+```
+
+Output:
+```terminal
+2021-06-25 03:08:44,313 loading INFO Reading image epoch01.fits ...
+2021-06-25 03:08:44,348 utils INFO Adding new frequency band: 888
+2021-06-25 03:08:44,390 utils INFO Created sky region 150.001, -30.001
+2021-06-25 03:08:44,441 loading INFO Processed measurements dataframe of shape: (4, 40)
+2021-06-25 03:08:44,452 loading INFO Bulk created #4 Measurement
+2021-06-25 03:08:44,504 loading INFO Reading image epoch02.fits ...
+...
+2021-06-25 03:08:44,731 loading INFO Reading image epoch04.fits ...
+2021-06-25 03:08:44,771 utils INFO Created sky region 150.021, -30.017
+2021-06-25 03:08:44,805 loading INFO Processed measurements dataframe of shape: (5, 40)
+2021-06-25 03:08:44,810 loading INFO Bulk created #5 Measurement
+2021-06-25 03:08:44,819 loading INFO Total images upload/loading time: 0.97 seconds
 ```
 
 ### initingest
 
-This command generates a template configuration file for use with the `ingestimages` command (above).
+This command generates a template configuration file for use with the [`ingestimages`](#ingestimages) command.
 
 ```terminal
 (pipeline_env)$ ./manage.py initingest --help
@@ -274,10 +293,15 @@ optional arguments:
 General usage:
 
 ```terminal
-(pipeline_env)$ ./manage.py initigest ingest_file
+(pipeline_env)$ ./manage.py initingest ingest_config.yml
 ```
 
-Then modify the `ingest_file` to your needs.
+Output:
+```terminal
+Writing template to:  ingest_config.yml
+```
+
+Then modify `ingest_config.yml` to suit your needs.
 
 ### initpiperun
 

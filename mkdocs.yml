@@ -80,7 +80,6 @@ nav:
     - Processing a Run: using/processrun.md
     - Adding Images to a Run: using/addtorun.md
     - Deleting a Run: using/deleterun.md
-    - Adding new Images: using/ingestimages.md
     - Exploring the Pipeline Website:
       - Overview: exploringwebsite/websiteoverview.md
       - DataTables: exploringwebsite/datatables.md
@@ -95,6 +94,7 @@ nav:
       - Column Descriptions: outputs/coldesc.md
     - Admin Usage:
       - CLI: adminusage/cli.md
+      - Standalone Image Ingestion: adminusage/ingestimages.md
       - Web App: adminusage/app.md
       - Web App Admin Tools: exploringwebsite/admintools.md
   - Features & Design:

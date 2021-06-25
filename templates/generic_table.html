@@ -228,15 +228,15 @@
             <div class="row">
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="astroUncertRaSelect">Astrometric Uncertainty RA (arcsec)</label>
-                <a href="#" data-toggle="tooltip" data-placement="top" title=
-                    "Base astrometric RA uncertainty in arcseconds that will be added in quadrature to the fitting uncertainties. (NOTE: only applied to NEW images that are not already present in the database, and to forced extractions)."
+                <a href="#" data-html="true" data-toggle="tooltip" data-placement="top" title=
+                    "Base astrometric RA uncertainty in arcseconds that will be added in quadrature to the fitting uncertainties. <b>Note</b> that this is only applied to <b>new</b> images that are not already present in the database, and to forced extractions."
                 ><i class="fas fa-info-circle"></i></a>
                 <input id="astroUncertRaSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.astrometric_uncertainty_ra }}" min="0" step="0.01" aria-label="astroUncertRaSearch" aria-describedby="basic-addon2" name="astrometric_uncertainty_ra">
               </div>
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="astroUncertDecSelect">Astrometric Uncertainty Dec (arcsec)</label>
-                <a href="#" data-toggle="tooltip" data-placement="top" title=
-                    "Base astrometric Dec uncertainty in arcseconds that will be added in quadrature to the fitting uncertainties. (NOTE: only applied to NEW images that are not already present in the database, and to forced extractions)."
+                <a href="#" data-html="true" data-toggle="tooltip" data-placement="top" title=
+                    "Base astrometric Dec uncertainty in arcseconds that will be added in quadrature to the fitting uncertainties. <b>Note</b> that this is only applied to <b>new</b> images that are not already present in the database, and to forced extractions."
                 ><i class="fas fa-info-circle"></i></a>
                 <input id="astroUncertDecSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.astrometric_uncertainty_dec }}" min="0" step="0.01" aria-label="astroUncertDecSearch" aria-describedby="basic-addon2" name="astrometric_uncertainty_dec">
               </div>
@@ -259,8 +259,8 @@
               </div>
               <div class="col">
                 <label class="col-form-label font-weight-bold text-gray-800" for="localRmsZeroFillSelect">Selavy Local RMS Zero Fill Value (mJy)</label>
-                <a href="#" data-toggle="tooltip" data-placement="top" title=
-                    "Rarely, a source in the selavy catalogue can have a local rms value of zero. This selects the default value to replace these zero values with to avoid errors. (NOTE: only applied to NEW images that are not already present in the database)."
+                <a href="#" data-html="true" data-toggle="tooltip" data-placement="top" title=
+                    "Rarely, a source in the selavy catalogue can have a local rms value of zero. This selects the default value to replace these zero values with to avoid errors. <b>Note</b> that this is only applied to <b>new</b> images that are not already present in the database."
                 ><i class="fas fa-info-circle"></i></a>
                 <input id="localRmsZeroFillSelect" type="number" class="form-control bg-light border-0" value="{{ runconfig.selavy_local_rms_zero_fill_value }}" min="0" step="0.01" aria-label="localRmsZeroFillSearch" aria-describedby="basic-addon2" name="selavy_local_rms_zero_fill_value">
               </div>
@@ -275,8 +275,8 @@
                 <div class="custom-control custom-switch">
                   <input type="checkbox" class="custom-control-input" id="condonErrorSwitch" {% if runconfig.use_condon_errors %} checked="checked" {% endif %} name="use_condon_errors">
                   <label class="custom-control-label font-weight-bold text-gray-800" for="condonErrorSwitch">Use Condon Errors</label>
-                  <a href="#" data-toggle="tooltip" data-placement="top" title=
-                      "Replaces the selavy catalogue flux and positional errors with those defined by Condon '97, calculated by the pipeline. (NOTE: only applied to NEW images that are not already present in the database)."
+                  <a href="#" data-html="true" data-toggle="tooltip" data-placement="top" title=
+                      "Replaces the selavy catalogue flux and positional errors with those defined by Condon '97, calculated by the pipeline. <b>Note</b> that this is only applied to <b>new</b> images that are not already present in the database."
                   ><i class="fas fa-info-circle"></i></a>
                 </div>
               </div>
