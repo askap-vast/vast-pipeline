@@ -57,6 +57,11 @@ class Command(BaseCommand):
             )
 
         fname = options['config_file_name'][0]
+
+        # Enforce .yml extension
+        if not fname.endswith('.yaml') and not fname.endswith('.yml'):
+            fname = fname + '.yml'
+
         print("Writing template to: ", fname)
         with open(fname, 'w') as f:
             f.write(template_str+"\n")
