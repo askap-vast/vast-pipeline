@@ -143,6 +143,9 @@ SOCIAL_AUTH_GITHUB_ORG_SCOPE = ['read:org', 'user:email']
 
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
+TNS_API_KEY = env('TNS_API_KEY', default=None)
+TNS_USER_AGENT = env('TNS_USER_AGENT', default=None)
+
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 

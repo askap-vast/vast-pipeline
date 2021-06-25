@@ -123,7 +123,7 @@ If an epoch pairing is significant then they are joined by a line on the graph. 
 
 ### External Search Results Table
 
-This table shows the result of a query to the SIMBAD and NED services for astronomical sources within 1 arcmin of the source location. 
+This table shows the result of a query to the SIMBAD, NED, and TNS services for astronomical sources within 1 arcmin of the source location. 
 Along with the name and coordinate of the matches, the on-sky separation between the source is shown along with the source type.
 
 ### JS9 Viewer Postage Stamps

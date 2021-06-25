@@ -140,6 +140,10 @@ Shown below is the [`.env.template`](https://github.com/askap-vast/vast-pipeline
     SOCIAL_AUTH_GITHUB_ORG_NAME=fillMeUp
     SOCIAL_AUTH_GITHUB_ADMIN_TEAM=fillMeUp
 
+    # External APIs
+    # TNS_API_KEY= uncomment and fill to use
+    # TNS_USER_AGENT= uncomment and fill to use
+
     # Pipeline
     PIPELINE_WORKING_DIR=pipeline-runs
     FLUX_DEFAULT_MIN_ERROR=0.001
@@ -152,7 +156,7 @@ Shown below is the [`.env.template`](https://github.com/askap-vast/vast-pipeline
     MAX_PIPERUN_IMAGES=200
     ```
 
-The available settings are grouped into three distinct categories:
+The available settings are grouped into 4 distinct categories:
 
 ### Django
 
@@ -173,6 +177,29 @@ Please refer to the [Python Social Auth documentation](https://python-social-aut
 !!! note
     By default the pipeline is set up for authentication using GitHub organizations. Note that switching to teams will require changes to `settings.py`. 
     Please refer to the instructions in the [Python Social Auth documentation](https://python-social-auth.readthedocs.io/en/latest/backends/github.html){:target="_blank"}.
+
+### External APIs
+
+The pipeline website interface supports querying some external APIs, e.g. SIMBAD, NED, VizieR, TNS. Some of these APIs require authentication which are described below.
+
+#### Transient Name Server (TNS)
+
+If you wish to enable TNS cone search results on the [source detail page](../exploringwebsite/sourcepages.md#source-detail-page), you must first obtain an API key for TNS.
+
+1. Create a TNS account at https://www.wis-tns.org/user/register if you do not already have one.
+2. Once logged in, create a bot by navigating to https://www.wis-tns.org/bots and clicking "Add bot" near the top of the table.
+3. Fill in the create bot form. Ensure that you select "Create new API key".
+4. Securely store the API key and paste it into your pipeline `webinterface/.env` file under `TNS_API_KEY`.
+
+    !!! warning
+        Do not lose the API key! It is not possible to retrieve it again past this point.
+
+5. Navigate to your [account page on TNS](https://www.wis-tns.org/user) and copy the User-Agent specification. Paste it into your pipeline `webinterface/.env` file under `TNS_USER_AGENT`.
+
+    !!! example "webinterface/.env"
+        ```console
+        TNS_USER_AGENT='tns_marker{"tns_id": 0000, "type": "user", "name": "your_username"}'
+        ```
 
 ### Pipeline
 

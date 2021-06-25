@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added TNS cone search to the external search results on the source detail page [#557](https://github.com/askap-vast/vast-pipeline/pull/557).
 - Added `HOME_DATA_ROOT` to the pipeline settings to override the OS default home directory location [#559](https://github.com/askap-vast/vast-pipeline/pull/559).
 - Added processing spinner to source query table [#551](https://github.com/askap-vast/vast-pipeline/pull/551).
 - Added `site_url` to the mkdocs config so static asset URLs have the correct base URL [#543](https://github.com/askap-vast/vast-pipeline/pull/543).
@@ -26,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#557](https://github.com/askap-vast/vast-pipeline/pull/557): feat: Add TNS external search for sources.
 - [#559](https://github.com/askap-vast/vast-pipeline/pull/559): feat: added HOME_DATA_ROOT setting.
 - [#555](https://github.com/askap-vast/vast-pipeline/pull/555): fix: compute ideal source coverage with astropy xmatch.
 - [#551](https://github.com/askap-vast/vast-pipeline/pull/551): feat: added processing spinner to source query table.
