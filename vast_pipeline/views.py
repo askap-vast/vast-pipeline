@@ -1713,8 +1713,15 @@ class RawImageListSet(ViewSet):
         ))
         # add home directory user data for user and jupyter-user (user = github name)
         req_user = request.user.username
-        for user in [f'~{req_user}', f'~jupyter-{req_user}']:
-            user_home_data = os.path.join(os.path.expanduser(user), settings.HOME_DATA_DIR)
+        for user in [f'{req_user}', f'jupyter-{req_user}']:
+            if settings.HOME_DATA_ROOT is not None:
+                user_home_data = os.path.join(
+                    settings.HOME_DATA_ROOT, user, settings.HOME_DATA_DIR
+                )
+            else:
+                user_home_data = os.path.join(
+                    os.path.expanduser(f'~{user}'), settings.HOME_DATA_DIR
+                )
             if settings.HOME_DATA_DIR and os.path.exists(user_home_data):
                 img_regex_list.append(os.path.join(user_home_data, '**' + os.sep + '*.fits'))
                 selavy_regex_list.append(os.path.join(user_home_data, '**' + os.sep + '*.txt'))

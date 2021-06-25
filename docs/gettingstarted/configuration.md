@@ -60,16 +60,17 @@ The following instructions, will get you started in setting up the database and 
 
 3. Set the database connection settings in the `webinterface/.env` file by modifying `DATABASE_URL` (for URL syntax see [this link](https://django-environ.readthedocs.io/en/latest/#tips){:target="_blank"}). For example:
 
-    ```bash
-    DATABASE_URL=psql://vast:<vast-user-password>@localhost:55002/vastdb
-    ```
+    !!! example ".env"
+        ```console
+        DATABASE_URL=psql://vast:<vast-user-password>@localhost:55002/vastdb
+        ```
 
     !!! note
         The connection details are the same that you setup during the [installation](installation.md). The database/user names must not contain any spaces or dashes, so use the underscore if you want, e.g. `this_is_my_db_name`.
 
 4. Create the pipeline database tables. The `createcachetable` command creates the cache tables required by DjangoQ.
 
-    ```bash
+    ```terminal
     python manage.py migrate
     python manage.py createcachetable
     ```
@@ -78,7 +79,23 @@ The following instructions, will get you started in setting up the database and 
 
     * `PIPELINE_WORKING_DIR`: location to store various pipeline output files.
     * `RAW_IMAGE_DIR`: default location that the pipeline will search for input images and catalogues to ingest during a pipeline run. Data inputs can also be defined as absolute paths in a pipeline run configuration file, so this setting only affects relative paths in the pipeline run configuration.
-    * `HOME_DATA_DIR`: additional location to search for input images and catalogues that is relative to the user's home directory. Intended for multi-user server deployments and unlikely to be useful for local installations.
+    * `HOME_DATA_DIR`: a path relative to a user's home directory to search for additional input images and catalogues. Intended for multi-user server deployments and unlikely to be useful for local installations. See below for some examples.
+    * `HOME_DATA_ROOT`: path to the location of user home directories. Used together with `HOME_DATA_DIR`. If not supplied, the pipeline will search for the user's home directory using the default OS location. See below for some examples.
+
+    !!! example ".env – User data configuration examples"
+        In the following examples, assume that the user's name is `foo`.
+
+        ```console
+        # HOME_DATA_ROOT=Uncomment to set a custom path to user data dirs
+        HOME_DATA_DIR=vast-pipeline-extra-data
+        ```
+        Using the above settings, the pipeline will search for additional input data in the user's home directory as resolved by the OS. e.g. on an Ubuntu system, this would be `/home/foo/vast-pipeline-extra-data`.
+
+        ```console
+        HOME_DATA_ROOT=/data/home
+        HOME_DATA_DIR=vast-pipeline-extra-data
+        ```
+        Using the above settings, the pipeline will search for additional input data in `/data/home/foo/vast-pipeline-extra-data`.
 
     While the default values for these settings are relative to the pipeline codebase root (i.e. within the repo), we recommend creating these directories outside of the repo and updating the `webinterface/.env` file appropriately with absolute paths. For example, assuming you wish to create these directories in `/data/vast-pipeline`:
 
@@ -86,16 +103,15 @@ The following instructions, will get you started in setting up the database and 
     mkdir -p /data/vast-pipeline
     mkdir /data/vast-pipeline/pipeline-runs
     mkdir /data/vast-pipeline/raw-images
-    mkdir /data/vast-pipeline/vast-pipeline-extra-data
     ```
 
     and update the `webinterface/.env` file with:
 
-    ```bash
-    PIPELINE_WORKING_DIR=/data/vast-pipeline/pipeline-runs
-    RAW_IMAGE_DIR=/data/vast-pipeline/raw-images
-    HOME_DATA_DIR=/data/vast-pipeline/vast-pipeline-extra-data
-    ```
+    !!!example ".env"
+        ```console
+        PIPELINE_WORKING_DIR=/data/vast-pipeline/pipeline-runs
+        RAW_IMAGE_DIR=/data/vast-pipeline/raw-images
+        ```
 
 ## .env File
 
@@ -134,6 +150,7 @@ Shown below is the [`.env.template`](https://github.com/askap-vast/vast-pipeline
     POS_DEFAULT_MIN_ERROR=0.01
     RAW_IMAGE_DIR=raw-images
     HOME_DATA_DIR=vast-pipeline-extra-data
+    # HOME_DATA_ROOT=Uncomment to set a custom path to user data dirs
     # PIPELINE_MAINTAINANCE_MESSAGE=Uncomment and fill to show
     MAX_PIPELINE_RUNS=3
     MAX_PIPERUN_IMAGES=200
@@ -147,9 +164,10 @@ These settings are standard Django settings that are commonly set in the `settin
 Please see [this page](https://docs.djangoproject.com/en/3.2/ref/settings/){:target="_blank"} in the Django documentation for explanations on their meaning.
 Multiple entries for settings such as `EXTRA_APPS` or `EXTRA_MIDDLEWARE` can be entered as comma-separated strings like the following example:
 
-```console
-EXTRA_APPS=django_extensions,debug_toolbar
-```
+!!!example ".env"
+    ```console
+    EXTRA_APPS=django_extensions,debug_toolbar
+    ```
 
 ### GitHub Authentication
 
@@ -193,16 +211,18 @@ These settings apply to various aspects of the VAST pipeline itself. The table b
 | `FLUX_DEFAULT_MIN_ERROR` | 0.001 | In the event a measurement is ingested with a flux error of 0 from Selavy, the error is replaced with this default value (mJy). |
 | `POS_DEFAULT_MIN_ERROR` | 0.01 | In the event a measurement is ingested with an positional error of 0 from Selavy, the error is replaced with this default value (arcsec). |
 | `RAW_IMAGE_DIR` | raw-images | Directory where the majority of raw ASKAP FITS images are expected to be stored. This directory is scanned to provide user with an image list when configuration a job using the website interface. |
-| `HOME_DATA_DIR` | vast-pipeline-extra-data | Not currently used. Safe to ignore. |
+| `HOME_DATA_DIR` | vast-pipeline-extra-data | Directory relative to the user's home directory that contains additional input images and catalogues. Safe to ignore if you don't intend to use this functionality. |
+| `HOME_DATA_ROOT` | Disabled | Path to directory that contains user's home directories. Enable by uncommenting and setting the desired path. If left disabled (commented), the pipeline will assume the OS default home directory location.
 | `PIPELINE_MAINTAINANCE_MESSAGE` | Disabled | The message to display at the top of the webserver. See image below this table for an example. Comment out the setting to disable. |
 | `MAX_PIPELINE_RUNS` | 3 | The allowed maximum number of concurrent pipeline runs. |
 | `MAX_PIPERUN_IMAGES` | 200 | The allowed maximum number of images in a single pipeline run (non-admins). |
 
 #### Maintenance Message Example
 
-```console
-PIPELINE_MAINTAINANCE_MESSAGE=This website is subject to rapid changes which may result in data loss and may go offline with minimal warning. Please be mindful of usage.
-```
+!!!example ".env"
+    ```console
+    PIPELINE_MAINTAINANCE_MESSAGE=This website is subject to rapid changes which may result in data loss and may go offline with minimal warning. Please be mindful of usage.
+    ```
 
 ![!Maintenance message example.](../img/maintenance-message.png){: loading=lazy }
 
