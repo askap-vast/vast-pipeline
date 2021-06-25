@@ -82,7 +82,7 @@ The following instructions, will get you started in setting up the database and 
     * `HOME_DATA_DIR`: a path relative to a user's home directory to search for additional input images and catalogues. Intended for multi-user server deployments and unlikely to be useful for local installations. See below for some examples.
     * `HOME_DATA_ROOT`: path to the location of user home directories. Used together with `HOME_DATA_DIR`. If not supplied, the pipeline will search for the user's home directory using the default OS location. See below for some examples.
 
-    !!! example "User data configuration examples"
+    !!! example ".env – User data configuration examples"
         In the following examples, assume that the user's name is `foo`.
 
         ```console
