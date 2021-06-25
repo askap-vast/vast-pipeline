@@ -60,16 +60,17 @@ The following instructions, will get you started in setting up the database and 
 
 3. Set the database connection settings in the `webinterface/.env` file by modifying `DATABASE_URL` (for URL syntax see [this link](https://django-environ.readthedocs.io/en/latest/#tips){:target="_blank"}). For example:
 
-    ```bash
-    DATABASE_URL=psql://vast:<vast-user-password>@localhost:55002/vastdb
-    ```
+    !!! example ".env"
+        ```console
+        DATABASE_URL=psql://vast:<vast-user-password>@localhost:55002/vastdb
+        ```
 
     !!! note
         The connection details are the same that you setup during the [installation](installation.md). The database/user names must not contain any spaces or dashes, so use the underscore if you want, e.g. `this_is_my_db_name`.
 
 4. Create the pipeline database tables. The `createcachetable` command creates the cache tables required by DjangoQ.
 
-    ```bash
+    ```terminal
     python manage.py migrate
     python manage.py createcachetable
     ```
@@ -106,10 +107,11 @@ The following instructions, will get you started in setting up the database and 
 
     and update the `webinterface/.env` file with:
 
-    ```bash
-    PIPELINE_WORKING_DIR=/data/vast-pipeline/pipeline-runs
-    RAW_IMAGE_DIR=/data/vast-pipeline/raw-images
-    ```
+    !!!example ".env"
+        ```console
+        PIPELINE_WORKING_DIR=/data/vast-pipeline/pipeline-runs
+        RAW_IMAGE_DIR=/data/vast-pipeline/raw-images
+        ```
 
 ## .env File
 
@@ -158,9 +160,10 @@ These settings are standard Django settings that are commonly set in the `settin
 Please see [this page](https://docs.djangoproject.com/en/3.2/ref/settings/){:target="_blank"} in the Django documentation for explanations on their meaning.
 Multiple entries for settings such as `EXTRA_APPS` or `EXTRA_MIDDLEWARE` can be entered as comma-separated strings like the following example:
 
-```console
-EXTRA_APPS=django_extensions,debug_toolbar
-```
+!!!example ".env"
+    ```console
+    EXTRA_APPS=django_extensions,debug_toolbar
+    ```
 
 ### GitHub Authentication
 
@@ -189,9 +192,10 @@ These settings apply to various aspects of the VAST pipeline itself. The table b
 
 #### Maintenance Message Example
 
-```console
-PIPELINE_MAINTAINANCE_MESSAGE=This website is subject to rapid changes which may result in data loss and may go offline with minimal warning. Please be mindful of usage.
-```
+!!!example ".env"
+    ```console
+    PIPELINE_MAINTAINANCE_MESSAGE=This website is subject to rapid changes which may result in data loss and may go offline with minimal warning. Please be mindful of usage.
+    ```
 
 ![!Maintenance message example.](../img/maintenance-message.png){: loading=lazy }
 
