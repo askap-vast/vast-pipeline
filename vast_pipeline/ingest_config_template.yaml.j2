@@ -1,0 +1,85 @@
+# This file is used for ingest only mode
+# It specifies the images to be processed and the relevant
+# settings to be used.
+
+inputs:
+{% if epoch_mode %}
+  image:
+  {% for epoch, image_list in image_files.items() %}
+    '{{ epoch }}':
+    {% for image in image_list %}
+    - {{ image }}
+    {% endfor %}
+  {% endfor %}
+
+  selavy:
+  {% for epoch, image_list in selavy_files.items() %}
+    '{{ epoch }}':
+    {% for image in image_list %}
+    - {{ image }}
+    {% endfor %}
+  {% endfor %}
+
+  noise:
+  {% for epoch, image_list in noise_files.items() %}
+    '{{ epoch }}':
+    {% for image in image_list %}
+    - {{ image }}
+    {% endfor %}
+  {% endfor %}
+
+  # Required only if source_monitoring.monitor is true, otherwise optional. If not providing
+  # background images, remove the entire background section below.
+  background:
+  {% for epoch, image_list in background_files.items() %}
+    '{{ epoch }}':
+    {% for image in image_list %}
+    - {{ image }}
+    {% endfor %}
+  {% endfor %}
+{% else %}
+  # NOTE: all the inputs must match with each other, i.e. the catalogue for the first
+  # input image (inputs.image[0]) must be the first input catalogue (inputs.selavy[0])
+  # and so on.
+  image:
+  # list input images here, e.g. (note the leading hyphens)
+  # - /path/to/image1.fits
+  # - /path/to/image2.fits
+  {% for image in image_files %}
+  - {{ image }}
+  {% endfor %}
+
+  selavy:
+  # list input selavy catalogues here, as above with the images
+  {% for image in selavy_files %}
+  - {{ image }}
+  {% endfor %}
+
+  noise:
+  # list input noise (rms) images here, as above with the images
+  {% for image in noise_files %}
+  - {{ image }}
+  {% endfor %}
+
+  # Required only if source_monitoring.monitor is true, otherwise optional. If not providing
+  # background images, remove the entire background section below.
+  {% if not monitor and not background_files %}  # {% else %}  {% endif %}background:
+  # list input background images here, as above with the images
+  {% for image in background_files %}
+  - {{ image }}
+  {% endfor %}
+{% endif %}
+
+measurements:
+  # Replace the selavy errors with Condon (1997) errors.
+  condon_errors: {{ use_condon_errors }}
+
+  # Sometimes the local rms for a source is reported as 0 by selavy.
+  # Choose a value to use for the local rms in these cases in mJy/beam.
+  selavy_local_rms_fill_value: {{ selavy_local_rms_zero_fill_value }}
+
+  # The positional uncertainty of a measurement is in reality the fitting errors and the
+  # astrometric uncertainty of the image/survey/instrument combined in quadrature.
+  # These two parameters are the astrometric uncertainty in RA/Dec and they may be different.
+  ra_uncertainty: {{ astrometric_uncertainty_ra }} # arcsec
+  dec_uncertainty: {{ astrometric_uncertainty_dec }}  # arcsec

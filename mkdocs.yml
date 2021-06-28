@@ -94,6 +94,7 @@ nav:
       - Column Descriptions: outputs/coldesc.md
     - Admin Usage:
       - CLI: adminusage/cli.md
+      - Standalone Image Ingestion: adminusage/ingestimages.md
       - Web App: adminusage/app.md
       - Web App Admin Tools: exploringwebsite/admintools.md
   - Features & Design:
@@ -131,6 +132,8 @@ nav:
             - clearpiperun.py: reference/management/commands/clearpiperun.md
             - createmeasarrow.py: reference/management/commands/createmeasarrow.md
             - debugrun.py: reference/management/commands/debugrun.md
+            - ingestimages.py: reference/management/commands/ingestimages.md
+            - initingest.py: reference/management/commands/initingest.md
             - initpiperun.py: reference/management/commands/initpiperun.md
             - restorepiperun.py: reference/management/commands/restorepiperun.md
             - runpipeline.py: reference/management/commands/runpipeline.md

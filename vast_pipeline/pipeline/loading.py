@@ -16,13 +16,10 @@ from vast_pipeline.pipeline.model_generator import (
     measurement_pair_models_generator,
 )
 from vast_pipeline.models import (
-    Association, Measurement, Source, RelatedSource,
+    Association, Band, Measurement, SkyRegion, Source, RelatedSource,
     MeasurementPair, Run, Image
 )
-from vast_pipeline.pipeline.config import PipelineConfig
-from vast_pipeline.pipeline.utils import (
-    get_create_img, get_create_img_band
-)
+from vast_pipeline.pipeline.utils import get_create_img, get_create_img_band
 from vast_pipeline.utils.utils import StopWatch
 
 
@@ -69,8 +66,8 @@ def bulk_upload_model(
 
 
 def make_upload_images(
-    paths: Dict[str, Dict[str, str]], config: PipelineConfig, pipeline_run: Run
-) -> Tuple[List[Image], pd.DataFrame]:
+    paths: Dict[str, Dict[str, str]], image_config: Dict
+) -> Tuple[List[Image], List[SkyRegion], List[Band]]:
     '''
     Carry the first part of the pipeline, by uploading all the images
     to the image table and populated band and skyregion objects.
@@ -81,14 +78,11 @@ def make_upload_images(
             the images in the pipeline run. The primary keys are `selavy`,
             'noise' and 'background' with the secondary key being the image
             name.
-        config (config):
-            The config object of the pipeline run.
-        pipeline_run:
-            The pipeline run object.
+        image_config:
+            Dictionary of configuration options for the image ingestion.
 
     Returns:
-        A list of image objects that have been uploaded along with a DataFrame
-        containing the information of the sky regions associated with the run.
+        A list of image, sky region and band objects that have been uploaded.
     '''
     timer = StopWatch()
     images = []
@@ -100,7 +94,7 @@ def make_upload_images(
         image = SelavyImage(
             path,
             paths,
-            config
+            image_config
         )
         logger.info('Reading image %s ...', image.name)
 
@@ -112,28 +106,16 @@ def make_upload_images(
 
         # 1.2 create image and skyregion entry in DB
         with transaction.atomic():
-            img, skyreg, exists_f = get_create_img(
-                pipeline_run, band.id, image
-            )
+            img, exists_f = get_create_img(band.id, image)
+            skyreg = img.skyreg
 
         # add image and skyregion to respective lists
         images.append(img)
         if skyreg not in skyregions:
             skyregions.append(skyreg)
+
         if exists_f:
-            logger.info(
-                'Image %s already processed, grab measurements',
-                img.name
-            )
-            # grab the measurements and skip to process next image
-            measurements = (
-                pd.Series(
-                    Measurement.objects.filter(forced=False, image__id=img.id),
-                    name='meas_dj'
-                )
-                .to_frame()
-            )
-            measurements['id'] = measurements['meas_dj'].apply(lambda x: x.id)
+            logger.info('Image %s already processed', img.name)
             continue
 
         # 1.3 get the image measurements and save them in DB
@@ -157,34 +139,12 @@ def make_upload_images(
         )
         del measurements, image, band, img
 
-    # write images parquet file under pipeline run folder
-    images_df = pd.DataFrame(map(lambda x: x.__dict__, images))
-    images_df = images_df.drop('_state', axis=1)
-    images_df.to_parquet(
-        os.path.join(config["run"]["path"], 'images.parquet'),
-        index=False
-    )
-    # write skyregions parquet file under pipeline run folder
-    skyregs_df = pd.DataFrame(map(lambda x: x.__dict__, skyregions))
-    skyregs_df = skyregs_df.drop('_state', axis=1)
-    skyregs_df.to_parquet(
-        os.path.join(config["run"]["path"], 'skyregions.parquet'),
-        index=False
-    )
-    # write skyregions parquet file under pipeline run folder
-    bands_df = pd.DataFrame(map(lambda x: x.__dict__, bands))
-    bands_df = bands_df.drop('_state', axis=1)
-    bands_df.to_parquet(
-        os.path.join(config["run"]["path"], 'bands.parquet'),
-        index=False
-    )
-
     logger.info(
         'Total images upload/loading time: %.2f seconds',
         timer.reset_init()
     )
 
-    return images, skyregs_df
+    return images, skyregions, bands
 
 
 def make_upload_sources(

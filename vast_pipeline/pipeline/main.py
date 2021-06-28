@@ -17,6 +17,7 @@ from django.conf import settings
 from django.db import transaction
 
 from vast_pipeline.models import Run
+from vast_pipeline.pipeline.utils import add_run_to_img
 from .association import association, parallel_association
 from .config import PipelineConfig
 from .new_sources import new_sources
@@ -26,7 +27,8 @@ from .loading import make_upload_images
 from .utils import (
     get_src_skyregion_merged_df,
     group_skyregions,
-    get_parallel_assoc_image_df
+    get_parallel_assoc_image_df,
+    write_parquets
 )
 
 from .errors import MaxPipelineRunsError
@@ -127,11 +129,18 @@ class Pipeline():
         self.match_images_to_data()
 
         # upload/retrieve image data
-        images, skyregs_df = make_upload_images(
+        images, skyregions, bands = make_upload_images(
             self.img_paths,
-            self.config,
-            p_run
+            self.config.image_opts()
         )
+
+        # associate the pipeline run with each image
+        with transaction.atomic():
+            for img in images:
+                add_run_to_img(p_run, img)
+
+        # write parquet files and retrieve skyregions as a dataframe
+        skyregs_df = write_parquets(images, skyregions, bands, self.config["run"]["path"])
 
         # STEP #2: measurements association
         # order images by time

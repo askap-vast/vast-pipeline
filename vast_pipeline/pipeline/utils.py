@@ -34,13 +34,12 @@ logger = logging.getLogger(__name__)
 dask.config.set({"multiprocessing.context": "fork"})
 
 
-def get_create_skyreg(p_run: Run, image: Image) -> SkyRegion:
+def get_create_skyreg(image: Image) -> SkyRegion:
     '''
     This creates a Sky Region object in Django ORM given the related
     image object.
 
     Args:
-        p_run: The pipeline run Django ORM object.
         image: The image Django ORM object.
 
     Returns:
@@ -57,26 +56,20 @@ def get_create_skyreg(p_run: Run, image: Image) -> SkyRegion:
     if skyr:
         skyr = skyr.get()
         logger.info('Found sky region %s', skyr)
-        if p_run not in skyr.run.all():
-            logger.info('Adding %s to sky region %s', p_run, skyr)
-            skyr.run.add(p_run)
-        return skyr
-
-    x, y, z = eq_to_cart(image.ra, image.dec)
-    skyr = SkyRegion(
-        centre_ra=image.ra,
-        centre_dec=image.dec,
-        width_ra=image.physical_bmin,
-        width_dec=image.physical_bmaj,
-        xtr_radius=image.fov_bmin,
-        x=x,
-        y=y,
-        z=z,
-    )
-    skyr.save()
-    logger.info('Created sky region %s', skyr)
-    skyr.run.add(p_run)
-    logger.info('Adding %s to sky region %s', p_run, skyr)
+    else:
+        x, y, z = eq_to_cart(image.ra, image.dec)
+        skyr = SkyRegion(
+            centre_ra=image.ra,
+            centre_dec=image.dec,
+            width_ra=image.physical_bmin,
+            width_dec=image.physical_bmaj,
+            xtr_radius=image.fov_bmin,
+            x=x,
+            y=y,
+            z=z,
+        )
+        skyr.save()
+        logger.info('Created sky region %s', skyr)
 
     return skyr
 
@@ -113,75 +106,57 @@ def get_create_img_band(image: Image) -> Band:
     return band
 
 
-def get_create_img(
-    p_run: Run, band_id: int, image: Image
-) -> Tuple[Image, SkyRegion, bool]:
+def get_create_img(band_id: int, image: Image) -> Tuple[Image, bool]:
     """
-    Function to fetch or create the Image and Sky Region objects for the images
-    in the pipeline run.
+    Function to fetch or create the Image and Sky Region objects for an image.
 
     Args:
-        p_run: The pipeline run Django ORM object.
         band_id: The integer database id value of the frequency band of the
             image.
         image: The image Django ORM object.
 
     Returns:
-        The resulting image django ORM object, the sky region Django ORM
-        object and a bool value denoting if the image already existed in the
+        The resulting image django ORM object, and a bool value denoting if the image already existed in the
         database.
     """
     img = Image.objects.filter(name__exact=image.name)
-    if img.exists():
+    exists = img.exists()
+    if exists:
         img = img.get()
         # Add background path if not originally provided
         if image.background_path and not img.background_path:
             img.background_path = image.background_path
             img.save()
-        skyreg = get_create_skyreg(p_run, img)
-        # check and add the many to many if not existent
-        if not Image.objects.filter(
-            id=img.id, run__id=p_run.id
-        ).exists():
-            img.run.add(p_run)
-
-        return (img, skyreg, True)
-
-    # at this stage, measurement parquet file is not created but
-    # assume location
-    img_folder_name = image.name.replace('.', '_')
-    measurements_path = os.path.join(
-        settings.PIPELINE_WORKING_DIR,
-        'images',
-        img_folder_name,
-        'measurements.parquet'
+    else:
+        # at this stage, measurement parquet file is not created but
+        # assume location
+        img_folder_name = image.name.replace('.', '_')
+        measurements_path = os.path.join(
+            settings.PIPELINE_WORKING_DIR,
+            'images',
+            img_folder_name,
+            'measurements.parquet'
+            )
+        img = Image(
+            band_id=band_id,
+            measurements_path=measurements_path
         )
-    img = Image(
-        band_id=band_id,
-        measurements_path=measurements_path
-    )
-    # set the attributes and save the image,
-    # by selecting only valid (not hidden) attributes
-    # FYI attributs and/or method starting with _ are hidden
-    # and with __ can't be modified/called
-    for fld in img._meta.get_fields():
-        if getattr(fld, 'attname', None) and (
-            getattr(image, fld.attname, None) is not None
-        ):
-            setattr(img, fld.attname, getattr(image, fld.attname))
 
-    # get create the sky region and associate with image
-    skyreg = get_create_skyreg(p_run, img)
-    img.skyreg = skyreg
+        # set the attributes and save the image,
+        # by selecting only valid (not hidden) attributes
+        # FYI attributs and/or method starting with _ are hidden
+        # and with __ can't be modified/called
+        for fld in img._meta.get_fields():
+            if getattr(fld, 'attname', None) and (getattr(image, fld.attname, None) is not None):
+                setattr(img, fld.attname, getattr(image, fld.attname))
 
-    img.rms_median, img.rms_min, img.rms_max = get_rms_noise_image_values(
-        img.noise_path
-    )
+        img.rms_median, img.rms_min, img.rms_max = get_rms_noise_image_values(img.noise_path)
 
-    img.save()
-    img.run.add(p_run)
+        # get create the sky region and associate with image
+        img.skyreg = get_create_skyreg(img)
+        img.save()
 
-    return (img, skyreg, False)
+    return (img, exists)
 
 
 def get_create_p_run(
@@ -213,6 +188,30 @@ def get_create_p_run(
     p_run.save()
 
     return p_run, False
+
+
+def add_run_to_img(pipeline_run: Run, img: Image) -> None:
+    """
+    Add a pipeline run to an Image (and corresponding SkyRegion) in the db
+
+    Args:
+        pipeline_run:
+            Pipeline run object you want to add.
+        img:
+            Image object you want to add to.
+
+    Returns:
+        None
+    """
+    skyreg = img.skyreg
+    # check and add the many to many if not existent
+    if not Image.objects.filter(id=img.id, run__id=pipeline_run.id).exists():
+        logger.info('Adding %s to image %s', pipeline_run, img.name)
+        img.run.add(pipeline_run)
+
+    if pipeline_run not in skyreg.run.all():
+        logger.info('Adding %s to sky region %s', pipeline_run, skyreg)
+        skyreg.run.add(pipeline_run)
 
 
 def remove_duplicate_measurements(
@@ -1803,3 +1802,48 @@ def reconstruct_associtaion_dfs(
     ], axis=1).reset_index(drop=True)
 
     return sources_df, skyc1_srcs
+
+
+def write_parquets(
+    images: List[Image],
+    skyregions: List[SkyRegion],
+    bands: List[Band],
+    run_path: str
+) -> pd.DataFrame:
+    """
+    This function saves images, skyregions and bands to parquet files.
+    It also returns a DataFrame containing containing the information
+    of the sky regions associated with the current run.
+
+    Args:
+        images: list of image Django ORM objects.
+        skyregions: list sky region Django ORM objects.
+        bands: list of band Django ORM objects.
+        run_path: directory to save parquets to.
+
+    Returns:
+        Sky regions as pandas DataFrame
+    """
+    # write images parquet file under pipeline run folder
+    images_df = pd.DataFrame(map(lambda x: x.__dict__, images))
+    images_df = images_df.drop('_state', axis=1)
+    images_df.to_parquet(
+        os.path.join(run_path, 'images.parquet'),
+        index=False
+    )
+    # write skyregions parquet file under pipeline run folder
+    skyregs_df = pd.DataFrame(map(lambda x: x.__dict__, skyregions))
+    skyregs_df = skyregs_df.drop('_state', axis=1)
+    skyregs_df.to_parquet(
+        os.path.join(run_path, 'skyregions.parquet'),
+        index=False
+    )
+    # write skyregions parquet file under pipeline run folder
+    bands_df = pd.DataFrame(map(lambda x: x.__dict__, bands))
+    bands_df = bands_df.drop('_state', axis=1)
+    bands_df.to_parquet(
+        os.path.join(run_path, 'bands.parquet'),
+        index=False
+    )
+
+    return skyregs_df
