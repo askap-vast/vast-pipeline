@@ -143,6 +143,9 @@ SOCIAL_AUTH_GITHUB_ORG_SCOPE = ['read:org', 'user:email']
 
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
+TNS_API_KEY = env('TNS_API_KEY', default=None)
+TNS_USER_AGENT = env('TNS_USER_AGENT', default=None)
+
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
@@ -283,7 +286,10 @@ RAW_IMAGE_DIR = env('RAW_IMAGE_DIR', cast=str, default=os.path.join(BASE_DIR, 'r
 if '/' not in RAW_IMAGE_DIR:
     RAW_IMAGE_DIR = os.path.join(BASE_DIR, RAW_IMAGE_DIR)
 
-# extra user-supplied data folder, relative to the user's home directory on the deployment machine
+# extra user-supplied data folder
+# HOME_DATA_DIR is relative to HOME_DATA_ROOT if HOME_DATA_ROOT is not None
+# otherwise, HOME_DATA_DIR is relative to the user's home directory on the deployment machine
+HOME_DATA_ROOT = env('HOME_DATA_ROOT', default=None)
 HOME_DATA_DIR = env('HOME_DATA_DIR', cast=str, default='vast-pipeline-extra-data')
 
 # allowed source finders

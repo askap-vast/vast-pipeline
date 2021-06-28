@@ -153,6 +153,7 @@ nav:
           - translators.py: reference/survey/translators.md
         - utils:
           - auth.py: reference/utils/auth.md
+          - external_query.py: reference/utils/external_query.md
           - unit_tags.py: reference/utils/unit_tags.md
           - utils.py: reference/utils/utils.md
           - view.py: reference/utils/view.md
