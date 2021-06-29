@@ -22,12 +22,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed permission error for regular users when trying to launch an initialised run [#563](https://github.com/askap-vast/vast-pipeline/pull/563).
 - Fixed outdated installation link in README [#543](https://github.com/askap-vast/vast-pipeline/pull/543).
 
 #### Removed
 
 #### List of PRs
 
+- [#563](https://github.com/askap-vast/vast-pipeline/pull/563): fix: fixed launch run user permission bug.
 - [#544](https://github.com/askap-vast/vast-pipeline/pull/544): feat: new command to ingest images without running the full pipeline.
 - [#557](https://github.com/askap-vast/vast-pipeline/pull/557): feat: Add TNS external search for sources.
 - [#559](https://github.com/askap-vast/vast-pipeline/pull/559): feat: added HOME_DATA_ROOT setting.
