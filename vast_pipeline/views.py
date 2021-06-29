@@ -276,17 +276,9 @@ class RunViewSet(ModelViewSet):
 
         # make sure that only the run creator or an admin can request the run
         # to be processed.
-        if (
-            p_run.user != request.user.get_username()
-            and not request.user.is_staff
-        ):
-            msg = (
-                'You do not have permission to process this pipeline run!'
-            )
-            messages.error(
-                request,
-                msg
-            )
+        if p_run.user != request.user and not request.user.is_staff:
+            msg = 'You do not have permission to process this pipeline run!'
+            messages.error(request, msg)
             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
         # check that it's not already running or queued
