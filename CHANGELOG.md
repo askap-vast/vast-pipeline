@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added support for ingesting Selavy catalogues in VOTable (XML) and CSV format [#565](https://github.com/askap-vast/vast-pipeline/pull/565)
 - Added new commands: `initingest` and `ingestimages` [#544](https://github.com/askap-vast/vast-pipeline/pull/544)
 - Added TNS cone search to the external search results on the source detail page [#557](https://github.com/askap-vast/vast-pipeline/pull/557).
 - Added `HOME_DATA_ROOT` to the pipeline settings to override the OS default home directory location [#559](https://github.com/askap-vast/vast-pipeline/pull/559).
@@ -30,6 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#565](https://github.com/askap-vast/vast-pipeline/pull/565): feat: added support for reading selavy VOTables and CSVs.
 - [#567](https://github.com/askap-vast/vast-pipeline/pull/567): fix: fixed pandas=1.3.0 groupby sum regression.
 - [#563](https://github.com/askap-vast/vast-pipeline/pull/563): fix: fixed launch run user permission bug.
 - [#544](https://github.com/askap-vast/vast-pipeline/pull/544): feat: new command to ingest images without running the full pipeline.
