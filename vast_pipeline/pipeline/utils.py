@@ -1032,7 +1032,7 @@ def get_src_skyregion_merged_df(
 
     src_skyrg_df = (
         src_skyrg_df.groupby('source')
-        .agg('sum') # sum because we need to preserve order
+        .sum(numeric_only=False) # sum because we need to preserve order
     )
 
     # merge into main df and compare the images
