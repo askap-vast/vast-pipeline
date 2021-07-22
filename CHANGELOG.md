@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed a regression from pandas=1.3.0 that caused non-numeric columns to be dropped after a groupby sum operation [#567](https://github.com/askap-vast/vast-pipeline/pull/567).
 - Fixed permission error for regular users when trying to launch an initialised run [#563](https://github.com/askap-vast/vast-pipeline/pull/563).
 - Fixed outdated installation link in README [#543](https://github.com/askap-vast/vast-pipeline/pull/543).
 
@@ -29,6 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#567](https://github.com/askap-vast/vast-pipeline/pull/567): fix: fixed pandas=1.3.0 groupby sum regression.
 - [#563](https://github.com/askap-vast/vast-pipeline/pull/563): fix: fixed launch run user permission bug.
 - [#544](https://github.com/askap-vast/vast-pipeline/pull/544): feat: new command to ingest images without running the full pipeline.
 - [#557](https://github.com/askap-vast/vast-pipeline/pull/557): feat: Add TNS external search for sources.
