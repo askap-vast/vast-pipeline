@@ -9,6 +9,7 @@ import pandas as pd
 
 from django.conf import settings
 from astropy.io import fits
+from astropy.table import Table
 from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
 from typing import Dict
@@ -287,7 +288,17 @@ class SelavyImage(FitsImage):
             Dataframe containing the cleaned and processed Selavy components.
         """
         # TODO: improve with loading only the cols we need and set datatype
-        df = pd.read_fwf(self.selavy_path, skiprows=[1])
+        if self.selavy_path.endswith(".xml") or self.selavy_path.endswith(".vot"):
+            df = Table.read(
+                self.selavy_path, format="votable", use_names_over_ids=True
+            ).to_pandas()
+        elif self.selavy_path.endswith(".csv"):
+            # CSVs from CASDA have all lowercase column names
+            df = pd.read_csv(self.selavy_path).rename(
+                columns={"spectral_index_from_tt": "spectral_index_from_TT"}
+            )
+        else:
+            df = pd.read_fwf(self.selavy_path, skiprows=[1])
         # drop first line with unit of measure, select only wanted
         # columns and rename them
         df = df.loc[:, tr_selavy.keys()].rename(
