@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Removed the timezone from the Timestamps being written to the the arrow file as this causes problems with vaex [#571](https://github.com/askap-vast/vast-pipeline/pull/571).
 - Reduced the memory footprint for computing the ideal source coverages by sky regions [#555](https://github.com/askap-vast/vast-pipeline/pull/555).
 - Gulp will only read `webinterface/.env` if the required vars are undefined in the current environment [#548](https://github.com/askap-vast/vast-pipeline/pull/548).
 
@@ -31,6 +32,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#571](https://github.com/askap-vast/vast-pipeline/pull/571): fix: Removed timezone from measurements arrow file time column
 - [#565](https://github.com/askap-vast/vast-pipeline/pull/565): feat: added support for reading selavy VOTables and CSVs.
 - [#567](https://github.com/askap-vast/vast-pipeline/pull/567): fix: fixed pandas=1.3.0 groupby sum regression.
 - [#563](https://github.com/askap-vast/vast-pipeline/pull/563): fix: fixed launch run user permission bug.
