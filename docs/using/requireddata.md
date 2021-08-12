@@ -6,7 +6,7 @@ This page gives an overview of what data is required to run the pipeline along w
 
 !!! note "Note: VAST Data Releases"
     If you are a member of the VAST collaboration you will have access to the VAST data release which contains the data for the VAST Pilot Survey.
-    Refer to the wiki for more details.
+    Refer to the [VAST wiki](https://github.com/askap-vast/vast-project/wiki/Pilot-Survey-Status-&-Data){:target="_blank"} for more details.
 
 Data produced by the ASKAP telescope can be accessed by using [The CSIRO ASKAP Science Data Archive (CASDA)](https://research.csiro.au/casda/){:target="_blank"}.
 CASDA provides a web form for users to search for the data they are interested in and request for the data to be staged for download.
