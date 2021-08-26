@@ -348,24 +348,24 @@ def one_to_many_advanced(
     '''
     # use only these columns for easy debugging of the dataframe
     cols = [
-        'index_old_skyc1', 'id_skyc1', 'source_skyc1', 'd2d_skyc1',
+        'index_old_skyc1', 'id_skyc1', 'source_skyc1',
         'related_skyc1', 'index_old_skyc2', 'id_skyc2', 'source_skyc2',
-        'd2d_skyc2', 'dr'
+        'd2d', 'dr'
     ]
     duplicated_skyc1 = temp_srcs.loc[
         temp_srcs['source_skyc1'].duplicated(keep=False), cols
     ].copy()
 
     # duplicated_skyc1
-    # +-----+-------------------+------------+----------------+-------------+
-    # |     |   index_old_skyc1 |   id_skyc1 |   source_skyc1 |   d2d_skyc1 |
-    # |-----+-------------------+------------+----------------+-------------+
-    # | 117 |               121 |        122 |            122 |           0 |
-    # | 118 |               121 |        122 |            122 |           0 |
-    # | 238 |               253 |        254 |            254 |           0 |
-    # | 239 |               253 |        254 |            254 |           0 |
-    # | 246 |               261 |        262 |            262 |           0 |
-    # +-----+-------------------+------------+----------------+-------------+
+    # +-----+-------------------+------------+----------------+
+    # |     |   index_old_skyc1 |   id_skyc1 |   source_skyc1 |
+    # |-----+-------------------+------------+----------------+
+    # | 117 |               121 |        122 |            122 |
+    # | 118 |               121 |        122 |            122 |
+    # | 238 |               253 |        254 |            254 |
+    # | 239 |               253 |        254 |            254 |
+    # | 246 |               261 |        262 |            262 |
+    # +-----+-------------------+------------+----------------+
     # -----------------+-------------------+------------+----------------+
     #  related_skyc1   |   index_old_skyc2 |   id_skyc2 |   source_skyc2 |
     # -----------------+-------------------+------------+----------------+
@@ -376,7 +376,7 @@ def one_to_many_advanced(
     #                  |               327 |       5869 |             -1 |
     # -----------------+-------------------+------------+----------------+
     # -------------+------+
-    #    d2d_skyc2 |   dr |
+    #          d2d |   dr |
     # -------------+------|
     #      3.07478 |    0 |
     #      6.41973 |    0 |
@@ -398,7 +398,7 @@ def one_to_many_advanced(
     # Get the column to check for the minimum depending on the method
     # set the column names needed for filtering the 'to-many'
     # associations depending on the method (advanced or deruiter)
-    dist_col = 'd2d_skyc2' if method == 'advanced' else 'dr'
+    dist_col = 'd2d' if method == 'advanced' else 'dr'
 
     # go through the doubles and
     # 1. Keep the closest d2d or de ruiter as the primary id
@@ -642,7 +642,7 @@ def many_to_many_advanced(temp_srcs: pd.DataFrame, method: str) -> pd.DataFrame:
         m_to_m.shape[0]
     )
 
-    dist_col = 'd2d_skyc2' if method == 'advanced' else 'dr'
+    dist_col = 'd2d' if method == 'advanced' else 'dr'
     min_col = 'min_' + dist_col
 
     # get the minimum de ruiter value for each extracted source
@@ -674,9 +674,9 @@ def many_to_one_advanced(temp_srcs: pd.DataFrame) -> pd.DataFrame:
     '''
     # use only these columns for easy debugging of the dataframe
     cols = [
-        'index_old_skyc1', 'id_skyc1', 'source_skyc1', 'd2d_skyc1',
+        'index_old_skyc1', 'id_skyc1', 'source_skyc1',
         'related_skyc1', 'index_old_skyc2', 'id_skyc2', 'source_skyc2',
-        'd2d_skyc2', 'dr'
+        'd2d', 'dr'
     ]
 
     # select those sources which have been matched to the same measurement
@@ -687,15 +687,15 @@ def many_to_one_advanced(temp_srcs: pd.DataFrame) -> pd.DataFrame:
     ]
 
     # duplicated_skyc2
-    # +-----+-------------------+------------+----------------+-------------
-    # |     |   index_old_skyc1 |   id_skyc1 |   source_skyc1 |   d2d_skyc1
-    # |-----+-------------------+------------+----------------+-------------
-    # | 447 |               477 |        478 |            478 |           0
-    # | 448 |               478 |        479 |            479 |           0
-    # | 477 |               507 |        508 |            508 |           0
-    # | 478 |               508 |        509 |            509 |           0
-    # | 695 |               738 |        739 |            739 |           0
-    # +-----+-------------------+------------+----------------+-------------
+    # +-----+-------------------+------------+----------------+
+    # |     |   index_old_skyc1 |   id_skyc1 |   source_skyc1 |
+    # |-----+-------------------+------------+----------------+
+    # | 447 |               477 |        478 |            478 |
+    # | 448 |               478 |        479 |            479 |
+    # | 477 |               507 |        508 |            508 |
+    # | 478 |               508 |        509 |            509 |
+    # | 695 |               738 |        739 |            739 |
+    # +-----+-------------------+------------+----------------+
     # +-----------------+-------------------+------------+----------------+
     # | related_skyc1   |   index_old_skyc2 |   id_skyc2 |   source_skyc2 |
     # +-----------------+-------------------+------------+----------------+
@@ -706,7 +706,7 @@ def many_to_one_advanced(temp_srcs: pd.DataFrame) -> pd.DataFrame:
     # |                 |               561 |       6103 |             -1 |
     # +-----------------+-------------------+------------+----------------+
     # -------------+------+
-    #    d2d_skyc2 |   dr |
+    #          d2d |   dr |
     # -------------+------|
     #      8.63598 |    0 |
     #      8.63598 |    0 |
@@ -943,6 +943,13 @@ def advanced_association(
         suffixes=('_skyc1', '_skyc2')
     )
 
+    # drop the double d2d column and keep the d2d_skyc2 as assigned above
+    temp_srcs = (
+        temp_srcs
+        .drop(['d2d_skyc1', 'dr_skyc1', 'dr_skyc2'], axis=1)
+        .rename(columns={'d2d_skyc2': 'd2d'})
+    )
+
     del temp_skyc1_srcs, temp_skyc2_srcs
 
     # Step 3: Apply the beamwidth limit
@@ -980,6 +987,7 @@ def advanced_association(
     ].reset_index(drop=True)
     skyc2_srcs_toappend['source'] = temp_srcs['source_skyc1'].values
     skyc2_srcs_toappend['related'] = temp_srcs['related_skyc1'].values
+    skyc2_srcs_toappend['d2d'] = temp_srcs['d2d'].values
     skyc2_srcs_toappend['dr'] = temp_srcs['dr'].values
 
     # and get the skyc2 sources with no match
