@@ -78,7 +78,7 @@ def test_sources(sources_1: pd.DataFrame, sources_2: pd.DataFrame):
     pd.testing.assert_frame_equal(
         sources_1,
         sources_2,
-        check_less_precise=4
+        rtol=1e-4
     )
 
 def test_relations(testcase: TestCase, relations_1: pd.DataFrame,

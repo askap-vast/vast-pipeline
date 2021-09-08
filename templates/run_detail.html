@@ -38,18 +38,30 @@
       <div>
         <h1 class="h3 mb-2 text-gray-800">Pipeline Run: {{ p_run.name }}</h1>
       </div>
-      {% if user.get_username == p_run.user or user.is_staff %}
-        <a id="newPipeRunButton" class="btn btn-sm btn-primary
-          btn-icon-split shadow-sm
-          {% if p_run.status == 'Running' or p_run.status == 'Queued' %}
-            disabled
-          {% endif %}" href="#" data-toggle="modal" data-target="#runPipeModal">
-          <span class="icon text-white-600">
-            <i class="fas fa-rocket"></i>
-          </span>
-          <span class="text">{% if p_run.status == 'Completed' %}Add Images or Re-{% endif %}Process Run</span>
-        </a>
-      {% endif %}
+      <div>
+        {% if user.get_username == p_run.user or user.is_staff %}
+          <a id="restorePipeRunButton" class="btn btn-sm btn-danger
+            btn-icon-split shadow-sm
+            {% if p_run.status == 'Running' or p_run.status == 'Queued' %}
+              disabled
+            {% endif %}" href="#" data-toggle="modal" data-target="#restorePipeModal">
+            <span class="icon text-white-600">
+              <i class="fas fa-window-restore"></i>
+            </span>
+            <span class="text">Restore Run</span>
+          </a>
+          <a id="newPipeRunButton" class="btn btn-sm btn-primary
+            btn-icon-split shadow-sm
+            {% if p_run.status == 'Running' or p_run.status == 'Queued' or p_run.status == 'Initialised' %}
+              disabled
+            {% endif %}" href="#" data-toggle="modal" data-target="#runPipeModal">
+            <span class="icon text-white-600">
+              <i class="fas fa-rocket"></i>
+            </span>
+            <span class="text">{% if p_run.status == 'Completed' %}Add Images or Re-{% endif %}Process Run</span>
+          </a>
+        {% endif %}
+      </div>
 
   </div>
 
@@ -226,6 +238,25 @@
     </div>
   </div>
 
+  <div class="row">
+    <div class="col-lg-12">
+      <!-- log file card -->
+      <div class="card shadow mb-4">
+        <h6 class="card-header m-0 font-weight-bold text-primary" id="restorelogFile">
+          <a data-toggle="collapse" href="#collapseRestoreLogCard" aria-expanded="true" aria-controls="collapseRestoreLogCard" id="restorelogHeader" class="d-block">
+            <i class="fa fa-chevron-down pull-right"></i>
+            Restore Log File
+          </a>
+        </h6>
+        <div class="collapse show" id="collapseRestoreLogCard">
+          <div class="card-body">
+            <pre class="pre-scrollable"><code>{% if p_run.restore_log_txt %}{{ p_run.restore_log_txt }}{% else %}N/A{% endif %}</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- image table -->
   <div class="row">
     <div class="col">
@@ -336,7 +367,7 @@
         </button>
       </div>
       <div class="modal-body">
-        <form id="runPipeForm" action="{% url 'vast_pipeline:api_pipe_runs-run' p_run.id %}" method="post" novalidate>
+        <form id="restorePipeForm" action="{% url 'vast_pipeline:api_pipe_runs-run' p_run.id %}" method="post" novalidate>
           {% csrf_token %}
           <p>Please read the sections below and confirm how you wish '{{ p_run.name }}' to be processed.</p>
           <hr>
@@ -379,6 +410,61 @@
                 <i class="fas fa-rocket fa-sm"></i>
               </span>
               <span class="text">Schedule Run</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Restore pipeline modal-->
+<div class="modal fade" id="restorePipeModal" tabindex="-1" role="dialog" aria-labelledby="restorePipeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title font-weight-bold" id="runPipeModalLabel">Restore Run {{ p_run.name }}</h4>
+        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="runPipeForm" action="{% url 'vast_pipeline:api_pipe_runs-restore' p_run.id %}" method="post" novalidate>
+          {% csrf_token %}
+          <p>
+            This process will restore the pipeline run to the previous successful run. 
+            For example, if an image was added that was wrong or the run errored part-way through, this procedure can restore the pipeline run to before the addition was attempted.
+            It can only be used once, which means you cannot restore the run state from more than one run previous.
+          </p>
+          <h5>Previous Successful Config</h5>
+          The pipeline run will be restored to the state of the configuration file below.
+          Note that if no configuration file is shown then the restore method cannot be used.
+          <pre id="prevrunConfigText" class="pre-scrollable" style="max-height: 50vh" contenteditable="false"><code id="prevrunConfigTextCode" class="language-yaml line-numbers" style="white-space: pre">{% if p_run.prev_config_txt %}{{ p_run.prev_config_txt }}{% else %}No previous config exists.{% endif %}</code></pre>
+          <hr>
+          <h5 style="color:#d9534f">Warning</h5>
+          <div style="color:#d9534f">
+            <p>
+              This process cannot be undone and the current state will be lost.
+            </p>
+          </div>
+          <div class="modal-footer">
+            Debug log output:
+            <div class="btn-group btn-group-toggle mr-auto" data-toggle="buttons">
+              <input type="checkbox" name="restoreDebug" id="debugToggle" data-toggle="toggle" data-size="sm">
+            </div>
+            <button class="btn btn-secondary btn-icon-split" type="button" data-dismiss="modal">
+              <span class="icon">
+                <i class="fa fa-window-close"></i>
+              </span>
+              <span class="text">Cancel</span>
+            </button>
+            <button id="restorePipeRun" class="btn btn-danger btn-icon-split" {% if p_run.prev_config_txt == None %}
+              disabled="disabled"
+            {% endif %}" type="submit">
+            <span class="icon">
+              <i class="fas fa-window-restore fa-sm"></i>
+            </span>
+            <span class="text">Restore Run</span>
             </button>
           </div>
         </form>

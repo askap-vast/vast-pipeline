@@ -340,6 +340,98 @@ class RunViewSet(ModelViewSet):
             reverse('vast_pipeline:run_detail', args=[p_run.id])
         )
 
+    @rest_framework.decorators.action(detail=True, methods=['post'])
+    def restore(self, request, pk=None):
+        """
+        Launches a restore pipeline run using a Django Q cluster. Includes a
+        check on ownership or admin status of the user to make sure
+        processing is allowed.
+
+        Args:
+            request (Request): Django REST Framework request object.
+            pk (int, optional): Run object primary key. Defaults to None.
+
+        Raises:
+            Http404: if a Source with the given `pk` cannot be found.
+
+        Returns:
+            Response: Returns to the orignal request page (the pipeline run
+            detail).
+        """
+        if not pk:
+            messages.error(
+                request,
+                'Error in config write: Run pk parameter null or not passed'
+            )
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        try:
+            p_run = get_object_or_404(self.queryset, pk=pk)
+        except Exception as e:
+            messages.error(request, f'Error in run fetch: {e}')
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        # make sure that only the run creator or an admin can request the run
+        # to be processed.
+        if p_run.user != request.user and not request.user.is_staff:
+            msg = 'You do not have permission to process this pipeline run!'
+            messages.error(request, msg)
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        # check that it's not already running or queued
+        if p_run.status in ["RUN", "QUE", "RES", "INI"]:
+            msg = (
+                f'{p_run.name} is already running, queued, restoring or is '
+                'only initialised. It cannot be restored at this time.'
+            )
+            messages.error(
+                request,
+                msg
+            )
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        if Run.objects.check_max_runs(settings.MAX_PIPELINE_RUNS):
+            msg = (
+                'The maximum number of simultaneous pipeline runs has been'
+                f' reached ({settings.MAX_PIPELINE_RUNS})! Please try again'
+                ' when other jobs have finished.'
+            )
+            messages.error(
+                request,
+                msg
+            )
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        prev_status = p_run.status
+        try:
+            debug_flag = True if request.POST.get('restoreDebug', None) else False
+
+            async_task(
+                'vast_pipeline.management.commands.restorepiperun.perform_checks_and_get_files',
+                p_run,
+                cli=False,
+                debug=debug_flag,
+                hook='vast_pipeline.hooks.run_restore',
+            )
+            msg = mark_safe(
+                f'Restore <b>{p_run.name}</b> successfully sent to the queue!<br><br>Refresh the'
+                ' page to check the status.'
+            )
+            messages.success(
+                request,
+                msg
+            )
+        except Exception as e:
+            with transaction.atomic():
+                p_run.status = prev_status
+                p_run.save()
+            messages.error(request, f'Error in restoring run: {e}')
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        return HttpResponseRedirect(
+            reverse('vast_pipeline:run_detail', args=[p_run.id])
+        )
+
 
 # Run detail
 @login_required
@@ -373,11 +465,23 @@ def RunDetail(request, id):
         with open(f_path) as fp:
             p_run['config_txt'] = fp.read()
 
+    # read prev run config
+    f_path = os.path.join(p_run['path'], 'config.yaml.bak')
+    if os.path.exists(f_path):
+        with open(f_path) as fp:
+            p_run['prev_config_txt'] = fp.read()
+
     # read run log file
     f_path = os.path.join(p_run['path'], 'log.txt')
     if os.path.exists(f_path):
         with open(f_path) as fp:
             p_run['log_txt'] = fp.read()
+
+    # read run log file
+    f_path = os.path.join(p_run['path'], 'restore_log.txt')
+    if os.path.exists(f_path):
+        with open(f_path) as fp:
+            p_run['restore_log_txt'] = fp.read()
 
     image_fields = [
         'name',
