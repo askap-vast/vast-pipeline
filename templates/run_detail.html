@@ -367,7 +367,7 @@
         </button>
       </div>
       <div class="modal-body">
-        <form id="restorePipeForm" action="{% url 'vast_pipeline:api_pipe_runs-run' p_run.id %}" method="post" novalidate>
+        <form id="runPipeForm" action="{% url 'vast_pipeline:api_pipe_runs-run' p_run.id %}" method="post" novalidate>
           {% csrf_token %}
           <p>Please read the sections below and confirm how you wish '{{ p_run.name }}' to be processed.</p>
           <hr>
@@ -429,7 +429,7 @@
         </button>
       </div>
       <div class="modal-body">
-        <form id="runPipeForm" action="{% url 'vast_pipeline:api_pipe_runs-restore' p_run.id %}" method="post" novalidate>
+        <form id="restorePipeForm" action="{% url 'vast_pipeline:api_pipe_runs-restore' p_run.id %}" method="post" novalidate>
           {% csrf_token %}
           <p>
             This process will restore the pipeline run to the previous successful run. 
