@@ -101,6 +101,17 @@ def run_pipe(
         os.path.join(p_run.path, 'config_temp.yaml')
     )
 
+    # backup the last successful outputs.
+    # if the run is being run again and the last status is END then the
+    # user is highly likely to be attempting to add images. Making the backups
+    # now from a guaranteed successful run is safer in case of problems
+    # with the config file below that causes an error.
+    if flag_exist:
+        if cli and p_run.status == 'END':
+            backup_parquets(p_run.path)
+        elif not cli and prev_ui_status == 'END':
+            backup_parquets(p_run.path)
+
     # validate run configuration
     try:
         pipeline.config.validate(user=user)
@@ -192,8 +203,6 @@ def run_pipe(
                 )
 
                 if full_rerun:
-                    if p_run.status == 'END':
-                        backup_parquets(p_run.path)
                     logger.info(
                         'Cleaning up pipeline run before re-process data'
                     )
@@ -248,12 +257,8 @@ def run_pipe(
                         pipeline.set_status(p_run, 'END')
                         return True
 
-                    if cli and p_run.status == 'END':
-                        backup_parquets(p_run.path)
-                    elif not cli and prev_ui_status == 'END':
-                        backup_parquets(p_run.path)
-
                     pipeline.add_mode = True
+
                     for i in [
                         'images', 'associations', 'sources', 'relations',
                         'measurement_pairs'
