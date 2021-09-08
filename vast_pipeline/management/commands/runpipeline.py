@@ -135,7 +135,7 @@ def run_pipe(
             # check for and remove any present .parquet (and .arrow) files
             parquets = (
                 glob.glob(os.path.join(p_run.path, "*.parquet"))
-                # TODO Remove arrow when vaex support is dropped.
+                # TODO Remove arrow when arrow files are no longer needed.
                 + glob.glob(os.path.join(p_run.path, "*.arrow"))
                 + glob.glob(os.path.join(p_run.path, "*.bak"))
             )
