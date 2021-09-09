@@ -79,9 +79,11 @@ nav:
     - Run Configuration: using/runconfig.md
     - Processing a Run: using/processrun.md
     - Adding Images to a Run: using/addtorun.md
+    - Restoring a Run: using/restorerun.md
     - Deleting a Run: using/deleterun.md
+    - Generating Arrow Files: using/genarrow.md
     - Exploring the Pipeline Website:
-      - Overview: exploringwebsite/websiteoverview.md
+      - Website Overview: exploringwebsite/websiteoverview.md
       - DataTables: exploringwebsite/datatables.md
       - Pipeline Run Pages: exploringwebsite/runpages.md
       - Source Pages: exploringwebsite/sourcepages.md

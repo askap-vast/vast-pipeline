@@ -12,7 +12,8 @@ from django.core.management.base import BaseCommand, CommandError
 from typing import Dict
 
 from vast_pipeline.models import (
-    Run, Source, Measurement, Image, Association, MeasurementPair
+    Run, Source, Measurement, Image, Association, MeasurementPair,
+    RelatedSource
 )
 from vast_pipeline.pipeline.loading import update_sources
 from vast_pipeline.pipeline.config import PipelineConfig
@@ -147,6 +148,33 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config: PipelineCon
                 n_del,
             )
             logger.debug('(type, #deleted): %s', detail_del)
+
+    # Delete newly created relations of sources that still exist after deleting
+    # the new sources
+    bak_relations = pd.read_parquet(bak_files['relations'])
+    db_relations = pd.DataFrame(
+        list(RelatedSource.objects.filter(from_source_id__run=p_run).values())
+    )
+
+    diff = pd.merge(
+        db_relations,
+        bak_relations,
+        on=['from_source_id', 'to_source_id'],
+        how='left',
+        indicator='exist'
+    )
+
+    relations_to_drop = diff[diff['exist'] == 'left_only']['id'].to_numpy()
+    relations_to_drop = RelatedSource.objects.filter(id__in=relations_to_drop)
+
+    with transaction.atomic():
+        n_del, detail_del = relations_to_drop.delete()
+        logger.info(
+            ('Deleting left over relations after dropping new sources'
+             ' Total objects deleted: %i'),
+            n_del,
+        )
+        logger.debug('(type, #deleted): %s', detail_del)
 
     if monitor:
         current_forced_parquets = glob(os.path.join(
@@ -354,7 +382,7 @@ class Command(BaseCommand):
         try:
             # update pipeline run status to restoring
             prev_status = p_run.status
-            pipeline.set_status('RES')
+            pipeline.set_status(p_run, 'RES')
 
             prev_config_file = os.path.join(p_run.path, 'config.yaml.bak')
 
@@ -399,13 +427,13 @@ class Command(BaseCommand):
 
             if user_continue:
                 restore_pipe(p_run, bak_files, prev_config)
-                pipeline.set_status('END')
+                pipeline.set_status(p_run, 'END')
                 logger.info('Restore complete.')
             else:
-                pipeline.set_status(prev_status)
+                pipeline.set_status(p_run, prev_status)
                 logger.info('No actions performed.')
 
         except Exception as e:
             logger.error('Restoring failed!')
             logger.error(e)
-            pipeline.set_status(prev_status)
+            pipeline.set_status(p_run, prev_status)

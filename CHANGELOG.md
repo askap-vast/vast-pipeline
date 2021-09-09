@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added new log files for arrow file creation and restore run and added to run detail page [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
+- Added restore run test [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
+- Added new run status of `DEL`, `Deleting` [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
+- Added documentation pages on new action buttons [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
+- Added UI action buttons to run-detail page to allow arrow file generation, deletion and restoration [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
 - Added try-except error capture on pre-run checks to correctly assign pipeline run as failed if an error occurs [#576](https://github.com/askap-vast/vast-pipeline/pull/576).
 - Added support for ingesting Selavy catalogues in VOTable (XML) and CSV format [#565](https://github.com/askap-vast/vast-pipeline/pull/565)
 - Added new commands: `initingest` and `ingestimages` [#544](https://github.com/askap-vast/vast-pipeline/pull/544)
@@ -19,12 +24,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Changed restore run command to only allow one run as input [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
+- Changed existing documentation pages to reflect new buttons [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
 - Moved creation of output backup files to occur before the config check [#576](https://github.com/askap-vast/vast-pipeline/pull/576).
 - Reduced the memory footprint for computing the ideal source coverages by sky regions [#555](https://github.com/askap-vast/vast-pipeline/pull/555).
 - Gulp will only read `webinterface/.env` if the required vars are undefined in the current environment [#548](https://github.com/askap-vast/vast-pipeline/pull/548).
 
 #### Fixed
 
+- Fixed testing pandas equal deprecation warning [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
+- Fixed restore run relations issue [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
 - Fixed logic for full re-run requirement when UI run is being re-run from an error status [#576](https://github.com/askap-vast/vast-pipeline/pull/576).
 - Fixed a regression from pandas=1.3.0 that caused non-numeric columns to be dropped after a groupby sum operation [#567](https://github.com/askap-vast/vast-pipeline/pull/567).
 - Fixed permission error for regular users when trying to launch an initialised run [#563](https://github.com/askap-vast/vast-pipeline/pull/563).
@@ -34,6 +43,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#580](https://github.com/askap-vast/vast-pipeline/pull/580): feat, fix, doc: Added UI run action buttons.
 - [#576](https://github.com/askap-vast/vast-pipeline/pull/576): fix: Fixed UI re-run from errored status.
 - [#565](https://github.com/askap-vast/vast-pipeline/pull/565): feat: added support for reading selavy VOTables and CSVs.
 - [#567](https://github.com/askap-vast/vast-pipeline/pull/567): fix: fixed pandas=1.3.0 groupby sum regression.
