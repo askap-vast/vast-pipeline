@@ -40,5 +40,7 @@ Once pressed the website will direct back to the `Pipeline Runs` page and a conf
     Hence, the run may still appear in the pipeline runs list for a short time following the request with a status of `Deleting`.
 
 ![!Delete Run notification.](../img/delete-run-notification.png){: loading=lazy }
+
 Refreshing the page will show a deleting status if the process is still running:
+
 ![!Delete Run deleting status.](../img/delete-run-deleting-status.png){: loading=lazy }
