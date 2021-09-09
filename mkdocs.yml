@@ -162,7 +162,6 @@ nav:
         - context_processors.py: reference/context_processors.md
         - converters.py: reference/converters.md
         - forms.py: reference/forms.md
-        - hooks.py: reference/hooks.md
         - models.py: reference/models.md
         - plots.py: reference/plots.md
         # - serializers.py: reference/serializers.md

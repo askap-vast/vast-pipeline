@@ -9,7 +9,7 @@ from glob import glob
 from django.db.models import Q
 from django.db import transaction
 from django.core.management.base import BaseCommand, CommandError
-from typing import Dict, Union
+from typing import Dict
 
 from vast_pipeline.models import (
     Run, Source, Measurement, Image, Association, MeasurementPair
@@ -44,86 +44,7 @@ def yesno(question: str) -> bool:
     return False
 
 
-def perform_checks_and_get_files(
-    p_run: Run,
-    cli: bool = True,
-    debug: bool = False
-) -> Union[PipelineConfig, Dict[str, str]]:
-    """
-    Function to perform sanity checks on whether a restore run is possible.
-
-    Args:
-        p_run: The Run object to check.
-        cli: Whether the command has been called from the command line or
-            the UI.
-        debug: Active debug logging from a non-CLI call.
-
-    Returns:
-        bak_files: Dictionary containing the paths to the backup files.
-
-    Raises:
-        CommandError: If run does not have 'END' or 'ERR' status.
-        CommandError: If previous config file does not exist.
-        CommandError: A backup file does not exist.
-    """
-    if not cli:
-        # set up the logger for the UI job
-        root_logger = logging.getLogger('')
-        if debug:
-            root_logger.setLevel(logging.DEBUG)
-        f_handler = logging.FileHandler(
-            os.path.join(p_run.path, 'restore_log.txt'),
-            mode='w'
-        )
-        f_handler.setFormatter(root_logger.handlers[0].formatter)
-        root_logger.addHandler(f_handler)
-
-    prev_config_file = os.path.join(p_run.path, 'config.yaml.bak')
-
-    if os.path.isfile(prev_config_file):
-        shutil.copy(
-            prev_config_file,
-            prev_config_file.replace('.yaml.bak', '.bak.yaml')
-        )
-        prev_config_file = prev_config_file.replace(
-            '.yaml.bak', '.bak.yaml'
-        )
-        prev_config = PipelineConfig.from_file(prev_config_file)
-        os.remove(prev_config_file)
-    else:
-        raise CommandError(
-            'Previous config file does not exist.'
-            ' Cannot restore pipeline run.'
-        )
-
-    bak_files = {}
-    for i in [
-        'associations', 'bands', 'images', 'measurement_pairs',
-        'relations', 'skyregions', 'sources', 'config'
-    ]:
-        if i == 'config':
-            f_name = os.path.join(p_run.path, f'{i}.yaml.bak')
-        else:
-            f_name = os.path.join(p_run.path, f'{i}.parquet.bak')
-
-        if os.path.isfile(f_name):
-            bak_files[i] = f_name
-        else:
-            raise CommandError(
-                f'File {f_name} does not exist.'
-                ' Cannot restore pipeline run.'
-            )
-
-    return prev_config, bak_files
-
-
-def restore_pipe(
-    p_run: Run,
-    bak_files: Dict[str, str],
-    prev_config: PipelineConfig,
-    cli: bool = True,
-    debug: bool = False
-) -> None:
+def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config: PipelineConfig) -> None:
     """
     Restores the pipeline to the backup files version.
 
@@ -134,24 +55,10 @@ def restore_pipe(
             Dictionary containing the paths to the .bak files.
         prev_config (PipelineConfig):
             Back up run configuration.
-        cli: Whether the command has been called from the command line or
-            the UI.
-        debug: Active debug logging from a non-CLI call.
 
     Returns:
         None
     """
-    if not cli:
-        # set up the logger for the UI job
-        root_logger = logging.getLogger('')
-        if debug:
-            root_logger.setLevel(logging.DEBUG)
-        f_handler = logging.FileHandler(
-            os.path.join(p_run.path, 'restore_log.txt'),
-            mode='a'
-        )
-        f_handler.setFormatter(root_logger.handlers[0].formatter)
-        root_logger.addHandler(f_handler)
     # check images match
     img_f_list = prev_config["inputs"]["image"]
     if isinstance(img_f_list, dict):
@@ -409,45 +316,74 @@ class Command(BaseCommand):
         Returns:
             None
         """
-        p_run_name, run_folder = get_p_run_name(
-            options['piperun'],
-            return_folder=True
-        )
         # configure logging
-        root_logger = logging.getLogger('')
-        f_handler = logging.FileHandler(
-            os.path.join(run_folder, 'restore_log.txt'),
-            mode='w'
-        )
-        f_handler.setFormatter(root_logger.handlers[0].formatter)
-        root_logger.addHandler(f_handler)
-
         if options['verbosity'] > 1:
             # set root logger to use the DEBUG level
+            root_logger = logging.getLogger('')
             root_logger.setLevel(logging.DEBUG)
             # set the traceback on
             options['traceback'] = True
 
+        piperun = options['piperun']
+
+        p_run_name = get_p_run_name(piperun)
         try:
             p_run = Run.objects.get(name=p_run_name)
-            pipeline = Pipeline(
-                name=p_run_name,
-                config_path=os.path.join(p_run.path, 'config.yaml')
-            )
         except Run.DoesNotExist:
             raise CommandError(f'Pipeline run {p_run_name} does not exist')
 
+        if p_run.status not in ['END', 'ERR']:
+            raise CommandError(
+                f"Run {p_run_name} does not have an 'END' or 'ERR' status."
+                " Unable to run restore."
+            )
+
+        path = p_run.path
+        pipeline = Pipeline(
+            name=p_run_name,
+            config_path=os.path.join(path, 'config.yaml')
+        )
         try:
             # update pipeline run status to restoring
             prev_status = p_run.status
-            if p_run.status not in ['END', 'ERR']:
-                raise CommandError(
-                    f"Run {p_run_name} does not have an 'END' or 'ERR' status."
-                    " Unable to run restore."
-                )
             pipeline.set_status('RES')
 
-            prev_config, bak_files = perform_checks_and_get_files(p_run)
+            prev_config_file = os.path.join(p_run.path, 'config.yaml.bak')
+
+            if os.path.isfile(prev_config_file):
+                shutil.copy(
+                    prev_config_file,
+                    prev_config_file.replace('.yaml.bak', '.bak.yaml')
+                )
+                prev_config_file = prev_config_file.replace(
+                    '.yaml.bak', '.bak.yaml'
+                )
+                prev_config = PipelineConfig.from_file(prev_config_file)
+                os.remove(prev_config_file)
+            else:
+                raise CommandError(
+                    'Previous config file does not exist.'
+                    ' Cannot restore pipeline run.'
+                )
+
+            bak_files = {}
+            for i in [
+                'associations', 'bands', 'images', 'measurement_pairs',
+                'relations', 'skyregions', 'sources', 'config'
+            ]:
+                if i == 'config':
+                    f_name = os.path.join(p_run.path, f'{i}.yaml.bak')
+                else:
+                    f_name = os.path.join(p_run.path, f'{i}.parquet.bak')
+
+                if os.path.isfile(f_name):
+                    bak_files[i] = f_name
+                else:
+                    raise CommandError(
+                        f'File {f_name} does not exist.'
+                        ' Cannot restore pipeline run.'
+                    )
+
             logger_msg = "Will restore the run to the following config:\n"
             logger.info(logger_msg + prev_config._yaml.as_yaml())
 
@@ -464,4 +400,4 @@ class Command(BaseCommand):
         except Exception as e:
             logger.error('Restoring failed!')
             logger.error(e)
-            pipeline.set_status('ERR')
+            pipeline.set_status(prev_status)

@@ -404,15 +404,16 @@ class RunViewSet(ModelViewSet):
 
         prev_status = p_run.status
         try:
-            debug_flag = True if request.POST.get('restoreDebug', None) else False
+            debug_flag = 3 if request.POST.get('restoreDebug', None) else 1
 
             async_task(
-                'vast_pipeline.management.commands.restorepiperun.perform_checks_and_get_files',
-                p_run,
-                cli=False,
-                debug=debug_flag,
-                hook='vast_pipeline.hooks.run_restore',
+                'django.core.management.call_command',
+                'restorepiperun',
+                p_run.path,
+                no_confirm=True,
+                verbosity=debug_flag
             )
+
             msg = mark_safe(
                 f'Restore <b>{p_run.name}</b> successfully sent to the queue!<br><br>Refresh the'
                 ' page to check the status.'
@@ -423,7 +424,7 @@ class RunViewSet(ModelViewSet):
             )
         except Exception as e:
             with transaction.atomic():
-                p_run.status = prev_status
+                p_run.status = 'ERR'
                 p_run.save()
             messages.error(request, f'Error in restoring run: {e}')
             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
