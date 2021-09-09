@@ -27,7 +27,7 @@ This can be slow using libraries such as pandas, and also consumes a lot of syst
 Instead, if the measurements are saved in the [Apache Arrow](https://arrow.apache.org/overview/){:target="_blank"} format, libraries such as [`vaex`](https://vaex.io){:target="_blank"} are able to open `.arrow` files in an out-of-core context so the memory footprint is hugely reduced along with the reading of the file being very fast.
 The two-epoch measurement pairs are also saved to arrow format due to the same reasons.
 
-See [Reading with vaex](usingoutputs.md#reading-with-vaex) for further details on using `vaex`.
+See [Reading with vaex](../../outputs/usingoutputs#reading-with-vaex) for further details on using `vaex`.
 
 ## Step-by-step Guide
 
