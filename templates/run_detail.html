@@ -40,9 +40,29 @@
       </div>
       <div>
         {% if user.get_username == p_run.user or user.is_staff %}
-          <a id="restorePipeRunButton" class="btn btn-sm btn-danger
+          <a id="arrowPipeRunButton" class="btn btn-sm btn-success
+            btn-icon-split shadow-sm
+            {% if p_run.status == 'Completed' %}{% else %}
+              disabled
+            {% endif %}" href="#" data-toggle="modal" data-target="#arrowPipeModal">
+            <span class="icon text-white-600">
+              <i class="fas fa-angle-double-right"></i>
+            </span>
+            <span class="text">Generate Arrow Files</span>
+          </a>
+          <a id="deletePipeRunButton" class="btn btn-sm btn-danger
             btn-icon-split shadow-sm
             {% if p_run.status == 'Running' or p_run.status == 'Queued' %}
+              disabled
+            {% endif %}" href="#" data-toggle="modal" data-target="#deletePipeModal">
+            <span class="icon text-white-600">
+              <i class="fas fa-trash"></i>
+            </span>
+            <span class="text">Delete Run</span>
+          </a>
+          <a id="restorePipeRunButton" class="btn btn-sm btn-warning
+            btn-icon-split shadow-sm
+            {% if p_run.status == 'Running' or p_run.status == 'Queued' or p_run.status == 'Initialised' %}
               disabled
             {% endif %}" href="#" data-toggle="modal" data-target="#restorePipeModal">
             <span class="icon text-white-600">
@@ -52,7 +72,7 @@
           </a>
           <a id="newPipeRunButton" class="btn btn-sm btn-primary
             btn-icon-split shadow-sm
-            {% if p_run.status == 'Running' or p_run.status == 'Queued' or p_run.status == 'Initialised' %}
+            {% if p_run.status == 'Running' or p_run.status == 'Queued' %}
               disabled
             {% endif %}" href="#" data-toggle="modal" data-target="#runPipeModal">
             <span class="icon text-white-600">
@@ -157,9 +177,14 @@
           <p><strong>Epoch based: </strong>{{ p_run.epoch_based }}</p>
           <p><strong>Run Status: </strong>{{ p_run.status }}</p>
           <p><strong>Path: </strong>{{ p_run.path }}</p>
+          <p><strong>Arrow Files Available: </strong>{% if p_run.arrow_files == True %}Yes{% else %}No{% endif %}</p>
           <p><strong>Description: </strong>{{ p_run.description }}</p>
-          <a href="#configFile"><p><strong>Config File</strong></p></a>
-          <a href="#logFile"><p><strong>Log File</strong></p></a>
+          <p>
+            <a href="#configFile"><strong>Config File</strong></a><br>
+            <a href="#logFile"><strong>Run Log File</strong></a><br>
+            <a href="#restorelogFile"><strong>Restore Log File</strong></a><br>
+            <a href="#arrowlogFile"><strong>Generate Arrow Files Log File</strong></a>
+          </p>
         </div>
       </div>
     </div>
@@ -251,6 +276,25 @@
         <div class="collapse show" id="collapseRestoreLogCard">
           <div class="card-body">
             <pre class="pre-scrollable"><code>{% if p_run.restore_log_txt %}{{ p_run.restore_log_txt }}{% else %}N/A{% endif %}</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="row">
+    <div class="col-lg-12">
+      <!-- log file card -->
+      <div class="card shadow mb-4">
+        <h6 class="card-header m-0 font-weight-bold text-primary" id="arrowlogFile">
+          <a data-toggle="collapse" href="#collapseArrowLogCard" aria-expanded="true" aria-controls="collapseArrowLogCard" id="arrowlogHeader" class="d-block">
+            <i class="fa fa-chevron-down pull-right"></i>
+            Generate Arrow Files Log File
+          </a>
+        </h6>
+        <div class="collapse show" id="collapseArrowLogCard">
+          <div class="card-body">
+            <pre class="pre-scrollable"><code>{% if p_run.gen_arrow_log_txt %}{{ p_run.gen_arrow_log_txt }}{% else %}N/A{% endif %}</code></pre>
           </div>
         </div>
       </div>
@@ -423,7 +467,7 @@
   <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h4 class="modal-title font-weight-bold" id="runPipeModalLabel">Restore Run {{ p_run.name }}</h4>
+        <h4 class="modal-title font-weight-bold" id="restorePipeModalLabel">Restore Run {{ p_run.name }}</h4>
         <button class="close" type="button" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">×</span>
         </button>
@@ -450,7 +494,7 @@
           <div class="modal-footer">
             Debug log output:
             <div class="btn-group btn-group-toggle mr-auto" data-toggle="buttons">
-              <input type="checkbox" name="restoreDebug" id="debugToggle" data-toggle="toggle" data-size="sm">
+              <input type="checkbox" name="restoreDebug" id="restoreDebugToggle" data-toggle="toggle" data-size="sm">
             </div>
             <button class="btn btn-secondary btn-icon-split" type="button" data-dismiss="modal">
               <span class="icon">
@@ -458,13 +502,113 @@
               </span>
               <span class="text">Cancel</span>
             </button>
-            <button id="restorePipeRun" class="btn btn-danger btn-icon-split" {% if p_run.prev_config_txt == None %}
+            <button id="restorePipeRun" class="btn btn-warning btn-icon-split" {% if p_run.prev_config_txt == None %}
               disabled="disabled"
-            {% endif %}" type="submit">
+            {% endif %} type="submit">
             <span class="icon">
               <i class="fas fa-window-restore fa-sm"></i>
             </span>
             <span class="text">Restore Run</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete pipeline modal-->
+<div class="modal fade" id="deletePipeModal" tabindex="-1" role="dialog" aria-labelledby="deletePipeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title font-weight-bold" id="deletePipeModalLabel">Delete Run {{ p_run.name }}</h4>
+        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="deletePipeForm" action="{% url 'vast_pipeline:api_pipe_runs-delete' p_run.id %}" method="post" novalidate>
+          {% csrf_token %}
+          <p>
+            Delete the pipeline run and the associated data products.
+            The run directory will also be deleted. 
+            Please manually back up the configuration file if you wish to return to the run in the future.
+          </p>
+          <h5>Note</h5>
+          <div>
+            <p>
+              Large runs may take a little time to remove so the run may still be present for a short time after the deletion process begins.
+            </p>
+          </div>
+          <h5 style="color:#d9534f">Warning</h5>
+          <div style="color:#d9534f">
+            <p>
+              This process cannot be undone the run will be permanently deleted.
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary btn-icon-split" type="button" data-dismiss="modal">
+              <span class="icon">
+                <i class="fa fa-window-close"></i>
+              </span>
+              <span class="text">Cancel</span>
+            </button>
+            <button id="deletePipeRun" class="btn btn-danger btn-icon-split" type="submit">
+            <span class="icon">
+              <i class="fas fa-trash fa-sm"></i>
+            </span>
+            <span class="text">Delete Run</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Arrow pipeline modal-->
+<div class="modal fade" id="arrowPipeModal" tabindex="-1" role="dialog" aria-labelledby="arrowPipeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title font-weight-bold" id="arrowPipeModalLabel">Generate Arrow Files for {{ p_run.name }}</h4>
+        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="arrowPipeForm" action="{% url 'vast_pipeline:api_pipe_runs-genarrow' p_run.id %}" method="post" novalidate>
+          {% csrf_token %}
+          <p>
+            Generate the arrow files containing the measurements and the measurement pairs.
+            If the arrow files are already present it is possible to overwrite these and generate new files.
+            The process can only be used for runs which have completed successfully.
+          </p>
+          <h5>What and Why?</h5>
+          <div>
+            <p>
+              <a target="_blank" href="https://arrow.apache.org/">Apache Arrow</a> is a column-based data storage format that is designed to be 'memory-mapped' which offers very fast data access.
+              For large pipeline runs it can be much more efficient to interact with the measurements data using the arrow format rather than the default parquet format.
+              If the arrow files are available then VAST Tools will automatically switch to using them.
+            </p>
+          </div>
+          <div class="modal-footer">
+            Overwrite Current Files:
+            <div class="btn-group btn-group-toggle mr-auto" data-toggle="buttons">
+              <input type="checkbox" name="arrowOverwrite" id="arrowOverwriteToggle" data-toggle="toggle" data-size="sm">
+            </div>
+            <button class="btn btn-secondary btn-icon-split" type="button" data-dismiss="modal">
+              <span class="icon">
+                <i class="fa fa-window-close"></i>
+              </span>
+              <span class="text">Cancel</span>
+            </button>
+            <button id="arrowPipeRun" class="btn btn-success btn-icon-split" type="submit">
+            <span class="icon">
+              <i class="fas fa-angle-double-right fa-sm"></i>
+            </span>
+            <span class="text">Generate Arrow Files</span>
             </button>
           </div>
         </form>

@@ -433,6 +433,163 @@ class RunViewSet(ModelViewSet):
             reverse('vast_pipeline:run_detail', args=[p_run.id])
         )
 
+    @rest_framework.decorators.action(detail=True, methods=['post'])
+    def delete(self, request, pk=None):
+        """
+        Launches the remove pipeline run using a Django Q cluster. Includes a
+        check on ownership or admin status of the user to make sure
+        deletion is allowed.
+
+        Args:
+            request (Request): Django REST Framework request object.
+            pk (int, optional): Run object primary key. Defaults to None.
+
+        Raises:
+            Http404: if a Source with the given `pk` cannot be found.
+
+        Returns:
+            Response: Returns to the run index page (list of pipeline runs).
+        """
+        if not pk:
+            messages.error(
+                request,
+                'Error in config write: Run pk parameter null or not passed'
+            )
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        try:
+            p_run = get_object_or_404(self.queryset, pk=pk)
+        except Exception as e:
+            messages.error(request, f'Error in run fetch: {e}')
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        # make sure that only the run creator or an admin can request the run
+        # to be processed.
+        if p_run.user != request.user and not request.user.is_staff:
+            msg = 'You do not have permission to process this pipeline run!'
+            messages.error(request, msg)
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        # check that it's not already running or queued
+        if p_run.status in ["RUN", "QUE", "RES"]:
+            msg = (
+                f'{p_run.name} is already running, queued or restoring. '
+                'It cannot be deleted at this time.'
+            )
+            messages.error(
+                request,
+                msg
+            )
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        try:
+            async_task(
+                'django.core.management.call_command',
+                'clearpiperun',
+                p_run.path,
+                remove_all=True,
+            )
+
+            msg = mark_safe(
+                f'Delete <b>{p_run.name}</b> successfully requested!<br><br>'
+                ' Refresh the Pipeline Runs page for the deletion to take effect.'
+            )
+            messages.success(
+                request,
+                msg
+            )
+        except Exception as e:
+            with transaction.atomic():
+                p_run.status = 'ERR'
+                p_run.save()
+            messages.error(request, f'Error in deleting run: {e}')
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        return HttpResponseRedirect(
+            reverse('vast_pipeline:run_index')
+        )
+
+    @rest_framework.decorators.action(detail=True, methods=['post'])
+    def genarrow(self, request, pk=None):
+        """
+        Launches the create arrow files process for a pipeline run using
+        a Django Q cluster. Includes a check on ownership or admin status of
+        the user to make sure the creation is allowed.
+
+        Args:
+            request (Request): Django REST Framework request object.
+            pk (int, optional): Run object primary key. Defaults to None.
+
+        Raises:
+            Http404: if a Source with the given `pk` cannot be found.
+
+        Returns:
+            Response: Returns to the orignal request page (the pipeline run
+            detail).
+        """
+        if not pk:
+            messages.error(
+                request,
+                'Error in config write: Run pk parameter null or not passed'
+            )
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        try:
+            p_run = get_object_or_404(self.queryset, pk=pk)
+        except Exception as e:
+            messages.error(request, f'Error in run fetch: {e}')
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        # make sure that only the run creator or an admin can request the run
+        # to be processed.
+        if p_run.user != request.user and not request.user.is_staff:
+            msg = 'You do not have permission to process this pipeline run!'
+            messages.error(request, msg)
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        # check that it's not already running or queued
+        if p_run.status != "END":
+            msg = (
+                f'{p_run.name} has not completed successfully.'
+                ' The arrow files can only be generated after the run is'
+                ' successful.'
+            )
+            messages.error(
+                request,
+                msg
+            )
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        try:
+            overwrite_flag = True if request.POST.get('arrowOverwrite', None) else False
+
+            async_task(
+                'django.core.management.call_command',
+                'createmeasarrow',
+                p_run.path,
+                overwrite=overwrite_flag,
+                verbosity=3
+            )
+
+            msg = mark_safe(
+                f'Generate the arrow files for <b>{p_run.name}</b> successfully requested!<br><br>'
+                ' Refresh the page and check the generate arrow log output for the status of the process.'
+            )
+            messages.success(
+                request,
+                msg
+            )
+        except Exception as e:
+            with transaction.atomic():
+                p_run.status = 'ERR'
+                p_run.save()
+            messages.error(request, f'Error in deleting run: {e}')
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        return HttpResponseRedirect(
+            reverse('vast_pipeline:run_detail', args=[p_run.id])
+        )
+
 
 # Run detail
 @login_required
@@ -478,11 +635,22 @@ def RunDetail(request, id):
         with open(f_path) as fp:
             p_run['log_txt'] = fp.read()
 
-    # read run log file
+    # read restore log file
     f_path = os.path.join(p_run['path'], 'restore_log.txt')
     if os.path.exists(f_path):
         with open(f_path) as fp:
             p_run['restore_log_txt'] = fp.read()
+
+    # read create arrow log file
+    f_path = os.path.join(p_run['path'], 'gen_arrow_log.txt')
+    if os.path.exists(f_path):
+        with open(f_path) as fp:
+            p_run['gen_arrow_log_txt'] = fp.read()
+
+    # Detect whether arrow files are present
+    p_run['arrow_files'] = os.path.isfile(
+        os.path.join(p_run['path'], 'measurements.arrow')
+    )
 
     image_fields = [
         'name',

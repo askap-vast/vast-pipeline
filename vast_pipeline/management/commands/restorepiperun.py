@@ -316,17 +316,25 @@ class Command(BaseCommand):
         Returns:
             None
         """
+        piperun = options['piperun']
+
+        p_run_name, run_folder = get_p_run_name(piperun, return_folder=True)
+
         # configure logging
+        root_logger = logging.getLogger('')
+        f_handler = logging.FileHandler(
+            os.path.join(run_folder, 'restore_log.txt'),
+            mode='w'
+        )
+        f_handler.setFormatter(root_logger.handlers[0].formatter)
+        root_logger.addHandler(f_handler)
+
         if options['verbosity'] > 1:
             # set root logger to use the DEBUG level
-            root_logger = logging.getLogger('')
             root_logger.setLevel(logging.DEBUG)
             # set the traceback on
             options['traceback'] = True
 
-        piperun = options['piperun']
-
-        p_run_name = get_p_run_name(piperun)
         try:
             p_run = Run.objects.get(name=p_run_name)
         except Run.DoesNotExist:

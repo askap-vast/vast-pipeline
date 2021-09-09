@@ -9,6 +9,7 @@ import shutil
 from argparse import ArgumentParser
 from glob import glob
 from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
 
 from vast_pipeline.models import Run
 from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
@@ -108,6 +109,9 @@ class Command(BaseCommand):
                 raise CommandError(f'Pipeline run {p_run_name} does not exist')
 
             logger.info("Deleting pipeline '%s' from database", p_run_name)
+            with transaction.atomic():
+                p_run.status = 'DEL'
+                p_run.save()
             p_run.delete()
 
             # remove forced measurements in db if presents
