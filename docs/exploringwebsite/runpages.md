@@ -42,7 +42,7 @@ For admins and creators of runs there are four action buttons available:
      A process to restore the run to the previous successful state.
      See [Restoring a Run](../../using/restorerun).
 * **Add Images or Re-Process Run/Process Run**  
-     Process the pipeline job.
+     Process the pipeline run.
      See [Processing a Run](../../using/processrun).
 
 ### Summary Cards
