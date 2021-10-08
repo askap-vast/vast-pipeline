@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added new log files for arrow file creation and restore run and added to run detail page [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
+- Added restore run test [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
+- Added new run status of `DEL`, `Deleting` [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
+- Added documentation pages on new action buttons [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
+- Added UI action buttons to run-detail page to allow arrow file generation, deletion and restoration [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
 - Added try-except error capture on pre-run checks to correctly assign pipeline run as failed if an error occurs [#576](https://github.com/askap-vast/vast-pipeline/pull/576).
 - Added support for ingesting Selavy catalogues in VOTable (XML) and CSV format [#565](https://github.com/askap-vast/vast-pipeline/pull/565)
 - Added new commands: `initingest` and `ingestimages` [#544](https://github.com/askap-vast/vast-pipeline/pull/544)
@@ -22,6 +27,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Changed restore run command to only allow one run as input [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
+- Changed existing documentation pages to reflect new buttons [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
 - Moved creation of output backup files to occur before the config check [#576](https://github.com/askap-vast/vast-pipeline/pull/576).
 - Association test data updated with d2d fix [#574](https://github.com/askap-vast/vast-pipeline/pull/574).
 - Removed the timezone from the Timestamps being written to the the arrow file as this causes problems with vaex [#571](https://github.com/askap-vast/vast-pipeline/pull/571).
@@ -30,6 +37,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed testing pandas equal deprecation warning [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
+- Fixed restore run relations issue [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
 - Fixed logic for full re-run requirement when UI run is being re-run from an error status [#576](https://github.com/askap-vast/vast-pipeline/pull/576).
 - Fixed d2d not being carried through the advanced association process [#574](https://github.com/askap-vast/vast-pipeline/pull/574).
 - Fixed old dictionary references in the documentation run config page [#572](https://github.com/askap-vast/vast-pipeline/pull/572).
@@ -41,6 +50,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#580](https://github.com/askap-vast/vast-pipeline/pull/580): feat, fix, doc: Added UI run action buttons.
 - [#576](https://github.com/askap-vast/vast-pipeline/pull/576): fix: Fixed UI re-run from errored status.
 - [#574](https://github.com/askap-vast/vast-pipeline/pull/574): fix: Fixed d2d assignment in advanced association.
 - [#572](https://github.com/askap-vast/vast-pipeline/pull/572): doc: Added required data page to documentation.

@@ -111,6 +111,7 @@ class Run(CommentableModel):
         ('END', 'Completed'),
         ('ERR', 'Error'),
         ('RES', 'Restoring'),
+        ('DEL', 'Deleting'),
     ]
     status = models.CharField(
         max_length=3,

@@ -478,7 +478,8 @@ Boolean. When `True` then two `arrow` format files are produced:
 Producing these files for large runs (200+ images) is recommended for post-processing. Defaults to `False`.
 
 !!! note
-    The arrow files can optionally be produced after the run has completed by an administrator.
+    The arrow files can optionally be produced after the run has completed.
+    See the [Generating Arrow Files page](genarrow.md).
 
 **`measurements.ra_uncertainty`**
 Float. Defines an uncertainty error to the RA that will be added in quadrature to the existing source extraction error. Used to represent a systematic positional error. Unit is arcseconds. Defaults to 1.0.
