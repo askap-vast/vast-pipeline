@@ -74,6 +74,7 @@ nav:
     - Configuration: gettingstarted/configuration.md
     - Deployment: gettingstarted/deployment.md
   - Using the Pipeline:
+    - Required Data: using/requireddata.md
     - Accessing the Pipeline: using/access.md
     - Initialising a Run: using/initrun.md
     - Run Configuration: using/runconfig.md

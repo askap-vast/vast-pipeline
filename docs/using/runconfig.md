@@ -141,8 +141,15 @@ Boolean. Astropy warnings are suppressed in the logging output if set to `True`.
 
 ### Input Images and Selavy Files
 
+!!! warning "Warning: Entry Order"
+    The order of the the inputs must be consistent between the different input types.
+    I.e. if `image1.fits` is the first listed image then `image1_selavy.txt` must be the first selavy input listed.
+
 **`inputs.image`**
-Line entries or epoch headed entries. The full paths to the image FITS files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see [Epoch Based Association](../design/association.md#epoch-based-association)) in which case all inputs must also be in dictionary format. The order of the entries must be consistent with the other input types.
+Line entries or epoch headed entries. 
+The full paths to the image FITS files to be processed. 
+Epoch mode is activated by including an extra key value with the epoch name, see the example below for a demonstration.
+Refer to [this section](../design/association.md#epoch-based-association) of the documentation for more information on epoch based association.
 
 <!-- markdownlint-disable MD046 -->
 !!! example "config.yaml"
@@ -167,10 +174,27 @@ Line entries or epoch headed entries. The full paths to the image FITS files to 
             epoch02:
             - /full/path/to/image3.fits
         ```
+        Make sure that the epoch names are orderable in the correct order, for example, use:
+        ```
+        epoch01:
+        ...
+        epoch09:
+        epoch10:
+        ``` 
+        and not:
+        ```
+        epoch1:
+        ...
+        epoch9:
+        epoch10:
+        ```
     <!-- markdownlint-enable MD046 -->
 
 **`inputs.selavy`**
-Line entries or epoch headed entries. The full paths to the selavy text files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see [Epoch Based Association](../design/association.md#epoch-based-association)) in which case all inputs must also be in dictionary format. The order of the entries must be consistent with the other input types.
+Line entries or epoch headed entries. 
+The full paths to the selavy text files to be processed. 
+Epoch mode is activated by including an extra key value with the epoch name, see the example below for a demonstration.
+Refer to [this section](../design/association.md#epoch-based-association) of the documentation for more information on epoch based association.
 
 !!! example "config.yaml"
     <!-- markdownlint-disable MD046 -->
@@ -195,10 +219,27 @@ Line entries or epoch headed entries. The full paths to the selavy text files to
             epoch02:
             - /full/path/to/image3_selavy.txt
         ```
+        Make sure that the epoch names are orderable in the correct order, for example, use:
+        ```
+        epoch01:
+        ...
+        epoch09:
+        epoch10:
+        ``` 
+        and not:
+        ```
+        epoch1:
+        ...
+        epoch9:
+        epoch10:
+        ```
     <!-- markdownlint-enable MD046 -->
 
 **`inputs.noise`**
-Line entries or epoch headed entries. The full paths to the image noise (RMS) FITS files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see [Epoch Based Association](../design/association.md#epoch-based-association)) in which case all inputs must also be in dictionary format. The order of the entries must be consistent with the other input types.
+Line entries or epoch headed entries. 
+The full paths to the image noise (RMS) FITS files to be processed. 
+Epoch mode is activated by including an extra key value with the epoch name, see the example below for a demonstration.
+Refer to [this section](../design/association.md#epoch-based-association) of the documentation for more information on epoch based association.
 
 !!! example "config.yaml"
     <!-- markdownlint-disable MD046 -->
@@ -223,10 +264,28 @@ Line entries or epoch headed entries. The full paths to the image noise (RMS) FI
             epoch02:
             - /full/path/to/image3_rms.fits
         ```
+        Make sure that the epoch names are orderable in the correct order, for example, use:
+        ```
+        epoch01:
+        ...
+        epoch09:
+        epoch10:
+        ``` 
+        and not:
+        ```
+        epoch1:
+        ...
+        epoch9:
+        epoch10:
+        ```
     <!-- markdownlint-enable MD046 -->
 
 **`inputs.background`**
-Line entries or epoch headed entries. The full paths to the image background (mean) FITS files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see [Epoch Based Association](../design/association.md#epoch-based-association)) in which case all inputs must also be in dictionary format. The order of the entries must be consistent with the other input types. Only required to be defined if `source_monitoring.monitor` is set to `True`.
+Line entries or epoch headed entries.
+The full paths to the image background (mean) FITS files to be processed. 
+Epoch mode is activated by including an extra key value with the epoch name, see the example below for a demonstration.
+Refer to [this section](../design/association.md#epoch-based-association) of the documentation for more information on epoch based association.
+The background images are only required to be defined if `source_monitoring.monitor` is set to `True`.
 
 !!! example "config.yaml"
     <!-- markdownlint-disable MD046 -->
@@ -250,6 +309,20 @@ Line entries or epoch headed entries. The full paths to the image background (me
             - /full/path/to/image2_bkg.fits
             epoch02:
             - /full/path/to/image3_bkg.fits
+        ```
+        Make sure that the epoch names are orderable in the correct order, for example, use:
+        ```
+        epoch01:
+        ...
+        epoch09:
+        epoch10:
+        ``` 
+        and not:
+        ```
+        epoch1:
+        ...
+        epoch9:
+        epoch10:
         ```
     <!-- markdownlint-enable MD046 -->
 
