@@ -1334,6 +1334,10 @@ def create_measurements_arrow_file(p_run: Run) -> None:
         .rename(columns={'source_id': 'source'})
     )
 
+    # drop timezone from datetime for vaex compatibility
+    # TODO: Look to keep the timezone if/when vaex is compatible.
+    measurements['time'] = measurements['time'].dt.tz_localize(None)
+
     logger.debug('Optimising dataframes.')
     measurements = optimize_ints(optimize_floats(measurements))
 
