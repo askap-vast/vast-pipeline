@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added try-except error capture on pre-run checks to correctly assign pipeline run as failed if an error occurs [#576](https://github.com/askap-vast/vast-pipeline/pull/576).
+- Added support for ingesting Selavy catalogues in VOTable (XML) and CSV format [#565](https://github.com/askap-vast/vast-pipeline/pull/565)
+- Added new commands: `initingest` and `ingestimages` [#544](https://github.com/askap-vast/vast-pipeline/pull/544)
 - Added documentation on the data required to run the pipeline [#572](https://github.com/askap-vast/vast-pipeline/pull/572).
 - Added support for ingesting Selavy catalogues in VOTable (XML) and CSV format [#565](https://github.com/askap-vast/vast-pipeline/pull/565).
 - Added new commands: `initingest` and `ingestimages` [#544](https://github.com/askap-vast/vast-pipeline/pull/544).
@@ -19,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Moved creation of output backup files to occur before the config check [#576](https://github.com/askap-vast/vast-pipeline/pull/576).
 - Association test data updated with d2d fix [#574](https://github.com/askap-vast/vast-pipeline/pull/574).
 - Removed the timezone from the Timestamps being written to the the arrow file as this causes problems with vaex [#571](https://github.com/askap-vast/vast-pipeline/pull/571).
 - Reduced the memory footprint for computing the ideal source coverages by sky regions [#555](https://github.com/askap-vast/vast-pipeline/pull/555).
@@ -26,6 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed logic for full re-run requirement when UI run is being re-run from an error status [#576](https://github.com/askap-vast/vast-pipeline/pull/576).
 - Fixed d2d not being carried through the advanced association process [#574](https://github.com/askap-vast/vast-pipeline/pull/574).
 - Fixed old dictionary references in the documentation run config page [#572](https://github.com/askap-vast/vast-pipeline/pull/572).
 - Fixed a regression from pandas=1.3.0 that caused non-numeric columns to be dropped after a groupby sum operation [#567](https://github.com/askap-vast/vast-pipeline/pull/567).
@@ -36,6 +41,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#576](https://github.com/askap-vast/vast-pipeline/pull/576): fix: Fixed UI re-run from errored status.
 - [#574](https://github.com/askap-vast/vast-pipeline/pull/574): fix: Fixed d2d assignment in advanced association.
 - [#572](https://github.com/askap-vast/vast-pipeline/pull/572): doc: Added required data page to documentation.
 - [#571](https://github.com/askap-vast/vast-pipeline/pull/571): fix: Removed timezone from measurements arrow file time column
