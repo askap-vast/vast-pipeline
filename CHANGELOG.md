@@ -8,8 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
-- Added support for ingesting Selavy catalogues in VOTable (XML) and CSV format [#565](https://github.com/askap-vast/vast-pipeline/pull/565)
-- Added new commands: `initingest` and `ingestimages` [#544](https://github.com/askap-vast/vast-pipeline/pull/544)
+- Added documentation on the data required to run the pipeline [#572](https://github.com/askap-vast/vast-pipeline/pull/572).
+- Added support for ingesting Selavy catalogues in VOTable (XML) and CSV format [#565](https://github.com/askap-vast/vast-pipeline/pull/565).
+- Added new commands: `initingest` and `ingestimages` [#544](https://github.com/askap-vast/vast-pipeline/pull/544).
 - Added TNS cone search to the external search results on the source detail page [#557](https://github.com/askap-vast/vast-pipeline/pull/557).
 - Added `HOME_DATA_ROOT` to the pipeline settings to override the OS default home directory location [#559](https://github.com/askap-vast/vast-pipeline/pull/559).
 - Added processing spinner to source query table [#551](https://github.com/askap-vast/vast-pipeline/pull/551).
@@ -24,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed old dictionary references in the documentation run config page [#572](https://github.com/askap-vast/vast-pipeline/pull/572).
 - Fixed a regression from pandas=1.3.0 that caused non-numeric columns to be dropped after a groupby sum operation [#567](https://github.com/askap-vast/vast-pipeline/pull/567).
 - Fixed permission error for regular users when trying to launch an initialised run [#563](https://github.com/askap-vast/vast-pipeline/pull/563).
 - Fixed outdated installation link in README [#543](https://github.com/askap-vast/vast-pipeline/pull/543).
@@ -32,6 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#572](https://github.com/askap-vast/vast-pipeline/pull/572): doc: Added required data page to documentation.
 - [#571](https://github.com/askap-vast/vast-pipeline/pull/571): fix: Removed timezone from measurements arrow file time column
 - [#565](https://github.com/askap-vast/vast-pipeline/pull/565): feat: added support for reading selavy VOTables and CSVs.
 - [#567](https://github.com/askap-vast/vast-pipeline/pull/567): fix: fixed pandas=1.3.0 groupby sum regression.
