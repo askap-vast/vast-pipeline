@@ -551,7 +551,7 @@ class Measurement(CommentableModel):
         through_fields=('meas', 'source')
     )
 
-    name = models.CharField(max_length=64, unique=True)
+    name = models.CharField(max_length=64)
 
     ra = models.FloatField(help_text='RA of the source (Deg).')# degrees
     ra_err = models.FloatField(
