@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), with an added `List of PRs` section and links to the relevant PRs on the individal updates. This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), with an added `List of PRs` section and links to the relevant PRs on the individual updates. This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/v1.0.0...HEAD)
 
@@ -48,8 +48,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Removed
 
+- Removed the unique constraint on `models.Measurement.name` [#583](https://github.com/askap-vast/vast-pipeline/pull/583).
+
 #### List of PRs
 
+- [#583](https://github.com/askap-vast/vast-pipeline/pull/583): fix: remove unique constraint from Measurement.name.
 - [#580](https://github.com/askap-vast/vast-pipeline/pull/580): feat, fix, doc: Added UI run action buttons.
 - [#576](https://github.com/askap-vast/vast-pipeline/pull/576): fix: Fixed UI re-run from errored status.
 - [#574](https://github.com/askap-vast/vast-pipeline/pull/574): fix: Fixed d2d assignment in advanced association.
