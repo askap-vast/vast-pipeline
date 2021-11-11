@@ -37,7 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
-- Fixed removal of image and sky region objects when a run is deleted [#585]((https://github.com/askap-vast/vast-pipeline/pull/585).
+- Fixed removal of image and sky region objects when a run is deleted [#585](https://github.com/askap-vast/vast-pipeline/pull/585).
 - Fixed testing pandas equal deprecation warning [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
 - Fixed restore run relations issue [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
 - Fixed logic for full re-run requirement when UI run is being re-run from an error status [#576](https://github.com/askap-vast/vast-pipeline/pull/576).
@@ -53,7 +53,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
-- [#585]((https://github.com/askap-vast/vast-pipeline/pull/585): fix: Clean up m2m related objects when deleting a run.
+- [#585](https://github.com/askap-vast/vast-pipeline/pull/585): fix: Clean up m2m related objects when deleting a run.
 - [#583](https://github.com/askap-vast/vast-pipeline/pull/583): fix: remove unique constraint from Measurement.name.
 - [#580](https://github.com/askap-vast/vast-pipeline/pull/580): feat, fix, doc: Added UI run action buttons.
 - [#576](https://github.com/askap-vast/vast-pipeline/pull/576): fix: Fixed UI re-run from errored status.
