@@ -1,4 +1,7 @@
+"""Functions that are executed upon receiving an application signal."""
 import logging
+from typing import Type
+
 from django.db.models import Count
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
@@ -9,9 +12,18 @@ logger = logging.getLogger(__name__)
 
 
 @receiver(pre_delete, sender=Run, dispatch_uid="delete_orphans_for_run")
-def delete_orphans_for_run(sender, instance: Run, using, **kwargs):
+def delete_orphans_for_run(sender: Type[Run], instance: Run, using: str, **kwargs) -> None:
     """Delete any Image and SkyRegion objects that would be orphaned by deleting the
-    given Run.
+    given Run. Expects to recieve the arguments sent by the pre_delete signal. See
+    <https://docs.djangoproject.com/en/3.1/ref/signals/#pre-delete>.
+
+    Args:
+        sender:
+            Model class that sent the signal.
+        instance:
+            Model instance to be deleted.
+        using:
+            Database alias.
     """
     image_orphans = (
         Image.objects.annotate(num_runs=Count("run"))
