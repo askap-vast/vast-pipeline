@@ -1,0 +1,64 @@
+<div class="card shadow h-100">
+  <div class="card-header py-3 clearfix" id="sourceInfoHeader">
+    <h6 class="m-0 font-weight-bold text-primary float-left">Source Information</h6>
+  </div>
+  <div class="card-body">
+    This is a test of {{ source.id }}.
+    
+    {% if source %}
+    <a href="{% url 'vast_pipeline:source_detail' source.id %}"
+      class="d-none d-sm-inline-block btn btn-sm btn-primary btn-icon-split shadow-sm" target="_blank"
+      title="Go to the source summary page.">
+      <span class="text">Source detail page</span>
+      <span class="icon text-white-600">
+        <i class="fa fa-arrow-right fa-sm"></i>
+      </span>
+    </a>
+    <span {% if not sourcefav %}data-toggle="modal" {% endif %} data-target="#starSource">
+      <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm" data-toggle="tooltip"
+        title="Add to favourites">
+        <span class="icon text-white-600">
+          <i class="fas fa-star" {% if sourcefav  %}style="color: #ffe271" {% endif %}></i>
+        </span>
+      </a>
+    </span>
+    {% else %}
+    The details of a selected source will appear here.
+    {% endif %}
+  </div>
+</div>
+
+
+{% block modal %}
+
+<!-- Starring source modal-->
+<div class="modal fade" id="starSource" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Add a comment for this source</h5>
+        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form action="{% url 'vast_pipeline:api_sources_favs-list' %}" method="post" id="commentStarForm">
+          {% csrf_token %}
+          <div class="form-group">
+            <textarea class="form-control" name="comment" placeholder="Insert comment here (optional)"
+              form="commentStarForm"></textarea>
+            <input type="text" name="source_id" value="{{ source.id }}" hidden="">
+            <input type="hidden" name="next" value="{{ request.path }}">
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+            <input class="btn btn-primary" type="submit" value="Add to Favourites">
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock modal %}

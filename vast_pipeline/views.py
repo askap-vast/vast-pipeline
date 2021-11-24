@@ -2,6 +2,7 @@ import io
 import os
 import json
 import logging
+import matplotlib.pyplot as plt
 import traceback
 import dask.bag as db
 import pandas as pd
@@ -44,7 +45,7 @@ from rest_framework import serializers
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.contrib.auth.decorators import login_required
 
-from vast_pipeline.plots import plot_lightcurve
+from vast_pipeline.plots import plot_lightcurve, plot_eta_v_bokeh
 from vast_pipeline.models import (
     Comment, CommentableModel, Image, Measurement, Run, Source, SourceFav,
 )
@@ -1553,6 +1554,29 @@ def SourceQuery(request):
     )
 
 
+# Source query eta V plot
+@login_required
+def SourceEtaVPlot(request):
+    # source_query_result_id_list = request.session.get("source_query_result_ids", [])
+    #
+    # # sources = Source.objects.filter(id__in=source_query_result_ids)
+    #
+    # context = {
+    #     'cb_obj': {'id': 0},
+    # }
+
+    return render(request, 'sources_etav_plot.html')
+
+
+@login_required
+def SourceEtaVPlotUpdate(request, pk):
+    source = Source.objects.get(pk=pk)
+
+    context = {'source': source}
+
+    return render(request, 'sources_etav_plot_card.html', context)
+
+
 # Source detail
 @login_required
 def SourceDetail(request, pk):
@@ -1777,7 +1801,7 @@ class ImageCutout(APIView):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, measurement_name, size="normal"):
+    def get(self, request, measurement_name, size="normal", img_type="png"):
         measurement = Measurement.objects.get(name=measurement_name)
         image_hdu: fits.PrimaryHDU = fits.open(measurement.image.path)[0]
         coord = SkyCoord(ra=measurement.ra, dec=measurement.dec, unit="deg")
@@ -1788,9 +1812,9 @@ class ImageCutout(APIView):
         }
 
         filenames = {
-            "xlarge": f"{measurement.name}_cutout_xlarge.fits",
-            "large": f"{measurement.name}_cutout_large.fits",
-            "normal": f"{measurement.name}_cutout.fits",
+            "xlarge": f"{measurement.name}_cutout_xlarge.{img_type}",
+            "large": f"{measurement.name}_cutout_large.fits.{img_type}",
+            "normal": f"{measurement.name}_cutout.fits.{img_type}",
         }
 
         try:
@@ -1819,7 +1843,11 @@ class ImageCutout(APIView):
 
         cutout_hdu = fits.PrimaryHDU(data=cutout.data, header=cutout_header)
         cutout_file = io.BytesIO()
-        cutout_hdu.writeto(cutout_file)
+
+        if img_type == "fits":
+            cutout_hdu.writeto(cutout_file)
+        else:
+            plt.imsave(cutout_file, cutout.data, dpi=600)
         cutout_file.seek(0)
         response = FileResponse(
             cutout_file,
@@ -2146,6 +2174,8 @@ class SourceFavViewSet(ModelViewSet):
         #     return Response(serializer.data, status=status.HTTP_201_CREATED)
         # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         data = request.data.dict()
+        if 'next' in data.keys():
+            data.pop('next')
         data.pop('csrfmiddlewaretoken')
         data['user_id'] = request.user.id
         try:
@@ -2168,7 +2198,12 @@ class SourceFavViewSet(ModelViewSet):
                 f'Errors in adding source to favourites: \n{e}'
             )
 
-        return HttpResponseRedirect(reverse('vast_pipeline:source_detail', args=[data['source_id']]))
+        next = request.POST.get('next', '/')
+        if 'query/plot' in next:
+            next = next.split('plot')[0] + 'plot/'
+        return HttpResponseRedirect(next)
+
+        # return HttpResponseRedirect(reverse('vast_pipeline:source_detail', args=[data['source_id']]))
 
     def destroy(self, request, pk=None):
         try:
@@ -2360,4 +2395,31 @@ class SourcePlotsSet(ViewSet):
         # TODO raster plots version for Slack posts
         use_peak_flux = request.query_params.get("peak_flux", "true").lower() == "true"
         plot_document = plot_lightcurve(source, use_peak_flux=use_peak_flux)
+        return Response(json_item(plot_document))
+
+    @rest_framework.decorators.action(methods=['get'], detail=False)
+    def etavplot(self, request: Request) -> Response:
+        """Create lightcurve and 2-epoch metric graph plots for a source.
+
+        Args:
+            request (Request): Django REST Framework request object.
+            ids (List[int], optional): Source object primary key. Defaults to None.
+
+        Raises:
+            Http404: if a Source with the given `pk` cannot be found.
+
+        Returns:
+            Response: Django REST Framework response object containing the Bokeh plot in
+                JSON format to be embedded in the HTML template.
+        """
+        source_query_result_id_list = request.session.get("source_query_result_ids", [])
+        try:
+            source = Source.objects.filter(pk__in=source_query_result_id_list)
+        except Source.DoesNotExist:
+            raise Http404
+        # TODO raster plots version for Slack posts
+        use_peak_flux = request.query_params.get("peak_flux", "true").lower() == "true"
+
+        plot_document = plot_eta_v_bokeh(
+            source, 3.0, 3.0, use_peak_flux=use_peak_flux)
         return Response(json_item(plot_document))

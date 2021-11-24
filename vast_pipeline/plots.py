@@ -1,23 +1,35 @@
 """Contains plotting code used by the web server."""
+import colorcet as cc
+import pandas as pd
+import networkx as nx
+import numpy as np
 
-from datetime import timedelta
+from astropy.stats import sigma_clip, mad_std, bayesian_blocks
 from bokeh.models import (
     ColumnDataSource,
+    Span,
+    BoxAnnotation,
     CustomJS,
     DataRange1d,
     Range1d,
     Whisker,
     LabelSet,
     HoverTool,
+    TapTool,
+    OpenURL
 )
 from bokeh.models.formatters import DatetimeTickFormatter
-from bokeh.layouts import row, Row
-from bokeh.plotting import figure
-from bokeh.transform import factor_cmap
+from bokeh.models.callbacks import CustomJS
+from bokeh.layouts import row, Row, gridplot, Spacer
+from bokeh.palettes import Category10_3
+from bokeh.plotting import figure, from_networkx
+from bokeh.transform import factor_cmap, linear_cmap
+from datetime import timedelta
+from django.shortcuts import redirect
 from django.db.models import F
 from django.db.models.functions import Abs
-import pandas as pd
-import networkx as nx
+from scipy.stats import norm
+from typing import List, Tuple
 
 from vast_pipeline.models import Measurement, Source
 
@@ -62,6 +74,7 @@ def plot_lightcurve(
             "flux_err_upper",
             "flux_err_lower",
             "forced",
+            "name"
         )
         .order_by("taustart_ts")
     )
@@ -78,6 +91,7 @@ def plot_lightcurve(
     lightcurve = pd.DataFrame(measurements_qs)
     # remap method values to labels to make a better legend
     lightcurve["method"] = lightcurve.forced.map({True: "Forced", False: "Selavy"})
+    lightcurve['cutout'] = lightcurve['name'].apply(lambda x: f'/cutout/{x}/normal/')
     source = ColumnDataSource(lightcurve)
     method_mapper = factor_cmap(
         "method", palette="Colorblind3", factors=["Selavy", "Forced"]
@@ -252,11 +266,35 @@ def plot_lightcurve(
 
     # create hover tool for lightcurve
     hover_tool_lc = HoverTool(
-        tooltips=[
-            ("Index", "@index"),
-            ("Date", "@taustart_ts{%F}"),
-            (f"Flux {metric_suffix}", "@flux mJy"),
-        ],
+        # tooltips=[
+        #     ("Index", "@index"),
+        #     ("Date", "@taustart_ts{%F}"),
+        #     (f"Flux {metric_suffix}", "@flux mJy"),
+        #     ('Cutout', )
+        # ],
+        tooltips="""
+        <div>
+            <div>
+                <img
+                    src=@cutout height="100" width="100"
+                    style="float: left; margin: 0px 15px 15px 0px;"
+                    border="2"
+                ></img>
+            </div>
+            <div>
+                <span style="font-size: 17px; font-weight: bold;">@index</span>
+                <span style="font-size: 15px; color: #966;">[$index]</span>
+            </div>
+            <div>
+                <span style="font-size: 15px;">Location</span>
+                <span style="font-size: 10px; color: #696;">($x, $y)</span>
+            </div>
+            <div>
+                <span style="font-size: 17px; font-weight: bold;">Date</span>
+                <span style="font-size: 15px; color: #966;">@taustart_ts{%F}</span>
+            </div>
+        </div>
+        """,
         formatters={"@taustart_ts": "datetime", },
         mode="vline",
         callback=hover_tool_lc_callback,
@@ -265,4 +303,279 @@ def plot_lightcurve(
 
     plot_row = row(fig_lc, fig_graph, sizing_mode="stretch_width")
     plot_row.css_classes.append("mx-auto")
+    return plot_row
+
+
+def fit_eta_v(
+    df: pd.DataFrame, use_peak_flux: bool = False
+) -> Tuple[float, float, float, float]:
+    """
+    Fits the eta and v distributions with Gaussians. Used from
+    within the 'run_eta_v_analysis' method.
+
+    Args:
+        df: DataFrame containing the sources from the pipeline run. A
+            `pandas.core.frame.DataFrame` instance.
+        use_int_flux: Use integrated fluxes for the analysis instead of
+            peak fluxes, defaults to 'False'.
+
+    Returns: Tuple containing the eta_fit_mean, eta_fit_sigma, v_fit_mean
+        and the v_fit_sigma.
+    """
+
+    if use_peak_flux:
+        eta_label = 'eta_peak'
+        v_label = 'v_peak'
+    else:
+        eta_label = 'eta_int'
+        v_label = 'v_int'
+
+    eta_log = np.log10(df[eta_label])
+    v_log = np.log10(df[v_label])
+
+    eta_log_clipped = sigma_clip(
+        eta_log, masked=False, stdfunc=mad_std, sigma=3
+    )
+    v_log_clipped = sigma_clip(
+        v_log, masked=False, stdfunc=mad_std, sigma=3
+    )
+
+    eta_fit_mean, eta_fit_sigma = norm.fit(eta_log_clipped)
+    v_fit_mean, v_fit_sigma = norm.fit(v_log_clipped)
+
+    return (eta_fit_mean, eta_fit_sigma, v_fit_mean, v_fit_sigma)
+
+
+def gaussian_fit(
+    data: pd.Series, param_mean: float, param_sigma: float
+) -> Tuple[np.ndarray, norm]:
+    """
+    Returns the Guassian to add to the matplotlib plot.
+
+    Args:
+        data: Series object containing the log10 values of the
+            distribution to plot.
+        param_mean: The calculated mean of the Gaussian to fit.
+        param_sigma: The calculated sigma of the Gaussian to fit.
+
+    Returns:
+        Tuple containing the range of the returned data and the
+        Gaussian fit.
+    """
+    range_data = np.linspace(min(data), max(data), 1000)
+    fit = norm.pdf(range_data, loc=param_mean, scale=param_sigma)
+
+    return range_data, fit
+
+
+def make_bins(self, x: pd.Series) -> List[float]:
+    """
+    Calculates the bins that should be used for the v, eta distribution
+    using bayesian blocks.
+
+    Args:
+        x: Series object containing the log10 values of the
+            distribution to plot.
+
+    Returns:
+        Bins to apply.
+    """
+    new_bins = bayesian_blocks(x)
+    binsx = [
+        new_bins[a] for a in range(
+            len(new_bins) - 1
+        ) if abs((new_bins[a + 1] - new_bins[a]) / new_bins[a]) > 0.05
+    ]
+    binsx = binsx + [new_bins[-1]]
+
+    return binsx
+
+
+def plot_eta_v_bokeh(
+    source: Source,
+    # eta_fit_mean: float,
+    # eta_fit_sigma: float,
+    # v_fit_mean: float,
+    # v_fit_sigma: float,
+    eta_sigma: float,
+    v_sigma: float,
+    use_peak_flux: bool = True
+) -> gridplot:
+    """
+    Adapted from code written by Andrew O'Brien.
+    Produces the eta, V candidates plot
+    (see Rowlinson et al., 2018,
+    https://ui.adsabs.harvard.edu/abs/2019A%26C....27..111R/abstract).
+    Returns a bokeh version.
+
+    Args:
+        df: Dataframe containing the sources from the pipeline run. A
+            `pandas.core.frame.DataFrame` instance.
+        eta_fit_mean: The mean of the eta fitted Gaussian.
+        eta_fit_sigma: The sigma of the eta fitted Gaussian.
+        v_fit_mean: The mean of the v fitted Gaussian.
+        v_fit_sigma: The sigma of the v fitted Gaussian.
+        eta_cutoff: The log10 eta_cutoff from the analysis.
+        v_cutoff: The log10 v_cutoff from the analysis.
+        use_int_flux: Use integrated fluxes for the analysis instead of
+            peak fluxes, defaults to 'False'.
+
+    Returns:
+        Bokeh grid object containing figure.
+    """
+    df = pd.DataFrame(source.values())
+
+    (
+        eta_fit_mean, eta_fit_sigma,
+        v_fit_mean, v_fit_sigma
+    ) = fit_eta_v(df, use_peak_flux=use_peak_flux)
+
+    v_cutoff = 10 ** (v_fit_mean + v_sigma * v_fit_sigma)
+    eta_cutoff = 10 ** (eta_fit_mean + eta_sigma * eta_fit_sigma)
+
+    # generate fitted curve data for plotting
+    eta_x = np.linspace(
+        norm.ppf(0.001, loc=eta_fit_mean, scale=eta_fit_sigma),
+        norm.ppf(0.999, loc=eta_fit_mean, scale=eta_fit_sigma),
+    )
+    eta_y = norm.pdf(eta_x, loc=eta_fit_mean, scale=eta_fit_sigma)
+
+    v_x = np.linspace(
+        norm.ppf(0.001, loc=v_fit_mean, scale=v_fit_sigma),
+        norm.ppf(0.999, loc=v_fit_mean, scale=v_fit_sigma),
+    )
+    v_y = norm.pdf(v_x, loc=v_fit_mean, scale=v_fit_sigma)
+
+    if use_peak_flux:
+        x_label = 'eta_peak'
+        y_label = 'v_peak'
+        title = 'Peak Flux'
+    else:
+        x_label = 'eta_int'
+        y_label = 'v_int'
+        title = "Int. Flux"
+
+    PLOT_WIDTH = 700
+    PLOT_HEIGHT = PLOT_WIDTH
+    fig = figure(
+        plot_width=PLOT_WIDTH,
+        plot_height=PLOT_HEIGHT,
+        aspect_scale=1,
+        x_axis_type="log",
+        y_axis_type="log",
+        x_axis_label="eta",
+        y_axis_label="V",
+        sizing_mode="stretch_width",
+        tooltips=[
+            ("source", "@name"),
+            ("\u03B7", f"@{x_label}"),
+            ("V", f"@{y_label}"),
+            ("id", "@id")
+        ],
+    )
+    cmap = linear_cmap(
+        "n_meas_sel",
+        cc.kb,
+        df["n_meas_sel"].min(),
+        df["n_meas_sel"].max(),
+    )
+
+    fig.scatter(
+        x=x_label, y=y_label, color=cmap,
+        marker="circle", size=5, source=df
+    )
+
+    # axis histograms
+    # filter out any forced-phot points for these
+    x_hist = figure(
+        plot_width=PLOT_WIDTH,
+        plot_height=100,
+        x_range=fig.x_range,
+        y_axis_type=None,
+        x_axis_type="log",
+        x_axis_location="above",
+        sizing_mode="stretch_width",
+        title="VAST eta-V {}".format(title),
+        tools="",
+    )
+    x_hist_data, x_hist_edges = np.histogram(
+        np.log10(df["eta_peak"]), density=True, bins=50,
+    )
+    x_hist.quad(
+        top=x_hist_data,
+        bottom=0,
+        left=10 ** x_hist_edges[:-1],
+        right=10 ** x_hist_edges[1:],
+    )
+    x_hist.line(10 ** eta_x, eta_y, color="black")
+    x_hist_sigma_span = Span(
+        location=eta_cutoff,
+        dimension="height",
+        line_color="black",
+        line_dash="dashed",
+    )
+    x_hist.add_layout(x_hist_sigma_span)
+    fig.add_layout(x_hist_sigma_span)
+
+    y_hist = figure(
+        plot_height=PLOT_HEIGHT,
+        plot_width=100,
+        y_range=fig.y_range,
+        x_axis_type=None,
+        y_axis_type="log",
+        y_axis_location="right",
+        sizing_mode="stretch_height",
+        tools="",
+    )
+    y_hist_data, y_hist_edges = np.histogram(
+        np.log10(df["v_peak"]), density=True, bins=50,
+    )
+    y_hist.quad(
+        right=y_hist_data,
+        left=0,
+        top=10 ** y_hist_edges[:-1],
+        bottom=10 ** y_hist_edges[1:],
+    )
+    y_hist.line(v_y, 10 ** v_x, color="black")
+    y_hist_sigma_span = Span(
+        location=v_cutoff,
+        dimension="width",
+        line_color="black",
+        line_dash="dashed",
+    )
+    y_hist.add_layout(y_hist_sigma_span)
+    fig.add_layout(y_hist_sigma_span)
+
+    variable_region = BoxAnnotation(
+        left=eta_cutoff,
+        bottom=v_cutoff,
+        fill_color="orange",
+        fill_alpha=0.3,
+        level="underlay",
+    )
+    fig.add_layout(variable_region)
+    grid = gridplot(
+        [[x_hist, Spacer(width=100, height=100)], [fig, y_hist]]
+    )
+
+    source = ColumnDataSource(data=df)
+    callback = CustomJS(args=dict(source=source), code="""
+    const d1 = source.data;
+    const i = cb_data.source.selected.indices[0];
+    const id = d1['id'][i];
+
+    $(document).ready(function () {
+      let fluxType = $('input[name="fluxTypeRadio"]:checked').val();
+      getLightcurvePlot(id, fluxType);
+      update_card(id);
+    });
+    """)
+
+    tap = TapTool(callback=callback)
+    fig.tools.append(tap)
+    # fig.select(TapTool).callback = redirect('vast_pipeline:source_detail', pk=2)
+
+    plot_row = row(grid, sizing_mode="stretch_width")
+    plot_row.css_classes.append("mx-auto")
+
     return plot_row
