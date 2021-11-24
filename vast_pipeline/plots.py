@@ -16,7 +16,10 @@ from bokeh.models import (
     LabelSet,
     HoverTool,
     TapTool,
-    OpenURL
+    OpenURL,
+    Slider,
+    Button,
+    RadioButtonGroup
 )
 from bokeh.models.formatters import DatetimeTickFormatter
 from bokeh.models.callbacks import CustomJS
@@ -90,8 +93,12 @@ def plot_lightcurve(
     # lightcurve required cols: taustart_ts, flux, flux_err_upper, flux_err_lower, forced
     lightcurve = pd.DataFrame(measurements_qs)
     # remap method values to labels to make a better legend
-    lightcurve["method"] = lightcurve.forced.map({True: "Forced", False: "Selavy"})
-    lightcurve['cutout'] = lightcurve['name'].apply(lambda x: f'/cutout/{x}/normal/')
+    lightcurve["method"] = lightcurve.forced.map(
+        {True: "Forced", False: "Selavy"}
+    )
+    lightcurve['cutout'] = lightcurve['name'].apply(
+        lambda x: f'/cutout/{x}/normal/?img_type=png'
+    )
     source = ColumnDataSource(lightcurve)
     method_mapper = factor_cmap(
         "method", palette="Colorblind3", factors=["Selavy", "Forced"]
@@ -270,28 +277,28 @@ def plot_lightcurve(
         #     ("Index", "@index"),
         #     ("Date", "@taustart_ts{%F}"),
         #     (f"Flux {metric_suffix}", "@flux mJy"),
-        #     ('Cutout', )
+        #     ('Cutout', "@cutout")
         # ],
         tooltips="""
-        <div>
+        <div style="width:200;">
             <div>
                 <img
-                    src=@cutout height="100" width="100"
+                    src=@cutout height="100" alt=@cutout width="100"
                     style="float: left; margin: 0px 15px 15px 0px;"
                     border="2"
                 ></img>
             </div>
             <div>
-                <span style="font-size: 17px; font-weight: bold;">@index</span>
-                <span style="font-size: 15px; color: #966;">[$index]</span>
+                <div style="font-size: 12px; font-weight: bold;">Date: </div>
+                <div style="font-size: 12px; color: #966;">@taustart_ts{%F}</div>
             </div>
             <div>
-                <span style="font-size: 15px;">Location</span>
-                <span style="font-size: 10px; color: #696;">($x, $y)</span>
+                <div style="font-size: 12px; font-weight: bold;">Flux:</div>
+                <div style="font-size: 12px; color: #966;">@flux mJy</div>
             </div>
             <div>
-                <span style="font-size: 17px; font-weight: bold;">Date</span>
-                <span style="font-size: 15px; color: #966;">@taustart_ts{%F}</span>
+                <div style="font-size: 12px; font-weight: bold;">Index:</div>
+                <div style="font-size: 12px; color: #966;">@index</div>
             </div>
         </div>
         """,
@@ -393,10 +400,6 @@ def make_bins(self, x: pd.Series) -> List[float]:
 
 def plot_eta_v_bokeh(
     source: Source,
-    # eta_fit_mean: float,
-    # eta_fit_sigma: float,
-    # v_fit_mean: float,
-    # v_fit_sigma: float,
     eta_sigma: float,
     v_sigma: float,
     use_peak_flux: bool = True
@@ -411,14 +414,10 @@ def plot_eta_v_bokeh(
     Args:
         df: Dataframe containing the sources from the pipeline run. A
             `pandas.core.frame.DataFrame` instance.
-        eta_fit_mean: The mean of the eta fitted Gaussian.
-        eta_fit_sigma: The sigma of the eta fitted Gaussian.
-        v_fit_mean: The mean of the v fitted Gaussian.
-        v_fit_sigma: The sigma of the v fitted Gaussian.
-        eta_cutoff: The log10 eta_cutoff from the analysis.
-        v_cutoff: The log10 v_cutoff from the analysis.
-        use_int_flux: Use integrated fluxes for the analysis instead of
-            peak fluxes, defaults to 'False'.
+        eta_sigma: The log10 eta_cutoff from the analysis.
+        v_sigma: The log10 v_cutoff from the analysis.
+        use_peak_flux: Use peak fluxes for the analysis instead of
+            integrated fluxes, defaults to 'True'.
 
     Returns:
         Bokeh grid object containing figure.
@@ -463,7 +462,7 @@ def plot_eta_v_bokeh(
         aspect_scale=1,
         x_axis_type="log",
         y_axis_type="log",
-        x_axis_label="eta",
+        x_axis_label="\u03B7",
         y_axis_label="V",
         sizing_mode="stretch_width",
         tooltips=[
@@ -554,20 +553,39 @@ def plot_eta_v_bokeh(
         level="underlay",
     )
     fig.add_layout(variable_region)
+
+    eta_slider = Slider(start=0, end=10, step=0.1, value=eta_sigma, title="\u03B7 sigma value", sizing_mode='stretch_width')
+    v_slider = Slider(start=0, end=10, step=0.1, value=v_sigma, title="V sigma value", sizing_mode='stretch_width')
+
+    labels = ['Peak', 'Integrated']
+    active = 0 if use_peak_flux else 1
+    flux_choice_radio = RadioButtonGroup(labels=labels, active=active, sizing_mode='stretch_width')
+
+    button = Button(label="Apply", button_type="primary", sizing_mode='stretch_width')
+    button.js_on_click(CustomJS(args=dict(eta_slider=eta_slider, v_slider=v_slider, flux_choice_radio=flux_choice_radio), code="""
+        var e = eta_slider.value;
+        var v = v_slider.value;
+        const peak = ["peak", "int"];
+        var fluxType = peak[flux_choice_radio.active];
+        getEtaVPlot(e, v, fluxType);
+    """)
+    )
+
     grid = gridplot(
-        [[x_hist, Spacer(width=100, height=100)], [fig, y_hist]]
+        [[x_hist, Spacer(width=100, height=100)], [fig, y_hist], [flux_choice_radio, None], [eta_slider, None], [v_slider, None], [button, None]]
     )
 
     source = ColumnDataSource(data=df)
-    callback = CustomJS(args=dict(source=source), code="""
+    callback = CustomJS(args=dict(source=source, flux_choice_radio=flux_choice_radio), code="""
     const d1 = source.data;
     const i = cb_data.source.selected.indices[0];
     const id = d1['id'][i];
+    const peak = ["peak", "int"];
+    var fluxType = peak[flux_choice_radio.active];
 
     $(document).ready(function () {
-      let fluxType = $('input[name="fluxTypeRadio"]:checked').val();
-      getLightcurvePlot(id, fluxType);
       update_card(id);
+      getLightcurvePlot(id, fluxType);
     });
     """)
 

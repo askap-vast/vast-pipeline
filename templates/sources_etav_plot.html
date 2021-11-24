@@ -7,8 +7,6 @@
 
 {% block head %}
 
-<link rel='stylesheet' href='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css' />
-<link rel="stylesheet" href="{% static 'vendor/js9/js9-allinone.css' %}" />
 <link rel="stylesheet" href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" />
 <link rel="stylesheet" href="{% static 'vendor/datatables-buttons/buttons.bootstrap4.min.css' %}" />
 
@@ -28,32 +26,24 @@
 
 {% block content %}
 <!-- Begin Page Content -->
+
 <div class="container-fluid flex-column">
 
   <div class="row">
     <div class="col-xl-5 mb-4">
 
-      <!-- Lightcurve -->
+      <!-- Eta V Plot -->
       <div class="card shadow h-100">
         <div class="card-header py-3 clearfix" id="etavplotHeader">
           <h6 class="m-0 font-weight-bold text-primary float-left">&eta;-V Plot</h6>
-          <div class="float-right" id="plotfluxTypeRadioContainer">
-            <div class="form-check form-check-inline">
-              <input class="form-check-input" type="radio" name="plotfluxTypeRadio" id="plotfluxTypeRadioPeak" value="peak" checked>
-              <label class="form-check-label" for="plotfluxTypeRadioPeak">
-                Peak
-              </label>
-            </div>
-            <div class="form-check form-check-inline">
-              <input class="form-check-input" type="radio" name="plotfluxTypeRadio" id="plotfluxTypeRadioInt" value="int">
-              <label class="form-check-label" for="plotfluxTypeRadioInt">
-                Integrated
-              </label>
-            </div>
-          </div>
         </div>
         <div class="card-body">
-          <div id="etaVBokeh"></div>
+          <div id="etaVBokeh">
+            {% if plot_ok == 0 %}
+              <center>Error.</center>
+            {% endif %}
+          </div>
+
         </div>
       </div>
     </div>
@@ -64,20 +54,6 @@
           <div class="card shadow h-100">
             <div class="card-header py-3 clearfix" id="lightcurveHeader">
               <h6 class="m-0 font-weight-bold text-primary float-left">Selected Source Light Curve</h6>
-              <div class="float-right" id="fluxTypeRadioContainer">
-                <div class="form-check form-check-inline">
-                  <input class="form-check-input" type="radio" name="fluxTypeRadio" id="fluxTypeRadioPeak" value="peak" checked>
-                  <label class="form-check-label" for="fluxTypeRadioPeak">
-                    Peak
-                  </label>
-                </div>
-                <div class="form-check form-check-inline">
-                  <input class="form-check-input" type="radio" name="fluxTypeRadio" id="fluxTypeRadioInt" value="int">
-                  <label class="form-check-label" for="fluxTypeRadioInt">
-                    Integrated
-                  </label>
-                </div>
-              </div>
             </div>
             <div class="card-body">
               <div id="lightCurveBokeh"></div>
@@ -85,13 +61,11 @@
           </div>
         </div>
       </div>
-      <div class="row">
-        <div class="col mb-4">
-          <div id="sourceInfoCard"> 
-            {% include 'sources_etav_plot_card.html' %}
-          </div>
-        </div>
+
+      <div id='cardsUpdate'>
+        {% include 'sources_etav_plot_update.html' %}
       </div>
+
     </div>
   </div>
 
@@ -105,13 +79,6 @@
 
 {% block scripts %}
 <script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>
-
-<!-- JS9 FITS viewer. Loads a bundled version of jQuery UI which conflicts with Bootstrap's
-  tooltips. Must be loaded before Bootstrap so that Bootstrap tooltips take precendence. -->
-<script type="text/javascript" src="{% static 'vendor/js9/js9prefs.js' %}"></script>
-<script type="text/javascript" src="{% static 'vendor/js9/js9support.min.js' %}"></script>
-<script type="text/javascript" src="{% static 'vendor/js9/js9.min.js' %}"></script>
-<script type="text/javascript" src="{% static 'vendor/js9/js9plugins.js' %}"></script>
 
 <!-- Bootstrap core JavaScript-->
 <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
@@ -129,24 +96,16 @@
 
 {% block custom_page_scripts %}
 <!-- Page level plugins -->
-<script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
-<script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
-<script src="{% static 'vendor/datatables-buttons/dataTables.buttons.min.js' %}"></script>
-<script src="{% static 'vendor/datatables-buttons/buttons.bootstrap4.min.js' %}"></script>
-<script src="{% static 'vendor/datatables-buttons/buttons.colVis.min.js' %}"></script>
-<script src="{% static 'vendor/datatables-buttons/buttons.html5.min.js' %}"></script>
-<script src="{% static 'vendor/datatables-buttons/buttons.flash.min.js' %}"></script>
-<script src="{% static 'vendor/jszip/jszip.min.js' %}"></script>
+
 
 <!-- Bokeh scripts -->
 <script src="{% static 'vendor/bokehjs/bokeh.min.js' %}"></script>
-
-<script src="{% static 'js/clipboard-copy.min.js' %}"></script>
+<script src="{% static 'vendor/bokehjs/bokeh-widgets.min.js' %}"></script>
 
 <script type="text/javascript">
-  function getEtaVPlot(fluxType = "peak") {
+  function getEtaVPlot(eta_sigma = 3.0, v_sigma = 3.0, fluxType = "peak") {
     let usePeakFlux = fluxType === "peak";
-    fetch("{% url 'vast_pipeline:api_source_plots-etavplot' %}?peak_flux=" + usePeakFlux)
+    fetch("{% url 'vast_pipeline:api_source_plots-etavplot' %}?eta_sigma=" + eta_sigma + "&v_sigma=" + v_sigma + "&peak_flux=" + usePeakFlux)
       .then(function (response) {
         return response.json()
       })
@@ -156,48 +115,18 @@
       })
   }
 
-  // get the lightcurve plot whenever the flux type radio value changes
-  $("#plotfluxTypeRadioContainer").on("change", function(e) {
-    console.log("getting lightcurve plot for flux type", e.target.value);
-    getEtaVPlot(e.target.value);
-  });
-
   $(document).ready(function () {
-    let fluxType = $('input[name="plotfluxTypeRadio"]:checked').val();
-    getEtaVPlot(fluxType);
+    var plot_ok = {{ plot_ok }};
+    if (plot_ok == true){
+      getEtaVPlot(3.0, 3.0, 'peak');
+    }
   });
-
-</script>
-
-  <script type="text/javascript">
-  function getLightcurvePlot(id, fluxType = "peak") {
-    console.log(id);
-    let usePeakFlux = fluxType === "peak";
-    fetch("{% url 'vast_pipeline:api_source_plots-lightcurve' -99 %}?peak_flux=".replace('-99', id) + usePeakFlux)
-      .then(function (response) {
-        return response.json()
-      })
-      .then(function (item) {
-        $("#lightCurveBokeh").empty();
-        return Bokeh.embed.embed_item(item, "lightCurveBokeh")
-      })
-  }
 
   function update_card(id) {
-      $('#sourceInfoCard').html('').load(
+      $('#cardsUpdate').html('').load(
           "{% url 'vast_pipeline:source_etav_plot_update' 0 %}".replace('0', id)
       ); // <--- this code instead of $.ajax(lala)
   }
-  // get the lightcurve plot whenever the flux type radio value changes
-  // $("#fluxTypeRadioContainer").on("change", function(e) {
-  //   console.log("getting lightcurve plot for flux type", e.target.value);
-  //   getLightcurvePlot(e.target.value);
-  // });
-  //
-  // $(document).ready(function () {
-  //   let fluxType = $('input[name="fluxTypeRadio"]:checked').val();
-  //   getLightcurvePlot(fluxType);
-  // });
 </script>
 
 {% endblock custom_page_scripts %}

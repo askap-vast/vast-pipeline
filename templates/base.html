@@ -252,10 +252,27 @@
         </div>
         {% endif %}
         {% if message.tags == 'error' %}
-        <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-delay=6000>
+        <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-delay=10000>
           <div class="toast-header bg-danger text-white">
             <span>
               <i class="fas fa-exclamation-circle"></i>
+            </span>
+            <strong class="mr-auto">&nbsp;VAST Pipeline</strong>
+            <small>just now</small>
+            <button type="button" class="ml-2 mb-1 close text-white" data-dismiss="toast" aria-label="Close">
+              <span aria-hidden="true">x</span>
+            </button>
+          </div>
+          <div class="toast-body">
+            {{ message }}
+          </div>
+        </div>
+        {% endif %}
+        {% if message.tags == 'warning' %}
+        <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-delay=10000>
+          <div class="toast-header bg-warning text-white">
+            <span>
+              <i class="fas fa-exclamation-triangle"></i>
             </span>
             <strong class="mr-auto">&nbsp;VAST Pipeline</strong>
             <small>just now</small>
