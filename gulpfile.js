@@ -186,7 +186,7 @@ function modules() {
   // Bokeh
   var bokehJS = gulp.src('./node_modules/@bokeh/bokehjs/build/js/bokeh.min.js')
     .pipe(gulp.dest(paths.vendor + '/bokehjs'));
-  var bokehJS = gulp.src('./node_modules/@bokeh/bokehjs/build/js/bokeh-widgets.min.js')
+  var bokehJSwidgets = gulp.src('./node_modules/@bokeh/bokehjs/build/js/bokeh-widgets.min.js')
     .pipe(gulp.dest(paths.vendor + '/bokehjs'));
 
   // SB Admin 2 Bootstrap template
@@ -265,7 +265,7 @@ function modules() {
   var prismJsLineNumCss = gulp.src('./node_modules/prismjs/plugins/line-numbers/prism-line-numbers.css')
     .pipe(gulp.dest(paths.vendor + '/prismjs/line-numbers'));
 
-  return merge(bootstrapJS, bootstrapSbAdmin2, bootstrap4toggle, bokehJS, dataTables, dataTablesButtons, fontAwesome, jquery, jqueryEasing, jszip, d3Celestial, d3CelestialData, d3CelestialImage, particlesJs, prismJs, prismJsYaml, prismJsLineNum, prismJsCss, prismJsLineNumCss);
+  return merge(bootstrapJS, bootstrapSbAdmin2, bootstrap4toggle, bokehJS, bokehJSwidgets, dataTables, dataTablesButtons, fontAwesome, jquery, jqueryEasing, jszip, d3Celestial, d3CelestialData, d3CelestialImage, particlesJs, prismJs, prismJsYaml, prismJsLineNum, prismJsCss, prismJsLineNumCss);
 }
 
 // SCSS task
