@@ -50,8 +50,8 @@ urlpatterns = [
         kwargs={"tag_model": Source.tags.tag_model},
         name="source_tags_autocomplete",
     ),
-    path('cutout/<str:measurement_name>/', views.ImageCutout.as_view(), name='cutout'),
-    path('cutout/<str:measurement_name>/<str:size>/', views.ImageCutout.as_view(), name='cutout'),
+    path('cutout/<int:measurement_id>/', views.ImageCutout.as_view(), name='cutout'),
+    path('cutout/<int:measurement_id>/<str:size>/', views.ImageCutout.as_view(), name='cutout'),
     path(
         'measurements/<int:image_id>/<ra:ra_deg>,<dec:dec_deg>,<angle:radius_deg>/region/',
         views.MeasurementQuery.as_view(),
