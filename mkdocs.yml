@@ -168,6 +168,7 @@ nav:
         - models.py: reference/models.md
         - plots.py: reference/plots.md
         # - serializers.py: reference/serializers.md
+        - signals.py: reference/signals.md
         - urls.py: reference/urls.md
         # - views.py: reference/views.md
 

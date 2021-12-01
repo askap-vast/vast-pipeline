@@ -1895,14 +1895,15 @@ class ImageCutout(APIView):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, measurement_name, size="normal"):
+    def get(self, request, measurement_id: int, size: str = "normal"):
         img_type = request.query_params.get('img_type', 'fits')
         if img_type not in ('fits', 'png'):
             raise Http404(
                 "GET query param img_type must be either 'fits' or 'png'."
             )
 
-        measurement = Measurement.objects.get(name=measurement_name)
+        measurement = Measurement.objects.get(id=measurement_id)
+
         image_hdu: fits.PrimaryHDU = fits.open(measurement.image.path)[0]
         coord = SkyCoord(ra=measurement.ra, dec=measurement.dec, unit="deg")
         sizes = {
