@@ -9,13 +9,18 @@ import glob
 import shutil
 import logging
 import traceback
+import signal
+import sys
 import warnings
 
 from argparse import ArgumentParser
+from dask.context import _globals
 from typing import Optional
 from django.db import transaction
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand, CommandError
+from functools import partial
+
 from vast_pipeline._version import __version__ as pipeline_version
 from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
 from vast_pipeline.pipeline.main import Pipeline
@@ -23,14 +28,32 @@ from vast_pipeline.pipeline.utils import (
     get_create_p_run, create_measurements_arrow_file,
     create_measurement_pairs_arrow_file, backup_parquets
 )
-from vast_pipeline.utils.utils import StopWatch
+from vast_pipeline.utils.utils import StopWatch, timeStamped
 from vast_pipeline.models import Run
 from ..helpers import get_p_run_name
+
 from astropy.utils.exceptions import AstropyWarning
 from vast_pipeline.pipeline.errors import PipelineConfigError
 
 
 logger = logging.getLogger(__name__)
+
+
+def termination_signal_handler(sig, frame, pipeline, p_run) -> None:
+    # pool = _globals.pop('pool')  # remove the pool from globals to make dask create a new one
+    # pool.close()
+    # pool.terminate()
+    # pool.join()
+    # Set pipeline run to error and shutdown
+    # logger is globally set.
+    logger.warning('Pipeline terminated, shutting down...')
+    pipeline.set_status(p_run, 'ERR')
+    logger.debug("Pipeline set to 'Error' status.")
+
+    # now terminate logger process
+    logging.shutdown()
+
+    sys.exit()
 
 
 def run_pipe(
@@ -76,7 +99,7 @@ def run_pipe(
         if debug:
             root_logger.setLevel(logging.DEBUG)
         f_handler = logging.FileHandler(
-            os.path.join(path, 'log.txt'),
+            os.path.join(path, timeStamped('log.txt')),
             mode='w'
         )
         f_handler.setFormatter(root_logger.handlers[0].formatter)
@@ -93,6 +116,15 @@ def run_pipe(
         pipeline.name,
         pipeline.config["run"]["path"],
     )
+
+    # register the terminate handler
+    sigterm_handler = partial(
+        termination_signal_handler,
+        pipeline=pipeline,
+        p_run=p_run
+    )
+    signal.signal(signal.SIGTERM, sigterm_handler)
+    signal.signal(signal.SIGINT, sigterm_handler)
 
     # copy across config file at the start
     logger.debug("Copying temp config file.")
@@ -409,7 +441,7 @@ class Command(BaseCommand):
         # configure logging
         root_logger = logging.getLogger('')
         f_handler = logging.FileHandler(
-            os.path.join(run_folder, 'log.txt'),
+            os.path.join(run_folder, timeStamped('log.txt')),
             mode='w'
         )
         f_handler.setFormatter(root_logger.handlers[0].formatter)

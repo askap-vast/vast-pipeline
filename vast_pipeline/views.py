@@ -647,6 +647,9 @@ def RunDetail(request, id):
         with open(f_path) as fp:
             p_run['gen_arrow_log_txt'] = fp.read()
 
+    log_files = sorted(glob(os.path.join(p_run['path'], '*[0-9]_log.txt')))
+    log_files = [os.path.basename(i) for i in log_files]
+
     # Detect whether arrow files are present
     p_run['arrow_files'] = os.path.isfile(
         os.path.join(p_run['path'], 'measurements.arrow')
@@ -758,6 +761,7 @@ def RunDetail(request, id):
         "datatables": [image_datatable, meas_datatable],
         "d3_celestial_skyregions": get_skyregions_collection(run_id=id),
         "static_url": settings.STATIC_URL,
+        "log_files": log_files
     }
 
     context["comment_form"], context["comments"] = _process_comment_form_get_comments(

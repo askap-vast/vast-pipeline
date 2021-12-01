@@ -18,6 +18,7 @@ from vast_pipeline.models import (
 from vast_pipeline.pipeline.loading import update_sources
 from vast_pipeline.pipeline.config import PipelineConfig
 from vast_pipeline.pipeline.main import Pipeline
+from vast_pipeline.utils.utils import timeStamped
 from ..helpers import get_p_run_name
 
 
@@ -351,7 +352,7 @@ class Command(BaseCommand):
         # configure logging
         root_logger = logging.getLogger('')
         f_handler = logging.FileHandler(
-            os.path.join(run_folder, 'restore_log.txt'),
+            os.path.join(run_folder, timeStamped('restore_log.txt')),
             mode='w'
         )
         f_handler.setFormatter(root_logger.handlers[0].formatter)
