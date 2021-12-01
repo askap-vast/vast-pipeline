@@ -96,7 +96,7 @@ def plot_lightcurve(
     lightcurve["method"] = lightcurve.forced.map(
         {True: "Forced", False: "Selavy"}
     )
-    lightcurve['cutout'] = lightcurve['name'].apply(
+    lightcurve['cutout'] = lightcurve['id'].apply(
         lambda x: f'/cutout/{x}/normal/?img_type=png'
     )
     source = ColumnDataSource(lightcurve)
