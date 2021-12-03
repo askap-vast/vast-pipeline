@@ -54,9 +54,8 @@ All the results from the pipeline run are uploaded to the database. Specifically
 * Sources and their statistics.
 * Relations between sources.
 * Associations.
-* Measurement two-epoch pairs.
 
-For large runs this can be a substantional component of the pipeline run time. 
+For large runs this can be a substantial component of the pipeline run time.
 `Bulk upload` statements will be seen in the pipeline run log file such as these shown below:
 
 !!! example "log.txt"
@@ -66,6 +65,4 @@ For large runs this can be a substantional component of the pipeline run time.
     2021-03-11 13:00:04,919 loading INFO Bulk created #29 RelatedSource
     2021-03-11 13:00:04,943 loading INFO Upload associations...
     2021-03-11 13:00:05,650 loading INFO Bulk created #3276 Association
-    2021-03-11 13:00:08,374 loading INFO Bulk created #10000 MeasurementPair
-    2021-03-11 13:00:08,663 loading INFO Bulk created #1150 MeasurementPair
     ```
