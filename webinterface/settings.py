@@ -1,8 +1,5 @@
 import os
 import environ
-import django_stubs_ext
-
-django_stubs_ext.monkeypatch()
 
 # Load the Django congig from the .env file
 env = environ.Env()
