@@ -11,11 +11,10 @@ from vast_pipeline.models import Run
 from vast_pipeline.utils.utils import StopWatch, optimize_floats, optimize_ints
 from vast_pipeline.pipeline.loading import (
     make_upload_associations, make_upload_sources, make_upload_related_sources,
-    make_upload_measurement_pairs, update_sources
+    update_sources
 )
-from vast_pipeline.pipeline.utils import (
-    parallel_groupby, calculate_measurement_pair_metrics
-)
+from vast_pipeline.pipeline.pairs import calculate_measurement_pair_metrics
+from vast_pipeline.pipeline.utils import parallel_groupby
 
 
 logger = logging.getLogger(__name__)
@@ -286,28 +285,9 @@ def final_operations(
             pd.read_parquet(previous_parquets['measurement_pairs'])
         ).rename(columns={'meas_id_a': 'id_a', 'meas_id_b': 'id_b'})
 
-        measurement_pairs_df_upload = measurement_pairs_df.append(
-            old_measurement_pairs, ignore_index=True)
-
-        measurement_pairs_df_upload = (
-            measurement_pairs_df_upload.drop_duplicates(
-                ['id_a', 'id_b', 'source_id'], keep=False)
-        )
-
-        logger.debug(
-            f'Add mode: #{measurement_pairs_df_upload.shape[0]}'
-            ' measurement pairs to upload.'
-        )
-    else:
-        measurement_pairs_df_upload = measurement_pairs_df
-
-    # create the measurement pair objects and upload to DB
-    measurement_pairs_df = make_upload_measurement_pairs(
-        measurement_pairs_df_upload)
-
-    if add_mode:
         measurement_pairs_df = old_measurement_pairs.append(
-            measurement_pairs_df)
+            measurement_pairs_df
+        ).drop_duplicates(["id_a", "id_b", "source_id"])
 
     # optimize measurement pair DataFrame and save to parquet file
     measurement_pairs_df = optimize_ints(
