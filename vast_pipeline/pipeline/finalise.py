@@ -279,16 +279,6 @@ def final_operations(
         srcs_df.id.rename("source_id"), on="source"
     )
 
-    if add_mode:
-        # Load old associations so the already uploaded ones can be removed
-        old_measurement_pairs = (
-            pd.read_parquet(previous_parquets['measurement_pairs'])
-        ).rename(columns={'meas_id_a': 'id_a', 'meas_id_b': 'id_b'})
-
-        measurement_pairs_df = old_measurement_pairs.append(
-            measurement_pairs_df
-        ).drop_duplicates(["id_a", "id_b", "source_id"])
-
     # optimize measurement pair DataFrame and save to parquet file
     measurement_pairs_df = optimize_ints(
         optimize_floats(
