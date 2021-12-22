@@ -1424,7 +1424,7 @@ def create_temp_config_file(p_run_path: str) -> None:
 
     Args:
         p_run_path:
-            The path of the pipeline run where the parquets are stored.
+            The path of the pipeline run of the config to be copied.
 
     Returns:
         None
