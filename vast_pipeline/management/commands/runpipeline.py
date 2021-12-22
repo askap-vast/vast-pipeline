@@ -9,7 +9,6 @@ import glob
 import shutil
 import logging
 import traceback
-import sys
 import warnings
 
 from argparse import ArgumentParser

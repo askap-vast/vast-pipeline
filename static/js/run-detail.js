@@ -56,16 +56,6 @@ $(document).ready(function() {
     loadlog(logfile, 'genarrowlog');
   }
 
-  $('#restorelogs').on('change', function () {
-    let logfile = document.getElementById('restorelogs').value;
-    loadlog(logfile, 'restorelog');
-  });
-
-  $('#genarrowlogs').on('change', function () {
-    let logfile = document.getElementById('genarrowlogs').value;
-    loadlog(logfile, 'genarrowlog');
-  });
-
   // load logs on selection change
   $('#logs').on('change', function () {
     let logfile = document.getElementById('logs').value;
