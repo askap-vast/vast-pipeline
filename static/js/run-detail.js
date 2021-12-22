@@ -40,4 +40,65 @@ $(document).ready(function() {
     document.getElementById('runConfigForm').submit();
   });
 
+  // load logs on page load
+  var logfile = document.getElementById('logs').value;
+  if (!!logfile) {
+    loadlog(logfile, 'runlog');
+  }
+
+  var logfile = document.getElementById('restorelogs').value;
+  if (!!logfile) {
+    loadlog(logfile, 'restorelog');
+  }
+
+  var logfile = document.getElementById('genarrowlogs').value;
+  if (!!logfile) {
+    loadlog(logfile, 'genarrowlog');
+  }
+
+  $('#restorelogs').on('change', function () {
+    let logfile = document.getElementById('restorelogs').value;
+    loadlog(logfile, 'restorelog');
+  });
+
+  $('#genarrowlogs').on('change', function () {
+    let logfile = document.getElementById('genarrowlogs').value;
+    loadlog(logfile, 'genarrowlog');
+  });
+
+  // load logs on selection change
+  $('#logs').on('change', function () {
+    let logfile = document.getElementById('logs').value;
+    loadlog(logfile, 'runlog');
+  });
+
+  $('#restorelogs').on('change', function () {
+    let logfile = document.getElementById('restorelogs').value;
+    loadlog(logfile, 'restorelog');
+  });
+
+  $('#genarrowlogs').on('change', function () {
+    let logfile = document.getElementById('genarrowlogs').value;
+    loadlog(logfile, 'genarrowlog');
+  });
 });
+
+
+function loadlog(logfile, type) {
+  // Function to load a run log file
+  let apiUrl = document.getElementById('runDetailScript').getAttribute('apiRunLogUrl');
+
+  $.ajax({
+    type: "GET",
+    url: apiUrl + "?logname="+ logfile,
+    success: function (data) {
+      if (type == 'runlog') {
+        $("#logtext").html(data.content);
+      } else if (type == 'restorelog') {
+        $("#restorelogtext").html(data.content);
+      } else if (type == 'genarrowlog') {
+        $("#genarrowlogtext").html(data.content);
+      }
+    }
+  });
+};
