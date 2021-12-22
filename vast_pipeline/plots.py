@@ -47,7 +47,7 @@ def plot_lightcurve(
 
     Args:
         source (Source): Source object.
-        vs_abs_min (float, optional): MeasurementPair objects with an absolute vs metric
+        vs_abs_min (float, optional): pairs of Measurement objects with an absolute vs metric
             greater than `vs_abs_min` and m metric greater than `m_abs_min` will be connected
             in the metric graph. Defaults to 4.3.
         m_abs_min (float, optional): See `vs_abs_min`. Defaults to 0.26.
@@ -81,14 +81,6 @@ def plot_lightcurve(
         )
         .order_by("taustart_ts")
     )
-    candidate_measurement_pairs_qs = (
-        source.measurementpair_set.annotate(
-            m_abs=Abs(f"m_{metric_suffix}"), vs_abs=Abs(f"vs_{metric_suffix}")
-        )
-        .filter(vs_abs__gte=vs_abs_min, m_abs__gte=m_abs_min)
-        .values("measurement_a_id", "measurement_b_id", "vs_abs", "m_abs")
-    )
-    candidate_measurement_pairs_df = pd.DataFrame(candidate_measurement_pairs_qs)
 
     # lightcurve required cols: taustart_ts, flux, flux_err_upper, flux_err_lower, forced
     lightcurve = pd.DataFrame(measurements_qs)
@@ -99,7 +91,8 @@ def plot_lightcurve(
     lightcurve['cutout'] = lightcurve['id'].apply(
         lambda x: f'/cutout/{x}/normal/?img_type=png'
     )
-    source = ColumnDataSource(lightcurve)
+    lc_source = ColumnDataSource(lightcurve)
+
     method_mapper = factor_cmap(
         "method", palette="Colorblind3", factors=["Selavy", "Forced"]
     )
@@ -129,7 +122,7 @@ def plot_lightcurve(
         nonselection_alpha=1.0,
         hover_color="red",
         alpha=1.0,
-        source=source,
+        source=lc_source,
         legend_group="method",
     )
     fig_lc.add_layout(
@@ -137,7 +130,7 @@ def plot_lightcurve(
             base="taustart_ts",
             upper="flux_err_upper",
             lower="flux_err_lower",
-            source=source,
+            source=lc_source,
         )
     )
     fig_lc.xaxis.axis_label = "Datetime"
@@ -166,7 +159,11 @@ def plot_lightcurve(
         sizing_mode="fixed",
     )
     hover_tool_lc_callback = None
-    if len(candidate_measurement_pairs_df) > 0:
+    measurement_pairs = source.get_measurement_pairs()
+    if len(measurement_pairs) > 0:
+        candidate_measurement_pairs_df = pd.DataFrame(measurement_pairs).query(
+            f"m_{metric_suffix}.abs() >= {m_abs_min} and vs_{metric_suffix}.abs() >= {vs_abs_min}"
+        ).reset_index()
         g = nx.Graph()
         for _row in candidate_measurement_pairs_df.itertuples(index=False):
             g.add_edge(_row.measurement_a_id, _row.measurement_b_id)
