@@ -25,7 +25,8 @@ from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
 from vast_pipeline.pipeline.main import Pipeline
 from vast_pipeline.pipeline.utils import (
     get_create_p_run, create_measurements_arrow_file,
-    create_measurement_pairs_arrow_file, backup_parquets
+    create_measurement_pairs_arrow_file, backup_parquets,
+    create_temp_config_file
 )
 from vast_pipeline.utils.utils import StopWatch, timeStamped
 from vast_pipeline.models import Run
@@ -150,6 +151,11 @@ def run_pipe(
             )
             for parquet in parquets:
                 os.remove(parquet)
+
+            # copy across config file at the start
+            logger.debug("Copying temp config file.")
+            create_temp_config_file(p_run.path)
+
         else:
             # Check if the status is already running or queued. Exit if this is
             # the case.
@@ -163,10 +169,7 @@ def run_pipe(
 
             # copy across config file at the start
             logger.debug("Copying temp config file.")
-            shutil.copyfile(
-                os.path.join(p_run.path, 'config.yaml'),
-                os.path.join(p_run.path, 'config_temp.yaml')
-            )
+            create_temp_config_file(p_run.path)
 
             # Check if there is a previous run config and back up if so
             if os.path.isfile(
