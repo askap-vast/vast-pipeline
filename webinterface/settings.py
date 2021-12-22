@@ -165,7 +165,7 @@ CACHES = {
 Q_CLUSTER = {
     'name': 'VastPipeline',
     'workers': 3,
-    'timeout': 604800,
+    'timeout': env('Q_CLUSTER_TIMEOUT', cast=int, default=86400),
     'queue_limit': 6,
     'ack_failures': True,
     'bulk': 10,
@@ -173,8 +173,7 @@ Q_CLUSTER = {
     'label': 'Django Q tasks',
     'daemonize_workers': False,
     'recycle': 100,
-    'retry': 691200,
-    'max_attempts': 1
+    'retry': env('Q_CLUSTER_RETRY', cast=int, default=86402),
 }
 
 # REST framework settings

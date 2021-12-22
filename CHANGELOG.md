@@ -27,6 +27,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Replaced `models.MeasurementPair` model with a dataclass [#590](https://github.com/askap-vast/vast-pipeline/pull/590).
+- Django-Q config variables `timeout` and `retry` are configurable in the .env file [#589](https://github.com/askap-vast/vast-pipeline/pull/589).
 - Changed restore run command to only allow one run as input [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
 - Changed existing documentation pages to reflect new buttons [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
 - Moved creation of output backup files to occur before the config check [#576](https://github.com/askap-vast/vast-pipeline/pull/576).
@@ -37,6 +39,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed measurement FITS cutout bug [#588](https://github.com/askap-vast/vast-pipeline/pull/588).
+- Fixed removal of image and sky region objects when a run is deleted [#585](https://github.com/askap-vast/vast-pipeline/pull/585).
 - Fixed testing pandas equal deprecation warning [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
 - Fixed restore run relations issue [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
 - Fixed logic for full re-run requirement when UI run is being re-run from an error status [#576](https://github.com/askap-vast/vast-pipeline/pull/576).
@@ -52,6 +56,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#590](https://github.com/askap-vast/vast-pipeline/pull/590): fix: Remove MeasurementPair model.
+- [#589](https://github.com/askap-vast/vast-pipeline/pull/589): fix: expose django-q timeout and retry to env vars.
+- [#588](https://github.com/askap-vast/vast-pipeline/pull/588): fix: change cutout endpoint to use measurement ID.
+- [#585](https://github.com/askap-vast/vast-pipeline/pull/585): fix: Clean up m2m related objects when deleting a run.
 - [#583](https://github.com/askap-vast/vast-pipeline/pull/583): fix: remove unique constraint from Measurement.name.
 - [#580](https://github.com/askap-vast/vast-pipeline/pull/580): feat, fix, doc: Added UI run action buttons.
 - [#576](https://github.com/askap-vast/vast-pipeline/pull/576): fix: Fixed UI re-run from errored status.

@@ -120,7 +120,6 @@ This page details the columns contained in each output file.
 |`m_peak`| n/a | The pair $m$ value using the peak flux. |
 |`m_int`| n/a | The pair $m$ value using the integrated flux. |
 |`source_id`| n/a | The database `id` of the source the pair is associated to. |
-|`id`| n/a | The database `id` of the measurement pair. |
 
 ## relations
 

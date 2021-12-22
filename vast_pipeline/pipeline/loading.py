@@ -13,11 +13,10 @@ from vast_pipeline.pipeline.model_generator import (
     source_models_generator,
     related_models_generator,
     association_models_generator,
-    measurement_pair_models_generator,
 )
 from vast_pipeline.models import (
     Association, Band, Measurement, SkyRegion, Source, RelatedSource,
-    MeasurementPair, Run, Image
+    Run, Image
 )
 from vast_pipeline.pipeline.utils import get_create_img, get_create_img_band
 from vast_pipeline.utils.utils import StopWatch
@@ -247,31 +246,6 @@ def make_upload_measurements(measurements_df: pd.DataFrame) -> pd.DataFrame:
     measurements_df['id'] = meas_dj_ids
 
     return measurements_df
-
-
-def make_upload_measurement_pairs(
-    measurement_pairs_df: pd.DataFrame
-) -> pd.DataFrame:
-    """
-    Uploads the measurement pairs from the supplied measurement pairs
-    DataFrame.
-
-    Args:
-        measurement_pairs_df:
-            DataFrame containing the measurement pairs information from the
-            pipeline.
-
-    Returns:
-        Original DataFrame with the database ID attached to each row.
-    """
-    meas_pair_dj_ids = bulk_upload_model(
-        MeasurementPair,
-        measurement_pair_models_generator(measurement_pairs_df),
-        return_ids=True
-    )
-    measurement_pairs_df["id"] = meas_pair_dj_ids
-
-    return measurement_pairs_df
 
 
 def update_sources(

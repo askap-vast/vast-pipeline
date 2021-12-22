@@ -151,6 +151,7 @@ nav:
           - main.py: reference/pipeline/main.md
           - model_generator.py: reference/pipeline/model_generator.md
           - new_sources.py: reference/pipeline/new_sources.md
+          - pairs.py: reference/pipeline/pairs.md
           - utils.py: reference/pipeline/utils.md
         - survey:
           - translators.py: reference/survey/translators.md
@@ -168,6 +169,7 @@ nav:
         - models.py: reference/models.md
         - plots.py: reference/plots.md
         # - serializers.py: reference/serializers.md
+        - signals.py: reference/signals.md
         - urls.py: reference/urls.md
         # - views.py: reference/views.md
 

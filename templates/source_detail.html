@@ -488,7 +488,7 @@
     return new Promise(resolve => {
       JS9.Load(
         addBaseUrl('/cutout/' + imageName + '/large'), {
-          id: imageName,
+          id: imageName.toString(),
           scalemin: -0.001,
           scalemax: 0.002,
           color: 'gray',
@@ -532,7 +532,7 @@
     // load all images and wait until they're all done
     await Promise.all(measurementData.map((measurement, i) => {
       var displayId = "JS9_" + (i + 1);
-      return loadFitsImage(measurement.name, displayId);
+      return loadFitsImage(measurement.id, displayId);
     }));
     JS9.SyncImages(); // sync panning between images
     focusOnSource(4.0);

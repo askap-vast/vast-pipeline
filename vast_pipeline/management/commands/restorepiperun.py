@@ -12,8 +12,7 @@ from django.core.management.base import BaseCommand, CommandError
 from typing import Dict
 
 from vast_pipeline.models import (
-    Run, Source, Measurement, Image, Association, MeasurementPair,
-    RelatedSource
+    Run, Source, Measurement, Image, Association, RelatedSource
 )
 from vast_pipeline.pipeline.loading import update_sources
 from vast_pipeline.pipeline.config import PipelineConfig
@@ -240,24 +239,6 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config: PipelineCon
             n_del, detail_del = associations_to_delete.delete()
             logger.info(
                 ('Deleting associations to restore run.'
-                 ' Total objects deleted: %i'),
-                n_del,
-            )
-            logger.debug('(type, #deleted): %s', detail_del)
-
-    pair_criteria_1 = Q(source_id__in=bak_sources['id'].to_numpy())
-    pair_criteria_2 = ~Q(measurement_a__in=meas['id'].to_numpy())
-    pair_criteria_3 = ~Q(measurement_b__in=meas['id'].to_numpy())
-
-    pairs_to_delete = MeasurementPair.objects.filter(
-       pair_criteria_1 and (pair_criteria_2 | pair_criteria_3)
-    )
-
-    if pairs_to_delete.exists():
-        with transaction.atomic():
-            n_del, detail_del = pairs_to_delete.delete()
-            logger.info(
-                ('Deleting measurement pairs to restore run.'
                  ' Total objects deleted: %i'),
                 n_del,
             )

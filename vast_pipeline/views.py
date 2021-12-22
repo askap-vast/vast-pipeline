@@ -1781,8 +1781,8 @@ class ImageCutout(APIView):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, measurement_name, size="normal"):
-        measurement = Measurement.objects.get(name=measurement_name)
+    def get(self, request, measurement_id: int, size: str = "normal"):
+        measurement = Measurement.objects.get(id=measurement_id)
         image_hdu: fits.PrimaryHDU = fits.open(measurement.image.path)[0]
         coord = SkyCoord(ra=measurement.ra, dec=measurement.dec, unit="deg")
         sizes = {
