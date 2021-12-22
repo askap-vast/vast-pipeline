@@ -174,6 +174,7 @@ Q_CLUSTER = {
     'daemonize_workers': False,
     'recycle': 100,
     'retry': env('Q_CLUSTER_RETRY', cast=int, default=86402),
+    'max_attempts': env('Q_CLUSTER_MAX_ATTEMPTS', cast=int, default=1),
 }
 
 # REST framework settings

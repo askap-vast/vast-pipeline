@@ -9,7 +9,6 @@ import glob
 import shutil
 import logging
 import traceback
-import signal
 import sys
 import warnings
 
@@ -37,23 +36,6 @@ from vast_pipeline.pipeline.errors import PipelineConfigError
 
 
 logger = logging.getLogger(__name__)
-
-
-def termination_signal_handler(sig, frame, pipeline, p_run) -> None:
-    # pool = _globals.pop('pool')  # remove the pool from globals to make dask create a new one
-    # pool.close()
-    # pool.terminate()
-    # pool.join()
-    # Set pipeline run to error and shutdown
-    # logger is globally set.
-    logger.warning('Pipeline terminated, shutting down...')
-    pipeline.set_status(p_run, 'ERR')
-    logger.debug("Pipeline set to 'Error' status.")
-
-    # now terminate logger process
-    logging.shutdown()
-
-    sys.exit()
 
 
 def run_pipe(
@@ -117,22 +99,6 @@ def run_pipe(
         pipeline.config["run"]["path"],
     )
 
-    # register the terminate handler
-    sigterm_handler = partial(
-        termination_signal_handler,
-        pipeline=pipeline,
-        p_run=p_run
-    )
-    signal.signal(signal.SIGTERM, sigterm_handler)
-    signal.signal(signal.SIGINT, sigterm_handler)
-
-    # copy across config file at the start
-    logger.debug("Copying temp config file.")
-    shutil.copyfile(
-        os.path.join(p_run.path, 'config.yaml'),
-        os.path.join(p_run.path, 'config_temp.yaml')
-    )
-
     # backup the last successful outputs.
     # if the run is being run again and the last status is END then the
     # user is highly likely to be attempting to add images. Making the backups
@@ -194,6 +160,13 @@ def run_pipe(
                     "Exiting."
                 )
                 return True
+
+            # copy across config file at the start
+            logger.debug("Copying temp config file.")
+            shutil.copyfile(
+                os.path.join(p_run.path, 'config.yaml'),
+                os.path.join(p_run.path, 'config_temp.yaml')
+            )
 
             # Check if there is a previous run config and back up if so
             if os.path.isfile(

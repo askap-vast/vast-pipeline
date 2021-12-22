@@ -93,11 +93,11 @@ function loadlog(logfile, type) {
     url: apiUrl + "?logname="+ logfile,
     success: function (data) {
       if (type == 'runlog') {
-        $("#logtext").html(data.content);
+        $("#logtext").html(data.log_html_content);
       } else if (type == 'restorelog') {
-        $("#restorelogtext").html(data.content);
+        $("#restorelogtext").html(data.log_html_content);
       } else if (type == 'genarrowlog') {
-        $("#genarrowlogtext").html(data.content);
+        $("#genarrowlogtext").html(data.log_html_content);
       }
     }
   });

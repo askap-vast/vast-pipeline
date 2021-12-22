@@ -2197,7 +2197,7 @@ class RunLogSet(ViewSet):
             return Response(msg, status=status.HTTP_400_BAD_REQUEST)
 
         logfile = {
-            'content': "<code>"+ pipeline_log + "</code>"
+            'log_html_content': "<code>"+ pipeline_log + "</code>"
         }
 
         return JsonResponse(logfile, status=status.HTTP_200_OK)
