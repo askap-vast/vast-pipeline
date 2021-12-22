@@ -12,12 +12,10 @@ import traceback
 import warnings
 
 from argparse import ArgumentParser
-from dask.context import _globals
 from typing import Optional
 from django.db import transaction
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand, CommandError
-from functools import partial
 
 from vast_pipeline._version import __version__ as pipeline_version
 from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
