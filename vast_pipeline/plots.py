@@ -16,7 +16,6 @@ from bokeh.models import (
     LabelSet,
     HoverTool,
     TapTool,
-    OpenURL,
     Slider,
     Button,
     RadioButtonGroup
@@ -24,13 +23,10 @@ from bokeh.models import (
 from bokeh.models.formatters import DatetimeTickFormatter
 from bokeh.models.callbacks import CustomJS
 from bokeh.layouts import row, Row, gridplot, Spacer
-from bokeh.palettes import Category10_3
-from bokeh.plotting import figure, from_networkx
+from bokeh.plotting import figure
 from bokeh.transform import factor_cmap, linear_cmap
 from datetime import timedelta
-from django.shortcuts import redirect
 from django.db.models import F
-from django.db.models.functions import Abs
 from scipy.stats import norm
 from typing import List, Tuple
 
