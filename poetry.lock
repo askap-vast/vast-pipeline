@@ -160,14 +160,14 @@ wcwidth = ">=0.1.4"
 
 [[package]]
 name = "bokeh"
-version = "2.3.0"
+version = "2.3.3"
 description = "Interactive plots and applications in the browser from Python"
 category = "main"
 optional = false
 python-versions = ">=3.6"
 
 [package.dependencies]
-Jinja2 = ">=2.7"
+Jinja2 = ">=2.9"
 numpy = ">=1.11.3"
 packaging = ">=16.8"
 pillow = ">=7.1.0"
@@ -1869,7 +1869,7 @@ prod = ["gevent", "gunicorn"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.1"
-content-hash = "5ba622c6ad5f5d63798ca9876c2e3cfdc8f8c96b92fc714917106df78d4b5830"
+content-hash = "f1a4001737f29806206eb9ed37b9b7303e1a390c5bc2777a8f23e1532b888278"
 
 [metadata.files]
 ansicon = [
@@ -1934,7 +1934,7 @@ blessed = [
     {file = "blessed-1.19.0.tar.gz", hash = "sha256:4db0f94e5761aea330b528e84a250027ffe996b5a94bf03e502600c9a5ad7a61"},
 ]
 bokeh = [
-    {file = "bokeh-2.3.0.tar.gz", hash = "sha256:dd417708f90702190222b1068a645acae99e66d4b58d7a336d545aeaa04e9b40"},
+    {file = "bokeh-2.3.3.tar.gz", hash = "sha256:a5fdcc181835561447fcc5a371300973fce4114692d5853addec284d1cdeb677"},
 ]
 certifi = [
     {file = "certifi-2021.10.8-py2.py3-none-any.whl", hash = "sha256:d62a0163eb4c2344ac042ab2bdf75399a71a2d8c7d47eac2e2ee91b9d6339569"},
