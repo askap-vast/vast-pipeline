@@ -1,3 +1,4 @@
+import glob
 import os
 
 from django.conf import settings as s
@@ -25,5 +26,5 @@ class RunPipelineTest(TestCase):
         call_command('runpipeline', self.basic_assoc_run)
 
     def test_check_run(self):
-        run_log_path = os.path.join(self.basic_assoc_run, 'log.txt')
-        self.assertTrue(os.path.exists(run_log_path))
+        run_logs = glob.glob(os.path.join(self.basic_assoc_run, '*_log.txt'))
+        self.assertEqual(len(run_logs), 1)
