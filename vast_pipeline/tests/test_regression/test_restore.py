@@ -35,8 +35,8 @@ class BasicAddImageTest(TestCase):
         '''
         Set up directories to test data, run the pipeline, and read the files.
         '''
-        base_path = 'normal-basic'
-        compare_path = 'restore-basic'
+        base_path = 'normal-basic-forced'
+        compare_path = 'restore-basic-forced'
         self.base_run = os.path.join(
             s.PIPELINE_WORKING_DIR, base_path
         )
@@ -109,7 +109,9 @@ class BasicAddImageTest(TestCase):
         '''
         See documentation for test_inc_assoc in compare_runs.
         '''
-        compare_runs.test_inc_assoc(self, self.ass_compare, self.ass_base)
+        compare_runs.test_inc_assoc(
+            self, self.ass_compare, self.ass_base, must_be_equal=True
+        )
 
     def test_update_source(self):
         '''

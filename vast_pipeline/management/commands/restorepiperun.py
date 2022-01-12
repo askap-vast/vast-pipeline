@@ -125,8 +125,6 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config: PipelineCon
                     ' Cannot restore pipeline run.'
                 )
 
-            del meas
-
     logger.info("Restoring '%s' from backup parquet files.", p_run.name)
 
     # Delete any new sources
@@ -251,9 +249,11 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config: PipelineCon
     logger.info('Restoring run metrics.')
     p_run.n_images = prev_images.shape[0]
     p_run.n_sources = bak_sources.shape[0]
-    p_run.n_selavy_measurements = meas.shape[0]
     if monitor:
+        p_run.n_selavy_measurements = meas.shape[0]
         p_run.n_forced_measurements = forced_meas.shape[0]
+    else:
+        p_run.n_selavy_measurements = bak_meas_ids.shape[0]
 
     with transaction.atomic():
         p_run.save()
