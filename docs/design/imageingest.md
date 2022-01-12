@@ -8,7 +8,7 @@ The portion of a pipeline log file below shows the messages for the ingestion of
 !!! note
     Once an image is uploaded then that image is available for all other runs to use without having to re-upload.
 
-!!! example "log.txt"
+!!! example "2021-03-11-12-48-21_log.txt"
     ```console
     2021-03-11 12:59:49,751 loading INFO Reading image VAST_0127-73A.EPOCH01.I.cutout.fits ...
     2021-03-11 12:59:49,756 utils INFO Adding new frequency band: 887

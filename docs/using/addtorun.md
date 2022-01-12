@@ -46,7 +46,7 @@ Select the `Add Images or Re-Process Run` button at the top right of the run det
 
 You can refresh the page to check the status of the run. You can confirm that the images have been added correctly by consulting the log output found below the configuration file. New images should have been ingested and output similar to the following should be present:
 
-!!! example "log.txt"
+!!! example "2021-04-02-21-14-31_log.txt"
     <!-- markdownlint-disable-next-line MD046-->
     ```console
     2021-04-02 21:17:00,628 association INFO Starting association.

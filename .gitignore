@@ -109,3 +109,6 @@ docker/
 .dockerignore
 .idea/
 mypy.ini
+
+# mac specific
+.DS_store

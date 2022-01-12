@@ -102,25 +102,25 @@ Users are able to read and post comments on a pipeline run using this form.
 ### Log Files
 
 There are three log files available, which are present depending on the actions performed.
+All logs are timestamped with the run time, and by default the most recent log is shown.
+A dropdown menu of available log files to view is available at the right hand side of the header as shown in the examples below.
+If there are no logs to show for the respective task then the log window will display `No logs to show` and the dropdown menu will appear empty.
 
 #### Run Log File
 
 The full log file of the pipeline run process.
-Will display `N/A` if the run has not been processed.
 
 ![!Run log file.](../img/run-detail4.png){: loading=lazy }
 
 #### Restore Log File
 
 The log file of the restore run action. 
-Will display `N/A` if the action has not been performed.
 
 ![!Restore log file.](../img/run-detail8.png){: loading=lazy }
 
 #### Generate Arrow Files Log File
 
 The log file of the generate arrow files action.
-Will display `N/A` if the action has not been performed.
 
 ![!Generate arrow files log file.](../img/run-detail9.png){: loading=lazy }
 
