@@ -24,7 +24,10 @@
 
   <!-- Page Heading -->
   <h1 class="h3 mb-2 text-gray-800">Sources Query</h1>
-  <p class="mb-4">Search through the sources using the query parameters</p>
+  <p class="mb-4">
+    Search through the sources using the query parameters. 
+    A query must be performed before the &eta;-V analysis button becomes active.
+  </p>
 
   <div class="card shadow mb-4">
     <div class="card-header py-3">
@@ -491,15 +494,15 @@
   <div class="card shadow mb-4">
     <div class="card-header py-3 container-fluid">
       <h6 class="m-0 font-weight-bold text-primary">Results
-        <div class="float-right" id="fluxTypeRadioContainer">
-            <a href="{% url 'vast_pipeline:source_etav_plot' %}"
-              class="d-none d-sm-inline-block btn btn-sm btn-primary btn-icon-split shadow-sm float-right" target="_blank"
-              title="Go to the source summary page.">
-              <span class="text">Go to &eta;-V analysis</span>
-              <span class="icon text-white-600">
-                <i class="fas fa-chart-pie fa-sm"></i>
-              </span>
-            </a>
+        <div class="float-right" id="etaVAnalysisButtonContainer">
+          <a href="{% url 'vast_pipeline:source_etav_plot' %}"
+            class="d-none d-sm-inline-block btn btn-sm btn-primary btn-icon-split shadow-sm float-right disabled" target="_blank"
+            title="Go to the source summary page." aria-disabled="true" id="etaAnalysisButton">
+            <span class="text">Go to &eta;-V analysis</span>
+            <span class="icon text-white-600">
+              <i class="fas fa-chart-pie fa-sm"></i>
+            </span>
+          </a>
         </div>
       </h6>
     </div>

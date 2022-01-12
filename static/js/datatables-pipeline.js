@@ -77,8 +77,8 @@ $(document).ready(function() {
         processing: true,
         language: {
           processing: (
-            '<div class="spinner-border" role="status">' + 
-              '<span class="sr-only">Loading...</span>' + 
+            '<div class="spinner-border" role="status">' +
+              '<span class="sr-only">Loading...</span>' +
             '</div>'
           )
         },
@@ -504,6 +504,11 @@ $(document).ready(function() {
     };
     table.ajax.url(qry_url);
     table.ajax.reload();
+
+    // activate eta-V plot button
+    let etaBtn = document.getElementById('etaAnalysisButton');
+    etaBtn.classList.remove('disabled')
+    etaBtn.setAttribute('aria-disabled', false);
   });
 
   // Trigger the search reset on the datatable
@@ -539,6 +544,11 @@ $(document).ready(function() {
     $("#coordInput").removeClass(["is-valid", "is-invalid"]);
     table.ajax.url(dataConfParsed.api);
     table.ajax.reload();
+
+    // deactivate eta-V plot button
+    let etaBtn = document.getElementById('etaAnalysisButton');
+    etaBtn.classList.add('disabled')
+    etaBtn.setAttribute('aria-disabled', true);
   });
 
   // Object name resolver
