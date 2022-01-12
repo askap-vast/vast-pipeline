@@ -220,15 +220,20 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config: PipelineCon
         with transaction.atomic():
             p_run.image_set.remove(*images_to_remove)
 
-    # load image meas
-    meas = pd.concat(
-        [pd.read_parquet(
-            i, columns=['id']
-        ) for i in prev_images['measurements_path']]
+    # load old associations to remove all new assoc
+    bak_assoc = pd.read_parquet(
+        bak_files['associations'],
+        columns=['source_id', 'meas_id']
     )
 
-    association_criteria_1 = Q(source_id__in=bak_sources['id'].to_numpy())
-    association_criteria_2 = ~Q(meas_id__in=meas['id'].to_numpy())
+    # get unique source and meas id values in the previous run
+    bak_source_ids = bak_assoc['source_id'].unique()
+    bak_meas_ids = bak_assoc['meas_id'].unique()
+
+    # create query to only obtain associations that are not part of the
+    # previous run
+    association_criteria_1 = Q(source_id__in=bak_source_ids)
+    association_criteria_2 = ~Q(meas_id__in=bak_meas_ids)
     associations_to_delete = Association.objects.filter(
         association_criteria_1 and association_criteria_2
     )
