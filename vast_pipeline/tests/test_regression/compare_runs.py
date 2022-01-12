@@ -8,7 +8,7 @@ def test_inc_assoc(
     testcase: TestCase,
     ass_add: pd.DataFrame,
     ass_backup: pd.DataFrame,
-    must_be_equal=False
+    must_be_equal: bool = False
 ):
     '''
     Test that the number of associations increased or equal with added
@@ -22,6 +22,8 @@ def test_inc_assoc(
         Associations after images were added.
     ass_backup : pd.DataFrame
         Associations before images were added.
+    must_be_equal: bool
+        The associations being compared must be equal in length to assert True.
     '''
     if not must_be_equal:
         testcase.assertTrue(len(ass_add) >= len(ass_backup))
