@@ -415,7 +415,7 @@ def plot_eta_v_bokeh(
     Returns:
         Bokeh grid object containing figure.
     """
-    df = pd.DataFrame(source.values())
+    df = pd.DataFrame(source.values("id", "eta_peak", "eta_int", "v_peak", "v_int", "n_meas_sel"))
 
     (
         eta_fit_mean, eta_fit_sigma,
