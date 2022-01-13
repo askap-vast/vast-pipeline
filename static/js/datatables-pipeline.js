@@ -1,3 +1,9 @@
+let DEFAULT_DATATABLE_BUTTONS = [
+  {extend: 'colvis', className: 'btn-info btn-sm'},
+  {extend: 'csv', className: 'btn-info btn-sm'},
+  {extend: 'excel', className: 'btn-info btn-sm'},
+]
+
 // Formatting function for API
 function obj_formatter(obj) {
   if (obj.render.hasOwnProperty('url')) {
@@ -43,23 +49,73 @@ function obj_formatter(obj) {
   };
 };
 
+function drawExternalResultsTable(id, buttons = DEFAULT_DATATABLE_BUTTONS) {
+  $(id)
+    .DataTable({
+      "searching": false,
+      "pageLength": 15,
+      "lengthChange": false,
+      // need a different dom for external results table
+      "dom": (
+        "<'row'<'col-sm-2'l><'col-sm-8 text-center'B><'col-sm-2'f>>" +
+        "<'row'<'col-sm-12'tr>>" +
+        "<'row'<'col-sm-5'i><'col-sm-7'p>>"
+      ),
+      "buttons": buttons,
+      "order": [[1, "asc"]],
+      "columnDefs": [
+        {
+          "targets": 0,
+          "render": function( data, type, row, meta) {
+            if (row["database"] === "SIMBAD") {
+              return '<a href="http://simbad.u-strasbg.fr/simbad/sim-id?Ident=' + row['object_name'] + '" target="_blank">' + row['object_name'] + '</a> (' + row['database'] + ')'
+            } else if (row["database"] == "NED") {
+              return '<a href="https://ned.ipac.caltech.edu/byname?objname=' + row['object_name'] + '" target="_blank">' + row['object_name'] + '</a> (' + row['database'] + ')'
+            } else if (row["database"] == "TNS") {
+              return '<a href="https://www.wis-tns.org/object/' + row['object_name'] + '" target="_blank">' + row['object_name'] + '</a> (' + row['database'] + ')'
+            } else {
+              return row['object_name'] + ' (' + row['database'] + ')'
+            }
+          }
+        },
+        {
+          "targets": 1,
+          "render": function ( data, type, row, meta ) {
+            return row['separation_arcsec'].toFixed(2);
+          }
+        },
+        {
+          "targets": 2,
+          "render": function ( data, type, row, meta ) {
+            if (row['otype_long'] !== "" && row['otype'] !== row['otype_long']) {
+              return '<abbr title="' + row['otype_long'] + '">' + row['otype'] + '</abbr>';
+            } else {
+              return row['otype'];
+            }
+          }
+        }
+      ]
+    });
+  $(id).DataTable.ext.pager.numbers_length = 3;
+}
+
 
 // Call the dataTables jQuery plugin
 $(document).ready(function() {
 
   $('[data-toggle="tooltip"]').tooltip();
-  let buttons = [
-    {extend: 'colvis', className: 'btn-info btn-sm'},
-    {extend: 'csv', className: 'btn-info btn-sm'},
-    {extend: 'excel', className: 'btn-info btn-sm'}
-  ]
   let dom = (
     "<'row'<'col-sm-3'l><'col-sm-6 text-center'B><'col-sm-3'f>>" +
     "<'row'<'col-sm-12'tr>>" +
     "<'row'<'col-sm-5'i><'col-sm-7'p>>"
   )
-  let dataConfParsed = JSON.parse(document.getElementById('datatable-conf').textContent);
-  let dataConfList = (Array.isArray(dataConfParsed)) ? dataConfParsed : [dataConfParsed];
+  let dataConfElement = document.getElementById('datatable-conf');
+  let dataConfList = [];
+  let dataConfParsed;
+  if (dataConfElement !== null) {
+    dataConfParsed = JSON.parse(dataConfElement.textContent);
+    dataConfList = (Array.isArray(dataConfParsed)) ? dataConfParsed : [dataConfParsed];
+  }
   for (let dataConf of dataConfList){
     let table_id = (dataConfList.length == 1) ? '#dataTable' : '#' + dataConf.table_id;
     if (dataConf.hasOwnProperty('api')) {
@@ -96,7 +152,7 @@ $(document).ready(function() {
         order: dataConf.order,
         searchDelay: 2000,
         dom : dom,
-        buttons: buttons
+        buttons: DEFAULT_DATATABLE_BUTTONS
       };
     } else {
       // expect that there is a 'data' attribute with the data
@@ -122,7 +178,7 @@ $(document).ready(function() {
         data: dataSet,
         order: dataConf.order,
         dom: dom,
-        buttons: buttons
+        buttons: DEFAULT_DATATABLE_BUTTONS
       };
       if (dataConf.table == 'source_detail') {
         let tableElement = document.getElementById(table_id.replace('#', '')),
@@ -251,61 +307,7 @@ $(document).ready(function() {
   }
 
   // Simbad and NED search results tables
-  $('#externalResultsTable')
-  /*
-    .on("xhr.dt", function(e, settings, json, xhr) {
-      console.log(json);
-      if (json === null) {
-        return true;
-      }
-    })
-    */
-    .DataTable({
-      "searching": false,
-      "pageLength": 15,
-      "lengthChange": false,
-      // need a different dom for external results table
-      "dom": (
-        "<'row'<'col-sm-2'l><'col-sm-8 text-center'B><'col-sm-2'f>>" +
-        "<'row'<'col-sm-12'tr>>" +
-        "<'row'<'col-sm-5'i><'col-sm-7'p>>"
-      ),
-      "buttons": buttons,
-      "order": [[1, "asc"]],
-      "columnDefs": [
-        {
-          "targets": 0,
-          "render": function( data, type, row, meta) {
-            if (row["database"] === "SIMBAD") {
-              return '<a href="http://simbad.u-strasbg.fr/simbad/sim-id?Ident=' + row['object_name'] + '" target="_blank">' + row['object_name'] + '</a> (' + row['database'] + ')'
-            } else if (row["database"] == "NED") {
-              return '<a href="https://ned.ipac.caltech.edu/byname?objname=' + row['object_name'] + '" target="_blank">' + row['object_name'] + '</a> (' + row['database'] + ')'
-            } else if (row["database"] == "TNS") {
-              return '<a href="https://www.wis-tns.org/object/' + row['object_name'] + '" target="_blank">' + row['object_name'] + '</a> (' + row['database'] + ')'
-            } else {
-              return row['object_name'] + ' (' + row['database'] + ')'
-            }
-          }
-        },
-        {
-          "targets": 1,
-          "render": function ( data, type, row, meta ) {
-            return row['separation_arcsec'].toFixed(2);
-          }
-        },
-        {
-          "targets": 2,
-          "render": function ( data, type, row, meta ) {
-            if (row['otype_long'] !== "" && row['otype'] !== row['otype_long']) {
-              return '<abbr title="' + row['otype_long'] + '">' + row['otype'] + '</abbr>';
-            } else {
-              return row['otype'];
-            }
-          }
-        }
-      ]
-    });
-  $('#externalResultsTable').DataTable.ext.pager.numbers_length = 3;
+  drawExternalResultsTable('#externalResultsTable');
 
   // Trigger the update search on the datatable
   $("#catalogSearch").on('click', function(e) {

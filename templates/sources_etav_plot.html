@@ -96,11 +96,23 @@
 
 {% block custom_page_scripts %}
 <!-- Page level plugins -->
+<script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'vendor/datatables-buttons/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'vendor/datatables-buttons/buttons.bootstrap4.min.js' %}"></script>
+<script src="{% static 'vendor/datatables-buttons/buttons.colVis.min.js' %}"></script>
+<script src="{% static 'vendor/datatables-buttons/buttons.html5.min.js' %}"></script>
+<script src="{% static 'vendor/datatables-buttons/buttons.flash.min.js' %}"></script>
+<script src="{% static 'vendor/jszip/jszip.min.js' %}"></script>
 
+<!-- Datatable scripts -->
+<script src="{% static 'js/datatables-pipeline.min.js' %}"></script>
 
 <!-- Bokeh scripts -->
 <script src="{% static 'vendor/bokehjs/bokeh.min.js' %}"></script>
 <script src="{% static 'vendor/bokehjs/bokeh-widgets.min.js' %}"></script>
+
+<script src="{% static 'js/clipboard-copy.min.js' %}"></script>
 
 <script type="text/javascript">
   function getEtaVPlot(eta_sigma = 3.0, v_sigma = 3.0, fluxType = "peak") {
@@ -115,6 +127,18 @@
       })
   }
 
+  function getLightcurvePlot(id, fluxType = "peak") {
+    let usePeakFlux = fluxType === "peak";
+    fetch("{% url 'vast_pipeline:api_source_plots-lightcurve' -99 %}?peak_flux=".replace('-99', id) + usePeakFlux)
+      .then(function (response) {
+        return response.json()
+      })
+      .then(function (item) {
+        $("#lightCurveBokeh").empty();
+        return Bokeh.embed.embed_item(item, "lightCurveBokeh")
+      })
+  }
+
   $(document).ready(function () {
     var plot_ok = {{ plot_ok }};
     if (plot_ok == true){
@@ -122,10 +146,21 @@
     }
   });
 
+  // get the lightcurve plot whenever the flux type radio value changes
+  $("#fluxTypeRadioContainer").on("change", function(e) {
+    console.log("getting lightcurve plot for flux type", e.target.value);
+    var source_id = {{ source.id }}
+    getLightcurvePlot(source_id, e.target.value);
+  });
+
   function update_card(id) {
-      $('#cardsUpdate').html('').load(
-          "{% url 'vast_pipeline:source_etav_plot_update' 0 %}".replace('0', id)
-      ); // <--- this code instead of $.ajax(lala)
+    $('#cardsUpdate').html('').load(
+      "{% url 'vast_pipeline:source_etav_plot_update' 0 %}".replace('0', id),
+      function() {
+        // redraw the external results table, function is defined in datatables-pipeline.js
+        drawExternalResultsTable('#externalResultsTable');
+      }
+    ); // <--- this code instead of $.ajax(lala)
   }
 </script>
 

@@ -1,15 +1,5 @@
-{% load static %}
-
 {% load unit_tags %}
 
-{% block head %}
-
-<link rel="stylesheet" href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" />
-<link rel="stylesheet" href="{% static 'vendor/datatables-buttons/buttons.bootstrap4.min.css' %}" />
-
-{% endblock head %}
-
-{% block content %}
 <div class="row">
   <div class="col mb-4">
     <div id="sourceInfoCard">
@@ -72,6 +62,7 @@
             <strong>New High Sigma:</strong>{% if source.new %}{{ source.new_high_sigma|floatformat:2 }}{% else %}N/A{% endif %}
             </div>
           </div>
+          {{ datatables|json_script:"datatable-conf" }}
           {% else %}
           The details of a selected source will appear here.
           {% endif %}
@@ -89,6 +80,7 @@
       </div>
       <div class="card-body small">
         <div class="table-responsive">
+          {% if source %}
           <table class="table table-sm table-bordered table-striped table-hover" id="externalResultsTable"
             width="100%" cellspacing="0" data-server-side="false"
             data-ajax="{% url 'vast_pipeline:api_utils-external-search' %}?coord={{ source.wavg_ra_hms }}{{ source.wavg_dec_dms }}&format=datatables&keep=otype_long,database">
@@ -102,15 +94,12 @@
               </tr>
             </thead>
           </table>
+          {% endif %}
         </div>
       </div>
     </div>
   </div>
 </div>
-{% endblock content %}
-
-
-{% block modal %}
 
 <!-- Starring source modal-->
 <div class="modal fade" id="starSource" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
@@ -141,71 +130,3 @@
     </div>
   </div>
 </div>
-
-{% endblock modal %}
-
-{% block scripts %}
-<script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>
-
-<!-- Bootstrap core JavaScript-->
-<script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-
-<!-- Core plugin JavaScript-->
-<script src="{% static 'vendor/jquery-easing/jquery.easing.min.js' %}"></script>
-
-<!-- Custom scripts for all pages-->
- <script src="{% static 'vendor/startbootstrap-sb-admin-2/sb-admin-2.min.js' %}"></script>
-
-{% endblock scripts %}
-
-{% block custom_page_scripts %}
-<!-- Page level plugins -->
-<script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
-<script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
-<script src="{% static 'vendor/datatables-buttons/dataTables.buttons.min.js' %}"></script>
-<script src="{% static 'vendor/datatables-buttons/buttons.bootstrap4.min.js' %}"></script>
-<script src="{% static 'vendor/datatables-buttons/buttons.colVis.min.js' %}"></script>
-<script src="{% static 'vendor/datatables-buttons/buttons.html5.min.js' %}"></script>
-<script src="{% static 'vendor/datatables-buttons/buttons.flash.min.js' %}"></script>
-<script src="{% static 'vendor/jszip/jszip.min.js' %}"></script>
-
-<!-- Datatable scripts -->
-{% if source %}
-{{ datatables|json_script:"datatable-conf" }}
-<script src="{% static 'js/datatables-pipeline.min.js' %}"></script>
-{% endif %}
-
-<!-- Bokeh scripts -->
-<script src="{% static 'vendor/bokehjs/bokeh.min.js' %}"></script>
-<script src="{% static 'vendor/bokehjs/bokeh-widgets.min.js' %}"></script>
-
-<script src="{% static 'js/clipboard-copy.min.js' %}"></script>
-
-  <script type="text/javascript">
-  function getLightcurvePlot(id, fluxType = "peak") {
-    let usePeakFlux = fluxType === "peak";
-    fetch("{% url 'vast_pipeline:api_source_plots-lightcurve' -99 %}?peak_flux=".replace('-99', id) + usePeakFlux)
-      .then(function (response) {
-        return response.json()
-      })
-      .then(function (item) {
-        $("#lightCurveBokeh").empty();
-        return Bokeh.embed.embed_item(item, "lightCurveBokeh")
-      })
-  }
-
-  // get the lightcurve plot whenever the flux type radio value changes
-  $("#fluxTypeRadioContainer").on("change", function(e) {
-    console.log("getting lightcurve plot for flux type", e.target.value);
-    var source_id = {{ source.id }}
-    getLightcurvePlot(source_id, e.target.value);
-  });
-
-  //
-  // $(document).ready(function () {
-  //   let fluxType = $('input[name="fluxTypeRadio"]:checked').val();
-  //   getLightcurvePlot(fluxType);
-  // });
-</script>
-
-{% endblock custom_page_scripts %}
