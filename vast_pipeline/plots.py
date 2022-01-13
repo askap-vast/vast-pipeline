@@ -415,7 +415,9 @@ def plot_eta_v_bokeh(
     Returns:
         Bokeh grid object containing figure.
     """
-    df = pd.DataFrame(source.values("id", "eta_peak", "eta_int", "v_peak", "v_int", "n_meas_sel"))
+    df = pd.DataFrame(source.values(
+        "id", "name", "eta_peak", "eta_int", "v_peak", "v_int", "n_meas_sel"
+    ))
 
     (
         eta_fit_mean, eta_fit_sigma,
@@ -450,6 +452,7 @@ def plot_eta_v_bokeh(
     PLOT_WIDTH = 700
     PLOT_HEIGHT = PLOT_WIDTH
     fig = figure(
+        output_backend="webgl",
         plot_width=PLOT_WIDTH,
         plot_height=PLOT_HEIGHT,
         aspect_scale=1,
@@ -489,6 +492,7 @@ def plot_eta_v_bokeh(
         sizing_mode="stretch_width",
         title="VAST eta-V {}".format(title),
         tools="",
+        output_backend="webgl",
     )
     x_hist_data, x_hist_edges = np.histogram(
         np.log10(df["eta_peak"]), density=True, bins=50,
@@ -518,6 +522,7 @@ def plot_eta_v_bokeh(
         y_axis_location="right",
         sizing_mode="stretch_height",
         tools="",
+        output_backend="webgl",
     )
     y_hist_data, y_hist_edges = np.histogram(
         np.log10(df["v_peak"]), density=True, bins=50,
