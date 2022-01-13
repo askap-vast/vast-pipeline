@@ -632,16 +632,25 @@ def RunDetail(request, id):
         with open(f_path) as fp:
             p_run['prev_config_txt'] = fp.read()
 
-    log_files = sorted(glob(os.path.join(p_run['path'], '*[0-9]_log.txt')))
+    log_files = (
+        # log.txt maintains backwards compatibility with old logs
+        # same is done for other log file types below
+        glob(os.path.join(p_run['path'], 'log.txt'))
+        + sorted(glob(os.path.join(p_run['path'], '*[0-9]_log.txt')))
+    )
     log_files = [os.path.basename(i) for i in log_files[::-1]]
 
-    restore_log_files = sorted(
-        glob(os.path.join(p_run['path'], '*[0-9]_restore_log.txt'))
+    restore_log_files = (
+        # separate glob to maintain old log being first (last on reverse)
+        glob(os.path.join(p_run['path'], 'restore_log.txt'))
+        + sorted(glob(os.path.join(p_run['path'], '*[0-9]_restore_log.txt')))
     )
     restore_log_files = [os.path.basename(i) for i in restore_log_files[::-1]]
 
-    genarrow_log_files = sorted(
-        glob(os.path.join(p_run['path'], '*[0-9]_gen_arrow_log.txt'))
+    genarrow_log_files = (
+        # separate glob to maintain old log being first (last on reverse)
+        glob(os.path.join(p_run['path'], 'gen_arrow_log.txt'))
+        + sorted(glob(os.path.join(p_run['path'], '*[0-9]_gen_arrow_log.txt')))
     )
     genarrow_log_files = [os.path.basename(i) for i in genarrow_log_files[::-1]]
 
