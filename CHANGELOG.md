@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added logfile dropdown selection to run detail page [#595](https://github.com/askap-vast/vast-pipeline/pull/595).
+- Added datetime stamps to all log files [#595](https://github.com/askap-vast/vast-pipeline/pull/595).
 - Added new log files for arrow file creation and restore run and added to run detail page [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
 - Added restore run test [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
 - Added new run status of `DEL`, `Deleting` [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
@@ -27,6 +29,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Django-Q config variable `max_attempts` is configurable in the .env file [#595](https://github.com/askap-vast/vast-pipeline/pull/595).
 - Replaced `models.MeasurementPair` model with a dataclass [#590](https://github.com/askap-vast/vast-pipeline/pull/590).
 - Django-Q config variables `timeout` and `retry` are configurable in the .env file [#589](https://github.com/askap-vast/vast-pipeline/pull/589).
 - Changed restore run command to only allow one run as input [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
@@ -39,6 +42,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed config being copied before run was confirmed to actually go ahead for existing runs [#595](https://github.com/askap-vast/vast-pipeline/pull/595).
 - Fixed forced measurements being removed from associations during the restore run process [#600](https://github.com/askap-vast/vast-pipeline/pull/600).
 - Fixed measurement FITS cutout bug [#588](https://github.com/askap-vast/vast-pipeline/pull/588).
 - Fixed removal of image and sky region objects when a run is deleted [#585](https://github.com/askap-vast/vast-pipeline/pull/585).
@@ -57,6 +61,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#595](https://github.com/askap-vast/vast-pipeline/pull/595): fix: Add date and time stamp to log files.
 - [#600](https://github.com/askap-vast/vast-pipeline/pull/600): fix: Fixed restore run forced measurements associations.
 - [#590](https://github.com/askap-vast/vast-pipeline/pull/590): fix: Remove MeasurementPair model.
 - [#589](https://github.com/askap-vast/vast-pipeline/pull/589): fix: expose django-q timeout and retry to env vars.

@@ -1415,6 +1415,29 @@ def backup_parquets(p_run_path: str) -> None:
         shutil.copyfile(i, backup_name)
 
 
+def create_temp_config_file(p_run_path: str) -> None:
+    """
+    Creates the temp config file which is saved at the beginning of each run.
+
+    It is to avoid issues created by users changing the config while the run
+    is running.
+
+    Args:
+        p_run_path:
+            The path of the pipeline run of the config to be copied.
+
+    Returns:
+        None
+    """
+    config_name = 'config.yaml'
+    temp_config_name = 'config_temp.yaml'
+
+    shutil.copyfile(
+        os.path.join(p_run_path, config_name),
+        os.path.join(p_run_path, temp_config_name)
+    )
+
+
 def reconstruct_associtaion_dfs(
     images_df_done: pd.DataFrame,
     previous_parquet_paths: Dict[str, str]

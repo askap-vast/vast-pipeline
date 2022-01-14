@@ -348,3 +348,7 @@ def dict_merge(dct: Dict[Any, Any], merge_dct: Dict[Any, Any], add_keys=True) ->
             dct[k] = merge_dct[k]
 
     return dct
+
+
+def timeStamped(fname, fmt='%Y-%m-%d-%H-%M-%S_{fname}'):
+    return datetime.now().strftime(fmt).format(fname=fname)

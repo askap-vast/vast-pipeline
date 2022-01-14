@@ -58,7 +58,7 @@ All the results from the pipeline run are uploaded to the database. Specifically
 For large runs this can be a substantial component of the pipeline run time.
 `Bulk upload` statements will be seen in the pipeline run log file such as these shown below:
 
-!!! example "log.txt"
+!!! example "2021-03-11-12-48-21_log.txt"
     ```console
     2021-03-11 13:00:04,893 loading INFO Bulk created #557 Source
     2021-03-11 13:00:04,910 loading INFO Populate "related" field of sources...

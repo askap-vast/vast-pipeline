@@ -37,7 +37,7 @@ pipeline-runs
 │   ├── forced_measurements_VAST_2118-06A_EPOCH06x_I_cutout_fits.parquet
 │   ├── forced_measurements_VAST_2118-06A_EPOCH12_I_cutout_fits.parquet
 │   ├── images.parquet
-│   ├── log.txt
+│   ├── YYYY-MM-DD-HH-MM-SS_log.txt
 │   ├── measurements.arrow
 │   ├── measurement_pairs.arrow
 │   ├── measurement_pairs.parquet
@@ -110,7 +110,7 @@ Here, for each image, the selavy measurements that have been ingested are stored
 | `config_prev.yaml` | The previous pipeline run configuration file used by the [add image](../using/addtorun.md) mode. |
 | `forced_measurements*.parquet` | Multiple files that contain the forced measurements extracted from the respective image denoted in the filename. |
 | `images.parquet` | Contains the information of the images processed in the pipeline run. |
-| `log.txt` | The log file of the pipeline run. |
+| `YYYY-MM-DD-HH-MM-SS_log.txt` | The log file of the pipeline run. It is timestamped with the date and time of the run start. |
 | `measurements.arrow` | An [Apache Arrow](https://arrow.apache.org/overview/){:target="_blank"} format file containing all the measurements associated with the pipeline run (see [Arrow Files](#arrow-files)).|
 | `measurement_pairs.arrow` | An [Apache Arrow](https://arrow.apache.org/overview/){:target="_blank"} format file containing all the measurement pair metrics (see [Arrow Files](#arrow-files)). |
 | `measurement_pairs.parquet` | Contains all the measurement pairs metrics. |

@@ -9,6 +9,7 @@ import pandas as pd
 from typing import Dict, Any, Tuple, List
 from glob import glob
 from itertools import tee
+from pathlib import Path
 
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
@@ -23,7 +24,9 @@ from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.db.models import F, Count, QuerySet
-from django.http import FileResponse, Http404, HttpResponseRedirect
+from django.http import (
+    FileResponse, Http404, HttpResponseRedirect, JsonResponse
+)
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils.safestring import mark_safe
@@ -629,23 +632,18 @@ def RunDetail(request, id):
         with open(f_path) as fp:
             p_run['prev_config_txt'] = fp.read()
 
-    # read run log file
-    f_path = os.path.join(p_run['path'], 'log.txt')
-    if os.path.exists(f_path):
-        with open(f_path) as fp:
-            p_run['log_txt'] = fp.read()
+    log_files = sorted(glob(os.path.join(p_run['path'], '*[0-9]_log.txt')))
+    log_files = [os.path.basename(i) for i in log_files[::-1]]
 
-    # read restore log file
-    f_path = os.path.join(p_run['path'], 'restore_log.txt')
-    if os.path.exists(f_path):
-        with open(f_path) as fp:
-            p_run['restore_log_txt'] = fp.read()
+    restore_log_files = sorted(
+        glob(os.path.join(p_run['path'], '*[0-9]_restore_log.txt'))
+    )
+    restore_log_files = [os.path.basename(i) for i in restore_log_files[::-1]]
 
-    # read create arrow log file
-    f_path = os.path.join(p_run['path'], 'gen_arrow_log.txt')
-    if os.path.exists(f_path):
-        with open(f_path) as fp:
-            p_run['gen_arrow_log_txt'] = fp.read()
+    genarrow_log_files = sorted(
+        glob(os.path.join(p_run['path'], '*[0-9]_gen_arrow_log.txt'))
+    )
+    genarrow_log_files = [os.path.basename(i) for i in genarrow_log_files[::-1]]
 
     # Detect whether arrow files are present
     p_run['arrow_files'] = os.path.isfile(
@@ -758,6 +756,9 @@ def RunDetail(request, id):
         "datatables": [image_datatable, meas_datatable],
         "d3_celestial_skyregions": get_skyregions_collection(run_id=id),
         "static_url": settings.STATIC_URL,
+        "log_files": log_files,
+        "restore_log_files": restore_log_files,
+        "genarrow_log_files": genarrow_log_files
     }
 
     context["comment_form"], context["comments"] = _process_comment_form_get_comments(
@@ -2122,6 +2123,84 @@ class RunConfigSet(ViewSet):
         return HttpResponseRedirect(
             reverse('vast_pipeline:run_detail', args=[p_run.id])
         )
+
+
+class RunLogSet(ViewSet):
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
+    queryset = Run.objects.all()
+
+    @rest_framework.decorators.action(detail=True, methods=['get'])
+    def fetch(self, request, pk=None):
+        if not pk:
+            return Response(
+                {
+                    'message': {
+                        'severity': 'danger',
+                        'text': [
+                            'Error in run log fetch request:',
+                            'Run pk parameter null or not passed'
+                        ]
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        logname = self.request.query_params.get('logname', None)
+
+        if not logname:
+            return Response(
+                {
+                    'message': {
+                        'severity': 'danger',
+                        'text': [
+                            'Error in run log fetch request:',
+                            'logname url parameter null or not passed'
+                        ]
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        p_run = get_object_or_404(self.queryset, pk=pk)
+        logpath = Path(p_run.path) / logname
+
+        if not logpath.exists():
+            return Response(
+                {
+                    'message': {
+                        'severity': 'danger',
+                        'text': [
+                            'Error in run log fetch request:',
+                            f'Path {logpath} does not exist'
+                        ]
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            pipeline_log = logpath.read_text()
+        except Exception as e:
+            trace = traceback.format_exc().splitlines()
+            trace = '\n'.join(trace[-4:])
+            msg = {
+                'message': {
+                    'severity': 'danger',
+                    'text': (
+                        'Error in run log fetch request\n'
+                        f'{e}\n\n'
+                        'Debug trace:\n'
+                        f'{trace}'
+                    ).split('\n'),
+                }
+            }
+            return Response(msg, status=status.HTTP_400_BAD_REQUEST)
+
+        logfile = {
+            'log_html_content': "<code>"+ pipeline_log + "</code>"
+        }
+
+        return JsonResponse(logfile, status=status.HTTP_200_OK)
 
 
 class SourceFavViewSet(ModelViewSet):

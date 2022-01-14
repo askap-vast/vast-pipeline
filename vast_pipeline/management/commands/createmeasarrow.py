@@ -13,6 +13,7 @@ from vast_pipeline.pipeline.utils import (
     create_measurement_pairs_arrow_file
 )
 from vast_pipeline.models import Run
+from vast_pipeline.utils.utils import timeStamped
 from ..helpers import get_p_run_name
 
 
@@ -75,7 +76,7 @@ class Command(BaseCommand):
         # configure logging
         root_logger = logging.getLogger('')
         f_handler = logging.FileHandler(
-            os.path.join(run_folder, 'gen_arrow_log.txt'),
+            os.path.join(run_folder, timeStamped('gen_arrow_log.txt')),
             mode='w'
         )
         f_handler.setFormatter(root_logger.handlers[0].formatter)
