@@ -58,15 +58,24 @@ def add_timestamp_and_copy(log_path: Path) -> None:
         return
 
     else:
-        shutil.copy(log_path, new_log_path)
+        try:
+            shutil.copy(log_path, new_log_path)
+        except Exception as e:
+            warnings.warn(
+                f"Log file '{log_path}' could not be migrated as the copy"
+                " operation failed. Please migrate this log file manually."
+                f"Copy error: {e}."
+            )
+            return
 
-        # delete old log after confirming the copy was successful.
+        # a final check before deletion.
         if new_log_path.exists():
             log_path.unlink()
         else:
             warnings.warn(
-                f"Log file '{log_path}' could not be migrated as the copy"
-                " operation failed. Please migrate this log file manually."
+                "While the copy operation was apparently successful the"
+                f" new log file '{new_log_path}' does not exist. Please"
+                " migrate the old log file '{log_path}' manually."
             )
 
 
