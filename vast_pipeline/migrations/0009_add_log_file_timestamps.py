@@ -75,7 +75,7 @@ def add_timestamp_and_copy(log_path: Path) -> None:
             warnings.warn(
                 "While the copy operation was apparently successful the"
                 f" new log file '{new_log_path}' does not exist. Please"
-                " migrate the old log file '{log_path}' manually."
+                f" migrate the old log file '{log_path}' manually."
             )
 
 
