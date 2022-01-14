@@ -23,7 +23,7 @@ def get_timestamp(log_path: Path) -> str:
         YYYY-MM-DD-HH-MM-SS.
     """
     with log_path.open() as f:
-        line = f.readlines()[0]
+        line = f.readline()
 
     timestamp = (
         line.split(',')[0]
@@ -95,8 +95,6 @@ def rename_logs(apps, schema_editor) -> None:
             log_path = run_path / log
             if log_path.exists():
                 add_timestamp_and_copy(log_path)
-            else:
-                continue
 
 
 class Migration(migrations.Migration):
