@@ -1624,6 +1624,16 @@ def SourceEtaVPlot(request: Request) -> Response:
             plot_ok = 0
 
         else:
+            if new_sources_query_len > settings.ETA_V_DATASHADER_THRESHOLD:
+                messages.info(
+                    request,
+                    (
+                        "Sources outside of the selected sigma area"
+                        " are displayed as a non-interactive averaged"
+                        " distribution."
+                    )
+                )
+
             plot_ok = 1
 
     context = {

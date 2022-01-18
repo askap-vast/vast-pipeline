@@ -1,8 +1,10 @@
 """Contains plotting code used by the web server."""
 import colorcet as cc
-import pandas as pd
+import datashader as ds
+import holoviews as hv
 import networkx as nx
 import numpy as np
+import pandas as pd
 
 from astropy.stats import sigma_clip, mad_std, bayesian_blocks
 from bokeh.models import (
@@ -18,7 +20,9 @@ from bokeh.models import (
     TapTool,
     Slider,
     Button,
-    RadioButtonGroup
+    RadioButtonGroup,
+    Scatter,
+    WheelZoomTool
 )
 from bokeh.models.formatters import DatetimeTickFormatter
 from bokeh.models.callbacks import CustomJS
@@ -26,7 +30,10 @@ from bokeh.layouts import row, Row, gridplot, Spacer
 from bokeh.plotting import figure
 from bokeh.transform import factor_cmap, linear_cmap
 from datetime import timedelta
+from django.conf import settings
 from django.db.models import F
+from holoviews import opts
+from holoviews.operation.datashader import datashade, spread
 from scipy.stats import norm
 from typing import List, Tuple
 
@@ -415,6 +422,7 @@ def plot_eta_v_bokeh(
     Returns:
         Bokeh grid object containing figure.
     """
+
     df = pd.DataFrame(source.values(
         "id", "name", "eta_peak", "eta_int", "v_peak", "v_int", "n_meas_sel"
     ))
@@ -424,8 +432,11 @@ def plot_eta_v_bokeh(
         v_fit_mean, v_fit_sigma
     ) = fit_eta_v(df, use_peak_flux=use_peak_flux)
 
-    v_cutoff = 10 ** (v_fit_mean + v_sigma * v_fit_sigma)
-    eta_cutoff = 10 ** (eta_fit_mean + eta_sigma * eta_fit_sigma)
+    eta_cutoff_log10 = eta_fit_mean + eta_sigma * eta_fit_sigma
+    v_cutoff_log10 = v_fit_mean + v_sigma * v_fit_sigma
+
+    eta_cutoff = 10 ** eta_cutoff_log10
+    v_cutoff = 10 ** v_cutoff_log10
 
     # generate fitted curve data for plotting
     eta_x = np.linspace(
@@ -449,25 +460,15 @@ def plot_eta_v_bokeh(
         y_label = 'v_int'
         title = "Int. Flux"
 
+    for i in [x_label, y_label]:
+        df[f"{i}_log10"] = np.log10(df[i])
+
     PLOT_WIDTH = 700
     PLOT_HEIGHT = PLOT_WIDTH
-    fig = figure(
-        output_backend="webgl",
-        plot_width=PLOT_WIDTH,
-        plot_height=PLOT_HEIGHT,
-        aspect_scale=1,
-        x_axis_type="log",
-        y_axis_type="log",
-        x_axis_label="\u03B7",
-        y_axis_label="V",
-        sizing_mode="stretch_width",
-        tooltips=[
-            ("source", "@name"),
-            ("\u03B7", f"@{x_label}"),
-            ("V", f"@{y_label}"),
-            ("id", "@id")
-        ],
-    )
+
+    x_axis_label = "log \u03B7"
+    y_axis_label = "log V"
+
     cmap = linear_cmap(
         "n_meas_sel",
         cc.kb,
@@ -475,10 +476,73 @@ def plot_eta_v_bokeh(
         df["n_meas_sel"].max(),
     )
 
-    fig.scatter(
-        x=x_label, y=y_label, color=cmap,
-        marker="circle", size=5, source=df
+    if df.shape[0] > settings.ETA_V_DATASHADER_THRESHOLD:
+
+        hv.extension('bokeh')
+
+        # create dfs for bokeh and datashader
+        mask = ((df[x_label] >= eta_cutoff) & (df[y_label] >= v_cutoff))
+
+        bokeh_df = df.loc[mask]
+        ds_df = df.loc[~mask]
+
+        # create datashader version first
+        points = spread(
+            datashade(
+                hv.Points(df[[f"{x_label}_log10", f"{y_label}_log10"]])
+            ),
+            cmap="Blues",
+            px=1,
+            shape='square'
+        ).opts(height=PLOT_HEIGHT, width=PLOT_WIDTH)
+
+        fig = hv.render(points)
+
+        fig.xaxis.axis_label = x_axis_label
+        fig.yaxis.axis_label = y_axis_label
+        fig.aspect_scale = 1
+        fig.sizing_mode = 'stretch_width'
+    else:
+        bokeh_df = df
+
+        fig = figure(
+            output_backend="webgl",
+            plot_width=PLOT_WIDTH,
+            plot_height=PLOT_HEIGHT,
+            aspect_scale=1,
+            x_axis_label=x_axis_label,
+            y_axis_label=y_axis_label,
+            sizing_mode="stretch_width",
+        )
+
+    # activate scroll wheel zoom by default
+    fig.toolbar.active_scroll = fig.select_one(WheelZoomTool)
+
+    source = ColumnDataSource(data=bokeh_df)
+
+    bokeh_points = Scatter(
+        x=f"{x_label}_log10",
+        y=f"{y_label}_log10",
+        fill_color=cmap,
+        line_color=cmap,
+        marker="circle",
+        size=5
     )
+
+    bokeh_g1 = fig.add_glyph(source_or_glyph=source, glyph=bokeh_points)
+
+    hover = HoverTool(
+        renderers=[bokeh_g1],
+        tooltips=[
+            ("source", "@name"),
+            ("\u03B7", f"@{x_label}"),
+            ("V", f"@{y_label}"),
+            ("id", "@id")
+        ],
+        mode='mouse'
+    )
+
+    fig.add_tools(hover)
 
     # axis histograms
     # filter out any forced-phot points for these
@@ -487,7 +551,7 @@ def plot_eta_v_bokeh(
         plot_height=100,
         x_range=fig.x_range,
         y_axis_type=None,
-        x_axis_type="log",
+        x_axis_type="linear",
         x_axis_location="above",
         sizing_mode="stretch_width",
         title="VAST eta-V {}".format(title),
@@ -495,17 +559,17 @@ def plot_eta_v_bokeh(
         output_backend="webgl",
     )
     x_hist_data, x_hist_edges = np.histogram(
-        np.log10(df["eta_peak"]), density=True, bins=50,
+        df[f"{x_label}_log10"], density=True, bins=50,
     )
     x_hist.quad(
         top=x_hist_data,
         bottom=0,
-        left=10 ** x_hist_edges[:-1],
-        right=10 ** x_hist_edges[1:],
+        left=x_hist_edges[:-1],
+        right=x_hist_edges[1:],
     )
-    x_hist.line(10 ** eta_x, eta_y, color="black")
+    x_hist.line(eta_x, eta_y, color="black")
     x_hist_sigma_span = Span(
-        location=eta_cutoff,
+        location=eta_cutoff_log10,
         dimension="height",
         line_color="black",
         line_dash="dashed",
@@ -518,24 +582,24 @@ def plot_eta_v_bokeh(
         plot_width=100,
         y_range=fig.y_range,
         x_axis_type=None,
-        y_axis_type="log",
+        y_axis_type="linear",
         y_axis_location="right",
         sizing_mode="stretch_height",
         tools="",
         output_backend="webgl",
     )
     y_hist_data, y_hist_edges = np.histogram(
-        np.log10(df["v_peak"]), density=True, bins=50,
+        (df[f"{y_label}_log10"]), density=True, bins=50,
     )
     y_hist.quad(
         right=y_hist_data,
         left=0,
-        top=10 ** y_hist_edges[:-1],
-        bottom=10 ** y_hist_edges[1:],
+        top=y_hist_edges[:-1],
+        bottom=y_hist_edges[1:],
     )
-    y_hist.line(v_y, 10 ** v_x, color="black")
+    y_hist.line(v_y, v_x, color="black")
     y_hist_sigma_span = Span(
-        location=v_cutoff,
+        location=v_cutoff_log10,
         dimension="width",
         line_color="black",
         line_dash="dashed",
@@ -544,52 +608,91 @@ def plot_eta_v_bokeh(
     fig.add_layout(y_hist_sigma_span)
 
     variable_region = BoxAnnotation(
-        left=eta_cutoff,
-        bottom=v_cutoff,
+        left=eta_cutoff_log10,
+        bottom=v_cutoff_log10,
         fill_color="orange",
         fill_alpha=0.3,
         level="underlay",
     )
     fig.add_layout(variable_region)
 
-    eta_slider = Slider(start=0, end=10, step=0.1, value=eta_sigma, title="\u03B7 sigma value", sizing_mode='stretch_width')
-    v_slider = Slider(start=0, end=10, step=0.1, value=v_sigma, title="V sigma value", sizing_mode='stretch_width')
+    eta_slider = Slider(
+        start=0,
+        end=10,
+        step=0.1,
+        value=eta_sigma,
+        title="\u03B7 sigma value",
+        sizing_mode='stretch_width'
+    )
+    v_slider = Slider(
+        start=0,
+        end=10,
+        step=0.1,
+        value=v_sigma,
+        title="V sigma value",
+        sizing_mode='stretch_width'
+    )
 
     labels = ['Peak', 'Integrated']
     active = 0 if use_peak_flux else 1
-    flux_choice_radio = RadioButtonGroup(labels=labels, active=active, sizing_mode='stretch_width')
+    flux_choice_radio = RadioButtonGroup(
+        labels=labels,
+        active=active,
+        sizing_mode='stretch_width'
+    )
 
-    button = Button(label="Apply", button_type="primary", sizing_mode='stretch_width')
-    button.js_on_click(CustomJS(args=dict(eta_slider=eta_slider, v_slider=v_slider, flux_choice_radio=flux_choice_radio), code="""
-        var e = eta_slider.value;
-        var v = v_slider.value;
-        const peak = ["peak", "int"];
-        var fluxType = peak[flux_choice_radio.active];
-        getEtaVPlot(e, v, fluxType);
-    """)
+    button = Button(
+        label="Apply",
+        button_type="primary",
+        sizing_mode='stretch_width'
+    )
+    button.js_on_click(
+        CustomJS(
+            args=dict(
+                eta_slider=eta_slider,
+                v_slider=v_slider,
+                flux_choice_radio=flux_choice_radio
+            ),
+            code="""
+            var e = eta_slider.value;
+            var v = v_slider.value;
+            const peak = ["peak", "int"];
+            var fluxType = peak[flux_choice_radio.active];
+            getEtaVPlot(e, v, fluxType);
+            """
+        )
     )
 
     grid = gridplot(
-        [[x_hist, Spacer(width=100, height=100)], [fig, y_hist], [flux_choice_radio, None], [eta_slider, None], [v_slider, None], [button, None]]
+        [
+            [x_hist, Spacer(width=100, height=100)],
+            [fig, y_hist],
+            [flux_choice_radio, None],
+            [eta_slider, None],
+            [v_slider, None],
+            [button, None]
+        ]
     )
 
-    source = ColumnDataSource(data=df)
-    callback = CustomJS(args=dict(source=source, flux_choice_radio=flux_choice_radio), code="""
-    const d1 = source.data;
-    const i = cb_data.source.selected.indices[0];
-    const id = d1['id'][i];
-    const peak = ["peak", "int"];
-    var fluxType = peak[flux_choice_radio.active];
+    source = ColumnDataSource(data=bokeh_df)
+    callback = CustomJS(
+        args=dict(source=source, flux_choice_radio=flux_choice_radio),
+        code="""
+        const d1 = source.data;
+        const i = cb_data.source.selected.indices[0];
+        const id = d1['id'][i];
+        const peak = ["peak", "int"];
+        var fluxType = peak[flux_choice_radio.active];
 
-    $(document).ready(function () {
-      update_card(id);
-      getLightcurvePlot(id, fluxType);
-    });
-    """)
+        $(document).ready(function () {
+          update_card(id);
+          getLightcurvePlot(id, fluxType);
+        });
+        """
+    )
 
-    tap = TapTool(callback=callback)
+    tap = TapTool(callback=callback, renderers=[bokeh_g1])
     fig.tools.append(tap)
-    # fig.select(TapTool).callback = redirect('vast_pipeline:source_detail', pk=2)
 
     plot_row = row(grid, sizing_mode="stretch_width")
     plot_row.css_classes.append("mx-auto")
