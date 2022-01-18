@@ -1,6 +1,5 @@
 """Contains plotting code used by the web server."""
 import colorcet as cc
-import datashader as ds
 import holoviews as hv
 import networkx as nx
 import numpy as np
@@ -32,7 +31,6 @@ from bokeh.transform import factor_cmap, linear_cmap
 from datetime import timedelta
 from django.conf import settings
 from django.db.models import F
-from holoviews import opts
 from holoviews.operation.datashader import datashade, spread
 from scipy.stats import norm
 from typing import List, Tuple
