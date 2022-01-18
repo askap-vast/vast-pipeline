@@ -17,6 +17,7 @@ from vast_pipeline.models import (
 from vast_pipeline.pipeline.loading import update_sources
 from vast_pipeline.pipeline.config import PipelineConfig
 from vast_pipeline.pipeline.main import Pipeline
+from vast_pipeline.utils.utils import timeStamped
 from ..helpers import get_p_run_name
 
 
@@ -125,8 +126,6 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config: PipelineCon
                     ' Cannot restore pipeline run.'
                 )
 
-            del meas
-
     logger.info("Restoring '%s' from backup parquet files.", p_run.name)
 
     # Delete any new sources
@@ -220,15 +219,20 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config: PipelineCon
         with transaction.atomic():
             p_run.image_set.remove(*images_to_remove)
 
-    # load image meas
-    meas = pd.concat(
-        [pd.read_parquet(
-            i, columns=['id']
-        ) for i in prev_images['measurements_path']]
+    # load old associations to remove all new assoc
+    bak_assoc = pd.read_parquet(
+        bak_files['associations'],
+        columns=['source_id', 'meas_id']
     )
 
-    association_criteria_1 = Q(source_id__in=bak_sources['id'].to_numpy())
-    association_criteria_2 = ~Q(meas_id__in=meas['id'].to_numpy())
+    # get unique source and meas id values in the previous run
+    bak_source_ids = bak_assoc['source_id'].unique()
+    bak_meas_ids = bak_assoc['meas_id'].unique()
+
+    # create query to only obtain associations that are not part of the
+    # previous run
+    association_criteria_1 = Q(source_id__in=bak_source_ids)
+    association_criteria_2 = ~Q(meas_id__in=bak_meas_ids)
     associations_to_delete = Association.objects.filter(
         association_criteria_1 and association_criteria_2
     )
@@ -246,9 +250,11 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config: PipelineCon
     logger.info('Restoring run metrics.')
     p_run.n_images = prev_images.shape[0]
     p_run.n_sources = bak_sources.shape[0]
-    p_run.n_selavy_measurements = meas.shape[0]
     if monitor:
+        p_run.n_selavy_measurements = meas.shape[0]
         p_run.n_forced_measurements = forced_meas.shape[0]
+    else:
+        p_run.n_selavy_measurements = bak_meas_ids.shape[0]
 
     with transaction.atomic():
         p_run.save()
@@ -332,7 +338,7 @@ class Command(BaseCommand):
         # configure logging
         root_logger = logging.getLogger('')
         f_handler = logging.FileHandler(
-            os.path.join(run_folder, 'restore_log.txt'),
+            os.path.join(run_folder, timeStamped('restore_log.txt')),
             mode='w'
         )
         f_handler.setFormatter(root_logger.handlers[0].formatter)

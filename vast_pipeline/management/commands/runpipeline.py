@@ -16,16 +16,19 @@ from typing import Optional
 from django.db import transaction
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand, CommandError
+
 from vast_pipeline._version import __version__ as pipeline_version
 from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
 from vast_pipeline.pipeline.main import Pipeline
 from vast_pipeline.pipeline.utils import (
     get_create_p_run, create_measurements_arrow_file,
-    create_measurement_pairs_arrow_file, backup_parquets
+    create_measurement_pairs_arrow_file, backup_parquets,
+    create_temp_config_file
 )
-from vast_pipeline.utils.utils import StopWatch
+from vast_pipeline.utils.utils import StopWatch, timeStamped
 from vast_pipeline.models import Run
 from ..helpers import get_p_run_name
+
 from astropy.utils.exceptions import AstropyWarning
 from vast_pipeline.pipeline.errors import PipelineConfigError
 
@@ -76,7 +79,7 @@ def run_pipe(
         if debug:
             root_logger.setLevel(logging.DEBUG)
         f_handler = logging.FileHandler(
-            os.path.join(path, 'log.txt'),
+            os.path.join(path, timeStamped('log.txt')),
             mode='w'
         )
         f_handler.setFormatter(root_logger.handlers[0].formatter)
@@ -92,13 +95,6 @@ def run_pipe(
     p_run, flag_exist = get_create_p_run(
         pipeline.name,
         pipeline.config["run"]["path"],
-    )
-
-    # copy across config file at the start
-    logger.debug("Copying temp config file.")
-    shutil.copyfile(
-        os.path.join(p_run.path, 'config.yaml'),
-        os.path.join(p_run.path, 'config_temp.yaml')
     )
 
     # backup the last successful outputs.
@@ -152,6 +148,11 @@ def run_pipe(
             )
             for parquet in parquets:
                 os.remove(parquet)
+
+            # copy across config file at the start
+            logger.debug("Copying temp config file.")
+            create_temp_config_file(p_run.path)
+
         else:
             # Check if the status is already running or queued. Exit if this is
             # the case.
@@ -162,6 +163,10 @@ def run_pipe(
                     "Exiting."
                 )
                 return True
+
+            # copy across config file at the start
+            logger.debug("Copying temp config file.")
+            create_temp_config_file(p_run.path)
 
             # Check if there is a previous run config and back up if so
             if os.path.isfile(
@@ -409,7 +414,7 @@ class Command(BaseCommand):
         # configure logging
         root_logger = logging.getLogger('')
         f_handler = logging.FileHandler(
-            os.path.join(run_folder, 'log.txt'),
+            os.path.join(run_folder, timeStamped('log.txt')),
             mode='w'
         )
         f_handler.setFormatter(root_logger.handlers[0].formatter)

@@ -4,7 +4,12 @@ import pandas as pd
 from django.test import TestCase
 
 
-def test_inc_assoc(testcase: TestCase, ass_add: pd.DataFrame, ass_backup: pd.DataFrame):
+def test_inc_assoc(
+    testcase: TestCase,
+    ass_add: pd.DataFrame,
+    ass_backup: pd.DataFrame,
+    must_be_equal: bool = False
+):
     '''
     Test that the number of associations increased or equal with added
     images.
@@ -17,9 +22,13 @@ def test_inc_assoc(testcase: TestCase, ass_add: pd.DataFrame, ass_backup: pd.Dat
         Associations after images were added.
     ass_backup : pd.DataFrame
         Associations before images were added.
+    must_be_equal: bool
+        The associations being compared must be equal in length to assert True.
     '''
-
-    testcase.assertTrue(len(ass_add) >= len(ass_backup))
+    if not must_be_equal:
+        testcase.assertTrue(len(ass_add) >= len(ass_backup))
+    else:
+        testcase.assertEqual(len(ass_add), len(ass_backup))
 
 def test_update_source(
     testcase: TestCase, sources_backup: pd.DataFrame, sources_backup_db: pd.DataFrame,
