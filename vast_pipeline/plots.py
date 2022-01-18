@@ -5,7 +5,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
-from astropy.stats import sigma_clip, mad_std, bayesian_blocks
+from astropy.stats import sigma_clip, mad_std
 from bokeh.models import (
     ColumnDataSource,
     Span,
@@ -24,7 +24,6 @@ from bokeh.models import (
     WheelZoomTool
 )
 from bokeh.models.formatters import DatetimeTickFormatter
-from bokeh.models.callbacks import CustomJS
 from bokeh.layouts import row, Row, gridplot, Spacer
 from bokeh.plotting import figure
 from bokeh.transform import factor_cmap, linear_cmap
@@ -33,7 +32,7 @@ from django.conf import settings
 from django.db.models import F
 from holoviews.operation.datashader import datashade, spread
 from scipy.stats import norm
-from typing import List, Tuple
+from typing import Tuple
 
 from vast_pipeline.models import Measurement, Source
 
@@ -351,51 +350,6 @@ def fit_eta_v(
     return (eta_fit_mean, eta_fit_sigma, v_fit_mean, v_fit_sigma)
 
 
-def gaussian_fit(
-    data: pd.Series, param_mean: float, param_sigma: float
-) -> Tuple[np.ndarray, norm]:
-    """
-    Returns the Guassian to add to the matplotlib plot.
-
-    Args:
-        data: Series object containing the log10 values of the
-            distribution to plot.
-        param_mean: The calculated mean of the Gaussian to fit.
-        param_sigma: The calculated sigma of the Gaussian to fit.
-
-    Returns:
-        Tuple containing the range of the returned data and the
-        Gaussian fit.
-    """
-    range_data = np.linspace(min(data), max(data), 1000)
-    fit = norm.pdf(range_data, loc=param_mean, scale=param_sigma)
-
-    return range_data, fit
-
-
-def make_bins(self, x: pd.Series) -> List[float]:
-    """
-    Calculates the bins that should be used for the v, eta distribution
-    using bayesian blocks.
-
-    Args:
-        x: Series object containing the log10 values of the
-            distribution to plot.
-
-    Returns:
-        Bins to apply.
-    """
-    new_bins = bayesian_blocks(x)
-    binsx = [
-        new_bins[a] for a in range(
-            len(new_bins) - 1
-        ) if abs((new_bins[a + 1] - new_bins[a]) / new_bins[a]) > 0.05
-    ]
-    binsx = binsx + [new_bins[-1]]
-
-    return binsx
-
-
 def plot_eta_v_bokeh(
     source: Source,
     eta_sigma: float,
@@ -487,7 +441,7 @@ def plot_eta_v_bokeh(
         # create datashader version first
         points = spread(
             datashade(
-                hv.Points(df[[f"{x_label}_log10", f"{y_label}_log10"]])
+                hv.Points(ds_df[[f"{x_label}_log10", f"{y_label}_log10"]])
             ),
             cmap="Blues",
             px=1,
