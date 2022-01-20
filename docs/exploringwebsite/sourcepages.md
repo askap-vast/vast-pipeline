@@ -1,4 +1,4 @@
-# Source Pages
+# Source Query & Detail Pages
 
 This page details the website pages for information on the sources.
 
@@ -76,6 +76,11 @@ are valid entries to this search field. Use the dropdown menu to declare whether
 Located directly below the form is the results table which is dynamically updated once the form is submitted.
 The full detail page of a specific source can be accessed by clicking on the source name in the table. 
 Explanation of the table options can be found in the [DataTables section](datatables.md).
+The `Go to η-V analysis` button will launch the η-V analysis page for the sources contained in the query results.
+Please refer to the [Source η-V Analysis Page](sourceanalysis.md) section for the full details of this feature.
+
+!!! note
+    The `Go to η-V analysis` button is only active after a query has been performed.
 
 ![!Source query results table.](../img/source-query-results.png){: loading=lazy }
 
@@ -115,6 +120,11 @@ Other surveys are available such as all epochs of the VAST Pilot Survey (includi
 The light curve of the source is shown. The peak or integrated flux can be selected by using the radio selection buttons.
 
 ![!Source detail page: light curve, node graph and external search results.](../img/source-detail2.png){: loading=lazy }
+
+![!Source detail page: light curve hover panel.](../img/light-curve-hover.png){: loading=lazy align=right }
+
+Hovering over the data points on the light curve will show an information panel that contains the date of the measurement, the flux and the measurement number.
+It also contains a thumbnail image preview of the respective measurement.
 
 ### Two-epoch Node Graph
 

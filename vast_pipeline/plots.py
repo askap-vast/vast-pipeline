@@ -21,10 +21,12 @@ from bokeh.models import (
     Button,
     RadioButtonGroup,
     Scatter,
-    WheelZoomTool
+    WheelZoomTool,
+    ColorBar,
+    ColorMapper
 )
 from bokeh.models.formatters import DatetimeTickFormatter
-from bokeh.layouts import row, Row, gridplot, Spacer
+from bokeh.layouts import row, Row, gridplot, Spacer, column
 from bokeh.plotting import figure
 from bokeh.transform import factor_cmap, linear_cmap
 from datetime import timedelta
@@ -320,8 +322,8 @@ def fit_eta_v(
     Args:
         df: DataFrame containing the sources from the pipeline run. A
             `pandas.core.frame.DataFrame` instance.
-        use_int_flux: Use integrated fluxes for the analysis instead of
-            peak fluxes, defaults to 'False'.
+        use_peak_flux: Use peak fluxes for the analysis instead of
+            integrated fluxes, defaults to 'False'.
 
     Returns: Tuple containing the eta_fit_mean, eta_fit_sigma, v_fit_mean
         and the v_fit_sigma.
@@ -364,8 +366,7 @@ def plot_eta_v_bokeh(
     Returns a bokeh version.
 
     Args:
-        df: Dataframe containing the sources from the pipeline run. A
-            `pandas.core.frame.DataFrame` instance.
+        source: The source model object containing the result of the query.
         eta_sigma: The log10 eta_cutoff from the analysis.
         v_sigma: The log10 v_cutoff from the analysis.
         use_peak_flux: Use peak fluxes for the analysis instead of
@@ -454,6 +455,10 @@ def plot_eta_v_bokeh(
         fig.yaxis.axis_label = y_axis_label
         fig.aspect_scale = 1
         fig.sizing_mode = 'stretch_width'
+        fig.output_backend = "webgl"
+        # update the y axis default range
+        if bokeh_df.shape[0] > 0:
+            fig.y_range.end = bokeh_df[f'{y_label}_log10'].max() + 0.2
     else:
         bokeh_df = df
 
@@ -495,6 +500,13 @@ def plot_eta_v_bokeh(
     )
 
     fig.add_tools(hover)
+
+    color_bar = ColorBar(
+        color_mapper=cmap['transform'],
+        title='Number of Selavy Measurements'
+    )
+
+    fig.add_layout(color_bar, 'below')
 
     # axis histograms
     # filter out any forced-phot points for these
@@ -619,12 +631,19 @@ def plot_eta_v_bokeh(
         [
             [x_hist, Spacer(width=100, height=100)],
             [fig, y_hist],
-            [flux_choice_radio, None],
-            [eta_slider, None],
-            [v_slider, None],
-            [button, None]
         ]
     )
+
+    plot_column = column(
+        grid,
+        flux_choice_radio,
+        eta_slider,
+        v_slider,
+        button,
+        sizing_mode='stretch_width'
+    )
+
+    plot_column.css_classes.append("mx-auto")
 
     source = ColumnDataSource(data=bokeh_df)
     callback = CustomJS(
@@ -646,7 +665,7 @@ def plot_eta_v_bokeh(
     tap = TapTool(callback=callback, renderers=[bokeh_g1])
     fig.tools.append(tap)
 
-    plot_row = row(grid, sizing_mode="stretch_width")
+    plot_row = row(plot_column, sizing_mode="stretch_width")
     plot_row.css_classes.append("mx-auto")
 
     return plot_row
