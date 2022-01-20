@@ -22,8 +22,7 @@ from bokeh.models import (
     RadioButtonGroup,
     Scatter,
     WheelZoomTool,
-    ColorBar,
-    ColorMapper
+    ColorBar
 )
 from bokeh.models.formatters import DatetimeTickFormatter
 from bokeh.layouts import row, Row, gridplot, Spacer, column
