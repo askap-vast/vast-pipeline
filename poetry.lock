@@ -67,6 +67,17 @@ docs = ["sphinx (<4)", "sphinx-astropy (>=1.3)", "pytest", "PyYAML (>=3.13)", "s
 test = ["pytest-astropy (>=0.8)", "pytest-xdist", "objgraph", "ipython (>=4.2)", "coverage", "skyfield (>=1.20)", "sgp4 (>=2.3)", "packaging"]
 
 [[package]]
+name = "astropy-helpers"
+version = "4.0.1"
+description = "Utilities for building and installing packages in the Astropy ecosystem"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.extras]
+docs = ["sphinx-astropy"]
+
+[[package]]
 name = "astroquery"
 version = "0.4.5"
 description = "Functions and classes to access online astronomical data resources"
@@ -389,7 +400,7 @@ tests = ["hypothesis (==4.23)", "pytest (>=3.10,<4.0)", "pytest-asyncio (>=0.8,<
 
 [[package]]
 name = "dask"
-version = "2022.1.0"
+version = "2022.1.1"
 description = "Parallel PyData with Task Scheduling"
 category = "main"
 optional = false
@@ -398,22 +409,22 @@ python-versions = ">=3.7"
 [package.dependencies]
 bokeh = {version = ">=2.1.1", optional = true, markers = "extra == \"complete\""}
 cloudpickle = ">=1.1.1"
-distributed = {version = "2022.01.0", optional = true, markers = "extra == \"complete\""}
+distributed = {version = "2022.01.1", optional = true, markers = "extra == \"complete\""}
 fsspec = ">=0.6.0"
 jinja2 = {version = "*", optional = true, markers = "extra == \"complete\""}
-numpy = {version = ">=1.18", optional = true, markers = "extra == \"complete\""}
+numpy = {version = ">=1.18", optional = true, markers = "extra == \"dataframe\""}
 packaging = ">=20.0"
-pandas = {version = ">=1.0", optional = true, markers = "extra == \"complete\""}
+pandas = {version = ">=1.0", optional = true, markers = "extra == \"dataframe\""}
 partd = ">=0.3.10"
 pyyaml = ">=5.3.1"
 toolz = ">=0.8.2"
 
 [package.extras]
 array = ["numpy (>=1.18)"]
-complete = ["bokeh (>=2.1.1)", "distributed (==2022.01.0)", "jinja2", "numpy (>=1.18)", "pandas (>=1.0)"]
+complete = ["bokeh (>=2.1.1)", "distributed (==2022.01.1)", "jinja2", "numpy (>=1.18)", "pandas (>=1.0)"]
 dataframe = ["numpy (>=1.18)", "pandas (>=1.0)"]
 diagnostics = ["bokeh (>=2.1.1)", "jinja2"]
-distributed = ["distributed (==2022.01.0)"]
+distributed = ["distributed (==2022.01.1)"]
 test = ["pytest", "pytest-rerunfailures", "pytest-xdist", "pre-commit"]
 
 [[package]]
@@ -486,7 +497,7 @@ graph = ["objgraph (>=1.7.2)"]
 
 [[package]]
 name = "distributed"
-version = "2022.1.0"
+version = "2022.1.1"
 description = "Distributed scheduler for Dask"
 category = "main"
 optional = false
@@ -495,7 +506,7 @@ python-versions = ">=3.7"
 [package.dependencies]
 click = ">=6.6"
 cloudpickle = ">=1.5.0"
-dask = "2022.01.0"
+dask = "2022.01.1"
 jinja2 = "*"
 msgpack = ">=0.6.0"
 packaging = ">=20.0"
@@ -2350,7 +2361,7 @@ prod = ["gevent", "gunicorn"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.1"
-content-hash = "75be8de148ab0a8002c5976784fd0948644332124da1be7f05d4b3832fdc7ca6"
+content-hash = "d195667d43cb3e8a761953704a2b6ca774c7d3cf4ae2d16e253d10511f8ee3b3"
 
 [metadata.files]
 ansicon = [
@@ -2390,6 +2401,9 @@ astropy = [
     {file = "astropy-4.3.1-cp39-cp39-win32.whl", hash = "sha256:dcb6d7e6631d92d5d15b7ae4e0a994829609b09a4e3af2055995187edb8989e3"},
     {file = "astropy-4.3.1-cp39-cp39-win_amd64.whl", hash = "sha256:434ab46e85f5406acc9f2d2084e5e36890abeaf615c8aa71178e835134b64726"},
     {file = "astropy-4.3.1.tar.gz", hash = "sha256:2d3951223b4eb7f368fcad8c8340d27374c5d8e3b635a636275acdb38f35cd51"},
+]
+astropy-helpers = [
+    {file = "astropy-helpers-4.0.1.tar.gz", hash = "sha256:f1096414d108778218d6bea06d4d9c7b2ff7c83856a451331ac194e74de9f413"},
 ]
 astroquery = [
     {file = "astroquery-0.4.5-py3-none-any.whl", hash = "sha256:7b78c5d0b3afad3c7c7646a784bc03c5be0e4d350dcca6b4897bcb804ffff89b"},
@@ -2547,8 +2561,8 @@ daphne = [
     {file = "daphne-3.0.2.tar.gz", hash = "sha256:76ffae916ba3aa66b46996c14fa713e46004788167a4873d647544e750e0e99f"},
 ]
 dask = [
-    {file = "dask-2022.1.0-py3-none-any.whl", hash = "sha256:36e3765ef7800451deff87b3fe90cbc8a4963e65b3fd4e2a73c112c243f88608"},
-    {file = "dask-2022.1.0.tar.gz", hash = "sha256:aee6eb6517f13dc00a3cc7ed9e13c728baa5850b8a35a2b93793d593a23ecbb8"},
+    {file = "dask-2022.1.1-py3-none-any.whl", hash = "sha256:6caaf633c85ecd1197025de0b8bd244ef88b4b1810f315b09005b3fe5c21ee8e"},
+    {file = "dask-2022.1.1.tar.gz", hash = "sha256:3d5e935792d8a5a61d19cb7e63771ee02cdfd6122e36beb15c2dad6257320c58"},
 ]
 datashader = [
     {file = "datashader-0.13.0-py2.py3-none-any.whl", hash = "sha256:7888740956213f4bc27816dfbb5bfc5d3f8fd92d583632d688ccbad167e657dc"},
@@ -2570,8 +2584,8 @@ dill = [
     {file = "dill-0.3.4.zip", hash = "sha256:9f9734205146b2b353ab3fec9af0070237b6ddae78452af83d2fca84d739e675"},
 ]
 distributed = [
-    {file = "distributed-2022.1.0-py3-none-any.whl", hash = "sha256:de1dd357cdaf1aa986898584593aa7d84574005f84dd3e30b6ae10c27f82c95d"},
-    {file = "distributed-2022.1.0.tar.gz", hash = "sha256:71caba36b831ae4d4baacd44c702936198f236cae7d422edb50fe36ef5a68156"},
+    {file = "distributed-2022.1.1-py3-none-any.whl", hash = "sha256:b8cdec07e46a7ddeaaa6cc1f3d8a50b0d102130b725e2246056ff531ea68a4c1"},
+    {file = "distributed-2022.1.1.tar.gz", hash = "sha256:c227b5dd2c784830917679487f049fb943c154f1993f187d5c52076aa78a72d0"},
 ]
 django = [
     {file = "Django-3.2.12-py3-none-any.whl", hash = "sha256:9b06c289f9ba3a8abea16c9c9505f25107809fb933676f6c891ded270039d965"},

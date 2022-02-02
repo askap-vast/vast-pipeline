@@ -41,6 +41,7 @@ matplotlib = "^3.5.0"
 holoviews = "^1.14.7"
 datashader = "^0.13.0"
 channels = "^3.0.4"
+astropy-helpers = "^4.0.1"
 
 [tool.poetry.dev-dependencies]
 mkdocs-material = "^7.1.4"
