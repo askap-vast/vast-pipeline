@@ -428,6 +428,8 @@ def plot_eta_v_bokeh(
         df["n_meas_sel"].max(),
     )
 
+    cb_title = "Number of Selavy Measurements"
+
     if df.shape[0] > settings.ETA_V_DATASHADER_THRESHOLD:
 
         hv.extension('bokeh')
@@ -441,9 +443,9 @@ def plot_eta_v_bokeh(
         # create datashader version first
         points = spread(
             datashade(
-                hv.Points(ds_df[[f"{x_label}_log10", f"{y_label}_log10"]])
+                hv.Points(ds_df[[f"{x_label}_log10", f"{y_label}_log10"]]),
+                cmap="Blues"
             ),
-            cmap="Blues",
             px=1,
             shape='square'
         ).opts(height=PLOT_HEIGHT, width=PLOT_WIDTH)
@@ -458,6 +460,8 @@ def plot_eta_v_bokeh(
         # update the y axis default range
         if bokeh_df.shape[0] > 0:
             fig.y_range.end = bokeh_df[f'{y_label}_log10'].max() + 0.2
+
+        cb_title += " (interactive points only)"
     else:
         bokeh_df = df
 
@@ -502,7 +506,7 @@ def plot_eta_v_bokeh(
 
     color_bar = ColorBar(
         color_mapper=cmap['transform'],
-        title='Number of Selavy Measurements'
+        title=cb_title
     )
 
     fig.add_layout(color_bar, 'below')
@@ -614,9 +618,11 @@ def plot_eta_v_bokeh(
             args=dict(
                 eta_slider=eta_slider,
                 v_slider=v_slider,
+                button=button,
                 flux_choice_radio=flux_choice_radio
             ),
             code="""
+            button.label = "Loading..."
             var e = eta_slider.value;
             var v = v_slider.value;
             const peak = ["peak", "int"];

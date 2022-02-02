@@ -51,18 +51,18 @@ def calculate_measurement_pair_aggregate_metrics(
         The metric columns are named: `vs_abs_significant_max_{flux_type}` and
         `m_abs_significant_max_{flux_type}`.
     """
-    pair_agg_metrics = measurement_pairs_df.set_index("source").iloc[
+    pair_agg_metrics = measurement_pairs_df.iloc[
         measurement_pairs_df.query(f"abs(vs_{flux_type}) >= @min_vs")
         .groupby("source")
         .agg(m_abs_max_idx=(f"m_{flux_type}", lambda x: x.abs().idxmax()),)
         .astype(np.int32)["m_abs_max_idx"]  # cast row indices to int and select them
         .reset_index(drop=True)  # keep only the row indices
-    ][[f"vs_{flux_type}", f"m_{flux_type}"]]
+    ][[f"vs_{flux_type}", f"m_{flux_type}", "source"]]
 
     pair_agg_metrics = pair_agg_metrics.abs().rename(columns={
         f"vs_{flux_type}": f"vs_abs_significant_max_{flux_type}",
         f"m_{flux_type}": f"m_abs_significant_max_{flux_type}",
-    })
+    }).set_index('source')
     return pair_agg_metrics
 
 

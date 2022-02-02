@@ -146,13 +146,6 @@
     }
   });
 
-  // get the lightcurve plot whenever the flux type radio value changes
-  $("#fluxTypeRadioContainer").on("change", function(e) {
-    console.log("getting lightcurve plot for flux type", e.target.value);
-    var source_id = {{ source.id }}
-    getLightcurvePlot(source_id, e.target.value);
-  });
-
   function update_card(id) {
     $('#cardsUpdate').html('').load(
       "{% url 'vast_pipeline:source_etav_plot_update' 0 %}".replace('0', id),
