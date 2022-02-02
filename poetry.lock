@@ -67,17 +67,6 @@ docs = ["sphinx (<4)", "sphinx-astropy (>=1.3)", "pytest", "PyYAML (>=3.13)", "s
 test = ["pytest-astropy (>=0.8)", "pytest-xdist", "objgraph", "ipython (>=4.2)", "coverage", "skyfield (>=1.20)", "sgp4 (>=2.3)", "packaging"]
 
 [[package]]
-name = "astropy-helpers"
-version = "4.0.1"
-description = "Utilities for building and installing packages in the Astropy ecosystem"
-category = "main"
-optional = false
-python-versions = ">=3.6"
-
-[package.extras]
-docs = ["sphinx-astropy"]
-
-[[package]]
 name = "astroquery"
 version = "0.4.5"
 description = "Functions and classes to access online astronomical data resources"
@@ -2361,7 +2350,7 @@ prod = ["gevent", "gunicorn"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.1"
-content-hash = "d195667d43cb3e8a761953704a2b6ca774c7d3cf4ae2d16e253d10511f8ee3b3"
+content-hash = "bf31921a62b9943f9f289e042b0f1dd1aff6342c3c4b760d274092d0526cda18"
 
 [metadata.files]
 ansicon = [
@@ -2401,9 +2390,6 @@ astropy = [
     {file = "astropy-4.3.1-cp39-cp39-win32.whl", hash = "sha256:dcb6d7e6631d92d5d15b7ae4e0a994829609b09a4e3af2055995187edb8989e3"},
     {file = "astropy-4.3.1-cp39-cp39-win_amd64.whl", hash = "sha256:434ab46e85f5406acc9f2d2084e5e36890abeaf615c8aa71178e835134b64726"},
     {file = "astropy-4.3.1.tar.gz", hash = "sha256:2d3951223b4eb7f368fcad8c8340d27374c5d8e3b635a636275acdb38f35cd51"},
-]
-astropy-helpers = [
-    {file = "astropy-helpers-4.0.1.tar.gz", hash = "sha256:f1096414d108778218d6bea06d4d9c7b2ff7c83856a451331ac194e74de9f413"},
 ]
 astroquery = [
     {file = "astroquery-0.4.5-py3-none-any.whl", hash = "sha256:7b78c5d0b3afad3c7c7646a784bc03c5be0e4d350dcca6b4897bcb804ffff89b"},
