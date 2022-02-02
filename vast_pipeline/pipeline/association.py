@@ -1251,7 +1251,7 @@ def association(images_df: pd.DataFrame, limit: Angle, dr_limit: float,
         # account for RA wrapping
         ra_wrap_mask = sources_df.ra <= 0.1
         sources_df['ra_wrap'] = sources_df.ra.values
-        sources_df.at[
+        sources_df.loc[
             ra_wrap_mask, 'ra_wrap'
         ] = sources_df[ra_wrap_mask].ra.values + 360.
 
@@ -1302,7 +1302,7 @@ def association(images_df: pd.DataFrame, limit: Angle, dr_limit: float,
 
         # correct the RA wrapping
         ra_wrap_mask = weighted_df.ra >= 360.
-        weighted_df.at[
+        weighted_df.loc[
             ra_wrap_mask, 'ra'
         ] = weighted_df[ra_wrap_mask].ra.values - 360.
 
