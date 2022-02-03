@@ -2,7 +2,7 @@
 
 This page details the interactive analysis tool of the _η_ and _V_ metrics for a selection of sources.
 
-The analysis can be performed on the results of a [source query](sourcepages.md#source-query).
+The analysis can be performed on the results of a [source query](sourcequery.md).
 
 !!! tip "Tip: Sensible Querying!"
     To get the most out of the tool is advised to design a query that will eliminate as many erroneous results as possible.
@@ -11,7 +11,7 @@ The analysis can be performed on the results of a [source query](sourcepages.md#
 
 ## Accessing the Analysis Page
 
-Once a query has been performed on the [source query page](sourcepages.md#source-query) the `Go to η-V analysis` button will be active as highlighted in the image below.
+Once a query has been performed on the [source query page](sourcequery.md) the `Go to η-V analysis` button will be active as highlighted in the image below.
 
 ![!Go to η-V analysis button.](../img/go-to-analysis-button.png){: loading=lazy }
 
@@ -21,7 +21,7 @@ Click this button and the analysis page will open.
     Bad sources for analysis will be automatically removed.
     These include sources that only have one datapoint or where the _η_ and/or _V_ are equal to 0 or have failed.
 
-![!Go to η-V analysis button.](../img/analysis-page-first-load.png){: loading=lazy }
+![!Page appearance on initial load.](../img/analysis-page-first-load.png){: loading=lazy }
 
 ## η-V Plot Description
 
@@ -48,7 +48,7 @@ Selecting another source will dynamically update these panels without having to 
 
 ![!Source light curve and information.](../img/analysis-page-source-display.png){: loading=lazy }
 
-The source information panel contains a link to go to the full [source detail page](sourcepages.md#source-detail-page) and the ability to [favourite a source](sourcetagsfavs.md) directly from this page.
+The source information panel contains a link to go to the full [source detail page](sourcedetail.md) and the ability to [favourite a source](sourcetagsfavs.md) directly from this page.
 Note that as of the current version, adding a source to favourites will reset the analysis page.
 
 ## Displaying High Source Counts
@@ -67,3 +67,5 @@ Any sources that fall within the transient threshold region are plotted as norma
 
 !!! note "Note: Colour Bar"
     The colour bar only applies to the interactive datapoints.
+
+![!Page appearance on initial load with high source counts.](../img/analysis-page-first-load-datashader.png){: loading=lazy }

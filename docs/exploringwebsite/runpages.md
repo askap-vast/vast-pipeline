@@ -54,7 +54,7 @@ The cards at the top of the page give a summary of the total numbers of:
 * New sources in the pipeline run.
 
 Clicking on the total number of images or measurements will navigate the user to the [Image and Measurements tables](#image-and-measurements-tables) on this page, 
-where as the source cards will take the user to the [Sources Query](sourcepages.md#source-query-page) page.
+where as the source cards will take the user to the [Sources Query](sourcequery.md) page.
 
 !!! warning
     When sent to the source query page, the user should make sure to click submit on the search.

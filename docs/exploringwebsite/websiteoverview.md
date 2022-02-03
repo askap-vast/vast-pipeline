@@ -46,7 +46,7 @@ Navigates the user to the list of pipeline runs available, which in turn link to
 
 ### Sources Query
 
-See the [Source Pages](sourcepages.md) section.
+See the [Source Query](sourcequery.md) section.
 
 Takes the user to the source query page, where users can search for sources by defining a set of thresholds and feature requirements. 
 From the results users can also access the detail page for individual sources.

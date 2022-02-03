@@ -87,8 +87,9 @@ nav:
       - Website Overview: exploringwebsite/websiteoverview.md
       - DataTables: exploringwebsite/datatables.md
       - Pipeline Run Pages: exploringwebsite/runpages.md
-      - Source Query & Detail: exploringwebsite/sourcepages.md
-      - Source η-V Analysis Page: exploringwebsite/sourceanalysis.md
+      - Source Query: exploringwebsite/sourcequery.md
+      - Source η-V Analysis: exploringwebsite/sourceanalysis.md
+      - Source Detail: exploringwebsite/sourcedetail.md
       - Source Tags & Favourites: exploringwebsite/sourcetagsfavs.md
       - Measurement Pages: exploringwebsite/measurementpages.md
       - Image Pages: exploringwebsite/imagepages.md

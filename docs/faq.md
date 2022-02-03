@@ -24,7 +24,7 @@ Please open a discussion or issue on GitHub if you intend to give this a go!
 
 Currently the pipeline only supports Stokes I data.
 
-Users can view Stokes V HIPS maps of the RACS and VAST surveys in the Aladin Lite tool on the [source detail page](exploringwebsite/sourcepages.md#source-detail-page).
+Users can view Stokes V HIPS maps of the RACS and VAST surveys in the Aladin Lite tool on the [source detail page](exploringwebsite/sourcedetail.md).
 
 The support of Stokes V is [planned in a future update](https://github.com/askap-vast/vast-pipeline/issues/223){:target="_blank"}.
 

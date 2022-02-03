@@ -190,7 +190,7 @@ The pipeline website interface supports querying some external APIs, e.g. SIMBAD
 
 #### Transient Name Server (TNS)
 
-If you wish to enable TNS cone search results on the [source detail page](../exploringwebsite/sourcepages.md#source-detail-page), you must first obtain an API key for TNS.
+If you wish to enable TNS cone search results on the [source detail page](../exploringwebsite/sourcedetail.md), you must first obtain an API key for TNS.
 
 1. Create a TNS account at https://www.wis-tns.org/user/register if you do not already have one.
 2. Once logged in, create a bot by navigating to https://www.wis-tns.org/bots and clicking "Add bot" near the top of the table.
