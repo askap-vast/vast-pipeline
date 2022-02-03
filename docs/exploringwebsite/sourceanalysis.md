@@ -2,12 +2,17 @@
 
 This page details the interactive analysis tool of the _η_ and _V_ metrics for a selection of sources.
 
+!!! info "Further Reading"
+    Descriptions of the η and V metrics can be found on the [source statistics page](../../design/sourcestats#v-and-metrics).
+    
+    For a detailed overview of the method, please refer to [Rowlinson et al., 2019](https://ui.adsabs.harvard.edu/abs/2019A%26C....27..111R/abstract){:target="_blank"}.
+
 The analysis can be performed on the results of a [source query](sourcequery.md).
 
 !!! tip "Tip: Sensible Querying!"
     To get the most out of the tool is advised to design a query that will eliminate as many erroneous results as possible.
     For example, making sure sources are isolated and have no siblings or relations.
-    The [VAST Tools](https://vast-survey.org/vast-tools/){:target="_blank"} package should be used for more advanced queries.  
+    The [VAST Tools](https://vast-survey.org/vast-tools/){:target="_blank"} package should be used for more advanced queries.
 
 ## Accessing the Analysis Page
 
