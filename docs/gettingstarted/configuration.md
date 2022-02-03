@@ -157,6 +157,9 @@ Shown below is the [`.env.template`](https://github.com/askap-vast/vast-pipeline
 
     # Q_CLUSTER_TIMEOUT=86400
     # Q_CLUSTER_RETRY=86402
+    # Q_CLUSTER_MAX_ATTEMPTS=1
+
+    ETA_V_DATASHADER_THRESHOLD=20000
     ```
 
 The available settings are grouped into 4 distinct categories:
@@ -187,7 +190,7 @@ The pipeline website interface supports querying some external APIs, e.g. SIMBAD
 
 #### Transient Name Server (TNS)
 
-If you wish to enable TNS cone search results on the [source detail page](../exploringwebsite/sourcepages.md#source-detail-page), you must first obtain an API key for TNS.
+If you wish to enable TNS cone search results on the [source detail page](../exploringwebsite/sourcedetail.md), you must first obtain an API key for TNS.
 
 1. Create a TNS account at https://www.wis-tns.org/user/register if you do not already have one.
 2. Once logged in, create a bot by navigating to https://www.wis-tns.org/bots and clicking "Add bot" near the top of the table.
@@ -221,6 +224,8 @@ These settings apply to various aspects of the VAST pipeline itself. The table b
 | `MAX_PIPERUN_IMAGES` | 200 | The allowed maximum number of images in a single pipeline run (non-admins). |
 | `Q_CLUSTER_TIMEOUT` | 86400 | Number of seconds a Django-Q cluster worker may spend on a task before it is terminated. See the [Django-Q documentation](https://django-q.readthedocs.io/en/latest/configure.html#timeout). |
 | `Q_CLUSTER_RETRY` | 86402 | Number of seconds a Django-Q broker will wait for a cluster to finish a task before it's presented again. See the [Django-Q documentation](https://django-q.readthedocs.io/en/latest/configure.html#retry). |
+| `Q_CLUSTER_MAX_ATTEMPTS` | 1 | Number of times a failed task is retried. See the [Django-Q documentation](https://django-q.readthedocs.io/en/latest/configure.html#max-attempts). |
+| `ETA_V_DATASHADER_THRESHOLD` | 20000 | The number of datapoints above which the eta-V plot uses datashader to plot the non-threshold distribution. |
 
 #### Maintenance Message Example
 

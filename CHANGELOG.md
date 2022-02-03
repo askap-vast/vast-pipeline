@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added eta-V plot analysis page along with documentation [#586](https://github.com/askap-vast/vast-pipeline/pull/586).
+- Added thumbnails to light curve tooltips [#586](https://github.com/askap-vast/vast-pipeline/pull/586).
 - Added logfile dropdown selection to run detail page [#595](https://github.com/askap-vast/vast-pipeline/pull/595).
 - Added datetime stamps to all log files [#595](https://github.com/askap-vast/vast-pipeline/pull/595).
 - Added new log files for arrow file creation and restore run and added to run detail page [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
@@ -29,6 +31,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Bumped test python versions to 3.7.12, 3.8.12 and 3.9.10 [#586](https://github.com/askap-vast/vast-pipeline/pull/586).
+- Bumped various dependencies using a fresh poetry.lock file [#586](https://github.com/askap-vast/vast-pipeline/pull/586).
+- Bumped bokeh packages to 2.3.3 [#586](https://github.com/askap-vast/vast-pipeline/pull/586).
 - Django-Q config variable `max_attempts` is configurable in the .env file [#595](https://github.com/askap-vast/vast-pipeline/pull/595).
 - Replaced `models.MeasurementPair` model with a dataclass [#590](https://github.com/askap-vast/vast-pipeline/pull/590).
 - Django-Q config variables `timeout` and `retry` are configurable in the .env file [#589](https://github.com/askap-vast/vast-pipeline/pull/589).
@@ -42,6 +47,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed regression issues with pandas 1.4 [#586](https://github.com/askap-vast/vast-pipeline/pull/586).
 - Fixed config being copied before run was confirmed to actually go ahead for existing runs [#595](https://github.com/askap-vast/vast-pipeline/pull/595).
 - Fixed forced measurements being removed from associations during the restore run process [#600](https://github.com/askap-vast/vast-pipeline/pull/600).
 - Fixed measurement FITS cutout bug [#588](https://github.com/askap-vast/vast-pipeline/pull/588).
@@ -61,6 +67,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#586](https://github.com/askap-vast/vast-pipeline/pull/586): feat, dep, doc: Add an eta-v analysis page for the source query.
 - [#595](https://github.com/askap-vast/vast-pipeline/pull/595): fix: Add date and time stamp to log files.
 - [#600](https://github.com/askap-vast/vast-pipeline/pull/600): fix: Fixed restore run forced measurements associations.
 - [#590](https://github.com/askap-vast/vast-pipeline/pull/590): fix: Remove MeasurementPair model.

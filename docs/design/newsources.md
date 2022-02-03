@@ -43,4 +43,4 @@ The `new source high sigma` is then equal to the maximum $\text{rms}_{location,i
 
 ## Viewing New Sources
 
-New sources are marked as new on the website interface (see [Source Pages](../exploringwebsite/sourcepages.md)) and in the source parquet file output there is a boolean column named `new`.
+New sources are marked as new on the website interface (see [Source Pages](../exploringwebsite/sourcedetail.md)) and in the source parquet file output there is a boolean column named `new`.

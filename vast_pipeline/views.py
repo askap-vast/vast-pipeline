@@ -2,6 +2,7 @@ import io
 import os
 import json
 import logging
+import matplotlib.pyplot as plt
 import traceback
 import dask.bag as db
 import pandas as pd
@@ -47,7 +48,7 @@ from rest_framework import serializers
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.contrib.auth.decorators import login_required
 
-from vast_pipeline.plots import plot_lightcurve
+from vast_pipeline.plots import plot_lightcurve, plot_eta_v_bokeh
 from vast_pipeline.models import (
     Comment, CommentableModel, Image, Measurement, Run, Source, SourceFav,
 )
@@ -1554,6 +1555,133 @@ def SourceQuery(request):
     )
 
 
+# Source query eta V plot
+@login_required
+def SourceEtaVPlot(request: Request) -> Response:
+    """The view for the main eta-V plot page.
+
+    Args:
+        request (Request): Django REST Framework request object.
+
+    Returns:
+        The response for the main eta-V page.
+    """
+    min_sources = 50
+
+    source_query_result_id_list = request.session.get("source_query_result_ids", [])
+
+    sources_query_len = len(source_query_result_id_list)
+
+    if sources_query_len < min_sources:
+        messages.error(
+            request,
+            (
+                f'The query has returned only {sources_query_len} sources.'
+                f' A minimum of {min_sources} sources must be used to produce'
+                ' the plot.'
+            )
+        )
+
+        plot_ok = 0
+
+    else:
+        sources = Source.objects.filter(
+            id__in=source_query_result_id_list,
+            n_meas__gt=1,
+            eta_peak__gt=0,
+            eta_int__gt=0,
+            v_peak__gt=0,
+            v_int__gt=0
+        )
+
+        new_sources_ids_list = list(sources.values_list("id", flat=True))
+
+        new_sources_query_len = len(new_sources_ids_list)
+
+        diff = sources_query_len - new_sources_query_len
+
+        if diff > 0:
+            messages.warning(
+                request,
+                (
+                    f'Removed {diff} sources that either had'
+                    ' only one datapoint, or, an \u03B7 or V value of 0.'
+                    ' Change the query options to avoid these sources.'
+                )
+            )
+
+            request.session["source_query_result_ids"] = new_sources_ids_list
+
+        if new_sources_query_len < min_sources:
+            messages.error(
+                request,
+                (
+                    'After filtering, the query has returned only'
+                    f' {sources_query_len} sources. A minimum of {min_sources}'
+                    ' sources must be used to produce the plot.'
+                )
+            )
+
+            plot_ok = 0
+
+        else:
+            if new_sources_query_len > settings.ETA_V_DATASHADER_THRESHOLD:
+                messages.info(
+                    request,
+                    (
+                        "Sources outside of the selected sigma area"
+                        " are displayed as a non-interactive averaged"
+                        " distribution."
+                    )
+                )
+
+            plot_ok = 1
+
+    context = {
+        'plot_ok': plot_ok,
+    }
+
+    return render(request, 'sources_etav_plot.html', context)
+
+
+@login_required
+def SourceEtaVPlotUpdate(request: Request, pk: int) -> Response:
+    """The view to perform the update on the eta-V plot page.
+
+    Args:
+        request (Request): Django REST Framework request object.
+        pk (int, optional): Source object primary key. Defaults to None.
+
+    Raises:
+        Http404: if a Source with the given `pk` cannot be found.
+
+    Returns:
+        The response for the update page.
+    """
+    try:
+        source = Source.objects.values().get(pk=pk)
+    except Source.DoesNotExist:
+        raise Http404
+
+    source['wavg_ra_hms'] = deg2hms(source['wavg_ra'], hms_format=True)
+    source['wavg_dec_dms'] = deg2dms(source['wavg_dec'], dms_format=True)
+    source['wavg_l'], source['wavg_b'] = equ2gal(source['wavg_ra'], source['wavg_dec'])
+
+    context = {
+        'source': source,
+        'sourcefav': (
+            SourceFav.objects.filter(
+                user__id=request.user.id,
+                source__id=source['id']
+            )
+            .exists()
+        ),
+        'datatables': []
+    }
+
+    return render(request, 'sources_etav_plot_update.html', context)
+
+
 # Source detail
 @login_required
 def SourceDetail(request, pk):
@@ -1779,7 +1907,14 @@ class ImageCutout(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, measurement_id: int, size: str = "normal"):
+        img_type = request.query_params.get('img_type', 'fits')
+        if img_type not in ('fits', 'png'):
+            raise Http404(
+                "GET query param img_type must be either 'fits' or 'png'."
+            )
+
         measurement = Measurement.objects.get(id=measurement_id)
+
         image_hdu: fits.PrimaryHDU = fits.open(measurement.image.path)[0]
         coord = SkyCoord(ra=measurement.ra, dec=measurement.dec, unit="deg")
         sizes = {
@@ -1789,9 +1924,9 @@ class ImageCutout(APIView):
         }
 
         filenames = {
-            "xlarge": f"{measurement.name}_cutout_xlarge.fits",
-            "large": f"{measurement.name}_cutout_large.fits",
-            "normal": f"{measurement.name}_cutout.fits",
+            "xlarge": f"{measurement.name}_cutout_xlarge.{img_type}",
+            "large": f"{measurement.name}_cutout_large.fits.{img_type}",
+            "normal": f"{measurement.name}_cutout.fits.{img_type}",
         }
 
         try:
@@ -1820,7 +1955,11 @@ class ImageCutout(APIView):
 
         cutout_hdu = fits.PrimaryHDU(data=cutout.data, header=cutout_header)
         cutout_file = io.BytesIO()
-        cutout_hdu.writeto(cutout_file)
+
+        if img_type == "fits":
+            cutout_hdu.writeto(cutout_file)
+        else:
+            plt.imsave(cutout_file, cutout.data, dpi=600)
         cutout_file.seek(0)
         response = FileResponse(
             cutout_file,
@@ -2225,6 +2364,8 @@ class SourceFavViewSet(ModelViewSet):
         #     return Response(serializer.data, status=status.HTTP_201_CREATED)
         # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         data = request.data.dict()
+        if 'next' in data.keys():
+            data.pop('next')
         data.pop('csrfmiddlewaretoken')
         data['user_id'] = request.user.id
         try:
@@ -2247,7 +2388,12 @@ class SourceFavViewSet(ModelViewSet):
                 f'Errors in adding source to favourites: \n{e}'
             )
 
-        return HttpResponseRedirect(reverse('vast_pipeline:source_detail', args=[data['source_id']]))
+        next = request.POST.get('next', '/')
+        if 'query/plot' in next:
+            next = next.split('plot')[0] + 'plot/'
+        return HttpResponseRedirect(next)
+
+        # return HttpResponseRedirect(reverse('vast_pipeline:source_detail', args=[data['source_id']]))
 
     def destroy(self, request, pk=None):
         try:
@@ -2439,4 +2585,33 @@ class SourcePlotsSet(ViewSet):
         # TODO raster plots version for Slack posts
         use_peak_flux = request.query_params.get("peak_flux", "true").lower() == "true"
         plot_document = plot_lightcurve(source, use_peak_flux=use_peak_flux)
+        return Response(json_item(plot_document))
+
+    @rest_framework.decorators.action(methods=['get'], detail=False)
+    def etavplot(self, request: Request) -> Response:
+        """Create the eta-V plot.
+
+        Args:
+            request (Request): Django REST Framework request object.
+
+        Raises:
+            Http404: if no sources are found.
+
+        Returns:
+            Response: Django REST Framework response object containing the Bokeh plot in
+                JSON format to be embedded in the HTML template.
+        """
+        source_query_result_id_list = request.session.get("source_query_result_ids", [])
+        try:
+            source = Source.objects.filter(pk__in=source_query_result_id_list)
+        except Source.DoesNotExist:
+            raise Http404
+        # TODO raster plots version for Slack posts
+        use_peak_flux = request.query_params.get("peak_flux", "true").lower() == "true"
+
+        eta_sigma = float(request.query_params.get("eta_sigma", 3.0))
+        v_sigma = float(request.query_params.get("v_sigma", 3.0))
+
+        plot_document = plot_eta_v_bokeh(
+            source, eta_sigma=eta_sigma, v_sigma=v_sigma, use_peak_flux=use_peak_flux)
         return Response(json_item(plot_document))

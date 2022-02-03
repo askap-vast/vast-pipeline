@@ -345,3 +345,6 @@ MAX_PIPERUN_IMAGES = env('MAX_PIPERUN_IMAGES', cast=int, default=200)
 
 # pipeline maintainance message/banner
 PIPELINE_MAINTAINANCE_MESSAGE = env('PIPELINE_MAINTAINANCE_MESSAGE', cast=str, default=None)
+
+# web server eta v plot datashader threshold
+ETA_V_DATASHADER_THRESHOLD = env('ETA_V_DATASHADER_THRESHOLD', cast=int, default=20000)

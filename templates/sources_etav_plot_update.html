@@ -1,0 +1,132 @@
+{% load unit_tags %}
+
+<div class="row">
+  <div class="col mb-4">
+    <div id="sourceInfoCard">
+      <div class="card shadow h-100">
+        <div class="card-header py-3 clearfix" id="sourceInfoHeader">
+          <h6 class="m-0 font-weight-bold text-primary float-left">Source Information</h6>
+        </div>
+        <div class="card-body">
+          {% if source %}
+          <div class="float-left">
+            <strong>{{ source.name }}</strong>
+          </div>
+          <div class="float-right">
+            <span {% if not sourcefav %}data-toggle="modal" {% endif %} data-target="#starSource">
+              <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm" data-toggle="tooltip"
+                title="Add to favourites">
+                <span class="icon text-white-600">
+                  <i class="fas fa-star" {% if sourcefav  %}style="color: #ffe271" {% endif %}></i>
+                </span>
+              </a>
+            </span>
+            <a href="{% url 'vast_pipeline:source_detail' source.id %}"
+              class="d-none d-sm-inline-block btn btn-sm btn-primary btn-icon-split shadow-sm" target="_blank"
+              title="Go to the source summary page.">
+              <span class="text">Source detail page</span>
+              <span class="icon text-white-600">
+                <i class="fa fa-arrow-right fa-sm"></i>
+              </span>
+            </a>
+          </div>
+          <br>
+          <strong>Position: </strong><span class="clipboard-copy">{{ source.wavg_ra_hms }} {{ source.wavg_dec_dms }}</span><br>
+          <strong>Position (Decimal): </strong><span class="clipboard-copy">{{ source.wavg_ra|floatformat:6 }} {{ source.wavg_dec|floatformat:6 }}</span><br>
+          <strong>Position (Galactic): </strong><span class="clipboard-copy">{{ source.wavg_l|floatformat:6 }} {{ source.wavg_b|floatformat:6 }}</span>
+          <div class="row">
+            <div class="col">
+              <strong>Avg. Compactness: </strong>{{ source.avg_compactness|floatformat:3 }}
+            </div>
+            <div class="col">
+              <strong>Neighbour Dist: </strong>{{ source.n_neighbour_dist|deg_to_arcmin|floatformat:2 }}&prime;
+            </div>
+            <div class="col">
+              <strong>Max SNR: </strong>{{ source.max_snr|floatformat:2 }}
+            </div>
+            <div class="col">
+              <strong>Min SNR: </strong>{{ source.min_snr|floatformat:2 }}
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+            <strong>Nr Relations: </strong>{{ source.n_rel }}
+            </div>
+            <div class="col">
+            <strong>Nr Siblings: </strong>{{ source.n_sibl }}
+            </div>
+            <div class="col">
+            <strong>New Source: </strong>{{ source.new }}
+            </div>
+            <div class="col">
+            <strong>New High Sigma:</strong>{% if source.new %}{{ source.new_high_sigma|floatformat:2 }}{% else %}N/A{% endif %}
+            </div>
+          </div>
+          {{ datatables|json_script:"datatable-conf" }}
+          {% else %}
+          The details of a selected source will appear here.
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col mb-4">
+    <div class="card shadow mb-4 h-100">
+      <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">External Search Results (1 arcmin)</h6>
+      </div>
+      <div class="card-body small">
+        <div class="table-responsive">
+          {% if source %}
+          <table class="table table-sm table-bordered table-striped table-hover" id="externalResultsTable"
+            width="100%" cellspacing="0" data-server-side="false"
+            data-ajax="{% url 'vast_pipeline:api_utils-external-search' %}?coord={{ source.wavg_ra_hms }}{{ source.wavg_dec_dms }}&format=datatables&keep=otype_long,database">
+            <thead>
+              <tr>
+                <th data-data="object_name">ID</th>
+                <th data-data="separation_arcsec">Dist (arcsec)</th>
+                <th data-data="otype">Type</th>
+                <th data-data="ra_hms">RA (hms)</th>
+                <th data-data="dec_dms">Dec (dms)</th>
+              </tr>
+            </thead>
+          </table>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Starring source modal-->
+<div class="modal fade" id="starSource" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Add a comment for this source</h5>
+        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form action="{% url 'vast_pipeline:api_sources_favs-list' %}" method="post" id="commentStarForm">
+          {% csrf_token %}
+          <div class="form-group">
+            <textarea class="form-control" name="comment" placeholder="Insert comment here (optional)"
+              form="commentStarForm"></textarea>
+            <input type="text" name="source_id" value="{{ source.id }}" hidden="">
+            <input type="hidden" name="next" value="{{ request.path }}">
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+            <input class="btn btn-primary" type="submit" value="Add to Favourites">
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

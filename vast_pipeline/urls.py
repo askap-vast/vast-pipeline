@@ -43,6 +43,8 @@ urlpatterns = [
         name='measurement_detail'
     ),
     path('sources/query/', views.SourceQuery, name='source_query'),
+    path('sources/query/plot/', views.SourceEtaVPlot, name='source_etav_plot'),
+    path('sources/query/plot/update/<int:pk>/', views.SourceEtaVPlotUpdate, name='source_etav_plot_update'),
     path('sources/<int:pk>/', views.SourceDetail, name='source_detail'),
     path('sources/favs/', views.UserSourceFavsList, name='source_favs'),
     path(

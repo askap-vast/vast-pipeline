@@ -51,18 +51,30 @@ def calculate_measurement_pair_aggregate_metrics(
         The metric columns are named: `vs_abs_significant_max_{flux_type}` and
         `m_abs_significant_max_{flux_type}`.
     """
-    pair_agg_metrics = measurement_pairs_df.set_index("source").iloc[
-        measurement_pairs_df.query(f"abs(vs_{flux_type}) >= @min_vs")
-        .groupby("source")
-        .agg(m_abs_max_idx=(f"m_{flux_type}", lambda x: x.abs().idxmax()),)
-        .astype(np.int32)["m_abs_max_idx"]  # cast row indices to int and select them
-        .reset_index(drop=True)  # keep only the row indices
-    ][[f"vs_{flux_type}", f"m_{flux_type}"]]
+    check_df = measurement_pairs_df.query(f"abs(vs_{flux_type}) >= @min_vs")
+
+    # This check is performed due to a bug that was occuring after updating the
+    # pandas dependancy (1.4) when performing the tests. The bug was that the
+    # grouby and agg stage below was being performed on an empty series in the
+    # basic association test and causing a failure. Hence this only performs
+    # the groupby if the original query dataframe is not empty.
+    if check_df.empty:
+        pair_agg_metrics = pd.DataFrame(
+            columns=[f"vs_{flux_type}", f"m_{flux_type}", "source"]
+        )
+    else:
+        pair_agg_metrics = measurement_pairs_df.iloc[
+            check_df
+            .groupby("source")
+            .agg(m_abs_max_idx=(f"m_{flux_type}", lambda x: x.abs().idxmax()),)
+            .astype(np.int32)["m_abs_max_idx"]  # cast row indices to int and select them
+            .reset_index(drop=True)  # keep only the row indices
+        ][[f"vs_{flux_type}", f"m_{flux_type}", "source"]]
 
     pair_agg_metrics = pair_agg_metrics.abs().rename(columns={
         f"vs_{flux_type}": f"vs_abs_significant_max_{flux_type}",
         f"m_{flux_type}": f"m_abs_significant_max_{flux_type}",
-    })
+    }).set_index('source')
     return pair_agg_metrics
 
 
