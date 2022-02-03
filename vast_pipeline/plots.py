@@ -412,6 +412,13 @@ def plot_eta_v_bokeh(
         y_label = 'v_int'
         title = "Int. Flux"
 
+    # PLOTTING NOTE!
+    # Datashader does not play nice with setting the axis to log-log, in fact
+    # it just doesn't work as of writing.
+    # See https://github.com/holoviz/holoviews/issues/2195.
+    # So this is why the actual log10 values are plotted instead on a linear
+    # axis. This could be revisited if the probelm with datashader and
+    # holoviews is resolved.
     for i in [x_label, y_label]:
         df[f"{i}_log10"] = np.log10(df[i])
 

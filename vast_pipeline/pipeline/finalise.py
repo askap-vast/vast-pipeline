@@ -53,6 +53,11 @@ def calculate_measurement_pair_aggregate_metrics(
     """
     check_df = measurement_pairs_df.query(f"abs(vs_{flux_type}) >= @min_vs")
 
+    # This check is performed due to a bug that was occuring after updating the
+    # pandas dependancy (1.4) when performing the tests. The bug was that the
+    # grouby and agg stage below was being performed on an empty series in the
+    # basic association test and causing a failure. Hence this only performs
+    # the groupby if the original query dataframe is not empty.
     if check_df.empty:
         pair_agg_metrics = pd.DataFrame(
             columns=[f"vs_{flux_type}", f"m_{flux_type}", "source"]
