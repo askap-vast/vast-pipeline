@@ -3,8 +3,8 @@ name: test-suite
 on: [pull_request]
 
 env:
-  db_password: 'postgres'
-  db_port: '5432'
+  db_password: "postgres"
+  db_port: "5432"
 
 jobs:
   test:
@@ -12,58 +12,59 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python_version: ['3.7.12', '3.8.12', '3.9.10']
+        python_version: ["3.7.12", "3.8.12", "3.9.10"]
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Create dev database
-      uses: ./.github/actions/create-dev-database
-      with:
-        db_password: ${{ env.db_password }}
-        db_port: ${{ env.db_port }}
+      - name: Create dev database
+        uses: ./.github/actions/create-dev-database
+        with:
+          db_password: ${{ env.db_password }}
+          db_port: ${{ env.db_port }}
 
-    - name: Install dependencies
-      run: sudo apt-get install -y libpq-dev libgraphviz-dev
+      - name: Install dependencies
+        run: sudo apt-get install -y libpq-dev libgraphviz-dev
 
-    - uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python_version }}
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python_version }}
 
-    - uses: actions/setup-node@v2
-      with:
-        node-version: '12'
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "12"
 
-    - name: Set up frontend assets and install python dependencies
-      run: |
-        npm ci
-        npm start
-        pip install .
+      - name: Set up frontend assets and install python dependencies
+        run: |
+          npm ci
+          npm start
+          pip install wheel
+          pip install .
 
-    - name: Set DATABASE_URL (using ansible)
-      run: >
-        cp webinterface/.env.template webinterface/.env &&
-        ansible localhost
-        -m lineinfile
-        -a "
-        path=webinterface/.env
-        regex=^DATABASE_URL
-        line='DATABASE_URL=psql://vast:vastpsw@localhost:${{ env.db_port }}/vastdb'
-        "
+      - name: Set DATABASE_URL (using ansible)
+        run: >
+          cp webinterface/.env.template webinterface/.env &&
+          ansible localhost
+          -m lineinfile
+          -a "
+          path=webinterface/.env
+          regex=^DATABASE_URL
+          line='DATABASE_URL=psql://vast:vastpsw@localhost:${{ env.db_port }}/vastdb'
+          "
 
-    - name: Create database user and database name
-      run: >
-        python ./init-tools/init-db.py
-        localhost ${{ env.db_port }}
-        postgres ${{ env.db_password }}
-        vast vastpsw vastdb
+      - name: Create database user and database name
+        run: >
+          python ./init-tools/init-db.py
+          localhost ${{ env.db_port }}
+          postgres ${{ env.db_password }}
+          vast vastpsw vastdb
 
-    - name: Make relevant directories
-      run: mkdir pipeline-runs
+      - name: Make relevant directories
+        run: mkdir pipeline-runs
 
-    - name: Download regression test data
-      run: bash -e ./download.sh
-      working-directory: ./vast_pipeline/tests/regression-data
+      - name: Download regression test data
+        run: bash -e ./download.sh
+        working-directory: ./vast_pipeline/tests/regression-data
 
-    - name: Run tests
-      run: ./manage.py test
+      - name: Run tests
+        run: ./manage.py test
