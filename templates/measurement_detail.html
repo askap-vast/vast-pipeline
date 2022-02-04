@@ -4,6 +4,10 @@
 
 {% load unit_tags %}
 
+{% block title %}
+<title>VAST Pipeline: Measurement ID {{ measurement.id }}</title>
+{% endblock title %}
+
 {% block head %}
 
 <link rel="stylesheet" href="{% static 'vendor/js9/js9-allinone.css' %}" />

@@ -105,6 +105,7 @@ function js9Config(bc) {
     "wcs",
     "zoom"
   ]
+  js9Config.globalOpts.updateTitlebar = false
   js9Config.textColorOpts = { "info": "#000064" }
 
   let outConfig = 'var JS9Prefs = ' + JSON.stringify(js9Config)

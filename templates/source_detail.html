@@ -5,6 +5,10 @@
 
 {% load unit_tags %}
 
+{% block title %}
+<title>VAST Pipeline: Source ID {{ source.id }}</title>
+{% endblock title %}
+
 {% block head %}
 
 <link rel='stylesheet' href='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css' />

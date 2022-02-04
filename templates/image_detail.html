@@ -4,6 +4,10 @@
 {% load humanize %}
 {% load unit_tags %}
 
+{% block title %}
+<title>VAST Pipeline: Image ID {{ image.id }}</title>
+{% endblock title %}
+
 {% block head %}
 
 <link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
