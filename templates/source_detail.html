@@ -38,14 +38,7 @@
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-2 text-gray-800"><strong>Source:</strong> {{ source.name }}</h1>
     <div class="">
-      <span {% if not sourcefav %}data-toggle="modal" {% endif %} data-target="#starSource">
-        <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm" data-toggle="tooltip"
-          title="Add to favourites">
-          <span class="icon text-white-600">
-            <i class="fas fa-star" {% if sourcefav  %}style="color: #ffe271" {% endif %}></i>
-          </span>
-        </a>
-      </span>
+      {% include 'source_fav_button.html' %}
       <a href="http://simbad.u-strasbg.fr/simbad/sim-coo?CooEpoch=2000&Coord={{ source.aladin_ra }}d{{ source.aladin_dec }}d&Radius.unit=arcmin&CooEqui=2000&CooFrame=FK5&Radius=2'"
         class="d-none d-sm-inline-block btn btn-sm btn-info btn-icon-split shadow-sm" target="_blank"
         title="SIMBAD cone search with 2 arcmin radius.">
@@ -379,34 +372,7 @@
 
 {% block modal %}
 
-<!-- Starring source modal-->
-<div class="modal fade" id="starSource" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-  aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Add a comment for this source</h5>
-        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">×</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <form action="{% url 'vast_pipeline:api_sources_favs-list' %}" method="post" id="commentStarForm">
-          {% csrf_token %}
-          <div class="form-group">
-            <textarea class="form-control" name="comment" placeholder="Insert comment here (optional)"
-              form="commentStarForm"></textarea>
-            <input type="text" name="source_id" value="{{ source.id }}" hidden="">
-          </div>
-          <div class="modal-footer">
-            <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
-            <input class="btn btn-primary" type="submit" value="Add to Favourites">
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
+{% include 'source_fav_modal.html' %}
 
 {% endblock modal %}
 
@@ -459,6 +425,7 @@
 <script src="{% static 'js/aladin-script.min.js' %}"></script>
 
 <script src="{% static 'js/clipboard-copy.min.js' %}"></script>
+<script src="{% static 'js/source-fav.min.js' %}" apiSourceFavUrl="{% url 'vast_pipeline:api_sources_favs-list' %}" id="SourceFavScript"></script>
 
 <script type="text/javascript">
   // configure aladin
@@ -585,6 +552,5 @@
     let fluxType = $('input[name="fluxTypeRadio"]:checked').val();
     getLightcurvePlot(fluxType);
   });
-
 </script>
 {% endblock custom_page_scripts %}

@@ -26,9 +26,10 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.db.models import F, Count, QuerySet
 from django.http import (
-    FileResponse, Http404, HttpResponseRedirect, JsonResponse
+    FileResponse, Http404, HttpResponseRedirect, JsonResponse, HttpResponse
 )
 from django.shortcuts import render, redirect, get_object_or_404
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 
@@ -2368,6 +2369,8 @@ class SourceFavViewSet(ModelViewSet):
             data.pop('next')
         data.pop('csrfmiddlewaretoken')
         data['user_id'] = request.user.id
+
+        return_data = {}
         try:
             check = (
                 SourceFav.objects.filter(
@@ -2378,22 +2381,30 @@ class SourceFavViewSet(ModelViewSet):
             )
             if check:
                 messages.error(request, 'Source already added to favourites!')
+                success = False
             else:
                 fav = SourceFav(**data)
                 fav.save()
                 messages.success(request, 'Added to favourites successfully')
+                success = True
         except Exception as e:
             messages.error(
                 request,
                 f'Errors in adding source to favourites: \n{e}'
             )
+            success = False
 
-        next = request.POST.get('next', '/')
-        if 'query/plot' in next:
-            next = next.split('plot')[0] + 'plot/'
-        return HttpResponseRedirect(next)
+        return_data['success'] = success
+        return_data['messages'] = render_to_string(
+            'messages.html',
+            {},
+            request
+        )
 
-        # return HttpResponseRedirect(reverse('vast_pipeline:source_detail', args=[data['source_id']]))
+        return HttpResponse(
+            json.dumps(return_data, ensure_ascii=False),
+            content_type="application/json"
+        )
 
     def destroy(self, request, pk=None):
         try:
@@ -2551,9 +2562,9 @@ class UtilitiesSet(ViewSet):
 
         simbad_results = external_query.simbad(coord, radius)
         ned_results = external_query.ned(coord, radius)
-        tns_results = external_query.tns(coord, radius)
+        # tns_results = external_query.tns(coord, radius)
 
-        results = simbad_results + ned_results + tns_results
+        results = simbad_results + ned_results # + tns_results
         serializer = ExternalSearchSerializer(data=results, many=True)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)

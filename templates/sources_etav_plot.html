@@ -113,6 +113,7 @@
 <script src="{% static 'vendor/bokehjs/bokeh-widgets.min.js' %}"></script>
 
 <script src="{% static 'js/clipboard-copy.min.js' %}"></script>
+<script src="{% static 'js/source-fav.min.js' %}" apiSourceFavUrl="{% url 'vast_pipeline:api_sources_favs-list' %}" id="SourceFavScript"></script>
 
 <script type="text/javascript">
   function getEtaVPlot(eta_sigma = 3.0, v_sigma = 3.0, fluxType = "peak") {

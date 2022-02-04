@@ -1,0 +1,29 @@
+<!-- Starring source modal-->
+<div class="modal fade" id="starSource" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Add a comment for this source</h5>
+        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form action="" method="post" id="commentStarForm">
+          {% csrf_token %}
+          <div class="form-group">
+            <textarea class="form-control" name="comment" placeholder="Insert comment here (optional)"
+              form="commentStarForm"></textarea>
+            <input type="text" name="source_id" value="{{ source.id }}" hidden="">
+            <input type="hidden" name="next" value="{{ request.path }}">
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+            <input class="btn btn-primary" type="submit" value="Add to Favourites">
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
