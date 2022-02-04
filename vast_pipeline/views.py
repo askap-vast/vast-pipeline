@@ -2562,9 +2562,9 @@ class UtilitiesSet(ViewSet):
 
         simbad_results = external_query.simbad(coord, radius)
         ned_results = external_query.ned(coord, radius)
-        # tns_results = external_query.tns(coord, radius)
+        tns_results = external_query.tns(coord, radius)
 
-        results = simbad_results + ned_results # + tns_results
+        results = simbad_results + ned_results + tns_results
         serializer = ExternalSearchSerializer(data=results, many=True)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
