@@ -48,6 +48,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Added an error handler for the external source queries (e.g. SIMBAD) [#616](https://github.com/askap-vast/vast-pipeline/pull/616).
 - Stopped JS9 from changing the page titles [#597](https://github.com/askap-vast/vast-pipeline/pull/597).
 - Fixed regression issues with pandas 1.4 [#586](https://github.com/askap-vast/vast-pipeline/pull/586).
 - Fixed config being copied before run was confirmed to actually go ahead for existing runs [#595](https://github.com/askap-vast/vast-pipeline/pull/595).
@@ -69,6 +70,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#616](https://github.com/askap-vast/vast-pipeline/pull/616): fix: added error handling to external queries.
 - [#614](https://github.com/askap-vast/vast-pipeline/pull/614): feat: Refactored add to favourites button to avoid refresh.
 - [#597](https://github.com/askap-vast/vast-pipeline/pull/597): fix: Update detail page titles.
 - [#586](https://github.com/askap-vast/vast-pipeline/pull/586): feat, dep, doc: Add an eta-v analysis page for the source query.
