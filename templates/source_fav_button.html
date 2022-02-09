@@ -1,0 +1,8 @@
+<span {% if not sourcefav %}data-toggle="modal" {% endif %} data-target="#starSource">
+  <a class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm" data-toggle="tooltip"
+    title="Add to favourites" id="favStarButton">
+    <span class="icon text-white-600">
+      <i class="fas fa-star" {% if sourcefav  %}style="color: #ffe271" {% endif %}></i>
+    </span>
+  </a>
+</span>

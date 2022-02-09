@@ -54,7 +54,6 @@ Selecting another source will dynamically update these panels without having to 
 ![!Source light curve and information.](../img/analysis-page-source-display.png){: loading=lazy }
 
 The source information panel contains a link to go to the full [source detail page](sourcedetail.md) and the ability to [favourite a source](sourcetagsfavs.md) directly from this page.
-Note that as of the current version, adding a source to favourites will reset the analysis page.
 
 ## Displaying High Source Counts
 

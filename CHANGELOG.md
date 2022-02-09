@@ -31,6 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Refactored adding source to favourites button to use ajax to avoid page reload [#614](https://github.com/askap-vast/vast-pipeline/pull/614).
 - Bumped test python versions to 3.7.12, 3.8.12 and 3.9.10 [#586](https://github.com/askap-vast/vast-pipeline/pull/586).
 - Bumped various dependencies using a fresh poetry.lock file [#586](https://github.com/askap-vast/vast-pipeline/pull/586).
 - Bumped bokeh packages to 2.3.3 [#586](https://github.com/askap-vast/vast-pipeline/pull/586).
@@ -68,6 +69,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#614](https://github.com/askap-vast/vast-pipeline/pull/614): feat: Refactored add to favourites button to avoid refresh.
 - [#597](https://github.com/askap-vast/vast-pipeline/pull/597): fix: Update detail page titles.
 - [#586](https://github.com/askap-vast/vast-pipeline/pull/586): feat, dep, doc: Add an eta-v analysis page for the source query.
 - [#595](https://github.com/askap-vast/vast-pipeline/pull/595): fix: Add date and time stamp to log files.
