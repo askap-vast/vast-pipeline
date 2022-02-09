@@ -35,6 +35,7 @@ from django.utils.safestring import mark_safe
 
 from django_q.tasks import async_task
 
+import requests
 from rest_framework import status
 import rest_framework.decorators
 from rest_framework.request import Request
@@ -2466,6 +2467,21 @@ class UtilitiesSet(ViewSet):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [IsAuthenticated]
 
+    @staticmethod
+    def _external_search_error_handler(
+        external_query_func,
+        coord: SkyCoord,
+        radius: Angle,
+        service_name: str,
+        request: Request,
+    ) -> List[Dict[str, Any]]:
+        try:
+            results = external_query_func(coord, radius)
+        except requests.HTTPError:
+            messages.error(request, f"Unable to get {service_name} query results.")
+            results = []
+        return results
+
     @rest_framework.decorators.action(methods=['get'], detail=False)
     def sesame_search(self, request: Request) -> Response:
         """Query the Sesame name resolver service and return a coordinate.
@@ -2560,9 +2576,15 @@ class UtilitiesSet(ViewSet):
         except ValueError as e:
             raise serializers.ValidationError({"radius": str(e.args[0])})
 
-        simbad_results = external_query.simbad(coord, radius)
-        ned_results = external_query.ned(coord, radius)
-        tns_results = external_query.tns(coord, radius)
+        simbad_results = self._external_search_error_handler(
+            external_query.simbad, coord, radius, "SIMBAD", request
+        )
+        ned_results = self._external_search_error_handler(
+            external_query.ned, coord, radius, "NED", request
+        )
+        tns_results = self._external_search_error_handler(
+            external_query.tns, coord, radius, "TNS", request
+        )
 
         results = simbad_results + ned_results + tns_results
         serializer = ExternalSearchSerializer(data=results, many=True)
