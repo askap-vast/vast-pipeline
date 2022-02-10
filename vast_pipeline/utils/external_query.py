@@ -34,7 +34,12 @@ def simbad(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
         "otype(V)",
         "otypes",
     )
-    simbad_result_table = CustomSimbad.query_region(coord, radius=radius)
+    try:
+        simbad_result_table = CustomSimbad.query_region(coord, radius=radius)
+    except requests.HTTPError:
+        # try the Harvard mirror
+        CustomSimbad.SIMBAD_URL = "https://simbad.harvard.edu/simbad/sim-script"
+        simbad_result_table = CustomSimbad.query_region(coord, radius=radius)
     if simbad_result_table is None:
         simbad_results_dict_list = []
     else:
