@@ -113,7 +113,9 @@ def deg2sex(deg: float) -> Tuple[int, Tuple[float, float, float]]:
     return (sign, (degf, minsf, secs))
 
 
-def deg2dms(deg: float, dms_format: bool = False, precision: int = 2) -> str:
+def deg2dms(
+    deg: float, dms_format: bool = False, precision: int = 2, truncate: bool = False
+) -> str:
     """Convert angle in degrees into a DMS formatted string. e.g.
 
     Args:
@@ -123,6 +125,8 @@ def deg2dms(deg: float, dms_format: bool = False, precision: int = 2) -> str:
         precision (optional): Floating point precision of the arcseconds component.
             Can be 0 or a positive integer. Negative values will be interpreted as 0.
             Defaults to 2.
+        truncate (optional): Truncate values after the decimal point instead of rounding.
+            Defaults to False (rounding).
 
     Returns:
         `deg` formatted as a DMS string.
@@ -134,20 +138,38 @@ def deg2dms(deg: float, dms_format: bool = False, precision: int = 2) -> str:
         '+02d34m56.78s'
         >>> deg2dms(-12.582438888888889, precision=1)
         '-12:34:56.8'
+        >>> deg2dms(-12.582438888888889, precision=1, truncate=True)
+        '-12:34:56.7'
     """
 
-    sign, sex = deg2sex(deg)
+    sign, (degrees, minutes, seconds) = deg2sex(deg)
     signchar = "+" if sign == 1 else "-"
     precision = precision if precision >= 0 else 0
+    # if truncating, render the seconds with an extra 2 decimal places
+    # 2 dp is needed to avoid the formatter rounding e.g. 9.9 -> 10.0 when precision = 0
+    precision = precision + 2 if truncate else precision
     sec_width = 3 + precision if precision > 0 else 2
 
+    degrees_str = f'{signchar}{degrees:02d}'
+    minutes_str = f'{minutes:02d}'
+    seconds_str = f'{seconds:0{sec_width}.{precision}f}'
+    if truncate and precision == 2:
+        # seconds should be truncated to an integer
+        # remove trailing 2 digits and decimal point
+        seconds_str = seconds_str[:-3]
+    elif truncate:
+        # truncate the trailing 2 digits only
+        seconds_str = seconds_str[:-2]
+
     if dms_format:
-        return f'{signchar}{sex[0]:02d}d{sex[1]:02d}m{sex[2]:0{sec_width}.{precision}f}s'
+        return f"{degrees_str}d{minutes_str}m{seconds_str}s"
+    else:
+        return f"{degrees_str}:{minutes_str}:{seconds_str}"
 
-    return f'{signchar}{sex[0]:02d}:{sex[1]:02d}:{sex[2]:0{sec_width}.{precision}f}'
 
-
-def deg2hms(deg: float, hms_format: bool = False, precision: int = 2) -> str:
+def deg2hms(
+    deg: float, hms_format: bool = False, precision: int = 2, truncate: bool = False
+) -> str:
     """Convert angle in degrees into a HMS formatted string. e.g.
 
     Args:
@@ -157,6 +179,8 @@ def deg2hms(deg: float, hms_format: bool = False, precision: int = 2) -> str:
         precision (optional): Floating point precision of the seconds component.
             Can be 0 or a positive integer. Negative values will be interpreted as 0.
             Defaults to 2.
+        truncate (optional): Truncate values after the decimal point instead of rounding.
+            Defaults to False (rounding).
 
     Returns:
         `deg` formatted as an HMS string.
@@ -168,15 +192,16 @@ def deg2hms(deg: float, hms_format: bool = False, precision: int = 2) -> str:
         '12h34m56.78s'
         >>> deg2hms(188.73658333333333, precision=1)
         '12:34:56.8'
+        >>> deg2hms(188.73658333333333, precision=1, truncate=True)
+        '12:34:56.7'
     """
-    sign, sex = deg2sex(deg / 15.)
-    precision = precision if precision >= 0 else 0
-    sec_width = 3 + precision if precision > 0 else 2
-
-    if hms_format:
-        return f'{sex[0]:02d}h{sex[1]:02d}m{sex[2]:0{sec_width}.{precision}f}s'
-
-    return f'{sex[0]:02d}:{sex[1]:02d}:{sex[2]:0{sec_width}.{precision}f}'
+    # use the deg2dms formatter, replace d with h, and cut off the leading ± sign
+    return deg2dms(
+        deg / 15.,
+        dms_format=hms_format,
+        precision=precision,
+        truncate=truncate,
+    ).replace("d", "h")[1:]
 
 
 def eq_to_cart(ra: float, dec: float) -> Tuple[float, float, float]:
