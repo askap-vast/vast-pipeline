@@ -1,102 +1,280 @@
 from django.test import SimpleTestCase
 
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import Longitude, Latitude
 
 from vast_pipeline.utils.utils import deg2hms, deg2dms
 
 
 class ExternalQueryTest(SimpleTestCase):
     def setUp(self):
-        self.coord = SkyCoord(
-            ra="23:16:09.951", dec="-22:57:28.8905", unit="hourangle,deg"
-        )
+        self.precision_test_inputs = [
+            {
+                "input": {
+                    "class": Longitude,
+                    "value": "23:16:09.951",
+                    "unit": "hourangle",
+                },
+                "tests": [
+                    {
+                        "params": {"truncate": False, "precision": 2},
+                        "output": "23:16:09.95",
+                    },
+                    {
+                        "params": {"truncate": False, "precision": 1},
+                        "output": "23:16:10.0",
+                    },
+                    {
+                        "params": {"truncate": False, "precision": 0},
+                        "output": "23:16:10",
+                    },
+                    {
+                        "params": {"truncate": True, "precision": 2},
+                        "output": "23:16:09.95",
+                    },
+                    {
+                        "params": {"truncate": True, "precision": 1},
+                        "output": "23:16:09.9",
+                    },
+                    {
+                        "params": {"truncate": True, "precision": 0},
+                        "output": "23:16:09",
+                    },
+                ],
+            },
+            {
+                "input": {
+                    "class": Longitude,
+                    "value": "02:01:59.999",
+                    "unit": "hourangle",
+                },
+                "tests": [
+                    {
+                        "params": {"truncate": False, "precision": 2},
+                        "output": "02:02:00.00",
+                    },
+                    {
+                        "params": {"truncate": False, "precision": 1},
+                        "output": "02:02:00.0",
+                    },
+                    {
+                        "params": {"truncate": False, "precision": 0},
+                        "output": "02:02:00",
+                    },
+                    {
+                        "params": {"truncate": True, "precision": 2},
+                        "output": "02:01:59.99",
+                    },
+                    {
+                        "params": {"truncate": True, "precision": 1},
+                        "output": "02:01:59.9",
+                    },
+                    {
+                        "params": {"truncate": True, "precision": 0},
+                        "output": "02:01:59",
+                    },
+                ],
+            },
+            {
+                "input": {
+                    "class": Latitude,
+                    "value": "-22:57:28.8905",
+                    "unit": "deg",
+                },
+                "tests": [
+                    {
+                        "params": {"truncate": False, "precision": 3},
+                        "output": "-22:57:28.891",
+                    },
+                    {
+                        "params": {"truncate": False, "precision": 2},
+                        "output": "-22:57:28.89",
+                    },
+                    {
+                        "params": {"truncate": False, "precision": 1},
+                        "output": "-22:57:28.9",
+                    },
+                    {
+                        "params": {"truncate": False, "precision": 0},
+                        "output": "-22:57:29",
+                    },
+                    {
+                        "params": {"truncate": True, "precision": 3},
+                        "output": "-22:57:28.890",
+                    },
+                    {
+                        "params": {"truncate": True, "precision": 2},
+                        "output": "-22:57:28.89",
+                    },
+                    {
+                        "params": {"truncate": True, "precision": 1},
+                        "output": "-22:57:28.8",
+                    },
+                    {
+                        "params": {"truncate": True, "precision": 0},
+                        "output": "-22:57:28",
+                    },
+                ],
+            },
+            {
+                "input": {
+                    "class": Latitude,
+                    "value": "75:32:28.9994",
+                    "unit": "deg",
+                },
+                "tests": [
+                    {
+                        "params": {"truncate": False, "precision": 3},
+                        "output": "+75:32:28.999",
+                    },
+                    {
+                        "params": {"truncate": False, "precision": 2},
+                        "output": "+75:32:29.00",
+                    },
+                    {
+                        "params": {"truncate": False, "precision": 1},
+                        "output": "+75:32:29.0",
+                    },
+                    {
+                        "params": {"truncate": False, "precision": 0},
+                        "output": "+75:32:29",
+                    },
+                    {
+                        "params": {"truncate": True, "precision": 3},
+                        "output": "+75:32:28.999",
+                    },
+                    {
+                        "params": {"truncate": True, "precision": 2},
+                        "output": "+75:32:28.99",
+                    },
+                    {
+                        "params": {"truncate": True, "precision": 1},
+                        "output": "+75:32:28.9",
+                    },
+                    {
+                        "params": {"truncate": True, "precision": 0},
+                        "output": "+75:32:28",
+                    },
+                ],
+            },
+            {
+                "input": {
+                    "class": Latitude,
+                    "value": "75:32:28.5",
+                    "unit": "deg",
+                },
+                "tests": [
+                    {
+                        "params": {"truncate": False, "precision": 3},
+                        "output": "+75:32:28.500",
+                    },
+                    {
+                        "params": {"truncate": False, "precision": 2},
+                        "output": "+75:32:28.50",
+                    },
+                    {
+                        "params": {"truncate": False, "precision": 1},
+                        "output": "+75:32:28.5",
+                    },
+                    {
+                        "params": {"truncate": False, "precision": 0},
+                        "output": "+75:32:29",
+                    },
+                    {
+                        "params": {"truncate": True, "precision": 3},
+                        "output": "+75:32:28.500",
+                    },
+                    {
+                        "params": {"truncate": True, "precision": 2},
+                        "output": "+75:32:28.50",
+                    },
+                    {
+                        "params": {"truncate": True, "precision": 1},
+                        "output": "+75:32:28.5",
+                    },
+                    {
+                        "params": {"truncate": True, "precision": 0},
+                        "output": "+75:32:28",
+                    },
+                ],
+            },
+            {
+                "input": {
+                    "class": Latitude,
+                    "value": "75:32:28",
+                    "unit": "deg",
+                },
+                "tests": [
+                    {
+                        "params": {"truncate": False, "precision": 3},
+                        "output": "+75:32:28.000",
+                    },
+                    {
+                        "params": {"truncate": False, "precision": 2},
+                        "output": "+75:32:28.00",
+                    },
+                    {
+                        "params": {"truncate": False, "precision": 1},
+                        "output": "+75:32:28.0",
+                    },
+                    {
+                        "params": {"truncate": False, "precision": 0},
+                        "output": "+75:32:28",
+                    },
+                    {
+                        "params": {"truncate": True, "precision": 3},
+                        "output": "+75:32:28.000",
+                    },
+                    {
+                        "params": {"truncate": True, "precision": 2},
+                        "output": "+75:32:28.00",
+                    },
+                    {
+                        "params": {"truncate": True, "precision": 1},
+                        "output": "+75:32:28.0",
+                    },
+                    {
+                        "params": {"truncate": True, "precision": 0},
+                        "output": "+75:32:28",
+                    },
+                ],
+            },
+        ]
 
-    def test_ra_string_precision_rounding(self):
+    def test_string_precision(self):
         """Test various precision roundings."""
-        hms_string = deg2hms(
-            self.coord.ra.deg, hms_format=True, precision=2, truncate=False
-        )
-        self.assertEqual(hms_string, "23h16m09.95s")
+        for test_input in self.precision_test_inputs:
+            test_func = (
+                deg2hms if test_input["input"]["class"] == Longitude else deg2dms
+            )
+            for test in test_input["tests"]:
+                with self.subTest(
+                    input=test_input["input"]["value"],
+                    angle_class=test_input["input"]["class"],
+                    precision=test["params"]["precision"],
+                    truncate=test["params"]["truncate"],
+                ):
+                    test_input_obj = test_input["input"]["class"](
+                        test_input["input"]["value"], unit=test_input["input"]["unit"]
+                    )
+                    test_output = test_func(test_input_obj.deg, **test["params"])
+                    self.assertEqual(test_output, test["output"])
 
+    def test_ra_string_separators(self):
+        longitude = Longitude("23:16:09.951", unit="hourangle")
         hms_string = deg2hms(
-            self.coord.ra.deg, hms_format=True, precision=1, truncate=False
-        )
-        self.assertEqual(hms_string, "23h16m10.0s")
-
-        hms_string = deg2hms(
-            self.coord.ra.deg, hms_format=True, precision=0, truncate=False
-        )
-        self.assertEqual(hms_string, "23h16m10s")
-
-    def test_ra_string_precision_truncating(self):
-        """Test various precision truncatings."""
-        hms_string = deg2hms(
-            self.coord.ra.deg, hms_format=True, precision=2, truncate=True
-        )
-        self.assertEqual(hms_string, "23h16m09.95s")
-
-        hms_string = deg2hms(
-            self.coord.ra.deg, hms_format=True, precision=1, truncate=True
-        )
-        self.assertEqual(hms_string, "23h16m09.9s")
-
-        hms_string = deg2hms(
-            self.coord.ra.deg, hms_format=True, precision=0, truncate=True
-        )
-        self.assertEqual(hms_string, "23h16m09s")
-
-    def test_ra_string_colon_separator(self):
-        hms_string = deg2hms(
-            self.coord.ra.deg, hms_format=False, precision=2, truncate=False
+            longitude.deg, hms_format=False, precision=2, truncate=False
         )
         self.assertEqual(hms_string, "23:16:09.95")
-
-    def test_dec_string_precision_rounding(self):
-        """Test various precision roundings."""
-        dms_string = deg2dms(
-            self.coord.dec.deg, dms_format=True, precision=3, truncate=False
+        hms_string = deg2hms(
+            longitude.deg, hms_format=True, precision=2, truncate=False
         )
-        self.assertEqual(dms_string, "-22d57m28.891s")
+        self.assertEqual(hms_string, "23h16m09.95s")
 
+    def test_dec_string_separators(self):
+        latitude = Latitude("-22:57:28.8905", unit="deg")
         dms_string = deg2dms(
-            self.coord.dec.deg, dms_format=True, precision=2, truncate=False
+            latitude.deg, dms_format=False, precision=2, truncate=False
         )
+        self.assertEqual(dms_string, "-22:57:28.89")
+        dms_string = deg2dms(latitude.deg, dms_format=True, precision=2, truncate=False)
         self.assertEqual(dms_string, "-22d57m28.89s")
-
-        dms_string = deg2dms(
-            self.coord.dec.deg, dms_format=True, precision=1, truncate=False
-        )
-        self.assertEqual(dms_string, "-22d57m28.9s")
-
-        dms_string = deg2dms(
-            self.coord.dec.deg, dms_format=True, precision=0, truncate=False
-        )
-        self.assertEqual(dms_string, "-22d57m29s")
-
-    def test_dec_string_precision_truncating(self):
-        """Test various precision truncatings."""
-        dms_string = deg2dms(
-            self.coord.dec.deg, dms_format=True, precision=3, truncate=True
-        )
-        self.assertEqual(dms_string, "-22d57m28.890s")
-
-        dms_string = deg2dms(
-            self.coord.dec.deg, dms_format=True, precision=2, truncate=True
-        )
-        self.assertEqual(dms_string, "-22d57m28.89s")
-
-        dms_string = deg2dms(
-            self.coord.dec.deg, dms_format=True, precision=1, truncate=True
-        )
-        self.assertEqual(dms_string, "-22d57m28.8s")
-
-        dms_string = deg2dms(
-            self.coord.dec.deg, dms_format=True, precision=0, truncate=True
-        )
-        self.assertEqual(dms_string, "-22d57m28s")
-
-    def test_dec_string_colon_separator(self):
-        dms_string = deg2dms(
-            self.coord.dec.deg, dms_format=False, precision=3, truncate=False
-        )
-        self.assertEqual(dms_string, "-22:57:28.891")

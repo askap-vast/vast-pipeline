@@ -10,7 +10,7 @@ import math as m
 from typing import Any, Dict, Tuple
 
 from astropy import units as u
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, Longitude, Latitude
 import numpy as np
 import pandas as pd
 
@@ -18,7 +18,7 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
-class StopWatch():
+class StopWatch:
     """
     A simple stopwatch to simplify timing code.
     """
@@ -60,7 +60,7 @@ class StopWatch():
         return diff
 
 
-def check_read_write_perm(path: str, perm: str='W') -> None:
+def check_read_write_perm(path: str, perm: str = "W") -> None:
     """
     Assess the file permission on a path.
 
@@ -74,49 +74,25 @@ def check_read_write_perm(path: str, perm: str='W') -> None:
     Raises:
         IOError: The permission is not valid on the checked directory.
     """
-    assert perm in ('R', 'W', 'X'), 'permission not supported'
+    assert perm in ("R", "W", "X"), "permission not supported"
 
-    perm_map = {'R': os.R_OK, 'W': os.W_OK, 'X': os.X_OK}
+    perm_map = {"R": os.R_OK, "W": os.W_OK, "X": os.X_OK}
     if not os.access(path, perm_map[perm]):
-        msg = f'permission not valid on folder: {path}'
+        msg = f"permission not valid on folder: {path}"
         logger.error(msg)
         raise IOError(msg)
 
     pass
 
 
-def deg2sex(deg: float) -> Tuple[int, Tuple[float, float, float]]:
-    """
-    Converts an angle in degrees to a tuple containing its sexagesimal components.
-
-    Args:
-        deg: The angle to convert in degrees.
-
-    Returns:
-        A nested tuple in the form (sign, (degrees, minutes, seconds)), where sign is
-        either -1 or 1.
-
-    Example:
-        >>> deg2sex(12.582438888888889)
-        (12, 34, 56.78000000000182)
-        >>> deg2sex(-12.582438888888889)
-        (-12, 34, 56.78000000000182)
-    """
-
-    sign = -1 if deg < 0 else 1
-    adeg = abs(deg)
-    degf = m.floor(adeg)
-    mins = (adeg - degf) * 60.
-    minsf = int(m.floor(mins))
-    secs = (mins - minsf) * 60.
-
-    return (sign, (degf, minsf, secs))
-
-
 def deg2dms(
-    deg: float, dms_format: bool = False, precision: int = 2, truncate: bool = False
+    deg: float,
+    dms_format: bool = False,
+    precision: int = 2,
+    truncate: bool = False,
+    latitude: bool = True,
 ) -> str:
-    """Convert angle in degrees into a DMS formatted string. e.g.
+    """Convert angle in degrees into a DMS formatted string.
 
     Args:
         deg: The angle to convert in degrees.
@@ -127,6 +103,9 @@ def deg2dms(
             Defaults to 2.
         truncate (optional): Truncate values after the decimal point instead of rounding.
             Defaults to False (rounding).
+        latitude (optional): The input `deg` value should be intrepreted as a latitude.
+            Otherwise, it will be interpreted as a longitude.
+            Defaults to True (latitude).
 
     Returns:
         `deg` formatted as a DMS string.
@@ -141,36 +120,50 @@ def deg2dms(
         >>> deg2dms(-12.582438888888889, precision=1, truncate=True)
         '-12:34:56.7'
     """
-
-    sign, (degrees, minutes, seconds) = deg2sex(deg)
-    signchar = "+" if sign == 1 else "-"
+    AngleClass = Latitude if latitude else Longitude
+    angle = AngleClass(deg, unit="deg")
     precision = precision if precision >= 0 else 0
-    # if truncating, render the seconds with an extra 2 decimal places
-    # 2 dp is needed to avoid the formatter rounding e.g. 9.9 -> 10.0 when precision = 0
-    precision = precision + 2 if truncate else precision
-    sec_width = 3 + precision if precision > 0 else 2
 
-    degrees_str = f'{signchar}{degrees:02d}'
-    minutes_str = f'{minutes:02d}'
-    seconds_str = f'{seconds:0{sec_width}.{precision}f}'
-    if truncate and precision == 2:
-        # seconds should be truncated to an integer
-        # remove trailing 2 digits and decimal point
-        seconds_str = seconds_str[:-3]
-    elif truncate:
-        # truncate the trailing 2 digits only
-        seconds_str = seconds_str[:-2]
+    output_str: str = angle.to_string(
+        unit="deg",
+        sep="fromunit" if dms_format else ":",
+        precision=precision if not truncate else None,
+        alwayssign=True,
+        pad=True,
+    )
+    if truncate:
+        # find the decimal point char position and the number of decimal places in the
+        # rendered input coordinate (in DMS format, not decimal deg)
+        dp_pos = output_str.find(".")
+        n_dp = len(output_str[dp_pos + 1 :]) if dp_pos >= 0 else 0
 
-    if dms_format:
-        return f"{degrees_str}d{minutes_str}m{seconds_str}s"
-    else:
-        return f"{degrees_str}:{minutes_str}:{seconds_str}"
+        # if the input coordinate precision is less than the requsted output precision,
+        # pad the end with zeroes
+        if n_dp < precision:
+            seconds_str = ""
+            # account for rendered input coord having precision = 0
+            if dp_pos < 0:
+                seconds_str += "."
+            seconds_str += "0" * (precision - n_dp)
+            output_str += seconds_str
+        # otherwise, cut off the excess decimal places
+        elif n_dp > precision:
+            if precision > 0:
+                # account for the decimal point char
+                precision += 1
+            output_str = output_str[: dp_pos + precision]
+        # in the n_dp == precision case, do nothing
+    return output_str
 
 
 def deg2hms(
-    deg: float, hms_format: bool = False, precision: int = 2, truncate: bool = False
+    deg: float,
+    hms_format: bool = False,
+    precision: int = 2,
+    truncate: bool = False,
+    longitude: bool = True,
 ) -> str:
-    """Convert angle in degrees into a HMS formatted string. e.g.
+    """Convert angle in degrees into a HMS formatted string.
 
     Args:
         deg: The angle to convert in degrees.
@@ -181,6 +174,9 @@ def deg2hms(
             Defaults to 2.
         truncate (optional): Truncate values after the decimal point instead of rounding.
             Defaults to False (rounding).
+        longitude (optional): The input `deg` value should be intrepreted as a longitude.
+            Otherwise, it will be interpreted as a latitude.
+            Defaults to True (longitude).
 
     Returns:
         `deg` formatted as an HMS string.
@@ -197,10 +193,11 @@ def deg2hms(
     """
     # use the deg2dms formatter, replace d with h, and cut off the leading ± sign
     return deg2dms(
-        deg / 15.,
+        deg / 15.0,
         dms_format=hms_format,
         precision=precision,
         truncate=truncate,
+        latitude=not longitude,
     ).replace("d", "h")[1:]
 
 
@@ -219,9 +216,9 @@ def eq_to_cart(ra: float, dec: float) -> Tuple[float, float, float]:
     # TODO: This part of the code can probably be removed along with the
     # storage of these coodinates on the image.
     return (
-        m.cos(m.radians(dec)) * m.cos(m.radians(ra)),# Cartesian x
-        m.cos(m.radians(dec)) * m.sin(m.radians(ra)),# Cartesian y
-        m.sin(m.radians(dec))# Cartesian z
+        m.cos(m.radians(dec)) * m.cos(m.radians(ra)),  # Cartesian x
+        m.cos(m.radians(dec)) * m.sin(m.radians(ra)),  # Cartesian y
+        m.sin(m.radians(dec)),  # Cartesian z
     )
 
 
@@ -236,7 +233,7 @@ def equ2gal(ra: float, dec: float) -> Tuple[float, float]:
     Returns:
         Tuple (float, float): Galactic longitude and latitude in degrees.
     """
-    c = SkyCoord(np.float(ra), np.float(dec), unit=(u.deg, u.deg), frame='icrs')
+    c = SkyCoord(np.float(ra), np.float(dec), unit=(u.deg, u.deg), frame="icrs")
     l = c.galactic.l.deg
     b = c.galactic.b.deg
 
@@ -254,7 +251,7 @@ def gal2equ(l: float, b: float) -> Tuple[float, float]:
     Returns:
         Tuple (float, float): Right ascension and declination in units of degrees.
     """
-    c = SkyCoord(l=np.float(l) * u.deg, b=np.float(b) * u.deg, frame='galactic')
+    c = SkyCoord(l=np.float(l) * u.deg, b=np.float(b) * u.deg, frame="galactic")
     ra = c.icrs.ra.deg
     dec = c.icrs.dec.deg
 
@@ -310,8 +307,8 @@ def optimize_floats(df: pd.DataFrame) -> pd.DataFrame:
         The input dataframe with the `float64` type
         columns downcasted.
     """
-    floats = df.select_dtypes(include=['float64']).columns.tolist()
-    df[floats] = df[floats].apply(pd.to_numeric, downcast='float')
+    floats = df.select_dtypes(include=["float64"]).columns.tolist()
+    df[floats] = df[floats].apply(pd.to_numeric, downcast="float")
 
     return df
 
@@ -331,13 +328,15 @@ def optimize_ints(df: pd.DataFrame) -> pd.DataFrame:
         The input dataframe with the `int64` type
         columns downcasted.
     """
-    ints = df.select_dtypes(include=['int64']).columns.tolist()
-    df[ints] = df[ints].apply(pd.to_numeric, downcast='integer')
+    ints = df.select_dtypes(include=["int64"]).columns.tolist()
+    df[ints] = df[ints].apply(pd.to_numeric, downcast="integer")
 
     return df
 
 
-def dict_merge(dct: Dict[Any, Any], merge_dct: Dict[Any, Any], add_keys=True) -> Dict[Any, Any]:
+def dict_merge(
+    dct: Dict[Any, Any], merge_dct: Dict[Any, Any], add_keys=True
+) -> Dict[Any, Any]:
     """Recursive dict merge. Inspired by dict.update(), instead of
     updating only top-level keys, dict_merge recurses down into dicts nested
     to an arbitrary depth, updating keys. The `merge_dct` is merged into
@@ -375,5 +374,5 @@ def dict_merge(dct: Dict[Any, Any], merge_dct: Dict[Any, Any], add_keys=True) ->
     return dct
 
 
-def timeStamped(fname, fmt='%Y-%m-%d-%H-%M-%S_{fname}'):
+def timeStamped(fname, fmt="%Y-%m-%d-%H-%M-%S_{fname}"):
     return datetime.now().strftime(fmt).format(fname=fname)
