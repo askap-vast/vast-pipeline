@@ -31,6 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Dependancies updated using npm audit fix (non-breaking) [#620](https://github.com/askap-vast/vast-pipeline/pull/620).
 - Refactored adding source to favourites button to use ajax to avoid page reload [#614](https://github.com/askap-vast/vast-pipeline/pull/614).
 - Bumped test python versions to 3.7.12, 3.8.12 and 3.9.10 [#586](https://github.com/askap-vast/vast-pipeline/pull/586).
 - Bumped various dependencies using a fresh poetry.lock file [#586](https://github.com/askap-vast/vast-pipeline/pull/586).
@@ -70,6 +71,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#620](https://github.com/askap-vast/vast-pipeline/pull/620): dep: Non-breaking npm audit fix update.
 - [#616](https://github.com/askap-vast/vast-pipeline/pull/616): fix: added error handling to external queries.
 - [#614](https://github.com/askap-vast/vast-pipeline/pull/614): feat: Refactored add to favourites button to avoid refresh.
 - [#597](https://github.com/askap-vast/vast-pipeline/pull/597): fix: Update detail page titles.
