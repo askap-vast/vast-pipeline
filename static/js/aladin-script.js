@@ -81,6 +81,42 @@ function configureAladin(aladin, aladinConf) {
     var vast_epoch_12_v = aladin.createImageSurvey(
         'VAST Pilot 12 (Stokes V)', 'VAST Pilot 12 (Stokes V)', 'https://www.atnf.csiro.au/people/Emil.Lenc/HiPS/VAST12_V4', 'equatorial', 6, {imgFormat: 'png'}
     );
+    var vast_epoch_13 = aladin.createImageSurvey(
+        'VAST Pilot 13', 'VAST Pilot 13', 'https://www.atnf.csiro.au/people/Emil.Lenc/HiPS/VAST13_I4', 'equatorial', 6, {imgFormat: 'png'}
+    );
+    var vast_epoch_13_v = aladin.createImageSurvey(
+        'VAST Pilot 13 (Stokes V)', 'VAST Pilot 13 (Stokes V)', 'https://www.atnf.csiro.au/people/Emil.Lenc/HiPS/VAST13_V4', 'equatorial', 6, {imgFormat: 'png'}
+    );
+    var vast_epoch_17 = aladin.createImageSurvey(
+        'VAST Pilot 17', 'VAST Pilot 17', 'https://www.atnf.csiro.au/people/Emil.Lenc/HiPS/VAST17_I4', 'equatorial', 6, {imgFormat: 'png'}
+    );
+    var vast_epoch_17_v = aladin.createImageSurvey(
+        'VAST Pilot 17 (Stokes V)', 'VAST Pilot 17 (Stokes V)', 'https://www.atnf.csiro.au/people/Emil.Lenc/HiPS/VAST17_V4', 'equatorial', 6, {imgFormat: 'png'}
+    );
+    var vast_epoch_18 = aladin.createImageSurvey(
+        'VAST Pilot 18', 'VAST Pilot 18', 'https://www.atnf.csiro.au/people/Emil.Lenc/HiPS/VAST18_I4', 'equatorial', 6, {imgFormat: 'png'}
+    );
+    var vast_epoch_18_v = aladin.createImageSurvey(
+        'VAST Pilot 18 (Stokes V)', 'VAST Pilot 18 (Stokes V)', 'https://www.atnf.csiro.au/people/Emil.Lenc/HiPS/VAST18_V4', 'equatorial', 6, {imgFormat: 'png'}
+    );
+    var vast_epoch_19 = aladin.createImageSurvey(
+        'VAST Pilot 19', 'VAST Pilot 19', 'https://www.atnf.csiro.au/people/Emil.Lenc/HiPS/VAST19_I4', 'equatorial', 6, {imgFormat: 'png'}
+    );
+    var vast_epoch_19_v = aladin.createImageSurvey(
+        'VAST Pilot 19 (Stokes V)', 'VAST Pilot 19 (Stokes V)', 'https://www.atnf.csiro.au/people/Emil.Lenc/HiPS/VAST19_V4', 'equatorial', 6, {imgFormat: 'png'}
+    );
+    var vast_epoch_20 = aladin.createImageSurvey(
+        'VAST Pilot 20', 'VAST Pilot 20', 'https://www.atnf.csiro.au/people/Emil.Lenc/HiPS/VAST20_I4', 'equatorial', 6, {imgFormat: 'png'}
+    );
+    var vast_epoch_20_v = aladin.createImageSurvey(
+        'VAST Pilot 20 (Stokes V)', 'VAST Pilot 20 (Stokes V)', 'https://www.atnf.csiro.au/people/Emil.Lenc/HiPS/VAST20_V4', 'equatorial', 6, {imgFormat: 'png'}
+    );
+    var vast_epoch_21 = aladin.createImageSurvey(
+        'VAST Pilot 21', 'VAST Pilot 21', 'https://www.atnf.csiro.au/people/Emil.Lenc/HiPS/VAST21_I4', 'equatorial', 6, {imgFormat: 'png'}
+    );
+    var vast_epoch_21_v = aladin.createImageSurvey(
+        'VAST Pilot 21 (Stokes V)', 'VAST Pilot 21 (Stokes V)', 'https://www.atnf.csiro.au/people/Emil.Lenc/HiPS/VAST21_V4', 'equatorial', 6, {imgFormat: 'png'}
+    );
     let survey = racs;
     aladin.setImageSurvey(survey);
     aladin.getBaseImageLayer().getColorMap().reverse();
