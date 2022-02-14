@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added the 0-based index of each measurement to the image cutout card headers [#625](https://github.com/askap-vast/vast-pipeline/pull/625).
+- Added Bokeh hover tooltip to measurement pair graph to display pair metrics [#625](https://github.com/askap-vast/vast-pipeline/pull/625).
 - Added eta-V plot analysis page along with documentation [#586](https://github.com/askap-vast/vast-pipeline/pull/586).
 - Added thumbnails to light curve tooltips [#586](https://github.com/askap-vast/vast-pipeline/pull/586).
 - Added logfile dropdown selection to run detail page [#595](https://github.com/askap-vast/vast-pipeline/pull/595).
@@ -71,6 +73,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#625](https://github.com/askap-vast/vast-pipeline/pull/625): feat: Pair metrics hover tooltip.
 - [#623](https://github.com/askap-vast/vast-pipeline/pull/623): fix: fixed NED links.
 - [#616](https://github.com/askap-vast/vast-pipeline/pull/616): fix: added error handling to external queries.
 - [#614](https://github.com/askap-vast/vast-pipeline/pull/614): feat: Refactored add to favourites button to avoid refresh.
