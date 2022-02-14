@@ -231,7 +231,10 @@ def plot_lightcurve(
             lightcurve_data.selected.indices = lightcurve_indices;
         """
         hover_tool_edges = HoverTool(
-            tooltips=None,
+            tooltips=[
+                (f"Vs {metric_suffix}", f"@vs_{metric_suffix}"),
+                (f"m {metric_suffix}", f"@m_{metric_suffix}"),
+            ],
             renderers=[edge_renderer],
             callback=CustomJS(
                 args={
