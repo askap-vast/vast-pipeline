@@ -56,9 +56,11 @@ def source_models_generator(
         An iterable generator object containing the yielded Source objects.
     """
     for i, row in src_df.iterrows():
+        # generate an IAU compliant source name, see
+        # https://cdsweb.u-strasbg.fr/Dic/iau-spec.html
         name = (
-            f"J{deg2hms(row['wavg_ra'], precision=1)}"
-            f"{deg2dms(row['wavg_dec'], precision=0)}"
+            f"J{deg2hms(row['wavg_ra'], precision=1, truncate=True)}"
+            f"{deg2dms(row['wavg_dec'], precision=0, truncate=True)}"
         ).replace(":", "")
         src = Source()
         src.run_id = pipeline_run.id

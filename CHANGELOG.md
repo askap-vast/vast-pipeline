@@ -52,6 +52,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed source names to be IAU compliant [#618](https://github.com/askap-vast/vast-pipeline/pull/618).
 - Fixed broken NED links for coordinates with many decimal places [#623](https://github.com/askap-vast/vast-pipeline/pull/623).
 - Added an error handler for the external source queries (e.g. SIMBAD) [#616](https://github.com/askap-vast/vast-pipeline/pull/616).
 - Stopped JS9 from changing the page titles [#597](https://github.com/askap-vast/vast-pipeline/pull/597).
@@ -75,6 +76,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#618](https://github.com/askap-vast/vast-pipeline/pull/618): fix: Produce IAU compliant source names.
 - [#625](https://github.com/askap-vast/vast-pipeline/pull/625): feat: Pair metrics hover tooltip.
 - [#620](https://github.com/askap-vast/vast-pipeline/pull/620): dep: Non-breaking npm audit fix update.
 - [#622](https://github.com/askap-vast/vast-pipeline/pull/622): feat: Updated Aladin VAST surveys.
