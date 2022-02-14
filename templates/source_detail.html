@@ -285,6 +285,7 @@
           {% for measurement in datatables.0.dataQuery %}
           <div class="card">
             <div class="card-header">
+              <span class="badge badge-pill badge-primary float-right">{{ forloop.counter0 }}</span>
               <p class="mb-0"><a href="{% url 'vast_pipeline:image_detail' measurement.image_id %}"
                   target="_blank">{{ measurement.image_name }}</a></p>
               <p class="mb-0"><a href="{% url 'vast_pipeline:measurement_detail' measurement.id %}"
