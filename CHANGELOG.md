@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added the 0-based index of each measurement to the image cutout card headers [#625](https://github.com/askap-vast/vast-pipeline/pull/625).
+- Added Bokeh hover tooltip to measurement pair graph to display pair metrics [#625](https://github.com/askap-vast/vast-pipeline/pull/625).
+- Added new VAST surveys (13-21) to the Aladin Lite panel [#622](https://github.com/askap-vast/vast-pipeline/pull/622).
 - Added eta-V plot analysis page along with documentation [#586](https://github.com/askap-vast/vast-pipeline/pull/586).
 - Added thumbnails to light curve tooltips [#586](https://github.com/askap-vast/vast-pipeline/pull/586).
 - Added logfile dropdown selection to run detail page [#595](https://github.com/askap-vast/vast-pipeline/pull/595).
@@ -31,6 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Dependancies updated using npm audit fix (non-breaking) [#620](https://github.com/askap-vast/vast-pipeline/pull/620).
 - Refactored adding source to favourites button to use ajax to avoid page reload [#614](https://github.com/askap-vast/vast-pipeline/pull/614).
 - Bumped test python versions to 3.7.12, 3.8.12 and 3.9.10 [#586](https://github.com/askap-vast/vast-pipeline/pull/586).
 - Bumped various dependencies using a fresh poetry.lock file [#586](https://github.com/askap-vast/vast-pipeline/pull/586).
@@ -49,6 +53,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### Fixed
 
 - Fixed source names to be IAU compliant [#618](https://github.com/askap-vast/vast-pipeline/pull/618).
+- Fixed broken NED links for coordinates with many decimal places [#623](https://github.com/askap-vast/vast-pipeline/pull/623).
 - Added an error handler for the external source queries (e.g. SIMBAD) [#616](https://github.com/askap-vast/vast-pipeline/pull/616).
 - Stopped JS9 from changing the page titles [#597](https://github.com/askap-vast/vast-pipeline/pull/597).
 - Fixed regression issues with pandas 1.4 [#586](https://github.com/askap-vast/vast-pipeline/pull/586).
@@ -72,6 +77,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### List of PRs
 
 - [#618](https://github.com/askap-vast/vast-pipeline/pull/618): fix: Produce IAU compliant source names.
+- [#625](https://github.com/askap-vast/vast-pipeline/pull/625): feat: Pair metrics hover tooltip.
+- [#620](https://github.com/askap-vast/vast-pipeline/pull/620): dep: Non-breaking npm audit fix update.
+- [#622](https://github.com/askap-vast/vast-pipeline/pull/622): feat: Updated Aladin VAST surveys.
+- [#623](https://github.com/askap-vast/vast-pipeline/pull/623): fix: fixed NED links.
 - [#616](https://github.com/askap-vast/vast-pipeline/pull/616): fix: added error handling to external queries.
 - [#614](https://github.com/askap-vast/vast-pipeline/pull/614): feat: Refactored add to favourites button to avoid refresh.
 - [#597](https://github.com/askap-vast/vast-pipeline/pull/597): fix: Update detail page titles.

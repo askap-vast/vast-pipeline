@@ -42,8 +42,8 @@ It also contains a thumbnail image preview of the respective measurement.
 
 ## Two-epoch Node Graph
 
-The node graph is a visual representation of what two-epoch pairings have significant variability metric values. 
-If an epoch pairing is significant then they are joined by a line on the graph. Hovering over the line will highlight the epoch pairing on the light curve plot.
+The node graph is a visual representation of what two-epoch pairings have significant variability metric values.
+If an epoch pairing is significant then they are joined by a line on the graph. Hovering over the line will display the pair metrics for the selected flux type (peak or integrated) and highlight the epoch pairing on the light curve plot.
 
 ## External Search Results Table
 
