@@ -17,11 +17,11 @@ These buttons do the following:
 
 ## Details
 
-A text representation of details of the measurement.
+A text representation of details of the source.
 
-## User Comments & Tags
+## First Detection Postage Stamp
 
-Users are able to read and post comments on a measurement using this form, in addition to adding and removing tags, see [Source Tags and Favourites](sourcetagsfavs.md).
+The JS9 viewer is used to show the postage stamp FITS image (cutout) of the first source-finder detection for this source. Cutouts for each measurement are shown further down the page.
 
 ## Aladin Lite Viewer
 
@@ -30,11 +30,13 @@ Users are able to read and post comments on a measurement using this form, in ad
 The central panel contains an Aladin Lite viewer, which by default displays the HIPS image from the [Rapid ASKAP Continuum Survey](https://research.csiro.au/racs/){ target=_blank }, centred on the location of the source.
 Other surveys are available such as all epochs of the VAST Pilot Survey (including Stokes V) and other wavelength surveys such as 2MASS.
 
+## Flux & Variability Details
+
+Aggregate flux density statistics and variability metrics for this source, separated by flux type (peak or integrated).
+
 ## Light Curve
 
 The light curve of the source is shown. The peak or integrated flux can be selected by using the radio selection buttons.
-
-![!Source detail page: light curve, node graph and external search results.](../img/source-detail2.png){: loading=lazy }
 
 ![!Source detail page: light curve hover panel.](../img/light-curve-hover.png){: loading=lazy align=right }
 
@@ -48,14 +50,19 @@ If an epoch pairing is significant then they are joined by a line on the graph. 
 
 ## External Search Results Table
 
-This table shows the result of a query to the SIMBAD, NED, and TNS services for astronomical sources within 1 arcmin of the source location. 
-Along with the name and coordinate of the matches, the on-sky separation between the source is shown along with the source type.
+This table shows the result of a query to the SIMBAD, NED, and TNS services for astronomical sources within 1 arcmin of the source location. Along with the name and coordinate of the matches, the on-sky separation between the source is shown along with the source type.
+
+![!Source detail page: external search results, user assigned tags and comments.](../img/source-detail2.png){: loading=lazy }
+
+## User Comments & Tags
+
+Users are able to read and post comments on a source using this form, in addition to adding and removing tags, see [Source Tags and Favourites](sourcetagsfavs.md).
 
 ## JS9 Viewer Postage Stamps
 
 [JS9 website](https://js9.si.edu){ target=_blank }.
 
-The JS9 viewer is used to show the postage stamp FITS images of the measurements that are associated with the source, loaded from their respective image FITS files.
+More JS9 viewers are used to show the postage stamp FITS images of the measurements that are associated with the source, loaded from their respective image FITS files.
 
 !!! note
     If the image data is removed from its location when the pipeline run was processed the JS9 viewer will no longer work.
