@@ -55,6 +55,14 @@
         </span>
         <span class="text">NED</span>
       </a>
+      <a href="https://mars.lco.global/?sort_value=jd&sort_order=desc&cone={{ source.aladin_ra|floatformat:6 }}%2C{{ source.aladin_dec|floatformat:6 }}%2C0.00278"
+        class="d-none d-sm-inline-block btn btn-sm btn-info btn-icon-split shadow-sm" target="_blank"
+        title="ZTF cone search with 10 arcsec radius.">
+        <span class="icon text-white-600">
+          <i class="fas fa-info-circle fa-sm"></i>
+        </span>
+        <span class="text">ZTF</span>
+      </a>
       {% if source_previous_id %}
       <a href="{% url 'vast_pipeline:source_detail' source_previous_id %}" class="d-none d-sm-inline-block btn btn-sm btn-light btn-icon-split shadow-sm">
         <span class="icon text-gray-600">

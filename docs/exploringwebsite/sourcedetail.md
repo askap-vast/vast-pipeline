@@ -4,13 +4,14 @@ This page presents all the information about the selected source, including a li
 
 ![!Source detail page.](../img/source-detail1.png){: loading=lazy }
 
-## Star, SIMBAD, NED, Previous & Next Buttons
+## Star, SIMBAD, NED, ZTF, Previous & Next Buttons
 
 These buttons do the following:
 
 * **Star**: Adds the source to the user's favourites, see [Source Tags and Favourites](sourcetagsfavs.md).
 * **SIMBAD**: Performs a cone search on SIMBAD with a radius of 10 arcmin centered on the source location.
 * **NED**: Performs a cone search on NED with a radius of 10 arcmin centered on the source location.
+* **ZTF**: Performs a cone search for optical transient alerts from the Zwicky Transient Facility (ZTF) with a radius of 10 arcsec centered on the source location.
 * **Previous**: Navigates to the previous source that was returned in the source query.
 * **Next**: Navigates to the next source that was returned in the source query
 
