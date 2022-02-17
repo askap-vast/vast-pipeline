@@ -48,3 +48,10 @@
     <script src="{{ base_url }}/js/lightgallery.min.js"></script>
     <script src="{{ base_url }}/js/lg-zoom.js"></script>
 {% endblock libs %}
+
+{% block outdated %}
+  You're not viewing the latest version.
+  <a href="{{ '../' ~ base_url }}">
+    <strong>Click here to go to latest.</strong>
+  </a>
+{% endblock %}
