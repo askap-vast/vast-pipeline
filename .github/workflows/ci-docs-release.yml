@@ -1,15 +1,14 @@
-name: ci docs
+name: ci docs release
 
 # a merged PR will trigger a push on master so merging to master is
 # included in the event below
 on:
-  push:
-    branches:
-      - master
+  release:
+    types: [published]
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.head.repo.fork == false
     steps:
       - uses: actions/checkout@v2
         with:
@@ -18,6 +17,10 @@ jobs:
         with:
           python-version: 3.x
       - uses: Gr1N/setup-poetry@v4
+      - name: Set release notes tag
+        run: |
+          export RELEASE_TAG_VERSION=${{ github.event.release.tag_name }}
+          echo "RELEASE_TAG_VERSION=${RELEASE_TAG_VERSION:1}" >> $GITHUB_ENV
       - name: Install system dependencies
         run: sudo apt-get update && sudo apt-get install -y build-essential libpq-dev libgraphviz-dev
       - name: Cache Python dependencies
@@ -28,4 +31,4 @@ jobs:
       - name: Install python dependencies
         run: poetry install
       - name: Build and deploy docs
-        run: poetry run mkdocs gh-deploy -m 'github action deployment' --force
+        run: poetry run mike deploy --push --update-aliases ${RELEASE_TAG_VERSION} latest
