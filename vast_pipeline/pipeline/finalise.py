@@ -48,8 +48,8 @@ def calculate_measurement_pair_aggregate_metrics(
 
     Returns:
         Measurement pair aggregate metrics indexed by the source ID, `source`.
-        The metric columns are named: `vs_abs_significant_max_{flux_type}` and
-        `m_abs_significant_max_{flux_type}`.
+            The metric columns are named: `vs_abs_significant_max_{flux_type}`
+            and `m_abs_significant_max_{flux_type}`.
     """
     check_df = measurement_pairs_df.query(f"abs(vs_{flux_type}) >= @min_vs")
 
@@ -117,7 +117,7 @@ def final_operations(
 
     Returns:
         The number of sources contained in the pipeline (used in the next steps
-        of main.py).
+            of main.py).
     """
     timer = StopWatch()
 

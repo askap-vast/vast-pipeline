@@ -212,10 +212,10 @@ class PipelineConfig:
         epochs.
 
         Args:
-            input_files (List[str]): the list of input file paths.
+            input_files: the list of input file paths.
 
         Returns:
-            Dict[str, List[str]]: the input file paths mapped to by unique epoch keys.
+            The input file paths mapped to by unique epoch keys.
         """
         pad_width = len(str(len(input_files)))
         input_files_dict = {
@@ -291,7 +291,7 @@ class PipelineConfig:
                 ---
 
         Returns:
-            List[str]: The resolved file paths in lexicographical order.
+            The resolved file paths in lexicographical order.
         """
         file_list: List[str] = []
         if input_files["glob"].is_sequence():
@@ -514,8 +514,8 @@ class PipelineConfig:
         settings are the same (the requirement for add mode). Otherwise False is returned.
 
         Returns:
-            True if images are different but general settings are the same, otherwise
-            False is returned.
+            `True` if images are different but general settings are the same, 
+                otherwise `False` is returned.
         """
         prev_config = PipelineConfig.from_file(
             os.path.join(self["run"]["path"], "config_prev.yaml"),
@@ -538,7 +538,7 @@ class PipelineConfig:
             return False
         return True
 
-    def image_opts(self) -> Dict:
+    def image_opts(self) -> Dict[str, Any]:
         """
         Get the config options required for image ingestion only.
         Namely:
@@ -548,7 +548,7 @@ class PipelineConfig:
             - dec_uncertainty
 
         Returns:
-            Dict: the relevant key value pairs
+            The relevant key value pairs
         """
         keys = [
             "selavy_local_rms_fill_value",

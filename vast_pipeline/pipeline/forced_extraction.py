@@ -76,7 +76,7 @@ def get_data_from_parquet(
 
     Returns:
         Dictionary with prefix string, an interger max_id and a string with the
-        id of the image
+            id of the image.
     '''
     if add_mode:
         image_name = file.split("/")[-2]
@@ -126,7 +126,7 @@ def extract_from_image(
 
     Returns:
         Dictionary with input dataframe with added columns (flux_int,
-        flux_int_err, chi_squared_fit) and image name.
+            flux_int_err, chi_squared_fit) and image name.
     """
     # create the skycoord obj to pass to the forced extraction
     # see usage https://github.com/dlakaplan/forced_phot
@@ -182,7 +182,7 @@ def finalise_forced_dfs(
 
     Returns:
         Input dataframe with added columns island_id, component_id,
-        name, bmaj, bmin, pa, image_id, time.
+            name, bmaj, bmin, pa, image_id, time.
     """
     # make up the measurements name from the image island_id and component_id
     df['island_id'] = np.char.add(
@@ -243,8 +243,8 @@ def parallel_extraction(
 
     Returns:
         Dataframe with forced extracted measurements data, columns are
-        'source_tmp_id', 'ra', 'dec', 'image', 'flux_peak', 'island_id',
-        'component_id', 'name', 'flux_int', 'flux_int_err'
+            'source_tmp_id', 'ra', 'dec', 'image', 'flux_peak', 'island_id',
+            'component_id', 'name', 'flux_int', 'flux_int_err'
     """
     # explode the lists in 'img_diff' column (this will make a copy of the df)
     out = (
@@ -475,8 +475,8 @@ def forced_extraction(
             run (used in add image mode).
 
     Returns:
-        The sources_df with the extracted sources added and n_forced is the
-        total number of forced measurements present in the run.
+        The `sources_df` with the extracted sources added.
+        The total number of forced measurements present in the run.
     """
     logger.info(
         'Starting force extraction step.'

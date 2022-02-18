@@ -28,7 +28,7 @@ def measurement_models_generator(
 
     Returns:
         An iterable generator object containing the yielded Measurement
-        objects.
+            objects.
     """
     for i, row in meas_df.iterrows():
         one_m = Measurement()
