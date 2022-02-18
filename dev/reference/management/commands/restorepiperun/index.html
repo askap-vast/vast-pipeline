@@ -1,0 +1,1057 @@
+<!doctype html><html lang=en class=no-js> <head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="VAST Pipeline platform to enable processing of astronomical sources extracted from the ASKAP telescope for radio transient detection science"><meta name=author content="VAST Development Team"><link href=https://vast-survey.org/vast-pipeline/dev/reference/management/commands/restorepiperun/ rel=canonical><link rel=icon href=../../../../img/favicon.png><meta name=generator content="mkdocs-1.2.3, mkdocs-material-8.2.1"><title>restorepiperun.py - VAST Pipeline</title><link rel=stylesheet href=../../../../assets/stylesheets/main.e8d9bf0c.min.css><link rel=stylesheet href=../../../../assets/stylesheets/palette.e6a45f82.min.css><link rel=stylesheet href=../../../../css/lightgallery.min.css><script src=../../../../js/lightgallery.min.js></script><script src=../../../../js/lg-zoom.js></script><link rel=preconnect href=https://fonts.gstatic.com crossorigin><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback"><style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style><link rel=stylesheet href=../../../../assets/_mkdocstrings.css><link rel=stylesheet href=../../../../theme/css/extra.css><script>__md_scope=new URL("../../../..",location),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script><meta property=og:type content=website><meta property=og:title content="VAST Pipeline - restorepiperun.py"><meta property=og:description content="VAST Pipeline platform to enable processing of astronomical sources extracted from the ASKAP telescope for radio transient detection science"><meta content=https://vast-survey.org/vast-pipeline/dev/reference/management/commands/restorepiperun/ property=og:url></head> <body dir=ltr data-md-color-scheme=default data-md-color-primary data-md-color-accent=indigo> <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script> <input class=md-toggle data-md-toggle=drawer type=checkbox id=__drawer autocomplete=off> <input class=md-toggle data-md-toggle=search type=checkbox id=__search autocomplete=off> <label class=md-overlay for=__drawer></label> <div data-md-component=skip> <a href=#vast_pipeline.management.commands.restorepiperun class=md-skip> Skip to content </a> </div> <div data-md-component=announce> <aside class=md-banner> <div class="md-banner__inner md-grid md-typeset"> <style>
+      .md-banner a,
+      .md-banner a:focus,
+      .md-banner a:hover{color:currentColor}.md-banner
+      strong{white-space:nowrap}.md-banner}
+  </style> <a href=../../../../changelog/ > <strong> New in version 1.0.0</strong>: Documentation, add epoch mode and more 🙌. Check the <strong>release notes! </strong> </a> </div> </aside> </div> <div data-md-component=outdated hidden> <aside class="md-banner md-banner--warning"> <div class="md-banner__inner md-grid md-typeset"> You're not viewing the latest version. <a href=../../../../..> <strong>Click here to go to latest.</strong> </a> </div> <script>var el=document.querySelector("[data-md-component=outdated]"),outdated=__md_get("__outdated",sessionStorage);!0===outdated&&el&&(el.hidden=!1)</script> </aside> </div> <header class=md-header data-md-component=header> <nav class="md-header__inner md-grid" aria-label=Header> <a href=../../../.. title="VAST Pipeline" class="md-header__button md-logo" aria-label="VAST Pipeline" data-md-component=logo> <img src=../../../../img/vast-logo.png alt=logo> </a> <label class="md-header__button md-icon" for=__drawer> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg> </label> <div class=md-header__title data-md-component=header-title> <div class=md-header__ellipsis> <div class=md-header__topic> <span class=md-ellipsis> VAST Pipeline </span> </div> <div class=md-header__topic data-md-component=header-topic> <span class=md-ellipsis> restorepiperun.py </span> </div> </div> </div> <form class=md-header__option data-md-component=palette> <input class=md-option data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme=default data-md-color-primary data-md-color-accent=indigo aria-label="Switch to dark mode" type=radio name=__palette id=__palette_1> <label class="md-header__button md-icon" title="Switch to dark mode" for=__palette_2 hidden> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6zm0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4zM7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg> </label> <input class=md-option data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme=slate data-md-color-primary data-md-color-accent=blue aria-label="Switch to light mode" type=radio name=__palette id=__palette_2> <label class="md-header__button md-icon" title="Switch to light mode" for=__palette_1 hidden> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3z"/></svg> </label> </form> <label class="md-header__button md-icon" for=__search> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg> </label> <div class=md-search data-md-component=search role=dialog> <label class=md-search__overlay for=__search></label> <div class=md-search__inner role=search> <form class=md-search__form name=search> <input type=text class=md-search__input name=query aria-label=Search placeholder=Search autocapitalize=off autocorrect=off autocomplete=off spellcheck=false data-md-component=search-query required> <label class="md-search__icon md-icon" for=__search> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg> </label> <nav class=md-search__options aria-label=Search> <button type=reset class="md-search__icon md-icon" aria-label=Clear tabindex=-1> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg> </button> </nav> </form> <div class=md-search__output> <div class=md-search__scrollwrap data-md-scrollfix> <div class=md-search-result data-md-component=search-result> <div class=md-search-result__meta> Initializing search </div> <ol class=md-search-result__list></ol> </div> </div> </div> </div> </div> <div class=md-header__source> <a href=https://github.com/askap-vast/vast-pipeline/ title="Go to repository" class=md-source data-md-component=source> <div class="md-source__icon md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 448 512"><!-- Font Awesome Free 6.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg> </div> <div class=md-source__repository> askap-vast/vast-pipeline </div> </a> </div> </nav> </header> <div class=md-container data-md-component=container> <nav class=md-tabs aria-label=Tabs data-md-component=tabs> <div class="md-tabs__inner md-grid"> <ul class=md-tabs__list> <li class=md-tabs__item> <a href=../../../.. class=md-tabs__link> Home </a> </li> <li class=md-tabs__item> <a href=../../../../gettingstarted/installation/ class=md-tabs__link> Getting Started </a> </li> <li class=md-tabs__item> <a href=../../../../using/requireddata/ class=md-tabs__link> Using the Pipeline </a> </li> <li class=md-tabs__item> <a href=../../../../design/overview/ class=md-tabs__link> Features & Design </a> </li> <li class=md-tabs__item> <a href=../../../../developing/intro/ class=md-tabs__link> Contributing and Developing </a> </li> <li class=md-tabs__item> <a href=../../../../faq/ class=md-tabs__link> FAQ </a> </li> <li class=md-tabs__item> <a href=../../../../help_and_acknowledgements/ class=md-tabs__link> Help and Acknowledgements </a> </li> <li class=md-tabs__item> <a href=../../../../changelog/ class="md-tabs__link md-tabs__link--active"> Reference </a> </li> </ul> </div> </nav> <main class=md-main data-md-component=main> <div class="md-main__inner md-grid"> <div class="md-sidebar md-sidebar--primary" data-md-component=sidebar data-md-type=navigation> <div class=md-sidebar__scrollwrap> <div class=md-sidebar__inner> <nav class="md-nav md-nav--primary md-nav--lifted" aria-label=Navigation data-md-level=0> <label class=md-nav__title for=__drawer> <a href=../../../.. title="VAST Pipeline" class="md-nav__button md-logo" aria-label="VAST Pipeline" data-md-component=logo> <img src=../../../../img/vast-logo.png alt=logo> </a> VAST Pipeline </label> <div class=md-nav__source> <a href=https://github.com/askap-vast/vast-pipeline/ title="Go to repository" class=md-source data-md-component=source> <div class="md-source__icon md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 448 512"><!-- Font Awesome Free 6.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg> </div> <div class=md-source__repository> askap-vast/vast-pipeline </div> </a> </div> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../../.. class=md-nav__link> Home </a> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_2 type=checkbox id=__nav_2> <label class=md-nav__link for=__nav_2> Getting Started <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label="Getting Started" data-md-level=1> <label class=md-nav__title for=__nav_2> <span class="md-nav__icon md-icon"></span> Getting Started </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../../../gettingstarted/installation/ class=md-nav__link> Installation </a> </li> <li class=md-nav__item> <a href=../../../../gettingstarted/configuration/ class=md-nav__link> Configuration </a> </li> <li class=md-nav__item> <a href=../../../../gettingstarted/deployment/ class=md-nav__link> Deployment </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_3 type=checkbox id=__nav_3> <label class=md-nav__link for=__nav_3> Using the Pipeline <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label="Using the Pipeline" data-md-level=1> <label class=md-nav__title for=__nav_3> <span class="md-nav__icon md-icon"></span> Using the Pipeline </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../../../using/requireddata/ class=md-nav__link> Required Data </a> </li> <li class=md-nav__item> <a href=../../../../using/access/ class=md-nav__link> Accessing the Pipeline </a> </li> <li class=md-nav__item> <a href=../../../../using/initrun/ class=md-nav__link> Initialising a Run </a> </li> <li class=md-nav__item> <a href=../../../../using/runconfig/ class=md-nav__link> Run Configuration </a> </li> <li class=md-nav__item> <a href=../../../../using/processrun/ class=md-nav__link> Processing a Run </a> </li> <li class=md-nav__item> <a href=../../../../using/addtorun/ class=md-nav__link> Adding Images to a Run </a> </li> <li class=md-nav__item> <a href=../../../../using/restorerun/ class=md-nav__link> Restoring a Run </a> </li> <li class=md-nav__item> <a href=../../../../using/deleterun/ class=md-nav__link> Deleting a Run </a> </li> <li class=md-nav__item> <a href=../../../../using/genarrow/ class=md-nav__link> Generating Arrow Files </a> </li> <li class="md-nav__item md-nav__item--section md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_3_10 type=checkbox id=__nav_3_10> <label class=md-nav__link for=__nav_3_10> Exploring the Pipeline Website <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label="Exploring the Pipeline Website" data-md-level=2> <label class=md-nav__title for=__nav_3_10> <span class="md-nav__icon md-icon"></span> Exploring the Pipeline Website </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../../../exploringwebsite/websiteoverview/ class=md-nav__link> Website Overview </a> </li> <li class=md-nav__item> <a href=../../../../exploringwebsite/datatables/ class=md-nav__link> DataTables </a> </li> <li class=md-nav__item> <a href=../../../../exploringwebsite/runpages/ class=md-nav__link> Pipeline Run Pages </a> </li> <li class=md-nav__item> <a href=../../../../exploringwebsite/sourcequery/ class=md-nav__link> Source Query </a> </li> <li class=md-nav__item> <a href=../../../../exploringwebsite/sourceanalysis/ class=md-nav__link> Source η-V Analysis </a> </li> <li class=md-nav__item> <a href=../../../../exploringwebsite/sourcedetail/ class=md-nav__link> Source Detail </a> </li> <li class=md-nav__item> <a href=../../../../exploringwebsite/sourcetagsfavs/ class=md-nav__link> Source Tags & Favourites </a> </li> <li class=md-nav__item> <a href=../../../../exploringwebsite/measurementpages/ class=md-nav__link> Measurement Pages </a> </li> <li class=md-nav__item> <a href=../../../../exploringwebsite/imagepages/ class=md-nav__link> Image Pages </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--section md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_3_11 type=checkbox id=__nav_3_11> <label class=md-nav__link for=__nav_3_11> Pipeline Outputs <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label="Pipeline Outputs" data-md-level=2> <label class=md-nav__title for=__nav_3_11> <span class="md-nav__icon md-icon"></span> Pipeline Outputs </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../../../outputs/outputs/ class=md-nav__link> Outputs Overview </a> </li> <li class=md-nav__item> <a href=../../../../outputs/usingoutputs/ class=md-nav__link> Using the Outputs </a> </li> <li class=md-nav__item> <a href=../../../../outputs/coldesc/ class=md-nav__link> Column Descriptions </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--section md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_3_12 type=checkbox id=__nav_3_12> <label class=md-nav__link for=__nav_3_12> Admin Usage <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label="Admin Usage" data-md-level=2> <label class=md-nav__title for=__nav_3_12> <span class="md-nav__icon md-icon"></span> Admin Usage </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../../../adminusage/cli/ class=md-nav__link> CLI </a> </li> <li class=md-nav__item> <a href=../../../../adminusage/ingestimages/ class=md-nav__link> Standalone Image Ingestion </a> </li> <li class=md-nav__item> <a href=../../../../adminusage/app/ class=md-nav__link> Web App </a> </li> <li class=md-nav__item> <a href=../../../../exploringwebsite/admintools/ class=md-nav__link> Web App Admin Tools </a> </li> </ul> </nav> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_4 type=checkbox id=__nav_4> <label class=md-nav__link for=__nav_4> Features & Design <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label="Features & Design" data-md-level=1> <label class=md-nav__title for=__nav_4> <span class="md-nav__icon md-icon"></span> Features & Design </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../../../design/overview/ class=md-nav__link> Pipeline Steps Overview </a> </li> <li class=md-nav__item> <a href=../../../../design/imageingest/ class=md-nav__link> Image & Selavy Catalogue Ingest </a> </li> <li class=md-nav__item> <a href=../../../../design/association/ class=md-nav__link> Source Association </a> </li> <li class=md-nav__item> <a href=../../../../design/newsources/ class=md-nav__link> New Sources </a> </li> <li class=md-nav__item> <a href=../../../../design/monitor/ class=md-nav__link> Forced Measurements </a> </li> <li class=md-nav__item> <a href=../../../../design/sourcestats/ class=md-nav__link> Source Statistics </a> </li> <li class="md-nav__item md-nav__item--section md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_4_7 type=checkbox id=__nav_4_7> <label class=md-nav__link for=__nav_4_7> Architecture <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label=Architecture data-md-level=2> <label class=md-nav__title for=__nav_4_7> <span class="md-nav__icon md-icon"></span> Architecture </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../../../architecture/intro/ class=md-nav__link> Architecture Overview </a> </li> <li class=md-nav__item> <a href=../../../../architecture/database/ class=md-nav__link> Database Schema </a> </li> </ul> </nav> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_5 type=checkbox id=__nav_5> <label class=md-nav__link for=__nav_5> Contributing and Developing <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label="Contributing and Developing" data-md-level=1> <label class=md-nav__title for=__nav_5> <span class="md-nav__icon md-icon"></span> Contributing and Developing </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../../../developing/intro/ class=md-nav__link> Development Guidlines </a> </li> <li class=md-nav__item> <a href=../../../../developing/github/ class=md-nav__link> GitHub Platform </a> </li> <li class=md-nav__item> <a href=../../../../developing/localdevenv/ class=md-nav__link> Local Development Environment </a> </li> <li class=md-nav__item> <a href=../../../../developing/tests/ class=md-nav__link> Tests </a> </li> <li class=md-nav__item> <a href=../../../../developing/docsdev/ class=md-nav__link> Documentation </a> </li> <li class=md-nav__item> <a href=../../../../developing/profiling/ class=md-nav__link> Benchmarks </a> </li> </ul> </nav> </li> <li class=md-nav__item> <a href=../../../../faq/ class=md-nav__link> FAQ </a> </li> <li class=md-nav__item> <a href=../../../../help_and_acknowledgements/ class=md-nav__link> Help and Acknowledgements </a> </li> <li class="md-nav__item md-nav__item--active md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_8 type=checkbox id=__nav_8 checked> <label class=md-nav__link for=__nav_8> Reference <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label=Reference data-md-level=1> <label class=md-nav__title for=__nav_8> <span class="md-nav__icon md-icon"></span> Reference </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../../../changelog/ class=md-nav__link> Changelog </a> </li> <li class=md-nav__item> <a href=../../../../code_of_conduct/ class=md-nav__link> Code of Conduct </a> </li> <li class=md-nav__item> <a href=../../../../license/ class=md-nav__link> License </a> </li> <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_8_4 type=checkbox id=__nav_8_4 checked> <label class=md-nav__link for=__nav_8_4> Code Reference <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label="Code Reference" data-md-level=2> <label class=md-nav__title for=__nav_8_4> <span class="md-nav__icon md-icon"></span> Code Reference </label> <ul class=md-nav__list data-md-scrollfix> <li class="md-nav__item md-nav__item--active md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_8_4_1 type=checkbox id=__nav_8_4_1 checked> <label class=md-nav__link for=__nav_8_4_1> vast_pipeline <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label=vast_pipeline data-md-level=3> <label class=md-nav__title for=__nav_8_4_1> <span class="md-nav__icon md-icon"></span> vast_pipeline </label> <ul class=md-nav__list data-md-scrollfix> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_8_4_1_1 type=checkbox id=__nav_8_4_1_1> <label class=md-nav__link for=__nav_8_4_1_1> image <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label=image data-md-level=4> <label class=md-nav__title for=__nav_8_4_1_1> <span class="md-nav__icon md-icon"></span> image </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../../image/main/ class=md-nav__link> main.py </a> </li> <li class=md-nav__item> <a href=../../../image/utils/ class=md-nav__link> utils.py </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--active md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_8_4_1_2 type=checkbox id=__nav_8_4_1_2 checked> <label class=md-nav__link for=__nav_8_4_1_2> management <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label=management data-md-level=4> <label class=md-nav__title for=__nav_8_4_1_2> <span class="md-nav__icon md-icon"></span> management </label> <ul class=md-nav__list data-md-scrollfix> <li class="md-nav__item md-nav__item--active md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_8_4_1_2_1 type=checkbox id=__nav_8_4_1_2_1 checked> <label class=md-nav__link for=__nav_8_4_1_2_1> commands <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label=commands data-md-level=5> <label class=md-nav__title for=__nav_8_4_1_2_1> <span class="md-nav__icon md-icon"></span> commands </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../clearpiperun/ class=md-nav__link> clearpiperun.py </a> </li> <li class=md-nav__item> <a href=../createmeasarrow/ class=md-nav__link> createmeasarrow.py </a> </li> <li class=md-nav__item> <a href=../debugrun/ class=md-nav__link> debugrun.py </a> </li> <li class=md-nav__item> <a href=../ingestimages/ class=md-nav__link> ingestimages.py </a> </li> <li class=md-nav__item> <a href=../initingest/ class=md-nav__link> initingest.py </a> </li> <li class=md-nav__item> <a href=../initpiperun/ class=md-nav__link> initpiperun.py </a> </li> <li class="md-nav__item md-nav__item--active"> <input class="md-nav__toggle md-toggle" data-md-toggle=toc type=checkbox id=__toc> <label class="md-nav__link md-nav__link--active" for=__toc> restorepiperun.py <span class="md-nav__icon md-icon"></span> </label> <a href=./ class="md-nav__link md-nav__link--active"> restorepiperun.py </a> <nav class="md-nav md-nav--secondary" aria-label="Table of contents"> <label class=md-nav__title for=__toc> <span class="md-nav__icon md-icon"></span> Table of contents </label> <ul class=md-nav__list data-md-component=toc data-md-scrollfix> <li class=md-nav__item> <a href=#vast_pipeline.management.commands.restorepiperun class=md-nav__link> vast_pipeline.management.commands.restorepiperun </a> </li> <li class=md-nav__item> <a href=#vast_pipeline.management.commands.restorepiperun.Command class=md-nav__link> Command </a> <nav class=md-nav aria-label=Command> <ul class=md-nav__list> <li class=md-nav__item> <a href=#vast_pipeline.management.commands.restorepiperun.Command.add_arguments class=md-nav__link> add_arguments() </a> </li> <li class=md-nav__item> <a href=#vast_pipeline.management.commands.restorepiperun.Command.handle class=md-nav__link> handle() </a> </li> </ul> </nav> </li> <li class=md-nav__item> <a href=#vast_pipeline.management.commands.restorepiperun.restore_pipe class=md-nav__link> restore_pipe() </a> </li> <li class=md-nav__item> <a href=#vast_pipeline.management.commands.restorepiperun.yesno class=md-nav__link> yesno() </a> </li> </ul> </nav> </li> <li class=md-nav__item> <a href=../runpipeline/ class=md-nav__link> runpipeline.py </a> </li> </ul> </nav> </li> <li class=md-nav__item> <a href=../../helpers/ class=md-nav__link> helpers.py </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_8_4_1_3 type=checkbox id=__nav_8_4_1_3> <label class=md-nav__link for=__nav_8_4_1_3> pipeline <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label=pipeline data-md-level=4> <label class=md-nav__title for=__nav_8_4_1_3> <span class="md-nav__icon md-icon"></span> pipeline </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../../pipeline/association/ class=md-nav__link> association.py </a> </li> <li class=md-nav__item> <a href=../../../pipeline/config/ class=md-nav__link> config.py </a> </li> <li class=md-nav__item> <a href=../../../pipeline/errors/ class=md-nav__link> errors.py </a> </li> <li class=md-nav__item> <a href=../../../pipeline/finalise/ class=md-nav__link> finalise.py </a> </li> <li class=md-nav__item> <a href=../../../pipeline/forced_extraction/ class=md-nav__link> forced_extraction.py </a> </li> <li class=md-nav__item> <a href=../../../pipeline/loading/ class=md-nav__link> loading.py </a> </li> <li class=md-nav__item> <a href=../../../pipeline/main/ class=md-nav__link> main.py </a> </li> <li class=md-nav__item> <a href=../../../pipeline/model_generator/ class=md-nav__link> model_generator.py </a> </li> <li class=md-nav__item> <a href=../../../pipeline/new_sources/ class=md-nav__link> new_sources.py </a> </li> <li class=md-nav__item> <a href=../../../pipeline/pairs/ class=md-nav__link> pairs.py </a> </li> <li class=md-nav__item> <a href=../../../pipeline/utils/ class=md-nav__link> utils.py </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_8_4_1_4 type=checkbox id=__nav_8_4_1_4> <label class=md-nav__link for=__nav_8_4_1_4> survey <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label=survey data-md-level=4> <label class=md-nav__title for=__nav_8_4_1_4> <span class="md-nav__icon md-icon"></span> survey </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../../survey/translators/ class=md-nav__link> translators.py </a> </li> </ul> </nav> </li> <li class="md-nav__item md-nav__item--nested"> <input class="md-nav__toggle md-toggle" data-md-toggle=__nav_8_4_1_5 type=checkbox id=__nav_8_4_1_5> <label class=md-nav__link for=__nav_8_4_1_5> utils <span class="md-nav__icon md-icon"></span> </label> <nav class=md-nav aria-label=utils data-md-level=4> <label class=md-nav__title for=__nav_8_4_1_5> <span class="md-nav__icon md-icon"></span> utils </label> <ul class=md-nav__list data-md-scrollfix> <li class=md-nav__item> <a href=../../../utils/auth/ class=md-nav__link> auth.py </a> </li> <li class=md-nav__item> <a href=../../../utils/external_query/ class=md-nav__link> external_query.py </a> </li> <li class=md-nav__item> <a href=../../../utils/unit_tags/ class=md-nav__link> unit_tags.py </a> </li> <li class=md-nav__item> <a href=../../../utils/utils/ class=md-nav__link> utils.py </a> </li> <li class=md-nav__item> <a href=../../../utils/view/ class=md-nav__link> view.py </a> </li> </ul> </nav> </li> <li class=md-nav__item> <a href=../../../admin/ class=md-nav__link> admin.py </a> </li> <li class=md-nav__item> <a href=../../../apps/ class=md-nav__link> apps.py </a> </li> <li class=md-nav__item> <a href=../../../context_processors/ class=md-nav__link> context_processors.py </a> </li> <li class=md-nav__item> <a href=../../../converters/ class=md-nav__link> converters.py </a> </li> <li class=md-nav__item> <a href=../../../forms/ class=md-nav__link> forms.py </a> </li> <li class=md-nav__item> <a href=../../../models/ class=md-nav__link> models.py </a> </li> <li class=md-nav__item> <a href=../../../plots/ class=md-nav__link> plots.py </a> </li> <li class=md-nav__item> <a href=../../../serializers/ class=md-nav__link> serializers.py </a> </li> <li class=md-nav__item> <a href=../../../signals/ class=md-nav__link> signals.py </a> </li> <li class=md-nav__item> <a href=../../../urls/ class=md-nav__link> urls.py </a> </li> <li class=md-nav__item> <a href=../../../views/ class=md-nav__link> views.py </a> </li> </ul> </nav> </li> </ul> </nav> </li> </ul> </nav> </li> </ul> </nav> </div> </div> </div> <div class="md-sidebar md-sidebar--secondary" data-md-component=sidebar data-md-type=toc> <div class=md-sidebar__scrollwrap> <div class=md-sidebar__inner> <nav class="md-nav md-nav--secondary" aria-label="Table of contents"> <label class=md-nav__title for=__toc> <span class="md-nav__icon md-icon"></span> Table of contents </label> <ul class=md-nav__list data-md-component=toc data-md-scrollfix> <li class=md-nav__item> <a href=#vast_pipeline.management.commands.restorepiperun class=md-nav__link> vast_pipeline.management.commands.restorepiperun </a> </li> <li class=md-nav__item> <a href=#vast_pipeline.management.commands.restorepiperun.Command class=md-nav__link> Command </a> <nav class=md-nav aria-label=Command> <ul class=md-nav__list> <li class=md-nav__item> <a href=#vast_pipeline.management.commands.restorepiperun.Command.add_arguments class=md-nav__link> add_arguments() </a> </li> <li class=md-nav__item> <a href=#vast_pipeline.management.commands.restorepiperun.Command.handle class=md-nav__link> handle() </a> </li> </ul> </nav> </li> <li class=md-nav__item> <a href=#vast_pipeline.management.commands.restorepiperun.restore_pipe class=md-nav__link> restore_pipe() </a> </li> <li class=md-nav__item> <a href=#vast_pipeline.management.commands.restorepiperun.yesno class=md-nav__link> yesno() </a> </li> </ul> </nav> </div> </div> </div> <div class=md-content data-md-component=content> <article class="md-content__inner md-typeset"> <a href=https://github.com/askap-vast/vast-pipeline/tree/dev/vast_pipeline/management/commands/restorepiperun.py title="Edit this page" class="md-content__button md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg> </a> <h1>restorepiperun.py</h1> <div class="doc doc-object doc-module"> <a id=vast_pipeline.management.commands.restorepiperun></a> <div class="doc doc-contents first"> <div class="doc doc-children"> <div class="doc doc-object doc-class"> <h2 id=vast_pipeline.management.commands.restorepiperun.Command class="doc doc-heading"> <code>Command</code> <a href=#vast_pipeline.management.commands.restorepiperun.Command class=headerlink title="Permanent link">&para;</a></h2> <div class="doc doc-contents "> <p class="doc doc-class-bases"> Bases: <code><span title="django.core.management.base.BaseCommand">BaseCommand</span></code></p> <p>This command is used to restore a pipeline run to the previous verion after add mode has been used. Use --help for usage.</p> <details class=quote> <summary>Source code in <code>vast_pipeline/management/commands/restorepiperun.py</code></summary> <table class=highlighttable><tr><td class=linenos><div class=linenodiv><pre><span></span><span class=normal>283</span>
+<span class=normal>284</span>
+<span class=normal>285</span>
+<span class=normal>286</span>
+<span class=normal>287</span>
+<span class=normal>288</span>
+<span class=normal>289</span>
+<span class=normal>290</span>
+<span class=normal>291</span>
+<span class=normal>292</span>
+<span class=normal>293</span>
+<span class=normal>294</span>
+<span class=normal>295</span>
+<span class=normal>296</span>
+<span class=normal>297</span>
+<span class=normal>298</span>
+<span class=normal>299</span>
+<span class=normal>300</span>
+<span class=normal>301</span>
+<span class=normal>302</span>
+<span class=normal>303</span>
+<span class=normal>304</span>
+<span class=normal>305</span>
+<span class=normal>306</span>
+<span class=normal>307</span>
+<span class=normal>308</span>
+<span class=normal>309</span>
+<span class=normal>310</span>
+<span class=normal>311</span>
+<span class=normal>312</span>
+<span class=normal>313</span>
+<span class=normal>314</span>
+<span class=normal>315</span>
+<span class=normal>316</span>
+<span class=normal>317</span>
+<span class=normal>318</span>
+<span class=normal>319</span>
+<span class=normal>320</span>
+<span class=normal>321</span>
+<span class=normal>322</span>
+<span class=normal>323</span>
+<span class=normal>324</span>
+<span class=normal>325</span>
+<span class=normal>326</span>
+<span class=normal>327</span>
+<span class=normal>328</span>
+<span class=normal>329</span>
+<span class=normal>330</span>
+<span class=normal>331</span>
+<span class=normal>332</span>
+<span class=normal>333</span>
+<span class=normal>334</span>
+<span class=normal>335</span>
+<span class=normal>336</span>
+<span class=normal>337</span>
+<span class=normal>338</span>
+<span class=normal>339</span>
+<span class=normal>340</span>
+<span class=normal>341</span>
+<span class=normal>342</span>
+<span class=normal>343</span>
+<span class=normal>344</span>
+<span class=normal>345</span>
+<span class=normal>346</span>
+<span class=normal>347</span>
+<span class=normal>348</span>
+<span class=normal>349</span>
+<span class=normal>350</span>
+<span class=normal>351</span>
+<span class=normal>352</span>
+<span class=normal>353</span>
+<span class=normal>354</span>
+<span class=normal>355</span>
+<span class=normal>356</span>
+<span class=normal>357</span>
+<span class=normal>358</span>
+<span class=normal>359</span>
+<span class=normal>360</span>
+<span class=normal>361</span>
+<span class=normal>362</span>
+<span class=normal>363</span>
+<span class=normal>364</span>
+<span class=normal>365</span>
+<span class=normal>366</span>
+<span class=normal>367</span>
+<span class=normal>368</span>
+<span class=normal>369</span>
+<span class=normal>370</span>
+<span class=normal>371</span>
+<span class=normal>372</span>
+<span class=normal>373</span>
+<span class=normal>374</span>
+<span class=normal>375</span>
+<span class=normal>376</span>
+<span class=normal>377</span>
+<span class=normal>378</span>
+<span class=normal>379</span>
+<span class=normal>380</span>
+<span class=normal>381</span>
+<span class=normal>382</span>
+<span class=normal>383</span>
+<span class=normal>384</span>
+<span class=normal>385</span>
+<span class=normal>386</span>
+<span class=normal>387</span>
+<span class=normal>388</span>
+<span class=normal>389</span>
+<span class=normal>390</span>
+<span class=normal>391</span>
+<span class=normal>392</span>
+<span class=normal>393</span>
+<span class=normal>394</span>
+<span class=normal>395</span>
+<span class=normal>396</span>
+<span class=normal>397</span>
+<span class=normal>398</span>
+<span class=normal>399</span>
+<span class=normal>400</span>
+<span class=normal>401</span>
+<span class=normal>402</span>
+<span class=normal>403</span>
+<span class=normal>404</span>
+<span class=normal>405</span>
+<span class=normal>406</span>
+<span class=normal>407</span>
+<span class=normal>408</span>
+<span class=normal>409</span>
+<span class=normal>410</span>
+<span class=normal>411</span>
+<span class=normal>412</span>
+<span class=normal>413</span>
+<span class=normal>414</span>
+<span class=normal>415</span>
+<span class=normal>416</span>
+<span class=normal>417</span>
+<span class=normal>418</span>
+<span class=normal>419</span>
+<span class=normal>420</span>
+<span class=normal>421</span>
+<span class=normal>422</span>
+<span class=normal>423</span>
+<span class=normal>424</span>
+<span class=normal>425</span>
+<span class=normal>426</span></pre></div></td><td class=code><div class=highlight><pre><span></span><code><span class=k>class</span> <span class=nc>Command</span><span class=p>(</span><span class=n>BaseCommand</span><span class=p>):</span>
+    <span class=sd>&quot;&quot;&quot;</span>
+<span class=sd>    This command is used to restore a pipeline run to the previous verion after</span>
+<span class=sd>    add mode has been used. Use --help for usage.</span>
+<span class=sd>    &quot;&quot;&quot;</span>
+
+    <span class=n>help</span> <span class=o>=</span> <span class=p>(</span>
+        <span class=s1>&#39;Restore a pipeline run to the previous person after image add mode&#39;</span>
+        <span class=s1>&#39; has been used.&#39;</span>
+    <span class=p>)</span>
+
+    <span class=k>def</span> <span class=nf>add_arguments</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>parser</span><span class=p>:</span> <span class=n>ArgumentParser</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=kc>None</span><span class=p>:</span>
+        <span class=sd>&quot;&quot;&quot;</span>
+<span class=sd>        Enables arguments for the command.</span>
+
+<span class=sd>        Args:</span>
+<span class=sd>            parser (ArgumentParser): The parser object of the command.</span>
+
+<span class=sd>        Returns:</span>
+<span class=sd>            None</span>
+<span class=sd>        &quot;&quot;&quot;</span>
+        <span class=c1># positional arguments (required)</span>
+        <span class=n>parser</span><span class=o>.</span><span class=n>add_argument</span><span class=p>(</span>
+            <span class=s1>&#39;piperun&#39;</span><span class=p>,</span>
+            <span class=nb>type</span><span class=o>=</span><span class=nb>str</span><span class=p>,</span>
+            <span class=n>default</span><span class=o>=</span><span class=kc>None</span><span class=p>,</span>
+            <span class=n>help</span><span class=o>=</span><span class=s1>&#39;Name or path of pipeline run(s) to restore.&#39;</span>
+        <span class=p>)</span>
+        <span class=c1># keyword arguments (optional)</span>
+        <span class=n>parser</span><span class=o>.</span><span class=n>add_argument</span><span class=p>(</span>
+            <span class=s1>&#39;--no-confirm&#39;</span><span class=p>,</span>
+            <span class=n>required</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span>
+            <span class=n>default</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span>
+            <span class=n>action</span><span class=o>=</span><span class=s1>&#39;store_true&#39;</span><span class=p>,</span>
+            <span class=n>help</span><span class=o>=</span><span class=p>(</span>
+                <span class=s1>&#39;Flag to skip the confirmation stage and proceed to restore&#39;</span>
+                <span class=s1>&#39; the pipeline run.&#39;</span>
+            <span class=p>)</span>
+        <span class=p>)</span>
+
+    <span class=k>def</span> <span class=nf>handle</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=o>*</span><span class=n>args</span><span class=p>,</span> <span class=o>**</span><span class=n>options</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=kc>None</span><span class=p>:</span>
+        <span class=sd>&quot;&quot;&quot;</span>
+<span class=sd>        Handle function of the command.</span>
+
+<span class=sd>        Args:</span>
+<span class=sd>            *args: Variable length argument list.</span>
+<span class=sd>            **options: Variable length options.</span>
+
+<span class=sd>        Returns:</span>
+<span class=sd>            None</span>
+<span class=sd>        &quot;&quot;&quot;</span>
+        <span class=n>piperun</span> <span class=o>=</span> <span class=n>options</span><span class=p>[</span><span class=s1>&#39;piperun&#39;</span><span class=p>]</span>
+
+        <span class=n>p_run_name</span><span class=p>,</span> <span class=n>run_folder</span> <span class=o>=</span> <span class=n>get_p_run_name</span><span class=p>(</span><span class=n>piperun</span><span class=p>,</span> <span class=n>return_folder</span><span class=o>=</span><span class=kc>True</span><span class=p>)</span>
+
+        <span class=c1># configure logging</span>
+        <span class=n>root_logger</span> <span class=o>=</span> <span class=n>logging</span><span class=o>.</span><span class=n>getLogger</span><span class=p>(</span><span class=s1>&#39;&#39;</span><span class=p>)</span>
+        <span class=n>f_handler</span> <span class=o>=</span> <span class=n>logging</span><span class=o>.</span><span class=n>FileHandler</span><span class=p>(</span>
+            <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>join</span><span class=p>(</span><span class=n>run_folder</span><span class=p>,</span> <span class=n>timeStamped</span><span class=p>(</span><span class=s1>&#39;restore_log.txt&#39;</span><span class=p>)),</span>
+            <span class=n>mode</span><span class=o>=</span><span class=s1>&#39;w&#39;</span>
+        <span class=p>)</span>
+        <span class=n>f_handler</span><span class=o>.</span><span class=n>setFormatter</span><span class=p>(</span><span class=n>root_logger</span><span class=o>.</span><span class=n>handlers</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span><span class=o>.</span><span class=n>formatter</span><span class=p>)</span>
+        <span class=n>root_logger</span><span class=o>.</span><span class=n>addHandler</span><span class=p>(</span><span class=n>f_handler</span><span class=p>)</span>
+
+        <span class=k>if</span> <span class=n>options</span><span class=p>[</span><span class=s1>&#39;verbosity&#39;</span><span class=p>]</span> <span class=o>&gt;</span> <span class=mi>1</span><span class=p>:</span>
+            <span class=c1># set root logger to use the DEBUG level</span>
+            <span class=n>root_logger</span><span class=o>.</span><span class=n>setLevel</span><span class=p>(</span><span class=n>logging</span><span class=o>.</span><span class=n>DEBUG</span><span class=p>)</span>
+            <span class=c1># set the traceback on</span>
+            <span class=n>options</span><span class=p>[</span><span class=s1>&#39;traceback&#39;</span><span class=p>]</span> <span class=o>=</span> <span class=kc>True</span>
+
+        <span class=k>try</span><span class=p>:</span>
+            <span class=n>p_run</span> <span class=o>=</span> <span class=n>Run</span><span class=o>.</span><span class=n>objects</span><span class=o>.</span><span class=n>get</span><span class=p>(</span><span class=n>name</span><span class=o>=</span><span class=n>p_run_name</span><span class=p>)</span>
+        <span class=k>except</span> <span class=n>Run</span><span class=o>.</span><span class=n>DoesNotExist</span><span class=p>:</span>
+            <span class=k>raise</span> <span class=n>CommandError</span><span class=p>(</span><span class=sa>f</span><span class=s1>&#39;Pipeline run </span><span class=si>{</span><span class=n>p_run_name</span><span class=si>}</span><span class=s1> does not exist&#39;</span><span class=p>)</span>
+
+        <span class=k>if</span> <span class=n>p_run</span><span class=o>.</span><span class=n>status</span> <span class=ow>not</span> <span class=ow>in</span> <span class=p>[</span><span class=s1>&#39;END&#39;</span><span class=p>,</span> <span class=s1>&#39;ERR&#39;</span><span class=p>]:</span>
+            <span class=k>raise</span> <span class=n>CommandError</span><span class=p>(</span>
+                <span class=sa>f</span><span class=s2>&quot;Run </span><span class=si>{</span><span class=n>p_run_name</span><span class=si>}</span><span class=s2> does not have an &#39;END&#39; or &#39;ERR&#39; status.&quot;</span>
+                <span class=s2>&quot; Unable to run restore.&quot;</span>
+            <span class=p>)</span>
+
+        <span class=n>path</span> <span class=o>=</span> <span class=n>p_run</span><span class=o>.</span><span class=n>path</span>
+        <span class=n>pipeline</span> <span class=o>=</span> <span class=n>Pipeline</span><span class=p>(</span>
+            <span class=n>name</span><span class=o>=</span><span class=n>p_run_name</span><span class=p>,</span>
+            <span class=n>config_path</span><span class=o>=</span><span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>join</span><span class=p>(</span><span class=n>path</span><span class=p>,</span> <span class=s1>&#39;config.yaml&#39;</span><span class=p>)</span>
+        <span class=p>)</span>
+        <span class=k>try</span><span class=p>:</span>
+            <span class=c1># update pipeline run status to restoring</span>
+            <span class=n>prev_status</span> <span class=o>=</span> <span class=n>p_run</span><span class=o>.</span><span class=n>status</span>
+            <span class=n>pipeline</span><span class=o>.</span><span class=n>set_status</span><span class=p>(</span><span class=n>p_run</span><span class=p>,</span> <span class=s1>&#39;RES&#39;</span><span class=p>)</span>
+
+            <span class=n>prev_config_file</span> <span class=o>=</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>join</span><span class=p>(</span><span class=n>p_run</span><span class=o>.</span><span class=n>path</span><span class=p>,</span> <span class=s1>&#39;config.yaml.bak&#39;</span><span class=p>)</span>
+
+            <span class=k>if</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>isfile</span><span class=p>(</span><span class=n>prev_config_file</span><span class=p>):</span>
+                <span class=n>shutil</span><span class=o>.</span><span class=n>copy</span><span class=p>(</span>
+                    <span class=n>prev_config_file</span><span class=p>,</span>
+                    <span class=n>prev_config_file</span><span class=o>.</span><span class=n>replace</span><span class=p>(</span><span class=s1>&#39;.yaml.bak&#39;</span><span class=p>,</span> <span class=s1>&#39;.bak.yaml&#39;</span><span class=p>)</span>
+                <span class=p>)</span>
+                <span class=n>prev_config_file</span> <span class=o>=</span> <span class=n>prev_config_file</span><span class=o>.</span><span class=n>replace</span><span class=p>(</span>
+                    <span class=s1>&#39;.yaml.bak&#39;</span><span class=p>,</span> <span class=s1>&#39;.bak.yaml&#39;</span>
+                <span class=p>)</span>
+                <span class=n>prev_config</span> <span class=o>=</span> <span class=n>PipelineConfig</span><span class=o>.</span><span class=n>from_file</span><span class=p>(</span><span class=n>prev_config_file</span><span class=p>)</span>
+                <span class=n>os</span><span class=o>.</span><span class=n>remove</span><span class=p>(</span><span class=n>prev_config_file</span><span class=p>)</span>
+            <span class=k>else</span><span class=p>:</span>
+                <span class=k>raise</span> <span class=n>CommandError</span><span class=p>(</span>
+                    <span class=s1>&#39;Previous config file does not exist.&#39;</span>
+                    <span class=s1>&#39; Cannot restore pipeline run.&#39;</span>
+                <span class=p>)</span>
+
+            <span class=n>bak_files</span> <span class=o>=</span> <span class=p>{}</span>
+            <span class=k>for</span> <span class=n>i</span> <span class=ow>in</span> <span class=p>[</span>
+                <span class=s1>&#39;associations&#39;</span><span class=p>,</span> <span class=s1>&#39;bands&#39;</span><span class=p>,</span> <span class=s1>&#39;images&#39;</span><span class=p>,</span> <span class=s1>&#39;measurement_pairs&#39;</span><span class=p>,</span>
+                <span class=s1>&#39;relations&#39;</span><span class=p>,</span> <span class=s1>&#39;skyregions&#39;</span><span class=p>,</span> <span class=s1>&#39;sources&#39;</span><span class=p>,</span> <span class=s1>&#39;config&#39;</span>
+            <span class=p>]:</span>
+                <span class=k>if</span> <span class=n>i</span> <span class=o>==</span> <span class=s1>&#39;config&#39;</span><span class=p>:</span>
+                    <span class=n>f_name</span> <span class=o>=</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>join</span><span class=p>(</span><span class=n>p_run</span><span class=o>.</span><span class=n>path</span><span class=p>,</span> <span class=sa>f</span><span class=s1>&#39;</span><span class=si>{</span><span class=n>i</span><span class=si>}</span><span class=s1>.yaml.bak&#39;</span><span class=p>)</span>
+                <span class=k>else</span><span class=p>:</span>
+                    <span class=n>f_name</span> <span class=o>=</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>join</span><span class=p>(</span><span class=n>p_run</span><span class=o>.</span><span class=n>path</span><span class=p>,</span> <span class=sa>f</span><span class=s1>&#39;</span><span class=si>{</span><span class=n>i</span><span class=si>}</span><span class=s1>.parquet.bak&#39;</span><span class=p>)</span>
+
+                <span class=k>if</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>isfile</span><span class=p>(</span><span class=n>f_name</span><span class=p>):</span>
+                    <span class=n>bak_files</span><span class=p>[</span><span class=n>i</span><span class=p>]</span> <span class=o>=</span> <span class=n>f_name</span>
+                <span class=k>else</span><span class=p>:</span>
+                    <span class=k>raise</span> <span class=n>CommandError</span><span class=p>(</span>
+                        <span class=sa>f</span><span class=s1>&#39;File </span><span class=si>{</span><span class=n>f_name</span><span class=si>}</span><span class=s1> does not exist.&#39;</span>
+                        <span class=s1>&#39; Cannot restore pipeline run.&#39;</span>
+                    <span class=p>)</span>
+
+            <span class=n>logger_msg</span> <span class=o>=</span> <span class=s2>&quot;Will restore the run to the following config:</span><span class=se>\n</span><span class=s2>&quot;</span>
+            <span class=n>logger</span><span class=o>.</span><span class=n>info</span><span class=p>(</span><span class=n>logger_msg</span> <span class=o>+</span> <span class=n>prev_config</span><span class=o>.</span><span class=n>_yaml</span><span class=o>.</span><span class=n>as_yaml</span><span class=p>())</span>
+
+            <span class=n>user_continue</span> <span class=o>=</span> <span class=kc>True</span> <span class=k>if</span> <span class=n>options</span><span class=p>[</span><span class=s1>&#39;no_confirm&#39;</span><span class=p>]</span> <span class=k>else</span> <span class=n>yesno</span><span class=p>(</span><span class=s2>&quot;Would you like to restore the run&quot;</span><span class=p>)</span>
+
+            <span class=k>if</span> <span class=n>user_continue</span><span class=p>:</span>
+                <span class=n>restore_pipe</span><span class=p>(</span><span class=n>p_run</span><span class=p>,</span> <span class=n>bak_files</span><span class=p>,</span> <span class=n>prev_config</span><span class=p>)</span>
+                <span class=n>pipeline</span><span class=o>.</span><span class=n>set_status</span><span class=p>(</span><span class=n>p_run</span><span class=p>,</span> <span class=s1>&#39;END&#39;</span><span class=p>)</span>
+                <span class=n>logger</span><span class=o>.</span><span class=n>info</span><span class=p>(</span><span class=s1>&#39;Restore complete.&#39;</span><span class=p>)</span>
+            <span class=k>else</span><span class=p>:</span>
+                <span class=n>pipeline</span><span class=o>.</span><span class=n>set_status</span><span class=p>(</span><span class=n>p_run</span><span class=p>,</span> <span class=n>prev_status</span><span class=p>)</span>
+                <span class=n>logger</span><span class=o>.</span><span class=n>info</span><span class=p>(</span><span class=s1>&#39;No actions performed.&#39;</span><span class=p>)</span>
+
+        <span class=k>except</span> <span class=ne>Exception</span> <span class=k>as</span> <span class=n>e</span><span class=p>:</span>
+            <span class=n>logger</span><span class=o>.</span><span class=n>error</span><span class=p>(</span><span class=s1>&#39;Restoring failed!&#39;</span><span class=p>)</span>
+            <span class=n>logger</span><span class=o>.</span><span class=n>error</span><span class=p>(</span><span class=n>e</span><span class=p>)</span>
+            <span class=n>pipeline</span><span class=o>.</span><span class=n>set_status</span><span class=p>(</span><span class=n>p_run</span><span class=p>,</span> <span class=n>prev_status</span><span class=p>)</span>
+</code></pre></div> </td></tr></table> </details> <div class="doc doc-children"> <div class="doc doc-object doc-function"> <h3 id=vast_pipeline.management.commands.restorepiperun.Command.add_arguments class="doc doc-heading"> <code class="highlight language-python"><span class=n>add_arguments</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>parser</span><span class=p>)</span></code> <a href=#vast_pipeline.management.commands.restorepiperun.Command.add_arguments class=headerlink title="Permanent link">&para;</a></h3> <div class="doc doc-contents "> <p>Enables arguments for the command.</p> <p><strong>Parameters:</strong></p> <table> <thead> <tr> <th>Name</th> <th>Type</th> <th>Description</th> <th>Default</th> </tr> </thead> <tbody> <tr> <td><code>parser</code></td> <td> <code><span title="argparse.ArgumentParser">ArgumentParser</span></code> </td> <td><p>The parser object of the command.</p></td> <td> <em>required</em> </td> </tr> </tbody> </table> <p><strong>Returns:</strong></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td> <code>None</code> </td> <td><p>None</p></td> </tr> </tbody> </table> <details class=quote> <summary>Source code in <code>vast_pipeline/management/commands/restorepiperun.py</code></summary> <table class=highlighttable><tr><td class=linenos><div class=linenodiv><pre><span></span><span class=normal>294</span>
+<span class=normal>295</span>
+<span class=normal>296</span>
+<span class=normal>297</span>
+<span class=normal>298</span>
+<span class=normal>299</span>
+<span class=normal>300</span>
+<span class=normal>301</span>
+<span class=normal>302</span>
+<span class=normal>303</span>
+<span class=normal>304</span>
+<span class=normal>305</span>
+<span class=normal>306</span>
+<span class=normal>307</span>
+<span class=normal>308</span>
+<span class=normal>309</span>
+<span class=normal>310</span>
+<span class=normal>311</span>
+<span class=normal>312</span>
+<span class=normal>313</span>
+<span class=normal>314</span>
+<span class=normal>315</span>
+<span class=normal>316</span>
+<span class=normal>317</span>
+<span class=normal>318</span>
+<span class=normal>319</span>
+<span class=normal>320</span>
+<span class=normal>321</span></pre></div></td><td class=code><div class=highlight><pre><span></span><code><span class=k>def</span> <span class=nf>add_arguments</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>parser</span><span class=p>:</span> <span class=n>ArgumentParser</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=kc>None</span><span class=p>:</span>
+    <span class=sd>&quot;&quot;&quot;</span>
+<span class=sd>    Enables arguments for the command.</span>
+
+<span class=sd>    Args:</span>
+<span class=sd>        parser (ArgumentParser): The parser object of the command.</span>
+
+<span class=sd>    Returns:</span>
+<span class=sd>        None</span>
+<span class=sd>    &quot;&quot;&quot;</span>
+    <span class=c1># positional arguments (required)</span>
+    <span class=n>parser</span><span class=o>.</span><span class=n>add_argument</span><span class=p>(</span>
+        <span class=s1>&#39;piperun&#39;</span><span class=p>,</span>
+        <span class=nb>type</span><span class=o>=</span><span class=nb>str</span><span class=p>,</span>
+        <span class=n>default</span><span class=o>=</span><span class=kc>None</span><span class=p>,</span>
+        <span class=n>help</span><span class=o>=</span><span class=s1>&#39;Name or path of pipeline run(s) to restore.&#39;</span>
+    <span class=p>)</span>
+    <span class=c1># keyword arguments (optional)</span>
+    <span class=n>parser</span><span class=o>.</span><span class=n>add_argument</span><span class=p>(</span>
+        <span class=s1>&#39;--no-confirm&#39;</span><span class=p>,</span>
+        <span class=n>required</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span>
+        <span class=n>default</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span>
+        <span class=n>action</span><span class=o>=</span><span class=s1>&#39;store_true&#39;</span><span class=p>,</span>
+        <span class=n>help</span><span class=o>=</span><span class=p>(</span>
+            <span class=s1>&#39;Flag to skip the confirmation stage and proceed to restore&#39;</span>
+            <span class=s1>&#39; the pipeline run.&#39;</span>
+        <span class=p>)</span>
+    <span class=p>)</span>
+</code></pre></div> </td></tr></table> </details> </div> </div> <div class="doc doc-object doc-function"> <h3 id=vast_pipeline.management.commands.restorepiperun.Command.handle class="doc doc-heading"> <code class="highlight language-python"><span class=n>handle</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=o>*</span><span class=n>args</span><span class=p>,</span> <span class=o>**</span><span class=n>options</span><span class=p>)</span></code> <a href=#vast_pipeline.management.commands.restorepiperun.Command.handle class=headerlink title="Permanent link">&para;</a></h3> <div class="doc doc-contents "> <p>Handle function of the command.</p> <p><strong>Parameters:</strong></p> <table> <thead> <tr> <th>Name</th> <th>Type</th> <th>Description</th> <th>Default</th> </tr> </thead> <tbody> <tr> <td><code>*args</code></td> <td> </td> <td><p>Variable length argument list.</p></td> <td> <code>()</code> </td> </tr> <tr> <td><code>**options</code></td> <td> </td> <td><p>Variable length options.</p></td> <td> <code>{}</code> </td> </tr> </tbody> </table> <p><strong>Returns:</strong></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td> <code>None</code> </td> <td><p>None</p></td> </tr> </tbody> </table> <details class=quote> <summary>Source code in <code>vast_pipeline/management/commands/restorepiperun.py</code></summary> <table class=highlighttable><tr><td class=linenos><div class=linenodiv><pre><span></span><span class=normal>323</span>
+<span class=normal>324</span>
+<span class=normal>325</span>
+<span class=normal>326</span>
+<span class=normal>327</span>
+<span class=normal>328</span>
+<span class=normal>329</span>
+<span class=normal>330</span>
+<span class=normal>331</span>
+<span class=normal>332</span>
+<span class=normal>333</span>
+<span class=normal>334</span>
+<span class=normal>335</span>
+<span class=normal>336</span>
+<span class=normal>337</span>
+<span class=normal>338</span>
+<span class=normal>339</span>
+<span class=normal>340</span>
+<span class=normal>341</span>
+<span class=normal>342</span>
+<span class=normal>343</span>
+<span class=normal>344</span>
+<span class=normal>345</span>
+<span class=normal>346</span>
+<span class=normal>347</span>
+<span class=normal>348</span>
+<span class=normal>349</span>
+<span class=normal>350</span>
+<span class=normal>351</span>
+<span class=normal>352</span>
+<span class=normal>353</span>
+<span class=normal>354</span>
+<span class=normal>355</span>
+<span class=normal>356</span>
+<span class=normal>357</span>
+<span class=normal>358</span>
+<span class=normal>359</span>
+<span class=normal>360</span>
+<span class=normal>361</span>
+<span class=normal>362</span>
+<span class=normal>363</span>
+<span class=normal>364</span>
+<span class=normal>365</span>
+<span class=normal>366</span>
+<span class=normal>367</span>
+<span class=normal>368</span>
+<span class=normal>369</span>
+<span class=normal>370</span>
+<span class=normal>371</span>
+<span class=normal>372</span>
+<span class=normal>373</span>
+<span class=normal>374</span>
+<span class=normal>375</span>
+<span class=normal>376</span>
+<span class=normal>377</span>
+<span class=normal>378</span>
+<span class=normal>379</span>
+<span class=normal>380</span>
+<span class=normal>381</span>
+<span class=normal>382</span>
+<span class=normal>383</span>
+<span class=normal>384</span>
+<span class=normal>385</span>
+<span class=normal>386</span>
+<span class=normal>387</span>
+<span class=normal>388</span>
+<span class=normal>389</span>
+<span class=normal>390</span>
+<span class=normal>391</span>
+<span class=normal>392</span>
+<span class=normal>393</span>
+<span class=normal>394</span>
+<span class=normal>395</span>
+<span class=normal>396</span>
+<span class=normal>397</span>
+<span class=normal>398</span>
+<span class=normal>399</span>
+<span class=normal>400</span>
+<span class=normal>401</span>
+<span class=normal>402</span>
+<span class=normal>403</span>
+<span class=normal>404</span>
+<span class=normal>405</span>
+<span class=normal>406</span>
+<span class=normal>407</span>
+<span class=normal>408</span>
+<span class=normal>409</span>
+<span class=normal>410</span>
+<span class=normal>411</span>
+<span class=normal>412</span>
+<span class=normal>413</span>
+<span class=normal>414</span>
+<span class=normal>415</span>
+<span class=normal>416</span>
+<span class=normal>417</span>
+<span class=normal>418</span>
+<span class=normal>419</span>
+<span class=normal>420</span>
+<span class=normal>421</span>
+<span class=normal>422</span>
+<span class=normal>423</span>
+<span class=normal>424</span>
+<span class=normal>425</span>
+<span class=normal>426</span></pre></div></td><td class=code><div class=highlight><pre><span></span><code><span class=k>def</span> <span class=nf>handle</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=o>*</span><span class=n>args</span><span class=p>,</span> <span class=o>**</span><span class=n>options</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=kc>None</span><span class=p>:</span>
+    <span class=sd>&quot;&quot;&quot;</span>
+<span class=sd>    Handle function of the command.</span>
+
+<span class=sd>    Args:</span>
+<span class=sd>        *args: Variable length argument list.</span>
+<span class=sd>        **options: Variable length options.</span>
+
+<span class=sd>    Returns:</span>
+<span class=sd>        None</span>
+<span class=sd>    &quot;&quot;&quot;</span>
+    <span class=n>piperun</span> <span class=o>=</span> <span class=n>options</span><span class=p>[</span><span class=s1>&#39;piperun&#39;</span><span class=p>]</span>
+
+    <span class=n>p_run_name</span><span class=p>,</span> <span class=n>run_folder</span> <span class=o>=</span> <span class=n>get_p_run_name</span><span class=p>(</span><span class=n>piperun</span><span class=p>,</span> <span class=n>return_folder</span><span class=o>=</span><span class=kc>True</span><span class=p>)</span>
+
+    <span class=c1># configure logging</span>
+    <span class=n>root_logger</span> <span class=o>=</span> <span class=n>logging</span><span class=o>.</span><span class=n>getLogger</span><span class=p>(</span><span class=s1>&#39;&#39;</span><span class=p>)</span>
+    <span class=n>f_handler</span> <span class=o>=</span> <span class=n>logging</span><span class=o>.</span><span class=n>FileHandler</span><span class=p>(</span>
+        <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>join</span><span class=p>(</span><span class=n>run_folder</span><span class=p>,</span> <span class=n>timeStamped</span><span class=p>(</span><span class=s1>&#39;restore_log.txt&#39;</span><span class=p>)),</span>
+        <span class=n>mode</span><span class=o>=</span><span class=s1>&#39;w&#39;</span>
+    <span class=p>)</span>
+    <span class=n>f_handler</span><span class=o>.</span><span class=n>setFormatter</span><span class=p>(</span><span class=n>root_logger</span><span class=o>.</span><span class=n>handlers</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span><span class=o>.</span><span class=n>formatter</span><span class=p>)</span>
+    <span class=n>root_logger</span><span class=o>.</span><span class=n>addHandler</span><span class=p>(</span><span class=n>f_handler</span><span class=p>)</span>
+
+    <span class=k>if</span> <span class=n>options</span><span class=p>[</span><span class=s1>&#39;verbosity&#39;</span><span class=p>]</span> <span class=o>&gt;</span> <span class=mi>1</span><span class=p>:</span>
+        <span class=c1># set root logger to use the DEBUG level</span>
+        <span class=n>root_logger</span><span class=o>.</span><span class=n>setLevel</span><span class=p>(</span><span class=n>logging</span><span class=o>.</span><span class=n>DEBUG</span><span class=p>)</span>
+        <span class=c1># set the traceback on</span>
+        <span class=n>options</span><span class=p>[</span><span class=s1>&#39;traceback&#39;</span><span class=p>]</span> <span class=o>=</span> <span class=kc>True</span>
+
+    <span class=k>try</span><span class=p>:</span>
+        <span class=n>p_run</span> <span class=o>=</span> <span class=n>Run</span><span class=o>.</span><span class=n>objects</span><span class=o>.</span><span class=n>get</span><span class=p>(</span><span class=n>name</span><span class=o>=</span><span class=n>p_run_name</span><span class=p>)</span>
+    <span class=k>except</span> <span class=n>Run</span><span class=o>.</span><span class=n>DoesNotExist</span><span class=p>:</span>
+        <span class=k>raise</span> <span class=n>CommandError</span><span class=p>(</span><span class=sa>f</span><span class=s1>&#39;Pipeline run </span><span class=si>{</span><span class=n>p_run_name</span><span class=si>}</span><span class=s1> does not exist&#39;</span><span class=p>)</span>
+
+    <span class=k>if</span> <span class=n>p_run</span><span class=o>.</span><span class=n>status</span> <span class=ow>not</span> <span class=ow>in</span> <span class=p>[</span><span class=s1>&#39;END&#39;</span><span class=p>,</span> <span class=s1>&#39;ERR&#39;</span><span class=p>]:</span>
+        <span class=k>raise</span> <span class=n>CommandError</span><span class=p>(</span>
+            <span class=sa>f</span><span class=s2>&quot;Run </span><span class=si>{</span><span class=n>p_run_name</span><span class=si>}</span><span class=s2> does not have an &#39;END&#39; or &#39;ERR&#39; status.&quot;</span>
+            <span class=s2>&quot; Unable to run restore.&quot;</span>
+        <span class=p>)</span>
+
+    <span class=n>path</span> <span class=o>=</span> <span class=n>p_run</span><span class=o>.</span><span class=n>path</span>
+    <span class=n>pipeline</span> <span class=o>=</span> <span class=n>Pipeline</span><span class=p>(</span>
+        <span class=n>name</span><span class=o>=</span><span class=n>p_run_name</span><span class=p>,</span>
+        <span class=n>config_path</span><span class=o>=</span><span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>join</span><span class=p>(</span><span class=n>path</span><span class=p>,</span> <span class=s1>&#39;config.yaml&#39;</span><span class=p>)</span>
+    <span class=p>)</span>
+    <span class=k>try</span><span class=p>:</span>
+        <span class=c1># update pipeline run status to restoring</span>
+        <span class=n>prev_status</span> <span class=o>=</span> <span class=n>p_run</span><span class=o>.</span><span class=n>status</span>
+        <span class=n>pipeline</span><span class=o>.</span><span class=n>set_status</span><span class=p>(</span><span class=n>p_run</span><span class=p>,</span> <span class=s1>&#39;RES&#39;</span><span class=p>)</span>
+
+        <span class=n>prev_config_file</span> <span class=o>=</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>join</span><span class=p>(</span><span class=n>p_run</span><span class=o>.</span><span class=n>path</span><span class=p>,</span> <span class=s1>&#39;config.yaml.bak&#39;</span><span class=p>)</span>
+
+        <span class=k>if</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>isfile</span><span class=p>(</span><span class=n>prev_config_file</span><span class=p>):</span>
+            <span class=n>shutil</span><span class=o>.</span><span class=n>copy</span><span class=p>(</span>
+                <span class=n>prev_config_file</span><span class=p>,</span>
+                <span class=n>prev_config_file</span><span class=o>.</span><span class=n>replace</span><span class=p>(</span><span class=s1>&#39;.yaml.bak&#39;</span><span class=p>,</span> <span class=s1>&#39;.bak.yaml&#39;</span><span class=p>)</span>
+            <span class=p>)</span>
+            <span class=n>prev_config_file</span> <span class=o>=</span> <span class=n>prev_config_file</span><span class=o>.</span><span class=n>replace</span><span class=p>(</span>
+                <span class=s1>&#39;.yaml.bak&#39;</span><span class=p>,</span> <span class=s1>&#39;.bak.yaml&#39;</span>
+            <span class=p>)</span>
+            <span class=n>prev_config</span> <span class=o>=</span> <span class=n>PipelineConfig</span><span class=o>.</span><span class=n>from_file</span><span class=p>(</span><span class=n>prev_config_file</span><span class=p>)</span>
+            <span class=n>os</span><span class=o>.</span><span class=n>remove</span><span class=p>(</span><span class=n>prev_config_file</span><span class=p>)</span>
+        <span class=k>else</span><span class=p>:</span>
+            <span class=k>raise</span> <span class=n>CommandError</span><span class=p>(</span>
+                <span class=s1>&#39;Previous config file does not exist.&#39;</span>
+                <span class=s1>&#39; Cannot restore pipeline run.&#39;</span>
+            <span class=p>)</span>
+
+        <span class=n>bak_files</span> <span class=o>=</span> <span class=p>{}</span>
+        <span class=k>for</span> <span class=n>i</span> <span class=ow>in</span> <span class=p>[</span>
+            <span class=s1>&#39;associations&#39;</span><span class=p>,</span> <span class=s1>&#39;bands&#39;</span><span class=p>,</span> <span class=s1>&#39;images&#39;</span><span class=p>,</span> <span class=s1>&#39;measurement_pairs&#39;</span><span class=p>,</span>
+            <span class=s1>&#39;relations&#39;</span><span class=p>,</span> <span class=s1>&#39;skyregions&#39;</span><span class=p>,</span> <span class=s1>&#39;sources&#39;</span><span class=p>,</span> <span class=s1>&#39;config&#39;</span>
+        <span class=p>]:</span>
+            <span class=k>if</span> <span class=n>i</span> <span class=o>==</span> <span class=s1>&#39;config&#39;</span><span class=p>:</span>
+                <span class=n>f_name</span> <span class=o>=</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>join</span><span class=p>(</span><span class=n>p_run</span><span class=o>.</span><span class=n>path</span><span class=p>,</span> <span class=sa>f</span><span class=s1>&#39;</span><span class=si>{</span><span class=n>i</span><span class=si>}</span><span class=s1>.yaml.bak&#39;</span><span class=p>)</span>
+            <span class=k>else</span><span class=p>:</span>
+                <span class=n>f_name</span> <span class=o>=</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>join</span><span class=p>(</span><span class=n>p_run</span><span class=o>.</span><span class=n>path</span><span class=p>,</span> <span class=sa>f</span><span class=s1>&#39;</span><span class=si>{</span><span class=n>i</span><span class=si>}</span><span class=s1>.parquet.bak&#39;</span><span class=p>)</span>
+
+            <span class=k>if</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>isfile</span><span class=p>(</span><span class=n>f_name</span><span class=p>):</span>
+                <span class=n>bak_files</span><span class=p>[</span><span class=n>i</span><span class=p>]</span> <span class=o>=</span> <span class=n>f_name</span>
+            <span class=k>else</span><span class=p>:</span>
+                <span class=k>raise</span> <span class=n>CommandError</span><span class=p>(</span>
+                    <span class=sa>f</span><span class=s1>&#39;File </span><span class=si>{</span><span class=n>f_name</span><span class=si>}</span><span class=s1> does not exist.&#39;</span>
+                    <span class=s1>&#39; Cannot restore pipeline run.&#39;</span>
+                <span class=p>)</span>
+
+        <span class=n>logger_msg</span> <span class=o>=</span> <span class=s2>&quot;Will restore the run to the following config:</span><span class=se>\n</span><span class=s2>&quot;</span>
+        <span class=n>logger</span><span class=o>.</span><span class=n>info</span><span class=p>(</span><span class=n>logger_msg</span> <span class=o>+</span> <span class=n>prev_config</span><span class=o>.</span><span class=n>_yaml</span><span class=o>.</span><span class=n>as_yaml</span><span class=p>())</span>
+
+        <span class=n>user_continue</span> <span class=o>=</span> <span class=kc>True</span> <span class=k>if</span> <span class=n>options</span><span class=p>[</span><span class=s1>&#39;no_confirm&#39;</span><span class=p>]</span> <span class=k>else</span> <span class=n>yesno</span><span class=p>(</span><span class=s2>&quot;Would you like to restore the run&quot;</span><span class=p>)</span>
+
+        <span class=k>if</span> <span class=n>user_continue</span><span class=p>:</span>
+            <span class=n>restore_pipe</span><span class=p>(</span><span class=n>p_run</span><span class=p>,</span> <span class=n>bak_files</span><span class=p>,</span> <span class=n>prev_config</span><span class=p>)</span>
+            <span class=n>pipeline</span><span class=o>.</span><span class=n>set_status</span><span class=p>(</span><span class=n>p_run</span><span class=p>,</span> <span class=s1>&#39;END&#39;</span><span class=p>)</span>
+            <span class=n>logger</span><span class=o>.</span><span class=n>info</span><span class=p>(</span><span class=s1>&#39;Restore complete.&#39;</span><span class=p>)</span>
+        <span class=k>else</span><span class=p>:</span>
+            <span class=n>pipeline</span><span class=o>.</span><span class=n>set_status</span><span class=p>(</span><span class=n>p_run</span><span class=p>,</span> <span class=n>prev_status</span><span class=p>)</span>
+            <span class=n>logger</span><span class=o>.</span><span class=n>info</span><span class=p>(</span><span class=s1>&#39;No actions performed.&#39;</span><span class=p>)</span>
+
+    <span class=k>except</span> <span class=ne>Exception</span> <span class=k>as</span> <span class=n>e</span><span class=p>:</span>
+        <span class=n>logger</span><span class=o>.</span><span class=n>error</span><span class=p>(</span><span class=s1>&#39;Restoring failed!&#39;</span><span class=p>)</span>
+        <span class=n>logger</span><span class=o>.</span><span class=n>error</span><span class=p>(</span><span class=n>e</span><span class=p>)</span>
+        <span class=n>pipeline</span><span class=o>.</span><span class=n>set_status</span><span class=p>(</span><span class=n>p_run</span><span class=p>,</span> <span class=n>prev_status</span><span class=p>)</span>
+</code></pre></div> </td></tr></table> </details> </div> </div> </div> </div> </div> <div class="doc doc-object doc-function"> <h2 id=vast_pipeline.management.commands.restorepiperun.restore_pipe class="doc doc-heading"> <code class="highlight language-python"><span class=n>restore_pipe</span><span class=p>(</span><span class=n>p_run</span><span class=p>,</span> <span class=n>bak_files</span><span class=p>,</span> <span class=n>prev_config</span><span class=p>)</span></code> <a href=#vast_pipeline.management.commands.restorepiperun.restore_pipe class=headerlink title="Permanent link">&para;</a></h2> <div class="doc doc-contents "> <p>Restores the pipeline to the backup files version.</p> <p><strong>Parameters:</strong></p> <table> <thead> <tr> <th>Name</th> <th>Type</th> <th>Description</th> <th>Default</th> </tr> </thead> <tbody> <tr> <td><code>p_run</code></td> <td> <code><a title="vast_pipeline.models.Run" href="../../../models/#vast_pipeline.models.Run">Run</a></code> </td> <td><p>The run model object.</p></td> <td> <em>required</em> </td> </tr> <tr> <td><code>bak_files</code></td> <td> <code><span title="typing.Dict">Dict</span>[str, str]</code> </td> <td><p>Dictionary containing the paths to the .bak files.</p></td> <td> <em>required</em> </td> </tr> <tr> <td><code>prev_config</code></td> <td> <code><a title="vast_pipeline.pipeline.config.PipelineConfig" href="../../../pipeline/config/#vast_pipeline.pipeline.config.PipelineConfig">PipelineConfig</a></code> </td> <td><p>Back up run configuration.</p></td> <td> <em>required</em> </td> </tr> </tbody> </table> <p><strong>Returns:</strong></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td> <code>None</code> </td> <td><p>None</p></td> </tr> </tbody> </table> <details class=quote> <summary>Source code in <code>vast_pipeline/management/commands/restorepiperun.py</code></summary> <table class=highlighttable><tr><td class=linenos><div class=linenodiv><pre><span></span><span class=normal> 48</span>
+<span class=normal> 49</span>
+<span class=normal> 50</span>
+<span class=normal> 51</span>
+<span class=normal> 52</span>
+<span class=normal> 53</span>
+<span class=normal> 54</span>
+<span class=normal> 55</span>
+<span class=normal> 56</span>
+<span class=normal> 57</span>
+<span class=normal> 58</span>
+<span class=normal> 59</span>
+<span class=normal> 60</span>
+<span class=normal> 61</span>
+<span class=normal> 62</span>
+<span class=normal> 63</span>
+<span class=normal> 64</span>
+<span class=normal> 65</span>
+<span class=normal> 66</span>
+<span class=normal> 67</span>
+<span class=normal> 68</span>
+<span class=normal> 69</span>
+<span class=normal> 70</span>
+<span class=normal> 71</span>
+<span class=normal> 72</span>
+<span class=normal> 73</span>
+<span class=normal> 74</span>
+<span class=normal> 75</span>
+<span class=normal> 76</span>
+<span class=normal> 77</span>
+<span class=normal> 78</span>
+<span class=normal> 79</span>
+<span class=normal> 80</span>
+<span class=normal> 81</span>
+<span class=normal> 82</span>
+<span class=normal> 83</span>
+<span class=normal> 84</span>
+<span class=normal> 85</span>
+<span class=normal> 86</span>
+<span class=normal> 87</span>
+<span class=normal> 88</span>
+<span class=normal> 89</span>
+<span class=normal> 90</span>
+<span class=normal> 91</span>
+<span class=normal> 92</span>
+<span class=normal> 93</span>
+<span class=normal> 94</span>
+<span class=normal> 95</span>
+<span class=normal> 96</span>
+<span class=normal> 97</span>
+<span class=normal> 98</span>
+<span class=normal> 99</span>
+<span class=normal>100</span>
+<span class=normal>101</span>
+<span class=normal>102</span>
+<span class=normal>103</span>
+<span class=normal>104</span>
+<span class=normal>105</span>
+<span class=normal>106</span>
+<span class=normal>107</span>
+<span class=normal>108</span>
+<span class=normal>109</span>
+<span class=normal>110</span>
+<span class=normal>111</span>
+<span class=normal>112</span>
+<span class=normal>113</span>
+<span class=normal>114</span>
+<span class=normal>115</span>
+<span class=normal>116</span>
+<span class=normal>117</span>
+<span class=normal>118</span>
+<span class=normal>119</span>
+<span class=normal>120</span>
+<span class=normal>121</span>
+<span class=normal>122</span>
+<span class=normal>123</span>
+<span class=normal>124</span>
+<span class=normal>125</span>
+<span class=normal>126</span>
+<span class=normal>127</span>
+<span class=normal>128</span>
+<span class=normal>129</span>
+<span class=normal>130</span>
+<span class=normal>131</span>
+<span class=normal>132</span>
+<span class=normal>133</span>
+<span class=normal>134</span>
+<span class=normal>135</span>
+<span class=normal>136</span>
+<span class=normal>137</span>
+<span class=normal>138</span>
+<span class=normal>139</span>
+<span class=normal>140</span>
+<span class=normal>141</span>
+<span class=normal>142</span>
+<span class=normal>143</span>
+<span class=normal>144</span>
+<span class=normal>145</span>
+<span class=normal>146</span>
+<span class=normal>147</span>
+<span class=normal>148</span>
+<span class=normal>149</span>
+<span class=normal>150</span>
+<span class=normal>151</span>
+<span class=normal>152</span>
+<span class=normal>153</span>
+<span class=normal>154</span>
+<span class=normal>155</span>
+<span class=normal>156</span>
+<span class=normal>157</span>
+<span class=normal>158</span>
+<span class=normal>159</span>
+<span class=normal>160</span>
+<span class=normal>161</span>
+<span class=normal>162</span>
+<span class=normal>163</span>
+<span class=normal>164</span>
+<span class=normal>165</span>
+<span class=normal>166</span>
+<span class=normal>167</span>
+<span class=normal>168</span>
+<span class=normal>169</span>
+<span class=normal>170</span>
+<span class=normal>171</span>
+<span class=normal>172</span>
+<span class=normal>173</span>
+<span class=normal>174</span>
+<span class=normal>175</span>
+<span class=normal>176</span>
+<span class=normal>177</span>
+<span class=normal>178</span>
+<span class=normal>179</span>
+<span class=normal>180</span>
+<span class=normal>181</span>
+<span class=normal>182</span>
+<span class=normal>183</span>
+<span class=normal>184</span>
+<span class=normal>185</span>
+<span class=normal>186</span>
+<span class=normal>187</span>
+<span class=normal>188</span>
+<span class=normal>189</span>
+<span class=normal>190</span>
+<span class=normal>191</span>
+<span class=normal>192</span>
+<span class=normal>193</span>
+<span class=normal>194</span>
+<span class=normal>195</span>
+<span class=normal>196</span>
+<span class=normal>197</span>
+<span class=normal>198</span>
+<span class=normal>199</span>
+<span class=normal>200</span>
+<span class=normal>201</span>
+<span class=normal>202</span>
+<span class=normal>203</span>
+<span class=normal>204</span>
+<span class=normal>205</span>
+<span class=normal>206</span>
+<span class=normal>207</span>
+<span class=normal>208</span>
+<span class=normal>209</span>
+<span class=normal>210</span>
+<span class=normal>211</span>
+<span class=normal>212</span>
+<span class=normal>213</span>
+<span class=normal>214</span>
+<span class=normal>215</span>
+<span class=normal>216</span>
+<span class=normal>217</span>
+<span class=normal>218</span>
+<span class=normal>219</span>
+<span class=normal>220</span>
+<span class=normal>221</span>
+<span class=normal>222</span>
+<span class=normal>223</span>
+<span class=normal>224</span>
+<span class=normal>225</span>
+<span class=normal>226</span>
+<span class=normal>227</span>
+<span class=normal>228</span>
+<span class=normal>229</span>
+<span class=normal>230</span>
+<span class=normal>231</span>
+<span class=normal>232</span>
+<span class=normal>233</span>
+<span class=normal>234</span>
+<span class=normal>235</span>
+<span class=normal>236</span>
+<span class=normal>237</span>
+<span class=normal>238</span>
+<span class=normal>239</span>
+<span class=normal>240</span>
+<span class=normal>241</span>
+<span class=normal>242</span>
+<span class=normal>243</span>
+<span class=normal>244</span>
+<span class=normal>245</span>
+<span class=normal>246</span>
+<span class=normal>247</span>
+<span class=normal>248</span>
+<span class=normal>249</span>
+<span class=normal>250</span>
+<span class=normal>251</span>
+<span class=normal>252</span>
+<span class=normal>253</span>
+<span class=normal>254</span>
+<span class=normal>255</span>
+<span class=normal>256</span>
+<span class=normal>257</span>
+<span class=normal>258</span>
+<span class=normal>259</span>
+<span class=normal>260</span>
+<span class=normal>261</span>
+<span class=normal>262</span>
+<span class=normal>263</span>
+<span class=normal>264</span>
+<span class=normal>265</span>
+<span class=normal>266</span>
+<span class=normal>267</span>
+<span class=normal>268</span>
+<span class=normal>269</span>
+<span class=normal>270</span>
+<span class=normal>271</span>
+<span class=normal>272</span>
+<span class=normal>273</span>
+<span class=normal>274</span>
+<span class=normal>275</span>
+<span class=normal>276</span>
+<span class=normal>277</span>
+<span class=normal>278</span>
+<span class=normal>279</span>
+<span class=normal>280</span></pre></div></td><td class=code><div class=highlight><pre><span></span><code><span class=k>def</span> <span class=nf>restore_pipe</span><span class=p>(</span><span class=n>p_run</span><span class=p>:</span> <span class=n>Run</span><span class=p>,</span> <span class=n>bak_files</span><span class=p>:</span> <span class=n>Dict</span><span class=p>[</span><span class=nb>str</span><span class=p>,</span> <span class=nb>str</span><span class=p>],</span> <span class=n>prev_config</span><span class=p>:</span> <span class=n>PipelineConfig</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=kc>None</span><span class=p>:</span>
+    <span class=sd>&quot;&quot;&quot;</span>
+<span class=sd>    Restores the pipeline to the backup files version.</span>
+
+<span class=sd>    Args:</span>
+<span class=sd>        p_run (Run):</span>
+<span class=sd>            The run model object.</span>
+<span class=sd>        bak_files (Dict[str, str]):</span>
+<span class=sd>            Dictionary containing the paths to the .bak files.</span>
+<span class=sd>        prev_config (PipelineConfig):</span>
+<span class=sd>            Back up run configuration.</span>
+
+<span class=sd>    Returns:</span>
+<span class=sd>        None</span>
+<span class=sd>    &quot;&quot;&quot;</span>
+    <span class=c1># check images match</span>
+    <span class=n>img_f_list</span> <span class=o>=</span> <span class=n>prev_config</span><span class=p>[</span><span class=s2>&quot;inputs&quot;</span><span class=p>][</span><span class=s2>&quot;image&quot;</span><span class=p>]</span>
+    <span class=k>if</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>img_f_list</span><span class=p>,</span> <span class=nb>dict</span><span class=p>):</span>
+        <span class=n>img_f_list</span> <span class=o>=</span> <span class=p>[</span>
+            <span class=n>item</span> <span class=k>for</span> <span class=n>sublist</span> <span class=ow>in</span> <span class=n>img_f_list</span><span class=o>.</span><span class=n>values</span><span class=p>()</span> <span class=k>for</span> <span class=n>item</span> <span class=ow>in</span> <span class=n>sublist</span>
+        <span class=p>]</span>
+    <span class=n>img_f_list</span> <span class=o>=</span> <span class=p>[</span><span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>basename</span><span class=p>(</span><span class=n>i</span><span class=p>)</span> <span class=k>for</span> <span class=n>i</span> <span class=ow>in</span> <span class=n>img_f_list</span><span class=p>]</span>
+
+    <span class=n>prev_images</span> <span class=o>=</span> <span class=n>pd</span><span class=o>.</span><span class=n>read_parquet</span><span class=p>(</span>
+        <span class=n>bak_files</span><span class=p>[</span><span class=s1>&#39;images&#39;</span><span class=p>],</span> <span class=n>columns</span><span class=o>=</span><span class=p>[</span><span class=s1>&#39;id&#39;</span><span class=p>,</span> <span class=s1>&#39;name&#39;</span><span class=p>,</span> <span class=s1>&#39;measurements_path&#39;</span><span class=p>]</span>
+    <span class=p>)</span>
+
+    <span class=k>if</span> <span class=nb>sorted</span><span class=p>(</span><span class=n>prev_images</span><span class=p>[</span><span class=s1>&#39;name&#39;</span><span class=p>]</span><span class=o>.</span><span class=n>tolist</span><span class=p>())</span> <span class=o>!=</span> <span class=nb>sorted</span><span class=p>(</span><span class=n>img_f_list</span><span class=p>):</span>
+        <span class=k>raise</span> <span class=n>CommandError</span><span class=p>(</span>
+            <span class=s1>&#39;Images in previous config file does not&#39;</span>
+            <span class=s1>&#39; match those found in the previous images.parquet.bak.&#39;</span>
+            <span class=s1>&#39; Cannot restore pipeline run.&#39;</span>
+        <span class=p>)</span>
+
+    <span class=c1># check forced measurements</span>
+    <span class=n>monitor</span> <span class=o>=</span> <span class=n>prev_config</span><span class=p>[</span><span class=s2>&quot;source_monitoring&quot;</span><span class=p>][</span><span class=s2>&quot;monitor&quot;</span><span class=p>]</span>
+    <span class=k>if</span> <span class=n>monitor</span><span class=p>:</span>
+        <span class=n>forced_parquets</span> <span class=o>=</span> <span class=n>glob</span><span class=p>(</span><span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>join</span><span class=p>(</span>
+            <span class=n>p_run</span><span class=o>.</span><span class=n>path</span><span class=p>,</span> <span class=s1>&#39;forced_*.parquet.bak&#39;</span>
+        <span class=p>))</span>
+
+        <span class=k>if</span> <span class=ow>not</span> <span class=n>forced_parquets</span><span class=p>:</span>
+            <span class=k>raise</span> <span class=n>CommandError</span><span class=p>(</span>
+                <span class=s1>&#39;source_monitoring.monitor is </span><span class=se>\&#39;</span><span class=s1>True</span><span class=se>\&#39;</span><span class=s1> in the previous configuration but&#39;</span>
+                <span class=s1>&#39; no .bak forced parquet files have been found.&#39;</span>
+                <span class=s1>&#39; Cannot restore pipeline run.&#39;</span>
+            <span class=p>)</span>
+        <span class=k>else</span><span class=p>:</span>
+            <span class=c1># load old associations</span>
+            <span class=n>bak_meas_id</span> <span class=o>=</span> <span class=n>pd</span><span class=o>.</span><span class=n>read_parquet</span><span class=p>(</span>
+                <span class=n>bak_files</span><span class=p>[</span><span class=s1>&#39;associations&#39;</span><span class=p>],</span>
+                <span class=n>columns</span><span class=o>=</span><span class=p>[</span><span class=s1>&#39;meas_id&#39;</span><span class=p>]</span>
+            <span class=p>)[</span><span class=s1>&#39;meas_id&#39;</span><span class=p>]</span><span class=o>.</span><span class=n>unique</span><span class=p>()</span>
+
+            <span class=c1># load backup forced measurements</span>
+            <span class=n>forced_meas</span> <span class=o>=</span> <span class=n>pd</span><span class=o>.</span><span class=n>concat</span><span class=p>(</span>
+                <span class=p>[</span><span class=n>pd</span><span class=o>.</span><span class=n>read_parquet</span><span class=p>(</span><span class=n>i</span><span class=p>,</span> <span class=n>columns</span><span class=o>=</span><span class=p>[</span><span class=s1>&#39;id&#39;</span><span class=p>])</span> <span class=k>for</span> <span class=n>i</span> <span class=ow>in</span> <span class=n>forced_parquets</span><span class=p>]</span>
+            <span class=p>)</span>
+
+            <span class=c1># load image meas</span>
+            <span class=n>meas</span> <span class=o>=</span> <span class=n>pd</span><span class=o>.</span><span class=n>concat</span><span class=p>(</span>
+                <span class=p>[</span><span class=n>pd</span><span class=o>.</span><span class=n>read_parquet</span><span class=p>(</span>
+                    <span class=n>i</span><span class=p>,</span> <span class=n>columns</span><span class=o>=</span><span class=p>[</span><span class=s1>&#39;id&#39;</span><span class=p>]</span>
+                <span class=p>)</span> <span class=k>for</span> <span class=n>i</span> <span class=ow>in</span> <span class=n>prev_images</span><span class=p>[</span><span class=s1>&#39;measurements_path&#39;</span><span class=p>]]</span>
+            <span class=p>)</span>
+
+            <span class=c1># Get forced ids from the associations</span>
+            <span class=n>forced_meas_id</span> <span class=o>=</span> <span class=n>bak_meas_id</span><span class=p>[</span>
+                <span class=n>np</span><span class=o>.</span><span class=n>isin</span><span class=p>(</span><span class=n>bak_meas_id</span><span class=p>,</span> <span class=n>meas</span><span class=p>[</span><span class=s1>&#39;id&#39;</span><span class=p>]</span><span class=o>.</span><span class=n>to_numpy</span><span class=p>(),</span> <span class=n>invert</span><span class=o>=</span><span class=kc>True</span><span class=p>)</span>
+            <span class=p>]</span>
+
+            <span class=k>if</span> <span class=ow>not</span> <span class=n>np</span><span class=o>.</span><span class=n>array_equal</span><span class=p>(</span>
+                <span class=n>np</span><span class=o>.</span><span class=n>sort</span><span class=p>(</span><span class=n>forced_meas_id</span><span class=p>),</span>
+                <span class=n>np</span><span class=o>.</span><span class=n>sort</span><span class=p>(</span><span class=n>forced_meas</span><span class=p>[</span><span class=s1>&#39;id&#39;</span><span class=p>]</span><span class=o>.</span><span class=n>to_numpy</span><span class=p>())</span>
+            <span class=p>):</span>
+                <span class=k>raise</span> <span class=n>CommandError</span><span class=p>(</span>
+                    <span class=s1>&#39;The forced measurements .bak files do not match the&#39;</span>
+                    <span class=s1>&#39; previous run.&#39;</span>
+                    <span class=s1>&#39; Cannot restore pipeline run.&#39;</span>
+                <span class=p>)</span>
+
+    <span class=n>logger</span><span class=o>.</span><span class=n>info</span><span class=p>(</span><span class=s2>&quot;Restoring &#39;</span><span class=si>%s</span><span class=s2>&#39; from backup parquet files.&quot;</span><span class=p>,</span> <span class=n>p_run</span><span class=o>.</span><span class=n>name</span><span class=p>)</span>
+
+    <span class=c1># Delete any new sources</span>
+    <span class=n>bak_sources</span> <span class=o>=</span> <span class=n>pd</span><span class=o>.</span><span class=n>read_parquet</span><span class=p>(</span><span class=n>bak_files</span><span class=p>[</span><span class=s1>&#39;sources&#39;</span><span class=p>])</span>
+
+    <span class=n>sources_to_delete</span> <span class=o>=</span> <span class=p>(</span>
+        <span class=n>Source</span><span class=o>.</span><span class=n>objects</span>
+        <span class=o>.</span><span class=n>filter</span><span class=p>(</span><span class=n>run</span><span class=o>=</span><span class=n>p_run</span><span class=p>)</span>
+        <span class=o>.</span><span class=n>exclude</span><span class=p>(</span><span class=n>id__in</span><span class=o>=</span><span class=n>bak_sources</span><span class=o>.</span><span class=n>index</span><span class=o>.</span><span class=n>to_numpy</span><span class=p>())</span>
+    <span class=p>)</span>
+
+    <span class=k>if</span> <span class=n>sources_to_delete</span><span class=o>.</span><span class=n>exists</span><span class=p>():</span>
+        <span class=k>with</span> <span class=n>transaction</span><span class=o>.</span><span class=n>atomic</span><span class=p>():</span>
+            <span class=n>n_del</span><span class=p>,</span> <span class=n>detail_del</span> <span class=o>=</span> <span class=n>sources_to_delete</span><span class=o>.</span><span class=n>delete</span><span class=p>()</span>
+            <span class=n>logger</span><span class=o>.</span><span class=n>info</span><span class=p>(</span>
+                <span class=p>(</span><span class=s1>&#39;Deleting new sources and associated objects to restore run&#39;</span>
+                 <span class=s1>&#39; Total objects deleted: </span><span class=si>%i</span><span class=s1>&#39;</span><span class=p>),</span>
+                <span class=n>n_del</span><span class=p>,</span>
+            <span class=p>)</span>
+            <span class=n>logger</span><span class=o>.</span><span class=n>debug</span><span class=p>(</span><span class=s1>&#39;(type, #deleted): </span><span class=si>%s</span><span class=s1>&#39;</span><span class=p>,</span> <span class=n>detail_del</span><span class=p>)</span>
+
+    <span class=c1># Delete newly created relations of sources that still exist after deleting</span>
+    <span class=c1># the new sources</span>
+    <span class=n>bak_relations</span> <span class=o>=</span> <span class=n>pd</span><span class=o>.</span><span class=n>read_parquet</span><span class=p>(</span><span class=n>bak_files</span><span class=p>[</span><span class=s1>&#39;relations&#39;</span><span class=p>])</span>
+    <span class=n>db_relations</span> <span class=o>=</span> <span class=n>pd</span><span class=o>.</span><span class=n>DataFrame</span><span class=p>(</span>
+        <span class=nb>list</span><span class=p>(</span><span class=n>RelatedSource</span><span class=o>.</span><span class=n>objects</span><span class=o>.</span><span class=n>filter</span><span class=p>(</span><span class=n>from_source_id__run</span><span class=o>=</span><span class=n>p_run</span><span class=p>)</span><span class=o>.</span><span class=n>values</span><span class=p>())</span>
+    <span class=p>)</span>
+
+    <span class=n>diff</span> <span class=o>=</span> <span class=n>pd</span><span class=o>.</span><span class=n>merge</span><span class=p>(</span>
+        <span class=n>db_relations</span><span class=p>,</span>
+        <span class=n>bak_relations</span><span class=p>,</span>
+        <span class=n>on</span><span class=o>=</span><span class=p>[</span><span class=s1>&#39;from_source_id&#39;</span><span class=p>,</span> <span class=s1>&#39;to_source_id&#39;</span><span class=p>],</span>
+        <span class=n>how</span><span class=o>=</span><span class=s1>&#39;left&#39;</span><span class=p>,</span>
+        <span class=n>indicator</span><span class=o>=</span><span class=s1>&#39;exist&#39;</span>
+    <span class=p>)</span>
+
+    <span class=n>relations_to_drop</span> <span class=o>=</span> <span class=n>diff</span><span class=p>[</span><span class=n>diff</span><span class=p>[</span><span class=s1>&#39;exist&#39;</span><span class=p>]</span> <span class=o>==</span> <span class=s1>&#39;left_only&#39;</span><span class=p>][</span><span class=s1>&#39;id&#39;</span><span class=p>]</span><span class=o>.</span><span class=n>to_numpy</span><span class=p>()</span>
+    <span class=n>relations_to_drop</span> <span class=o>=</span> <span class=n>RelatedSource</span><span class=o>.</span><span class=n>objects</span><span class=o>.</span><span class=n>filter</span><span class=p>(</span><span class=n>id__in</span><span class=o>=</span><span class=n>relations_to_drop</span><span class=p>)</span>
+
+    <span class=k>with</span> <span class=n>transaction</span><span class=o>.</span><span class=n>atomic</span><span class=p>():</span>
+        <span class=n>n_del</span><span class=p>,</span> <span class=n>detail_del</span> <span class=o>=</span> <span class=n>relations_to_drop</span><span class=o>.</span><span class=n>delete</span><span class=p>()</span>
+        <span class=n>logger</span><span class=o>.</span><span class=n>info</span><span class=p>(</span>
+            <span class=p>(</span><span class=s1>&#39;Deleting left over relations after dropping new sources&#39;</span>
+             <span class=s1>&#39; Total objects deleted: </span><span class=si>%i</span><span class=s1>&#39;</span><span class=p>),</span>
+            <span class=n>n_del</span><span class=p>,</span>
+        <span class=p>)</span>
+        <span class=n>logger</span><span class=o>.</span><span class=n>debug</span><span class=p>(</span><span class=s1>&#39;(type, #deleted): </span><span class=si>%s</span><span class=s1>&#39;</span><span class=p>,</span> <span class=n>detail_del</span><span class=p>)</span>
+
+    <span class=k>if</span> <span class=n>monitor</span><span class=p>:</span>
+        <span class=n>current_forced_parquets</span> <span class=o>=</span> <span class=n>glob</span><span class=p>(</span><span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>join</span><span class=p>(</span>
+            <span class=n>p_run</span><span class=o>.</span><span class=n>path</span><span class=p>,</span> <span class=s1>&#39;forced_*.parquet&#39;</span>
+        <span class=p>))</span>
+
+        <span class=n>current_forced_meas</span> <span class=o>=</span> <span class=n>pd</span><span class=o>.</span><span class=n>concat</span><span class=p>(</span>
+            <span class=p>[</span><span class=n>pd</span><span class=o>.</span><span class=n>read_parquet</span><span class=p>(</span>
+                <span class=n>i</span><span class=p>,</span> <span class=n>columns</span><span class=o>=</span><span class=p>[</span><span class=s1>&#39;id&#39;</span><span class=p>]</span>
+            <span class=p>)</span> <span class=k>for</span> <span class=n>i</span> <span class=ow>in</span> <span class=n>current_forced_parquets</span><span class=p>]</span>
+        <span class=p>)</span>
+
+        <span class=n>ids_to_delete</span> <span class=o>=</span> <span class=n>current_forced_meas</span><span class=o>.</span><span class=n>loc</span><span class=p>[</span>
+            <span class=o>~</span><span class=n>current_forced_meas</span><span class=p>[</span><span class=s1>&#39;id&#39;</span><span class=p>]</span><span class=o>.</span><span class=n>isin</span><span class=p>(</span><span class=n>forced_meas</span><span class=p>[</span><span class=s1>&#39;id&#39;</span><span class=p>]</span><span class=o>.</span><span class=n>to_numpy</span><span class=p>()),</span>
+            <span class=s1>&#39;id&#39;</span>
+        <span class=p>]</span>
+
+        <span class=n>meas_to_delete</span> <span class=o>=</span> <span class=n>Measurement</span><span class=o>.</span><span class=n>objects</span><span class=o>.</span><span class=n>filter</span><span class=p>(</span><span class=n>id__in</span><span class=o>=</span><span class=n>ids_to_delete</span><span class=p>)</span>
+
+        <span class=k>del</span> <span class=n>ids_to_delete</span>
+
+        <span class=k>if</span> <span class=n>meas_to_delete</span><span class=o>.</span><span class=n>exists</span><span class=p>():</span>
+            <span class=k>with</span> <span class=n>transaction</span><span class=o>.</span><span class=n>atomic</span><span class=p>():</span>
+                <span class=n>n_del</span><span class=p>,</span> <span class=n>detail_del</span> <span class=o>=</span> <span class=n>meas_to_delete</span><span class=o>.</span><span class=n>delete</span><span class=p>()</span>
+                <span class=n>logger</span><span class=o>.</span><span class=n>info</span><span class=p>(</span>
+                    <span class=p>(</span><span class=s1>&#39;Deleting forced measurement and associated&#39;</span>
+                     <span class=s1>&#39; objects to restore run. Total objects deleted: </span><span class=si>%i</span><span class=s1>&#39;</span><span class=p>),</span>
+                    <span class=n>n_del</span><span class=p>,</span>
+                <span class=p>)</span>
+                <span class=n>logger</span><span class=o>.</span><span class=n>debug</span><span class=p>(</span><span class=s1>&#39;(type, #deleted): </span><span class=si>%s</span><span class=s1>&#39;</span><span class=p>,</span> <span class=n>detail_del</span><span class=p>)</span>
+
+    <span class=c1># restore source metrics</span>
+    <span class=n>logger</span><span class=o>.</span><span class=n>info</span><span class=p>(</span><span class=sa>f</span><span class=s1>&#39;Restoring metrics for </span><span class=si>{</span><span class=n>bak_sources</span><span class=o>.</span><span class=n>shape</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span><span class=si>}</span><span class=s1> sources.&#39;</span><span class=p>)</span>
+    <span class=n>bak_sources</span> <span class=o>=</span> <span class=n>update_sources</span><span class=p>(</span><span class=n>bak_sources</span><span class=p>)</span>
+
+    <span class=c1># remove images from run</span>
+    <span class=n>images_to_remove</span> <span class=o>=</span> <span class=p>(</span>
+        <span class=n>Image</span><span class=o>.</span><span class=n>objects</span>
+        <span class=o>.</span><span class=n>filter</span><span class=p>(</span><span class=n>run</span><span class=o>=</span><span class=n>p_run</span><span class=p>)</span>
+        <span class=o>.</span><span class=n>exclude</span><span class=p>(</span><span class=n>id__in</span><span class=o>=</span><span class=n>prev_images</span><span class=p>[</span><span class=s1>&#39;id&#39;</span><span class=p>]</span><span class=o>.</span><span class=n>to_numpy</span><span class=p>())</span>
+    <span class=p>)</span>
+    <span class=n>logger</span><span class=o>.</span><span class=n>info</span><span class=p>(</span><span class=sa>f</span><span class=s1>&#39;Removing </span><span class=si>{</span><span class=nb>len</span><span class=p>(</span><span class=n>images_to_remove</span><span class=p>)</span><span class=si>}</span><span class=s1> images from the run.&#39;</span><span class=p>)</span>
+    <span class=k>if</span> <span class=n>images_to_remove</span><span class=o>.</span><span class=n>exists</span><span class=p>():</span>
+        <span class=k>with</span> <span class=n>transaction</span><span class=o>.</span><span class=n>atomic</span><span class=p>():</span>
+            <span class=n>p_run</span><span class=o>.</span><span class=n>image_set</span><span class=o>.</span><span class=n>remove</span><span class=p>(</span><span class=o>*</span><span class=n>images_to_remove</span><span class=p>)</span>
+
+    <span class=c1># load old associations to remove all new assoc</span>
+    <span class=n>bak_assoc</span> <span class=o>=</span> <span class=n>pd</span><span class=o>.</span><span class=n>read_parquet</span><span class=p>(</span>
+        <span class=n>bak_files</span><span class=p>[</span><span class=s1>&#39;associations&#39;</span><span class=p>],</span>
+        <span class=n>columns</span><span class=o>=</span><span class=p>[</span><span class=s1>&#39;source_id&#39;</span><span class=p>,</span> <span class=s1>&#39;meas_id&#39;</span><span class=p>]</span>
+    <span class=p>)</span>
+
+    <span class=c1># get unique source and meas id values in the previous run</span>
+    <span class=n>bak_source_ids</span> <span class=o>=</span> <span class=n>bak_assoc</span><span class=p>[</span><span class=s1>&#39;source_id&#39;</span><span class=p>]</span><span class=o>.</span><span class=n>unique</span><span class=p>()</span>
+    <span class=n>bak_meas_ids</span> <span class=o>=</span> <span class=n>bak_assoc</span><span class=p>[</span><span class=s1>&#39;meas_id&#39;</span><span class=p>]</span><span class=o>.</span><span class=n>unique</span><span class=p>()</span>
+
+    <span class=c1># create query to only obtain associations that are not part of the</span>
+    <span class=c1># previous run</span>
+    <span class=n>association_criteria_1</span> <span class=o>=</span> <span class=n>Q</span><span class=p>(</span><span class=n>source_id__in</span><span class=o>=</span><span class=n>bak_source_ids</span><span class=p>)</span>
+    <span class=n>association_criteria_2</span> <span class=o>=</span> <span class=o>~</span><span class=n>Q</span><span class=p>(</span><span class=n>meas_id__in</span><span class=o>=</span><span class=n>bak_meas_ids</span><span class=p>)</span>
+    <span class=n>associations_to_delete</span> <span class=o>=</span> <span class=n>Association</span><span class=o>.</span><span class=n>objects</span><span class=o>.</span><span class=n>filter</span><span class=p>(</span>
+        <span class=n>association_criteria_1</span> <span class=ow>and</span> <span class=n>association_criteria_2</span>
+    <span class=p>)</span>
+
+    <span class=k>if</span> <span class=n>associations_to_delete</span><span class=o>.</span><span class=n>exists</span><span class=p>():</span>
+        <span class=k>with</span> <span class=n>transaction</span><span class=o>.</span><span class=n>atomic</span><span class=p>():</span>
+            <span class=n>n_del</span><span class=p>,</span> <span class=n>detail_del</span> <span class=o>=</span> <span class=n>associations_to_delete</span><span class=o>.</span><span class=n>delete</span><span class=p>()</span>
+            <span class=n>logger</span><span class=o>.</span><span class=n>info</span><span class=p>(</span>
+                <span class=p>(</span><span class=s1>&#39;Deleting associations to restore run.&#39;</span>
+                 <span class=s1>&#39; Total objects deleted: </span><span class=si>%i</span><span class=s1>&#39;</span><span class=p>),</span>
+                <span class=n>n_del</span><span class=p>,</span>
+            <span class=p>)</span>
+            <span class=n>logger</span><span class=o>.</span><span class=n>debug</span><span class=p>(</span><span class=s1>&#39;(type, #deleted): </span><span class=si>%s</span><span class=s1>&#39;</span><span class=p>,</span> <span class=n>detail_del</span><span class=p>)</span>
+
+    <span class=n>logger</span><span class=o>.</span><span class=n>info</span><span class=p>(</span><span class=s1>&#39;Restoring run metrics.&#39;</span><span class=p>)</span>
+    <span class=n>p_run</span><span class=o>.</span><span class=n>n_images</span> <span class=o>=</span> <span class=n>prev_images</span><span class=o>.</span><span class=n>shape</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span>
+    <span class=n>p_run</span><span class=o>.</span><span class=n>n_sources</span> <span class=o>=</span> <span class=n>bak_sources</span><span class=o>.</span><span class=n>shape</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span>
+    <span class=k>if</span> <span class=n>monitor</span><span class=p>:</span>
+        <span class=n>p_run</span><span class=o>.</span><span class=n>n_selavy_measurements</span> <span class=o>=</span> <span class=n>meas</span><span class=o>.</span><span class=n>shape</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span>
+        <span class=n>p_run</span><span class=o>.</span><span class=n>n_forced_measurements</span> <span class=o>=</span> <span class=n>forced_meas</span><span class=o>.</span><span class=n>shape</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span>
+    <span class=k>else</span><span class=p>:</span>
+        <span class=n>p_run</span><span class=o>.</span><span class=n>n_selavy_measurements</span> <span class=o>=</span> <span class=n>bak_meas_ids</span><span class=o>.</span><span class=n>shape</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span>
+
+    <span class=k>with</span> <span class=n>transaction</span><span class=o>.</span><span class=n>atomic</span><span class=p>():</span>
+        <span class=n>p_run</span><span class=o>.</span><span class=n>save</span><span class=p>()</span>
+
+    <span class=c1># switch files and delete backups</span>
+    <span class=n>logger</span><span class=o>.</span><span class=n>info</span><span class=p>(</span><span class=s1>&#39;Restoring parquet files and removing .bak files.&#39;</span><span class=p>)</span>
+    <span class=k>for</span> <span class=n>i</span> <span class=ow>in</span> <span class=n>bak_files</span><span class=p>:</span>
+        <span class=n>bak_file</span> <span class=o>=</span> <span class=n>bak_files</span><span class=p>[</span><span class=n>i</span><span class=p>]</span>
+        <span class=k>if</span> <span class=n>i</span> <span class=o>==</span> <span class=s1>&#39;config&#39;</span><span class=p>:</span>
+            <span class=n>actual_file</span> <span class=o>=</span> <span class=n>bak_file</span><span class=o>.</span><span class=n>replace</span><span class=p>(</span><span class=s1>&#39;.yaml.bak&#39;</span><span class=p>,</span> <span class=s1>&#39;_prev.yaml&#39;</span><span class=p>)</span>
+        <span class=k>else</span><span class=p>:</span>
+            <span class=n>actual_file</span> <span class=o>=</span> <span class=n>bak_file</span><span class=o>.</span><span class=n>replace</span><span class=p>(</span><span class=s1>&#39;.bak&#39;</span><span class=p>,</span> <span class=s1>&#39;&#39;</span><span class=p>)</span>
+        <span class=n>shutil</span><span class=o>.</span><span class=n>copy</span><span class=p>(</span><span class=n>bak_file</span><span class=p>,</span> <span class=n>actual_file</span><span class=p>)</span>
+        <span class=n>os</span><span class=o>.</span><span class=n>remove</span><span class=p>(</span><span class=n>bak_file</span><span class=p>)</span>
+
+    <span class=k>if</span> <span class=n>monitor</span><span class=p>:</span>
+        <span class=k>for</span> <span class=n>i</span> <span class=ow>in</span> <span class=n>current_forced_parquets</span><span class=p>:</span>
+            <span class=n>os</span><span class=o>.</span><span class=n>remove</span><span class=p>(</span><span class=n>i</span><span class=p>)</span>
+
+        <span class=k>for</span> <span class=n>i</span> <span class=ow>in</span> <span class=n>forced_parquets</span><span class=p>:</span>
+            <span class=n>new_file</span> <span class=o>=</span> <span class=n>i</span><span class=o>.</span><span class=n>replace</span><span class=p>(</span><span class=s1>&#39;.bak&#39;</span><span class=p>,</span> <span class=s1>&#39;&#39;</span><span class=p>)</span>
+            <span class=n>shutil</span><span class=o>.</span><span class=n>copy</span><span class=p>(</span><span class=n>i</span><span class=p>,</span> <span class=n>new_file</span><span class=p>)</span>
+            <span class=n>os</span><span class=o>.</span><span class=n>remove</span><span class=p>(</span><span class=n>i</span><span class=p>)</span>
+</code></pre></div> </td></tr></table> </details> </div> </div> <div class="doc doc-object doc-function"> <h2 id=vast_pipeline.management.commands.restorepiperun.yesno class="doc doc-heading"> <code class="highlight language-python"><span class=n>yesno</span><span class=p>(</span><span class=n>question</span><span class=p>)</span></code> <a href=#vast_pipeline.management.commands.restorepiperun.yesno class=headerlink title="Permanent link">&para;</a></h2> <div class="doc doc-contents "> <p>Simple Yes/No Function.</p> <p><strong>Parameters:</strong></p> <table> <thead> <tr> <th>Name</th> <th>Type</th> <th>Description</th> <th>Default</th> </tr> </thead> <tbody> <tr> <td><code>question</code></td> <td> <code>str</code> </td> <td><p>The question to show to the user for a y/n response.</p></td> <td> <em>required</em> </td> </tr> </tbody> </table> <p><strong>Returns:</strong></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td> <code>bool</code> </td> <td><p>True if user enters 'y', False if 'n'.</p></td> </tr> </tbody> </table> <details class=quote> <summary>Source code in <code>vast_pipeline/management/commands/restorepiperun.py</code></summary> <table class=highlighttable><tr><td class=linenos><div class=linenodiv><pre><span></span><span class=normal>27</span>
+<span class=normal>28</span>
+<span class=normal>29</span>
+<span class=normal>30</span>
+<span class=normal>31</span>
+<span class=normal>32</span>
+<span class=normal>33</span>
+<span class=normal>34</span>
+<span class=normal>35</span>
+<span class=normal>36</span>
+<span class=normal>37</span>
+<span class=normal>38</span>
+<span class=normal>39</span>
+<span class=normal>40</span>
+<span class=normal>41</span>
+<span class=normal>42</span>
+<span class=normal>43</span>
+<span class=normal>44</span>
+<span class=normal>45</span></pre></div></td><td class=code><div class=highlight><pre><span></span><code><span class=k>def</span> <span class=nf>yesno</span><span class=p>(</span><span class=n>question</span><span class=p>:</span> <span class=nb>str</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=nb>bool</span><span class=p>:</span>
+    <span class=sd>&quot;&quot;&quot;</span>
+<span class=sd>    Simple Yes/No Function.</span>
+
+<span class=sd>    Args:</span>
+<span class=sd>        question (str):</span>
+<span class=sd>            The question to show to the user for a y/n response.</span>
+
+<span class=sd>    Returns:</span>
+<span class=sd>        True if user enters &#39;y&#39;, False if &#39;n&#39;.</span>
+<span class=sd>    &quot;&quot;&quot;</span>
+    <span class=n>prompt</span> <span class=o>=</span> <span class=sa>f</span><span class=s1>&#39;</span><span class=si>{</span><span class=n>question</span><span class=si>}</span><span class=s1> ? (y/n): &#39;</span>
+    <span class=n>ans</span> <span class=o>=</span> <span class=nb>input</span><span class=p>(</span><span class=n>prompt</span><span class=p>)</span><span class=o>.</span><span class=n>strip</span><span class=p>()</span><span class=o>.</span><span class=n>lower</span><span class=p>()</span>
+    <span class=k>if</span> <span class=n>ans</span> <span class=ow>not</span> <span class=ow>in</span> <span class=p>[</span><span class=s1>&#39;y&#39;</span><span class=p>,</span> <span class=s1>&#39;n&#39;</span><span class=p>]:</span>
+        <span class=nb>print</span><span class=p>(</span><span class=sa>f</span><span class=s1>&#39;</span><span class=si>{</span><span class=n>ans</span><span class=si>}</span><span class=s1> is invalid, please try again...&#39;</span><span class=p>)</span>
+        <span class=k>return</span> <span class=n>yesno</span><span class=p>(</span><span class=n>question</span><span class=p>)</span>
+    <span class=k>if</span> <span class=n>ans</span> <span class=o>==</span> <span class=s1>&#39;y&#39;</span><span class=p>:</span>
+        <span class=k>return</span> <span class=kc>True</span>
+    <span class=k>return</span> <span class=kc>False</span>
+</code></pre></div> </td></tr></table> </details> </div> </div> </div> </div> </div> <hr> <div class=md-source-file> <small> Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">February 18, 2022</span> <br> Created: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">February 18, 2022</span> </small> </div> </article> </div> </div> </main> <footer class=md-footer> <nav class="md-footer__inner md-grid" aria-label=Footer> <a href=../initpiperun/ class="md-footer__link md-footer__link--prev" aria-label="Previous: initpiperun.py" rel=prev> <div class="md-footer__button md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg> </div> <div class=md-footer__title> <div class=md-ellipsis> <span class=md-footer__direction> Previous </span> initpiperun.py </div> </div> </a> <a href=../runpipeline/ class="md-footer__link md-footer__link--next" aria-label="Next: runpipeline.py" rel=next> <div class=md-footer__title> <div class=md-ellipsis> <span class=md-footer__direction> Next </span> runpipeline.py </div> </div> <div class="md-footer__button md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg> </div> </a> </nav> <div class="md-footer-meta md-typeset"> <div class="md-footer-meta__inner md-grid"> <div class=md-copyright> <div class=md-copyright__highlight> Copyright &copy; 2020 - 2025 Vast Development Team, University of Sydney - all right reserved </div> Made with <a href=https://squidfunk.github.io/mkdocs-material/ target=_blank rel=noopener> Material for MkDocs </a> </div> <div class=md-social> <a href=https://github.com/askap-vast/vast-pipeline target=_blank rel=noopener title="vast-pipeline source on GitHub" class=md-social__link> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 496 512"><!-- Font Awesome Free 6.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg> </a> <a href=https://vast-survey.org target=_blank rel=noopener title=vast-survey.org class=md-social__link> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 512 512"><!-- Font Awesome Free 6.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M352 256c0 22.2-1.2 43.6-3.3 64H163.3c-2.1-20.4-4.2-41.8-4.2-64 0-22.2 2.1-43.6 4.2-64h185.4c2.1 20.4 3.3 41.8 3.3 64zm151.9-64c5.3 20.5 8.1 41.9 8.1 64s-2.8 43.5-8.1 64H380.8c2.1-20.6 3.2-42.9 3.2-64 0-22-1.1-43.4-3.2-64h123.1zm-10.5-32H376.7c-10-63.86-29.8-117.38-55.3-151.558C399.8 29.09 463.4 85.94 493.4 160zm-149.1 0H167.7c6.1-36.4 15.5-68.62 27-94.65 10.5-23.61 22.2-40.74 33.5-51.54C239.4 3.178 248.7 0 256 0c7.3 0 16.6 3.178 27.8 13.81 11.3 10.8 23 27.93 33.5 51.54 11.5 26.03 20.9 58.25 27 94.65zm-325.69 0C48.59 85.94 112.2 29.09 190.6 8.442 165.1 42.62 145.3 96.14 135.3 160H18.61zm112.59 32c-2.1 20.6-4.1 42-4.1 64 0 21.1 2 43.4 4.1 64H8.065C2.8 299.5 0 278.1 0 256s2.8-43.5 8.065-64H131.2zm63.5 254.6c-11.5-26-20.9-58.2-27-94.6h176.6c-6.1 36.4-15.5 68.6-27 94.6-10.5 23.7-22.2 40.8-33.5 51.6-11.2 10.6-20.5 13.8-28.7 13.8-6.4 0-15.7-3.2-26.9-13.8-11.3-10.8-23-27.9-33.5-51.6zm-4.1 57C112.2 482.9 48.59 426.1 18.61 352H135.3c10 63.9 29.8 117.4 55.3 151.6zm130.8 0c25.5-34.2 45.3-87.7 55.3-151.6h116.7c-30 74.1-93.6 130.9-172 151.6z"/></svg> </a> </div> </div> </div> </footer> </div> <div class=md-dialog data-md-component=dialog> <div class="md-dialog__inner md-typeset"></div> </div> <script id=__config type=application/json>{"base": "../../../..", "features": ["navigation.instant", "navigation.tabs", "navigation.sections"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../../../assets/javascripts/workers/search.bd0b6b67.min.js", "version": {"provider": "mike"}}</script> <script src=../../../../assets/javascripts/bundle.8aa65030.min.js></script> <script src=../../../../theme/js/extra.min.js></script> <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script> <script src=https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js></script> </body> </html>
