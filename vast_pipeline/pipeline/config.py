@@ -514,7 +514,7 @@ class PipelineConfig:
         settings are the same (the requirement for add mode). Otherwise False is returned.
 
         Returns:
-            `True` if images are different but general settings are the same, 
+            `True` if images are different but general settings are the same,
                 otherwise `False` is returned.
         """
         prev_config = PipelineConfig.from_file(

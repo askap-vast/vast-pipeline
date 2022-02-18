@@ -328,7 +328,7 @@ def fit_eta_v(
             integrated fluxes, defaults to 'False'.
 
     Returns:
-        The mean of the eta fit. 
+        The mean of the eta fit.
         The sigma of the eta fit.
         The mean of the v fit.
         The sigma of the v fit.
