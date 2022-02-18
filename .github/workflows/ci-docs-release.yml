@@ -1,7 +1,5 @@
 name: ci docs release
 
-# a merged PR will trigger a push on master so merging to master is
-# included in the event below
 on:
   release:
     types: [published]
