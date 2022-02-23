@@ -54,6 +54,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed a regression from pandas==1.4.0 that caused empty groups to be passed to an apply function [#632](https://github.com/askap-vast/vast-pipeline/pull/632).
 - Fixed source names to be IAU compliant [#618](https://github.com/askap-vast/vast-pipeline/pull/618).
 - Fixed broken NED links for coordinates with many decimal places [#623](https://github.com/askap-vast/vast-pipeline/pull/623).
 - Added an error handler for the external source queries (e.g. SIMBAD) [#616](https://github.com/askap-vast/vast-pipeline/pull/616).
@@ -78,6 +79,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#632](https://github.com/askap-vast/vast-pipeline/pull/632): fix: skip empty groups in new sources groupby-apply.
 - [#634](https://github.com/askap-vast/vast-pipeline/pull/634): dep: bump Jinja2 to v3.
 - [#626](https://github.com/askap-vast/vast-pipeline/pull/626): feat: Add a ZTF cone search link.
 - [#618](https://github.com/askap-vast/vast-pipeline/pull/618): fix: Produce IAU compliant source names.
