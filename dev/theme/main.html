@@ -42,6 +42,13 @@
 
 {% endblock %}
 
+{% block outdated %}
+  You're viewing an outdated or development version.
+  <a href="{{ '../' ~ base_url }}">
+    <strong>Click here to go to latest stable release.</strong>
+  </a>
+{% endblock %}
+
 {% block styles %}
     {{ super() }}
     <link rel="stylesheet" href="{{ base_url }}/css/lightgallery.min.css">
@@ -52,10 +59,3 @@
     <script src="{{ base_url }}/js/lightgallery.min.js"></script>
     <script src="{{ base_url }}/js/lg-zoom.js"></script>
 {% endblock libs %}
-
-{% block outdated %}
-  You're viewing an outdated or development version.
-  <a href="{{ '~' ~ base_url }}">
-    <strong>Click here to go to latest stable release.</strong>
-  </a>
-{% endblock %}
