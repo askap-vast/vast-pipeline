@@ -35,6 +35,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Bumped Jinja2 to 3.0.3 to fix a Markupsafe error caused by a removed function [#634](https://github.com/askap-vast/vast-pipeline/pull/634).
 - Dependancies updated using npm audit fix (non-breaking) [#620](https://github.com/askap-vast/vast-pipeline/pull/620).
 - Refactored adding source to favourites button to use ajax to avoid page reload [#614](https://github.com/askap-vast/vast-pipeline/pull/614).
 - Bumped test python versions to 3.7.12, 3.8.12 and 3.9.10 [#586](https://github.com/askap-vast/vast-pipeline/pull/586).
@@ -77,6 +78,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#634](https://github.com/askap-vast/vast-pipeline/pull/634): dep: bump Jinja2 to v3.
 - [#626](https://github.com/askap-vast/vast-pipeline/pull/626): feat: Add a ZTF cone search link.
 - [#618](https://github.com/askap-vast/vast-pipeline/pull/618): fix: Produce IAU compliant source names.
 - [#625](https://github.com/askap-vast/vast-pipeline/pull/625): feat: Pair metrics hover tooltip.
