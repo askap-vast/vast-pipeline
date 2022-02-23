@@ -79,6 +79,9 @@ def get_image_rms_measurements(
         The group dataframe with the 'img_diff_true_rms' column added. The
         column will contain 'NaN' entires for sources that fail.
     """
+    if len(group) == 0:
+        # input dataframe is empty, nothing to do
+        return group
     image = group.iloc[0]['img_diff_rms_path']
 
     with fits.open(image) as hdul:
