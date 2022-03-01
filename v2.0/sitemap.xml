@@ -1,242 +1,437 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/changelog/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/code_of_conduct/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/faq/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/help_and_acknowledgements/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/license/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/adminusage/app/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/adminusage/cli/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/adminusage/ingestimages/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/architecture/database/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/architecture/intro/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/design/association/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/design/imageingest/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/design/monitor/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/design/newsources/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/design/overview/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/design/sourcestats/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/developing/docsdev/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/developing/github/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/developing/intro/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/developing/localdevenv/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/developing/profiling/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/developing/tests/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/exploringwebsite/admintools/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/exploringwebsite/datatables/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/exploringwebsite/imagepages/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/exploringwebsite/measurementpages/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/exploringwebsite/runpages/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/exploringwebsite/sourceanalysis/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/exploringwebsite/sourcedetail/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/exploringwebsite/sourcequery/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/exploringwebsite/sourcetagsfavs/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/exploringwebsite/websiteoverview/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/gettingstarted/configuration/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/gettingstarted/deployment/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/gettingstarted/installation/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/outputs/coldesc/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/outputs/outputs/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/outputs/usingoutputs/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/using/access/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/using/addtorun/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/using/deleterun/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/using/genarrow/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/using/initrun/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/using/processrun/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/using/requireddata/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/using/restorerun/</loc>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://vast-survey.org/vast-pipeline/v2.0/using/runconfig/</loc>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
+         <lastmod>2022-03-01</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>None</loc>
          <lastmod>2022-03-01</lastmod>
          <changefreq>daily</changefreq>
     </url>
