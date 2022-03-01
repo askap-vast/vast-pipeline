@@ -1877,9 +1877,8 @@ category = "main"
 optional = false
 python-versions = ">=3.7"
 
-[package.dependencies]
-astropy = ">=4.0"
-requests = "*"
+[package.extras]
+docs = ["sphinx-astropy"]
 
 [[package]]
 name = "pywin32-ctypes"
@@ -2458,7 +2457,7 @@ prod = ["gevent", "gunicorn"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.1"
-content-hash = "fdec0ba9ca437d08246bc3251de4be222a78fc6b50742d98066e88191760a611"
+content-hash = "2f2045c83c783144483c93662957d56e9910dda0e9f80c00c4ffb81dd5c544eb"
 
 [metadata.files]
 ansicon = [
@@ -2862,7 +2861,6 @@ griffe = [
     {file = "griffe-0.12.5.tar.gz", hash = "sha256:9ba7ce1742e8069eb9a67d3cce9b1967af0b46130d04e41c4d7e0c654c930e5c"},
 ]
 gunicorn = [
-    {file = "gunicorn-20.1.0-py3-none-any.whl", hash = "sha256:9dcc4547dbb1cb284accfb15ab5667a0e5d1881cc443e0677b4882a4067a807e"},
     {file = "gunicorn-20.1.0.tar.gz", hash = "sha256:e0a968b5ba15f8a328fdfd7ab1fcb5af4470c28aaf7e55df02a99bc13138e6e8"},
 ]
 heapdict = [
@@ -3559,7 +3557,6 @@ pyviz-comms = [
     {file = "pyviz_comms-2.1.0.tar.gz", hash = "sha256:f4a7126f318fb6b964fef3f92fa55bc46b9218f62a8464a8b18e968b3087dbc0"},
 ]
 pyvo = [
-    {file = "pyvo-1.2.1-py3-none-any.whl", hash = "sha256:f90eb8e687fc950df9b2df9b63b837d33c4db52a68bebc8f4970ec3d1fbba9d2"},
     {file = "pyvo-1.2.1.tar.gz", hash = "sha256:3630ad7c62acf9ce435a9b2d997376fa9fae6865ada6632735680c90ccf525e6"},
 ]
 pywin32-ctypes = [
