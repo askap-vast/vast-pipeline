@@ -1,12 +1,27 @@
 {% extends "base.html" %}
 
 <!-- Custom front matter -->
+{% block extrahead %}
 
-{% block outdated %}
-  You're viewing an outdated or development version.
-  <a href="{{ '../' ~ base_url }}">
-    <strong>Click here to go to latest stable release. {{ base_url }}</strong>
-  </a>
+  <!-- Determine title -->
+  {% set title = config.site_name %}
+  {% if page and page.title and not page.is_homepage %}
+    {% set title = config.site_name ~ " - " ~ page.title | striptags %}
+  {% endif %}
+
+  <!-- The image needs to have an absolute URL -->
+  <!-- {% set image = config.site_url ~ 'assets/images/illustrations/banner.png' %} -->
+
+  <!-- Open graph meta tags -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="{{ title }}" />
+  <meta property="og:description" content="{{ config.site_description }}" />
+  <meta property="og:url" content="{{ page.canonical_url }}" />
+  <!-- <meta property="og:image" content="{{ image }}" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1080" />
+  <meta property="og:image:height" content="568" /> -->
+
 {% endblock %}
 
 <!-- Announcement bar -->
@@ -37,3 +52,10 @@
     <script src="{{ base_url }}/js/lightgallery.min.js"></script>
     <script src="{{ base_url }}/js/lg-zoom.js"></script>
 {% endblock libs %}
+
+{% block outdated %}
+  You're viewing an outdated or development version.
+  <a href="{{ '../' ~ base_url }}">
+    <strong>Click here to go to latest stable release.</strong>
+  </a>
+{% endblock %}
