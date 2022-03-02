@@ -35,6 +35,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Source query results table is no longer populated by default, a query must be submitted first [#638](https://github.com/askap-vast/vast-pipeline/pull/638).
 - Bumped Jinja2 to 3.0.3 to fix a Markupsafe error caused by a removed function [#634](https://github.com/askap-vast/vast-pipeline/pull/634).
 - Dependancies updated using npm audit fix (non-breaking) [#620](https://github.com/askap-vast/vast-pipeline/pull/620).
 - Refactored adding source to favourites button to use ajax to avoid page reload [#614](https://github.com/askap-vast/vast-pipeline/pull/614).
@@ -80,6 +81,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#638](https://github.com/askap-vast/vast-pipeline/pull/638): feat: Support defer loading of dataTables data.
 - [#633](https://github.com/askap-vast/vast-pipeline/pull/633): fix: URI encode NED object names.
 - [#632](https://github.com/askap-vast/vast-pipeline/pull/632): fix: skip empty groups in new sources groupby-apply.
 - [#634](https://github.com/askap-vast/vast-pipeline/pull/634): dep: bump Jinja2 to v3.
