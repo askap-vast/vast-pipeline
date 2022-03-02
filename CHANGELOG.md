@@ -76,10 +76,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Removed
 
+- Removed Measurements table page and measurements table from run detail page [#636](https://github.com/askap-vast/vast-pipeline/pull/636).
 - Removed the unique constraint on `models.Measurement.name` [#583](https://github.com/askap-vast/vast-pipeline/pull/583).
 
 #### List of PRs
 
+- [#636](https://github.com/askap-vast/vast-pipeline/pull/636): fix, doc: Remove excessive measurement tables.
 - [#633](https://github.com/askap-vast/vast-pipeline/pull/633): fix: URI encode NED object names.
 - [#632](https://github.com/askap-vast/vast-pipeline/pull/632): fix: skip empty groups in new sources groupby-apply.
 - [#634](https://github.com/askap-vast/vast-pipeline/pull/634): dep: bump Jinja2 to v3.

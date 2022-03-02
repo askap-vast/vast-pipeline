@@ -91,7 +91,7 @@ nav:
       - Source η-V Analysis: exploringwebsite/sourceanalysis.md
       - Source Detail: exploringwebsite/sourcedetail.md
       - Source Tags & Favourites: exploringwebsite/sourcetagsfavs.md
-      - Measurement Pages: exploringwebsite/measurementpages.md
+      - Measurement Detail Page: exploringwebsite/measurementdetail.md
       - Image Pages: exploringwebsite/imagepages.md
     - Pipeline Outputs:
       - Outputs Overview: outputs/outputs.md
