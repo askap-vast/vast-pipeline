@@ -154,6 +154,14 @@ $(document).ready(function() {
         dom : dom,
         buttons: DEFAULT_DATATABLE_BUTTONS
       };
+      // apply deferLoading config, if supplied
+      if (dataConf.hasOwnProperty('deferLoading')) {
+        dataTableConf.deferLoading = dataConf.deferLoading;
+        // change the message printed in the empty table if deferLoading active
+        dataTableConf.initComplete = function(settings, json) {
+          $("td.dataTables_empty").text("Submit a query to view results");
+        }
+      }
     } else {
       // expect that there is a 'data' attribute with the data
       // data are in this format
