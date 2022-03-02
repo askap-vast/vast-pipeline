@@ -2525,11 +2525,11 @@ class UtilitiesSet(ViewSet):
         ned_results = self._external_search_error_handler(
             external_query.ned, coord, radius, "NED", request
         )
-        # tns_results = self._external_search_error_handler(
-        #     external_query.tns, coord, radius, "TNS", request
-        # )
+        tns_results = self._external_search_error_handler(
+            external_query.tns, coord, radius, "TNS", request
+        )
 
-        results = simbad_results + ned_results # + tns_results
+        results = simbad_results + ned_results + tns_results
         serializer = ExternalSearchSerializer(data=results, many=True)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
