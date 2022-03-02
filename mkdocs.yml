@@ -56,7 +56,7 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.inlinehilite
   - pymdownx.tabbed:
-      alternate_style: true 
+      alternate_style: true
   - pymdownx.superfences
   - pymdownx.highlight
   - pymdownx.tabbed
@@ -181,6 +181,8 @@ plugins:
   - git-revision-date-localized:
       fallback_to_build_date: true
       enable_creation_date: true
+      exclude:
+        - index.md
   - gen-files:
       scripts:
       # - docs/gen_credits.py
