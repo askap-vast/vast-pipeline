@@ -31,7 +31,7 @@ The front-end is built in simple HTML, CSS and Javascript using a freely availab
   * [Django Crispy Forms](https://django-crispy-forms.readthedocs.io/en/latest/index.html){:target="_blank"}
   * [Django Tagulous](https://github.com/radiac/django-tagulous){:target="_blank"}
 * [Pandas 1+](https://pandas.pydata.org/){:target="_blank"}
-* [Python 3.7+](https://www.python.org/){:target="_blank"}
+* [Python 3.8+](https://www.python.org/){:target="_blank"}
 * [Pyarrow 0.17+](https://arrow.apache.org/docs/python/install.html){:target="_blank"}
 * [Postgres 10+](https://www.postgresql.org/){:target="_blank"}
   * [Q3C](https://github.com/segasai/q3c){:target="_blank"}
