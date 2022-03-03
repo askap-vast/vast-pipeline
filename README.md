@@ -16,7 +16,7 @@ If using this tool in your research, please cite Murphy, et al. (2021).
 
 ## Features
 
-* Code base in `Python 3.7+`
+* Code base in `Python 3.8+`
 * Source association/manipulations using `Astropy4+` and `Pandas1+` dataframe
 * Association methods: basic (`Astropy` crossmatch), advanced (search with a fixed distance), De Ruiter
 * Flagging of "New Source" and "Related Source"

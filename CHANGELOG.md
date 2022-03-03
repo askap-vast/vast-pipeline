@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added support for Python 3.10 [#641](https://github.com/askap-vast/vast-pipeline/pull/641).
 - Added documentation versioning [#627](https://github.com/askap-vast/vast-pipeline/pull/627).
 - Added a ZTF cone search button on the source detail page [#626](https://github.com/askap-vast/vast-pipeline/pull/626).
 - Added the 0-based index of each measurement to the image cutout card headers [#625](https://github.com/askap-vast/vast-pipeline/pull/625).
@@ -36,6 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Bumped major versions of astropy (5.0) and pyarrow (7.0) [#641](https://github.com/askap-vast/vast-pipeline/pull/641).
 - Addressed future pandas append deprecation, migrated all uses to pd.concat [#643](https://github.com/askap-vast/vast-pipeline/pull/643).
 - Bumped all documentation dependancies to latest versions (incl. mkdocs-material minimum 8.2.4) [#627](https://github.com/askap-vast/vast-pipeline/pull/627).
 - Changed GitHub workflows for new documentation versioning [#627](https://github.com/askap-vast/vast-pipeline/pull/627).
@@ -82,11 +84,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Removed
 
+- Removed support for Python 3.7 [#641](https://github.com/askap-vast/vast-pipeline/pull/641).
 - Removed Measurements table page and measurements table from run detail page [#636](https://github.com/askap-vast/vast-pipeline/pull/636).
 - Removed the unique constraint on `models.Measurement.name` [#583](https://github.com/askap-vast/vast-pipeline/pull/583).
 
 #### List of PRs
 
+- [#641](https://github.com/askap-vast/vast-pipeline/pull/641): dep: Drop Python 3.7 and dependency refresh.
 - [#643](https://github.com/askap-vast/vast-pipeline/pull/643): fix: Addressed pandas DataFrame.append deprecation.
 - [#642](https://github.com/askap-vast/vast-pipeline/pull/642): fix: Fix empty groups in parallel association.
 - [#636](https://github.com/askap-vast/vast-pipeline/pull/636): fix, doc: Remove excessive measurement tables.
