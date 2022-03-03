@@ -46,8 +46,8 @@ def gen_array_coords_from_wcs(coords: SkyCoord, wcs: WCS) -> np.ndarray:
 
     Returns:
         Array containing the x and y array coordinates of the input sky
-        coordinates, e.g.:
-        np.array([[x1, x2, x3], [y1, y2, y3]])
+            coordinates, e.g.:
+            np.array([[x1, x2, x3], [y1, y2, y3]])
     """
     array_coords = wcs.world_to_array_index(coords)
     array_coords = np.array([
@@ -77,7 +77,7 @@ def get_image_rms_measurements(
 
     Returns:
         The group dataframe with the 'img_diff_true_rms' column added. The
-        column will contain 'NaN' entires for sources that fail.
+            column will contain 'NaN' entires for sources that fail.
     """
     if len(group) == 0:
         # input dataframe is empty, nothing to do
@@ -203,7 +203,7 @@ def parallel_get_rms_measurements(
 
     Returns:
         The original input dataframe with the 'img_diff_true_rms' column
-        added. The column will contain 'NaN' entires for sources that fail.
+            added. The column will contain 'NaN' entires for sources that fail.
     """
     out = df[[
         'source', 'wavg_ra', 'wavg_dec',
@@ -254,33 +254,7 @@ def new_sources(
             The sources found from the association step.
         missing_sources_df:
             The dataframe containing the 'missing detections' for each source.
-            +----------+----------------------------------+-----------+------------+
-            |   source | img_list                         |   wavg_ra |   wavg_dec |
-            |----------+----------------------------------+-----------+------------+
-            |      278 | ['VAST_0127-73A.EPOCH01.I.fits'] |  22.2929  |   -71.8717 |
-            |      702 | ['VAST_0127-73A.EPOCH01.I.fits'] |  28.8125  |   -69.3547 |
-            |      776 | ['VAST_0127-73A.EPOCH01.I.fits'] |  31.8223  |   -70.4674 |
-            |      844 | ['VAST_0127-73A.EPOCH01.I.fits'] |  17.3152  |   -72.346  |
-            |      934 | ['VAST_0127-73A.EPOCH01.I.fits'] |   9.75754 |   -72.9629 |
-            +----------+----------------------------------+-----------+------------+
-            ------------------------------------------------------------------+
-             skyreg_img_list                                                  |
-            ------------------------------------------------------------------+
-             ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
-             ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
-             ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
-             ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
-             ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
-            ------------------------------------------------------------------+
-            ----------------------------------+
-             img_diff                         |
-            ----------------------------------|
-             ['VAST_0127-73A.EPOCH08.I.fits'] |
-             ['VAST_0127-73A.EPOCH08.I.fits'] |
-             ['VAST_0127-73A.EPOCH08.I.fits'] |
-             ['VAST_0127-73A.EPOCH08.I.fits'] |
-             ['VAST_0127-73A.EPOCH08.I.fits'] |
-            ----------------------------------+
+            See the source code comments for the layout of this dataframe.
         min_sigma:
             The minimum sigma value acceptable when compared to the minimum
             rms of the respective image.
@@ -292,26 +266,54 @@ def new_sources(
 
     Returns:
         The original input dataframe with the 'img_diff_true_rms' column
-        added. The column will contain 'NaN' entires for sources that fail.
-        Columns:
-            source - source id, int.
-            img_list - list of images, List.
-            wavg_ra - weighted average RA, float.
-            wavg_dec - weighted average Dec, float.
-            skyreg_img_list - list of sky regions of images in img_list, List.
-            img_diff - The images missing from coverage, List.
-            primary - What should be the first image, str.
-            detection - The first detection image, str.
-            detection_time - Datetime of detection, datetime.datetime.
-            img_diff_time - Datetime of img_diff list, datetime.datetime.
-            img_diff_rms_min - Minimum rms of diff images, float.
-            img_diff_rms_median - Median rms of diff images, float.
-            img_diff_rms_path - rms path of diff images, str.
-            flux_peak - Flux peak of source (detection), float.
-            diff_sigma - SNR in differnce images (compared to minimum), float.
-            img_diff_true_rms - The true rms value from the diff images, float.
-            new_high_sigma - peak flux / true rms value, float.
+            added. The column will contain 'NaN' entires for sources that fail.
+            Columns:
+                source - source id, int.
+                img_list - list of images, List.
+                wavg_ra - weighted average RA, float.
+                wavg_dec - weighted average Dec, float.
+                skyreg_img_list - list of sky regions of images in img_list, List.
+                img_diff - The images missing from coverage, List.
+                primary - What should be the first image, str.
+                detection - The first detection image, str.
+                detection_time - Datetime of detection, datetime.datetime.
+                img_diff_time - Datetime of img_diff list, datetime.datetime.
+                img_diff_rms_min - Minimum rms of diff images, float.
+                img_diff_rms_median - Median rms of diff images, float.
+                img_diff_rms_path - rms path of diff images, str.
+                flux_peak - Flux peak of source (detection), float.
+                diff_sigma - SNR in differnce images (compared to minimum), float.
+                img_diff_true_rms - The true rms value from the diff images, float.
+                new_high_sigma - peak flux / true rms value, float.
     """
+    # Missing sources df layout
+    # +----------+----------------------------------+-----------+------------+
+    # |   source | img_list                         |   wavg_ra |   wavg_dec |
+    # |----------+----------------------------------+-----------+------------+
+    # |      278 | ['VAST_0127-73A.EPOCH01.I.fits'] |  22.2929  |   -71.8717 |
+    # |      702 | ['VAST_0127-73A.EPOCH01.I.fits'] |  28.8125  |   -69.3547 |
+    # |      776 | ['VAST_0127-73A.EPOCH01.I.fits'] |  31.8223  |   -70.4674 |
+    # |      844 | ['VAST_0127-73A.EPOCH01.I.fits'] |  17.3152  |   -72.346  |
+    # |      934 | ['VAST_0127-73A.EPOCH01.I.fits'] |   9.75754 |   -72.9629 |
+    # +----------+----------------------------------+-----------+------------+
+    # ------------------------------------------------------------------+
+    #  skyreg_img_list                                                  |
+    # ------------------------------------------------------------------+
+    #  ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+    #  ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+    #  ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+    #  ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+    #  ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+    # ------------------------------------------------------------------+
+    # ----------------------------------+
+    #  img_diff                         |
+    # ----------------------------------|
+    #  ['VAST_0127-73A.EPOCH08.I.fits'] |
+    #  ['VAST_0127-73A.EPOCH08.I.fits'] |
+    #  ['VAST_0127-73A.EPOCH08.I.fits'] |
+    #  ['VAST_0127-73A.EPOCH08.I.fits'] |
+    #  ['VAST_0127-73A.EPOCH08.I.fits'] |
+    # ----------------------------------+
     timer = StopWatch()
 
     logger.info("Starting new source analysis.")

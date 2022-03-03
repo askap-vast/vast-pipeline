@@ -11,7 +11,8 @@ For admins, refer to the following pages for details of the configuration and se
 ![!VAST Pipeline homepage.](../img/homepage.png){: loading=lazy }
 
 The homepage provides a summary of the data currently held in the pipeline instance that has been processed. The four cards at the top of the homepage provide total values
-for the amount of pipeline runs, images, measurements and sources that are stored in the database. Clicking any of them will take you to the respective overview page for the data type.
+for the amount of pipeline runs, images, measurements and sources that are stored in the database. 
+Clicking any of them will take you to the respective overview page for the data type (excluding measurements).
 
 !!! note
     The totals presented on the homepage are totals for all pipeline runs combined!
@@ -50,13 +51,6 @@ See the [Source Query](sourcequery.md) section.
 
 Takes the user to the source query page, where users can search for sources by defining a set of thresholds and feature requirements. 
 From the results users can also access the detail page for individual sources.
-
-### Measurements
-
-See the [Measurement Pages](measurementpages.md) section.
-
-Navigates the user to the measurements page that features a table containing all the measurements currently held in the database. 
-From here users can also access the detail page for individual measurements.
 
 ### Images
 

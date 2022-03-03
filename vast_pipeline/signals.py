@@ -24,6 +24,9 @@ def delete_orphans_for_run(sender: Type[Run], instance: Run, using: str, **kwarg
             Model instance to be deleted.
         using:
             Database alias.
+
+    Returns:
+        None
     """
     image_orphans = (
         Image.objects.annotate(num_runs=Count("run"))

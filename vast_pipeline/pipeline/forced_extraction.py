@@ -76,7 +76,7 @@ def get_data_from_parquet(
 
     Returns:
         Dictionary with prefix string, an interger max_id and a string with the
-        id of the image
+            id of the image.
     '''
     if add_mode:
         image_name = file.split("/")[-2]
@@ -126,7 +126,7 @@ def extract_from_image(
 
     Returns:
         Dictionary with input dataframe with added columns (flux_int,
-        flux_int_err, chi_squared_fit) and image name.
+            flux_int_err, chi_squared_fit) and image name.
     """
     # create the skycoord obj to pass to the forced extraction
     # see usage https://github.com/dlakaplan/forced_phot
@@ -182,7 +182,7 @@ def finalise_forced_dfs(
 
     Returns:
         Input dataframe with added columns island_id, component_id,
-        name, bmaj, bmin, pa, image_id, time.
+            name, bmaj, bmin, pa, image_id, time.
     """
     # make up the measurements name from the image island_id and component_id
     df['island_id'] = np.char.add(
@@ -243,8 +243,8 @@ def parallel_extraction(
 
     Returns:
         Dataframe with forced extracted measurements data, columns are
-        'source_tmp_id', 'ra', 'dec', 'image', 'flux_peak', 'island_id',
-        'component_id', 'name', 'flux_int', 'flux_int_err'
+            'source_tmp_id', 'ra', 'dec', 'image', 'flux_peak', 'island_id',
+            'component_id', 'name', 'flux_int', 'flux_int_err'
     """
     # explode the lists in 'img_diff' column (this will make a copy of the df)
     out = (
@@ -393,7 +393,7 @@ def write_group_to_parquet(
     out_df = df.drop(['d2d', 'dr', 'source', 'image'], axis=1)
     if os.path.isfile(fname) and add_mode:
         exist_df = pd.read_parquet(fname)
-        out_df = exist_df.append(out_df)
+        out_df = pd.concat([exist_df, out_df])
 
     out_df.to_parquet(fname, index=False)
 
@@ -475,8 +475,8 @@ def forced_extraction(
             run (used in add image mode).
 
     Returns:
-        The sources_df with the extracted sources added and n_forced is the
-        total number of forced measurements present in the run.
+        The `sources_df` with the extracted sources added.
+        The total number of forced measurements present in the run.
     """
     logger.info(
         'Starting force extraction step.'
@@ -529,14 +529,15 @@ def forced_extraction(
         # 3. A new relation has been created and they need the forced
         # measuremnts filled in (actually covered by 2.)
 
-        extr_df = (
-            extr_df[~extr_df['img_diff'].isin(done_images_df['name'])]
-            .append(extr_df[
-                (~extr_df['source'].isin(done_source_ids))
-                & (extr_df['img_diff'].isin(done_images_df.name))
-            ])
-            .sort_index()
-        )
+        extr_df = pd.concat(
+            [
+                extr_df[~extr_df['img_diff'].isin(done_images_df['name'])],
+                extr_df[
+                    (~extr_df['source'].isin(done_source_ids))
+                    & (extr_df['img_diff'].isin(done_images_df.name))
+                ]
+            ]
+        ).sort_index()
 
         logger.info(
             f"{extr_df.shape[0]} new measurements to force extract"
@@ -636,8 +637,11 @@ def forced_extraction(
     extr_df = extr_df.rename(columns={'time': 'datetime'})
 
     # append new meas into main df and proceed with source groupby etc
-    sources_df = sources_df.append(
-        extr_df.loc[:, extr_df.columns.isin(sources_df.columns)],
+    sources_df = pd.concat(
+        [
+            sources_df,
+            extr_df.loc[:, extr_df.columns.isin(sources_df.columns)]
+        ],
         ignore_index=True
     )
 

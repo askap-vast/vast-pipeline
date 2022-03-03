@@ -327,8 +327,11 @@ def fit_eta_v(
         use_peak_flux: Use peak fluxes for the analysis instead of
             integrated fluxes, defaults to 'False'.
 
-    Returns: Tuple containing the eta_fit_mean, eta_fit_sigma, v_fit_mean
-        and the v_fit_sigma.
+    Returns:
+        The mean of the eta fit.
+        The sigma of the eta fit.
+        The mean of the v fit.
+        The sigma of the v fit.
     """
 
     if use_peak_flux:

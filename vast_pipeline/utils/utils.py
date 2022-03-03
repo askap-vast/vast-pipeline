@@ -211,7 +211,9 @@ def eq_to_cart(ra: float, dec: float) -> Tuple[float, float, float]:
         dec: The declination coordinate, in degrees, to convert.
 
     Returns:
-        The cartesian coordinates.
+        The cartesian x coordinate.
+        The cartesian y coordinate.
+        The cartesian z coordinate.
     """
     # TODO: This part of the code can probably be removed along with the
     # storage of these coodinates on the image.
@@ -231,7 +233,8 @@ def equ2gal(ra: float, dec: float) -> Tuple[float, float]:
         dec (float): Declination in units of degrees.
 
     Returns:
-        Tuple (float, float): Galactic longitude and latitude in degrees.
+        Galactic longitude in degrees.
+        Galactic latitude in degrees.
     """
     c = SkyCoord(np.float(ra), np.float(dec), unit=(u.deg, u.deg), frame="icrs")
     l = c.galactic.l.deg
@@ -249,7 +252,8 @@ def gal2equ(l: float, b: float) -> Tuple[float, float]:
         b (float): Galactic latitude in degrees.
 
     Returns:
-        Tuple (float, float): Right ascension and declination in units of degrees.
+        Right ascension in degrees.
+        Declination in degrees.
     """
     c = SkyCoord(l=np.float(l) * u.deg, b=np.float(b) * u.deg, frame="galactic")
     ra = c.icrs.ra.deg
@@ -273,7 +277,7 @@ def parse_coord(coord_string: str, coord_frame: str = "icrs") -> SkyCoord:
         coord_frame (str, optional): The frame of `coord_string`. Defaults to "icrs".
 
     Returns:
-        SkyCoord
+        The SkyCoord object.
     """
     # if both coord components are decimals, assume they're in degrees, otherwise assume
     # hourangles and degrees. Note that the unit parameter is ignored if the units are
@@ -304,8 +308,7 @@ def optimize_floats(df: pd.DataFrame) -> pd.DataFrame:
             input dataframe, no specific columns.
 
     Returns:
-        The input dataframe with the `float64` type
-        columns downcasted.
+        The input dataframe with the `float64` type columns downcasted.
     """
     floats = df.select_dtypes(include=["float64"]).columns.tolist()
     df[floats] = df[floats].apply(pd.to_numeric, downcast="float")
@@ -325,8 +328,7 @@ def optimize_ints(df: pd.DataFrame) -> pd.DataFrame:
             Input dataframe, no specific columns.
 
     Returns:
-        The input dataframe with the `int64` type
-        columns downcasted.
+        The input dataframe with the `int64` type columns downcasted.
     """
     ints = df.select_dtypes(include=["int64"]).columns.tolist()
     df[ints] = df[ints].apply(pd.to_numeric, downcast="integer")
@@ -355,7 +357,7 @@ def dict_merge(
         add_keys (bool): whether to add new keys
 
     Returns:
-        dict: updated dict
+        Updated dict.
     """
     dct = dct.copy()
     if not add_keys:
@@ -365,7 +367,7 @@ def dict_merge(
         if (
             k in dct
             and isinstance(dct[k], dict)
-            and isinstance(merge_dct[k], collections.Mapping)
+            and isinstance(merge_dct[k], collections.abc.Mapping)
         ):
             dct[k] = dict_merge(dct[k], merge_dct[k], add_keys=add_keys)
         else:

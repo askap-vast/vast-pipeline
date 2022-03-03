@@ -1,0 +1,32 @@
+name: ci docs release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - uses: Gr1N/setup-poetry@v4
+      - name: Set release notes tag
+        run: |
+          export RELEASE_TAG_VERSION=${{ github.event.release.tag_name }}
+          echo "RELEASE_TAG_VERSION=${RELEASE_TAG_VERSION:1}" >> $GITHUB_ENV
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential libpq-dev libgraphviz-dev
+      - name: Cache Python dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
+      - name: Install python dependencies
+        run: poetry install
+      - name: Build and deploy docs
+        run: poetry run mike deploy --push --update-aliases ${RELEASE_TAG_VERSION} latest

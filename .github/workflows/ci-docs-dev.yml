@@ -1,22 +1,22 @@
-name: ci docs
+name: ci docs dev
 
-# a merged PR will trigger a push on master so merging to master is
+# a merged PR will trigger a push on dev so merging to dev is
 # included in the event below
 on:
   push:
     branches:
-      - master
+      - dev
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.head.repo.fork == false
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.x
+          python-version: 3.8
       - uses: Gr1N/setup-poetry@v4
       - name: Install system dependencies
         run: sudo apt-get update && sudo apt-get install -y build-essential libpq-dev libgraphviz-dev
@@ -28,4 +28,4 @@ jobs:
       - name: Install python dependencies
         run: poetry install
       - name: Build and deploy docs
-        run: poetry run mkdocs gh-deploy -m 'github action deployment' --force
+        run: poetry run mike deploy --push dev

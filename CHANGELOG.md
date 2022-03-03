@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added support for Python 3.10 [#641](https://github.com/askap-vast/vast-pipeline/pull/641).
+- Added documentation versioning [#627](https://github.com/askap-vast/vast-pipeline/pull/627).
 - Added a ZTF cone search button on the source detail page [#626](https://github.com/askap-vast/vast-pipeline/pull/626).
 - Added the 0-based index of each measurement to the image cutout card headers [#625](https://github.com/askap-vast/vast-pipeline/pull/625).
 - Added Bokeh hover tooltip to measurement pair graph to display pair metrics [#625](https://github.com/askap-vast/vast-pipeline/pull/625).
@@ -36,6 +38,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### Changed
 
 - Source query results table is no longer populated by default, a query must be submitted first [#638](https://github.com/askap-vast/vast-pipeline/pull/638).
+- Bumped major versions of astropy (5.0) and pyarrow (7.0) [#641](https://github.com/askap-vast/vast-pipeline/pull/641).
+- Addressed future pandas append deprecation, migrated all uses to pd.concat [#643](https://github.com/askap-vast/vast-pipeline/pull/643).
+- Bumped all documentation dependancies to latest versions (incl. mkdocs-material minimum 8.2.4) [#627](https://github.com/askap-vast/vast-pipeline/pull/627).
+- Changed GitHub workflows for new documentation versioning [#627](https://github.com/askap-vast/vast-pipeline/pull/627).
 - Bumped Jinja2 to 3.0.3 to fix a Markupsafe error caused by a removed function [#634](https://github.com/askap-vast/vast-pipeline/pull/634).
 - Dependancies updated using npm audit fix (non-breaking) [#620](https://github.com/askap-vast/vast-pipeline/pull/620).
 - Refactored adding source to favourites button to use ajax to avoid page reload [#614](https://github.com/askap-vast/vast-pipeline/pull/614).
@@ -55,6 +61,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed a regression from pandas==1.4.0 that caused empty groups to be passed to an apply function in parallel association [#642](https://github.com/askap-vast/vast-pipeline/pull/642).
+- Fixed docs issue that stopped serializers and views being shown in the code reference [#627](https://github.com/askap-vast/vast-pipeline/pull/627).
 - Fixed broken links to external search results from NED by URI encoding source names [#633](https://github.com/askap-vast/vast-pipeline/pull/633).
 - Fixed a regression from pandas==1.4.0 that caused empty groups to be passed to an apply function [#632](https://github.com/askap-vast/vast-pipeline/pull/632).
 - Fixed source names to be IAU compliant [#618](https://github.com/askap-vast/vast-pipeline/pull/618).
@@ -77,11 +85,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Removed
 
+- Removed support for Python 3.7 [#641](https://github.com/askap-vast/vast-pipeline/pull/641).
+- Removed Measurements table page and measurements table from run detail page [#636](https://github.com/askap-vast/vast-pipeline/pull/636).
 - Removed the unique constraint on `models.Measurement.name` [#583](https://github.com/askap-vast/vast-pipeline/pull/583).
 
 #### List of PRs
 
 - [#638](https://github.com/askap-vast/vast-pipeline/pull/638): feat: Support defer loading of dataTables data.
+- [#641](https://github.com/askap-vast/vast-pipeline/pull/641): dep: Drop Python 3.7 and dependency refresh.
+- [#643](https://github.com/askap-vast/vast-pipeline/pull/643): fix: Addressed pandas DataFrame.append deprecation.
+- [#642](https://github.com/askap-vast/vast-pipeline/pull/642): fix: Fix empty groups in parallel association.
+- [#636](https://github.com/askap-vast/vast-pipeline/pull/636): fix, doc: Remove excessive measurement tables.
+- [#627](https://github.com/askap-vast/vast-pipeline/pull/627): dep, docs: Documentation update and versioning.
 - [#633](https://github.com/askap-vast/vast-pipeline/pull/633): fix: URI encode NED object names.
 - [#632](https://github.com/askap-vast/vast-pipeline/pull/632): fix: skip empty groups in new sources groupby-apply.
 - [#634](https://github.com/askap-vast/vast-pipeline/pull/634): dep: bump Jinja2 to v3.
