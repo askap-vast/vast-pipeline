@@ -37,6 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Source query results table is no longer populated by default, a query must be submitted first [#638](https://github.com/askap-vast/vast-pipeline/pull/638).
 - Bumped major versions of astropy (5.0) and pyarrow (7.0) [#641](https://github.com/askap-vast/vast-pipeline/pull/641).
 - Addressed future pandas append deprecation, migrated all uses to pd.concat [#643](https://github.com/askap-vast/vast-pipeline/pull/643).
 - Bumped all documentation dependancies to latest versions (incl. mkdocs-material minimum 8.2.4) [#627](https://github.com/askap-vast/vast-pipeline/pull/627).
@@ -90,6 +91,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#638](https://github.com/askap-vast/vast-pipeline/pull/638): feat: Support defer loading of dataTables data.
 - [#641](https://github.com/askap-vast/vast-pipeline/pull/641): dep: Drop Python 3.7 and dependency refresh.
 - [#643](https://github.com/askap-vast/vast-pipeline/pull/643): fix: Addressed pandas DataFrame.append deprecation.
 - [#642](https://github.com/askap-vast/vast-pipeline/pull/642): fix: Fix empty groups in parallel association.

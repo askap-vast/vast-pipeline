@@ -1504,6 +1504,7 @@ def SourceQuery(request):
                     'New High Sigma'
                 ],
                 'search': False,
+                'deferLoading': 0,  # don't fetch results until a query is made
             }
         }
     )
