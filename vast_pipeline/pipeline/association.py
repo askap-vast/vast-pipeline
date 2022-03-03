@@ -225,7 +225,7 @@ def one_to_many_basic(
         axis=1
     )
 
-    duplicated_skyc2 = original.append(not_original)
+    duplicated_skyc2 = pd.concat([original, not_original])
 
     # duplicated_skyc2
     # +-----+----------+-----------+---------+-----------------+
@@ -305,9 +305,9 @@ def one_to_many_basic(
     # Reset the related column to avoid rogue relations
     sources_to_copy['related'] = None
 
-    # and finally append.
-    sources_df = sources_df.append(
-        sources_to_copy,
+    # and finally concatenate.
+    sources_df = pd.concat(
+        [sources_df, sources_to_copy],
         ignore_index=True
     )
 
@@ -516,7 +516,7 @@ def one_to_many_advanced(
     )
 
     # Merge them back together
-    duplicated_skyc1 = original.append(not_original)
+    duplicated_skyc1 = pd.concat([original, not_original])
 
     del original, not_original
 
@@ -596,11 +596,8 @@ def one_to_many_advanced(
     # Reset the related column to avoid rogue relations
     sources_to_copy['related'] = None
 
-    # and finally append.
-    sources_df = sources_df.append(
-        sources_to_copy,
-        ignore_index=True
-    )
+    # and finally concatenate.
+    sources_df = pd.concat([sources_df, sources_to_copy], ignore_index=True)
 
     return temp_srcs, sources_df
 
@@ -864,16 +861,20 @@ def basic_association(
         )
     )
 
-    # and skyc2 is now ready to be appended to new sources
-    sources_df = sources_df.append(
-        skyc2_srcs, ignore_index=True
+    # and skyc2 is now ready to be concatenated with the new sources
+    sources_df = pd.concat(
+        [sources_df, skyc2_srcs],
+        ignore_index=True
     ).reset_index(drop=True)
 
     # and update skyc1 with the sources that were created from the one
     # to many relations and any new sources.
-    skyc1_srcs = skyc1_srcs.append(
-        skyc2_srcs[
-            ~skyc2_srcs['source'].isin(skyc1_srcs['source'])
+    skyc1_srcs = pd.concat(
+        [
+            skyc1_srcs,
+            skyc2_srcs[
+                ~skyc2_srcs['source'].isin(skyc1_srcs['source'])
+            ]
         ],
         ignore_index=True
     ).reset_index(drop=True)
@@ -1022,27 +1023,32 @@ def advanced_association(
         start_elem + new_sources.shape[0],
         dtype=int
     )
-    skyc2_srcs_toappend = skyc2_srcs_toappend.append(
-        new_sources, ignore_index=True
+    skyc2_srcs_toappend = pd.concat(
+        [skyc2_srcs_toappend, new_sources],
+        ignore_index=True
     )
 
-    # and skyc2 is now ready to be appended to source_df
-    sources_df = sources_df.append(
-        skyc2_srcs_toappend, ignore_index=True
+    # and skyc2 is now ready to be concatenated with source_df
+    sources_df = pd.concat(
+        [sources_df, skyc2_srcs_toappend],
+        ignore_index=True
     ).reset_index(drop=True)
 
     # update skyc1 and df for next association iteration
     # calculate average angles for skyc1
-    skyc1_srcs = (
-        skyc1_srcs.append(new_sources, ignore_index=True)
-        .reset_index(drop=True)
-    )
+    skyc1_srcs = pd.concat(
+        [skyc1_srcs, new_sources],
+        ignore_index=True
+    ).reset_index(drop=True)
 
     # also need to append any related sources that created a new
     # source, we can use the skyc2_srcs_toappend to get these
-    skyc1_srcs = skyc1_srcs.append(
-        skyc2_srcs_toappend.loc[
-            ~skyc2_srcs_toappend.source.isin(skyc1_srcs.source)
+    skyc1_srcs = pd.concat(
+        [
+            skyc1_srcs,
+            skyc2_srcs_toappend.loc[
+                ~skyc2_srcs_toappend.source.isin(skyc1_srcs.source)
+            ]
         ]
     )
 
