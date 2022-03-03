@@ -1105,6 +1105,11 @@ def association(
     timer = StopWatch()
 
     if parallel:
+        # Skip empty groups that seems to sometimes happen with the
+        # dask groupby
+        if len(images_df) == 0:
+            return images_df
+
         images_df = (
             images_df.sort_values(by='image_datetime')
             .drop('image_datetime', axis=1)
