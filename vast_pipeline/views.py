@@ -683,7 +683,7 @@ def RunDetail(request, id):
     )
 
     image_datatable = {
-        'table_id': 'imageTable',
+        'table_id': 'dataTable',
         'api': (
             reverse('vast_pipeline:api_pipe_runs-images', args=[p_run['id']]) +
             '?format=datatables'
@@ -706,66 +706,9 @@ def RunDetail(request, id):
         'order': [1, 'asc']
     }
 
-    meas_fields = [
-        'name',
-        'ra',
-        'ra_err',
-        'uncertainty_ew',
-        'dec',
-        'dec_err',
-        'uncertainty_ns',
-        'flux_peak',
-        'flux_peak_err',
-        'flux_peak_isl_ratio',
-        'flux_int',
-        'flux_int_err',
-        'flux_int_isl_ratio',
-        'frequency',
-        'compactness',
-        'snr',
-        'has_siblings',
-        'forced'
-    ]
-
-    meas_colsfields = generate_colsfields(
-        meas_fields,
-        {'name': reverse('vast_pipeline:measurement_detail', args=[1])[:-2]},
-        not_searchable_col=['frequency']
-    )
-
-    meas_datatable = {
-        'table_id': 'measTable',
-        'api': (
-            reverse('vast_pipeline:api_pipe_runs-measurements', args=[p_run['id']]) +
-            '?format=datatables'
-        ),
-        'colsFields': meas_colsfields,
-        'colsNames': [
-            'Name',
-            'RA (deg)',
-            'RA Error (arcsec)',
-            'Uncertainty EW (arcsec)',
-            'Dec (deg)',
-            'Dec Error (arcsec)',
-            'Uncertainty NS (arcsec)',
-            'Peak Flux (mJy/beam)',
-            'Peak Flux Error (mJy/beam)',
-            'Peak Flux Isl. Ratio',
-            'Int. Flux (mJy)',
-            'Int. Flux Error (mJy)',
-            'Int. Flux Isl. Ratio',
-            'Frequency (MHz)',
-            'Compactness',
-            'SNR',
-            'Has siblings',
-            'Forced Extraction'
-        ],
-        'search': True,
-    }
-
     context = {
         "p_run": p_run,
-        "datatables": [image_datatable, meas_datatable],
+        "datatables": [image_datatable],
         "d3_celestial_skyregions": get_skyregions_collection(run_id=id),
         "static_url": settings.STATIC_URL,
         "log_files": log_files,
