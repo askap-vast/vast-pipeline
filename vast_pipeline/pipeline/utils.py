@@ -427,8 +427,13 @@ def prep_skysrc_df(
 
     if len(images) > 1:
         for img in images[1:]:
-            df = df.append(
-                _load_measurements(img, cols, df.source.max(), ini_df=ini_df),
+            df = pd.concat(
+                [
+                    df,
+                    _load_measurements(
+                        img, cols, df.source.max(), ini_df=ini_df
+                    )
+                ],
                 ignore_index=True
             )
 

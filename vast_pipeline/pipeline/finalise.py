@@ -198,7 +198,7 @@ def final_operations(
         srcs_df = update_sources(srcs_df_update, batch_size=1000)
         # Add back together
         if not srcs_df_upload.empty:
-            srcs_df = srcs_df.append(srcs_df_upload)
+            srcs_df = pd.concat([srcs_df, srcs_df_upload])
     else:
         srcs_df = make_upload_sources(srcs_df, p_run, add_mode)
 
@@ -240,7 +240,7 @@ def final_operations(
         )
 
         related_df = (
-            related_df.append(old_relations, ignore_index=True)
+            pd.concat([related_df, old_relations], ignore_index=True)
             .drop_duplicates(keep=False)
         )
         logger.debug(f'Add mode: #{related_df.shape[0]} relations to upload.')
@@ -268,8 +268,10 @@ def final_operations(
             pd.read_parquet(previous_parquets['associations'])
             .rename(columns={'meas_id': 'id'})
         )
-        sources_df_upload = sources_df.append(
-            old_assoications, ignore_index=True)
+        sources_df_upload = pd.concat(
+            [sources_df, old_assoications],
+            ignore_index=True
+        )
         sources_df_upload = sources_df_upload.drop_duplicates(
             ['source_id', 'id', 'd2d', 'dr'], keep=False
         )
