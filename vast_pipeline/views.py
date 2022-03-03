@@ -7,7 +7,7 @@ import traceback
 import dask.bag as db
 import pandas as pd
 
-from typing import Dict, Any, Tuple, List
+from typing import Dict, Any, Tuple, List, Optional
 from glob import glob
 from itertools import tee
 from pathlib import Path
@@ -72,19 +72,20 @@ logger = logging.getLogger(__name__)
 
 
 def _process_comment_form_get_comments(
-    request, instance: CommentableModel
+    request: Request, instance: CommentableModel
 ) -> Tuple[CommentForm, "QuerySet[Comment]"]:
-    """Process the comment form and return the form and comment objects. If the `request`
-    method was POST, create a `Comment` object attached to `instance`.
+    """Process the comment form and return the form and comment objects.
+    If the `request` method was POST, create a `Comment` object attached to
+    `instance`.
 
     Args:
         request: Django HTTP request object.
-        instance (CommentableModel): Django object that is a subclass of `CommentableModel`.
+        instance: Django object that is a subclass of `CommentableModel`.
             This is the object the comment will be attached to.
 
     Returns:
-        Tuple[CommentForm, QuerySet[Comment]]: a new, unbound `CommentForm` instance; and
-            the `QuerySet` of `Comment` objects attached to `instance`.
+        A new, unbound `CommentForm` instance.
+        The `QuerySet` of `Comment` objects attached to `instance`.
     """
     if request.method == "POST":
         comment_form = CommentForm(request.POST)
@@ -250,22 +251,24 @@ class RunViewSet(ModelViewSet):
         return Response(serializer.data)
 
     @rest_framework.decorators.action(detail=True, methods=['post'])
-    def run(self, request, pk=None):
+    def run(
+        self, request: Request, pk: Optional[int] = None
+    ) -> HttpResponseRedirect:
         """
         Launches a pipeline run using a Django Q cluster. Includes a check
         on ownership or admin stataus of the user to make sure processing
         is allowed.
 
         Args:
-            request (Request): Django REST Framework request object.
-            pk (int, optional): Run object primary key. Defaults to None.
+            request: Django REST Framework request object.
+            pk: Run object primary key. Defaults to None.
 
         Raises:
             Http404: if a Source with the given `pk` cannot be found.
 
         Returns:
             Response: Returns to the orignal request page (the pipeline run
-            detail).
+                detail).
         """
         if not pk:
             messages.error(
@@ -347,22 +350,24 @@ class RunViewSet(ModelViewSet):
         )
 
     @rest_framework.decorators.action(detail=True, methods=['post'])
-    def restore(self, request, pk=None):
+    def restore(
+        self, request: Request, pk: Optional[int] = None
+    ) -> HttpResponseRedirect:
         """
         Launches a restore pipeline run using a Django Q cluster. Includes a
         check on ownership or admin status of the user to make sure
         processing is allowed.
 
         Args:
-            request (Request): Django REST Framework request object.
-            pk (int, optional): Run object primary key. Defaults to None.
+            request: Django REST Framework request object.
+            pk: Run object primary key. Defaults to None.
 
         Raises:
             Http404: if a Source with the given `pk` cannot be found.
 
         Returns:
             Response: Returns to the orignal request page (the pipeline run
-            detail).
+                detail).
         """
         if not pk:
             messages.error(
@@ -440,7 +445,9 @@ class RunViewSet(ModelViewSet):
         )
 
     @rest_framework.decorators.action(detail=True, methods=['post'])
-    def delete(self, request, pk=None):
+    def delete(
+        self, request: Request, pk: Optional[int] = None
+    ) -> HttpResponseRedirect:
         """
         Launches the remove pipeline run using a Django Q cluster. Includes a
         check on ownership or admin status of the user to make sure
@@ -516,22 +523,24 @@ class RunViewSet(ModelViewSet):
         )
 
     @rest_framework.decorators.action(detail=True, methods=['post'])
-    def genarrow(self, request, pk=None):
+    def genarrow(
+        self, request: Request, pk: Optional[int] = None
+    ) ->HttpResponseRedirect:
         """
         Launches the create arrow files process for a pipeline run using
         a Django Q cluster. Includes a check on ownership or admin status of
         the user to make sure the creation is allowed.
 
         Args:
-            request (Request): Django REST Framework request object.
-            pk (int, optional): Run object primary key. Defaults to None.
+            request: Django REST Framework request object.
+            pk: Run object primary key. Defaults to None.
 
         Raises:
             Http404: if a Source with the given `pk` cannot be found.
 
         Returns:
             Response: Returns to the orignal request page (the pipeline run
-            detail).
+                detail).
         """
         if not pk:
             messages.error(
@@ -1920,7 +1929,7 @@ class MeasurementQuery(APIView):
 
     def get(
         self,
-        request,
+        request: Request,
         ra_deg: float,
         dec_deg: float,
         image_id: int,
@@ -2436,7 +2445,7 @@ class UtilitiesSet(ViewSet):
                     Defaults to "all".
 
         Returns:
-            Response: a Django REST framework Response. Will return JSON with status code:
+            A Django REST framework Response. Will return JSON with status code:
                 - 400 if the query params fail validation (i.e. if an invalid Sesame service
                     or no object name is provided) or if the name resolution fails. Error
                     messages are returned as an array of strings under the relevant query
@@ -2463,7 +2472,7 @@ class UtilitiesSet(ViewSet):
                 - frame (str): the frame for the given coordinate string e.g. icrs, galactic.
 
         Returns:
-            Response: a Django REST framework Response. Will return JSON with status code:
+            A Django REST framework Response. Will return JSON with status code:
                 - 400 if the query params fail validation, i.e. if a frame unknown to Astropy
                     is given, or the coordinate string fails to parse. Error messages are
                     returned as an array of strings under the relevant query parameter key.
@@ -2495,7 +2504,7 @@ class UtilitiesSet(ViewSet):
                 `astropy.coordinates.Angle`, respectively.
 
         Returns:
-            Response: a Django REST framework Response containing result records as a list
+            A Django REST framework Response containing result records as a list
                 under the data object key. Each record contains the properties:
                     - object_name: the name of the astronomical object.
                     - database: the source of the result, e.g. SIMBAD or NED.

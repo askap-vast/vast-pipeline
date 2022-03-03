@@ -19,13 +19,13 @@ def simbad(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
     Returns:
         A list of dicts, where each dict is a query result row with the following keys:
 
-        - object_name: the name of the astronomical object.
-        - database: the source of the result, i.e. SIMBAD.
-        - separation_arcsec: separation to the query coordinate in arcsec.
-        - otype: object type.
-        - otype_long: long form of the object type.
-        - ra_hms: RA coordinate string in hms format.
-        - dec_dms: Dec coordinate string in ±dms format.
+            - object_name: the name of the astronomical object.
+            - database: the source of the result, i.e. SIMBAD.
+            - separation_arcsec: separation to the query coordinate in arcsec.
+            - otype: object type.
+            - otype_long: long form of the object type.
+            - ra_hms: RA coordinate string in hms format.
+            - dec_dms: Dec coordinate string in ±dms format.
     """
     CustomSimbad = Simbad()
     CustomSimbad.add_votable_fields(
@@ -78,13 +78,13 @@ def ned(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
     Returns:
         A list of dicts, where each dict is a query result row with the following keys:
 
-        - object_name: the name of the astronomical object.
-        - database: the source of the result, i.e. NED.
-        - separation_arcsec: separation to the query coordinate in arcsec.
-        - otype: object type.
-        - otype_long: long form of the object type.
-        - ra_hms: RA coordinate string in hms format.
-        - dec_dms: Dec coordinate string in ±dms format.
+            - object_name: the name of the astronomical object.
+            - database: the source of the result, i.e. NED.
+            - separation_arcsec: separation to the query coordinate in arcsec.
+            - otype: object type.
+            - otype_long: long form of the object type.
+            - ra_hms: RA coordinate string in hms format.
+            - dec_dms: Dec coordinate string in ±dms format.
     """
     # NED API doesn't supply the long-form object types.
     # Copied from https://ned.ipac.caltech.edu/Documents/Guides/Database
@@ -197,14 +197,14 @@ def tns(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
     Returns:
         A list of dicts, where each dict is a query result row with the following keys:
 
-        - object_name: the name of the transient.
-        - database: the source of the result, i.e. TNS.
-        - separation_arcsec: separation to the query coordinate in arcsec.
-        - otype: object type.
-        - otype_long: long form of the object type. Not given by TNS, will always be
-            an empty string.
-        - ra_hms: RA coordinate string in hms format.
-        - dec_dms: Dec coordinate string in ±dms format.
+            - object_name: the name of the transient.
+            - database: the source of the result, i.e. TNS.
+            - separation_arcsec: separation to the query coordinate in arcsec.
+            - otype: object type.
+            - otype_long: long form of the object type. Not given by TNS, will always be
+                an empty string.
+            - ra_hms: RA coordinate string in hms format.
+            - dec_dms: Dec coordinate string in ±dms format.
     """
     TNS_API_URL = "https://www.wis-tns.org/api/"
     headers = {

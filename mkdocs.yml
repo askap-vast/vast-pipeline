@@ -55,7 +55,8 @@ markdown_extensions:
   - pymdownx.caret
   - pymdownx.details
   - pymdownx.inlinehilite
-  - pymdownx.tabbed
+  - pymdownx.tabbed:
+      alternate_style: true
   - pymdownx.superfences
   - pymdownx.highlight
   - pymdownx.tabbed
@@ -170,16 +171,18 @@ nav:
         - forms.py: reference/forms.md
         - models.py: reference/models.md
         - plots.py: reference/plots.md
-        # - serializers.py: reference/serializers.md
+        - serializers.py: reference/serializers.md
         - signals.py: reference/signals.md
         - urls.py: reference/urls.md
-        # - views.py: reference/views.md
+        - views.py: reference/views.md
 
 plugins:
   - search
   - git-revision-date-localized:
       fallback_to_build_date: true
       enable_creation_date: true
+      exclude:
+        - index.md
   - gen-files:
       scripts:
       # - docs/gen_credits.py
@@ -213,3 +216,5 @@ extra:
       name: vast-pipeline source on GitHub
     - icon: fontawesome/solid/globe
       link: https://vast-survey.org
+  version:
+    provider: mike

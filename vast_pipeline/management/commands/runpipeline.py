@@ -68,8 +68,12 @@ def run_pipe(
             The previous status through the UI. Defaults to 'END'.
 
     Returns:
-        Boolean equal to `True` on a successful completion, or in cases of
-        failures a CommandError is returned.
+        Boolean equal to `True` on a successful completion.
+
+    Raises:
+        CommandError: Raised if error occurs during processing.
+        PipelineConfigError: Raised if an error is found in the pipeline
+            config.
     '''
     path = run_dj_obj.path if run_dj_obj else path_name
     # set up logging for running pipeline from UI

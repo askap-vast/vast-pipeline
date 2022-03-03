@@ -28,13 +28,17 @@
 {% block announce %}
   <!-- Extra stylesing -->
   <style>
-      .md-announce a,
-      .md-announce a:focus,
-      .md-announce a:hover{color:currentColor}.md-announce
-      strong{white-space:nowrap}.md-announce}
+      .md-banner a,
+      .md-banner a:focus,
+      .md-banner a:hover{color:currentColor}.md-banner
+      strong{white-space:nowrap}.md-banner}
   </style>
 
-  <a href="{{ base_url }}/changelog/"><strong>New in version 1.0.0</strong>: Documentation, add epoch mode and more 🙌. Check the <strong>release notes!</strong></a>
+  <a href="{{ base_url }}/changelog/">
+    <strong>
+     Development Version 🧑‍💻: </strong> Check the <strong>release notes
+    </strong> for the latest changes!
+  </a>
 
 {% endblock %}
 
@@ -48,3 +52,10 @@
     <script src="{{ base_url }}/js/lightgallery.min.js"></script>
     <script src="{{ base_url }}/js/lg-zoom.js"></script>
 {% endblock libs %}
+
+{% block outdated %}
+  You're viewing an outdated or development version.
+  <a href="{{ '../' ~ base_url }}">
+    <strong>Click here to go to latest stable release.</strong>
+  </a>
+{% endblock %}

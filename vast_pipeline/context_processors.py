@@ -28,7 +28,7 @@ def pipeline_version(request: HttpRequest) -> Dict[str, Optional[str]]:
         request (HttpRequest): The web server request.
 
     Returns:
-        Dict[str, str]: key-value pairs to add to the template context.
+        Key-value pairs to add to the template context.
     """
     url: Optional[str] = None
     if not __version__.endswith("dev"):

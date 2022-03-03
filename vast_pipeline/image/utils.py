@@ -90,10 +90,18 @@ def calc_error_radius(ra, ra_err, dec, dec_err) -> float:
 
 
 def calc_condon_flux_errors(
-    row: pd.Series, theta_B: float, theta_b: float , alpha_maj1: float=2.5,
-    alpha_min1: float=0.5, alpha_maj2: float=0.5, alpha_min2:float =2.5,
-    alpha_maj3: float=1.5, alpha_min3: float=1.5, clean_bias: float=0.0,
-    clean_bias_error: float=0.0, frac_flux_cal_error: float=0.0,
+    row: pd.Series,
+    theta_B: float,
+    theta_b: float,
+    alpha_maj1: float = 2.5,
+    alpha_min1: float = 0.5,
+    alpha_maj2: float = 0.5,
+    alpha_min2: float = 2.5,
+    alpha_maj3: float = 1.5,
+    alpha_min3: float = 1.5,
+    clean_bias: float = 0.0,
+    clean_bias_error: float = 0.0,
+    frac_flux_cal_error: float = 0.0
 ) -> Tuple[float, float, float, float, float, float, float]:
     """
     The following code for this function taken from the TraP with a few
@@ -109,7 +117,7 @@ def calc_condon_flux_errors(
 
     Args:
         row (pd.Series):
-            The row containing the componenet information from the Selavy
+            The row containing the component information from the Selavy
             component catalogue.
         theta_B (float):
             The major axis size of the restoring beam of the image (degrees).
@@ -138,10 +146,13 @@ def calc_condon_flux_errors(
             TraP).
 
     Returns:
-        Tuple containing the following calculated values:
-        peak flux error, integrated flux error, major axis error, minor
-        axis error, position angle error, right ascension error and the
-        declination error.
+        Peak flux error (Jy).
+        Integrated flux error (Jy).
+        Major axis error (deg).
+        Minor axis error (deg).
+        Position angle error (deg).
+        Right ascension error (deg).
+        Declination error (deg).
     """
 
     major = row.bmaj / 3600.  # degrees
