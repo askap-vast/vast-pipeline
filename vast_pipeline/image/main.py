@@ -168,10 +168,20 @@ class FitsImage(Image):
         # get the time as Julian Datetime using Pandas function
         self.jd = self.datetime.to_julian_date()
 
-    def __get_img_coordinates(self, header, fits_naxis1, fits_naxis2):
+    def __get_img_coordinates(
+        self, header: fits.Header, fits_naxis1: str, fits_naxis2: str
+    ) -> None:
         """
-        set the image attributes ra, dec, fov_bmin and fov_bmaj, radius
-        from the image file header
+        Set the image attributes ra, dec, fov_bmin and fov_bmaj, radius
+        from the image file header.
+
+        Args:
+            header: The FITS header object.
+            fits_naxis1: The header keyword of the NAXIS1 to use.
+            fits_naxis2: The header keyword of the NAXIS2 to use.
+
+        Returns:
+            None
         """
         wcs = WCS(header, naxis=2)
         pix_centre = [[header[fits_naxis1] / 2., header[fits_naxis2] / 2.]]
@@ -195,10 +205,22 @@ class FitsImage(Image):
         # TODO: check calcs
         self.radius_pixels = usable_radius_pix
 
-    def __get_radius_pixels(self, header, fits_naxis1, fits_naxis2):
+    def __get_radius_pixels(
+        self, header: fits.Header, fits_naxis1: str, fits_naxis2: str
+    ) -> float:
         """
         Return the radius (pixels) of the full image.
-        If the image is not a square/circle then the shortest radius will be returned.
+
+        If the image is not a square/circle then the shortest radius will be
+        returned.
+
+        Args:
+            header: The FITS header object.
+            fits_naxis1: The header keyword of the NAXIS1 to use.
+            fits_naxis2: The header keyword of the NAXIS2 to use.
+
+        Returns:
+            The radius of the image in pixels.
         """
         if self.entire_image:
             # a large circle that *should* include the whole image (and then some)
@@ -208,13 +230,16 @@ class FitsImage(Image):
             diameter = min(header[fits_naxis1], header[fits_naxis2])
         return diameter / 2.
 
-    def __get_frequency(self, header):
+    def __get_frequency(self, header: fits.Header) -> None:
         """
         Set some 'shortcut' variables for access to the frequency parameters
         in the FITS file header.
 
-        @param hdulist: hdulist to parse
-        @type hdulist: hdulist
+        Args:
+            header: The FITS header object.
+
+        Returns:
+            None
         """
         self.freq_eff = None
         self.freq_bw = None

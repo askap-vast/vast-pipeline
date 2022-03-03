@@ -211,6 +211,14 @@ For example, using the `vast_pipeline` as the base for the python files and `ref
 
 Please refer to the [`mkdocstrings` documentation ](https://mkdocstrings.github.io){:target="_blank"} for full details of the options available to declare in `mkdocs.yml`.
 
+## Versioning
+
+Versioning is enabled on the documentation by using the [`mike`](https://github.com/jimporter/mike){:target="_blank"} package.
+The documentation is published for each release version, along with a development version that is updated with every commit to the default `dev` branch.
+Setup of this has been completed on the initial deployment, and the GitHub workflows will automatically take care of the continual deployment.
+Vist the `mike` package page linked above for details on general management commands such as how to delete a version.
+
 ## Deployment to GitHub pages
 
-Automatic deployment to GitHub pages is set up using GitHub actions and workflows. See source code under the `.github` folder.
+Automatic deployment to GitHub pages is set up using GitHub actions and workflows. 
+See the workflows `ci-docs-dev.yml` and `ci-docs-release.yml`.

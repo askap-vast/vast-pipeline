@@ -71,7 +71,7 @@ class AngleConverter:
     value."""
     regex = r"\d+(\.\d+)?\s?\w+"
 
-    def to_python(self, value) -> float:
+    def to_python(self, value: Angle) -> float:
         """
         Return the decimal degrees from the coordinate input as an Angle object.
 
@@ -83,7 +83,7 @@ class AngleConverter:
         """
         return Angle(value).deg
 
-    def to_url(self, value) -> str:
+    def to_url(self, value: Angle) -> str:
         """
         Return the string format of an Angle object from the coordinate input.
 

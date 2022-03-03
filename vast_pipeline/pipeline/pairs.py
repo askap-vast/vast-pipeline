@@ -54,7 +54,7 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
             flux_int_err, flux_peak, flux_peak_err, has_siblings.
 
     Returns:
-        pd.DataFrame: Measurement pairs and 2-epoch metrics. Will contain columns:
+        Measurement pairs and 2-epoch metrics. Will contain columns:
             source - the source ID
             id_a, id_b - the measurement IDs
             flux_int_a, flux_int_b - measurement integrated fluxes in mJy

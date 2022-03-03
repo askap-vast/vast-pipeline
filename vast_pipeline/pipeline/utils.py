@@ -117,8 +117,8 @@ def get_create_img(band_id: int, image: SelavyImage) -> Tuple[Image, bool]:
         image: The image object.
 
     Returns:
-        The resulting image django ORM object, and a bool value denoting if the image
-        already existed in the database.
+        The resulting image django ORM object.
+        `True` the image already existed in the database, `False` if not.
     """
     images = Image.objects.filter(name__exact=image.name)
     exists = images.exists()
@@ -175,8 +175,8 @@ def get_create_p_run(
         user: The Django user that launched the pipeline run.
 
     Returns:
-        The pipeline run object and a boolean object representing whether
-        the pipeline run already existed ('True') or not ('False').
+        The pipeline run object.
+        Whether the pipeline run already existed ('True') or not ('False').
     '''
     p_run = Run.objects.filter(name__exact=name)
     if p_run:
@@ -341,7 +341,7 @@ def _load_measurements(
 
     Returns:
         The measurements of the image with some extra values set ready for
-        association .
+            association.
     """
     image_centre = SkyCoord(
         image.ra,
@@ -401,7 +401,7 @@ def prep_skysrc_df(
 
     Returns:
         The measurements of the image(s) with some extra values set ready for
-        association and duplicates removed if necessary.
+            association and duplicates removed if necessary.
     '''
     cols = [
         'id',
@@ -480,7 +480,7 @@ def add_new_one_to_many_relations(
 
     Returns:
         The new related field for the source in question, containing the
-        appended ids.
+            appended ids.
     """
     if source_ids is None:
         source_ids = pd.DataFrame()
@@ -521,7 +521,7 @@ def add_new_many_to_one_relations(row: pd.Series) -> List[int]:
 
     Returns:
         The new related field for the source in question, containing the
-        appended ids.
+            appended ids.
     """
     out = row['new_relations'].copy()
 
@@ -541,7 +541,6 @@ def cross_join(left: pd.DataFrame, right: pd.DataFrame) -> pd.DataFrame:
 
     Returns:
         The resultant merged DataFrame.
-
     """
     return (
         left.assign(key=1)
@@ -567,7 +566,6 @@ def get_eta_metric(
 
     Returns:
         The calculated eta value.
-
     '''
     if row['n_meas'] == 1:
         return 0.
@@ -595,7 +593,6 @@ def groupby_funcs(df: pd.DataFrame) -> pd.Series:
 
     Returns:
         Pandas series containing the calculated metrics of the source.
-
     '''
     # calculated average ra, dec, fluxes and metrics
     d = {}
@@ -729,7 +726,7 @@ def calc_ave_coord(grp: pd.DataFrame) -> pd.Series:
 
     Returns:
         A pandas series containing the average coordinate along with the
-        image and epoch lists.
+            image and epoch lists.
     """
     d = {}
     grp = grp.sort_values(by='datetime')
@@ -752,7 +749,7 @@ def parallel_groupby_coord(df: pd.DataFrame) -> pd.DataFrame:
 
     Returns:
         The resulting average coordinate values and unique image and epoch
-        lists for each unique source (group).
+            lists for each unique source (group).
     """
     col_dtype = {
         'img_list': 'O',
@@ -781,7 +778,9 @@ def get_rms_noise_image_values(rms_path: str) -> Tuple[float, float, float]:
         rms_path: The system path to the RMS FITS image.
 
     Returns:
-        The median, minimum and maximum values of the RMS image.
+        The median value of the RMS image.
+        The minimum value of the RMS image.
+        The maximum value of the RMS image.
 
     Raises:
         IOError: Raised when the RMS FITS file cannot be found.
@@ -814,8 +813,8 @@ def get_image_list_diff(row: pd.Series) -> Union[List[str], int]:
         row: The row from the sources dataframe that is being iterated over.
 
     Returns:
-        A list of the images missing from the observed image list. Will be
-        returned as '-1' integer value if there are no missing images.
+        A list of the images missing from the observed image list.
+        A '-1' integer value if there are no missing images.
     """
     out = list(
         filter(lambda arg: arg not in row['img_list'], row['skyreg_img_list'])
@@ -856,7 +855,7 @@ def get_names_and_epochs(grp: pd.DataFrame) -> pd.Series:
 
     Returns:
         Pandas series containing the list object that contains the lists of the
-        image names, epochs and datetimes.
+            image names, epochs and datetimes.
     """
     d = {}
     d['skyreg_img_epoch_list'] = [[[x, ], y, z] for x, y, z in zip(
@@ -903,44 +902,46 @@ def get_src_skyregion_merged_df(
             sky region objects for the run loaded into a dataframe.
 
     Returns:
-        DataFrame containing missing image information. Output format:
-        +----------+----------------------------------+-----------+------------+
-        |   source | img_list                         |   wavg_ra |   wavg_dec |
-        |----------+----------------------------------+-----------+------------+
-        |      278 | ['VAST_0127-73A.EPOCH01.I.fits'] |  22.2929  |   -71.8717 |
-        |      702 | ['VAST_0127-73A.EPOCH01.I.fits'] |  28.8125  |   -69.3547 |
-        |      844 | ['VAST_0127-73A.EPOCH01.I.fits'] |  17.3152  |   -72.346  |
-        |      934 | ['VAST_0127-73A.EPOCH01.I.fits'] |   9.75754 |   -72.9629 |
-        |     1290 | ['VAST_0127-73A.EPOCH01.I.fits'] |  20.8455  |   -76.8269 |
-        +----------+----------------------------------+-----------+------------+
-        ------------------------------------------------------------------+
-         skyreg_img_list                                                  |
-        ------------------------------------------------------------------+
-         ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
-         ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
-         ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
-         ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
-         ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
-        ------------------------------------------------------------------+
-        ----------------------------------+------------------------------+
-         img_diff                         | primary                      |
-        ----------------------------------+------------------------------+
-         ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
-         ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
-         ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
-         ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
-         ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
-        ----------------------------------+------------------------------+
-        ------------------------------+--------------+
-         detection                    | in_primary   |
-        ------------------------------+--------------|
-         VAST_0127-73A.EPOCH01.I.fits | True         |
-         VAST_0127-73A.EPOCH01.I.fits | True         |
-         VAST_0127-73A.EPOCH01.I.fits | True         |
-         VAST_0127-73A.EPOCH01.I.fits | True         |
-         VAST_0127-73A.EPOCH01.I.fits | True         |
-        ------------------------------+--------------+
+        DataFrame containing missing image information (see source code for
+            dataframe format).
     """
+    # Output format:
+    # +----------+----------------------------------+-----------+------------+
+    # |   source | img_list                         |   wavg_ra |   wavg_dec |
+    # |----------+----------------------------------+-----------+------------+
+    # |      278 | ['VAST_0127-73A.EPOCH01.I.fits'] |  22.2929  |   -71.8717 |
+    # |      702 | ['VAST_0127-73A.EPOCH01.I.fits'] |  28.8125  |   -69.3547 |
+    # |      844 | ['VAST_0127-73A.EPOCH01.I.fits'] |  17.3152  |   -72.346  |
+    # |      934 | ['VAST_0127-73A.EPOCH01.I.fits'] |   9.75754 |   -72.9629 |
+    # |     1290 | ['VAST_0127-73A.EPOCH01.I.fits'] |  20.8455  |   -76.8269 |
+    # +----------+----------------------------------+-----------+------------+
+    # ------------------------------------------------------------------+
+    #  skyreg_img_list                                                  |
+    # ------------------------------------------------------------------+
+    #  ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+    #  ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+    #  ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+    #  ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+    #  ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+    # ------------------------------------------------------------------+
+    # ----------------------------------+------------------------------+
+    #  img_diff                         | primary                      |
+    # ----------------------------------+------------------------------+
+    #  ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
+    #  ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
+    #  ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
+    #  ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
+    #  ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
+    # ----------------------------------+------------------------------+
+    # ------------------------------+--------------+
+    #  detection                    | in_primary   |
+    # ------------------------------+--------------|
+    #  VAST_0127-73A.EPOCH01.I.fits | True         |
+    #  VAST_0127-73A.EPOCH01.I.fits | True         |
+    #  VAST_0127-73A.EPOCH01.I.fits | True         |
+    #  VAST_0127-73A.EPOCH01.I.fits | True         |
+    #  VAST_0127-73A.EPOCH01.I.fits | True         |
+    # ------------------------------+--------------+
     logger.info("Creating ideal source coverage df...")
 
     merged_timer = StopWatch()
@@ -1100,7 +1101,7 @@ def _get_skyregion_relations(
 
     Returns:
         A list of other sky regions (including self) that are within the
-        'xtr_radius' of the sky region in the row.
+            'xtr_radius' of the sky region in the row.
     '''
     target = SkyCoord(
         row['centre_ra'],
@@ -1141,13 +1142,13 @@ def group_skyregions(df: pd.DataFrame) -> pd.DataFrame:
 
     Returns:
         The sky region group of each skyregion id.
-        +----+----------------+
-        |    |   skyreg_group |
-        |----+----------------|
-        |  2 |              1 |
-        |  3 |              1 |
-        |  1 |              2 |
-        +----+----------------+
+            +----+----------------+
+            |    |   skyreg_group |
+            |----+----------------|
+            |  2 |              1 |
+            |  3 |              1 |
+            |  1 |              2 |
+            +----+----------------+
     """
     sr_coords = SkyCoord(
         df['centre_ra'],
@@ -1242,20 +1243,22 @@ def get_parallel_assoc_image_df(
             +----+----------------+
 
     Returns:
-        Dataframe containing the merged images and skyreg_id and skyreg_group.
-        +----+-------------------------------+-------------+----------------+
-        |    | image                         |   skyreg_id |   skyreg_group |
-        |----+-------------------------------+-------------+----------------|
-        |  0 | VAST_2118+00A.EPOCH01.I.fits  |           2 |              1 |
-        |  1 | VAST_2118-06A.EPOCH01.I.fits  |           3 |              1 |
-        |  2 | VAST_0127-73A.EPOCH01.I.fits  |           1 |              2 |
-        |  3 | VAST_2118-06A.EPOCH03x.I.fits |           3 |              1 |
-        |  4 | VAST_2118-06A.EPOCH02.I.fits  |           3 |              1 |
-        |  5 | VAST_2118-06A.EPOCH05x.I.fits |           3 |              1 |
-        |  6 | VAST_2118-06A.EPOCH06x.I.fits |           3 |              1 |
-        |  7 | VAST_0127-73A.EPOCH08.I.fits  |           1 |              2 |
-        +----+-------------------------------+-------------+----------------+
+        Dataframe containing the merged images and skyreg_id and skyreg_group
+            (see source code for output format).
     """
+    # Output format
+    # +----+-------------------------------+-------------+----------------+
+    # |    | image                         |   skyreg_id |   skyreg_group |
+    # |----+-------------------------------+-------------+----------------|
+    # |  0 | VAST_2118+00A.EPOCH01.I.fits  |           2 |              1 |
+    # |  1 | VAST_2118-06A.EPOCH01.I.fits  |           3 |              1 |
+    # |  2 | VAST_0127-73A.EPOCH01.I.fits  |           1 |              2 |
+    # |  3 | VAST_2118-06A.EPOCH03x.I.fits |           3 |              1 |
+    # |  4 | VAST_2118-06A.EPOCH02.I.fits  |           3 |              1 |
+    # |  5 | VAST_2118-06A.EPOCH05x.I.fits |           3 |              1 |
+    # |  6 | VAST_2118-06A.EPOCH06x.I.fits |           3 |              1 |
+    # |  7 | VAST_0127-73A.EPOCH08.I.fits  |           1 |              2 |
+    # +----+-------------------------------+-------------+----------------+
     skyreg_ids = [i.skyreg_id for i in images]
 
     images_df = pd.DataFrame({
@@ -1456,7 +1459,8 @@ def reconstruct_associtaion_dfs(
             and 'measurement_pairs'.
 
     Returns:
-        The reconstructed sources_df and skyc1_srs dataframes.
+        The reconstructed `sources_df` dataframe.
+        The reconstructed `skyc1_srs` dataframes.
     """
     prev_associations = pd.read_parquet(previous_parquet_paths['associations'])
 
@@ -1673,7 +1677,7 @@ def write_parquets(
         run_path: directory to save parquets to.
 
     Returns:
-        Sky regions as pandas DataFrame
+        Sky regions as pandas DataFrame.
     """
     # write images parquet file under pipeline run folder
     images_df = pd.DataFrame(map(lambda x: x.__dict__, images))

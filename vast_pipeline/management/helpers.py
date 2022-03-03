@@ -12,7 +12,7 @@ from django.conf import settings as sett
 logger = logging.getLogger(__name__)
 
 
-def get_p_run_name(name: str, return_folder: bool=False) -> Tuple[str, str]:
+def get_p_run_name(name: str, return_folder: bool = False) -> Tuple[str, str]:
     """
     Determines the name of the pipeline run. Can also return the output folder
     if selected.
@@ -22,8 +22,8 @@ def get_p_run_name(name: str, return_folder: bool=False) -> Tuple[str, str]:
         return_folder: When `True` the pipeline directory is also returned.
 
     Returns:
-        The name of the pipeline run. If return_folder is `True` then both
-        the name and directory are returned.
+        The name of the pipeline run (always returned).
+        The run directory (if `return_folder` is set to `True`).
     """
     if '/' in name:
         folder = os.path.realpath(name)

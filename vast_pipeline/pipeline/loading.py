@@ -81,7 +81,9 @@ def make_upload_images(
             Dictionary of configuration options for the image ingestion.
 
     Returns:
-        A list of image, sky region and band objects that have been uploaded.
+        A list of Image objects that have been uploaded.
+        A list of SkyRegion objects that have been uploaded.
+        A list of Band objects that have been uploaded.
     '''
     timer = StopWatch()
     images = []
