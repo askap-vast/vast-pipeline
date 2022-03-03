@@ -46,20 +46,24 @@ tests = ["pytest", "pytest-asyncio", "mypy (>=0.800)"]
 
 [[package]]
 name = "astropy"
-version = "4.3.1"
+version = "5.0.1"
 description = "Astronomy and astrophysics core library"
 category = "main"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 
 [package.dependencies]
-numpy = ">=1.17"
-pyerfa = ">=1.7.3"
+numpy = ">=1.18"
+packaging = ">=19.0"
+pyerfa = ">=2.0"
+PyYAML = ">=3.13"
 
 [package.extras]
-all = ["scipy (>=1.1)", "certifi", "dask", "h5py", "beautifulsoup4", "html5lib", "bleach", "PyYAML (>=3.13)", "pandas", "sortedcontainers", "pytz", "jplephem", "matplotlib (>=3.0,!=3.4.0)", "mpmath", "asdf (>=2.6)", "bottleneck", "ipython (>=4.2)", "pytest"]
-docs = ["sphinx (<4)", "sphinx-astropy (>=1.3)", "pytest", "PyYAML (>=3.13)", "scipy (>=1.1)", "matplotlib (>=3.1,!=3.4.0)", "sphinx-changelog (>=1.1.0)", "packaging"]
-test = ["pytest-astropy (>=0.8)", "pytest-xdist", "objgraph", "ipython (>=4.2)", "coverage", "skyfield (>=1.20)", "sgp4 (>=2.3)", "packaging"]
+all = ["scipy (>=1.3)", "matplotlib (>=3.1,!=3.4.0)", "certifi", "dask", "h5py", "pyarrow (>=5.0.0)", "beautifulsoup4", "html5lib", "bleach", "pandas", "sortedcontainers", "pytz", "jplephem", "mpmath", "asdf (>=2.6)", "bottleneck", "ipython (>=4.2)", "pytest", "typing-extensions"]
+docs = ["sphinx (<4)", "sphinx-astropy (>=1.6)", "pytest", "scipy (>=1.3)", "matplotlib (>=3.1,!=3.4.0)", "sphinx-changelog (>=1.1.0)"]
+recommended = ["scipy (>=1.3)", "matplotlib (>=3.1,!=3.4.0)"]
+test = ["pytest-astropy (>=0.9)", "pytest-astropy-header (!=0.2.0)", "pytest-xdist"]
+test_all = ["pytest-astropy (>=0.9)", "pytest-xdist", "objgraph", "ipython (>=4.2)", "coverage", "skyfield (>=1.20)", "sgp4 (>=2.3)"]
 
 [[package]]
 name = "astroquery"
@@ -1629,11 +1633,11 @@ python-versions = "*"
 
 [[package]]
 name = "pyarrow"
-version = "3.0.0"
+version = "7.0.0"
 description = "Python library for Apache Arrow"
 category = "main"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.7"
 
 [package.dependencies]
 numpy = ">=1.16.6"
@@ -2212,7 +2216,7 @@ test = ["pytest"]
 
 [[package]]
 name = "twisted"
-version = "22.1.0"
+version = "22.2.0"
 description = "An asynchronous networking framework written in Python"
 category = "main"
 optional = false
@@ -2436,7 +2440,7 @@ prod = ["gevent", "gunicorn"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8.0,<3.11"
-content-hash = "5e2a72b1e829f1e39f5e75620ad786876e2e7af96635be1b1043b0e0e90e3f76"
+content-hash = "8691ab445f5b3893ac00dcfabdf99143f867b643aa94cb88b607c40e29b67eea"
 
 [metadata.files]
 ansicon = [
@@ -2460,22 +2464,24 @@ asgiref = [
     {file = "asgiref-3.5.0.tar.gz", hash = "sha256:2f8abc20f7248433085eda803936d98992f1343ddb022065779f37c5da0181d0"},
 ]
 astropy = [
-    {file = "astropy-4.3.1-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:a0764d7f68034c584dda8d1c9cc4357ade05cec4c1134db43bce804fcf656ff1"},
-    {file = "astropy-4.3.1-cp37-cp37m-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:ce1095e385ec74c655866eacd1853535fbc2dd2c42a8188503fe9a68b8a98ea0"},
-    {file = "astropy-4.3.1-cp37-cp37m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:9a01cc7b9d50f265d5d77e1f7206cda22c62720f5bed63158ee56440708848ea"},
-    {file = "astropy-4.3.1-cp37-cp37m-win32.whl", hash = "sha256:98bba44f60bb3584b3ad24d1ffad1763138d4d18fc7ca31921732d2449419dd9"},
-    {file = "astropy-4.3.1-cp37-cp37m-win_amd64.whl", hash = "sha256:aae1e9e6b2c7811070e4a3373c54eac603f882dc381a796b981a25c02e7fafe2"},
-    {file = "astropy-4.3.1-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:6a5fb4ce4c964f02d7ac2b755f80f5210157a413cbfcdccbc25ad6e7586c258f"},
-    {file = "astropy-4.3.1-cp38-cp38-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:9e5613e897cb6da64330c5969981f576385491ff5ea61435218117d717a71ff2"},
-    {file = "astropy-4.3.1-cp38-cp38-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:0b4576d9bc2ab8359f2c4b87d0496c5ad768c7a14d1b16dc634ec24d22147c79"},
-    {file = "astropy-4.3.1-cp38-cp38-win32.whl", hash = "sha256:26f8dce66d3de8aa761508d76b99627ed745d99ec7c5e10289566c2082fa7dc3"},
-    {file = "astropy-4.3.1-cp38-cp38-win_amd64.whl", hash = "sha256:bcedff7bad0fbc70209751e8eb98eec7c0bd3f0e202f4ee7ff65b8ddf19d5e53"},
-    {file = "astropy-4.3.1-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:beddc4a365d696214e13ff9aa9362d418ecc112f1dba6338f8ac4218fe475e25"},
-    {file = "astropy-4.3.1-cp39-cp39-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:4b0ff70baee2a2c768cfc5f7966a371fa0741c93a7283d7e99d6a668f2606851"},
-    {file = "astropy-4.3.1-cp39-cp39-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:34992c0ac1da577d7a1b13171cd8097cdb4544f09687bbd27e433806d3fd2e9f"},
-    {file = "astropy-4.3.1-cp39-cp39-win32.whl", hash = "sha256:dcb6d7e6631d92d5d15b7ae4e0a994829609b09a4e3af2055995187edb8989e3"},
-    {file = "astropy-4.3.1-cp39-cp39-win_amd64.whl", hash = "sha256:434ab46e85f5406acc9f2d2084e5e36890abeaf615c8aa71178e835134b64726"},
-    {file = "astropy-4.3.1.tar.gz", hash = "sha256:2d3951223b4eb7f368fcad8c8340d27374c5d8e3b635a636275acdb38f35cd51"},
+    {file = "astropy-5.0.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:c915403b0e694175f175f34a635b46f3259eaf94557b24842c08c663946758a9"},
+    {file = "astropy-5.0.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:07cab2374777d6b4c709ee171e52933a780e285db6698f4f496288c89510144a"},
+    {file = "astropy-5.0.1-cp310-cp310-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:c298dd4e7103f75a98e5b2433c93488c911ec68619b04c402317819e611903d6"},
+    {file = "astropy-5.0.1-cp310-cp310-win32.whl", hash = "sha256:ea0e71fa652fd14261dc5cef2f7e4abdcc3b7e1eab5a9d7eebf28bcf0c8251e4"},
+    {file = "astropy-5.0.1-cp310-cp310-win_amd64.whl", hash = "sha256:63db27dabe255793a55744d5babb492f5b209b946ffdd26cb6665e3b5b8dfdfa"},
+    {file = "astropy-5.0.1-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:c524da78a3846caa30a19b0b4dff9761d7cbeeb11003a4d503279bf012eed39d"},
+    {file = "astropy-5.0.1-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:dac9fc9ac0927b51e6088c43ea2673a7ca6cd02bb09c3c3d79e58610a062e5c8"},
+    {file = "astropy-5.0.1-cp38-cp38-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:5a2e97bc9be17d5a334e9ea613ae58a9ab56d6a2dd7d03a61f03d964a671f1c4"},
+    {file = "astropy-5.0.1-cp38-cp38-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:284b8410d8fc235e628c21d90c242192b5ccb537a57f2b1248baad2fb42af716"},
+    {file = "astropy-5.0.1-cp38-cp38-win32.whl", hash = "sha256:6807af2514989baec92f7475018f9b75a4bd626684172a4267f2713f0218d02e"},
+    {file = "astropy-5.0.1-cp38-cp38-win_amd64.whl", hash = "sha256:e5b0dcb41157b0e2487e3349fbaf38a7ff44c9aa7797c211fe9c8b24a701b8ed"},
+    {file = "astropy-5.0.1-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:699782974f8f3bdfd768a6cb0df07e22726d0d22edbe3f13002431ef284a79b1"},
+    {file = "astropy-5.0.1-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:3d404c33b1a3503eaafa59acd02622ce525c1fe61e219311a00e5d0c193a66c2"},
+    {file = "astropy-5.0.1-cp39-cp39-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:73c81c7e834f1903720c753643d6a9b4ae1c642e46c4a96dab16728279343275"},
+    {file = "astropy-5.0.1-cp39-cp39-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:df3d0c09834bfa96029ff8c6d155b631610f55d66a8432f23e87568c7dc39957"},
+    {file = "astropy-5.0.1-cp39-cp39-win32.whl", hash = "sha256:ef03ad6fa11ef331b27ffe94686c799858a54a4897e922a81ae2762c60e28c84"},
+    {file = "astropy-5.0.1-cp39-cp39-win_amd64.whl", hash = "sha256:fbd1bff159374b4419c2fa869d5b591b8f955a63bd69b7542cdd88f717a42626"},
+    {file = "astropy-5.0.1.tar.gz", hash = "sha256:6382cde6a205aa0b16a0d5e61c0c0131ebd4f0174d6c73e2964f4bee132a9027"},
 ]
 astroquery = [
     {file = "astroquery-0.4.5-py3-none-any.whl", hash = "sha256:7b78c5d0b3afad3c7c7646a784bc03c5be0e4d350dcca6b4897bcb804ffff89b"},
@@ -3408,27 +3414,36 @@ ptyprocess = [
     {file = "ptyprocess-0.7.0.tar.gz", hash = "sha256:5c5d0a3b48ceee0b48485e0c26037c0acd7d29765ca3fbb5cb3831d347423220"},
 ]
 pyarrow = [
-    {file = "pyarrow-3.0.0-cp36-cp36m-macosx_10_13_x86_64.whl", hash = "sha256:03e2435da817bc2b5d0fad6f2e53305eb36c24004ddfcb2b30e4217a1a80cf22"},
-    {file = "pyarrow-3.0.0-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:2be3a9eab4bfd00024dc3c83fa03de1c1d04a0f47ebaf3dc483cd100546eacbf"},
-    {file = "pyarrow-3.0.0-cp36-cp36m-manylinux2010_x86_64.whl", hash = "sha256:a76031ef19d11db2fef79a97cc69997c97bea35aa07efbe042a177c7e3b1a390"},
-    {file = "pyarrow-3.0.0-cp36-cp36m-manylinux2014_x86_64.whl", hash = "sha256:a07e286e81ceb20f8f0c45f69760d2ebc434fe83794d5f9b44f89fc2dc6dc24d"},
-    {file = "pyarrow-3.0.0-cp36-cp36m-win_amd64.whl", hash = "sha256:cfea99a01d844c3db5e25374a6cdcf3b5ba1698bfe95d41272c295a4581e884c"},
-    {file = "pyarrow-3.0.0-cp37-cp37m-macosx_10_13_x86_64.whl", hash = "sha256:d5666a7fa2668f3ff95df028c2072d59e8b17e73d682068e8505dafa2688f3cc"},
-    {file = "pyarrow-3.0.0-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:3ea6574d1ae2d9bff7e6e1715f64c31bdc01b42387a5c78311a8ce9c09cfe135"},
-    {file = "pyarrow-3.0.0-cp37-cp37m-manylinux2010_x86_64.whl", hash = "sha256:2d5c95eb04a3d2e786e097b53534893eade6c8b3faf10f53a06143384b4446b1"},
-    {file = "pyarrow-3.0.0-cp37-cp37m-manylinux2014_x86_64.whl", hash = "sha256:31e6fc0868963aba4e6b8a3e218c9a5ff347bca870d622da0b3d58269d0c5398"},
-    {file = "pyarrow-3.0.0-cp37-cp37m-win_amd64.whl", hash = "sha256:960a9b0fd599601ddac42f16d5acf049637ec08957359c6741d6eb2bf0dbae97"},
-    {file = "pyarrow-3.0.0-cp38-cp38-macosx_10_13_x86_64.whl", hash = "sha256:2c3353d38d137f1158595b3b18dcef711f3d8fdb57cf7ae2d861d07235064bc1"},
-    {file = "pyarrow-3.0.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:72206cde1857d5420601feae75f53921cffab4326b42262a858c7b8be67982b7"},
-    {file = "pyarrow-3.0.0-cp38-cp38-manylinux2010_x86_64.whl", hash = "sha256:dec007a0f7adba86bd170252140ede01646b45c3a470d5862ce00d8e40cd29bd"},
-    {file = "pyarrow-3.0.0-cp38-cp38-manylinux2014_x86_64.whl", hash = "sha256:bf6684fe9e38f8ddb696e38901461eab783ec1d565974ebd5862270320b3e27f"},
-    {file = "pyarrow-3.0.0-cp38-cp38-win_amd64.whl", hash = "sha256:3b46487c45faaea8d1a5aa65002e2832ae2e1c9e68ecb461cda4fa59891cf490"},
-    {file = "pyarrow-3.0.0-cp39-cp39-macosx_10_13_x86_64.whl", hash = "sha256:978bbe8ec9090d1133a25f00f32ed92600f9d315fbfa29a17952bee01f0d7fe5"},
-    {file = "pyarrow-3.0.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:b7a8903f2b8a80498725ef5d4a35cd7dd5a98b74e080d42692545e61a6cbfbe4"},
-    {file = "pyarrow-3.0.0-cp39-cp39-manylinux2010_x86_64.whl", hash = "sha256:b1cf92df9f336f31706249e543dc0ffce3c67a78204ce540f1173c6c07dfafec"},
-    {file = "pyarrow-3.0.0-cp39-cp39-manylinux2014_x86_64.whl", hash = "sha256:b08c119cc2b9fcd1567797fedb245a2f4352a3084a22b7298272afe7cf7a4730"},
-    {file = "pyarrow-3.0.0-cp39-cp39-win_amd64.whl", hash = "sha256:5faa2dc73444bdcf042f121383965a47362be1f946303d46e8fd80f8d26cd90c"},
-    {file = "pyarrow-3.0.0.tar.gz", hash = "sha256:4bf8cc43e1db1e0517466209ee8e8f459d9b5e1b4074863317f2a965cf59889e"},
+    {file = "pyarrow-7.0.0-cp310-cp310-macosx_10_13_universal2.whl", hash = "sha256:0f15213f380539c9640cb2413dc677b55e70f04c9e98cfc2e1d8b36c770e1036"},
+    {file = "pyarrow-7.0.0-cp310-cp310-macosx_10_13_x86_64.whl", hash = "sha256:29c4e3b3be0b94d07ff4921a5e410fc690a3a066a850a302fc504de5fc638495"},
+    {file = "pyarrow-7.0.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:8a9bfc8a016bcb8f9a8536d2fa14a890b340bc7a236275cd60fd4fb8b93ff405"},
+    {file = "pyarrow-7.0.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:49d431ed644a3e8f53ae2bbf4b514743570b495b5829548db51610534b6eeee7"},
+    {file = "pyarrow-7.0.0-cp310-cp310-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:aa6442a321c1e49480b3d436f7d631c895048a16df572cf71c23c6b53c45ed66"},
+    {file = "pyarrow-7.0.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f6b01a23cb401750092c6f7c4dcae67cd8fd6b99ae710e26f654f23508f25f25"},
+    {file = "pyarrow-7.0.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0f10928745c6ff66e121552731409803bed86c66ac79c64c90438b053b5242c5"},
+    {file = "pyarrow-7.0.0-cp310-cp310-win_amd64.whl", hash = "sha256:759090caa1474cafb5e68c93a9bd6cb45d8bb8e4f2cad2f1a0cc9439bae8ae88"},
+    {file = "pyarrow-7.0.0-cp37-cp37m-macosx_10_13_x86_64.whl", hash = "sha256:e3fe34bcfc28d9c4a747adc3926d2307a04c5c50b89155946739515ccfe5eab0"},
+    {file = "pyarrow-7.0.0-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:040dce5345603e4e621bcf4f3b21f18d557852e7b15307e559bb14c8951c8714"},
+    {file = "pyarrow-7.0.0-cp37-cp37m-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:ed4b647c3345ae3463d341a9d28d0260cd302fb92ecf4e2e3e0f1656d6e0e55c"},
+    {file = "pyarrow-7.0.0-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e7fecd5d5604f47e003f50887a42aee06cb8b7bf8e8bf7dc543a22331d9ba832"},
+    {file = "pyarrow-7.0.0-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1f2d00b892fe865e43346acb78761ba268f8bb1cbdba588816590abcb780ee3d"},
+    {file = "pyarrow-7.0.0-cp37-cp37m-win_amd64.whl", hash = "sha256:f439f7d77201681fd31391d189aa6b1322d27c9311a8f2fce7d23972471b02b6"},
+    {file = "pyarrow-7.0.0-cp38-cp38-macosx_10_13_x86_64.whl", hash = "sha256:3e06b0e29ce1e32f219c670c6b31c33d25a5b8e29c7828f873373aab78bf30a5"},
+    {file = "pyarrow-7.0.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:13dc05bcf79dbc1bd2de1b05d26eb64824b85883d019d81ca3c2eca9b68b5a44"},
+    {file = "pyarrow-7.0.0-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:06183a7ff2b0c030ec0413fc4dc98abad8cf336c78c280a0b7f4bcbebb78d125"},
+    {file = "pyarrow-7.0.0-cp38-cp38-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:702c5a9f960b56d03569eaaca2c1a05e8728f05ea1a2138ef64234aa53cd5884"},
+    {file = "pyarrow-7.0.0-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c7313038203df77ec4092d6363dbc0945071caa72635f365f2b1ae0dd7469865"},
+    {file = "pyarrow-7.0.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e87d1f7dc7a0b2ecaeb0c7a883a85710f5b5626d4134454f905571c04bc73d5a"},
+    {file = "pyarrow-7.0.0-cp38-cp38-win_amd64.whl", hash = "sha256:ba69488ae25c7fde1a2ae9ea29daf04d676de8960ffd6f82e1e13ca945bb5861"},
+    {file = "pyarrow-7.0.0-cp39-cp39-macosx_10_13_universal2.whl", hash = "sha256:11a591f11d2697c751261c9d57e6e5b0d38fdc7f0cc57f4fd6edc657da7737df"},
+    {file = "pyarrow-7.0.0-cp39-cp39-macosx_10_13_x86_64.whl", hash = "sha256:6183c700877852dc0f8a76d4c0c2ffd803ba459e2b4a452e355c2d58d48cf39f"},
+    {file = "pyarrow-7.0.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:d1748154714b543e6ae8452a68d4af85caf5298296a7e5d4d00f1b3021838ac6"},
+    {file = "pyarrow-7.0.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:fcc8f934c7847a88f13ec35feecffb61fe63bb7a3078bd98dd353762e969ce60"},
+    {file = "pyarrow-7.0.0-cp39-cp39-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:759f59ac77b84878dbd54d06cf6df74ff781b8e7cf9313eeffbb5ec97b94385c"},
+    {file = "pyarrow-7.0.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:3d3e3f93ac2993df9c5e1922eab7bdea047b9da918a74e52145399bc1f0099a3"},
+    {file = "pyarrow-7.0.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:306120af554e7e137895254a3b4741fad682875a5f6403509cd276de3fe5b844"},
+    {file = "pyarrow-7.0.0-cp39-cp39-win_amd64.whl", hash = "sha256:087769dac6e567d58d59b94c4f866b3356c00d3db5b261387ece47e7324c2150"},
+    {file = "pyarrow-7.0.0.tar.gz", hash = "sha256:da656cad3c23a2ebb6a307ab01d35fce22f7850059cffafcb90d12590f8f4f38"},
 ]
 pyasn1 = [
     {file = "pyasn1-0.4.8-py2.4.egg", hash = "sha256:fec3e9d8e36808a28efb59b489e4528c10ad0f480e57dcc32b4de5c9d8c9fdf3"},
@@ -3868,8 +3883,8 @@ traitlets = [
     {file = "traitlets-5.1.1.tar.gz", hash = "sha256:059f456c5a7c1c82b98c2e8c799f39c9b8128f6d0d46941ee118daace9eb70c7"},
 ]
 twisted = [
-    {file = "Twisted-22.1.0-py3-none-any.whl", hash = "sha256:ccd638110d9ccfdc003042aa3e1b6d6af272eaca45d36e083359560549e3e848"},
-    {file = "Twisted-22.1.0.tar.gz", hash = "sha256:b7971ec9805b0f80e1dcb1a3721d7bfad636d5f909de687430ce373979d67b61"},
+    {file = "Twisted-22.2.0-py3-none-any.whl", hash = "sha256:5c63c149eb6b8fe1e32a0215b1cef96fabdba04f705d8efb9174b1ccf5b49d49"},
+    {file = "Twisted-22.2.0.tar.gz", hash = "sha256:57f32b1f6838facb8c004c89467840367ad38e9e535f8252091345dba500b4f2"},
 ]
 twisted-iocpsupport = [
     {file = "twisted-iocpsupport-1.0.2.tar.gz", hash = "sha256:72068b206ee809c9c596b57b5287259ea41ddb4774d86725b19f35bf56aa32a9"},
