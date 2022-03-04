@@ -61,6 +61,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed deprecation warning on astroquery Ned import [#644](https://github.com/askap-vast/vast-pipeline/pull/644).
 - Fixed a regression from pandas==1.4.0 that caused empty groups to be passed to an apply function in parallel association [#642](https://github.com/askap-vast/vast-pipeline/pull/642).
 - Fixed docs issue that stopped serializers and views being shown in the code reference [#627](https://github.com/askap-vast/vast-pipeline/pull/627).
 - Fixed broken links to external search results from NED by URI encoding source names [#633](https://github.com/askap-vast/vast-pipeline/pull/633).
@@ -91,6 +92,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#644](https://github.com/askap-vast/vast-pipeline/pull/644): fix: Fix astroquery Ned import deprecation.
 - [#638](https://github.com/askap-vast/vast-pipeline/pull/638): feat: Support defer loading of dataTables data.
 - [#641](https://github.com/askap-vast/vast-pipeline/pull/641): dep: Drop Python 3.7 and dependency refresh.
 - [#643](https://github.com/askap-vast/vast-pipeline/pull/643): fix: Addressed pandas DataFrame.append deprecation.
