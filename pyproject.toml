@@ -63,6 +63,7 @@ django-stubs = "^1.9.0"
 lightgallery = "^0"
 mkdocs-git-revision-date-localized-plugin = "^0"
 mike = "^1.1.2"
+pyfakefs = "^4.5.5"
 
 [tool.poetry.extras]
 prod = ["gevent", "gunicorn"]

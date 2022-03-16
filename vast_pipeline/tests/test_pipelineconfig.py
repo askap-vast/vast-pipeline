@@ -5,6 +5,7 @@ import uuid
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.test import SimpleTestCase, override_settings
+from pyfakefs.fake_filesystem_unittest import TestCase as FakeFsTestCase
 import strictyaml as yaml
 
 from vast_pipeline.management.commands.initpiperun import make_config_template
@@ -20,8 +21,16 @@ TEST_ROOT = os.path.join(settings.BASE_DIR, "vast_pipeline", "tests")
     PIPELINE_WORKING_DIR=os.path.join(TEST_ROOT, "pipeline-runs"),
     MAX_PIPERUN_IMAGES=10,
 )
-class CheckRunConfigValidationTest(SimpleTestCase):
+class CheckRunConfigValidationTest(SimpleTestCase, FakeFsTestCase):
     def setUp(self):
+        # set up fake filesystem
+        self.setUpPyfakefs()
+        self.fs.add_real_directory(
+            os.path.join(settings.PIPELINE_WORKING_DIR, "basic-association")
+        )
+        self.fs.add_real_file(PipelineConfig.TEMPLATE_PATH)
+        self.fs.add_real_directory("vast_pipeline/tests/data")
+
         # load a base run configuration file
         self.config_path = os.path.join(
             settings.PIPELINE_WORKING_DIR, "basic-association", "config.yaml"
@@ -183,6 +192,62 @@ class CheckRunConfigValidationTest(SimpleTestCase):
         # the original config
         self.assertDictEqual(
             pipeline_config_original._yaml.data, pipeline_config_globs._yaml.data
+        )
+
+    def test_diff_glob(self):
+        """Test that changes to the input files on disk trigger a config change for runs
+        that use glob expressions."""
+        def gen_config(config_dict) -> PipelineConfig:
+            config_yaml = yaml.as_document(config_dict)
+            config = PipelineConfig(config_yaml)
+            config.validate()
+            return config
+
+        # replace the inputs with glob expressions
+        self.config_dict["inputs"]["image"] = {
+            "glob": "vast_pipeline/tests/data/epoch??.fits"
+        }
+        self.config_dict["inputs"]["selavy"] = {
+            "glob": "vast_pipeline/tests/data/epoch??.selavy.components.txt"
+        }
+        self.config_dict["inputs"]["noise"] = {
+            "glob": "vast_pipeline/tests/data/epoch??.noiseMap.fits"
+        }
+        self.config_dict["inputs"]["background"] = {
+            "glob": "vast_pipeline/tests/data/epoch??.meanMap.fits"
+        }
+        pipeline_config_globs = gen_config(self.config_dict)
+        n_images = pipeline_config_globs.count_images()
+
+        # Generate another pipeline config object using the same glob expressions as
+        # above. Contents will be the same as pipeline_config_globs.
+        pipeline_config_globs_nochange = gen_config(self.config_dict)
+
+        # no change to config nor filesystem, diff check should return False
+        self.assertFalse(
+            pipeline_config_globs_nochange.check_prev_config_diff(
+                n_images, prev_config=pipeline_config_globs
+            )
+        )
+
+        # add a new input files to the fake filesystem
+        for f in (
+            "epoch00.fits",
+            "epoch00.meanMap.fits",
+            "epoch00.noiseMap.fits",
+            "epoch00.selavy.components.txt",
+        ):
+            self.fs.create_file(f"vast_pipeline/tests/data/{f}")
+
+        # Generate another pipeline config object using the same glob expressions as
+        # above. Contents will be different as new inputs were added to the filesystem.
+        pipeline_config_globs_newfiles = gen_config(self.config_dict)
+
+        # the config inputs should now be different
+        self.assertTrue(
+            pipeline_config_globs_newfiles.check_prev_config_diff(
+                n_images, prev_config=pipeline_config_globs
+            )
         )
 
     def test_input_multiple_globs(self):
