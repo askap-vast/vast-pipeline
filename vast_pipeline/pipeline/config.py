@@ -528,7 +528,7 @@ class PipelineConfig:
         settings are the same (the requirement for add mode). Otherwise False is returned.
 
         Args:
-            prev_n_images (int): The number of input images in the previous run. If the 
+            prev_n_images (int): The number of input images in the previous run. If the
                 number of input images after resolving glob expressions is greater than
                 this value, the config is considered different.
 
