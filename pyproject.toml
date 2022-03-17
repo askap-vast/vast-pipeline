@@ -41,6 +41,7 @@ matplotlib = "^3.5.0"
 holoviews = "^1.14.7"
 datashader = "^0.13.0"
 channels = "^3.0.4"
+pyfakefs = "^4.5.5"
 
 [tool.poetry.dev-dependencies]
 mkdocs-material = "^8.2.4"
@@ -63,7 +64,6 @@ django-stubs = "^1.9.0"
 lightgallery = "^0"
 mkdocs-git-revision-date-localized-plugin = "^0"
 mike = "^1.1.2"
-pyfakefs = "^4.5.5"
 
 [tool.poetry.extras]
 prod = ["gevent", "gunicorn"]
