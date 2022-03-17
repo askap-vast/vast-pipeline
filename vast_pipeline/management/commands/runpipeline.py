@@ -243,8 +243,8 @@ def run_pipe(
                     # Before parquets are started to be copied and backed up, a
                     # check is run to see if anything has actually changed in
                     # the config
-                    config_diff = pipeline.config.check_prev_config_diff()
-                    if config_diff:
+                    config_diff = pipeline.config.check_prev_config_diff(p_run.n_images)
+                    if not config_diff:
                         logger.info(
                             "The config file has either not changed since the"
                             " previous run or other settings have changed such"

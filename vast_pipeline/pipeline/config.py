@@ -1,7 +1,7 @@
 from glob import glob
 import logging
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from django.contrib.auth.models import User
 from django.conf import settings
@@ -507,25 +507,54 @@ class PipelineConfig:
                     if not os.path.exists(file):
                         raise PipelineConfigError(f"{file} does not exist.")
 
-    def check_prev_config_diff(self) -> bool:
+    def count_images(self) -> int:
+        """Count the number of input images in the config. Assumes the config has been
+        validated and glob expressions have been resolved.
+
+        Returns:
+            int: The number of input images in the config.
+        """
+        n_images = 0
+        for _, images in self._yaml.data["inputs"]["image"].items():
+            n_images += len(images)
+        return n_images
+
+    def check_prev_config_diff(
+        self, prev_n_images: int, prev_config: Optional["PipelineConfig"] = None
+    ) -> bool:
         """
         Checks if the previous config file differs from the current config file. Used in
         add mode. Only returns true if the images are different and the other general
         settings are the same (the requirement for add mode). Otherwise False is returned.
 
+        Args:
+            prev_n_images (int): The number of input images in the previous run. If the
+                number of input images after resolving glob expressions is greater than
+                this value, the config is considered different.
+
         Returns:
             `True` if images are different but general settings are the same,
                 otherwise `False` is returned.
         """
-        prev_config = PipelineConfig.from_file(
-            os.path.join(self["run"]["path"], "config_prev.yaml"),
-            label="previous run config",
-        )
-        if self._yaml == prev_config._yaml:
-            return True
+        if prev_config is None:
+            prev_config = PipelineConfig.from_file(
+                os.path.join(self["run"]["path"], "config_prev.yaml"),
+                label="previous run config",
+            )
+
+        # count the input images in case the config uses glob expressions and new images
+        # have appeared on disk
+        n_images = self.count_images()
+
+        # is the config unchanged, including the image count?
+        if self._yaml == prev_config._yaml and n_images == prev_n_images:
+            return False
 
         # are the input image files different?
-        images_changed = self["inputs"]["image"] != prev_config["inputs"]["image"]
+        images_changed = (
+            self["inputs"]["image"] != prev_config["inputs"]["image"]
+            or n_images > prev_n_images
+        )
 
         # are all the non-input file configs the same?
         config_dict = self._yaml.data
@@ -535,8 +564,8 @@ class PipelineConfig:
         settings_check = config_dict == prev_config_dict
 
         if images_changed and settings_check:
-            return False
-        return True
+            return True
+        return False
 
     def image_opts(self) -> Dict[str, Any]:
         """
