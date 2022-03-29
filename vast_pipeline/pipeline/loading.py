@@ -110,35 +110,33 @@ def make_upload_images(
             img, exists_f = get_create_img(band.id, image)
             skyreg = img.skyreg
 
-        # add image and skyregion to respective lists
-        images.append(img)
-        if skyreg not in skyregions:
-            skyregions.append(skyreg)
+            # add image and skyregion to respective lists
+            images.append(img)
+            if skyreg not in skyregions:
+                skyregions.append(skyreg)
 
-        if exists_f:
-            logger.info('Image %s already processed', img.name)
-            continue
+            if exists_f:
+                logger.info("Image %s already processed", img.name)
+                continue
 
-        # 1.3 get the image measurements and save them in DB
-        measurements = image.read_selavy(img)
-        logger.info(
-            'Processed measurements dataframe of shape: (%i, %i)',
-            measurements.shape[0], measurements.shape[1]
-        )
+            # 1.3 get the image measurements and save them in DB
+            measurements = image.read_selavy(img)
+            logger.info(
+                "Processed measurements dataframe of shape: (%i, %i)",
+                measurements.shape[0],
+                measurements.shape[1],
+            )
 
-        # upload measurements, a column with the db is added to the df
-        measurements = make_upload_measurements(measurements)
+            # upload measurements, a column with the db is added to the df
+            measurements = make_upload_measurements(measurements)
 
-        # save measurements to parquet file in pipeline run folder
-        base_folder = os.path.dirname(img.measurements_path)
-        if not os.path.exists(base_folder):
-            os.makedirs(base_folder)
+            # save measurements to parquet file in pipeline run folder
+            base_folder = os.path.dirname(img.measurements_path)
+            if not os.path.exists(base_folder):
+                os.makedirs(base_folder)
 
-        measurements.to_parquet(
-            img.measurements_path,
-            index=False
-        )
-        del measurements, image, band, img
+            measurements.to_parquet(img.measurements_path, index=False)
+            del measurements, image, band, img
 
     logger.info(
         'Total images upload/loading time: %.2f seconds',
