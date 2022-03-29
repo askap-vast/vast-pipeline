@@ -4,7 +4,7 @@ from urllib.parse import urljoin
 
 from astropy.coordinates import SkyCoord, Angle, Longitude, Latitude
 from astroquery.simbad import Simbad
-from astroquery.ned import Ned
+from astroquery.ipac.ned import Ned
 from django.conf import settings
 import requests
 

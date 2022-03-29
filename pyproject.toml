@@ -8,7 +8,7 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = ">=3.8.0,<3.11"
 astropy = "^5.0"
-astroquery = "^0.4.0"
+astroquery = "^0.4.4"
 bokeh = "2.3.3" # must align with @bokeh/bokehjs version in package.json
 cloudpickle = "^1.5.0"
 dask = {extras = ["dataframe"], version = "^2022.1.0"}

@@ -2440,7 +2440,7 @@ prod = ["gevent", "gunicorn"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8.0,<3.11"
-content-hash = "8691ab445f5b3893ac00dcfabdf99143f867b643aa94cb88b607c40e29b67eea"
+content-hash = "88be0a1174ba726e535851688a33cbe2990ff5122720af1d72a54bdf690d64df"
 
 [metadata.files]
 ansicon = [
