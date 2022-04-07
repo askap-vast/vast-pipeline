@@ -196,7 +196,7 @@ def plot_lightcurve(
         )
         node_positions_df["lc_index"] = node_positions_df.index.map(
             {v: k for k, v in lightcurve.id.to_dict().items()}
-        ).values
+        ).values.astype(str)
         node_source = ColumnDataSource(node_positions_df)
         edge_source = ColumnDataSource(candidate_measurement_pairs_df)
 
@@ -304,7 +304,7 @@ def plot_lightcurve(
         </div>
         """,
         formatters={"@taustart_ts": "datetime", },
-        mode="vline",
+        mode="mouse",
         callback=hover_tool_lc_callback,
     )
     fig_lc.add_tools(hover_tool_lc)

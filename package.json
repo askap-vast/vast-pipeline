@@ -36,7 +36,7 @@
   },
   "homepage": "https://github.com/askap-vast/vast-pipeline#readme",
   "dependencies": {
-    "@bokeh/bokehjs": "2.3.3",
+    "@bokeh/bokehjs": "2.4.2",
     "@fortawesome/fontawesome-free": "5.12.0",
     "bootstrap-select": "^1.13.18",
     "bootstrap4-toggle": "3.6.1",
