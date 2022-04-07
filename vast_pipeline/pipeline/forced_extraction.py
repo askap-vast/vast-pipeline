@@ -105,9 +105,15 @@ def get_data_from_parquet(
 
 
 def extract_from_image(
-    df: pd.DataFrame, image: str, background: str, noise: str,
-    edge_buffer: float, cluster_threshold: float, allow_nan: bool
-    ) -> Dict:
+    df: pd.DataFrame,
+    image: str,
+    background: str,
+    noise: str,
+    edge_buffer: float,
+    cluster_threshold: float,
+    allow_nan: bool,
+    **kwargs,
+) -> Dict:
     """
     Extract the flux, its erros and chi squared data from the image
     files (image FIT, background and noise files) and return a dictionary
