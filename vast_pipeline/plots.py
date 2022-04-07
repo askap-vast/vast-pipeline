@@ -304,7 +304,7 @@ def plot_lightcurve(
         </div>
         """,
         formatters={"@taustart_ts": "datetime", },
-        mode="vline",
+        mode="mouse",
         callback=hover_tool_lc_callback,
     )
     fig_lc.add_tools(hover_tool_lc)
