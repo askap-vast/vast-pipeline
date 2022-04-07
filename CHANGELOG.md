@@ -37,6 +37,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Changed lightcurve plot cursor hit-test mode from "vline" to "mouse" to avoid a regression in Bokeh [#652](https://github.com/askap-vast/vast-pipeline/pull/652).
+- Updated Bokeh from v2.3.3 to v2.4.2 [#652](https://github.com/askap-vast/vast-pipeline/pull/652).
 - Source query results table is no longer populated by default, a query must be submitted first [#638](https://github.com/askap-vast/vast-pipeline/pull/638).
 - Bumped major versions of astropy (5.0) and pyarrow (7.0) [#641](https://github.com/askap-vast/vast-pipeline/pull/641).
 - Addressed future pandas append deprecation, migrated all uses to pd.concat [#643](https://github.com/askap-vast/vast-pipeline/pull/643).
@@ -61,6 +63,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed a Bokeh regression that requires LabelSet values to be strings [#652](https://github.com/askap-vast/vast-pipeline/pull/652).
 - Fixed deprecation warning on astroquery Ned import [#644](https://github.com/askap-vast/vast-pipeline/pull/644).
 - Fixed a regression from pandas==1.4.0 that caused empty groups to be passed to an apply function in parallel association [#642](https://github.com/askap-vast/vast-pipeline/pull/642).
 - Fixed docs issue that stopped serializers and views being shown in the code reference [#627](https://github.com/askap-vast/vast-pipeline/pull/627).
@@ -92,6 +95,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#652](https://github.com/askap-vast/vast-pipeline/pull/652): dep, fix: Bump bokeh 2.4.2.
 - [#644](https://github.com/askap-vast/vast-pipeline/pull/644): fix: Fix astroquery Ned import deprecation.
 - [#638](https://github.com/askap-vast/vast-pipeline/pull/638): feat: Support defer loading of dataTables data.
 - [#641](https://github.com/askap-vast/vast-pipeline/pull/641): dep: Drop Python 3.7 and dependency refresh.
