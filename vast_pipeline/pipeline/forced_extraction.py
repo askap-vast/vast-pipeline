@@ -13,7 +13,7 @@ from astropy.coordinates import SkyCoord
 from django.conf import settings
 from django.db import transaction
 from pyarrow.parquet import read_schema
-from typing import List, Tuple, Dict
+from typing import Any, List, Tuple, Dict
 
 from vast_pipeline.models import Image, Measurement, Run
 from vast_pipeline.pipeline.loading import make_upload_measurements
@@ -61,13 +61,14 @@ def remove_forced_meas(run_path: str) -> None:
 
 
 def get_data_from_parquet(
-    file: str, p_run_path: str, add_mode: bool = False,) -> Dict:
+    file_and_image_id: Tuple[str, int], p_run_path: str, add_mode: bool = False
+) -> Dict:
     '''
     Get the prefix, max id and image id from the measurements parquets
 
     Args:
-        file:
-            a string with the path of the measurements parquet file
+        file_and_image_id:
+            a tuple containing the path of the measurements parquet file and the image ID.
         p_run_path:
             Pipeline run path to get forced parquet in case of add mode.
         add_mode:
@@ -78,6 +79,7 @@ def get_data_from_parquet(
         Dictionary with prefix string, an interger max_id and a string with the
             id of the image.
     '''
+    file, image_id = file_and_image_id
     if add_mode:
         image_name = file.split("/")[-2]
         forced_parquet = os.path.join(
@@ -88,20 +90,30 @@ def get_data_from_parquet(
             file = forced_parquet
     # get max component id from parquet file
     df = pd.read_parquet(file, columns=['island_id', 'image_id'])
-    prefix = df['island_id'].iloc[0].rsplit('_', maxsplit=1)[0] + '_'
-    max_id = (
-        df['island_id'].str.rsplit('_', n=1)
-        .str.get(-1)
-        .astype(int)
-        .values.max() + 1
-    )
-    return {'prefix': prefix, 'max_id': max_id, 'id': df['image_id'].iloc[0]}
+    if len(df) > 0:
+        prefix = df['island_id'].iloc[0].rsplit('_', maxsplit=1)[0] + '_'
+        max_id = (
+            df['island_id'].str.rsplit('_', n=1)
+            .str.get(-1)
+            .astype(int)
+            .values.max() + 1
+        )
+    else:
+        prefix = "island_"
+        max_id = 1
+    return {'prefix': prefix, 'max_id': max_id, 'id': image_id}
 
 
 def extract_from_image(
-    df: pd.DataFrame, image: str, background: str, noise: str,
-    edge_buffer: float, cluster_threshold: float, allow_nan: bool
-    ) -> Dict:
+    df: pd.DataFrame,
+    image: str,
+    background: str,
+    noise: str,
+    edge_buffer: float,
+    cluster_threshold: float,
+    allow_nan: bool,
+    **kwargs,
+) -> Dict:
     """
     Extract the flux, its erros and chi squared data from the image
     files (image FIT, background and noise files) and return a dictionary
@@ -293,19 +305,26 @@ def parallel_extraction(
 
     # get the unique images to extract from
     unique_images_to_extract = out['image_name'].unique().tolist()
+
     # create a list of dictionaries with image file paths and dataframes
     # with data related to each images
-    image_data_func = lambda x: {
-        'image': df_images.at[x, 'path'],
-        'background': df_images.at[x, 'background_path'],
-        'noise': df_images.at[x, 'noise_path'],
-        'df': out[out['image_name'] == x]
-    }
+    def image_data_func(image_name: str) -> Dict[str, Any]:
+        nonlocal out  # `out` refers to the `out` declared in nearest enclosing scope
+        return {
+            'image_id': df_images.at[image_name, 'id'],
+            'image': df_images.at[image_name, 'path'],
+            'background': df_images.at[image_name, 'background_path'],
+            'noise': df_images.at[image_name, 'noise_path'],
+            'df': out[out['image_name'] == image_name]
+        }
     list_to_map = list(map(image_data_func, unique_images_to_extract))
     # create a list of all the measurements parquet files to extract data from,
     # such as prefix and max_id
     list_meas_parquets = list(map(
-        lambda el: df_images.at[el, 'measurements_path'],
+        lambda image_name: (
+            df_images.at[image_name, 'measurements_path'],
+            df_images.at[image_name, 'id'],
+        ),
         unique_images_to_extract
     ))
     del out, unique_images_to_extract, image_data_func
