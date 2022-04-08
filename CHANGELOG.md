@@ -63,6 +63,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Ensure Image models are not created if the catalogue ingest fails [#648](https://github.com/askap-vast/vast-pipeline/pull/648).
 - Fixed a Bokeh regression that requires LabelSet values to be strings [#652](https://github.com/askap-vast/vast-pipeline/pull/652).
 - Fixed deprecation warning on astroquery Ned import [#644](https://github.com/askap-vast/vast-pipeline/pull/644).
 - Fixed a regression from pandas==1.4.0 that caused empty groups to be passed to an apply function in parallel association [#642](https://github.com/askap-vast/vast-pipeline/pull/642).
@@ -95,6 +96,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#648](https://github.com/askap-vast/vast-pipeline/pull/648): fix: make Image and Measurement creation atomic together.
 - [#652](https://github.com/askap-vast/vast-pipeline/pull/652): dep, fix: Bump bokeh 2.4.2.
 - [#644](https://github.com/askap-vast/vast-pipeline/pull/644): fix: Fix astroquery Ned import deprecation.
 - [#638](https://github.com/askap-vast/vast-pipeline/pull/638): feat: Support defer loading of dataTables data.
