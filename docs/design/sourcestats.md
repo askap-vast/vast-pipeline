@@ -70,8 +70,10 @@ where $w$ is the uncertainty ($e$) in $I$ of a measurement, and is given by $w=\
 
 ### Two-Epoch Metrics
 
-Alternative variability metrics, $V_s$ and $m$, are also calculated which we refer to as the 'two-epoch metrics'.
-They are calculated for each unique pair of measurements assoicated with the source, with the most significant pair of values attached to the source (see section below). Please refer to [Mooley et al. (2016)](https://ui.adsabs.harvard.edu/abs/2016ApJ...818..105M/abstract){:target="_blank"} for further details.
+By default, alternative variability metrics, $V_s$ and $m$, are also calculated which we refer to as the 'two-epoch metrics'.
+They are calculated for each unique pair of measurements associated with the source, with the most significant pair of values attached to the source (see section below). Please refer to [Mooley et al. (2016)](https://ui.adsabs.harvard.edu/abs/2016ApJ...818..105M/abstract){:target="_blank"} for further details.
+
+The number of measurement pairs scales exponentially with the number of measurements per source (i.e. the number of images). Runs that contain a large number of input images per source may run out memory while calculating the two-epoch metrics. If this occurs, it is recommended that the pair metric calculation is turned off in the run configuration by setting `variability.pair_metrics: False` (see [variability run configuration options](../using/runconfig.md#variability)).
 
 !!! note
     All the two-epoch pair $V_s$ and $m$ values for a run are saved in the output file `measurement_pairs.parquet` for offline analysis.
@@ -104,8 +106,8 @@ which equates to a variability of 30%. However the user is free to set their own
 
 #### Significant Source Values
 
-The $V_s$ and $m$ metrics of the 'maximum signficant pair' is attached to the source.
-The maximum significant pair is determind by selecting the most significant $\mid m \mid$ value given a minimum $V_s$ threshold which is defined in the pipeline configuration file `variability.source_aggregate_pair_metrics_min_abs_vs`:
+The $V_s$ and $m$ metrics of the 'maximum significant pair' is attached to the source.
+The maximum significant pair is determined by selecting the most significant $\mid m \mid$ value given a minimum $V_s$ threshold which is defined in the pipeline configuration file `variability.source_aggregate_pair_metrics_min_abs_vs`:
 
 !!! example "config.yaml"
     ```yaml
@@ -115,7 +117,7 @@ The maximum significant pair is determind by selecting the most significant $\mi
       source_aggregate_pair_metrics_min_abs_vs: 4.3
     ```
 
-By default this value is set to 4.3. For example, if a source with three associatied measurements gave the following pair metrics:
+By default this value is set to 4.3. For example, if a source with three associated measurements gave the following pair metrics:
 
 | Pair | $\mid V_s \mid$ | $\mid m \mid$ |
 | ---- | --------------- | ------------- |

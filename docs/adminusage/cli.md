@@ -87,6 +87,9 @@ Example usage:
 
 This command allows for the creation of the `measurements.arrow` and `measurement_pairs.arrow` files after a run has been successfully completed. See [Arrow Files](../outputs/outputs.md#arrow-files) for more information.
 
+!!!tip
+    The `measurement_pairs.arrow` file will only be created if the run was configured to calculate pair metrics.
+
 ```terminal
 ./manage.py createmeasarrow --help
 usage: manage.py createmeasarrow [-h] [--overwrite] [--version] [-v {0,1,2,3}]
