@@ -341,7 +341,8 @@ def run_pipe(
         # Create arrow file after success if selected.
         if pipeline.config["measurements"]["write_arrow_files"]:
             create_measurements_arrow_file(p_run)
-            create_measurement_pairs_arrow_file(p_run)
+            if pipeline.config["variability"]["pair_metrics"]:
+                create_measurement_pairs_arrow_file(p_run)
     except Exception as e:
         # set the pipeline status as error
         pipeline.set_status(p_run, 'ERR')

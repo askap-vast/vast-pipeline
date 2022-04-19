@@ -294,6 +294,7 @@ class Pipeline():
             sources_df,
             p_run,
             new_sources_df,
+            self.config["variability"]["pair_metrics"],
             self.config["variability"]["source_aggregate_pair_metrics_min_abs_vs"],
             self.add_mode,
             done_source_ids,

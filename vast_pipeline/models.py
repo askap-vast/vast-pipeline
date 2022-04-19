@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from itertools import combinations
+from pathlib import Path
 from typing import List
 
 from django.db import models
@@ -10,6 +11,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.templatetags.static import static
 from social_django.models import UserSocialAuth
 from tagulous.models import TagField
+from vast_pipeline.pipeline.config import PipelineConfig
 
 from vast_pipeline.pipeline.pairs import calculate_vs_metric, calculate_m_metric
 
@@ -173,6 +175,20 @@ class Run(CommentableModel):
         # enforce the full model validation on save
         self.full_clean()
         super(Run, self).save(*args, **kwargs)
+
+    def get_config(self, validate: bool = False) -> PipelineConfig:
+        """Read, parse, and optionally validate the run configuration file.
+
+        Args:
+            validate (bool, optional): Validate the run configuration. Defaults to False.
+
+        Returns:
+            PipelineConfig: The run configuration object.
+        """
+        config = PipelineConfig.from_file(
+            str(Path(self.path) / "config.yaml"), validate=validate
+        )
+        return config
 
 
 class Band(models.Model):

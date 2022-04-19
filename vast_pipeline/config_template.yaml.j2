@@ -156,6 +156,10 @@ measurements:
   dec_uncertainty: {{ astrometric_uncertainty_dec }}  # arcsec
 
 variability:
+  # For each source, calculate the measurement pair metrics (Vs and m) for each unique
+  # combination of measurements.
+  pair_metrics: {{ pair_metrics }}
+
   # Only measurement pairs where the Vs metric exceeds this value are selected for the
   # aggregate pair metrics that are stored in Source objects.
   source_aggregate_pair_metrics_min_abs_vs: {{ source_aggregate_pair_metrics_min_abs_vs }}

@@ -89,7 +89,7 @@ class Command(BaseCommand):
             options['traceback'] = True
 
         try:
-            p_run = Run.objects.get(name=p_run_name)
+            p_run: Run = Run.objects.get(name=p_run_name)
         except Run.DoesNotExist:
             raise CommandError(f'Pipeline run {p_run_name} does not exist')
 
@@ -135,11 +135,12 @@ class Command(BaseCommand):
 
         create_measurements_arrow_file(p_run)
 
-        logger.info(
-            "Creating measurement pairs arrow file for '%s'.", p_run_name
-        )
+        if p_run.get_config()["variability"]["pair_metrics"]:
+            logger.info(
+                "Creating measurement pairs arrow file for '%s'.", p_run_name
+            )
 
-        create_measurement_pairs_arrow_file(p_run)
+            create_measurement_pairs_arrow_file(p_run)
 
         logger.info(
             "Arrow files created successfully for '%s'!", p_run_name

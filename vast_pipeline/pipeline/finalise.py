@@ -82,6 +82,7 @@ def final_operations(
     sources_df: pd.DataFrame,
     p_run: Run,
     new_sources_df: pd.DataFrame,
+    calculate_pairs: bool,
     source_aggregate_pair_metrics_min_abs_vs: float,
     add_mode: bool,
     done_source_ids: List[int],
@@ -105,6 +106,9 @@ def final_operations(
         new_sources_df:
             The new sources dataframe, only contains the
             'new_source_high_sigma' column (source_id is the index).
+        calculate_pairs:
+            Whether to calculate the measurement pairs and their 2-epoch metrics, Vs and
+            m.
         source_aggregate_pair_metrics_min_abs_vs:
             Only measurement pairs where the Vs metric exceeds this value
             are selected for the aggregate pair metrics that are stored in
@@ -155,33 +159,34 @@ def final_operations(
     srcs_df['n_neighbour_dist'] = d2d.deg
 
     # create measurement pairs, aka 2-epoch metrics
-    timer.reset()
-    measurement_pairs_df = calculate_measurement_pair_metrics(sources_df)
-    logger.info('Measurement pair metrics time: %.2f seconds', timer.reset())
+    if calculate_pairs:
+        timer.reset()
+        measurement_pairs_df = calculate_measurement_pair_metrics(sources_df)
+        logger.info('Measurement pair metrics time: %.2f seconds', timer.reset())
 
-    # calculate measurement pair metric aggregates for sources by finding the row indices
-    # of the aggregate max of the abs(m) metric for each flux type.
-    pair_agg_metrics = pd.merge(
-        calculate_measurement_pair_aggregate_metrics(
-            measurement_pairs_df, source_aggregate_pair_metrics_min_abs_vs, flux_type="peak",
-        ),
-        calculate_measurement_pair_aggregate_metrics(
-            measurement_pairs_df, source_aggregate_pair_metrics_min_abs_vs, flux_type="int",
-        ),
-        how="outer",
-        left_index=True,
-        right_index=True,
-    )
+        # calculate measurement pair metric aggregates for sources by finding the row indices
+        # of the aggregate max of the abs(m) metric for each flux type.
+        pair_agg_metrics = pd.merge(
+            calculate_measurement_pair_aggregate_metrics(
+                measurement_pairs_df, source_aggregate_pair_metrics_min_abs_vs, flux_type="peak",
+            ),
+            calculate_measurement_pair_aggregate_metrics(
+                measurement_pairs_df, source_aggregate_pair_metrics_min_abs_vs, flux_type="int",
+            ),
+            how="outer",
+            left_index=True,
+            right_index=True,
+        )
 
-    # join with sources and replace agg metrics NaNs with 0 as the DataTables API JSON
-    # serialization doesn't like them
-    srcs_df = srcs_df.join(pair_agg_metrics).fillna(value={
-        "vs_abs_significant_max_peak": 0.0,
-        "m_abs_significant_max_peak": 0.0,
-        "vs_abs_significant_max_int": 0.0,
-        "m_abs_significant_max_int": 0.0,
-    })
-    logger.info("Measurement pair aggregate metrics time: %.2f seconds", timer.reset())
+        # join with sources and replace agg metrics NaNs with 0 as the DataTables API JSON
+        # serialization doesn't like them
+        srcs_df = srcs_df.join(pair_agg_metrics).fillna(value={
+            "vs_abs_significant_max_peak": 0.0,
+            "m_abs_significant_max_peak": 0.0,
+            "vs_abs_significant_max_int": 0.0,
+            "m_abs_significant_max_int": 0.0,
+        })
+        logger.info("Measurement pair aggregate metrics time: %.2f seconds", timer.reset())
 
     # upload sources to DB, column 'id' with DB id is contained in return
     if add_mode:
@@ -288,22 +293,23 @@ def final_operations(
         ['source_id', 'meas_id', 'd2d', 'dr']
     ].to_parquet(os.path.join(p_run.path, 'associations.parquet'))
 
-    # get the Source object primary keys for the measurement pairs
-    measurement_pairs_df = measurement_pairs_df.join(
-        srcs_df.id.rename("source_id"), on="source"
-    )
+    if calculate_pairs:
+        # get the Source object primary keys for the measurement pairs
+        measurement_pairs_df = measurement_pairs_df.join(
+            srcs_df.id.rename("source_id"), on="source"
+        )
 
-    # optimize measurement pair DataFrame and save to parquet file
-    measurement_pairs_df = optimize_ints(
-        optimize_floats(
-            measurement_pairs_df.drop(columns=["source"]).rename(
-                columns={"id_a": "meas_id_a", "id_b": "meas_id_b"}
+        # optimize measurement pair DataFrame and save to parquet file
+        measurement_pairs_df = optimize_ints(
+            optimize_floats(
+                measurement_pairs_df.drop(columns=["source"]).rename(
+                    columns={"id_a": "meas_id_a", "id_b": "meas_id_b"}
+                )
             )
         )
-    )
-    measurement_pairs_df.to_parquet(
-        os.path.join(p_run.path, "measurement_pairs.parquet"), index=False
-    )
+        measurement_pairs_df.to_parquet(
+            os.path.join(p_run.path, "measurement_pairs.parquet"), index=False
+        )
 
     logger.info("Total final operations time: %.2f seconds", timer.reset_init())
 

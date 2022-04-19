@@ -273,6 +273,15 @@
             <div class="row align-items-center" style="margin-top: 1rem;">
               <div class="col">
                 <div class="custom-control custom-switch">
+                  <input type="checkbox" class="custom-control-input" id="pairMetricsSwitch" {% if runconfig.pair_metrics %} checked="checked" {% endif %} name="pair_metrics">
+                  <label class="custom-control-label font-weight-bold text-gray-800" for="pairMetricsSwitch">Calculate Pair Metrics</label>
+                  <a href="#" data-html="true" data-toggle="tooltip" data-placement="top" title=
+                      "Calculate the 2-epoch metrics for each unique of pair of measurements for each source. It is recommended that this is turned off for runs where sources will have many measurements."
+                  ><i class="fas fa-info-circle"></i></a>
+                </div>
+              </div>
+              <div class="col">
+                <div class="custom-control custom-switch">
                   <input type="checkbox" class="custom-control-input" id="condonErrorSwitch" {% if runconfig.use_condon_errors %} checked="checked" {% endif %} name="use_condon_errors">
                   <label class="custom-control-label font-weight-bold text-gray-800" for="condonErrorSwitch">Use Condon Errors</label>
                   <a href="#" data-html="true" data-toggle="tooltip" data-placement="top" title=

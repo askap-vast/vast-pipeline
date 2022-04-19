@@ -110,6 +110,7 @@ class PipelineConfig:
             ),
             "variability": yaml.Map(
                 {
+                    "pair_metrics": yaml.Bool(),
                     "source_aggregate_pair_metrics_min_abs_vs": yaml.Float(),
                 }
             ),

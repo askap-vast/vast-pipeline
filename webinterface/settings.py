@@ -334,6 +334,7 @@ PIPE_RUN_CONFIG_DEFAULTS = {
     'selavy_local_rms_zero_fill_value': 0.2,
     'create_measurements_arrow_files': False,
     'suppress_astropy_warnings': True,
+    'pair_metrics': True,
     'source_aggregate_pair_metrics_min_abs_vs': 4.3,
 }
 
