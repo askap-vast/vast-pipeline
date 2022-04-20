@@ -121,7 +121,7 @@ class PipelineConfig:
         settings.BASE_DIR, "vast_pipeline", "config_template.yaml.j2"
     )
 
-    def __init__(self, config_yaml: yaml.YAML):
+    def __init__(self, config_yaml: yaml.YAML, validate_inputs: bool = True):
         """Initialises PipelineConfig with parsed (but not necessarily validated) YAML.
 
         Args:
@@ -144,6 +144,9 @@ class PipelineConfig:
         # the epochs.
 
         # ensure the inputs are valid in case .from_file(..., validate=False) was used
+        if not validate_inputs:
+            return
+
         try:
             self._validate_inputs()
         except yaml.YAMLValidationError as e:
@@ -230,6 +233,7 @@ class PipelineConfig:
         yaml_path: str,
         label: str = "run config",
         validate: bool = True,
+        validate_inputs: bool = True,
         add_defaults: bool = True,
     ) -> "PipelineConfig":
         """Create a PipelineConfig object from a run configuration YAML file.
@@ -270,7 +274,7 @@ class PipelineConfig:
             # merge configs
             config_dict = dict_merge(config_defaults_dict, config_yaml.data)
             config_yaml = yaml.as_document(config_dict, schema=schema, label=label)
-        return cls(config_yaml)
+        return cls(config_yaml, validate_inputs=validate_inputs)
 
     @staticmethod
     def _resolve_glob_expressions(input_files: yaml.YAML) -> List[str]:

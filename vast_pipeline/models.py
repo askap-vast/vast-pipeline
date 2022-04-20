@@ -176,7 +176,7 @@ class Run(CommentableModel):
         self.full_clean()
         super(Run, self).save(*args, **kwargs)
 
-    def get_config(self, validate: bool = False) -> PipelineConfig:
+    def get_config(self, validate: bool = True, validate_inputs: bool = True) -> PipelineConfig:
         """Read, parse, and optionally validate the run configuration file.
 
         Args:
@@ -186,7 +186,9 @@ class Run(CommentableModel):
             PipelineConfig: The run configuration object.
         """
         config = PipelineConfig.from_file(
-            str(Path(self.path) / "config.yaml"), validate=validate
+            str(Path(self.path) / "config.yaml"),
+            validate=validate,
+            validate_inputs=validate_inputs,
         )
         return config
 
@@ -707,6 +709,21 @@ class Source(CommentableModel):
         return self.name
 
     def get_measurement_pairs(self) -> List[MeasurementPair]:
+        """Calculate the measurement pair metrics for the source. If the run config
+        set variability.pair_metrics to false, then no pairs are calculated and an empty
+        list is returned.
+
+        Returns:
+            List[MeasurementPair]: The list of measurement pairs and their metrics.
+        """
+        # do not calculate pair metrics if it was disabled in the run config
+        config = self.run.get_config(validate=False, validate_inputs=False)
+        # validate the config schema only, not the full validation executed by
+        # PipelineConfig.validate.
+        config._yaml.revalidate(PipelineConfig.SCHEMA)
+        if not config["variability"]["pair_metrics"]:
+            return []
+
         measurements = (
             Measurement.objects.filter(source=self)
             .select_related("image")
