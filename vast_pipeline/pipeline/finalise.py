@@ -187,6 +187,10 @@ def final_operations(
             "m_abs_significant_max_int": 0.0,
         })
         logger.info("Measurement pair aggregate metrics time: %.2f seconds", timer.reset())
+    else:
+        logger.info(
+            "Skipping measurement pair metric calculation as specified in the run configuration."
+        )
 
     # upload sources to DB, column 'id' with DB id is contained in return
     if add_mode:
