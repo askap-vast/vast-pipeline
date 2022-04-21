@@ -176,17 +176,26 @@ class Run(CommentableModel):
         self.full_clean()
         super(Run, self).save(*args, **kwargs)
 
-    def get_config(self, validate: bool = True, validate_inputs: bool = True) -> PipelineConfig:
+    def get_config(
+        self, validate: bool = True, validate_inputs: bool = True, prev: bool = False
+    ) -> PipelineConfig:
         """Read, parse, and optionally validate the run configuration file.
 
         Args:
-            validate (bool, optional): Validate the run configuration. Defaults to False.
+            validate: Validate the run configuration. Defaults to False.
+            validate_inputs: Validate the config input files. Ensures
+                that the inputs match (e.g. each image has a catalogue), and that each
+                path exists. Set to False to skip these checks. Defaults to True.
+            prev: Get the previous config file instead of the current config. The
+                previous config is the one used for the last successfully completed run.
+                The current config may have been modified since the run was executed.
 
         Returns:
             PipelineConfig: The run configuration object.
         """
+        config_name = "config_prev.yaml" if prev else "config.yaml"
         config = PipelineConfig.from_file(
-            str(Path(self.path) / "config.yaml"),
+            str(Path(self.path) / config_name),
             validate=validate,
             validate_inputs=validate_inputs,
         )
@@ -717,7 +726,7 @@ class Source(CommentableModel):
             List[MeasurementPair]: The list of measurement pairs and their metrics.
         """
         # do not calculate pair metrics if it was disabled in the run config
-        config = self.run.get_config(validate=False, validate_inputs=False)
+        config = self.run.get_config(validate=False, validate_inputs=False, prev=True)
         # validate the config schema only, not the full validation executed by
         # PipelineConfig.validate.
         config._yaml.revalidate(PipelineConfig.SCHEMA)
