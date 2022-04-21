@@ -73,7 +73,8 @@ where $w$ is the uncertainty ($e$) in $I$ of a measurement, and is given by $w=\
 By default, alternative variability metrics, $V_s$ and $m$, are also calculated which we refer to as the 'two-epoch metrics'.
 They are calculated for each unique pair of measurements associated with the source, with the most significant pair of values attached to the source (see section below). Please refer to [Mooley et al. (2016)](https://ui.adsabs.harvard.edu/abs/2016ApJ...818..105M/abstract){:target="_blank"} for further details.
 
-The number of measurement pairs scales exponentially with the number of measurements per source (i.e. the number of images). Runs that contain a large number of input images per source may run out memory while calculating the two-epoch metrics. If this occurs, it is recommended that the pair metric calculation is turned off in the run configuration by setting `variability.pair_metrics: False` (see [variability run configuration options](../using/runconfig.md#variability)).
+!!!warning
+    The number of measurement pairs scales exponentially with the number of measurements per source (i.e. the number of images). Runs that contain a large number of input images per source may run out memory while calculating the two-epoch metrics. If this occurs, it is recommended that the pair metric calculation is turned off in the run configuration by setting `variability.pair_metrics: False` (see [variability run configuration options](../using/runconfig.md#variability)).
 
 !!! note
     All the two-epoch pair $V_s$ and $m$ values for a run are saved in the output file `measurement_pairs.parquet` for offline analysis.

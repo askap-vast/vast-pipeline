@@ -126,6 +126,9 @@ class PipelineConfig:
 
         Args:
             config_yaml (yaml.YAML): Input YAML, usually the output of `strictyaml.load`.
+            validate_inputs (bool, optional): Validate the config input files. Ensures
+                that the inputs match (e.g. each image has a catalogue), and that each
+                path exists. Set to False to skip these checks. Defaults to True.
 
         Raises:
             PipelineConfigError: The input YAML config violates the schema.
@@ -247,6 +250,9 @@ class PipelineConfig:
                 will not be performed until PipelineConfig.validate() is
                 explicitly called. The inputs are always validated regardless.
                 Defaults to True.
+            validate_inputs: Validate the config input files. Ensures that the inputs
+                match (e.g. each image has a catalogue), and that each path exists. Set
+                to False to skip these checks. Defaults to True.
             add_defaults: Add missing configuration parameters using configured
                 defaults. The defaults are read from the Django settings file.
                 Defaults to True.
