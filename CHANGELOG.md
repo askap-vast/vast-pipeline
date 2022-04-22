@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added run config option to skip calculating measurement pair metrics [#655](https://github.com/askap-vast/vast-pipeline/pull/655).
 - Added support for Python 3.10 [#641](https://github.com/askap-vast/vast-pipeline/pull/641).
 - Added documentation versioning [#627](https://github.com/askap-vast/vast-pipeline/pull/627).
 - Added a ZTF cone search button on the source detail page [#626](https://github.com/askap-vast/vast-pipeline/pull/626).
@@ -97,6 +98,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#655](https://github.com/askap-vast/vast-pipeline/pull/655): feat: Add run config option to disable measurement pairs.
 - [#648](https://github.com/askap-vast/vast-pipeline/pull/648): fix: make Image and Measurement creation atomic together.
 - [#653](https://github.com/askap-vast/vast-pipeline/pull/653): fix: Allow forced fitting on images with empty catalogues.
 - [#652](https://github.com/askap-vast/vast-pipeline/pull/652): dep, fix: Bump bokeh 2.4.2.

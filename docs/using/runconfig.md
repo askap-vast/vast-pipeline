@@ -119,6 +119,10 @@ Below is an example of a default `config.yaml` file. Note that no images or othe
       dec_uncertainty: 1.0  # arcsec
 
     variability:
+      # For each source, calculate the measurement pair metrics (Vs and m) for each unique
+      # combination of measurements.
+      pair_metrics: True
+
       # Only measurement pairs where the Vs metric exceeds this value are selected for the
       # aggregate pair metrics that are stored in Source objects.
       source_aggregate_pair_metrics_min_abs_vs: 4.3
@@ -473,7 +477,7 @@ Float. Value to substitute for the `local_rms` parameter in selavy extractions i
 Boolean. When `True` then two `arrow` format files are produced:
 
 * `measurements.arrow` - an arrow file containing all the measurements associated with the run.
-* `measurement_pairs.arrow` -  an arrow file containing the measurement pairs information pre-merged with extra information from the measurements.
+* `measurement_pairs.arrow` -  an arrow file containing the measurement pairs information pre-merged with extra information from the measurements. Only output if `variability.pair_metrics` is also set to `True`.
 
 Producing these files for large runs (200+ images) is recommended for post-processing. Defaults to `False`.
 
@@ -488,6 +492,9 @@ Float. Defines an uncertainty error to the RA that will be added in quadrature t
 Float. Defines an uncertainty error to the Dec that will be added in quadrature to the existing source extraction error. Used to represent systematic positional error. Unit is arcseconds. Defaults to 1.0.
 
 ### Variability
+
+**`variability.pair_metrics`**
+Boolean. When `True` then the two-epoch metrics are calculated for each source. It is recommended that users set this to `False` to skip calculating the pair metrics for runs that contain many input images per source. Defaults to `True`.
 
 **`variability.source_aggregate_pair_metrics_min_abs_vs`**
 Float. Defines the minimum $V_s$ two-epoch metric value threshold used to attach the most significant pair value to the source. Defaults to `4.3`.

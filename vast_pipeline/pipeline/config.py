@@ -110,6 +110,7 @@ class PipelineConfig:
             ),
             "variability": yaml.Map(
                 {
+                    "pair_metrics": yaml.Bool(),
                     "source_aggregate_pair_metrics_min_abs_vs": yaml.Float(),
                 }
             ),
@@ -120,11 +121,14 @@ class PipelineConfig:
         settings.BASE_DIR, "vast_pipeline", "config_template.yaml.j2"
     )
 
-    def __init__(self, config_yaml: yaml.YAML):
+    def __init__(self, config_yaml: yaml.YAML, validate_inputs: bool = True):
         """Initialises PipelineConfig with parsed (but not necessarily validated) YAML.
 
         Args:
             config_yaml (yaml.YAML): Input YAML, usually the output of `strictyaml.load`.
+            validate_inputs (bool, optional): Validate the config input files. Ensures
+                that the inputs match (e.g. each image has a catalogue), and that each
+                path exists. Set to False to skip these checks. Defaults to True.
 
         Raises:
             PipelineConfigError: The input YAML config violates the schema.
@@ -143,6 +147,9 @@ class PipelineConfig:
         # the epochs.
 
         # ensure the inputs are valid in case .from_file(..., validate=False) was used
+        if not validate_inputs:
+            return
+
         try:
             self._validate_inputs()
         except yaml.YAMLValidationError as e:
@@ -229,6 +236,7 @@ class PipelineConfig:
         yaml_path: str,
         label: str = "run config",
         validate: bool = True,
+        validate_inputs: bool = True,
         add_defaults: bool = True,
     ) -> "PipelineConfig":
         """Create a PipelineConfig object from a run configuration YAML file.
@@ -242,6 +250,9 @@ class PipelineConfig:
                 will not be performed until PipelineConfig.validate() is
                 explicitly called. The inputs are always validated regardless.
                 Defaults to True.
+            validate_inputs: Validate the config input files. Ensures that the inputs
+                match (e.g. each image has a catalogue), and that each path exists. Set
+                to False to skip these checks. Defaults to True.
             add_defaults: Add missing configuration parameters using configured
                 defaults. The defaults are read from the Django settings file.
                 Defaults to True.
@@ -269,7 +280,7 @@ class PipelineConfig:
             # merge configs
             config_dict = dict_merge(config_defaults_dict, config_yaml.data)
             config_yaml = yaml.as_document(config_dict, schema=schema, label=label)
-        return cls(config_yaml)
+        return cls(config_yaml, validate_inputs=validate_inputs)
 
     @staticmethod
     def _resolve_glob_expressions(input_files: yaml.YAML) -> List[str]:

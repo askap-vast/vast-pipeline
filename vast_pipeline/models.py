@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from itertools import combinations
+from pathlib import Path
 from typing import List
 
 from django.db import models
@@ -10,6 +11,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.templatetags.static import static
 from social_django.models import UserSocialAuth
 from tagulous.models import TagField
+from vast_pipeline.pipeline.config import PipelineConfig
 
 from vast_pipeline.pipeline.pairs import calculate_vs_metric, calculate_m_metric
 
@@ -173,6 +175,31 @@ class Run(CommentableModel):
         # enforce the full model validation on save
         self.full_clean()
         super(Run, self).save(*args, **kwargs)
+
+    def get_config(
+        self, validate: bool = True, validate_inputs: bool = True, prev: bool = False
+    ) -> PipelineConfig:
+        """Read, parse, and optionally validate the run configuration file.
+
+        Args:
+            validate: Validate the run configuration. Defaults to False.
+            validate_inputs: Validate the config input files. Ensures
+                that the inputs match (e.g. each image has a catalogue), and that each
+                path exists. Set to False to skip these checks. Defaults to True.
+            prev: Get the previous config file instead of the current config. The
+                previous config is the one used for the last successfully completed run.
+                The current config may have been modified since the run was executed.
+
+        Returns:
+            PipelineConfig: The run configuration object.
+        """
+        config_name = "config_prev.yaml" if prev else "config.yaml"
+        config = PipelineConfig.from_file(
+            str(Path(self.path) / config_name),
+            validate=validate,
+            validate_inputs=validate_inputs,
+        )
+        return config
 
 
 class Band(models.Model):
@@ -691,6 +718,21 @@ class Source(CommentableModel):
         return self.name
 
     def get_measurement_pairs(self) -> List[MeasurementPair]:
+        """Calculate the measurement pair metrics for the source. If the run config
+        set variability.pair_metrics to false, then no pairs are calculated and an empty
+        list is returned.
+
+        Returns:
+            List[MeasurementPair]: The list of measurement pairs and their metrics.
+        """
+        # do not calculate pair metrics if it was disabled in the run config
+        config = self.run.get_config(validate=False, validate_inputs=False, prev=True)
+        # validate the config schema only, not the full validation executed by
+        # PipelineConfig.validate.
+        config._yaml.revalidate(PipelineConfig.SCHEMA)
+        if not config["variability"]["pair_metrics"]:
+            return []
+
         measurements = (
             Measurement.objects.filter(source=self)
             .select_related("image")

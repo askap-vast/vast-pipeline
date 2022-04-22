@@ -401,7 +401,10 @@ class Command(BaseCommand):
 
                 if os.path.isfile(f_name):
                     bak_files[i] = f_name
-                else:
+                elif (
+                    i != "measurement_pairs"
+                    or pipeline.config["variability"]["pair_metrics"]
+                ):
                     raise CommandError(
                         f'File {f_name} does not exist.'
                         ' Cannot restore pipeline run.'
