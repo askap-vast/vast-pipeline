@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added `MAX_CUTOUT_IMAGES` to the pipeline settings to limit the number of postage stamps displayed on the source detail page [#658](https://github.com/askap-vast/vast-pipeline/pull/658).
 - Added run config option to skip calculating measurement pair metrics [#655](https://github.com/askap-vast/vast-pipeline/pull/655).
 - Added support for Python 3.10 [#641](https://github.com/askap-vast/vast-pipeline/pull/641).
 - Added documentation versioning [#627](https://github.com/askap-vast/vast-pipeline/pull/627).
@@ -98,6 +99,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#658](https://github.com/askap-vast/vast-pipeline/pull/658): feat: Add MAX_CUTOUT_IMAGES setting.
 - [#655](https://github.com/askap-vast/vast-pipeline/pull/655): feat: Add run config option to disable measurement pairs.
 - [#648](https://github.com/askap-vast/vast-pipeline/pull/648): fix: make Image and Measurement creation atomic together.
 - [#653](https://github.com/askap-vast/vast-pipeline/pull/653): fix: Allow forced fitting on images with empty catalogues.
