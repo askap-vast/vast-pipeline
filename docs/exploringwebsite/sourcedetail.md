@@ -62,7 +62,7 @@ Users are able to read and post comments on a source using this form, in additio
 
 [JS9 website](https://js9.si.edu){ target=_blank }.
 
-More JS9 viewers are used to show the postage stamp FITS images of the measurements that are associated with the source, loaded from their respective image FITS files.
+More JS9 viewers are used to show the postage stamp FITS images of the measurements that are associated with the source, loaded from their respective image FITS files. The number of cutouts to display is configurable with the `MAX_CUTOUT_IMAGES` setting: only the first `MAX_CUTOUT_IMAGES` measurements will be displayed as cutout images. A warning will be displayed if the number of displayed cutouts has been truncated. Refer to the [pipeline configuration](../gettingstarted/configuration.md#pipeline) documentation for more information.
 
 !!! note
     If the image data is removed from its location when the pipeline run was processed the JS9 viewer will no longer work.

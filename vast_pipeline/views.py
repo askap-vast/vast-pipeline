@@ -1672,15 +1672,25 @@ def SourceDetail(request, pk):
         'forced',
         'image_id'
     ]
-    measurements = list(
-        Measurement.objects.filter(source__id=pk).annotate(
-            datetime=F('image__datetime'),
-            image_name=F('image__name'),
-            frequency=F('image__band__frequency'),
-        ).order_by('datetime').values(*tuple(cols))
+    measurements_qs = (
+        Measurement.objects.filter(source__id=pk)
+        .annotate(datetime=F("image__datetime"), image_name=F("image__name"))
+        .order_by("datetime")
     )
 
-    first_det_meas_index = [i['forced'] for i in measurements].index(False)
+    measurements = list(
+        measurements_qs.annotate(
+            frequency=F("image__band__frequency"),
+        ).values(*tuple(cols))
+    )
+    # subset of measurements used for the cutouts
+    measurements_cutouts = list(
+        measurements_qs[: settings.MAX_CUTOUT_IMAGES].values(
+            "id", "ra", "dec", "image_id", "image_name",
+        )
+    )
+    # get the measurement for the first detection - used for the first detection cutout
+    first_det_meas = measurements[[i['forced'] for i in measurements].index(False)]
 
     for one_m in measurements:
         one_m['datetime'] = one_m['datetime'].isoformat()
@@ -1793,8 +1803,9 @@ def SourceDetail(request, pk):
         'source': source,
         'source_next_id': source_next_id,
         'source_previous_id': source_previous_id,
-        'first_det_meas_index': first_det_meas_index,
+        'first_det_meas': first_det_meas,
         'datatables': [measurements, related_datatables],
+        'cutout_measurements': measurements_cutouts,
         # flag to deactivate starring and render yellow star
         'sourcefav': (
             SourceFav.objects.filter(

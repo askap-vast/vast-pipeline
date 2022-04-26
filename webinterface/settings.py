@@ -344,6 +344,9 @@ MAX_PIPELINE_RUNS = env('MAX_PIPELINE_RUNS', cast=int, default=3)
 # maximum number of images for non-admin runs
 MAX_PIPERUN_IMAGES = env('MAX_PIPERUN_IMAGES', cast=int, default=200)
 
+# maximum number of cutout images to render on the source detail page
+MAX_CUTOUT_IMAGES = env('MAX_CUTOUT_IMAGES', cast=int, default=30)
+
 # pipeline maintainance message/banner
 PIPELINE_MAINTAINANCE_MESSAGE = env('PIPELINE_MAINTAINANCE_MESSAGE', cast=str, default=None)
 
