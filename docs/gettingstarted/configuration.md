@@ -154,6 +154,7 @@ Shown below is the [`.env.template`](https://github.com/askap-vast/vast-pipeline
     # PIPELINE_MAINTAINANCE_MESSAGE=Uncomment and fill to show
     MAX_PIPELINE_RUNS=3
     MAX_PIPERUN_IMAGES=200
+    MAX_CUTOUT_IMAGES=30
 
     # Q_CLUSTER_TIMEOUT=86400
     # Q_CLUSTER_RETRY=86402
@@ -222,6 +223,7 @@ These settings apply to various aspects of the VAST pipeline itself. The table b
 | `PIPELINE_MAINTAINANCE_MESSAGE` | Disabled | The message to display at the top of the webserver. See image below this table for an example. Comment out the setting to disable. |
 | `MAX_PIPELINE_RUNS` | 3 | The allowed maximum number of concurrent pipeline runs. |
 | `MAX_PIPERUN_IMAGES` | 200 | The allowed maximum number of images in a single pipeline run (non-admins). |
+| `MAX_CUTOUT_IMAGES` | 30 | The maximum number of cutout images to display on the source detail pages. The first `MAX_CUTOUT_IMAGES` cutouts are displayed, in temporal order. |
 | `Q_CLUSTER_TIMEOUT` | 86400 | Number of seconds a Django-Q cluster worker may spend on a task before it is terminated. See the [Django-Q documentation](https://django-q.readthedocs.io/en/latest/configure.html#timeout). |
 | `Q_CLUSTER_RETRY` | 86402 | Number of seconds a Django-Q broker will wait for a cluster to finish a task before it's presented again. See the [Django-Q documentation](https://django-q.readthedocs.io/en/latest/configure.html#retry). |
 | `Q_CLUSTER_MAX_ATTEMPTS` | 1 | Number of times a failed task is retried. See the [Django-Q documentation](https://django-q.readthedocs.io/en/latest/configure.html#max-attempts). |

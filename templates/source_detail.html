@@ -142,7 +142,7 @@
           <h6 class="m-0 font-weight-bold text-primary">First Detection Postage Stamp</h6>
         </div>
         <div class="card-body">
-          <div class="JS9" id="JS9_{{ source.n_meas|add:"1" }}" data-width="450px" data-height="360px"></div>
+          <div class="JS9" id="JS9_{{ cutout_measurements|length|add:"1" }}" data-width="450px" data-height="360px"></div>
         </div>
       </div>
     </div>
@@ -282,6 +282,13 @@
     </h6>
     <div id="collapse-postage-stamps" class="collapse show" aria-labelledby="heading-example">
       <div class="card-body">
+        {% if cutout_measurements|length < datatables.0.dataQuery|length %}
+        <div class="alert alert-warning" role="alert">
+          Number of displayed postage stamp cutouts has been truncated. Displaying the first
+          {{ cutout_measurements|length }} of {{ datatables.0.dataQuery|length }}
+          measurement cutouts.
+        </div>
+        {% endif %}
         <div class="row">
           <button class="btn btn-info mr-1" onclick="focusOnSource(4.0);">Zoom to Source</button>
           <button class="btn btn-info mr-1" onclick="focusOnSource('toFit');">Zoom to Field</button>
@@ -290,7 +297,7 @@
           <div class="JS9Menubar" id="SUPERMENU_" data-displays="*"></div>
         </div>
         <div class="row">
-          {% for measurement in datatables.0.dataQuery %}
+          {% for measurement in cutout_measurements %}
           <div class="card">
             <div class="card-header">
               <span class="badge badge-pill badge-primary float-right">{{ forloop.counter0 }}</span>
@@ -458,7 +465,8 @@
     })
 </script>
 
-{{ datatables.0.dataQuery|json_script:"data-js9" }}
+{{ cutout_measurements|json_script:"data-js9" }}
+{{ first_det_meas|json_script:"data-js9-first-detection" }}
 <script type="text/javascript">
   let baseUrl = '{{ base_url }}' || null;
   // function to add base url to an existing url if valid
@@ -508,7 +516,8 @@
   // when JS9 is ready, load the cutout images into the correct display panels
   $(document).on("JS9:ready", async function () {
     var measurementData = JSON.parse(document.getElementById("data-js9").textContent);
-    measurementData.push(measurementData[{{ first_det_meas_index }}]);
+    var firstDetectionMeasurementData = JSON.parse(document.getElementById("data-js9-first-detection").textContent);
+    measurementData.push(firstDetectionMeasurementData);
     // load all images and wait until they're all done
     await Promise.all(measurementData.map((measurement, i) => {
       var displayId = "JS9_" + (i + 1);
