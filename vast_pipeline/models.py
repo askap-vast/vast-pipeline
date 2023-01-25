@@ -154,6 +154,10 @@ class Run(CommentableModel):
         default=0,
         help_text='number of forced measurements in this run'
     )
+    n_new_sources = models.IntegerField(
+        default=0,
+        help_text='number of new sources in this run'
+    )
     epoch_based = models.BooleanField(
         default=False,
         help_text=(

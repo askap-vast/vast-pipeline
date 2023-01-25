@@ -115,15 +115,7 @@ def Login(request):
 
 @login_required
 def Home(request):
-    totals = {}
-    totals['nr_pruns'] = Run.objects.count()
-    totals['nr_imgs'] = Image.objects.count()
-    totals['nr_srcs'] = Source.objects.count()
-    totals['nr_meas'] = Measurement.objects.count()
-
     context = {
-        'totals': totals,
-        'd3_celestial_skyregions': get_skyregions_collection(),
         'static_url': settings.STATIC_URL
     }
     return render(request, 'index.html', context)
@@ -619,17 +611,11 @@ def RunDetail(request, id):
         p_run['nr_meas'] = p_run['n_selavy_measurements']
         p_run['nr_frcd'] = p_run['n_forced_measurements']
         p_run['nr_srcs'] = p_run['n_sources']
+        p_run['new_srcs'] = p_run['n_new_sources']
     else:
         p_run['nr_meas'] = 'N/A'
         p_run['nr_frcd'] = 'N/A'
         p_run['nr_srcs'] = 'N/A'
-
-    if p_run_model.status == 'Completed':
-        p_run['new_srcs'] = Source.objects.filter(
-            run__id=p_run['id'],
-            new=True,
-        ).count()
-    else:
         p_run['new_srcs'] = 'N/A'
 
     # read run config
