@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added `n_new_sources` column to run model to store the number of new sources in a pipeline run [#676](https://github.com/askap-vast/vast-pipeline/pull/676).
 - Added `MAX_CUTOUT_IMAGES` to the pipeline settings to limit the number of postage stamps displayed on the source detail page [#658](https://github.com/askap-vast/vast-pipeline/pull/658).
 - Added run config option to skip calculating measurement pair metrics [#655](https://github.com/askap-vast/vast-pipeline/pull/655).
 - Added support for Python 3.10 [#641](https://github.com/askap-vast/vast-pipeline/pull/641).
@@ -66,6 +67,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed link to JupyterHub [#676](https://github.com/askap-vast/vast-pipeline/pull/676).
 - Ensure Image models are not created if the catalogue ingest fails [#648](https://github.com/askap-vast/vast-pipeline/pull/648).
 - Fixed run failures caused by attempting to force fit images with empty catalogues [#653](https://github.com/askap-vast/vast-pipeline/pull/653).
 - Fixed a Bokeh regression that requires LabelSet values to be strings [#652](https://github.com/askap-vast/vast-pipeline/pull/652).
@@ -94,12 +96,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Removed
 
+- Removed sky coverage plot from homepage [#676](https://github.com/askap-vast/vast-pipeline/pull/676).
+- Removed various counts from homepage [#676](https://github.com/askap-vast/vast-pipeline/pull/676).
 - Removed support for Python 3.7 [#641](https://github.com/askap-vast/vast-pipeline/pull/641).
 - Removed Measurements table page and measurements table from run detail page [#636](https://github.com/askap-vast/vast-pipeline/pull/636).
 - Removed the unique constraint on `models.Measurement.name` [#583](https://github.com/askap-vast/vast-pipeline/pull/583).
 
 #### List of PRs
 
+- [#676](https://github.com/askap-vast/vast-pipeline/pull/676): Removed home counts and new source count.
 - [#665](https://github.com/askap-vast/vast-pipeline/pull/665): Update Gr1N/setup-poetry to v7.
 - [#658](https://github.com/askap-vast/vast-pipeline/pull/658): feat: Add MAX_CUTOUT_IMAGES setting.
 - [#655](https://github.com/askap-vast/vast-pipeline/pull/655): feat: Add run config option to disable measurement pairs.
