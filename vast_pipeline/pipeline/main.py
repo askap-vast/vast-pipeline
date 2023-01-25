@@ -290,7 +290,7 @@ class Pipeline():
 
         # STEP #6: finalise the df getting unique sources, calculating
         # metrics and upload data to database
-        nr_sources = final_operations(
+        nr_sources, nr_new_sources = final_operations(
             sources_df,
             p_run,
             new_sources_df,
@@ -312,6 +312,7 @@ class Pipeline():
             p_run.n_forced_measurements = (
                 nr_forced_measurements if self.config["source_monitoring"]["monitor"] else 0
             )
+            p_run.n_new_sources = nr_new_sources
             p_run.save()
 
         pass

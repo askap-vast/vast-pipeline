@@ -5,7 +5,7 @@ import pandas as pd
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 from vast_pipeline.models import Run
 from vast_pipeline.utils.utils import StopWatch, optimize_floats, optimize_ints
@@ -87,7 +87,7 @@ def final_operations(
     add_mode: bool,
     done_source_ids: List[int],
     previous_parquets: Dict[str, str]
-) -> int:
+) -> Tuple[int, int]:
     """
     Performs the final operations of the pipeline:
     - Calculates the statistics for the final sources.
@@ -120,7 +120,9 @@ def final_operations(
             in the previous run in add mode.
 
     Returns:
-        The number of sources contained in the pipeline (used in the next steps
+        The number of sources contained in the pipeline run (used in the next steps
+            of main.py).
+        The number of new sources contained in the pipeline run (used in the next steps
             of main.py).
     """
     timer = StopWatch()
@@ -317,5 +319,8 @@ def final_operations(
 
     logger.info("Total final operations time: %.2f seconds", timer.reset_init())
 
+    nr_sources = srcs_df["id"].count()
+    nr_new_sources = srcs_df['new'].sum()
+
     # calculate and return total number of extracted sources
-    return srcs_df["id"].count()
+    return (nr_sources, nr_new_sources)

@@ -10,15 +10,7 @@ For admins, refer to the following pages for details of the configuration and se
 
 ![!VAST Pipeline homepage.](../img/homepage.png){: loading=lazy }
 
-The homepage provides a summary of the data currently held in the pipeline instance that has been processed. The four cards at the top of the homepage provide total values
-for the amount of pipeline runs, images, measurements and sources that are stored in the database. 
-Clicking any of them will take you to the respective overview page for the data type (excluding measurements).
-
-!!! note
-    The totals presented on the homepage are totals for all pipeline runs combined!
-
-Also displayed is a sky region map that shows all the areas of the sky that have had successful and completed pipeline runs performed.
-
+The homepage contains a welcome message and links to popular pages of the list of pipeline runs, the source query page or the list of images.
 
 ## Navbar
 
