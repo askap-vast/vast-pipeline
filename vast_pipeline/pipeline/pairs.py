@@ -65,6 +65,8 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
             m_peak, m_int - variability modulation index
     """
     n_cpu = cpu_count() - 1
+    logger.debug('input df')
+    logger.debug(df[:20].to_string())
 
     """Create a DataFrame containing all measurement ID combinations per source.
     Resultant DataFrame will have a MultiIndex(["source", RangeIndex]) where "source" is
@@ -85,6 +87,7 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
                 2  12929  21994
         11128   0   6216  23534
     """
+    
     measurement_combinations = (
         dd.from_pandas(df, n_cpu)
         .groupby("source")["id"]
@@ -92,7 +95,7 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
             lambda x: pd.DataFrame(list(combinations(x, 2))), meta={0: "i", 1: "i"},)
         .compute(num_workers=n_cpu, scheduler="processes")
     )
-
+    logger.debug(measurement_combinations[:20].to_string())
     """Drop the RangeIndex from the MultiIndex as it isn't required and rename the columns.
     Example resultant DataFrame:
                source   id_a   id_b
@@ -112,6 +115,7 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
     measurement_combinations = measurement_combinations.reset_index(
         level=1, drop=True
     ).rename(columns={0: "id_a", 1: "id_b"}).astype(int).reset_index()
+    logger.debug(measurement_combinations[:20].to_string())
 
     # Dask has a tendency to swap which order the measurement pairs are
     # defined in, even if the dataframe is pre-sorted. We want the pairs to be
