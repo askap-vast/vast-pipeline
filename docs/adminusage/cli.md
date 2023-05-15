@@ -504,6 +504,14 @@ Would you like to restore the run ? (y/n): y
 
 The pipeline is run using `runpipeline` django command.
 
+The `--full-rerun` option allows for the requested pipeline run to be cleared prior to processing
+so a fresh run is performed.
+
+!!!warning
+    Using `--full-rerun` cannot be undone and all prior results will be deleted, including any source comments
+    associated with the pipeline run.
+    Use with caution.
+
 ```terminal
 (pipeline_env)$ ./manage.py runpipeline --help
 ```
@@ -511,30 +519,28 @@ The pipeline is run using `runpipeline` django command.
 Output:
 
 ```terminal
-usage: manage.py runpipeline [-h] [--version] [-v {0,1,2,3}]
-                             [--settings SETTINGS] [--pythonpath PYTHONPATH]
-                             [--traceback] [--no-color] [--force-color]
+usage: manage.py runpipeline [-h] [--full-rerun] [--version] [-v {0,1,2,3}] [--settings SETTINGS]
+                             [--pythonpath PYTHONPATH] [--traceback] [--no-color] [--force-color]
                              [--skip-checks]
                              piperun
 
 Process the pipeline for a list of images and Selavy catalogs
 
 positional arguments:
-  piperun       Path or name of the pipeline run.
+  piperun               Path or name of the pipeline run.
 
 optional arguments:
   -h, --help            show this help message and exit
+  --full-rerun          Flag to signify that a full re-run is requested. Old data is completely
+                        removed and replaced.
   --version             show program's version number and exit
   -v {0,1,2,3}, --verbosity {0,1,2,3}
-                        Verbosity level; 0=minimal output, 1=normal output,
-                        2=verbose output, 3=very verbose output
-  --settings SETTINGS   The Python path to a settings module, e.g.
-                        "myproject.settings.main". If this isn't provided, the
-                        DJANGO_SETTINGS_MODULE environment variable will be
-                        used.
+                        Verbosity level; 0=minimal output, 1=normal output, 2=verbose output, 3=very
+                        verbose output
+  --settings SETTINGS   The Python path to a settings module, e.g. "myproject.settings.main". If this
+                        isn't provided, the DJANGO_SETTINGS_MODULE environment variable will be used.
   --pythonpath PYTHONPATH
-                        A directory to add to the Python path, e.g.
-                        "/home/djangoprojects/myproject".
+                        A directory to add to the Python path, e.g. "/home/djangoprojects/myproject".
   --traceback           Raise on CommandError exceptions
   --no-color            Don't colorize the command output.
   --force-color         Force colorization of the command output.
