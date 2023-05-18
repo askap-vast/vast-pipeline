@@ -68,6 +68,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### Fixed
 
 - Updated test and lint workflows to use `ubuntu-latest` [#687](https://github.com/askap-vast/vast-pipeline/pull/687).
+- Fixed outdated `runpipeline` section on CLI docs page [#685](https://github.com/askap-vast/vast-pipeline/pull/685).
 - Fixed link to JupyterHub [#676](https://github.com/askap-vast/vast-pipeline/pull/676).
 - Ensure Image models are not created if the catalogue ingest fails [#648](https://github.com/askap-vast/vast-pipeline/pull/648).
 - Fixed run failures caused by attempting to force fit images with empty catalogues [#653](https://github.com/askap-vast/vast-pipeline/pull/653).
@@ -106,6 +107,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### List of PRs
 
 - [#687](https://github.com/askap-vast/vast-pipeline/pull/687): fix: Updated test and lint workflows ubuntu version.
+- [#685](https://github.com/askap-vast/vast-pipeline/pull/685): docs: Updated `runpipeline` section on CLI docs.
 - [#676](https://github.com/askap-vast/vast-pipeline/pull/676): Removed home counts and new source count.
 - [#665](https://github.com/askap-vast/vast-pipeline/pull/665): Update Gr1N/setup-poetry to v7.
 - [#658](https://github.com/askap-vast/vast-pipeline/pull/658): feat: Add MAX_CUTOUT_IMAGES setting.
