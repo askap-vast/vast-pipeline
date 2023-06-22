@@ -13,7 +13,7 @@ from django.db import transaction
 
 from vast_pipeline.models import Run
 from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
-from ..helpers import get_p_run_name
+from ..helpers import get_p_run_name, clean_delete
 
 
 logger = logging.getLogger(__name__)
@@ -112,7 +112,7 @@ class Command(BaseCommand):
             with transaction.atomic():
                 p_run.status = 'DEL'
                 p_run.save()
-            p_run.delete()
+            clean_delete(p_run)
 
             # remove forced measurements in db if presents
             forced_parquets = remove_forced_meas(p_run.path)
