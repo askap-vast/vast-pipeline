@@ -165,6 +165,9 @@ def make_upload_sources(
     Returns:
         The input dataframe with the 'id' column added.
     '''
+    logger.debug("Uploading sources...")
+    mem_usage = sources_df.memory_usage(deep=True).sum() / 1e6
+    logger.debug(f"sources_df memory usage: {mem_usage}MB")
     # create sources in DB
     with transaction.atomic():
         if (add_mode is False and
@@ -204,6 +207,8 @@ def make_upload_related_sources(related_df: pd.DataFrame) -> None:
         None.
     """
     logger.info('Populate "related" field of sources...')
+    mem_usage = related_df.memory_usage(deep=True).sum() / 1e6
+    logger.debug(f"related_df memory usage: {mem_usage}MB")
     bulk_upload_model(RelatedSource, related_models_generator(related_df))
 
 
@@ -220,6 +225,8 @@ def make_upload_associations(associations_df: pd.DataFrame) -> None:
         None.
     """
     logger.info('Upload associations...')
+    mem_usage = associations_df.memory_usage(deep=True).sum() / 1e6
+    logger.debug(f"associations_df memory usage: {mem_usage}MB")
     bulk_upload_model(
         Association, association_models_generator(associations_df)
     )
@@ -237,6 +244,9 @@ def make_upload_measurements(measurements_df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         Original DataFrame with the database ID attached to each row.
     """
+    logger.info("Upload measurements...")
+    mem_usage = measurements_df.memory_usage(deep=True).sum() / 1e6
+    logger.debug(f"measurements_df memory usage: {mem_usage}MB")
     meas_dj_ids = bulk_upload_model(
         Measurement,
         measurement_models_generator(measurements_df),

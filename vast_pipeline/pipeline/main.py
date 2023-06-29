@@ -232,7 +232,8 @@ class Pipeline():
                 self.previous_parquets,
                 done_images_df
             )
-
+        mem_usage = sources_df.memory_usage(deep=True).sum() / 1e6
+        logger.debug(f"Step 2: sources_df memory usage: {mem_usage}MB")
         # Obtain the number of selavy measurements for the run
         # n_selavy_measurements = sources_df.
         nr_selavy_measurements = sources_df['id'].unique().shape[0]
@@ -285,6 +286,8 @@ class Pipeline():
                 done_images_df,
                 done_source_ids
             )
+            mem_usage = sources_df.memory_usage(deep=True).sum() / 1e6
+            logger.debug(f"Step 5: sources_df memory usage: {mem_usage}MB")
 
         del missing_sources_df
 
