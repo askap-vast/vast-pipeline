@@ -40,6 +40,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Update github workflows from ubuntu-18.04 to ubuntu-22.04 [#692](https://github.com/askap-vast/vast-pipeline/pull/692)
 - Updated GitHub actions Gr1N/setup-poetry to v7 [#665](https://github.com/askap-vast/vast-pipeline/pull/665).
 - Changed lightcurve plot cursor hit-test mode from "vline" to "mouse" to avoid a regression in Bokeh [#652](https://github.com/askap-vast/vast-pipeline/pull/652).
 - Updated Bokeh from v2.3.3 to v2.4.2 [#652](https://github.com/askap-vast/vast-pipeline/pull/652).
@@ -105,6 +106,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#692](https://github.com/askap-vast/vast-pipeline/pull/692): fix: Update github workflows from ubuntu-18.04 to ubuntu-22.04
 - [#685](https://github.com/askap-vast/vast-pipeline/pull/685): docs: Updated `runpipeline` section on CLI docs.
 - [#676](https://github.com/askap-vast/vast-pipeline/pull/676): Removed home counts and new source count.
 - [#665](https://github.com/askap-vast/vast-pipeline/pull/665): Update Gr1N/setup-poetry to v7.
