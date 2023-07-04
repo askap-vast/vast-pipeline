@@ -149,14 +149,16 @@ def extract_from_image(
     )
     timer = StopWatch()
     FP = ForcedPhot(image, background, noise)
-    logger.debug(f"Time to initialise FP for {image}: {timer.reset()}")
+    logger.debug(f"Time to initialise FP for {image}: {timer.reset()}s")
+    
+    logger.debug(f"Running forced fits for {len(df)} sources in {image}...")
     flux, flux_err, chisq, DOF, cluster_id = FP.measure(
         P_islands,
         cluster_threshold=cluster_threshold,
         allow_nan=allow_nan,
         edge_buffer=edge_buffer
     )
-    logger.debug(f"Time to measure FP for {image}: {timer.reset()}")
+    logger.debug(f"Time to measure FP for {image}: {timer.reset()}s")
     df['flux_int'] = flux * 1.e3
     df['flux_int_err'] = flux_err * 1.e3
     df['chi_squared_fit'] = chisq
