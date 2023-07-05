@@ -83,12 +83,14 @@ def get_image_rms_measurements(
         # input dataframe is empty, nothing to do
         return group
     image = group.iloc[0]['img_diff_rms_path']
-
+    get_rms_timer = StopWatch()
     with fits.open(image) as hdul:
         header = hdul[0].header
         wcs = WCS(header, naxis=2)
         data = hdul[0].data.squeeze()
-
+    
+    logger.debug("{image} - Time to load fits: {get_rms_timer.reset()}s")
+    
     # Here we mimic the forced fits behaviour,
     # sources within 3 half BMAJ widths of the image
     # edges are ignored. The user buffer is also
@@ -105,12 +107,15 @@ def get_image_rms_measurements(
     )
 
     npix = int(round(npix * edge_buffer))
-
+    
+    get_rms_timer.reset()
     coords = SkyCoord(
         group.wavg_ra, group.wavg_dec, unit=(u.deg, u.deg)
     )
+    logger.debug("{image} - Time to generate SkyCoord: {get_rms_timer.reset()}s")
 
     array_coords = gen_array_coords_from_wcs(coords, wcs)
+    logger.debug("{image} - Time to generate array_coords: {get_rms_timer.reset()}s")
 
     # check for pixel wrapping
     x_valid = np.logical_or(
@@ -130,6 +135,8 @@ def get_image_rms_measurements(
     valid_indexes = group[valid].index.values
 
     group = group.loc[valid_indexes]
+    
+    logger.debug("{image} - Time to get valid indices: {get_rms_timer.reset()}s")
 
     if group.empty:
         # early return if all sources failed range check
@@ -142,11 +149,14 @@ def get_image_rms_measurements(
 
     # Now we also need to check proximity to NaN values
     # as forced fits may also drop these values
+    get_rms_timer.reset()
     coords = SkyCoord(
         group.wavg_ra, group.wavg_dec, unit=(u.deg, u.deg)
     )
+    logger.debug("{image} - Time to generate second SkyCoord: {get_rms_timer.reset()}s")
 
     array_coords = gen_array_coords_from_wcs(coords, wcs)
+    logger.debug("{image} - Time to generate second array_coords: {get_rms_timer.reset()}s")
 
     acceptable_no_nan_dist = int(
         round(bmaj.to('arcsec').value / 2. / pixelscale.value)
@@ -154,6 +164,7 @@ def get_image_rms_measurements(
 
     nan_valid = []
 
+    get_rms_timer.reset()
     # Get slices of each source and check NaN is not included.
     for i,j in zip(array_coords[0], array_coords[1]):
         sl = tuple((
@@ -166,6 +177,8 @@ def get_image_rms_measurements(
             nan_valid.append(True)
 
     valid_indexes = group[nan_valid].index.values
+    
+    logger.debug("{image} - Time to get second valid indices: {get_rms_timer.reset()}s")
 
     if np.any(nan_valid):
         # only run if there are actual values to measure
@@ -315,6 +328,7 @@ def new_sources(
     #  ['VAST_0127-73A.EPOCH08.I.fits'] |
     # ----------------------------------+
     timer = StopWatch()
+    debug_timer = StopWatch()
 
     logger.info("Starting new source analysis.")
 
@@ -328,6 +342,8 @@ def new_sources(
             run=p_run
         ).values(*tuple(cols))
     )).set_index('name')
+    
+    logger.debug(f"Time to make images_df: {debug_timer.reset()}s")
 
     # Get rid of sources that are not 'new', i.e. sources which the
     # first sky region image is not in the image list
@@ -336,6 +352,7 @@ def new_sources(
     ].drop(
         columns=['in_primary']
     )
+    logger.debug(f"Time to make new_sources_df: {debug_timer.reset()}s")
 
     # Check if the previous sources would have actually been seen
     # i.e. are the previous images sensitive enough
@@ -368,6 +385,8 @@ def new_sources(
         'rms_median': 'img_diff_rms_median',
         'noise_path': 'img_diff_rms_path'
     })
+    
+    logger.debug(f"Time to reset & merge image info into new_sources_df: {debug_timer.reset()}s")
 
     # Select only those images that come before the detection image
     # in time.
@@ -381,6 +400,8 @@ def new_sources(
         left_on=['source', 'detection'], right_on=['source', 'image'],
         how='left'
     ).drop(columns=['image'])
+    
+    logger.debug(f"Time to merge detection fluxes into new_sources_df: {debug_timer.reset()}s")
 
     # calculate the sigma of the source if it was placed in the
     # minimum rms region of the previous images
@@ -393,6 +414,8 @@ def new_sources(
     new_sources_df = new_sources_df.loc[
         new_sources_df['diff_sigma'] >= min_sigma
     ]
+    
+    logger.debug(f"Time to do new_sources_df threshold calcs: {debug_timer.reset()}s")
 
     # Now have list of sources that should have been seen before given
     # previous images minimum rms values.
@@ -413,6 +436,7 @@ def new_sources(
     new_sources_df = parallel_get_rms_measurements(
         new_sources_df, edge_buffer=edge_buffer
     )
+    logger.debug(f"Time to get rms measurements: {debug_timer.reset()}s")
 
     # this removes those that are out of range
     new_sources_df['img_diff_true_rms'] = (
@@ -443,6 +467,8 @@ def new_sources(
 
     # moving forward only the new_high_sigma columns is needed, drop all others.
     new_sources_df = new_sources_df[['new_high_sigma']]
+    
+    logger.debug(f"Time to to do final cleanup steps {debug_timer.reset()}s")
 
     logger.info(
         'Total new source analysis time: %.2f seconds', timer.reset_init()
