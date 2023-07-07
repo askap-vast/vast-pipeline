@@ -29,7 +29,7 @@ from .utils import (
     group_skyregions,
     get_parallel_assoc_image_df,
     write_parquets,
-    get_mem_usage
+    get_memory_usage
 )
 
 from .errors import MaxPipelineRunsError

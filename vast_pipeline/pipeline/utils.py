@@ -1720,4 +1720,4 @@ def get_memory_usage():
     mem = psutil.virtual_memory()[3] #resource usage in bytes
     mem = mem / 1024**3 #resource usage in GB
     
-    return f"Current memory usage: {mem}GB"
+    return f"Current memory usage: {mem:.3f}GB"

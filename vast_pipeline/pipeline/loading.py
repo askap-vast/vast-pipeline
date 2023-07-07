@@ -31,8 +31,9 @@ logger = logging.getLogger(__name__)
 def bulk_upload_model(
     djmodel: models.Model,
     generator: Iterable[Generator[models.Model, None, None]],
-    batch_size: int=10_000, return_ids: bool=False,
-    log_mem_usage: False
+    batch_size: int=10_000,
+    return_ids: bool=False,
+    log_mem_usage: bool=False,
 ) -> List[int]:
     '''
     Bulk upload a list of generator objects of django models to db.
