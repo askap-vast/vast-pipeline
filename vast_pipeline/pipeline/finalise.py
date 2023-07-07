@@ -14,7 +14,7 @@ from vast_pipeline.pipeline.loading import (
     update_sources
 )
 from vast_pipeline.pipeline.pairs import calculate_measurement_pair_metrics
-from vast_pipeline.pipeline.utils import parallel_groupby
+from vast_pipeline.pipeline.utils import parallel_groupby, get_memory_usage
 
 
 logger = logging.getLogger(__name__)
@@ -135,6 +135,7 @@ def final_operations(
     srcs_df = parallel_groupby(sources_df)
     mem_usage = srcs_df.memory_usage(deep=True).sum() / 1e6
     logger.debug(f"Initial srcs_df memory: {mem_usage}MB")
+    logger.debug(get_memory_usage())
     logger.info('Groupby-apply time: %.2f seconds', timer.reset())
 
     # add new sources
@@ -149,6 +150,7 @@ def final_operations(
     srcs_df["new_high_sigma"] = srcs_df["new_high_sigma"].fillna(0.0)
     mem_usage = srcs_df.memory_usage(deep=True).sum() / 1e6
     logger.debug(f"srcs_df memory after adding new sources: {mem_usage}MB")
+    logger.debug(get_memory_usage())
 
     # calculate nearest neighbour
     srcs_skycoord = SkyCoord(
@@ -165,6 +167,7 @@ def final_operations(
     srcs_df['n_neighbour_dist'] = d2d.deg
     mem_usage = srcs_df.memory_usage(deep=True).sum() / 1e6
     logger.debug(f"srcs_df memory after nearest-neighbour: {mem_usage}MB")
+    logger.debug(get_memory_usage())
 
     # create measurement pairs, aka 2-epoch metrics
     if calculate_pairs:
@@ -173,6 +176,7 @@ def final_operations(
         logger.info('Measurement pair metrics time: %.2f seconds', timer.reset())
         mem_usage = measurement_pairs_df.memory_usage(deep=True).sum() / 1e6
         logger.debug(f"measurement_pairs_df memory: {mem_usage}MB")
+        logger.debug(get_memory_usage())
 
         # calculate measurement pair metric aggregates for sources by finding the row indices
         # of the aggregate max of the abs(m) metric for each flux type.
@@ -199,6 +203,7 @@ def final_operations(
         logger.info("Measurement pair aggregate metrics time: %.2f seconds", timer.reset())
         mem_usage = srcs_df.memory_usage(deep=True).sum() / 1e6
         logger.debug(f"srcs_df memory after calculate_pairs: {mem_usage}MB")
+        logger.debug(get_memory_usage())
     else:
         logger.info(
             "Skipping measurement pair metric calculation as specified in the run configuration."
@@ -213,20 +218,24 @@ def final_operations(
         srcs_df_upload = srcs_df.loc[~src_done_mask].copy()
         mem_usage = srcs_df_upload.memory_usage(deep=True).sum() / 1e6
         logger.debug(f"srcs_df_upload initial memory: {mem_usage}MB")
+        logger.debug(get_memory_usage())
 
         srcs_df_upload = make_upload_sources(srcs_df_upload, p_run, add_mode)
         mem_usage = srcs_df_upload.memory_usage(deep=True).sum() / 1e6
         logger.debug(f"srcs_df_upload memory after upload: {mem_usage}MB")
+        logger.debug(get_memory_usage())
         # And now update
         srcs_df_update = srcs_df.loc[src_done_mask].copy()
         mem_usage = srcs_df_update.memory_usage(deep=True).sum() / 1e6
         logger.debug(f"srcs_df_update memory: {mem_usage}MB")
+        logger.debug(get_memory_usage())
         logger.info(
             f"Updating {srcs_df_update.shape[0]} sources with new metrics.")
 
         srcs_df = update_sources(srcs_df_update, batch_size=1000)
         mem_usage = srcs_df_update.memory_usage(deep=True).sum() / 1e6
         logger.debug(f"srcs_df_update memory after update: {mem_usage}MB")
+        logger.debug(get_memory_usage())
         # Add back together
         if not srcs_df_upload.empty:
             srcs_df = pd.concat([srcs_df, srcs_df_upload])
@@ -235,6 +244,7 @@ def final_operations(
 
     mem_usage = srcs_df.memory_usage(deep=True).sum() / 1e6
     logger.debug(f"srcs_df memory after upload_sources: {mem_usage}MB")
+    logger.debug(get_memory_usage())
 
     # gather the related df, upload to db and save to parquet file
     # the df will look like
@@ -255,6 +265,7 @@ def final_operations(
     )
     mem_usage = related_df.memory_usage(deep=True).sum() / 1e6
     logger.debug(f"related_df memory: {mem_usage}MB")
+    logger.debug(get_memory_usage())
 
     # for the column 'from_source_id', replace relation source ids with db id
     related_df["to_source_id"] = related_df["to_source_id"].map(srcs_df["id"].to_dict())
@@ -262,6 +273,7 @@ def final_operations(
     related_df = related_df[related_df["from_source_id"] != related_df["to_source_id"]]
     mem_usage = related_df.memory_usage(deep=True).sum() / 1e6
     logger.debug(f"related_df memory after calcs: {mem_usage}MB")
+    logger.debug(get_memory_usage())
 
     # write symmetrical relations to parquet
     related_df.to_parquet(
@@ -285,10 +297,12 @@ def final_operations(
 
         mem_usage = related_df.memory_usage(deep=True).sum() / 1e6
         logger.debug(f"related_df memory after partitioning: {mem_usage}MB")
+        logger.debug(get_memory_usage())
 
     make_upload_related_sources(related_df)
     mem_usage = related_df.memory_usage(deep=True).sum() / 1e6
     logger.debug(f"related_df memory after upload: {mem_usage}MB")
+    logger.debug(get_memory_usage())
 
     del related_df
 
@@ -306,6 +320,7 @@ def final_operations(
     )
     mem_usage = sources_df.memory_usage(deep=True).sum() / 1e6
     logger.debug(f"sources_df memory after srcs_df merge: {mem_usage}MB")
+    logger.debug(get_memory_usage())
 
     if add_mode:
         # Load old associations so the already uploaded ones can be removed
