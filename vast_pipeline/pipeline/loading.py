@@ -18,7 +18,9 @@ from vast_pipeline.models import (
     Association, Band, Measurement, SkyRegion, Source, RelatedSource,
     Run, Image
 )
-from vast_pipeline.pipeline.utils import get_create_img, get_create_img_band
+from vast_pipeline.pipeline.utils import (
+    get_create_img, get_create_img_band, get_memory_usage
+)
 from vast_pipeline.utils.utils import StopWatch
 
 
@@ -29,7 +31,8 @@ logger = logging.getLogger(__name__)
 def bulk_upload_model(
     djmodel: models.Model,
     generator: Iterable[Generator[models.Model, None, None]],
-    batch_size: int=10_000, return_ids: bool=False
+    batch_size: int=10_000, return_ids: bool=False,
+    log_mem_usage: False
 ) -> List[int]:
     '''
     Bulk upload a list of generator objects of django models to db.
@@ -52,6 +55,8 @@ def bulk_upload_model(
     bulk_ids = []
     while True:
         items = list(islice(generator, batch_size))
+        if log_mem_usage:
+            logger.debug(get_memory_usage())
         if not items:
             break
         out_bulk = djmodel.objects.bulk_create(items)
@@ -168,6 +173,7 @@ def make_upload_sources(
     logger.debug("Uploading sources...")
     mem_usage = sources_df.memory_usage(deep=True).sum() / 1e6
     logger.debug(f"sources_df memory usage: {mem_usage}MB")
+    logger.debug(get_memory_usage())
     # create sources in DB
     with transaction.atomic():
         if (add_mode is False and
@@ -209,6 +215,7 @@ def make_upload_related_sources(related_df: pd.DataFrame) -> None:
     logger.info('Populate "related" field of sources...')
     mem_usage = related_df.memory_usage(deep=True).sum() / 1e6
     logger.debug(f"related_df memory usage: {mem_usage}MB")
+    logger.debug(get_memory_usage())
     bulk_upload_model(RelatedSource, related_models_generator(related_df))
 
 
@@ -227,10 +234,12 @@ def make_upload_associations(associations_df: pd.DataFrame) -> None:
     logger.info('Upload associations...')
     mem_usage = associations_df.memory_usage(deep=True).sum() / 1e6
     logger.debug(f"associations_df memory usage: {mem_usage}MB")
+    logger.debug(get_memory_usage())
     bulk_upload_model(
         Association,
         association_models_generator(associations_df),
-        batch_size=1000
+        batch_size=100,
+        log_mem_usage=True
     )
 
 
@@ -249,6 +258,7 @@ def make_upload_measurements(measurements_df: pd.DataFrame) -> pd.DataFrame:
     logger.info("Upload measurements...")
     mem_usage = measurements_df.memory_usage(deep=True).sum() / 1e6
     logger.debug(f"measurements_df memory usage: {mem_usage}MB")
+    logger.debug(get_memory_usage())
     meas_dj_ids = bulk_upload_model(
         Measurement,
         measurement_models_generator(measurements_df),
