@@ -104,11 +104,31 @@ def get_data_from_parquet(
     return {'prefix': prefix, 'max_id': max_id, 'id': image_id}
 
 
-def extract_from_image(
-    df: pd.DataFrame,
+def _init_forcedphot(
     image: str,
     background: str,
     noise: str,
+) -> ForcedPhot:
+    """
+    Initialise a ForcedPhot object for the requested image, background and
+    noise maps.
+    
+    Args:
+        image:
+            a string with the path of the image FIT file.
+        background:
+            a string with the path of the image background file.
+        noise:
+            a string with the path of the image noise file.
+    
+    Returns:
+        A ForcedPhot object.
+    """
+    return ForcedPhot(image, background, noise)
+    
+def extract_from_image(
+    df: pd.DataFrame,
+    FP: ForcedPhot,
     edge_buffer: float,
     cluster_threshold: float,
     allow_nan: bool,
@@ -123,12 +143,8 @@ def extract_from_image(
         df:
             input dataframe with columns [source_tmp_id, wavg_ra, wavg_dec,
             image_name, flux_peak]
-        image:
-            a string with the path of the image FIT file
-        background:
-            a string with the path of the image background file
-        noise:
-            a string with the path of the image noise file
+        FP:
+            ForcedPhot object
         edge_buffer:
             flag to pass to ForcedPhot.measure method
         cluster_threshold:
@@ -148,7 +164,6 @@ def extract_from_image(
         unit=(u.deg, u.deg)
     )
 
-    FP = ForcedPhot(image, background, noise)
     flux, flux_err, chisq, DOF, cluster_id = FP.measure(
         P_islands,
         cluster_threshold=cluster_threshold,
