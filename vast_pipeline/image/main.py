@@ -124,9 +124,9 @@ class FitsImage(Image):
             with open_fits(self.path) as hdulist:
                 hdu = hdulist[hdu_index]
         except Exception:
-            raise IOError((
-                f"Could not read FITS file: {self.path}"
-            ))
+            raise IOError(
+                ("Could not read this FITS file: " f"{os.path.basename(self.path)}")
+            )
 
         return hdu.header.copy()
 
