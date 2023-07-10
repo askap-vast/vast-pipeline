@@ -15,8 +15,14 @@ from vast_pipeline.pipeline.model_generator import (
     association_models_generator,
 )
 from vast_pipeline.models import (
-    Association, Band, Measurement, SkyRegion, Source, RelatedSource,
-    Run, Image
+    Association,
+    Band,
+    Measurement,
+    SkyRegion,
+    Source,
+    RelatedSource,
+    Run,
+    Image,
 )
 from vast_pipeline.pipeline.utils import get_create_img, get_create_img_band
 from vast_pipeline.utils.utils import StopWatch
@@ -29,9 +35,10 @@ logger = logging.getLogger(__name__)
 def bulk_upload_model(
     djmodel: models.Model,
     generator: Iterable[Generator[models.Model, None, None]],
-    batch_size: int=10_000, return_ids: bool=False
+    batch_size: int = 10_000,
+    return_ids: bool = False,
 ) -> List[int]:
-    '''
+    """
     Bulk upload a list of generator objects of django models to db.
 
     Args:
@@ -48,14 +55,14 @@ def bulk_upload_model(
     Returns:
         None or a list of the database IDs of the uploaded objects.
 
-    '''
+    """
     bulk_ids = []
     while True:
         items = list(islice(generator, batch_size))
         if not items:
             break
         out_bulk = djmodel.objects.bulk_create(items)
-        logger.info('Bulk created #%i %s', len(out_bulk), djmodel.__name__)
+        logger.info("Bulk created #%i %s", len(out_bulk), djmodel.__name__)
         # save the DB ids to return
         if return_ids:
             bulk_ids.extend(list(map(lambda i: i.id, out_bulk)))
@@ -67,7 +74,7 @@ def bulk_upload_model(
 def make_upload_images(
     paths: Dict[str, Dict[str, str]], image_config: Dict
 ) -> Tuple[List[Image], List[SkyRegion], List[Band]]:
-    '''
+    """
     Carry the first part of the pipeline, by uploading all the images
     to the image table and populated band and skyregion objects.
 
@@ -84,20 +91,16 @@ def make_upload_images(
         A list of Image objects that have been uploaded.
         A list of SkyRegion objects that have been uploaded.
         A list of Band objects that have been uploaded.
-    '''
+    """
     timer = StopWatch()
     images = []
     skyregions = []
     bands = []
 
-    for path in paths['selavy']:
+    for path in paths["selavy"]:
         # STEP #1: Load image and measurements
-        image = SelavyImage(
-            path,
-            paths,
-            image_config
-        )
-        logger.info('Reading image %s ...', image.name)
+        image = SelavyImage(path, paths, image_config)
+        logger.info("Reading image %s ...", image.name)
 
         # 1.1 get/create the frequency band
         with transaction.atomic():
@@ -128,7 +131,7 @@ def make_upload_images(
             )
 
             # upload measurements, a column with the db is added to the df
-            measurements = make_upload_measurements(measurements)
+            make_upload_measurements(measurements)
 
             # save measurements to parquet file in pipeline run folder
             base_folder = os.path.dirname(img.measurements_path)
@@ -138,10 +141,7 @@ def make_upload_images(
             measurements.to_parquet(img.measurements_path, index=False)
             del measurements, image, band, img
 
-    logger.info(
-        'Total images upload/loading time: %.2f seconds',
-        timer.reset_init()
-    )
+    logger.info("Total images upload/loading time: %.2f seconds", timer.reset_init())
 
     return images, skyregions, bands
 
@@ -149,7 +149,7 @@ def make_upload_images(
 def make_upload_sources(
     sources_df: pd.DataFrame, pipeline_run: Run, add_mode: bool = False
 ) -> pd.DataFrame:
-    '''
+    """
     Delete previous sources for given pipeline run and bulk upload
     new found sources as well as related sources.
 
@@ -164,29 +164,28 @@ def make_upload_sources(
 
     Returns:
         The input dataframe with the 'id' column added.
-    '''
+    """
     # create sources in DB
     with transaction.atomic():
-        if (add_mode is False and
-                Source.objects.filter(run=pipeline_run).exists()):
-            logger.info('Removing objects from previous pipeline run')
-            n_del, detail_del = (
-                Source.objects.filter(run=pipeline_run).delete()
-            )
+        if add_mode is False and Source.objects.filter(run=pipeline_run).exists():
+            logger.info("Removing objects from previous pipeline run")
+            n_del, detail_del = Source.objects.filter(run=pipeline_run).delete()
             logger.info(
-                ('Deleting all sources and related objects for this run. '
-                 'Total objects deleted: %i'),
+                (
+                    "Deleting all sources and related objects for this run. "
+                    "Total objects deleted: %i"
+                ),
                 n_del,
             )
-            logger.debug('(type, #deleted): %s', detail_del)
+            logger.debug("(type, #deleted): %s", detail_del)
 
     src_dj_ids = bulk_upload_model(
         Source,
         source_models_generator(sources_df, pipeline_run=pipeline_run),
-        return_ids=True
+        return_ids=True,
     )
 
-    sources_df['id'] = src_dj_ids
+    sources_df["id"] = src_dj_ids
 
     return sources_df
 
@@ -219,13 +218,11 @@ def make_upload_associations(associations_df: pd.DataFrame) -> None:
     Returns:
         None.
     """
-    logger.info('Upload associations...')
-    bulk_upload_model(
-        Association, association_models_generator(associations_df)
-    )
+    logger.info("Upload associations...")
+    bulk_upload_model(Association, association_models_generator(associations_df))
 
 
-def make_upload_measurements(measurements_df: pd.DataFrame) -> pd.DataFrame:
+def make_upload_measurements(measurements_df: pd.DataFrame) -> None:
     """
     Uploads the measurements from the supplied measurements DataFrame.
 
@@ -237,21 +234,13 @@ def make_upload_measurements(measurements_df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         Original DataFrame with the database ID attached to each row.
     """
-    meas_dj_ids = bulk_upload_model(
-        Measurement,
-        measurement_models_generator(measurements_df),
-        return_ids=True
+    bulk_upload_model(
+        Measurement, measurement_models_generator(measurements_df), return_ids=False
     )
 
-    measurements_df['id'] = meas_dj_ids
 
-    return measurements_df
-
-
-def update_sources(
-    sources_df: pd.DataFrame, batch_size: int = 10_000
-) -> pd.DataFrame:
-    '''
+def update_sources(sources_df: pd.DataFrame, batch_size: int = 10_000) -> pd.DataFrame:
+    """
     Update database using SQL code. This function opens one connection to the
     database, and closes it after the update is done.
 
@@ -267,37 +256,36 @@ def update_sources(
 
     Returns:
         DataFrame containing the new data to be uploaded to the database.
-    '''
+    """
     # Get all possible columns from the model
     all_source_table_cols = [
-        fld.attname for fld in Source._meta.get_fields()
-        if getattr(fld, 'attname', None) is not None
+        fld.attname
+        for fld in Source._meta.get_fields()
+        if getattr(fld, "attname", None) is not None
     ]
 
     # Filter to those present in sources_df
-    columns = [
-        col for col in all_source_table_cols if col in sources_df.columns
-    ]
+    columns = [col for col in all_source_table_cols if col in sources_df.columns]
 
-    sources_df['id'] = sources_df.index.values
+    sources_df["id"] = sources_df.index.values
 
-    batches = np.ceil(len(sources_df)/batch_size)
+    batches = np.ceil(len(sources_df) / batch_size)
     dfs = np.array_split(sources_df, batches)
     with connection.cursor() as cursor:
         for df_batch in dfs:
-            SQL_comm = SQL_update(
-                df_batch, Source, index='id', columns=columns
-            )
+            SQL_comm = SQL_update(df_batch, Source, index="id", columns=columns)
             cursor.execute(SQL_comm)
 
     return sources_df
 
 
 def SQL_update(
-    df: pd.DataFrame, model: models.Model, index: Optional[str] = None,
-    columns: Optional[List[str]] = None
+    df: pd.DataFrame,
+    model: models.Model,
+    index: Optional[str] = None,
+    columns: Optional[List[str]] = None,
 ) -> str:
-    '''
+    """
     Generate the SQL code required to update the database.
 
     Args:
@@ -316,7 +304,7 @@ def SQL_update(
 
     Returns:
         The SQL command to update the database.
-    '''
+    """
     # set index and columns if None
     if index is None:
         index = model._meta.pk.name
@@ -326,8 +314,8 @@ def SQL_update(
 
     # get names
     table = model._meta.db_table
-    new_columns = ', '.join('new_'+c for c in columns)
-    set_columns = ', '.join(c+'=new_'+c for c in columns)
+    new_columns = ", ".join("new_" + c for c in columns)
+    set_columns = ", ".join(c + "=new_" + c for c in columns)
 
     # get index values and new values
     column_headers = [index]
@@ -335,9 +323,9 @@ def SQL_update(
     data_arr = df[column_headers].to_numpy()
     values = []
     for row in data_arr:
-        val_row = '(' + ', '.join(f'{val}' for val in row) + ')'
+        val_row = "(" + ", ".join(f"{val}" for val in row) + ")"
         values.append(val_row)
-    values = ', '.join(values)
+    values = ", ".join(values)
 
     # update database
     SQL_comm = f"""
