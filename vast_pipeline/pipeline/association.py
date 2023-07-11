@@ -78,7 +78,7 @@ def calc_de_ruiter(df: pd.DataFrame) -> np.ndarray:
 
 
 def one_to_many_basic(
-    skyc2_srcs: pd.DataFrame, sources_df: pd.DataFrame, id_incr_par_assoc: int = 0
+    skyc2_srcs: pd.DataFrame, sources_df: pd.DataFrame
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Finds and processes the one-to-many associations in the basic
@@ -96,9 +96,6 @@ def one_to_many_basic(
             associated to the base) used during basic association.
         sources_df: The sources_df produced by each step of
             association holding the current 'sources'.
-        id_incr_par_assoc: An increment value to add to new source ids
-            when creating them. Mainly useful for add mode with parallel
-            association
 
     Returns:
         Updated 'skyc2_srcs' with all the one_to_many relation information
@@ -394,13 +391,8 @@ def one_to_many_advanced(
     # |             262 |
     # +-----------------+
 
-    # Define the range of new source ids
-    start_new_src_id = sources_df["source"].values.max() + 1 + id_incr_par_assoc
-
     # Create an arange to use to change the ones that need to be changed.
-    new_source_ids = np.arange(
-        start_new_src_id, start_new_src_id + idx_to_change.shape[0], dtype=int
-    )
+    new_source_ids = [str(uuid.uuid4()) for _ in range(idx_to_change.shape[0])]
 
     # Assign the new IDs to those that need to be changed.
     duplicated_skyc1.loc[idx_to_change, "new_source_id"] = new_source_ids
@@ -411,7 +403,7 @@ def one_to_many_advanced(
 
     # Now we need to sort out the related, essentially here the 'original'
     # and 'non original' need to be treated differently.
-    # The original source need all the assoicated new ids appended to the
+    # The original source need all the associated new ids appended to the
     # related column.
     # The not_original ones need just the original ID appended.
     not_original = duplicated_skyc1.loc[idx_to_change].copy()
@@ -766,9 +758,7 @@ def basic_association(
     # this would mean that multiple sources in skyc2 have been matched
     # to the same base source we want to keep closest match and move
     # the other match(es) back to having a -1 src id
-    skyc2_srcs, sources_df = one_to_many_basic(
-        skyc2_srcs, sources_df, id_incr_par_assoc
-    )
+    skyc2_srcs, sources_df = one_to_many_basic(skyc2_srcs, sources_df)
 
     logger.info("Updating sources catalogue with new sources...")
     # update the src numbers for those sources in skyc2 with no match
@@ -916,10 +906,7 @@ def advanced_association(
     ].reset_index(drop=True)
     # update the src numbers for those sources in skyc2 with no match
     # using the max current src as the start and incrementing by one
-    start_elem = sources_df["source"].values.max() + 1 + id_incr_par_assoc
-    new_sources["source"] = np.arange(
-        start_elem, start_elem + new_sources.shape[0], dtype=int
-    )
+    new_sources["source"] = new_sources.apply(lambda _: str(uuid.uuid4()), axis=1)
     skyc2_srcs_toappend = pd.concat(
         [skyc2_srcs_toappend, new_sources], ignore_index=True
     )
