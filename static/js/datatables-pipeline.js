@@ -1,7 +1,7 @@
 let DEFAULT_DATATABLE_BUTTONS = [
-  {extend: 'colvis', className: 'btn-info btn-sm'},
-  {extend: 'csv', className: 'btn-info btn-sm'},
-  {extend: 'excel', className: 'btn-info btn-sm'},
+  { extend: 'colvis', className: 'btn-info btn-sm' },
+  { extend: 'csv', className: 'btn-info btn-sm' },
+  { extend: 'excel', className: 'btn-info btn-sm' },
 ]
 
 // Formatting function for API
@@ -10,7 +10,7 @@ function obj_formatter(obj) {
     let hrefValue = null;
     if (obj.render.url.hasOwnProperty('nested')) {
       let [prefix, col] = [obj.render.url.prefix, obj.render.url.col];
-      hrefValue = function(data, type, row, meta) {
+      hrefValue = function (data, type, row, meta) {
         // split the col on the . for nested JSON and build the selection
         let sel = row;
         col.split('.').forEach(item => sel = sel[item]);
@@ -18,7 +18,7 @@ function obj_formatter(obj) {
       };
     } else {
       let [prefix, col] = [obj.render.url.prefix, obj.render.url.col];
-      hrefValue = function(data, type, row, meta) {
+      hrefValue = function (data, type, row, meta) {
         return '<a href="' + prefix + row.id + ' "target="_blank">' + row[col] + '</a>';
       };
     }
@@ -30,14 +30,14 @@ function obj_formatter(obj) {
       obj.render.float.scale,
       obj.render.float.col
     ];
-    let floatFormat = function(data, type, row, meta) {
-        return (row[col] * scale).toFixed(precision);
+    let floatFormat = function (data, type, row, meta) {
+      return (row[col] * scale).toFixed(precision);
     };
     obj.render = floatFormat;
     return obj;
   } else if (obj.render.hasOwnProperty('contains_sibl')) {
     let col = obj.render.contains_sibl.col;
-    let sibl_bool = function(data, type, row, meta) {
+    let sibl_bool = function (data, type, row, meta) {
       if (row[col] > 0) {
         return true;
       } else {
@@ -66,7 +66,7 @@ function drawExternalResultsTable(id, buttons = DEFAULT_DATATABLE_BUTTONS) {
       "columnDefs": [
         {
           "targets": 0,
-          "render": function( data, type, row, meta) {
+          "render": function (data, type, row, meta) {
             if (row["database"] === "SIMBAD") {
               return '<a href="http://simbad.u-strasbg.fr/simbad/sim-id?Ident=' + row['object_name'] + '" target="_blank">' + row['object_name'] + '</a> (' + row['database'] + ')'
             } else if (row["database"] == "NED") {
@@ -80,13 +80,13 @@ function drawExternalResultsTable(id, buttons = DEFAULT_DATATABLE_BUTTONS) {
         },
         {
           "targets": 1,
-          "render": function ( data, type, row, meta ) {
+          "render": function (data, type, row, meta) {
             return row['separation_arcsec'].toFixed(2);
           }
         },
         {
           "targets": 2,
-          "render": function ( data, type, row, meta ) {
+          "render": function (data, type, row, meta) {
             if (row['otype_long'] !== "" && row['otype'] !== row['otype_long']) {
               return '<abbr title="' + row['otype_long'] + '">' + row['otype'] + '</abbr>';
             } else {
@@ -101,7 +101,7 @@ function drawExternalResultsTable(id, buttons = DEFAULT_DATATABLE_BUTTONS) {
 
 
 // Call the dataTables jQuery plugin
-$(document).ready(function() {
+$(document).ready(function () {
 
   $('[data-toggle="tooltip"]').tooltip();
   let dom = (
@@ -116,12 +116,12 @@ $(document).ready(function() {
     dataConfParsed = JSON.parse(dataConfElement.textContent);
     dataConfList = (Array.isArray(dataConfParsed)) ? dataConfParsed : [dataConfParsed];
   }
-  for (let dataConf of dataConfList){
+  for (let dataConf of dataConfList) {
     let table_id = (dataConfList.length == 1) ? '#dataTable' : '#' + dataConf.table_id;
     if (dataConf.hasOwnProperty('api')) {
       // build conf for server side datatable
       let testFields = dataConf.colsFields;
-      testFields.forEach( function(obj) {
+      testFields.forEach(function (obj) {
         if (obj.hasOwnProperty('render')) {
           obj = obj_formatter(obj)
         }
@@ -134,7 +134,7 @@ $(document).ready(function() {
         language: {
           processing: (
             '<div class="spinner-border" role="status">' +
-              '<span class="sr-only">Loading...</span>' +
+            '<span class="sr-only">Loading...</span>' +
             '</div>'
           )
         },
@@ -151,14 +151,14 @@ $(document).ready(function() {
         columns: dataConf.colsFields,
         order: dataConf.order,
         searchDelay: 2000,
-        dom : dom,
+        dom: dom,
         buttons: DEFAULT_DATATABLE_BUTTONS
       };
       // apply deferLoading config, if supplied
       if (dataConf.hasOwnProperty('deferLoading')) {
         dataTableConf.deferLoading = dataConf.deferLoading;
         // change the message printed in the empty table if deferLoading active
-        dataTableConf.initComplete = function(settings, json) {
+        dataTableConf.initComplete = function (settings, json) {
           $("td.dataTables_empty").text("Submit a query to view results");
         }
       }
@@ -171,9 +171,9 @@ $(document).ready(function() {
       // ...
       // ];
       let dataSet = [];
-      dataConf.dataQuery.forEach( function(obj) {
+      dataConf.dataQuery.forEach(function (obj) {
         let row = [];
-        dataConf.colsFields.forEach(function(elem) {
+        dataConf.colsFields.forEach(function (elem) {
           row.push(obj[elem])
         })
         dataSet.push(row)
@@ -201,106 +201,106 @@ $(document).ready(function() {
           {
             "targets": 1,
             "data": "name",
-            "render": function ( data, type, row, meta ) {
+            "render": function (data, type, row, meta) {
               return '<a href="' + meas_url + row[0] + '"target="_blank">' + row[1] + '</a>';
             }
           },
           {
             "targets": 3,
             "data": "image",
-            "render": function ( data, type, row, meta ) {
+            "render": function (data, type, row, meta) {
               return '<a href="' + img_url + row[19] + '"target="_blank">' + row[3] + '</a>';
             }
           },
           {
             "targets": 4,
             "data": "frequency",
-            "render": function ( data, type, row, meta ) {
+            "render": function (data, type, row, meta) {
               return row[4].toFixed(2);
             }
           },
           {
             "targets": 5,
             "data": "ra",
-            "render": function ( data, type, row, meta ) {
+            "render": function (data, type, row, meta) {
               return row[5].toFixed(4);
             }
           },
           {
             "targets": 6,
             "data": "ra_err",
-            "render": function ( data, type, row, meta ) {
-                return (row[6] * 3600.).toFixed(4);
+            "render": function (data, type, row, meta) {
+              return (row[6] * 3600.).toFixed(4);
             }
           },
           {
             "targets": 7,
             "data": "dec",
-            "render": function ( data, type, row, meta ) {
-                return row[7].toFixed(4);
+            "render": function (data, type, row, meta) {
+              return row[7].toFixed(4);
             }
           },
           {
             "targets": 8,
             "data": "dec_err",
-            "render": function ( data, type, row, meta ) {
-                return (row[8] * 3600.).toFixed(4);
+            "render": function (data, type, row, meta) {
+              return (row[8] * 3600.).toFixed(4);
             }
           },
           {
             "targets": 9,
             "data": "flux_peak",
-            "render": function ( data, type, row, meta ) {
-                return (row[9]).toFixed(3);
+            "render": function (data, type, row, meta) {
+              return (row[9]).toFixed(3);
             }
           },
           {
             "targets": 10,
             "data": "flux_peak_err",
-            "render": function ( data, type, row, meta ) {
-                return (row[10]).toFixed(3);
+            "render": function (data, type, row, meta) {
+              return (row[10]).toFixed(3);
             }
           },
           {
             "targets": 11,
             "data": "flux_peak_isl_ratio",
-            "render": function ( data, type, row, meta ) {
-                return (row[11]).toFixed(2);
+            "render": function (data, type, row, meta) {
+              return (row[11]).toFixed(2);
             }
           },
           {
             "targets": 12,
             "data": "flux_int",
-            "render": function ( data, type, row, meta ) {
-                return (row[12]).toFixed(3);
+            "render": function (data, type, row, meta) {
+              return (row[12]).toFixed(3);
             }
           },
           {
             "targets": 13,
             "data": "flux_int_err",
-            "render": function ( data, type, row, meta ) {
-                return (row[13]).toFixed(3);
+            "render": function (data, type, row, meta) {
+              return (row[13]).toFixed(3);
             }
           },
           {
             "targets": 14,
             "data": "flux_int_isl_ratio",
-            "render": function ( data, type, row, meta ) {
-                return (row[14]).toFixed(2);
+            "render": function (data, type, row, meta) {
+              return (row[14]).toFixed(2);
             }
           },
           {
             "targets": 15,
             "data": "local_rms",
-            "render": function ( data, type, row, meta ) {
-                return (row[15]).toFixed(2);
+            "render": function (data, type, row, meta) {
+              return (row[15]).toFixed(2);
             }
           },
           {
             "targets": 16,
             "data": "snr",
-            "render": function ( data, type, row, meta ) {
-                return (row[16]).toFixed(2);
+            "render": function (data, type, row, meta) {
+              return (row[16]).toFixed(2);
             }
           },
           {
@@ -318,7 +318,7 @@ $(document).ready(function() {
   drawExternalResultsTable('#externalResultsTable');
 
   // Trigger the update search on the datatable
-  $("#catalogSearch").on('click', function(e) {
+  $("#catalogSearch").on('click', function (e) {
     let PipeRun = document.getElementById("runSelect");
     let qry_url = dataConfParsed.api;
     if (PipeRun.value != '') {
@@ -338,7 +338,7 @@ $(document).ready(function() {
       qry_url = qry_url + "&coord=" + encodeURIComponent(coord.value);
     };
     if (unit.value) {
-        qry_url = qry_url + "&radiusunit=" + unit.value
+      qry_url = qry_url + "&radiusunit=" + unit.value
     }
     let avg_flux_type = document.getElementById("aveFluxSelect");
     let avg_flux_min = document.getElementById("avgFluxMinSelect");
@@ -510,7 +510,7 @@ $(document).ready(function() {
       qry_url = qry_url + "&source_selection=" + source_selection.value;
     };
     if (source_selection_type.value) {
-      qry_url = qry_url + "&source_selection_type=" +source_selection_type.value;
+      qry_url = qry_url + "&source_selection_type=" + source_selection_type.value;
     };
     table.ajax.url(qry_url);
     table.ajax.reload();
@@ -522,8 +522,8 @@ $(document).ready(function() {
   });
 
   // Trigger the search reset on the datatable
-  $("#resetSearch").on('click', function(e) {
-    $('#runSelect option').prop('selected', function() {
+  $("#resetSearch").on('click', function (e) {
+    $('#runSelect option').prop('selected', function () {
       return this.defaultSelected
     });
     let inputs = [
@@ -536,7 +536,7 @@ $(document).ready(function() {
       'compactnessMinSelect', 'compactnessMaxSelect', 'objectNameInput', 'MinSnrMinSelect',
       'MinSnrMaxSelect', 'MaxSnrMinSelect', 'MaxSnrMaxSelect', 'fluxMaxMinSelect',
       'fluxMaxMaxSelect', 'sourceSelectionSelect',
-      ];
+    ];
     var input;
     for (input of inputs) {
       document.getElementById(input).value = '';
