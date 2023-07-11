@@ -28,7 +28,7 @@ from .utils import (
     get_src_skyregion_merged_df,
     group_skyregions,
     get_parallel_assoc_image_df,
-    write_parquets
+    write_parquets,
 )
 
 from .errors import MaxPipelineRunsError
@@ -37,7 +37,7 @@ from .errors import MaxPipelineRunsError
 logger = logging.getLogger(__name__)
 
 
-class Pipeline():
+class Pipeline:
     """Instance of a pipeline. All the methods runs the pipeline opearations, such as
     association.
 
@@ -53,6 +53,7 @@ class Pipeline():
         previous_parquets: A dict mapping that provides the paths to parquet files for
             previous executions of this pipeline run.
     """
+
     def __init__(self, name: str, config_path: str, validate_config: bool = True):
         """Initialise an instance of Pipeline with a name and configuration file path.
 
@@ -67,9 +68,9 @@ class Pipeline():
             config_path, validate=validate_config
         )
         self.img_paths: Dict[str, Dict[str, str]] = {
-            'selavy': {},
-            'noise': {},
-            'background': {},
+            "selavy": {},
+            "noise": {},
+            "background": {},
         }  # maps input image paths to their selavy/noise/background counterpart path
         self.img_epochs: Dict[str, str] = {}  # maps image names to their provided epoch
         self.add_mode: bool = False
@@ -112,9 +113,9 @@ class Pipeline():
         Returns:
             None
         """
-        logger.info(f'Epoch based association: {self.config.epoch_based}')
+        logger.info(f"Epoch based association: {self.config.epoch_based}")
         if self.add_mode:
-            logger.info('Running in image add mode.')
+            logger.info("Running in image add mode.")
 
         # Update epoch based flag to not cause user confusion when running
         # the pipeline (i.e. if it was only updated at the end). It is not
@@ -130,8 +131,7 @@ class Pipeline():
 
         # upload/retrieve image data
         images, skyregions, bands = make_upload_images(
-            self.img_paths,
-            self.config.image_opts()
+            self.img_paths, self.config.image_opts()
         )
 
         # associate the pipeline run with each image
@@ -140,11 +140,13 @@ class Pipeline():
                 add_run_to_img(p_run, img)
 
         # write parquet files and retrieve skyregions as a dataframe
-        skyregs_df = write_parquets(images, skyregions, bands, self.config["run"]["path"])
+        skyregs_df = write_parquets(
+            images, skyregions, bands, self.config["run"]["path"]
+        )
 
         # STEP #2: measurements association
         # order images by time
-        images.sort(key=operator.attrgetter('datetime'))
+        images.sort(key=operator.attrgetter("datetime"))
 
         # If the user has given lists we need to reorder the
         # image epochs such that they are in date order.
@@ -153,9 +155,7 @@ class Pipeline():
             for i, img in enumerate(images):
                 self.img_epochs[img.name] = i + 1
 
-        image_epochs = [
-            self.img_epochs[img.name] for img in images
-        ]
+        image_epochs = [self.img_epochs[img.name] for img in images]
         limit = Angle(self.config["source_association"]["radius"] * u.arcsec)
         dr_limit = self.config["source_association"]["deruiter_radius"]
         bw_limit = self.config["source_association"]["deruiter_beamwidth_limit"]
@@ -166,20 +166,17 @@ class Pipeline():
         # 2.1 Check if sky regions to be associated can be
         # split into connected point groups
         skyregion_groups = group_skyregions(
-            skyregs_df[['id', 'centre_ra', 'centre_dec', 'xtr_radius']]
+            skyregs_df[["id", "centre_ra", "centre_dec", "xtr_radius"]]
         )
-        n_skyregion_groups = skyregion_groups[
-            'skyreg_group'
-        ].unique().shape[0]
+        n_skyregion_groups = skyregion_groups["skyreg_group"].unique().shape[0]
 
         # Get already done images if in add mode
         if self.add_mode:
             done_images_df = pd.read_parquet(
-                self.previous_parquets['images'], columns=['id', 'name']
+                self.previous_parquets["images"], columns=["id", "name"]
             )
             done_source_ids = pd.read_parquet(
-                self.previous_parquets['sources'],
-                columns=['wavg_ra']
+                self.previous_parquets["sources"], columns=["wavg_ra"]
             ).index.tolist()
         else:
             done_images_df = None
@@ -187,10 +184,8 @@ class Pipeline():
 
         # 2.2 Associate with other measurements
         if self.config["source_association"]["parallel"] and n_skyregion_groups > 1:
-            images_df = get_parallel_assoc_image_df(
-                images, skyregion_groups
-            )
-            images_df['epoch'] = image_epochs
+            images_df = get_parallel_assoc_image_df(images, skyregion_groups)
+            images_df["epoch"] = image_epochs
 
             sources_df = parallel_association(
                 images_df,
@@ -203,23 +198,18 @@ class Pipeline():
                 self.add_mode,
                 self.previous_parquets,
                 done_images_df,
-                done_source_ids
+                done_source_ids,
             )
         else:
             images_df = pd.DataFrame.from_dict(
-                {
-                    'image_dj': images,
-                    'epoch': image_epochs
-                }
+                {"image_dj": images, "epoch": image_epochs}
             )
 
-            images_df['skyreg_id'] = images_df['image_dj'].apply(
-                lambda x: x.skyreg_id
+            images_df["skyreg_id"] = images_df["image_dj"].apply(
+                lambda x: str(x.skyreg_id)
             )
 
-            images_df['image_name'] = images_df['image_dj'].apply(
-                lambda x: x.name
-            )
+            images_df["image_name"] = images_df["image_dj"].apply(lambda x: x.name)
 
             sources_df = association(
                 images_df,
@@ -230,24 +220,30 @@ class Pipeline():
                 self.config,
                 self.add_mode,
                 self.previous_parquets,
-                done_images_df
+                done_images_df,
             )
 
         # Obtain the number of selavy measurements for the run
         # n_selavy_measurements = sources_df.
-        nr_selavy_measurements = sources_df['id'].unique().shape[0]
+        nr_selavy_measurements = sources_df["id"].unique().shape[0]
 
         # STEP #3: Merge sky regions and sources ready for
         # steps 4 and 5 below.
         missing_source_cols = [
-            'source', 'datetime', 'image', 'epoch',
-            'interim_ew', 'weight_ew', 'interim_ns', 'weight_ns'
+            "source",
+            "datetime",
+            "image",
+            "epoch",
+            "interim_ew",
+            "weight_ew",
+            "interim_ns",
+            "weight_ns",
         ]
         # need to make sure no forced measurments are being passed which
         # could happen in add mode, otherwise the wrong detection image is
         # assigned.
         missing_sources_df = get_src_skyregion_merged_df(
-            sources_df.loc[sources_df['forced'] == False, missing_source_cols],
+            sources_df.loc[sources_df["forced"] == False, missing_source_cols],
             images_df,
             skyregs_df,
         )
@@ -258,23 +254,18 @@ class Pipeline():
             missing_sources_df,
             self.config["new_sources"]["min_sigma"],
             self.config["source_monitoring"]["edge_buffer_scale"],
-            p_run
+            p_run,
         )
 
         # Drop column no longer required in missing_sources_df.
-        missing_sources_df = (
-            missing_sources_df.drop(['in_primary'], axis=1)
-        )
+        missing_sources_df = missing_sources_df.drop(["in_primary"], axis=1)
 
         # STEP #5: Run forced extraction/photometry if asked
         if self.config["source_monitoring"]["monitor"]:
-            (
+            (sources_df, nr_forced_measurements) = forced_extraction(
                 sources_df,
-                nr_forced_measurements
-            ) = forced_extraction(
-                sources_df,
-                self.config["measurements"]["ra_uncertainty"] / 3600.,
-                self.config["measurements"]["dec_uncertainty"] / 3600.,
+                self.config["measurements"]["ra_uncertainty"] / 3600.0,
+                self.config["measurements"]["dec_uncertainty"] / 3600.0,
                 p_run,
                 missing_sources_df,
                 self.config["source_monitoring"]["min_sigma"],
@@ -283,7 +274,7 @@ class Pipeline():
                 self.config["source_monitoring"]["allow_nan"],
                 self.add_mode,
                 done_images_df,
-                done_source_ids
+                done_source_ids,
             )
 
         del missing_sources_df
@@ -298,7 +289,7 @@ class Pipeline():
             self.config["variability"]["source_aggregate_pair_metrics_min_abs_vs"],
             self.add_mode,
             done_source_ids,
-            self.previous_parquets
+            self.previous_parquets,
         )
 
         # calculate number processed images
@@ -310,7 +301,9 @@ class Pipeline():
             p_run.n_sources = nr_sources
             p_run.n_selavy_measurements = nr_selavy_measurements
             p_run.n_forced_measurements = (
-                nr_forced_measurements if self.config["source_monitoring"]["monitor"] else 0
+                nr_forced_measurements
+                if self.config["source_monitoring"]["monitor"]
+                else 0
             )
             p_run.n_new_sources = nr_new_sources
             p_run.save()
@@ -334,7 +327,7 @@ class Pipeline():
             raise MaxPipelineRunsError
 
     @staticmethod
-    def set_status(pipe_run: Run, status: str=None) -> None:
+    def set_status(pipe_run: Run, status: str = None) -> None:
         """
         Function to change the status of a pipeline run model object and save
         to the database.
@@ -346,8 +339,8 @@ class Pipeline():
         Returns:
             None
         """
-        #TODO: This function gives no feedback if the status is not accepted?
-        choices = [x[0] for x in Run._meta.get_field('status').choices]
+        # TODO: This function gives no feedback if the status is not accepted?
+        choices = [x[0] for x in Run._meta.get_field("status").choices]
         if status and status in choices and pipe_run.status != status:
             with transaction.atomic():
                 pipe_run.status = status
