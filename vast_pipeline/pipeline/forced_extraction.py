@@ -359,7 +359,8 @@ def parallel_extraction(
     )
     del col_to_drop
 
-    n_cpu = cpu_count() - 1
+    #n_cpu = cpu_count() - 1 # this doesn't work because cpu_count returns the number of CPUs in the machine, not the container.
+    n_cpu = 6
     bags = db.from_sequence(list_to_map, npartitions=len(list_to_map))
     forced_dfs = (
         bags.map(lambda x: extract_from_image(
