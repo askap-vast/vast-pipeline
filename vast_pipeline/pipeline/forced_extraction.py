@@ -1,6 +1,7 @@
 import os
 import logging
 import datetime
+import time
 import numpy as np
 import pandas as pd
 import dask.dataframe as dd
@@ -10,10 +11,13 @@ from glob import glob
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from astropy.io import fits
 from django.conf import settings
 from django.db import transaction
 from pyarrow.parquet import read_schema
 from typing import Any, List, Tuple, Dict
+from dask.distributed import Client, LocalCluster
+from dask.distributed.protocol.serialize import dask_serialize, serialize, dask_deserialize
 
 from vast_pipeline.models import Image, Measurement, Run
 from vast_pipeline.pipeline.loading import make_upload_measurements
@@ -125,14 +129,13 @@ def _init_forcedphot(
         A ForcedPhot object.
     """
     return ForcedPhot(image, background, noise)
-    
+
 def extract_from_image(
     df: pd.DataFrame,
     FP: ForcedPhot,
     edge_buffer: float,
     cluster_threshold: float,
-    allow_nan: bool,
-    **kwargs,
+    allow_nan: bool
 ) -> Dict:
     """
     Extract the flux, its erros and chi squared data from the image
@@ -158,6 +161,72 @@ def extract_from_image(
     """
     # create the skycoord obj to pass to the forced extraction
     # see usage https://github.com/dlakaplan/forced_phot
+    
+    sbid = FP.fi[0].header['SBID']
+    
+    P_islands = SkyCoord(
+        df['wavg_ra'].values,
+        df['wavg_dec'].values,
+        unit=(u.deg, u.deg)
+    )
+    
+    timer = StopWatch()
+    flux, flux_err, chisq, DOF, cluster_id = FP.measure(
+        P_islands,
+        cluster_threshold=cluster_threshold,
+        allow_nan=allow_nan,
+        edge_buffer=edge_buffer
+    )
+    logger.debug(f"Time to measure FP for SB{sbid}: {timer.reset()}s")
+    
+    df['flux_int'] = flux * 1.e3
+    df['flux_int_err'] = flux_err * 1.e3
+    df['chi_squared_fit'] = chisq
+    
+    del FP
+    del P_islands
+
+    return {'df': df, 'image': df['image_name'].iloc[0]}
+    
+def extract_from_image_old(
+    df: pd.DataFrame,
+    image,
+    background,
+    noise,
+    edge_buffer: float,
+    cluster_threshold: float,
+    allow_nan: bool
+) -> Dict:
+    """
+    Extract the flux, its erros and chi squared data from the image
+    files (image FIT, background and noise files) and return a dictionary
+    with the dataframe and image name
+
+    Args:
+        df:
+            input dataframe with columns [source_tmp_id, wavg_ra, wavg_dec,
+            image_name, flux_peak]
+        FP:
+            ForcedPhot object
+        edge_buffer:
+            flag to pass to ForcedPhot.measure method
+        cluster_threshold:
+            flag to pass to ForcedPhot.measure method
+        allow_nan:
+            flag to pass to ForcedPhot.measure method
+
+    Returns:
+        Dictionary with input dataframe with added columns (flux_int,
+            flux_int_err, chi_squared_fit) and image name.
+    """
+    FP = ForcedPhot(image.to_hdulist(), background.to_hdulist(), noise.to_hdulist())
+    
+    del image
+    del background
+    del noise
+    
+    # create the skycoord obj to pass to the forced extraction
+    # see usage https://github.com/dlakaplan/forced_phot
     P_islands = SkyCoord(
         df['wavg_ra'].values,
         df['wavg_dec'].values,
@@ -173,9 +242,119 @@ def extract_from_image(
     df['flux_int'] = flux * 1.e3
     df['flux_int_err'] = flux_err * 1.e3
     df['chi_squared_fit'] = chisq
+    
+    del FP
+    del P_islands
+
 
     return {'df': df, 'image': df['image_name'].iloc[0]}
 
+
+class minimalHDU:
+    def __init__(self, filepath, hdu_index=0):
+        hdulist = fits.open(filepath, memmap=False)
+        self.header = hdulist[hdu_index].header
+        self.data = hdulist[hdu_index].data
+    
+    def to_hdulist(self):
+        return fits.HDUList(fits.ImageHDU(data=self.data, header=self.header))
+
+def run_extraction(mapped_info, edge_buffer, cluster_threshold, allow_nan):
+    cluster = LocalCluster(#dashboard_address='http://ada.physics.usyd.edu.au:8061/',
+                           #processes=False,
+                           n_workers=1
+                           )
+    submitted_futures = []
+    completed_futures = []
+    
+    max_concurrent_futures = 3
+    
+    with Client(cluster) as client:
+        for info in mapped_info:
+            num_submitted = len(submitted_futures)
+            num_completed = len(completed_futures)
+            while num_submitted-num_completed > max_concurrent_futures:
+                logger.debug(f"Number of unfinished futures ({num_submitted-num_completed}) exceeds limit ({max_concurrent_futures}). Waiting...")
+                time.sleep(1)
+                for submitted_future in submitted_futures:
+                    if submitted_future.done():
+                        completed_futures.append(submitted_future)
+                
+                num_submitted = len(submitted_futures)
+                num_completed = len(completed_futures)
+            
+            timer = StopWatch()
+            #FP = _init_forcedphot(image, background, noise)
+            #logger.debug(f"Time to initialise FP for {image_path}: {timer.reset()}s")
+            #logger.debug(f"Running forced fits for {len(df)} sources in {image_path}...")
+            #FP_serial = dask_serialize(FP)
+            #FP_scattered = client.scatter(FP)
+            
+            image_path = info['image']
+            bkg_path = info['background']
+            noise_path = info['noise']
+            df = info['df']
+            
+            #FP = _init_forcedphot(minimalHDU(image_path).to_hdulist(),
+            #                      minimalHDU(bkg_path).to_hdulist(),
+            #                      minimalHDU(noise_path).to_hdulist()
+            #                      )
+            #FP_scattered = client.scatter(FP)
+            
+            
+            
+            """
+            future = client.submit(extract_from_image,
+                                   df,
+                                   FP_scattered,
+                                   edge_buffer,
+                                   cluster_threshold,
+                                   allow_nan
+                                   )
+            """
+            
+            #"""
+            #print(image_path)
+            image_s = client.scatter(minimalHDU(image_path))
+            bkg_s = client.scatter(minimalHDU(bkg_path))
+            noise_s = client.scatter(minimalHDU(noise_path))
+            
+            future = client.submit(extract_from_image_old,
+                                   df,
+                                   image_s,
+                                   bkg_s,
+                                   noise_s,
+                                   edge_buffer,
+                                   cluster_threshold,
+                                   allow_nan,
+                                   )
+
+            #"""
+            
+            """
+            future = client.submit(extract_from_image_old,
+                                   df,
+                                   image_path,
+                                   bkg_path,
+                                   noise_path,
+                                   edge_buffer,
+                                   cluster_threshold,
+                                   allow_nan,
+                                   )
+            """
+            submitted_futures.append(future)
+            
+            """result = extract_from_image(df,
+                                        FP,
+                                        edge_buffer,
+                                        cluster_threshold,
+                                        allow_nan
+                                        )"""
+        
+        futures = submitted_futures+completed_futures
+        results = client.gather(futures)
+    
+    return results
 
 def finalise_forced_dfs(
     df: pd.DataFrame, prefix: str, max_id: int, beam_bmaj: float,
@@ -370,18 +549,21 @@ def parallel_extraction(
     )
     del col_to_drop
 
-    n_cpu = cpu_count() - 1
-    bags = db.from_sequence(list_to_map, npartitions=len(list_to_map))
-    forced_dfs = (
-        bags.map(lambda x: extract_from_image(
-            edge_buffer=edge_buffer,
-            cluster_threshold=cluster_threshold,
-            allow_nan=allow_nan,
-            **x
-        ))
-        .compute()
-    )
-    del bags
+    #n_cpu = cpu_count() - 1
+    #bags = db.from_sequence(list_to_map, npartitions=len(list_to_map))
+    #forced_dfs = (
+    #    bags.map(lambda x: extract_from_image(
+    #        edge_buffer=edge_buffer,
+    #        cluster_threshold=cluster_threshold,
+    #        allow_nan=allow_nan,
+    #        **x
+    #    ))
+    #    .compute()
+    #)
+    #del bags
+    
+    forced_dfs = run_extraction(list_to_map, edge_buffer, cluster_threshold, allow_nan)
+    
     # create intermediates dfs combining the mapping data and the forced
     # extracted data from the images
     intermediate_df = list(map(
