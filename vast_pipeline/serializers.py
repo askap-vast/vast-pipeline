@@ -96,6 +96,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class RunNameSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(read_only=True)
+
     class Meta:
         model = Run
         fields = ["id", "name"]
@@ -103,6 +105,7 @@ class RunNameSerializer(serializers.ModelSerializer):
 
 
 class SourceNameSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(read_only=True)
     run = RunNameSerializer()
 
     class Meta:
@@ -130,6 +133,7 @@ class SourceSerializer(serializers.ModelSerializer):
 
 
 class SourceFavSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(read_only=True)
     user = UserSerializer(read_only=True)
     source = SourceNameSerializer(read_only=True)
     deletefield = serializers.SerializerMethodField()

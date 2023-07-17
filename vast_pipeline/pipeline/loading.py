@@ -36,7 +36,6 @@ def bulk_upload_model(
     djmodel: models.Model,
     generator: Iterable[Generator[models.Model, None, None]],
     batch_size: int = 10_000,
-    return_ids: bool = False,
 ) -> List[int]:
     """
     Bulk upload a list of generator objects of django models to db.
@@ -48,27 +47,17 @@ def bulk_upload_model(
             The generator objects of the model to upload.
         batch_size:
             How many records to upload at once.
-        return_ids:
-            When set to True, the database IDs of the uploaded objects are
-            returned.
 
     Returns:
         None or a list of the database IDs of the uploaded objects.
 
     """
-    bulk_ids = []
     while True:
         items = list(islice(generator, batch_size))
         if not items:
             break
         out_bulk = djmodel.objects.bulk_create(items)
         logger.info("Bulk created #%i %s", len(out_bulk), djmodel.__name__)
-        # save the DB ids to return
-        if return_ids:
-            bulk_ids.extend(list(map(lambda i: i.id, out_bulk)))
-
-    if return_ids:
-        return bulk_ids
 
 
 def make_upload_images(
@@ -179,13 +168,10 @@ def make_upload_sources(
             )
             logger.debug("(type, #deleted): %s", detail_del)
 
-    src_dj_ids = bulk_upload_model(
+    bulk_upload_model(
         Source,
         source_models_generator(sources_df, pipeline_run=pipeline_run),
-        return_ids=True,
     )
-
-    sources_df["id"] = src_dj_ids
 
     return sources_df
 
@@ -234,9 +220,7 @@ def make_upload_measurements(measurements_df: pd.DataFrame) -> None:
     Returns:
         Original DataFrame with the database ID attached to each row.
     """
-    bulk_upload_model(
-        Measurement, measurement_models_generator(measurements_df), return_ids=False
-    )
+    bulk_upload_model(Measurement, measurement_models_generator(measurements_df))
 
 
 def update_sources(sources_df: pd.DataFrame, batch_size: int = 10_000) -> pd.DataFrame:

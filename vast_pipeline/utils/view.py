@@ -1,4 +1,5 @@
 """Functions and variables used in pipeline/views.py."""
+from uuid import UUID
 
 from vast_pipeline.models import SkyRegion
 from typing import List, Dict, Optional, Any
@@ -256,7 +257,7 @@ def generate_colsfields(
     return colsfields
 
 
-def get_skyregions_collection(run_id: Optional[int] = None) -> Dict[str, Any]:
+def get_skyregions_collection(run_id: Optional[UUID] = None) -> Dict[str, Any]:
     """
     Produce Sky region geometry shapes JSON object for d3-celestial.
 
@@ -272,7 +273,7 @@ def get_skyregions_collection(run_id: Optional[int] = None) -> Dict[str, Any]:
 
     features = []
 
-    for skr in skyregions:
+    for i, skr in enumerate(skyregions):
         ra_fix = 360.0 if skr.centre_ra > 180.0 else 0.0
         ra = skr.centre_ra - ra_fix
         dec = skr.centre_dec
@@ -283,7 +284,7 @@ def get_skyregions_collection(run_id: Optional[int] = None) -> Dict[str, Any]:
             {
                 "type": "Feature",
                 "id": f"SkyRegion{id}",
-                "properties": {"n": f"{id:02d}", "loc": [ra, dec]},
+                "properties": {"n": f"{i:02d}", "loc": [ra, dec]},
                 "geometry": {
                     "type": "MultiLineString",
                     "coordinates": [

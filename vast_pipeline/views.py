@@ -11,6 +11,7 @@ from typing import Dict, Any, Tuple, List, Optional
 from glob import glob
 from itertools import tee
 from pathlib import Path
+from uuid import UUID
 
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
@@ -178,7 +179,13 @@ def RunIndex(request):
     fields = ["name", "time", "path", "n_images", "n_sources", "status"]
 
     colsfields = generate_colsfields(
-        fields, {"name": reverse("vast_pipeline:run_detail", args=[1])[:-2]}
+        fields,
+        {
+            "name": reverse(
+                "vast_pipeline:run_detail",
+                args=["e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813"],
+            )[:-37]
+        },
     )
 
     return render(
@@ -632,7 +639,12 @@ def RunDetail(request, id):
 
     image_colsfields = generate_colsfields(
         image_fields,
-        {"name": reverse("vast_pipeline:image_detail", args=[1])[:-2]},
+        {
+            "name": reverse(
+                "vast_pipeline:image_detail",
+                args=["e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813"],
+            )[:-37]
+        },
         not_searchable_col=["frequency"],
     )
 
@@ -776,34 +788,52 @@ def ImageDetail(request, id, action=None):
     # source data
     image = Image.objects.all().order_by("id")
     if action:
-        if action == 'next':
+        if action == "next":
             img = image.filter(id__gt=id)
             if img.exists():
-                image = img.annotate(
-                    frequency=F('band__frequency'),
-                    bandwidth=F('band__bandwidth'),
-                    n_runs=Count('run')
-                ).values().first()
+                image = (
+                    img.annotate(
+                        frequency=F("band__frequency"),
+                        bandwidth=F("band__bandwidth"),
+                        n_runs=Count("run"),
+                    )
+                    .values()
+                    .first()
+                )
             else:
-                image = image.filter(id=id).annotate(
-                    frequency=F('band__frequency'),
-                    bandwidth=F('band__bandwidth'),
-                    n_runs=Count('run')
-                ).values().get()
-        elif action == 'prev':
+                image = (
+                    image.filter(id=id)
+                    .annotate(
+                        frequency=F("band__frequency"),
+                        bandwidth=F("band__bandwidth"),
+                        n_runs=Count("run"),
+                    )
+                    .values()
+                    .get()
+                )
+        elif action == "prev":
             img = image.filter(id__lt=id)
             if img.exists():
-                image = img.annotate(
-                    frequency=F('band__frequency'),
-                    bandwidth=F('band__bandwidth'),
-                    n_runs=Count('run')
-                ).values().last()
+                image = (
+                    img.annotate(
+                        frequency=F("band__frequency"),
+                        bandwidth=F("band__bandwidth"),
+                        n_runs=Count("run"),
+                    )
+                    .values()
+                    .last()
+                )
             else:
-                image = image.filter(id=id).annotate(
-                    frequency=F('band__frequency'),
-                    bandwidth=F('band__bandwidth'),
-                    n_runs=Count('run')
-                ).values().get()
+                image = (
+                    image.filter(id=id)
+                    .annotate(
+                        frequency=F("band__frequency"),
+                        bandwidth=F("band__bandwidth"),
+                        n_runs=Count("run"),
+                    )
+                    .values()
+                    .get()
+                )
     else:
         image = (
             image.filter(id=id)
@@ -853,7 +883,12 @@ def ImageDetail(request, id, action=None):
 
     meas_colsfields = generate_colsfields(
         meas_fields,
-        {"name": reverse("vast_pipeline:measurement_detail", args=[1])[:-2]},
+        {
+            "name": reverse(
+                "vast_pipeline:measurement_detail",
+                args=["e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813"],
+            )[:-37]
+        },
         not_searchable_col=["frequency"],
     )
 
@@ -890,7 +925,13 @@ def ImageDetail(request, id, action=None):
     run_fields = ["name", "time", "path", "n_images", "n_sources", "status"]
 
     run_colsfields = generate_colsfields(
-        run_fields, {"name": reverse("vast_pipeline:run_detail", args=[1])[:-2]}
+        run_fields,
+        {
+            "name": reverse(
+                "vast_pipeline:run_detail",
+                args=["e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813"],
+            )[:-37]
+        },
     )
 
     run_datatable = {
@@ -944,7 +985,12 @@ def MeasurementIndex(request):
 
     colsfields = generate_colsfields(
         fields,
-        {"name": reverse("vast_pipeline:measurement_detail", args=[1])[:-2]},
+        {
+            "name": reverse(
+                "vast_pipeline:measurement_detail",
+                args=["e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813"],
+            )[:-37]
+        },
         not_searchable_col=["frequency"],
     )
 
@@ -1121,7 +1167,12 @@ def MeasurementDetail(request, id, action=None):
 
     sibling_colsfields = generate_colsfields(
         sibling_fields,
-        {"name": reverse("vast_pipeline:measurement_detail", args=[1])[:-2]},
+        {
+            "name": reverse(
+                "vast_pipeline:measurement_detail",
+                args=["e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813"],
+            )[:-37]
+        },
     )
 
     sibling_datatable = {
@@ -1177,8 +1228,12 @@ def MeasurementDetail(request, id, action=None):
     ]
 
     api_col_dict = {
-        "name": reverse("vast_pipeline:source_detail", args=[1])[:-2],
-        "run.name": reverse("vast_pipeline:run_detail", args=[1])[:-2],
+        "name": reverse(
+            "vast_pipeline:source_detail", args=["e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813"]
+        )[:-37],
+        "run.name": reverse(
+            "vast_pipeline:run_detail", args=["e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813"]
+        )[:-37],
     }
 
     source_colsfields = generate_colsfields(source_fields, api_col_dict)
@@ -1357,9 +1412,9 @@ class SourceViewSet(ModelViewSet):
         button links. Then, call the original list function.
         """
         queryset = self.filter_queryset(self.get_queryset())
-        self.request.session["source_query_result_ids"] = list(
-            queryset.values_list("id", flat=True)
-        )
+        self.request.session["source_query_result_ids"] = [
+            str(i) for i in list(queryset.values_list("id", flat=True))
+        ]
         return super().list(request, *args, **kwargs)
 
     @rest_framework.decorators.action(detail=True, methods=["get"])
@@ -1413,8 +1468,12 @@ def SourceQuery(request):
     ]
 
     api_col_dict = {
-        "name": reverse("vast_pipeline:source_detail", args=[1])[:-2],
-        "run.name": reverse("vast_pipeline:run_detail", args=[1])[:-2],
+        "name": reverse(
+            "vast_pipeline:source_detail", args=["e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813"]
+        )[:-37],
+        "run.name": reverse(
+            "vast_pipeline:run_detail", args=["e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813"]
+        )[:-37],
     }
 
     colsfields = generate_colsfields(fields, api_col_dict)
@@ -1487,6 +1546,7 @@ def SourceEtaVPlot(request: Request) -> Response:
     min_sources = 50
 
     source_query_result_id_list = request.session.get("source_query_result_ids", [])
+    source_query_result_id_list = [UUID(i) for i in source_query_result_id_list]
 
     sources_query_len = len(source_query_result_id_list)
 
@@ -1528,7 +1588,9 @@ def SourceEtaVPlot(request: Request) -> Response:
                 ),
             )
 
-            request.session["source_query_result_ids"] = new_sources_ids_list
+            request.session["source_query_result_ids"] = [
+                str(x) for x in new_sources_ids_list
+            ]
 
         if new_sources_query_len < min_sources:
             messages.error(
@@ -1563,7 +1625,7 @@ def SourceEtaVPlot(request: Request) -> Response:
 
 
 @login_required
-def SourceEtaVPlotUpdate(request: Request, pk: int) -> Response:
+def SourceEtaVPlotUpdate(request: Request, pk: UUID) -> Response:
     """The view to perform the update on the eta-V plot page.
 
     Args:
@@ -1581,6 +1643,7 @@ def SourceEtaVPlotUpdate(request: Request, pk: int) -> Response:
     except Source.DoesNotExist:
         raise Http404
 
+    source["id"] = str(source["id"])
     source["wavg_ra_hms"] = deg2hms(source["wavg_ra"], hms_format=True)
     source["wavg_dec_dms"] = deg2dms(source["wavg_dec"], dms_format=True)
     source["wavg_l"], source["wavg_b"] = equ2gal(source["wavg_ra"], source["wavg_dec"])
@@ -1589,7 +1652,7 @@ def SourceEtaVPlotUpdate(request: Request, pk: int) -> Response:
         "source": source,
         "sourcefav": (
             SourceFav.objects.filter(
-                user__id=request.user.id, source__id=source["id"]
+                user__id=request.user.id, source__id=pk
             ).exists()
         ),
         "datatables": [],
@@ -1719,7 +1782,13 @@ def SourceDetail(request, pk):
         "new_high_sigma",
     ]
     related_colsfields = generate_colsfields(
-        related_fields, {"name": reverse("vast_pipeline:source_detail", args=[1])[:-2]}
+        related_fields,
+        {
+            "name": reverse(
+                "vast_pipeline:source_detail",
+                args=["e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813"],
+            )[:-37]
+        },
     )
     related_datatables = {
         "table_id": "dataTableRelated",
@@ -2360,8 +2429,12 @@ def UserSourceFavsList(request):
     fields = ["source.name", "comment", "source.run.name", "deletefield"]
 
     api_col_dict = {
-        "source.name": reverse("vast_pipeline:source_detail", args=[1])[:-2],
-        "source.run.name": reverse("vast_pipeline:run_detail", args=[1])[:-2],
+        "source.name": reverse(
+            "vast_pipeline:source_detail", args=["e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813"]
+        )[:-37],
+        "source.run.name": reverse(
+            "vast_pipeline:run_detail", args=["e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813"]
+        )[:-37],
     }
     colsfields = generate_colsfields(fields, api_col_dict, ["deletefield"])
 
@@ -2525,7 +2598,7 @@ class SourcePlotsSet(ViewSet):
     permission_classes = [IsAuthenticated]
 
     @rest_framework.decorators.action(methods=["get"], detail=True)
-    def lightcurve(self, request: Request, pk: int = None) -> Response:
+    def lightcurve(self, request: Request, pk: UUID = None) -> Response:
         """Create lightcurve and 2-epoch metric graph plots for a source.
 
         Args:
@@ -2546,6 +2619,7 @@ class SourcePlotsSet(ViewSet):
         # TODO raster plots version for Slack posts
         use_peak_flux = request.query_params.get("peak_flux", "true").lower() == "true"
         plot_document = plot_lightcurve(source, use_peak_flux=use_peak_flux)
+
         return Response(json_item(plot_document))
 
     @rest_framework.decorators.action(methods=["get"], detail=False)
@@ -2563,6 +2637,7 @@ class SourcePlotsSet(ViewSet):
                 JSON format to be embedded in the HTML template.
         """
         source_query_result_id_list = request.session.get("source_query_result_ids", [])
+        source_query_result_id_list = [UUID(x) for x in source_query_result_id_list]
         try:
             source = Source.objects.filter(pk__in=source_query_result_id_list)
         except Source.DoesNotExist:

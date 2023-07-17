@@ -22,7 +22,7 @@ from bokeh.models import (
     RadioButtonGroup,
     Scatter,
     WheelZoomTool,
-    ColorBar
+    ColorBar,
 )
 from bokeh.models.formatters import DatetimeTickFormatter
 from bokeh.layouts import row, Row, gridplot, Spacer, column
@@ -36,6 +36,7 @@ from scipy.stats import norm
 from typing import Tuple
 
 from vast_pipeline.models import Measurement, Source
+from vast_pipeline.pipeline.utils import _convert_uuid_col_to_str
 
 
 def plot_lightcurve(
@@ -72,25 +73,24 @@ def plot_lightcurve(
         )
         .values(
             "id",
-            "pk",
             "taustart_ts",
             "flux",
             "flux_err_upper",
             "flux_err_lower",
             "forced",
-            "name"
+            "name",
         )
         .order_by("taustart_ts")
     )
 
     # lightcurve required cols: taustart_ts, flux, flux_err_upper, flux_err_lower, forced
     lightcurve = pd.DataFrame(measurements_qs)
+    lightcurve["id"] = _convert_uuid_col_to_str(lightcurve["id"])
+
     # remap method values to labels to make a better legend
-    lightcurve["method"] = lightcurve.forced.map(
-        {True: "Forced", False: "Selavy"}
-    )
-    lightcurve['cutout'] = lightcurve['id'].apply(
-        lambda x: f'/cutout/{x}/normal/?img_type=png'
+    lightcurve["method"] = lightcurve.forced.map({True: "Forced", False: "Selavy"})
+    lightcurve["cutout"] = lightcurve["id"].apply(
+        lambda x: f"/cutout/{x}/normal/?img_type=png"
     )
     lc_source = ColumnDataSource(lightcurve)
 
@@ -135,7 +135,7 @@ def plot_lightcurve(
         )
     )
     fig_lc.xaxis.axis_label = "Datetime"
-    fig_lc.xaxis[0].formatter = DatetimeTickFormatter(days="%F", hours='%H:%M')
+    fig_lc.xaxis[0].formatter = DatetimeTickFormatter(days="%F", hours="%H:%M")
     fig_lc.yaxis.axis_label = (
         "Peak flux (mJy/beam)" if use_peak_flux else "Integrated flux (mJy)"
     )
@@ -162,9 +162,22 @@ def plot_lightcurve(
     hover_tool_lc_callback = None
     measurement_pairs = source.get_measurement_pairs()
     if len(measurement_pairs) > 0:
-        candidate_measurement_pairs_df = pd.DataFrame(measurement_pairs).query(
-            f"m_{metric_suffix}.abs() >= {m_abs_min} and vs_{metric_suffix}.abs() >= {vs_abs_min}"
-        ).reset_index()
+        candidate_measurement_pairs_df = (
+            pd.DataFrame(measurement_pairs)
+            .query(
+                f"m_{metric_suffix}.abs() >= {m_abs_min} and vs_{metric_suffix}.abs() >= {vs_abs_min}"
+            )
+            .reset_index()
+        )
+        candidate_measurement_pairs_df["measurement_a_id"] = _convert_uuid_col_to_str(
+            candidate_measurement_pairs_df["measurement_a_id"]
+        )
+        candidate_measurement_pairs_df["measurement_b_id"] = _convert_uuid_col_to_str(
+            candidate_measurement_pairs_df["measurement_b_id"]
+        )
+        candidate_measurement_pairs_df["source_id"] = _convert_uuid_col_to_str(
+            candidate_measurement_pairs_df["source_id"]
+        )
         g = nx.Graph()
         for _row in candidate_measurement_pairs_df.itertuples(index=False):
             g.add_edge(_row.measurement_a_id, _row.measurement_b_id)
@@ -303,7 +316,9 @@ def plot_lightcurve(
             </div>
         </div>
         """,
-        formatters={"@taustart_ts": "datetime", },
+        formatters={
+            "@taustart_ts": "datetime",
+        },
         mode="mouse",
         callback=hover_tool_lc_callback,
     )
@@ -311,6 +326,7 @@ def plot_lightcurve(
 
     plot_row = row(fig_lc, fig_graph, sizing_mode="stretch_width")
     plot_row.css_classes.append("mx-auto")
+
     return plot_row
 
 
@@ -335,21 +351,17 @@ def fit_eta_v(
     """
 
     if use_peak_flux:
-        eta_label = 'eta_peak'
-        v_label = 'v_peak'
+        eta_label = "eta_peak"
+        v_label = "v_peak"
     else:
-        eta_label = 'eta_int'
-        v_label = 'v_int'
+        eta_label = "eta_int"
+        v_label = "v_int"
 
     eta_log = np.log10(df[eta_label])
     v_log = np.log10(df[v_label])
 
-    eta_log_clipped = sigma_clip(
-        eta_log, masked=False, stdfunc=mad_std, sigma=3
-    )
-    v_log_clipped = sigma_clip(
-        v_log, masked=False, stdfunc=mad_std, sigma=3
-    )
+    eta_log_clipped = sigma_clip(eta_log, masked=False, stdfunc=mad_std, sigma=3)
+    v_log_clipped = sigma_clip(v_log, masked=False, stdfunc=mad_std, sigma=3)
 
     eta_fit_mean, eta_fit_sigma = norm.fit(eta_log_clipped)
     v_fit_mean, v_fit_sigma = norm.fit(v_log_clipped)
@@ -358,10 +370,7 @@ def fit_eta_v(
 
 
 def plot_eta_v_bokeh(
-    source: Source,
-    eta_sigma: float,
-    v_sigma: float,
-    use_peak_flux: bool = True
+    source: Source, eta_sigma: float, v_sigma: float, use_peak_flux: bool = True
 ) -> gridplot:
     """
     Adapted from code written by Andrew O'Brien.
@@ -381,20 +390,23 @@ def plot_eta_v_bokeh(
         Bokeh grid object containing figure.
     """
 
-    df = pd.DataFrame(source.values(
-        "id", "name", "eta_peak", "eta_int", "v_peak", "v_int", "n_meas_sel"
-    ))
+    df = pd.DataFrame(
+        source.values(
+            "id", "name", "eta_peak", "eta_int", "v_peak", "v_int", "n_meas_sel"
+        )
+    )
 
-    (
-        eta_fit_mean, eta_fit_sigma,
-        v_fit_mean, v_fit_sigma
-    ) = fit_eta_v(df, use_peak_flux=use_peak_flux)
+    df["id"] = _convert_uuid_col_to_str(df["id"])
+
+    (eta_fit_mean, eta_fit_sigma, v_fit_mean, v_fit_sigma) = fit_eta_v(
+        df, use_peak_flux=use_peak_flux
+    )
 
     eta_cutoff_log10 = eta_fit_mean + eta_sigma * eta_fit_sigma
     v_cutoff_log10 = v_fit_mean + v_sigma * v_fit_sigma
 
-    eta_cutoff = 10 ** eta_cutoff_log10
-    v_cutoff = 10 ** v_cutoff_log10
+    eta_cutoff = 10**eta_cutoff_log10
+    v_cutoff = 10**v_cutoff_log10
 
     # generate fitted curve data for plotting
     eta_x = np.linspace(
@@ -410,12 +422,12 @@ def plot_eta_v_bokeh(
     v_y = norm.pdf(v_x, loc=v_fit_mean, scale=v_fit_sigma)
 
     if use_peak_flux:
-        x_label = 'eta_peak'
-        y_label = 'v_peak'
-        title = 'Peak Flux'
+        x_label = "eta_peak"
+        y_label = "v_peak"
+        title = "Peak Flux"
     else:
-        x_label = 'eta_int'
-        y_label = 'v_int'
+        x_label = "eta_int"
+        y_label = "v_int"
         title = "Int. Flux"
 
     # PLOTTING NOTE!
@@ -444,11 +456,10 @@ def plot_eta_v_bokeh(
     cb_title = "Number of Selavy Measurements"
 
     if df.shape[0] > settings.ETA_V_DATASHADER_THRESHOLD:
-
-        hv.extension('bokeh')
+        hv.extension("bokeh")
 
         # create dfs for bokeh and datashader
-        mask = ((df[x_label] >= eta_cutoff) & (df[y_label] >= v_cutoff))
+        mask = (df[x_label] >= eta_cutoff) & (df[y_label] >= v_cutoff)
 
         bokeh_df = df.loc[mask]
         ds_df = df.loc[~mask]
@@ -456,11 +467,10 @@ def plot_eta_v_bokeh(
         # create datashader version first
         points = spread(
             datashade(
-                hv.Points(ds_df[[f"{x_label}_log10", f"{y_label}_log10"]]),
-                cmap="Blues"
+                hv.Points(ds_df[[f"{x_label}_log10", f"{y_label}_log10"]]), cmap="Blues"
             ),
             px=1,
-            shape='square'
+            shape="square",
         ).opts(height=PLOT_HEIGHT, width=PLOT_WIDTH)
 
         fig = hv.render(points)
@@ -468,11 +478,11 @@ def plot_eta_v_bokeh(
         fig.xaxis.axis_label = x_axis_label
         fig.yaxis.axis_label = y_axis_label
         fig.aspect_scale = 1
-        fig.sizing_mode = 'stretch_width'
+        fig.sizing_mode = "stretch_width"
         fig.output_backend = "webgl"
         # update the y axis default range
         if bokeh_df.shape[0] > 0:
-            fig.y_range.end = bokeh_df[f'{y_label}_log10'].max() + 0.2
+            fig.y_range.end = bokeh_df[f"{y_label}_log10"].max() + 0.2
 
         cb_title += " (interactive points only)"
     else:
@@ -499,7 +509,7 @@ def plot_eta_v_bokeh(
         fill_color=cmap,
         line_color=cmap,
         marker="circle",
-        size=5
+        size=5,
     )
 
     bokeh_g1 = fig.add_glyph(source_or_glyph=source, glyph=bokeh_points)
@@ -510,19 +520,16 @@ def plot_eta_v_bokeh(
             ("source", "@name"),
             ("\u03B7", f"@{x_label}"),
             ("V", f"@{y_label}"),
-            ("id", "@id")
+            ("id", "@id"),
         ],
-        mode='mouse'
+        mode="mouse",
     )
 
     fig.add_tools(hover)
 
-    color_bar = ColorBar(
-        color_mapper=cmap['transform'],
-        title=cb_title
-    )
+    color_bar = ColorBar(color_mapper=cmap["transform"], title=cb_title)
 
-    fig.add_layout(color_bar, 'below')
+    fig.add_layout(color_bar, "below")
 
     # axis histograms
     # filter out any forced-phot points for these
@@ -539,7 +546,9 @@ def plot_eta_v_bokeh(
         output_backend="webgl",
     )
     x_hist_data, x_hist_edges = np.histogram(
-        df[f"{x_label}_log10"], density=True, bins=50,
+        df[f"{x_label}_log10"],
+        density=True,
+        bins=50,
     )
     x_hist.quad(
         top=x_hist_data,
@@ -569,7 +578,9 @@ def plot_eta_v_bokeh(
         output_backend="webgl",
     )
     y_hist_data, y_hist_edges = np.histogram(
-        (df[f"{y_label}_log10"]), density=True, bins=50,
+        (df[f"{y_label}_log10"]),
+        density=True,
+        bins=50,
     )
     y_hist.quad(
         right=y_hist_data,
@@ -602,7 +613,7 @@ def plot_eta_v_bokeh(
         step=0.1,
         value=eta_sigma,
         title="\u03B7 sigma value",
-        sizing_mode='stretch_width'
+        sizing_mode="stretch_width",
     )
     v_slider = Slider(
         start=0,
@@ -610,29 +621,23 @@ def plot_eta_v_bokeh(
         step=0.1,
         value=v_sigma,
         title="V sigma value",
-        sizing_mode='stretch_width'
+        sizing_mode="stretch_width",
     )
 
-    labels = ['Peak', 'Integrated']
+    labels = ["Peak", "Integrated"]
     active = 0 if use_peak_flux else 1
     flux_choice_radio = RadioButtonGroup(
-        labels=labels,
-        active=active,
-        sizing_mode='stretch_width'
+        labels=labels, active=active, sizing_mode="stretch_width"
     )
 
-    button = Button(
-        label="Apply",
-        button_type="primary",
-        sizing_mode='stretch_width'
-    )
+    button = Button(label="Apply", button_type="primary", sizing_mode="stretch_width")
     button.js_on_click(
         CustomJS(
             args=dict(
                 eta_slider=eta_slider,
                 v_slider=v_slider,
                 button=button,
-                flux_choice_radio=flux_choice_radio
+                flux_choice_radio=flux_choice_radio,
             ),
             code="""
             button.label = "Loading..."
@@ -641,7 +646,7 @@ def plot_eta_v_bokeh(
             const peak = ["peak", "int"];
             var fluxType = peak[flux_choice_radio.active];
             getEtaVPlot(e, v, fluxType);
-            """
+            """,
         )
     )
 
@@ -658,7 +663,7 @@ def plot_eta_v_bokeh(
         eta_slider,
         v_slider,
         button,
-        sizing_mode='stretch_width'
+        sizing_mode="stretch_width",
     )
 
     plot_column.css_classes.append("mx-auto")
@@ -677,7 +682,7 @@ def plot_eta_v_bokeh(
           update_card(id);
           getLightcurvePlot(id, fluxType);
         });
-        """
+        """,
     )
 
     tap = TapTool(callback=callback, renderers=[bokeh_g1])
