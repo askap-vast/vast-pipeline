@@ -271,7 +271,6 @@ def one_to_many_advanced(
     temp_srcs: pd.DataFrame,
     sources_df: pd.DataFrame,
     method: str,
-    id_incr_par_assoc: int = 0,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Finds and processes the one-to-many associations in the advanced
@@ -294,9 +293,6 @@ def one_to_many_advanced(
         method:
             Can be either 'advanced' or 'deruiter' to represent the advanced
             association method being used.
-        id_incr_par_assoc:
-            An increment value to add to new source ids when creating them.
-            Mainly useful for add mode with parallel association
 
     Returns:
         Updated `temp_srcs` dataframe with all the one_to_many relation
@@ -707,7 +703,6 @@ def basic_association(
     skyc2_srcs: pd.DataFrame,
     skyc2: SkyCoord,
     limit: Angle,
-    id_incr_par_assoc: int = 0,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     The loop for basic source association that uses the astropy
@@ -732,10 +727,6 @@ def basic_association(
             A SkyCoord object with the sky positions from skyc2_srcs.
         limit:
             The association limit to use (applies to basic and advanced only).
-        id_incr_par_assoc:
-            An increment value to be applied to source numbering when adding
-            new sources to the associations (applies when parallel and add
-            image are being used). Defaults to 0.
 
     Returns:
         The output `sources_df` containing all input measurements along with the
@@ -792,7 +783,6 @@ def advanced_association(
     skyc2: SkyCoord,
     dr_limit: float,
     bw_max: float,
-    id_incr_par_assoc: int = 0,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     The loop for advanced source association that uses the astropy
@@ -823,10 +813,6 @@ def advanced_association(
             The de Ruiter radius limit to use (applies to de ruiter only).
         bw_max:
             The beamwidth limit to use (applies to de ruiter only).
-        id_incr_par_assoc:
-            An increment value to be applied to source numbering when adding
-            new sources to the associations (applies when parallel and add
-            image are being used). Defaults to 0.
 
     Returns:
         The output `sources_df` containing all input measurements along with the
@@ -879,7 +865,7 @@ def advanced_association(
     # Next one-to-many
     # Get the sources which are doubled
     temp_srcs, sources_df = one_to_many_advanced(
-        temp_srcs, sources_df, method, id_incr_par_assoc
+        temp_srcs, sources_df, method
     )
 
     # Finally many-to-one associations, the opposite of above but we
@@ -946,7 +932,6 @@ def association(
     add_mode: bool,
     previous_parquets: Dict[str, str],
     done_images_df: pd.DataFrame,
-    id_incr_par_assoc: int = 0,
     parallel: bool = False,
 ) -> pd.DataFrame:
     """
@@ -975,10 +960,6 @@ def association(
         done_images_df:
             Datafraame containing the images of the previous successful run
             (used in add image mode).
-        id_incr_par_assoc:
-            An increment value to be applied to source numbering when adding
-            new sources to the associations (applies when parallel and add
-            image are being used). Defaults to 0.
         parallel:
             Whether parallel association is being used.
 
@@ -1138,7 +1119,6 @@ def association(
                 skyc2_srcs,
                 skyc2,
                 limit,
-                id_incr_par_assoc,
             )
 
         elif method in ["advanced", "deruiter"]:
@@ -1155,7 +1135,6 @@ def association(
                 skyc2,
                 dr_limit,
                 bw_max,
-                id_incr_par_assoc,
             )
         else:
             raise Exception("association method not implemented!")
@@ -1283,34 +1262,6 @@ def association(
     return sources_df
 
 
-def _correct_parallel_source_ids(df: pd.DataFrame, correction: int) -> pd.DataFrame:
-    """
-    This function is to correct the source ids after the combination of
-    the associaiton dataframes produced by parallel association - as source
-    ids will be duplicated if left.
-
-    Args:
-        df:
-            Holds the measurements associated into sources. The output of
-            of the association step (sources_df).
-        correction:
-            The value to add to the source ids.
-
-    Returns:
-        The input df with corrected source ids and relations.
-    """
-    df["source"] = df["source"].values + correction
-    related_mask = df["related"].notna()
-
-    new_relations = df.loc[related_mask, "related"].explode() + correction
-
-    df.loc[df[related_mask].index.values, "related"] = new_relations.groupby(
-        level=0
-    ).apply(lambda x: x.values.tolist())
-
-    return df
-
-
 def _correct_parallel_source_ids_add_mode(
     df: pd.DataFrame, done_source_ids: List[int], start_elem: int
 ) -> Tuple[pd.DataFrame, int]:
@@ -1418,7 +1369,7 @@ def parallel_association(
     timer = StopWatch()
 
     meta = {
-        "id": "i",
+        "id": "U36",
         "uncertainty_ew": "f",
         "weight_ew": "f",
         "uncertainty_ns": "f",
@@ -1433,9 +1384,9 @@ def parallel_association(
         "compactness": "f",
         "has_siblings": "?",
         "snr": "f",
-        "image": "U",
+        "image": "U36",
         "datetime": "datetime64[ns]",
-        "source": "i",
+        "source": "U36",
         "ra": "f",
         "dec": "f",
         "d2d": "f",
@@ -1445,10 +1396,6 @@ def parallel_association(
         "interim_ew": "f",
         "interim_ns": "f",
     }
-
-    # Add an increment to any new source values when using add_mode to avoid
-    # getting duplicates in the result laater
-    id_incr_par_assoc = max(done_source_ids) if add_mode else 0
 
     n_cpu = cpu_count() - 1
 
@@ -1466,7 +1413,6 @@ def parallel_association(
             add_mode=add_mode,
             previous_parquets=previous_parquets,
             done_images_df=done_images_df,
-            id_incr_par_assoc=id_incr_par_assoc,
             parallel=True,
             meta=meta,
         )
@@ -1482,11 +1428,10 @@ def parallel_association(
 
     # The index however is now a multi index with the skyregion group and
     # a general result index. Hence the general result index is repeated for
-    # each skyreg_group along with the source_ids. This needs to be collapsed
-    # and the source id's corrected.
+    # each skyreg_group along with the source_ids. This needs to be collapsed.
 
     # Index example:
-    #                        id
+    #                        id (now UUIDs)
     # skyreg_group
     # --------------------------
     # 2            0      15640
@@ -1516,23 +1461,7 @@ def parallel_association(
     else:
         # The first index acts as the base, so the others are looped over and
         # corrected.
-        for i, val in enumerate(indexes):
-            # skip first one, makes the enumerate easier to deal with
-            if i == 0:
-                continue
-            # Get the maximum source ID from the previous group.
-            max_id = results.loc[indexes[i - 1]].source.max()
-            # Run through the correction function, only the 'source' and
-            # 'related'
-            # columns are passed and returned (corrected).
-            corr_df = _correct_parallel_source_ids(
-                results.loc[val, ["source", "related"]], max_id
-            )
-            # replace the values in the results with the corrected source and
-            # related values
-            results.loc[(val, slice(None)), ["source", "related"]] = corr_df.values
-
-            del corr_df
+        pass
 
     # reset the indeex of the final corrected and collapsed result
     results = results.reset_index(drop=True)

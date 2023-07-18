@@ -290,17 +290,13 @@ def remove_duplicate_measurements(
     # reset the source_df index
     sources_df = sources_df.reset_index(drop=True)
 
-    # Reset the source number
-    if ini_df:
-        sources_df["source"] = sources_df.index + 1
-
     del results
 
     return sources_df
 
 
 def _load_measurements(
-    image: Image, cols: List[str], start_id: int = 0, ini_df: bool = False
+    image: Image, cols: List[str], ini_df: bool = False
 ) -> pd.DataFrame:
     """
     Load the measurements for an image from the parquet file.
@@ -311,9 +307,6 @@ def _load_measurements(
             measurements.
         cols:
             The columns to load.
-        start_id:
-            The number to start from when setting the source ids (when
-            'ini_df' is 'True'). Defaults to 0.
         ini_df:
             Boolean to indicate whether these sources are part of the initial
             source list creation for association. If 'True' the source ids are
@@ -404,7 +397,7 @@ def prep_skysrc_df(
     if len(images) > 1:
         for img in images[1:]:
             df = pd.concat(
-                [df, _load_measurements(img, cols, df.source.max(), ini_df=ini_df)],
+                [df, _load_measurements(img, cols, ini_df=ini_df)],
                 ignore_index=True,
             )
 
@@ -1173,7 +1166,7 @@ def get_parallel_assoc_image_df(
     # |  6 | VAST_2118-06A.EPOCH06x.I.fits |           3 |              1 |
     # |  7 | VAST_0127-73A.EPOCH08.I.fits  |           1 |              2 |
     # +----+-------------------------------+-------------+----------------+
-    skyreg_ids = [i.skyreg_id for i in images]
+    skyreg_ids = [str(i.skyreg_id) for i in images]
 
     images_df = pd.DataFrame(
         {
