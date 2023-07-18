@@ -391,7 +391,7 @@ def parallel_extraction(
             allow_nan=allow_nan,
             **x,
         )
-    ).compute()
+    ).compute(scheduler="processes", num_workers=n_cpu)
     del bags
     # create intermediates dfs combining the mapping data and the forced
     # extracted data from the images
