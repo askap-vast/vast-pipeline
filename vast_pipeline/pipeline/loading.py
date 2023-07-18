@@ -307,7 +307,7 @@ def SQL_update(
     data_arr = df[column_headers].to_numpy()
     values = []
     for row in data_arr:
-        val_row = "(" + ", ".join(f"{val}" for val in row) + ")"
+        val_row = "(" + f"'{row[0]}', " + ", ".join(f"{val}" for val in row[1:]) + ")"
         values.append(val_row)
     values = ", ".join(values)
 
@@ -317,7 +317,7 @@ def SQL_update(
         SET {set_columns}
         FROM (VALUES {values})
         AS new_values (index_col, {new_columns})
-        WHERE {index}=index_col;
+        WHERE {index}=index_col::uuid;
     """
 
     return SQL_comm

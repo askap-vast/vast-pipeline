@@ -1262,76 +1262,6 @@ def association(
     return sources_df
 
 
-def _correct_parallel_source_ids_add_mode(
-    df: pd.DataFrame, done_source_ids: List[int], start_elem: int
-) -> Tuple[pd.DataFrame, int]:
-    """
-    This function is to correct the source ids after the combination of
-    the associaiton dataframes produced by parallel association - as source
-    ids will be duplicated if left - specifically for add mode.
-
-    When add mode is being used the 'old' sources require the ID to remain
-    the same with only the new ones being changed. The next start elem also
-    needs to be dynamically updated with every skyreg_group loop.
-
-    Args:
-        df:
-            Holds the measurements associated into sources. The output of of
-            the association step (sources_df).
-        done_source_ids:
-            A list of the 'old' source ids that need to remain the same.
-        start_elem:
-            The start elem number for the new source ids.
-
-    Returns:
-        The input dataframe with corrected source ids and relations.
-        The new start elem for the next group.
-    """
-    # When using add_mode the correction becomes easier with the increment
-    # as there's a clear difference between old and new.
-    # old ones do not need to be corrected
-
-    # get a mask of those that need to be corrected
-    to_correct_mask = ~df["source"].isin(done_source_ids)
-
-    # check that there are any to correct
-    if not np.any(to_correct_mask):
-        # there are no ids to correct we can just return the input
-        # next start elem is just the same as the input as well
-        return df[["source", "related"]], start_elem
-
-    # create a new column for the new id
-    df["new_source"] = df["source"]
-    # how many unique new sources
-    to_correct_source_ids = df.loc[to_correct_mask, "source"].unique()
-    # create the range of new ids
-    new_ids = list(range(start_elem, start_elem + to_correct_source_ids.shape[0]))
-    # create a map of old source to new source
-    source_id_map = dict(zip(to_correct_source_ids, new_ids))
-    # get and apply the new ids to the new column
-    df.loc[to_correct_mask, "new_source"] = df.loc[to_correct_mask, "new_source"].map(
-        source_id_map
-    )
-    # regenrate the map
-    source_id_map = dict(zip(df.source.values, df.new_source.values))
-    # get mask of non-nan relations
-    related_mask = df["related"].notna()
-    # get the relations
-    new_relations = df.loc[related_mask, "related"].explode()
-    # map the new values
-    new_relations = new_relations.map(source_id_map)
-    # group them back and form lists again
-    new_relations = new_relations.groupby(level=0).apply(lambda x: x.values.tolist())
-    # apply corrected relations to results
-    df.loc[df[related_mask].index.values, "related"] = new_relations
-    # drop the old sources and replace
-    df = df.drop("source", axis=1).rename(columns={"new_source": "source"})
-    # define what the next start elem will be
-    next_start_elem = new_ids[-1] + 1
-
-    return df[["source", "related"]], next_start_elem
-
-
 def parallel_association(
     images_df: pd.DataFrame,
     limit: Angle,
@@ -1445,23 +1375,6 @@ def parallel_association(
     #              46977  54150
     #              46978  54161
     #              46979  54164
-
-    # Get the indexes (skyreg_groups) to loop over for source id correction
-    indexes = results.index.levels[0].values
-
-    if add_mode:
-        # Need to correct all skyreg_groups.
-        # First get the starting id for new sources.
-        new_id = max(done_source_ids) + 1
-        for i in indexes:
-            corr_df, new_id = _correct_parallel_source_ids_add_mode(
-                results.loc[i, ["source", "related"]], done_source_ids, new_id
-            )
-            results.loc[(i, slice(None)), ["source", "related"]] = corr_df.values
-    else:
-        # The first index acts as the base, so the others are looped over and
-        # corrected.
-        pass
 
     # reset the indeex of the final corrected and collapsed result
     results = results.reset_index(drop=True)

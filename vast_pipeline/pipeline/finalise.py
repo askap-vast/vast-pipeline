@@ -212,10 +212,10 @@ def final_operations(
     if add_mode:
         # if add mode is being used some sources need to updated where as some
         # need to be newly uploaded.
-        # upload new ones first (new id's are fetched)
+        # upload new ones first
         src_done_mask = srcs_df.index.isin(done_source_ids)
         srcs_df_upload = srcs_df.loc[~src_done_mask].copy()
-        srcs_df_upload = make_upload_sources(srcs_df_upload, p_run, add_mode)
+        make_upload_sources(srcs_df_upload, p_run, add_mode)
         # And now update
         srcs_df_update = srcs_df.loc[src_done_mask].copy()
         logger.info(f"Updating {srcs_df_update.shape[0]} sources with new metrics.")
@@ -277,13 +277,18 @@ def final_operations(
     sources_df = sources_df.drop("related", axis=1)
 
     if add_mode:
+        import ipdb
+        ipdb.set_trace()
         # Load old associations so the already uploaded ones can be removed
-        old_assoications = pd.read_parquet(previous_parquets["associations"]).rename(
-            columns={"meas_id": "id"}
+        old_associations = pd.read_parquet(previous_parquets["associations"]).rename(
+            columns={"meas_id": "id", "source_id": "source"}
         )
-        sources_df_upload = pd.concat([sources_df, old_assoications], ignore_index=True)
+        sources_df_upload = pd.concat(
+            [sources_df, old_associations],
+            ignore_index=True
+        )
         sources_df_upload = sources_df_upload.drop_duplicates(
-            ["source_id", "id", "d2d", "dr"], keep=False
+            ["source", "id", "d2d", "dr"], keep=False
         )
         logger.debug(f"Add mode: #{sources_df_upload.shape[0]} associations to upload.")
     else:

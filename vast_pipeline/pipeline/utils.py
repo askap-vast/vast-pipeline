@@ -1399,7 +1399,7 @@ def reconstruct_associtaion_dfs(
     measurements = measurements.loc[measurements_mask].set_index("id")
 
     # Set the index on images_df for faster merging.
-    images_df_done["image_id"] = images_df_done["image_dj"].apply(lambda x: x.id).values
+    images_df_done["image_id"] = images_df_done["image_dj"].apply(lambda x: str(x.id)).values
     images_df_done = images_df_done.set_index("image_id")
 
     # Merge image information to measurements
@@ -1528,7 +1528,7 @@ def reconstruct_associtaion_dfs(
     # deep=True copy does not truly copy mutable type objects)
     relation_mask = skyc1_srcs.related.notna()
     relation_vals = skyc1_srcs.loc[relation_mask, "related"].to_list()
-    new_relation_vals = [x.copy() for x in relation_vals]
+    new_relation_vals = np.array([x.copy() for x in relation_vals], dtype='object')
     skyc1_srcs.loc[relation_mask, "related"] = new_relation_vals
 
     # Reorder so we don't mess up the dask metas.
