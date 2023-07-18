@@ -11,6 +11,7 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.templatetags.static import static
+from postgres_copy import CopyManager
 from social_django.models import UserSocialAuth
 from tagulous.models import TagField
 from vast_pipeline.pipeline.config import PipelineConfig
@@ -482,6 +483,15 @@ class Measurement(CommentableModel):
     )
 
     objects = MeasurementQuerySet.as_manager()
+
+    copies = CopyManager()
+
+    def copy_id_template(self):
+      return """
+          CASE
+              WHEN "%(name)s" ~* '^[a-f0-9]{8}-([a-f0-9]{4}-){3}[a-f0-9]{12}$' THEN "%(name)s"::UUID
+          END
+          """
 
     class Meta:
         ordering = ["ra"]

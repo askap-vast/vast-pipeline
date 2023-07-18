@@ -919,6 +919,17 @@ Django = ">=3.2"
 tests = ["tox"]
 
 [[package]]
+name = "django-postgres-copy"
+version = "2.7.3"
+description = "Quickly import and export delimited data with Django support for PostgreSQL’s COPY command"
+optional = false
+python-versions = "*"
+files = [
+    {file = "django-postgres-copy-2.7.3.tar.gz", hash = "sha256:e6dec4b6d4e1a69f37b1a280b246d1054a257873e9cf46bf4b84dbd5f00dfbc8"},
+    {file = "django_postgres_copy-2.7.3-py2.py3-none-any.whl", hash = "sha256:4e78d4622db9df01694822804c19b7fc81ac2cac36e4b8223d07a24e079f34a7"},
+]
+
+[[package]]
 name = "django-q"
 version = "1.3.9"
 description = "A multiprocessing distributed task queue for Django"
@@ -4053,4 +4064,4 @@ prod = ["gevent", "gunicorn"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10.0,<4"
-content-hash = "22df3a849dc73f8f54b83899b2b5f20601789a1d6b69334aafccee3aea75555c"
+content-hash = "7a26ad06b59197993dd6dc3a125f6ae7aeba2ac7541f3abfd773b5ed9c174b6a"

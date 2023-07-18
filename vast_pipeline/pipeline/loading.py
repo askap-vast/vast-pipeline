@@ -4,8 +4,10 @@ import numpy as np
 import pandas as pd
 
 from typing import List, Optional, Dict, Tuple, Generator, Iterable
+from io import StringIO
 from itertools import islice
 from django.db import transaction, connection, models
+from contextlib import closing
 
 from vast_pipeline.image.main import SelavyImage
 from vast_pipeline.pipeline.model_generator import (
@@ -30,6 +32,18 @@ from vast_pipeline.utils.utils import StopWatch
 
 logger = logging.getLogger(__name__)
 
+
+def in_memory_csv(df):
+    """Creates an in-memory csv.
+
+    Assumes `data` is a list of dicts
+    with native python types."""
+
+    mem_csv = StringIO()
+    df.to_csv(mem_csv, index=False)
+    mem_csv.seek(0)
+
+    return mem_csv
 
 @transaction.atomic
 def bulk_upload_model(
@@ -111,24 +125,33 @@ def make_upload_images(
                 logger.info("Image %s already processed", img.name)
                 continue
 
-            # 1.3 get the image measurements and save them in DB
-            measurements = image.read_selavy(img)
-            logger.info(
-                "Processed measurements dataframe of shape: (%i, %i)",
-                measurements.shape[0],
-                measurements.shape[1],
-            )
+        # 1.3 get the image measurements and save them in DB
+        measurements = image.read_selavy(img)
+        logger.info(
+            "Processed measurements dataframe of shape: (%i, %i)",
+            measurements.shape[0],
+            measurements.shape[1],
+        )
 
-            # upload measurements, a column with the db is added to the df
-            make_upload_measurements(measurements)
+        # import ipdb; ipdb.set_trace()
+        # upload measurements, a column with the db is added to the df
+        columns_to_upload = []
+        for fld in Measurement._meta.get_fields():
+            if getattr(fld, "attname", None) and fld.attname in measurements.columns:
+                columns_to_upload.append(fld.attname)
 
-            # save measurements to parquet file in pipeline run folder
-            base_folder = os.path.dirname(img.measurements_path)
-            if not os.path.exists(base_folder):
-                os.makedirs(base_folder)
+        mem_csv = in_memory_csv(measurements[columns_to_upload])
+        with closing(mem_csv) as csv_io:
+            Measurement.copies.from_csv(csv_io, drop_constraints=False, drop_indexes=False)
+        # make_upload_measurements(measurements)
 
-            measurements.to_parquet(img.measurements_path, index=False)
-            del measurements, image, band, img
+        # save measurements to parquet file in pipeline run folder
+        base_folder = os.path.dirname(img.measurements_path)
+        if not os.path.exists(base_folder):
+            os.makedirs(base_folder)
+
+        measurements.to_parquet(img.measurements_path, index=False)
+        del measurements, image, band, img
 
     logger.info("Total images upload/loading time: %.2f seconds", timer.reset_init())
 
