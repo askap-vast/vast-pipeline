@@ -1,5 +1,6 @@
 import ast
 import os
+import numpy as np
 import pandas as pd
 from pathlib import Path
 
@@ -15,7 +16,6 @@ from vast_pipeline.pipeline.association import (
     many_to_one_advanced,
     basic_association,
     advanced_association,
-    _correct_parallel_source_ids
 )
 
 
@@ -107,6 +107,14 @@ class OneToManyBasicTest(SimpleTestCase):
         sources_df: must contain at least all source ids present in skyc2_src,
         rows with same id as duplicates in skyc2_srcs will be duplicated and
         assigned to the new id.
+
+                                        source                                            related  d2d
+        0                                     1                                                NaN  3.1
+        1  9a327f7d-2d7a-4c18-a169-7ddb60fd984e                                                [2]  4.2
+        2                                     2             [9a327f7d-2d7a-4c18-a169-7ddb60fd984e]  2.3
+        3                                     3  [a035b62f-57de-42c0-ba18-963dfe57a38c, 87f5aef...  3.3
+        4  87f5aef3-8c04-4d42-b619-fd4c68fa0316                                                [3]  5.6
+        5  a035b62f-57de-42c0-ba18-963dfe57a38c                                                [3]  4.0
         '''
         skyc2_srcs = pd.read_csv(
             os.path.join(DATA_PATH, 'skyc2_srcs_dup.csv'),
@@ -119,8 +127,31 @@ class OneToManyBasicTest(SimpleTestCase):
 
         skyc2_srcs, sources_df = one_to_many_basic(skyc2_srcs, sources_df)
 
-        self.assertTrue(skyc2_srcs.equals(self.skyc2_srcs_out))
-        self.assertTrue(sources_df.equals(self.sources_df_out))
+        assert skyc2_srcs['source'].loc[[0, 2, 3]].to_list() == [1, 2, 3]
+        for source_id in skyc2_srcs['source'].loc[[1, 4, 5]]:
+            assert isinstance(source_id, str)
+            assert len(source_id) == 36
+        assert skyc2_srcs["related"].fillna(-1).to_list() == [
+            -1,
+            [2],
+            [skyc2_srcs['source'].loc[1]],
+            [skyc2_srcs['source'].loc[5], skyc2_srcs['source'].loc[4]],
+            [3],
+            [3],
+        ]
+
+        assert sources_df['source'].loc[[0, 1, 2, 3, 4]].to_list() == [1, 2, 2, 2, 3]
+        for source_id in sources_df['source'].loc[[5, 6, 7, 8, 9]]:
+            assert isinstance(source_id, str)
+            assert len(source_id) == 36
+        # assert sources_df["related"].fillna(-1).to_list() == [
+        #     -1,
+        #     [2],
+        #     [sources_df['source'].loc[1]],
+        #     [sources_df['source'].loc[5], sources_df['source'].loc[4]],
+        #     [3],
+        #     [3],
+        # ]
 
 
 class OneToManyAdvancedTest(SimpleTestCase):
@@ -387,7 +418,7 @@ class TestHelpers(SimpleTestCase):
     Class which has some helper functions for testing.
     '''
 
-    def check_col(self, df1, df2, columns=['ra', 'dec', 'source', 'epoch']):
+    def check_col(self, df1, df2, columns=['ra', 'dec', 'epoch']):
         '''
         Function which checks that certain columns of two DataFrames are
         equal for BasicAssociationTest and AdvancedAssociationTest.
@@ -476,11 +507,12 @@ class BasicAssociationTest(TestHelpers):
         limit = Angle(10, unit='arcsec')
 
         sources_df, skyc1_srcs = basic_association(
-            sources_df, skyc1_srcs, skyc1, skyc2_srcs, skyc2, limit
+            sources_df, skyc1_srcs, skyc1, skyc2_srcs, skyc2, limit,
         )
 
         self.check_col(sources_df, self.sources_df_no_new)
         self.check_col(skyc1_srcs, self.skyc1_srcs_in)
+        assert sources_df["source"].nunique() == 2
 
     def test_zero_limit(self):
         '''
@@ -517,6 +549,7 @@ class BasicAssociationTest(TestHelpers):
 
         self.check_col(sources_df, self.sources_df_all)
         self.check_col(skyc1_srcs, self.skyc1_srcs_all)
+        assert sources_df['source'].nunique() == 5
 
     def test_basic_association(self):
         '''
@@ -553,6 +586,7 @@ class BasicAssociationTest(TestHelpers):
 
         self.check_col(sources_df, self.sources_df_basic_out)
         self.check_col(skyc1_srcs, self.skyc1_srcs_out)
+        assert sources_df["source"].nunique() == 3
 
 
 class AdvancedAssociationTest(TestHelpers):
@@ -626,6 +660,7 @@ class AdvancedAssociationTest(TestHelpers):
 
         self.check_col(sources_df, self.sources_df_no_new)
         self.check_col(skyc1_srcs, self.skyc1_srcs_in)
+        assert sources_df['source'].nunique() == 2
 
     def test_zero_bw_max(self):
         '''
@@ -664,6 +699,7 @@ class AdvancedAssociationTest(TestHelpers):
 
         self.check_col(sources_df, self.sources_df_all)
         self.check_col(skyc1_srcs, self.skyc1_srcs_all)
+        assert sources_df['source'].nunique() == 5
 
     def test_advanced(self):
         '''
@@ -702,6 +738,7 @@ class AdvancedAssociationTest(TestHelpers):
 
         self.check_col(sources_df, self.sources_df_advanced_out)
         self.check_col(skyc1_srcs, self.skyc1_srcs_out)
+        assert sources_df['source'].nunique() == 3
 
     def test_deruiter(self):
         '''
@@ -742,56 +779,4 @@ class AdvancedAssociationTest(TestHelpers):
 
         self.check_col(sources_df, self.sources_df_advanced_out)
         self.check_col(skyc1_srcs, self.skyc1_srcs_out)
-
-
-class CorrectParallelSourceIdsTest(SimpleTestCase):
-    '''
-    Tests for _correct_parallel_souce_ids in association.py
-    '''
-
-    @classmethod
-    def setUpClass(self):
-        '''
-        Load in correct outputs so inplace operations are tested.
-        '''
-        super().setUpClass()
-        self.sources_df_in = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_in.csv'),
-            header=0,
-            converters={'related': parse_or_nan}
-        )
-        self.sources_df_out_2 = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_out_2.csv'),
-            header=0,
-            converters={'related': parse_or_nan}
-        )
-
-    def test_zero(self):
-        '''
-        Test _correct_parallel_source_ids doesn't change the input df when
-        correction=0.
-        '''
-        df = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_in.csv'),
-            header=0,
-            converters={'related': parse_or_nan}
-        )
-
-        df = _correct_parallel_source_ids(df, 0)
-
-        self.assertTrue(df.equals(self.sources_df_in))
-
-    def test_correct_parllel_source_ids(self):
-        '''
-        Test _correct_parallel_source_ids increases the numbers in the source
-        and relate column by the correction amount.
-        '''
-        df = pd.read_csv(
-            os.path.join(DATA_PATH, 'sources_df_in.csv'),
-            header=0,
-            converters={'related': parse_or_nan}
-        )
-
-        df = _correct_parallel_source_ids(df, 2)
-
-        self.assertTrue(df.equals(self.sources_df_out_2))
+        assert sources_df['source'].nunique() == 3

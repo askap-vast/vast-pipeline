@@ -265,7 +265,12 @@ def final_operations(
     del related_df
 
     # write sources to parquet file
-    srcs_df = srcs_df.drop(["related_list", "img_list"], axis=1)
+    cols_to_drop = ["related_list", "img_list"]
+
+    if add_mode:
+        cols_to_drop.append("id")
+
+    srcs_df = srcs_df.drop(cols_to_drop, axis=1)
 
     (
         srcs_df.to_parquet(  # set the index to db ids, dropping the source idx
@@ -277,8 +282,6 @@ def final_operations(
     sources_df = sources_df.drop("related", axis=1)
 
     if add_mode:
-        import ipdb
-        ipdb.set_trace()
         # Load old associations so the already uploaded ones can be removed
         old_associations = pd.read_parquet(previous_parquets["associations"]).rename(
             columns={"meas_id": "id", "source_id": "source"}

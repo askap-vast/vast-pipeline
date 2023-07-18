@@ -753,7 +753,6 @@ def basic_association(
 
     logger.info("Updating sources catalogue with new sources...")
     # update the src numbers for those sources in skyc2 with no match
-    # using the max current src as the start and incrementing by one
     nan_sel = (skyc2_srcs["source"].isnull()).to_numpy()
     skyc2_srcs.loc[nan_sel, "source"] = [
         str(uuid.uuid4()) for _ in range(nan_sel.sum())
