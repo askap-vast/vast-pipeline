@@ -11,7 +11,7 @@ from typing import Dict, Any, Tuple, List, Optional
 from glob import glob
 from itertools import tee
 from pathlib import Path
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
@@ -1368,12 +1368,12 @@ class SourceViewSet(ModelViewSet):
                 qry_dict["name__in"] = selection
             else:
                 try:
-                    selection = [int(i) for i in selection]
+                    selection = [UUID(i) for i in selection]
                     qry_dict["id__in"] = selection
                 except:
                     # this avoids an error on the check if the user has
                     # accidentally entered names with a 'id' selection type.
-                    qry_dict["id"] = -1
+                    qry_dict["id"] = uuid4()
 
         if "newsrc" in self.request.query_params:
             qry_dict["new"] = True
