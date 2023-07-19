@@ -27,7 +27,7 @@ from vast_pipeline.models import (
     Image,
 )
 from vast_pipeline.pipeline.utils import get_create_img, get_create_img_band
-from vast_pipeline.utils.utils import StopWatch
+from vast_pipeline.utils.utils import StopWatch, deg2hms, deg2dms
 
 
 logger = logging.getLogger(__name__)
@@ -197,6 +197,63 @@ def copy_upload_measurements(
 
     copy_upload_model(measurements_df[columns_to_upload], Measurement, batch_size=batch_size)
 
+
+def _generate_source_name(row: pd.Series) -> str:
+    """
+    Generate an IAU compliant source name, see
+    https://cdsweb.u-strasbg.fr/Dic/iau-spec.html
+
+    Args:
+        row:
+            The row of the dataframe containing the source information.
+
+    Returns:
+        The generated source name.
+    """
+    name = (
+        f"J{deg2hms(row['wavg_ra'], precision=1, truncate=True)}"
+        f"{deg2dms(row['wavg_dec'], precision=0, truncate=True)}"
+    ).replace(":", "")
+
+    return name
+
+def _prepare_sources_df_for_upload(sources_df: pd.DataFrame, run_id: str) -> pd.DataFrame:
+
+    sources_df["name"] = sources_df[["wavg_ra", "wavg_dec"]].apply(
+        _generate_source_name, axis=1
+    )
+
+    sources_df["run_id"] = run_id
+
+    sources_df = sources_df.reset_index().rename(columns={"source": "id"})
+
+    return sources_df
+
+
+def copy_upload_sources(sources_df: pd.DataFrame, pipeline_run: Run, add_mode: bool = False, batch_size: int = 10_000) -> None:
+    with transaction.atomic():
+        if add_mode is False and Source.objects.filter(run=pipeline_run).exists():
+            logger.info("Removing objects from previous pipeline run")
+            n_del, detail_del = Source.objects.filter(run=pipeline_run).delete()
+            logger.info(
+                (
+                    "Deleting all sources and related objects for this run. "
+                    "Total objects deleted: %i"
+                ),
+                n_del,
+            )
+            logger.debug("(type, #deleted): %s", detail_del)
+
+    sources_df_upload = _prepare_sources_df_for_upload(sources_df.copy(), str(pipeline_run.id))
+
+    columns_to_upload = []
+    for fld in Source._meta.get_fields():
+        if getattr(fld, "attname", None) and fld.attname in sources_df_upload.columns:
+            columns_to_upload.append(fld.attname)
+
+    copy_upload_model(sources_df_upload[columns_to_upload], Source, batch_size=batch_size)
+
+    del sources_df_upload
 
 
 def make_upload_sources(

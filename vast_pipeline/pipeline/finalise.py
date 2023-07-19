@@ -14,6 +14,7 @@ from vast_pipeline.pipeline.loading import (
     make_upload_sources,
     make_upload_related_sources,
     update_sources,
+    copy_upload_sources,
 )
 from vast_pipeline.pipeline.pairs import calculate_measurement_pair_metrics
 from vast_pipeline.pipeline.utils import parallel_groupby
@@ -208,14 +209,15 @@ def final_operations(
             "Skipping measurement pair metric calculation as specified in the run configuration."
         )
 
-    # upload sources to DB, column 'id' with DB id is contained in return
+    # upload sources to DB
     if add_mode:
         # if add mode is being used some sources need to updated where as some
         # need to be newly uploaded.
         # upload new ones first
         src_done_mask = srcs_df.index.isin(done_source_ids)
         srcs_df_upload = srcs_df.loc[~src_done_mask].copy()
-        make_upload_sources(srcs_df_upload, p_run, add_mode)
+        # make_upload_sources(srcs_df_upload, p_run, add_mode)
+        copy_upload_sources(srcs_df_upload, p_run, add_mode)
         # And now update
         srcs_df_update = srcs_df.loc[src_done_mask].copy()
         logger.info(f"Updating {srcs_df_update.shape[0]} sources with new metrics.")
@@ -224,7 +226,8 @@ def final_operations(
         if not srcs_df_upload.empty:
             srcs_df = pd.concat([srcs_df, srcs_df_upload])
     else:
-        make_upload_sources(srcs_df, p_run, add_mode)
+        copy_upload_sources(srcs_df, p_run, add_mode)
+        # make_upload_sources(srcs_df, p_run, add_mode)
 
     # gather the related df, upload to db and save to parquet file
     # the df will look like
