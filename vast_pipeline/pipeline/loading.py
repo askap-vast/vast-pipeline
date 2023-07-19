@@ -34,12 +34,17 @@ from vast_pipeline.utils.utils import StopWatch, deg2hms, deg2dms
 logger = logging.getLogger(__name__)
 
 
-def in_memory_csv(df):
+def in_memory_csv(df: pd.DataFrame) -> StringIO:
     """Creates an in-memory csv.
 
-    Assumes `data` is a list of dicts
-    with native python types."""
+    Assumes `data` is a list of dicts with native python types.
 
+    Args:
+        df: The dataframe to convert to csv.
+
+    Returns:
+        The in-memory csv.
+    """
     mem_csv = StringIO()
     df.to_csv(mem_csv, index=False)
     mem_csv.seek(0)
@@ -48,7 +53,10 @@ def in_memory_csv(df):
 
 
 def copy_upload_model(
-        df: pd.DataFrame, djmodel: models.Model, mapping: Optional[Dict[str, str]] = None, batch_size: int = 10_000
+        df: pd.DataFrame,
+        djmodel: models.Model,
+        mapping: Optional[Dict[str, str]] = None,
+        batch_size: int = 10_000
     ) -> None:
     """Use the django-postgres-copy in-memory csv method to upload a model.
 
@@ -56,7 +64,8 @@ def copy_upload_model(
         df: The dataframe containing the data to upload. Must be in a suitable state to
             run to_csv() on.
         djmodel: The model to copy to. The model must have the CopyManager attached
-            to the copies attribute
+            to the copies attribute.
+        mapping: A dictionary mapping the model column names to the dataframe columns.
         batch_size: The batch size such that in memory csvs don't get crazy big.
             Defaults to 10_000.
     """
@@ -75,6 +84,8 @@ def copy_upload_model(
             logging.info(f"Copied {num_copied} {djmodel.__name__} objects to database.")
 
         start_index = end_index
+
+    del mem_csv
 
 
 @transaction.atomic
@@ -204,6 +215,8 @@ def _generate_source_name(row: pd.Series) -> str:
     Generate an IAU compliant source name, see
     https://cdsweb.u-strasbg.fr/Dic/iau-spec.html
 
+    Used as a apply function to a dataframe.
+
     Args:
         row:
             The row of the dataframe containing the source information.
@@ -218,8 +231,24 @@ def _generate_source_name(row: pd.Series) -> str:
 
     return name
 
-def _prepare_sources_df_for_upload(sources_df: pd.DataFrame, run_id: str) -> pd.DataFrame:
+def _prepare_sources_df_for_upload(
+    sources_df: pd.DataFrame,
+    run_id: str
+) -> pd.DataFrame:
+    """Prepare the sources dataframe for upload.
 
+    It involves:
+        - Adding the name column.
+        - Adding the run_id column.
+        - Resetting the index and renaming to 'id'.
+
+    Args:
+        sources_df: The sources dataframe to prepare.
+        run_id: The run id to add to the dataframe.
+
+    Returns:
+        The prepared sources dataframe.
+    """
     sources_df["name"] = sources_df[["wavg_ra", "wavg_dec"]].apply(
         _generate_source_name, axis=1
     )
@@ -231,7 +260,23 @@ def _prepare_sources_df_for_upload(sources_df: pd.DataFrame, run_id: str) -> pd.
     return sources_df
 
 
-def copy_upload_sources(sources_df: pd.DataFrame, pipeline_run: Run, add_mode: bool = False, batch_size: int = 10_000) -> None:
+def copy_upload_sources(
+    sources_df: pd.DataFrame,
+    pipeline_run: Run,
+    add_mode: bool = False,
+    batch_size: int = 10_000
+) -> None:
+    """The copy upload method for source model objects.
+
+    It also checks for any existing sources and deletes them if the pipeline
+    is not being run in add mode.
+
+    Args:
+        sources_df: The sources dataframe to upload.
+        pipeline_run: The pipeline run object.
+        add_mode: If the pipeline is being run in add mode. Defaults to False.
+        batch_size: The batch size to use. Defaults to 10_000.
+    """
     with transaction.atomic():
         if add_mode is False and Source.objects.filter(run=pipeline_run).exists():
             logger.info("Removing objects from previous pipeline run")
@@ -298,7 +343,10 @@ def make_upload_sources(
     return sources_df
 
 
-def copy_upload_related_sources(related_df: pd.DataFrame, batch_size: int = 10_000) -> None:
+def copy_upload_related_sources(
+    related_df: pd.DataFrame,
+    batch_size: int = 10_000
+) -> None:
     """Upload related sources using django-postgres-copy in-memory csv method.
 
     Args:

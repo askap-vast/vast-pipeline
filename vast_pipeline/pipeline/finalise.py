@@ -10,9 +10,6 @@ from typing import List, Dict, Tuple
 from vast_pipeline.models import Run
 from vast_pipeline.utils.utils import StopWatch, optimize_floats, optimize_ints
 from vast_pipeline.pipeline.loading import (
-    make_upload_associations,
-    make_upload_sources,
-    make_upload_related_sources,
     update_sources,
     copy_upload_sources,
     copy_upload_related_sources,
