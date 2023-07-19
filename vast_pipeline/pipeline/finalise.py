@@ -208,10 +208,13 @@ def final_operations(
             "Skipping measurement pair metric calculation as specified in the run configuration."
         )
         logger.info("Setting source two epoch metrics to 0...")
-        srcs_df["vs_abs_significant_max_peak"] = 0.0
-        srcs_df["m_abs_significant_max_peak"] = 0.0
-        srcs_df["vs_abs_significant_max_int"] = 0.0
-        srcs_df["m_abs_significant_max_int"] = 0.0
+        for col in [
+            "vs_abs_significant_max_peak",
+            "m_abs_significant_max_peak",
+            "vs_abs_significant_max_int",
+            "m_abs_significant_max_int",
+        ]:
+            srcs_df[col] = 0.0
 
     # upload sources to DB
     if add_mode:
