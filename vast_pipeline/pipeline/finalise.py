@@ -215,7 +215,6 @@ def final_operations(
         # upload new ones first
         src_done_mask = srcs_df.index.isin(done_source_ids)
         srcs_df_upload = srcs_df.loc[~src_done_mask].copy()
-        # make_upload_sources(srcs_df_upload, p_run, add_mode)
         copy_upload_sources(srcs_df_upload, p_run, add_mode)
         # And now update
         srcs_df_update = srcs_df.loc[src_done_mask].copy()
@@ -226,7 +225,6 @@ def final_operations(
             srcs_df = pd.concat([srcs_df, srcs_df_upload])
     else:
         copy_upload_sources(srcs_df, p_run, add_mode)
-        # make_upload_sources(srcs_df, p_run, add_mode)
 
     # gather the related df, upload to db and save to parquet file
     # the df will look like
@@ -300,7 +298,7 @@ def final_operations(
         sources_df_upload = sources_df
 
     # upload associations into DB
-    copy_upload_associations(sources_df_upload[["id", "source", "d2d", "dr"]])
+    copy_upload_associations(sources_df_upload.loc[:, ["id", "source", "d2d", "dr"]])
 
     # write associations to parquet file
     sources_df.rename(columns={"id": "meas_id", "source": "source_id"})[

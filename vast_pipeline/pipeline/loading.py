@@ -290,6 +290,7 @@ def copy_upload_sources(
             )
             logger.debug("(type, #deleted): %s", detail_del)
 
+    logger.info("Upload sources...")
     sources_df_upload = _prepare_sources_df_for_upload(sources_df.copy(), str(pipeline_run.id))
 
     columns_to_upload = []
@@ -353,6 +354,8 @@ def copy_upload_related_sources(
         related_df: The related sources dataframe to upload.
         batch_size: The batch size. Defaults to 10_000.
     """
+    logger.info('Populate "related" field of sources...')
+
     columns_to_upload = ["id"]
     for fld in RelatedSource._meta.get_fields():
         if getattr(fld, "attname", None) and fld.attname in related_df.columns:
@@ -386,6 +389,7 @@ def copy_upload_associations(associations_df: pd.DataFrame, batch_size: int = 10
         associations_df: The associations dataframe to upload.
         batch_size: The batch size. Defaults to 10_000.
     """
+    logger.info("Upload associations...")
     columns_to_upload = ["source", "db_id"]
     for fld in Association._meta.get_fields():
         if getattr(fld, "attname", None) and fld.attname in associations_df.columns:
