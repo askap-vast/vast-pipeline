@@ -127,6 +127,11 @@ class OneToManyBasicTest(SimpleTestCase):
 
         skyc2_srcs, sources_df = one_to_many_basic(skyc2_srcs, sources_df)
 
+        # Note the testing is more complex here as the source indexes are now
+        # randomly generated UUIDs, so we can't test the source_skyc1 column
+        # directly. Instead we test that the source column is correct and that
+        # the related column is correct.
+
         assert skyc2_srcs['source'].loc[[0, 2, 3]].to_list() == [1, 2, 3]
         for source_id in skyc2_srcs['source'].loc[[1, 4, 5]]:
             assert isinstance(source_id, str)
@@ -144,14 +149,6 @@ class OneToManyBasicTest(SimpleTestCase):
         for source_id in sources_df['source'].loc[[5, 6, 7, 8, 9]]:
             assert isinstance(source_id, str)
             assert len(source_id) == 36
-        # assert sources_df["related"].fillna(-1).to_list() == [
-        #     -1,
-        #     [2],
-        #     [sources_df['source'].loc[1]],
-        #     [sources_df['source'].loc[5], sources_df['source'].loc[4]],
-        #     [3],
-        #     [3],
-        # ]
 
 
 class OneToManyAdvancedTest(SimpleTestCase):
@@ -244,8 +241,35 @@ class OneToManyAdvancedTest(SimpleTestCase):
             method='advanced'
         )
 
-        self.assertTrue(temp_srcs.equals(self.temp_srcs_advanced_out))
-        self.assertTrue(sources_df.equals(self.sources_df_out))
+        # Note the testing is more complex here as the source indexes are now
+        # randomly generated UUIDs, so we can't test the source_skyc1 column
+        # directly. Instead we test that the source column is correct and that
+        # the related column is correct.
+
+        assert temp_srcs['source_skyc1'].loc[[0, 2, 5, 6, 7]].to_list() == [
+            1, 2, 3, 7, 8
+        ]
+        for source_id in temp_srcs['source_skyc1'].loc[[1, 3, 4]]:
+            assert isinstance(source_id, str)
+            assert len(source_id) == 36
+        assert temp_srcs["related_skyc1"].fillna(-1).to_list() == [
+            -1,
+            [2],
+            [temp_srcs['source_skyc1'].loc[1]],
+            [3],
+            [3],
+            [temp_srcs['source_skyc1'].loc[3], temp_srcs['source_skyc1'].loc[4]],
+            -1,
+            -1
+        ]
+
+        assert sources_df['source'].loc[[0, 1, 2, 3, 4]].to_list() == [
+            1, 2, 2, 2, 3
+        ]
+        for source_id in sources_df['source'].loc[[5, 6, 7, 8, 9]]:
+            assert isinstance(source_id, str)
+            assert len(source_id) == 36
+
 
     def test_method_deruiter(self):
         '''
@@ -277,8 +301,34 @@ class OneToManyAdvancedTest(SimpleTestCase):
             method='deruiter'
         )
 
-        self.assertTrue(temp_srcs.equals(self.temp_srcs_deruiter_out))
-        self.assertTrue(sources_df.equals(self.sources_df_out))
+        # Note the testing is more complex here as the source indexes are now
+        # randomly generated UUIDs, so we can't test the source_skyc1 column
+        # directly. Instead we test that the source column is correct and that
+        # the related column is correct.
+
+        assert temp_srcs['source_skyc1'].loc[[0, 1, 3, 6, 7]].to_list() == [
+            1, 2, 3, 7, 8
+        ]
+        for source_id in temp_srcs['source_skyc1'].loc[[2, 4, 5]]:
+            assert isinstance(source_id, str)
+            assert len(source_id) == 36
+        assert temp_srcs["related_skyc1"].fillna(-1).to_list() == [
+            -1,
+            [temp_srcs['source_skyc1'].loc[2]],
+            [2],
+            [temp_srcs['source_skyc1'].loc[4], temp_srcs['source_skyc1'].loc[5]],
+            [3],
+            [3],
+            -1,
+            -1
+        ]
+
+        assert sources_df['source'].loc[[0, 1, 2, 3, 4]].to_list() == [
+            1, 2, 2, 2, 3
+        ]
+        for source_id in sources_df['source'].loc[[5, 6, 7, 8, 9]]:
+            assert isinstance(source_id, str)
+            assert len(source_id) == 36
 
 
 class ManyToManyAdvancedTest(SimpleTestCase):
