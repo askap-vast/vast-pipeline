@@ -15,6 +15,8 @@ from vast_pipeline.pipeline.loading import (
     make_upload_related_sources,
     update_sources,
     copy_upload_sources,
+    copy_upload_related_sources,
+    copy_upload_associations,
 )
 from vast_pipeline.pipeline.pairs import calculate_measurement_pair_metrics
 from vast_pipeline.pipeline.utils import parallel_groupby
@@ -263,7 +265,7 @@ def final_operations(
         ).drop_duplicates(keep=False)
         logger.debug(f"Add mode: #{related_df.shape[0]} relations to upload.")
 
-    make_upload_related_sources(related_df)
+    copy_upload_related_sources(related_df)
 
     del related_df
 
@@ -301,7 +303,7 @@ def final_operations(
         sources_df_upload = sources_df
 
     # upload associations into DB
-    make_upload_associations(sources_df_upload[["id", "source", "d2d", "dr"]])
+    copy_upload_associations(sources_df_upload[["id", "source", "d2d", "dr"]])
 
     # write associations to parquet file
     sources_df.rename(columns={"id": "meas_id", "source": "source_id"})[

@@ -8,6 +8,7 @@ from io import StringIO
 from itertools import islice
 from django.db import transaction, connection, models
 from contextlib import closing
+from uuid import uuid4
 
 from vast_pipeline.image.main import SelavyImage
 from vast_pipeline.pipeline.model_generator import (
@@ -47,7 +48,7 @@ def in_memory_csv(df):
 
 
 def copy_upload_model(
-        df: pd.DataFrame, djmodel: models.Model, batch_size: int = 10_000
+        df: pd.DataFrame, djmodel: models.Model, mapping: Optional[Dict[str, str]] = None, batch_size: int = 10_000
     ) -> None:
     """Use the django-postgres-copy in-memory csv method to upload a model.
 
@@ -69,7 +70,7 @@ def copy_upload_model(
         mem_csv = in_memory_csv(batch)
         with closing(mem_csv) as csv_io:
             num_copied = djmodel.copies.from_csv(
-                csv_io, drop_constraints=False, drop_indexes=False
+                csv_io, drop_constraints=False, drop_indexes=False, mapping=mapping
             )
             logging.info(f"Copied {num_copied} {djmodel.__name__} objects to database.")
 
@@ -297,6 +298,23 @@ def make_upload_sources(
     return sources_df
 
 
+def copy_upload_related_sources(related_df: pd.DataFrame, batch_size: int = 10_000) -> None:
+    """Upload related sources using django-postgres-copy in-memory csv method.
+
+    Args:
+        related_df: The related sources dataframe to upload.
+        batch_size: The batch size. Defaults to 10_000.
+    """
+    columns_to_upload = ["id"]
+    for fld in RelatedSource._meta.get_fields():
+        if getattr(fld, "attname", None) and fld.attname in related_df.columns:
+            columns_to_upload.append(fld.attname)
+
+    related_df["id"] = [str(uuid4()) for _ in range(len(related_df))]
+
+    copy_upload_model(related_df[columns_to_upload], RelatedSource, batch_size=batch_size)
+
+
 def make_upload_related_sources(related_df: pd.DataFrame) -> None:
     """
     Uploads the related sources from the supplied related sources DataFrame.
@@ -311,6 +329,38 @@ def make_upload_related_sources(related_df: pd.DataFrame) -> None:
     """
     logger.info('Populate "related" field of sources...')
     bulk_upload_model(RelatedSource, related_models_generator(related_df))
+
+
+def copy_upload_associations(associations_df: pd.DataFrame, batch_size: int = 10_000) -> None:
+    """Upload associations using django-postgres-copy in-memory csv method.
+
+    Args:
+        associations_df: The associations dataframe to upload.
+        batch_size: The batch size. Defaults to 10_000.
+    """
+    columns_to_upload = ["source", "db_id"]
+    for fld in Association._meta.get_fields():
+        if getattr(fld, "attname", None) and fld.attname in associations_df.columns:
+            columns_to_upload.append(fld.attname)
+
+    # Bit messy but the reason that id is not in the list above is because it is
+    # the name of the measurement id here.
+    mapping = {
+        "id": "db_id",
+        "meas_id": "id",
+        "source_id": "source",
+        "d2d": "d2d",
+        "dr": "dr"
+    }
+
+    associations_df["db_id"] = [str(uuid4()) for _ in range(len(associations_df))]
+
+    copy_upload_model(
+        associations_df[columns_to_upload],
+        Association,
+        mapping=mapping,
+        batch_size=batch_size
+    )
 
 
 def make_upload_associations(associations_df: pd.DataFrame) -> None:
