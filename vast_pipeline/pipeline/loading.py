@@ -45,6 +45,37 @@ def in_memory_csv(df):
 
     return mem_csv
 
+
+def copy_upload_model(
+        df: pd.DataFrame, djmodel: models.Model, batch_size: int = 10_000
+    ) -> None:
+    """Use the django-postgres-copy in-memory csv method to upload a model.
+
+    Args:
+        df: The dataframe containing the data to upload. Must be in a suitable state to
+            run to_csv() on.
+        djmodel: The model to copy to. The model must have the CopyManager attached
+            to the copies attribute
+        batch_size: The batch size such that in memory csvs don't get crazy big.
+            Defaults to 10_000.
+    """
+    total_rows = len(df)
+    start_index = 0
+
+    while start_index < total_rows:
+        end_index = min(start_index + batch_size, total_rows)
+        batch = df.iloc[start_index:end_index]
+
+        mem_csv = in_memory_csv(batch)
+        with closing(mem_csv) as csv_io:
+            num_copied = djmodel.copies.from_csv(
+                csv_io, drop_constraints=False, drop_indexes=False
+            )
+            logging.info(f"Copied {num_copied} {djmodel.__name__} objects to database.")
+
+        start_index = end_index
+
+
 @transaction.atomic
 def bulk_upload_model(
     djmodel: models.Model,
@@ -133,16 +164,8 @@ def make_upload_images(
             measurements.shape[1],
         )
 
-        # import ipdb; ipdb.set_trace()
         # upload measurements, a column with the db is added to the df
-        columns_to_upload = []
-        for fld in Measurement._meta.get_fields():
-            if getattr(fld, "attname", None) and fld.attname in measurements.columns:
-                columns_to_upload.append(fld.attname)
-
-        mem_csv = in_memory_csv(measurements[columns_to_upload])
-        with closing(mem_csv) as csv_io:
-            Measurement.copies.from_csv(csv_io, drop_constraints=False, drop_indexes=False)
+        copy_upload_measurements(measurements)
         # make_upload_measurements(measurements)
 
         # save measurements to parquet file in pipeline run folder
@@ -156,6 +179,24 @@ def make_upload_images(
     logger.info("Total images upload/loading time: %.2f seconds", timer.reset_init())
 
     return images, skyregions, bands
+
+
+def copy_upload_measurements(
+        measurements_df: pd.DataFrame, batch_size: int = 10_000
+    ) -> None:
+    """Upload measurements using django-postgres-copy in-memory csv method.
+
+    Args:
+        measurements_df: The measurements dataframe to upload.
+        batch_size: The batch size. Defaults to 10_000.
+    """
+    columns_to_upload = []
+    for fld in Measurement._meta.get_fields():
+        if getattr(fld, "attname", None) and fld.attname in measurements_df.columns:
+            columns_to_upload.append(fld.attname)
+
+    copy_upload_model(measurements_df[columns_to_upload], Measurement, batch_size=batch_size)
+
 
 
 def make_upload_sources(

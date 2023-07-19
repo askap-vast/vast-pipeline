@@ -17,7 +17,7 @@ from pyarrow.parquet import read_schema
 from typing import Any, List, Tuple, Dict, Optional
 
 from vast_pipeline.models import Image, Measurement, Run
-from vast_pipeline.pipeline.loading import make_upload_measurements
+from vast_pipeline.pipeline.loading import copy_upload_measurements
 
 from forced_phot import ForcedPhot
 from ..utils.utils import StopWatch
@@ -673,7 +673,7 @@ def forced_extraction(
     extr_df = extr_df[col_order + remaining]
 
     # upload the measurements
-    make_upload_measurements(extr_df)
+    copy_upload_measurements(extr_df)
 
     extr_df = extr_df.rename(columns={"source_tmp_id": "source"})
 

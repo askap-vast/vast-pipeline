@@ -378,3 +378,19 @@ def dict_merge(
 
 def timeStamped(fname, fmt="%Y-%m-%d-%H-%M-%S_{fname}"):
     return datetime.now().strftime(fmt).format(fname=fname)
+
+
+def model_uuid_copy_check() -> str:
+    """
+    An SQL snippet to convert a string to a UUID.
+
+    It is used in the copy method as part of django-postgres-copy in the models.
+
+    Returns:
+        A SQL snippet to make sure UUID fields are converted correctly from strings.
+    """
+    return """
+            CASE
+                WHEN "%(name)s" ~* '^[a-f0-9]{8}-([a-f0-9]{4}-){3}[a-f0-9]{12}$' THEN "%(name)s"::UUID
+            END
+            """

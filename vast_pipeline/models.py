@@ -16,6 +16,7 @@ from social_django.models import UserSocialAuth
 from tagulous.models import TagField
 from vast_pipeline.pipeline.config import PipelineConfig
 
+from .utils.utils import model_uuid_copy_check
 from vast_pipeline.pipeline.pairs import calculate_vs_metric, calculate_m_metric
 
 
@@ -487,11 +488,7 @@ class Measurement(CommentableModel):
     copies = CopyManager()
 
     def copy_id_template(self):
-      return """
-          CASE
-              WHEN "%(name)s" ~* '^[a-f0-9]{8}-([a-f0-9]{4}-){3}[a-f0-9]{12}$' THEN "%(name)s"::UUID
-          END
-          """
+      return model_uuid_copy_check()
 
     class Meta:
         ordering = ["ra"]
@@ -614,6 +611,11 @@ class Source(CommentableModel):
 
     objects = SourceQuerySet.as_manager()
 
+    copies = CopyManager()
+
+    def copy_id_template(self):
+      return model_uuid_copy_check()
+
     def __str__(self):
         return self.name
 
@@ -683,6 +685,13 @@ class Association(models.Model):
         default=0.0, help_text="De Ruiter radius calculated in advanced association."
     )
 
+    objects = models.Manager()
+
+    copies = CopyManager()
+
+    def copy_id_template(self):
+      return model_uuid_copy_check()
+
     def __str__(self):
         return (
             f"distance: {self.d2d:.2f}" if self.dr == 0 else f"distance: {self.dr:.2f}"
@@ -701,6 +710,13 @@ class RelatedSource(models.Model):
     to_source = models.ForeignKey(
         Source, on_delete=models.CASCADE, related_name="related_sources", to_field="id"
     )
+
+    objects = models.Manager()
+
+    copies = CopyManager()
+
+    def copy_id_template(self):
+      return model_uuid_copy_check()
 
     class Meta:
         constraints = [
