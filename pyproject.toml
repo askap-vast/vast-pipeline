@@ -11,7 +11,7 @@ astropy = "^5.0"
 astroquery = "^0.4.4"
 bokeh = "2.4.2" # must align with @bokeh/bokehjs version in package.json
 cloudpickle = "^1.5.0"
-dask = {extras = ["dataframe"], version = "^2023.1.0"}
+dask = {extras = ["complete"], version = "^2023.7.0"}
 dill = "^0"
 Django = "^3.2.13"
 django-crispy-forms = "^1.9.2"
