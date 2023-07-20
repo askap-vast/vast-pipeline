@@ -44,6 +44,7 @@ channels = "^3.0.4"
 numba = "^0.57.1"
 llvmlite = "^0.40.1"
 django-postgres-copy = "^2.7.3"
+distributed = "^2023.7.0"
 
 [tool.poetry.dev-dependencies]
 mkdocs-material = "^8.2.4"
