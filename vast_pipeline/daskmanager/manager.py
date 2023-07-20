@@ -31,6 +31,7 @@ class DaskManager(metaclass=Singleton):
             logger.info('Connected to Dask Cluster')
         except Exception:
             # assume a local cluster
+            logger.warning('Could not connect to Dask Cluster')
             logger.info('Starting local Dask Cluster')
             cluster = LocalCluster(
                 host=s.DASK_SCHEDULER_HOST,
