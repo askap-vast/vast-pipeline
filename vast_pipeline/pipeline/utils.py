@@ -37,6 +37,17 @@ logger = logging.getLogger(__name__)
 dask.config.set({"multiprocessing.context": "fork"})
 
 
+# Dask custom aggregations
+# from https://docs.dask.org/en/latest/dataframe-groupby.html#aggregate
+collect_list = dd.Aggregation(
+    name='collect_list',
+    chunk=lambda s: s.apply(list),
+    agg=lambda s0: s0.apply(
+        lambda chunks: list(chain.from_iterable(chunks))
+    ),
+)
+
+
 def get_create_skyreg(image: Image) -> SkyRegion:
     """
     This creates a Sky Region object in Django ORM given the related
@@ -666,58 +677,34 @@ def parallel_groupby(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def calc_ave_coord(grp: pd.DataFrame) -> pd.Series:
-    """
-    Calculates the average coordinate of the grouped by sources dataframe for
-    each unique group, along with defining the image and epoch list for each
-    unique source (group).
+def parallel_groupby_coord(df: dd.core.DataFrame) -> pd.DataFrame:
+    """Calculate the weighted average RA and Dec of the sources.
+
+    Note that Sergio had the idea to persist the dataframe result and keep it in the
+    cluster. However since then the ideal image method uses the astropy match sky
+    method which relies on being able to iloc the dataframe. This would be really
+    difficult to do with a persisted dataframe. So it is computed.
 
     Args:
-        grp: The current group dataframe (unique source) of the grouped by
-            dataframe being acted upon.
+        df: The persisted sources dataframe.
 
     Returns:
-        A pandas series containing the average coordinate along with the
-            image and epoch lists.
+        The average coordinates of the sources along with image and epoch lists.
     """
-    d = {}
-    grp = grp.sort_values(by="datetime")
-    d["img_list"] = grp["image"].values.tolist()
-    d["epoch_list"] = grp["epoch"].values.tolist()
-    d["wavg_ra"] = grp["interim_ew"].sum() / grp["weight_ew"].sum()
-    d["wavg_dec"] = grp["interim_ns"].sum() / grp["weight_ns"].sum()
+    cols = [
+        'source', 'image', 'epoch', 'interim_ew', 'weight_ew', 'interim_ns', 'weight_ns'
+    ]
+    cols_to_sum = ['interim_ew', 'weight_ew', 'interim_ns', 'weight_ns']
 
-    return pd.Series(d)
+    groups = df[cols].groupby('source')
+    out = groups[cols_to_sum].agg('sum')
+    out['wavg_ra'] = out['interim_ew'] / out['weight_ew']
+    out['wavg_dec'] = out['interim_ns'] / out['weight_ns']
+    out = out.drop(cols_to_sum, axis=1)
+    out['img_list'] = groups['image'].agg(collect_list)
+    out['epoch_list'] = groups['epoch'].agg(collect_list)
 
-
-def parallel_groupby_coord(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    This function uses Dask to perform the average coordinate and unique image
-    and epoch lists calculation. The result from the Dask compute is returned
-    which is a dataframe containing the results for each source.
-
-    Args:
-        df: The sources dataframe produced by the pipeline.
-
-    Returns:
-        The resulting average coordinate values and unique image and epoch
-            lists for each unique source (group).
-    """
-    col_dtype = {
-        "img_list": "O",
-        "epoch_list": "O",
-        "wavg_ra": "f",
-        "wavg_dec": "f",
-    }
-    n_cpu = cpu_count() - 1
-    out = dd.from_pandas(df, n_cpu)
-    out = (
-        out.groupby("source")
-        .apply(calc_ave_coord, meta=col_dtype)
-        .compute(num_workers=n_cpu, scheduler="processes")
-    )
-
-    return out
+    return out.compute()
 
 
 def get_rms_noise_image_values(rms_path: str) -> Tuple[float, float, float]:
@@ -768,7 +755,9 @@ def get_image_list_diff(row: pd.Series) -> Union[List[str], int]:
         A list of the images missing from the observed image list.
         A '-1' integer value if there are no missing images.
     """
-    out = list(filter(lambda arg: arg not in row["img_list"], row["skyreg_img_list"]))
+    out = list(filter(
+        lambda arg: arg not in row["img_list"], row["skyreg_img_list"]
+    ))
 
     # set empty list to -1
     if not out:
@@ -842,8 +831,8 @@ def check_primary_image(row: pd.Series) -> bool:
 
 
 def get_src_skyregion_merged_df(
-    sources_df: pd.DataFrame, images_df: pd.DataFrame, skyreg_df: pd.DataFrame
-) -> pd.DataFrame:
+    sources_df: dd.core.DataFrame, images_df: pd.DataFrame, skyreg_df: pd.DataFrame
+) -> dd.core.DataFrame:
     """
     Analyses the current sources_df to determine what the 'ideal coverage'
     for each source should be. In other words, what images is the source
@@ -915,14 +904,11 @@ def get_src_skyregion_merged_df(
         on="id",
     )
 
-    sources_df = sources_df.sort_values(by="datetime")
     # calculate some metrics on sources
     # compute only some necessary metrics in the groupby
     timer = StopWatch()
     srcs_df = parallel_groupby_coord(sources_df)
     logger.debug("Groupby-apply time: %.2f seconds", timer.reset())
-
-    del sources_df
 
     # crossmatch sources with sky regions up to the max sky region radius
     skyreg_coords = SkyCoord(

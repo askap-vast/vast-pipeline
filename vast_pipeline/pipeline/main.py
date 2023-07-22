@@ -259,6 +259,12 @@ class Pipeline:
             skyregs_df,
         )
 
+        missing_sources_df = dd.from_pandas(
+            missing_sources_df,
+            npartitions=dm.get_nr_workers()
+        )
+        missing_sources_df = dm.persist(missing_sources_df)
+
         # STEP #4 New source analysis
         new_sources_df = new_sources(
             sources_df,
