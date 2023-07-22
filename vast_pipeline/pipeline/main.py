@@ -231,7 +231,6 @@ class Pipeline:
         # n_selavy_measurements = sources_df.
         nr_selavy_measurements = sources_df["id"].unique().shape[0]
 
-        dm = DaskManager()
         sources_df = dd.from_pandas(
             sources_df,
             npartitions=dm.get_nr_workers()
