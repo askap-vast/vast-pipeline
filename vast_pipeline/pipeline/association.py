@@ -5,13 +5,15 @@ import logging
 import uuid
 import numpy as np
 import pandas as pd
-from typing import Tuple, Dict, List
+from typing import Tuple, Dict
 import dask.dataframe as dd
 from psutil import cpu_count
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.coordinates import Angle
+
+from django.core import serializers
 
 from .utils import (
     prep_skysrc_df,
@@ -997,6 +999,12 @@ def association(
             "image_datetime", axis=1
         )
 
+        images_df["image_dj"] = images_df["image_dj"].apply(
+            lambda x: [i for i in serializers.deserialize("json", x)][0].object
+        )
+
+        logger.debug(images_df["image_dj"])
+
     if "skyreg_group" in images_df.columns:
         skyreg_group = images_df["skyreg_group"].iloc[0]
         skyreg_tag = " (sky region group %s)" % skyreg_group
@@ -1288,7 +1296,6 @@ def parallel_association(
     add_mode: bool,
     previous_parquets: Dict[str, str],
     done_images_df: pd.DataFrame,
-    done_source_ids: List[int],
 ) -> pd.DataFrame:
     """
     Launches association on different sky region groups in parallel using Dask.
@@ -1345,8 +1352,12 @@ def parallel_association(
     n_cpu = cpu_count() - 1
 
     # pass each skyreg_group through the normal association process.
+    images_df["image_dj"] = images_df["image_dj"].apply(
+        lambda x: serializers.serialize("json", [x,])
+    )
+
     results = (
-        dd.from_pandas(images_df, n_cpu)
+        dd.from_pandas(images_df, npartitions=n_skyregion_groups)
         .groupby("skyreg_group")
         .apply(
             association,
@@ -1361,7 +1372,11 @@ def parallel_association(
             parallel=True,
             meta=meta,
         )
-        .compute(n_workers=n_cpu, scheduler="processes")
+        .compute()
+    )
+
+    images_df["image_dj"] = images_df["image_dj"].apply(
+        lambda x: [i for i in serializers.deserialize("json", x)][0].object
     )
 
     # results are the normal dataframe of results with the columns:

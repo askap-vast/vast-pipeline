@@ -18,6 +18,7 @@ from django.db import transaction
 
 from vast_pipeline.models import Run
 from vast_pipeline.pipeline.utils import add_run_to_img
+from vast_pipeline.daskmanager.manager import DaskManager
 from .association import association, parallel_association
 from .config import PipelineConfig
 from .new_sources import new_sources
@@ -182,6 +183,8 @@ class Pipeline:
             done_images_df = None
             done_source_ids = None
 
+        dm = DaskManager()
+
         # 2.2 Associate with other measurements
         if self.config["source_association"]["parallel"] and n_skyregion_groups > 1:
             images_df = get_parallel_assoc_image_df(images, skyregion_groups)
@@ -198,7 +201,6 @@ class Pipeline:
                 self.add_mode,
                 self.previous_parquets,
                 done_images_df,
-                done_source_ids,
             )
         else:
             images_df = pd.DataFrame.from_dict(
@@ -239,7 +241,7 @@ class Pipeline:
             "interim_ns",
             "weight_ns",
         ]
-        # need to make sure no forced measurments are being passed which
+        # need to make sure no forced measurements are being passed which
         # could happen in add mode, otherwise the wrong detection image is
         # assigned.
         missing_sources_df = get_src_skyregion_merged_df(
