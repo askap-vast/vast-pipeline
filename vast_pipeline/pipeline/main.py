@@ -274,7 +274,7 @@ class Pipeline:
         )
 
         # Drop column no longer required in missing_sources_df.
-        missing_sources_df = missing_sources_df.drop(["in_primary"], axis=1)
+        missing_sources_df = dm.persist(missing_sources_df.drop(["in_primary"], axis=1))
 
         # STEP #5: Run forced extraction/photometry if asked
         if self.config["source_monitoring"]["monitor"]:

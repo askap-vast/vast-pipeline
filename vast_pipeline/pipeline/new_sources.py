@@ -1,11 +1,14 @@
 import logging
 import pandas as pd
 import numpy as np
+import dask.bag as db
 import dask.dataframe as dd
 
-from psutil import cpu_count
+from typing import Dict, Union
+
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.wcs.utils import (
     proj_plane_pixel_scales
@@ -58,46 +61,79 @@ def gen_array_coords_from_wcs(coords: SkyCoord, wcs: WCS) -> np.ndarray:
     return array_coords
 
 
-def get_image_rms_measurements(
-    group: pd.DataFrame, nbeam: int = 3, edge_buffer: float = 1.0
-) -> pd.DataFrame:
-    """
-    Take the coordinates provided from the group
-    and measure the array cell value in the provided image.
+def extract_rms_data_from_img(
+        image: str
+) -> Dict[str, Union[np.ndarray, WCS, fits.Header]]:
+    """Extracts the data, wcs and header from a fits image.
 
     Args:
-        group:
-            The group of sources to measure in the image, requiring the
-            columns: 'source', 'wavg_ra', 'wavg_dec' and 'img_diff_rms_path'.
-        nbeam:
-            The number of half beamwidths (BMAJ) away from the edge of the
-            image or a NaN value that is acceptable.
-        edge_buffer:
-            Multiplicative factor applied to nbeam to act as a buffer.
+        image: The path to the fits image.
 
     Returns:
-        The group dataframe with the 'img_diff_true_rms' column added. The
-            column will contain 'NaN' entires for sources that fail.
+        Dictionary containing the data, wcs and header of the image.
     """
-    if len(group) == 0:
-        # input dataframe is empty, nothing to do
-        return group
-    image = group.iloc[0]['img_diff_rms_path']
-
     with open_fits(image) as hdul:
         header = hdul[0].header
         wcs = WCS(header, naxis=2)
         data = hdul[0].data.squeeze()
 
+    return {'data': data, 'wcs': wcs, 'header': header}
+
+
+def get_coord_array(df: pd.DataFrame) -> SkyCoord:
+    """Get the skycoords from a given dataframe.
+
+    Expects the dataframe to have the columns 'wavg_ra' and 'wavg_dec'.
+
+    Args:
+        df: The dataframe containing the coordinates.
+
+    Returns:
+        The SkyCoord object containing the coordinates.
+    """
+    coords = SkyCoord(
+        df['wavg_ra'].values,
+        df['wavg_dec'].values,
+        unit=(u.deg, u.deg)
+    )
+
+    return coords
+
+
+def finalise_rms_calcs(
+    rms: Dict[str, Union[np.ndarray, WCS, fits.Header]],
+    coords: SkyCoord,
+    df: pd.DataFrame,
+    nbeam: int = 3,
+    edge_buffer: float = 1.0
+) -> pd.DataFrame:
+    """Obtains the rms values from the image at the given coordinates.
+
+    Checks are made prior to the extraction:
+        - The coordinates are not within 3 half BMAJ widths of the image.
+        - The coordinates are not within the user specified edge buffer.
+        - The coordinates are not within the NaN region of the image.
+
+    Args:
+        rms: The dictionary containing the image data, wcs and header.
+        coords: The SkyCoord object containing the coordinates.
+        df: The dataframe containing the source information.
+        nbeam: The number of beams to use for the edge buffer.
+        edge_buffer: The multiplicative factor to use for the edge buffer.
+
+    Returns:
+        Dataframe containing the 'img_diff_true_rms' column and the source_id
+            as the index.
+    """
     # Here we mimic the forced fits behaviour,
     # sources within 3 half BMAJ widths of the image
     # edges are ignored. The user buffer is also
     # applied for consistency.
     pixelscale = (
-        proj_plane_pixel_scales(wcs)[1] * u.deg
+        proj_plane_pixel_scales(rms["wcs"])[1] * u.deg
     ).to(u.arcsec)
 
-    bmaj = header["BMAJ"] * u.deg
+    bmaj = rms["header"]["BMAJ"] * u.deg
 
     npix = round(
         (nbeam / 2. * bmaj.to('arcsec') /
@@ -106,20 +142,20 @@ def get_image_rms_measurements(
 
     npix = int(round(npix * edge_buffer))
 
-    coords = SkyCoord(
-        group.wavg_ra, group.wavg_dec, unit=(u.deg, u.deg)
-    )
-
-    array_coords = gen_array_coords_from_wcs(coords, wcs)
+    array_coords = rms['wcs'].world_to_array_index(coords)
+    array_coords = np.array([
+        np.array(array_coords[0]),
+        np.array(array_coords[1]),
+    ])
 
     # check for pixel wrapping
     x_valid = np.logical_or(
-        array_coords[0] >= (data.shape[0] - npix),
+        array_coords[0] >= (rms['data'].shape[0] - npix),
         array_coords[0] < npix
     )
 
     y_valid = np.logical_or(
-        array_coords[1] >= (data.shape[1] - npix),
+        array_coords[1] >= (rms['data'].shape[1] - npix),
         array_coords[1] < npix
     )
 
@@ -127,27 +163,8 @@ def get_image_rms_measurements(
         x_valid, y_valid
     )
 
-    valid_indexes = group[valid].index.values
-
-    group = group.loc[valid_indexes]
-
-    if group.empty:
-        # early return if all sources failed range check
-        logger.debug(
-            'All sources out of range in new source rms measurement'
-            f' for image {image}.'
-        )
-        group['img_diff_true_rms'] = np.nan
-        return group
-
     # Now we also need to check proximity to NaN values
     # as forced fits may also drop these values
-    coords = SkyCoord(
-        group.wavg_ra, group.wavg_dec, unit=(u.deg, u.deg)
-    )
-
-    array_coords = gen_array_coords_from_wcs(coords, wcs)
-
     acceptable_no_nan_dist = int(
         round(bmaj.to('arcsec').value / 2. / pixelscale.value)
     )
@@ -155,79 +172,84 @@ def get_image_rms_measurements(
     nan_valid = []
 
     # Get slices of each source and check NaN is not included.
-    for i, j in zip(array_coords[0], array_coords[1]):
+    for i,j in zip(array_coords[0][valid], array_coords[1][valid]):
         sl = tuple((
             slice(i - acceptable_no_nan_dist, i + acceptable_no_nan_dist),
             slice(j - acceptable_no_nan_dist, j + acceptable_no_nan_dist)
         ))
-        if np.any(np.isnan(data[sl])):
+        if np.any(np.isnan(rms["data"][sl])):
             nan_valid.append(False)
         else:
             nan_valid.append(True)
 
-    valid_indexes = group[nan_valid].index.values
+    valid[valid] = nan_valid
 
-    if np.any(nan_valid):
-        # only run if there are actual values to measure
-        rms_values = data[
-            array_coords[0][nan_valid],
-            array_coords[1][nan_valid]
-        ]
+    # create the column data, not matched ones will be NaN.
+    rms_values = np.full(valid.shape, np.NaN)
+    logger.debug(f"Df shape: {df.shape}")
+    logger.debug(f"Valid shape: {valid.shape}")
+    logger.debug(f"Array coords shape: {array_coords.shape}")
+    if np.any(valid):
+        rms_values[valid] = rms['data'][
+            array_coords[0][valid],
+            array_coords[1][valid]
+        ].astype(np.float64) * 1.e3
 
-        # not matched ones will be NaN.
-        group.loc[
-            valid_indexes, 'img_diff_true_rms'
-        ] = rms_values.astype(np.float64) * 1.e3
+    # copy the df and create the rms column
+    df_out = df.copy()  # dask doesn't like to modify inputs in place
+    df_out['img_diff_true_rms'] = rms_values
 
-    else:
-        group['img_diff_true_rms'] = np.nan
-
-    return group
+    return df_out
 
 
 def parallel_get_rms_measurements(
-    df: pd.DataFrame, edge_buffer: float = 1.0
-) -> pd.DataFrame:
+        df: dd.core.DataFrame,
+        nbeam: int = 3,
+        edge_buffer: float = 1.0
+    ) -> dd.core.DataFrame:
     """
     Wrapper function to use 'get_image_rms_measurements'
-    in parallel with Dask. nbeam is not an option here as that parameter
-    is fixed in forced extraction and so is made sure to be fixed here to. This
-    may change in the future.
-
-    Args:
-        df:
-            The group of sources to measure in the images.
-        edge_buffer:
-            Multiplicative factor to be passed to the
-            'get_image_rms_measurements' function.
-
-    Returns:
-        The original input dataframe with the 'img_diff_true_rms' column
-            added. The column will contain 'NaN' entires for sources that fail.
+    in parallel with Dask.
     """
-    out = df[[
-        'source', 'wavg_ra', 'wavg_dec',
-        'img_diff_rms_path'
-    ]]
+    # Use the Dask bag backend to work on different image files
+    # calculate first the unique image_diff then create the bag
+    uniq_img_diff = (
+        df['img_diff_rms_path'].unique()
+        .compute()
+        .tolist()
+    )
+    nr_uniq_img = len(uniq_img_diff)
+    # map the extract function to the bag to get data from images
+    img_data_bags = (
+        db.from_sequence(uniq_img_diff, npartitions=nr_uniq_img)
+        .map(extract_rms_data_from_img)
+    )
 
-    col_dtype = {
-        'source': 'i',
-        'wavg_ra': 'f',
-        'wavg_dec': 'f',
-        'img_diff_rms_path': 'U',
-        'img_diff_true_rms': 'f',
-    }
+    # generate bags with dataframes for each unique image_diff
+    cols = ['img_diff_rms_path', 'source', 'wavg_ra', 'wavg_dec']
+    df_bags = []
+    for elem in uniq_img_diff:
+        df_bags.append(df.loc[df['img_diff_rms_path'] == elem, cols])
+    df_bags = dd.compute(*df_bags)
+    df_bags = db.from_sequence(df_bags, npartitions=nr_uniq_img)
 
-    n_cpu = cpu_count() - 1
+    # map the get_coord_array and column selection function
+    arr_coords_bags = df_bags.map(get_coord_array)
+    col_sel_bags = df_bags.map(lambda onedf: onedf[['source']])
 
+    # combine the bags and apply final operations, this will create a list
+    # of pandas dataframes
     out = (
-        dd.from_pandas(out, n_cpu)
-        .groupby('img_diff_rms_path')
-        .apply(
-            get_image_rms_measurements,
+        db.zip(img_data_bags, arr_coords_bags, col_sel_bags)
+        .map(lambda tup: finalise_rms_calcs(
+            *tup,
             edge_buffer=edge_buffer,
-            meta=col_dtype
-        ).compute(num_workers=n_cpu, scheduler='processes')
+            nbeam=nbeam
+        ))
+        # tranform dfs to list of dicts
+        .map(lambda onedf: onedf.to_dict(orient='records'))
+        .flatten()
+        .to_dataframe()
     )
 
     df = df.merge(
@@ -236,7 +258,7 @@ def parallel_get_rms_measurements(
         how='left'
     )
 
-    return df
+    return df.persist()
 
 
 def new_sources(
@@ -376,8 +398,8 @@ def new_sources(
     ]
 
     # merge the detection fluxes in
-    new_sources_df = pd.merge(
-        new_sources_df, sources_df[['source', 'image', 'flux_peak']],
+    new_sources_df = new_sources_df.merge(
+        sources_df[['source', 'image', 'flux_peak']],
         left_on=['source', 'detection'], right_on=['source', 'image'],
         how='left'
     ).drop(columns=['image'])
@@ -429,17 +451,14 @@ def new_sources(
     )
 
     # We only care about the highest true sigma
-    new_sources_df = new_sources_df.sort_values(
-        by=['source', 'true_sigma']
-    )
-
-    # keep only the highest for each source, rename for the daatabase
     new_sources_df = (
-        new_sources_df
+        new_sources_df.set_index('true_sigma')
+        .map_partitions(lambda x: x.sort_index())
         .drop_duplicates('source')
-        .set_index('source')
+        .reset_index()
         .rename(columns={'true_sigma': 'new_high_sigma'})
-    )
+        .set_index('source')
+     )
 
     # moving forward only the new_high_sigma columns is needed, drop all
     # others.
@@ -449,4 +468,4 @@ def new_sources(
         'Total new source analysis time: %.2f seconds', timer.reset_init()
     )
 
-    return new_sources_df
+    return new_sources_df.persist()
