@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 import dask.dataframe as dd
 import dask.bag as db
-from psutil import cpu_count
 from glob import glob
 
 from astropy import units as u
@@ -161,8 +160,10 @@ def extract_from_image(
     """
     # create the skycoord obj to pass to the forced extraction
     # see usage https://github.com/dlakaplan/forced_phot
+    df = df.compute()
+
     P_islands = SkyCoord(
-        df["wavg_ra"].values, df["wavg_dec"].values, unit=(u.deg, u.deg)
+        df["wavg_ra"].to_numpy(), df["wavg_dec"].to_numpy(), unit=(u.deg, u.deg)
     )
     # load the image, background and noisemaps into memory
     # a dedicated function may seem unneccesary, but will be useful if we
@@ -310,10 +311,13 @@ def parallel_extraction(
     )
 
     # drop the source for which we would have no hope of detecting
-    predrop_shape = out.shape[0]
+    predrop_shape = out["source_tmp_id"].count().compute()
     out["max_snr"] = out["flux_peak"].values / out["image_rms_min"].values
     out = out[out["max_snr"] > min_sigma].reset_index(drop=True)
-    logger.debug("Min forced sigma dropped %i sources", predrop_shape - out.shape[0])
+    logger.debug(
+        "Min forced sigma dropped %i sources",
+        predrop_shape - out["source_tmp_id"].count().compute()
+    )
 
     # drop some columns that are no longer needed and the df should look like
     # out
@@ -330,7 +334,7 @@ def parallel_extraction(
     )
 
     # get the unique images to extract from
-    unique_images_to_extract = out["image_name"].unique().tolist()
+    unique_images_to_extract = out["image_name"].unique().compute().tolist()
 
     # create a list of dictionaries with image file paths and dataframes
     # with data related to each images
@@ -382,7 +386,6 @@ def parallel_extraction(
     )
     del col_to_drop
 
-    n_cpu = cpu_count() - 1
     bags = db.from_sequence(list_to_map, npartitions=len(list_to_map))
     forced_dfs = bags.map(
         lambda x: extract_from_image(
@@ -391,7 +394,7 @@ def parallel_extraction(
             allow_nan=allow_nan,
             **x,
         )
-    ).compute(scheduler="processes", num_workers=n_cpu)
+    ).compute()
     del bags
     # create intermediates dfs combining the mapping data and the forced
     # extracted data from the images
@@ -462,22 +465,19 @@ def parallel_write_parquet(
         run_path, "forced_measurements_" + n.replace(".", "_") + ".parquet"
     )
     dfs = list(map(lambda x: (df[df["image"] == x], get_fname(x)), images))
-    n_cpu = cpu_count() - 1
 
     # writing parquets using Dask bag
     bags = db.from_sequence(dfs)
     bags = bags.starmap(lambda df, fname: write_group_to_parquet(df, fname, add_mode))
-    bags.compute(num_workers=n_cpu)
-
-    pass
+    bags.compute()
 
 
 def forced_extraction(
-    sources_df: pd.DataFrame,
+    sources_df: dd.DataFrame,
     cfg_err_ra: float,
     cfg_err_dec: float,
     p_run: Run,
-    extr_df: pd.DataFrame,
+    extr_df: dd.DataFrame,
     min_sigma: float,
     edge_buffer: float,
     cluster_threshold: float,
@@ -588,9 +588,9 @@ def forced_extraction(
         # 2. The forced extraction is attached to a new source from the new
         # images.
         # 3. A new relation has been created and they need the forced
-        # measuremnts filled in (actually covered by 2.)
+        # measurements filled in (actually covered by 2.)
 
-        extr_df = pd.concat(
+        extr_df = dd.concat(
             [
                 extr_df[~extr_df["img_diff"].isin(done_images_df["name"])],
                 extr_df[
@@ -684,11 +684,16 @@ def forced_extraction(
     # Required to rename this column for the image add mode.
     extr_df = extr_df.rename(columns={"time": "datetime"})
 
+    # Transform the extr_df to a dask dataframe
+    extr_df = dd.from_pandas(extr_df, npartitions=1)
+
     # append new meas into main df and proceed with source groupby etc
-    sources_df = pd.concat(
+    sources_df = dd.concat(
         [sources_df, extr_df.loc[:, extr_df.columns.isin(sources_df.columns)]],
         ignore_index=True,
-    )
+    ).persist()
+
+    del extr_df
 
     # get the number of forced extractions for the run
     forced_parquets = glob(os.path.join(p_run.path, "forced_measurements*.parquet"))

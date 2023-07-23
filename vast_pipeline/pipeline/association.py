@@ -1353,8 +1353,6 @@ def parallel_association(
         "interim_ns": "f",
     }
 
-    n_cpu = cpu_count() - 1
-
     # pass each skyreg_group through the normal association process.
     images_df["image_dj"] = images_df["image_dj"].apply(
         lambda x: serializers.serialize("json", [x,])

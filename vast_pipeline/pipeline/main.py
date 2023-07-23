@@ -293,6 +293,8 @@ class Pipeline:
                 done_source_ids,
             )
 
+            sources_df = dm.persist(sources_df)
+
         del missing_sources_df
 
         # STEP #6: finalise the df getting unique sources, calculating
