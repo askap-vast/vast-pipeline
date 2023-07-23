@@ -1,6 +1,7 @@
 import logging
 
 from time import sleep
+from argparse import ArgumentParser
 from vast_pipeline.daskmanager.manager import DaskManager
 from django.core.management.base import BaseCommand, CommandError
 
@@ -14,8 +15,26 @@ class Command(BaseCommand):
     """
     help = 'Run a local Dask cluster'
 
+    def add_arguments(self, parser: ArgumentParser) -> None:
+        """
+        Enables arguments for the command.
+
+        Args:
+            parser (ArgumentParser): The parser object of the command.
+
+        Returns:
+            None
+        """
+        parser.add_argument(
+            '--skip-connect',
+            action='store_true',
+            required=False,
+            default=False,
+            help="Skip attempt to connect to Dask Cluster.",
+        )
+
     def handle(self, *args, **options):
-        dm = DaskManager()
+        dm = DaskManager(skip_connect=options['skip_connect'])
         # self.stdout.write(self.style.INFO(dm.client))
         self.stdout.write(self.style.SUCCESS(str(dm.client)))
         addr = dm.client.cluster.scheduler_info['address'].split(':')[1]

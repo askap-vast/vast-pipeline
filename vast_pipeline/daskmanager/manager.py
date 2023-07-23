@@ -22,8 +22,11 @@ class Singleton(type):
 
 
 class DaskManager(metaclass=Singleton):
-    def __init__(self):
+    def __init__(self, skip_connect: bool = False):
         try:
+            if skip_connect:
+                raise Exception('Skipping attempt to connect to Dask Cluster.')
+
             logger.info('Trying connecting to Dask Cluster')
             self.client = Client(
                 f'{s.DASK_SCHEDULER_HOST}:{s.DASK_SCHEDULER_PORT}'
