@@ -276,7 +276,7 @@ class SelavyImage(FitsImage):
         path: str,
         paths: Dict[str, Dict[str, str]],
         config: Dict,
-        hdu_index: int = 0,
+        hdu_index: int = 1,
     ) -> None:
         """
         Initialise the SelavyImage.
