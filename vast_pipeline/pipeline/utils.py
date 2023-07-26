@@ -773,7 +773,7 @@ def parallel_groupby_coord(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def get_rms_noise_image_values(rms_path: str) -> Tuple[float, float, float]:
+def get_rms_noise_image_values(rms_path: str, hdu_index: int=1) -> Tuple[float, float, float]:
     '''
     Open the RMS noise FITS file and compute the median, max and min
     rms values to be added to the image model and then used in the
@@ -781,6 +781,7 @@ def get_rms_noise_image_values(rms_path: str) -> Tuple[float, float, float]:
 
     Args:
         rms_path: The system path to the RMS FITS image.
+        hdu_index: The index number to use to access the hdu object
 
     Returns:
         The median value of the RMS image.
@@ -794,7 +795,7 @@ def get_rms_noise_image_values(rms_path: str) -> Tuple[float, float, float]:
     med_val = min_val = max_val = 0.
     try:
         with fits.open(rms_path) as f:
-            data = f[0].data
+            data = f[hdu_index].data
             data = data[np.logical_not(np.isnan(data))]
             data = data[data != 0]
             med_val = np.median(data) * 1e+3
