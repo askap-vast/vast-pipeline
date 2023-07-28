@@ -258,6 +258,8 @@ def parallel_extraction(
             'source_tmp_id', 'ra', 'dec', 'image', 'flux_peak', 'island_id',
             'component_id', 'name', 'flux_int', 'flux_int_err'
     """
+    logger.debug(df)
+    logger.debug(df_images)
     # explode the lists in 'img_diff' column (this will make a copy of the df)
     out = (
         df.rename(columns={'img_diff':'image', 'source':'source_tmp_id'})
@@ -279,6 +281,8 @@ def parallel_extraction(
         .drop(columns=['image_y', 'source'])
         .rename(columns={'image_x': 'image'})
     )
+    logger.debug(out)
+    logger.debug(out[['flux_peak', 'image_rms_min']])
 
     # drop the source for which we would have no hope of detecting
     predrop_shape = out.shape[0]
@@ -305,6 +309,7 @@ def parallel_extraction(
 
     # get the unique images to extract from
     unique_images_to_extract = out['image_name'].unique().tolist()
+    logger.debug(unique_images_to_extract)
 
     # create a list of dictionaries with image file paths and dataframes
     # with data related to each images
@@ -318,6 +323,7 @@ def parallel_extraction(
             'df': out[out['image_name'] == image_name]
         }
     list_to_map = list(map(image_data_func, unique_images_to_extract))
+    logger.debug(list_to_map)
     # create a list of all the measurements parquet files to extract data from,
     # such as prefix and max_id
     list_meas_parquets = list(map(
@@ -329,6 +335,7 @@ def parallel_extraction(
     ))
     del out, unique_images_to_extract, image_data_func
 
+    logger.debug(list_meas_parquets)
     # get a map of the columns that have a fixed value
     mapping = (
         db.from_sequence(

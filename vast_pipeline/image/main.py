@@ -80,7 +80,7 @@ class FitsImage(Image):
 
     entire_image = True
 
-    def __init__(self, path: str, hdu_index: int=1) -> None:
+    def __init__(self, path: str, hdu_index: int=0) -> None:
         """
         Initialise a FitsImage object.
 
