@@ -647,6 +647,16 @@ def forced_extraction(
     extr_df = extr_df[col_order + remaining]
 
     # upload the measurements, a column 'id' is returned with the DB id
+    long_names = extr_df.loc[extr_df['name'].str.len() > 63]
+    long_comps = extr_df.loc[extr_df['component_id'].str.len() > 63]
+    long_isls = extr_df.loc[extr_df['island_id'].str.len() > 63]
+    
+    logger.debug("Entries with long names:")
+    logger.debug(long_names)
+    logger.debug("Entries with long component ids:")
+    logger.debug(long_comps)
+    logger.debug("Entries with long island ids:")
+    logger.debug(long_isls)
     extr_df = make_upload_measurements(extr_df)
 
     extr_df = extr_df.rename(columns={'source_tmp_id': 'source'})
