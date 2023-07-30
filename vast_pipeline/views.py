@@ -66,6 +66,7 @@ from vast_pipeline.utils.view import generate_colsfields, get_skyregions_collect
 from vast_pipeline.management.commands.initpiperun import initialise_run
 from vast_pipeline.forms import PipelineRunForm, CommentForm, TagWithCommentsForm
 from vast_pipeline.pipeline.config import PipelineConfig
+from vast_pipeline.pipeline.utils import open_fits
 
 
 logger = logging.getLogger(__name__)
@@ -1867,7 +1868,7 @@ class ImageCutout(APIView):
 
         measurement = Measurement.objects.get(id=measurement_id)
 
-        image_hdu: fits.PrimaryHDU = fits.open(measurement.image.path)[0]
+        image_hdu: fits.PrimaryHDU = open_fits(measurement.image.path)[0]
         coord = SkyCoord(ra=measurement.ra, dec=measurement.dec, unit="deg")
         sizes = {
             "xlarge": "40arcmin",
