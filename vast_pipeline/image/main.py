@@ -107,7 +107,7 @@ class FitsImage(Image):
 
     def __get_header(self, hdu_index: int) -> fits.Header:
         """
-        Retrieves the header from teh FITS image.
+        Retrieves the header from the FITS image.
 
         Args:
             hdu_index:

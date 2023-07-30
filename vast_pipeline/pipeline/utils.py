@@ -1707,3 +1707,31 @@ def write_parquets(
     )
 
     return skyregs_df
+
+def open_fits(fits_path: Union[str, Path]):
+    """
+    This function opens both compressed and uncompressed fits files.
+    
+    Args:
+        fits_path: Path to the fits file
+    
+    Returns:
+        HDUList loaded from the fits file
+    
+    Raises:
+        ValueError: File extension must be .fits or .fits.fz
+    """
+
+    if type(fits_path) = Path:
+        fits_path = str(fits_path)
+    
+    hdul = fits.open(fits_path)
+    
+    if fits_path.endswith('.fits'):
+        return hdul
+    elif fits_path.endswith('.fits.fz'):
+        return fits.HDUList(hdul[1:])
+    else:
+        raise ValueError("Unrecognised extension for {fits_path}."
+                         "File extension must be .fits or .fits.fz"
+                         )
