@@ -59,7 +59,10 @@ def gen_array_coords_from_wcs(coords: SkyCoord, wcs: WCS) -> np.ndarray:
 
 
 def get_image_rms_measurements(
-    group: pd.DataFrame, nbeam: int = 3, edge_buffer: float = 1.0
+    group: pd.DataFrame,
+    nbeam: int = 3,
+    edge_buffer: float = 1.0,
+    hdu_index: int = 1,
 ) -> pd.DataFrame:
     """
     Take the coordinates provided from the group
@@ -85,9 +88,9 @@ def get_image_rms_measurements(
     image = group.iloc[0]['img_diff_rms_path']
 
     with fits.open(image) as hdul:
-        header = hdul[0].header
+        header = hdul[hdu_index].header
         wcs = WCS(header, naxis=2)
-        data = hdul[0].data.squeeze()
+        data = hdul[hdu_index].data.squeeze()
 
     # Here we mimic the forced fits behaviour,
     # sources within 3 half BMAJ widths of the image

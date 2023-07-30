@@ -795,16 +795,21 @@ def get_rms_noise_image_values(rms_path: str, hdu_index: int=1) -> Tuple[float, 
     med_val = min_val = max_val = 0.
     try:
         with fits.open(rms_path) as f:
+            logger.debug(rms_path)
+            logger.debug(hdu_index)
             data = f[hdu_index].data
+            logger.debug(f"{np.nanmin(data)}, {np.nanmean(data)}")
             data = data[np.logical_not(np.isnan(data))]
             data = data[data != 0]
             med_val = np.median(data) * 1e+3
             min_val = np.min(data) * 1e+3
             max_val = np.max(data) * 1e+3
             del data
+            logger.debug(f"{med_val}, {min_val}, {max_val}")
     except Exception:
         raise IOError(f'Could not read this RMS FITS file: {rms_path}')
 
+    #raise IOError("Breaking nicely")
     return med_val, min_val, max_val
 
 

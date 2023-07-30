@@ -10,10 +10,11 @@ from glob import glob
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from astropy.io import fits
 from django.conf import settings
 from django.db import transaction
 from pyarrow.parquet import read_schema
-from typing import Any, List, Tuple, Dict
+from typing import Any, List, Tuple, Dict, Optional
 
 from vast_pipeline.models import Image, Measurement, Run
 from vast_pipeline.pipeline.loading import make_upload_measurements
@@ -112,6 +113,7 @@ def extract_from_image(
     edge_buffer: float,
     cluster_threshold: float,
     allow_nan: bool,
+    hdu_index: Optional[int] = 1,
     **kwargs,
 ) -> Dict:
     """
@@ -147,6 +149,9 @@ def extract_from_image(
         df['wavg_dec'].values,
         unit=(u.deg, u.deg)
     )
+    image = fits.HDUList(fits.open(image)[hdu_index])
+    background = fits.HDUList(fits.open(background)[hdu_index])
+    noise = fits.HDUList(fits.open(noise)[hdu_index])
 
     FP = ForcedPhot(image, background, noise)
     flux, flux_err, chisq, DOF, cluster_id = FP.measure(
