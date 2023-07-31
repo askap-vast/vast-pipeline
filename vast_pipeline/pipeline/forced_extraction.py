@@ -20,6 +20,7 @@ from vast_pipeline.pipeline.loading import make_upload_measurements
 
 from forced_phot import ForcedPhot
 from ..utils.utils import StopWatch
+from vast_pipeline.pipeline.utils import open_fits
 
 
 logger = logging.getLogger(__name__)
@@ -148,7 +149,10 @@ def extract_from_image(
         unit=(u.deg, u.deg)
     )
 
-    FP = ForcedPhot(image, background, noise)
+    FP = ForcedPhot(open_fits(image),
+                    open_fits(background),
+                    open_fits(noise)
+                    )
     flux, flux_err, chisq, DOF, cluster_id = FP.measure(
         P_islands,
         cluster_threshold=cluster_threshold,
