@@ -66,7 +66,6 @@ from vast_pipeline.utils.view import generate_colsfields, get_skyregions_collect
 from vast_pipeline.management.commands.initpiperun import initialise_run
 from vast_pipeline.forms import PipelineRunForm, CommentForm, TagWithCommentsForm
 from vast_pipeline.pipeline.config import PipelineConfig
-from vast_pipeline.pipeline.utils import open_fits
 
 
 logger = logging.getLogger(__name__)
@@ -1856,6 +1855,8 @@ def SourceDetail(request, pk):
 
 
 class ImageCutout(APIView):
+    from vast_pipeline.pipeline.utils import open_fits
+
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [IsAuthenticated]
 
