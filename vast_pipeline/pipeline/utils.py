@@ -21,6 +21,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from psutil import cpu_count
 from itertools import chain
+from pathlib import Path
 
 from vast_pipeline.image.main import FitsImage, SelavyImage
 from vast_pipeline.utils.utils import (
@@ -1722,7 +1723,7 @@ def open_fits(fits_path: Union[str, Path]):
         ValueError: File extension must be .fits or .fits.fz
     """
 
-    if type(fits_path) = Path:
+    if type(fits_path) == Path:
         fits_path = str(fits_path)
     
     hdul = fits.open(fits_path)
