@@ -105,6 +105,29 @@ def get_data_from_parquet(
     return {'prefix': prefix, 'max_id': max_id, 'id': image_id}
 
 
+def _forcedphot_preload(image: str,
+                        background: str,
+                        noise: str,
+                        memmap: Optional[bool]=False
+                        ):
+    """
+    Load the relevant image, background and noisemap files.
+    
+    Args:
+        image: a string with the path of the image file
+        background: a string with the path of the background map
+        noise: a string with the path of the noise map
+    
+    Returns:
+        A tuple containing the HDU lists
+    """
+    
+    image_hdul = open_fits(image, memmap=memmap)
+    background_hdul = open_fits(background, memmap=memmap)
+    noise_hdul = open_fits(noise, memmap=memmap)
+    
+    return image_hdul, background_hdul, noise_hdul
+    
 def extract_from_image(
     df: pd.DataFrame,
     image: str,
@@ -148,11 +171,15 @@ def extract_from_image(
         df['wavg_dec'].values,
         unit=(u.deg, u.deg)
     )
+    # load the image, background and noisemaps into memory
+    # a dedicated function may seem unneccesary, but will be useful if we split the load to a separate thread.
+    forcedphot_input = _forcedphot_preload(image,
+                                           background,
+                                           noise,
+                                           memmap=False
+    )
+    FP = ForcedPhot(forcedphot_input)
 
-    FP = ForcedPhot(open_fits(image),
-                    open_fits(background),
-                    open_fits(noise)
-                    )
     flux, flux_err, chisq, DOF, cluster_id = FP.measure(
         P_islands,
         cluster_threshold=cluster_threshold,
