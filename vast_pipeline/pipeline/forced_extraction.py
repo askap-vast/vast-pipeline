@@ -13,7 +13,7 @@ from astropy.coordinates import SkyCoord
 from django.conf import settings
 from django.db import transaction
 from pyarrow.parquet import read_schema
-from typing import Any, List, Tuple, Dict
+from typing import Any, List, Tuple, Dict, Optional
 
 from vast_pipeline.models import Image, Measurement, Run
 from vast_pipeline.pipeline.loading import make_upload_measurements
@@ -178,7 +178,7 @@ def extract_from_image(
                                            noise,
                                            memmap=False
     )
-    FP = ForcedPhot(forcedphot_input)
+    FP = ForcedPhot(*forcedphot_input)
 
     flux, flux_err, chisq, DOF, cluster_id = FP.measure(
         P_islands,
