@@ -1709,12 +1709,13 @@ def write_parquets(
 
     return skyregs_df
 
-def open_fits(fits_path: Union[str, Path]):
+def open_fits(fits_path: Union[str, Path], memmap: Optional[bool]=True):
     """
     This function opens both compressed and uncompressed fits files.
     
     Args:
         fits_path: Path to the fits file
+        memmap: Open the fits file with mmap.
     
     Returns:
         HDUList loaded from the fits file
@@ -1726,7 +1727,7 @@ def open_fits(fits_path: Union[str, Path]):
     if type(fits_path) == Path:
         fits_path = str(fits_path)
     
-    hdul = fits.open(fits_path)
+    hdul = fits.open(fits_path, memmap=memmap)
     
     if fits_path.endswith('.fits'):
         return hdul
