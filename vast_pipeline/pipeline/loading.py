@@ -405,14 +405,18 @@ def copy_upload_associations(associations_df: pd.DataFrame, batch_size: int = 10
         "dr": "dr"
     }
 
-    associations_df["db_id"] = [str(uuid4()) for _ in range(len(associations_df))]
+    to_upload = associations_df.compute()
+
+    to_upload["db_id"] = [str(uuid4()) for _ in range(len(to_upload))]
 
     copy_upload_model(
-        associations_df[columns_to_upload],
+        to_upload[columns_to_upload],
         Association,
         mapping=mapping,
         batch_size=batch_size
     )
+
+    del to_upload
 
 
 def make_upload_associations(associations_df: pd.DataFrame) -> None:
