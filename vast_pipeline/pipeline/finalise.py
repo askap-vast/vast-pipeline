@@ -261,8 +261,11 @@ def final_operations(
     # 0       60              14396
     # 1       94              12961
 
+    # import ipdb; ipdb.set_trace()
     related_df = (
-        srcs_df.loc[srcs_df["related_list"].apply(len) > 0, ["related_list"]]
+        srcs_df.loc[
+            (srcs_df["related_list"].apply(len) > 0) & (srcs_df["related_list"].apply(lambda x: x[0] != "NULL")),
+            ["related_list"]]
         .explode("related_list")
         .reset_index()
         .rename(columns={"source": "from_source_id", "related_list": "to_source_id"})
@@ -310,15 +313,20 @@ def final_operations(
 
     if add_mode:
         # Load old associations so the already uploaded ones can be removed
-        old_associations = pd.read_parquet(previous_parquets["associations"]).rename(
+        old_associations = dd.read_parquet(previous_parquets["associations"]).rename(
             columns={"meas_id": "id", "source_id": "source"}
         )
-        sources_df_upload = pd.concat(
+        sources_df_upload = dd.concat(
             [sources_df, old_associations],
             ignore_index=True
         )
-        sources_df_upload = sources_df_upload.drop_duplicates(
+        # Annoyingly keep=False doesn't work with dask, so we have to compute
+        # the drop_duplicates and then recompute the dask dataframe
+        sources_df_upload = sources_df_upload.compute().drop_duplicates(
             ["source", "id", "d2d", "dr"], keep=False
+        )
+        sources_df_upload = dd.from_pandas(
+            sources_df_upload, npartitions=sources_df.npartitions
         )
         logger.debug(f"Add mode: #{sources_df_upload.shape[0]} associations to upload.")
     else:

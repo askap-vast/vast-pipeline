@@ -598,11 +598,11 @@ def forced_extraction(
                     & (extr_df["img_diff"].isin(done_images_df.name))
                 ],
             ]
-        ).sort_index()
+        )
 
         logger.info(
-            f"{extr_df.shape[0]} new measurements to force extract"
-            f" (from {total_to_extract} total)"
+            f"{extr_df.shape[0].compute()} new measurements to force extract"
+            f" (from {total_to_extract.compute()} total)"
         )
 
     timer.reset()
@@ -683,6 +683,10 @@ def forced_extraction(
 
     # Required to rename this column for the image add mode.
     extr_df = extr_df.rename(columns={"time": "datetime"})
+
+    # Add the ["NULL"] related column to the extr_df
+    extr_df["related"] = "NULL"
+    extr_df["related"] = extr_df["related"].apply(lambda x: [x,])
 
     # Transform the extr_df to a dask dataframe
     extr_df = dd.from_pandas(extr_df, npartitions=1)

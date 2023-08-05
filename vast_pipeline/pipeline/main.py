@@ -70,6 +70,11 @@ class Pipeline:
         self.config: PipelineConfig = PipelineConfig.from_file(
             config_path, validate=validate_config
         )
+
+        # TODO: Remove this once the pipeline is fully functional
+        # Disable pair_metrics
+        self.config["variability"]["pair_metrics"] = False
+
         self.img_paths: Dict[str, Dict[str, str]] = {
             "selavy": {},
             "noise": {},
@@ -324,7 +329,9 @@ class Pipeline:
             p_run.n_new_sources = nr_new_sources
             p_run.save()
 
-        pass
+        del sources_df
+        del missing_sources_df
+        del new_sources_df
 
     @staticmethod
     def check_current_runs() -> None:

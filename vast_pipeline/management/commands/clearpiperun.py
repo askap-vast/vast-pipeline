@@ -14,6 +14,7 @@ from django.db import transaction
 from vast_pipeline.models import Run
 from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
 from ..helpers import get_p_run_name
+from vast_pipeline.pipeline.utils import delete_file_or_dir
 
 
 logger = logging.getLogger(__name__)
@@ -126,7 +127,7 @@ class Command(BaseCommand):
                 )
                 for parquet in parquets:
                     try:
-                        os.remove(parquet)
+                        delete_file_or_dir(parquet)
                     except OSError as e:
                         self.stdout.write(self.style.WARNING(
                             f'Parquet file "{os.path.basename(parquet)}" not existent'

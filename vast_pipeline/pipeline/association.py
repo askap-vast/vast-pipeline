@@ -1282,6 +1282,14 @@ def association(
     # correctly when computing missing_sources_df
     sources_df = sources_df.sort_values(by='datetime')
 
+    # Finally the related column Null entries are filled with a list containing "NULL"
+    # to avoid dask schema issues later on.
+    related_null_mask = sources_df["related"].isnull()
+    sources_df.loc[related_null_mask, "related"] = "NULL"
+    sources_df.loc[related_null_mask, "related"] = sources_df.loc[related_null_mask, "related"].apply(
+        lambda x: [x,]
+    )
+
     logger.info(
         "Total association time: %.2f seconds%s.", timer.reset_init(), skyreg_tag
     )
