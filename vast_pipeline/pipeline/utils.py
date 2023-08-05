@@ -1460,7 +1460,16 @@ def backup_parquets(p_run_path: str) -> None:
         if os.path.isfile(backup_name):
             logger.debug(f"Removing old backup file: {backup_name}.")
             os.remove(backup_name)
-        shutil.copyfile(i, backup_name)
+        elif os.path.isdir(backup_name):
+            logger.debug(f"Removing old backup directory: {backup_name}.")
+            shutil.rmtree(backup_name)
+
+        if os.path.isfile(i):
+            # logger.debug(f"Backing up file: {i}.")
+            shutil.copyfile(i, backup_name)
+        elif os.path.isdir(i):
+            # logger.debug(f"Backing up directory: {i}.")
+            shutil.copytree(i, backup_name)
 
 
 def create_temp_config_file(p_run_path: str) -> None:
