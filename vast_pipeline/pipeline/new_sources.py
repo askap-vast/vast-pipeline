@@ -460,8 +460,9 @@ def new_sources(
         .set_index('source')
      )
 
-    # moving forward only the new_high_sigma columns is needed, drop all
-    # others.
+    # import ipdb; ipdb.set_trace()
+
+    # moving forward only the new_high_sigma columns is needed, drop all others.
     new_sources_df = new_sources_df[['new_high_sigma']]
 
     logger.info(

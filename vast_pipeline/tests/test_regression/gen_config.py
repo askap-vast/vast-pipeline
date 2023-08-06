@@ -84,6 +84,10 @@ def list_to_dict(obs: List[str]) -> Dict[str, List[str]]:
         _, field = os.path.split(o)
         epoch = field.split('.')[1]
         obs_dict[epoch[5:]].append(o)
+
+    # Needs to have epoch keys that are sortable
+    obs_dict = {f"epoch{e:02d}": obs_dict[val] for e, val in enumerate(obs_dict.keys())}
+
     return obs_dict
 
 
@@ -137,6 +141,7 @@ def gen_config(folder: str, run_path: str, epochs: List[str]):
         obs: Dict[str, List[str]] = list_to_dict(obs)  # type: ignore[no-redef]
         obs_func = obs_dict
         settings['epoch_mode'] = True
+
     settings['image_files'] = obs_func(obs, '.I.cutout.fits')
     settings['selavy_files'] = obs_func(obs, '.I.cutout.components.txt')
     settings['noise_files'] = obs_func(obs, '.I.cutout_rms.fits')

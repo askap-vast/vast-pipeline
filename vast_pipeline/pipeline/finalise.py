@@ -145,33 +145,25 @@ def final_operations(
     logger.info("Calculating statistics for sources...")
     srcs_df = parallel_groupby(sources_df)
     srcs_df = srcs_df.fillna(0.)
-    # logger.info("Groupby-apply time: %.2f seconds", timer.reset())
+
     # add new sources
-    # srcs_df["new"] = srcs_df.index.isin(new_sources_df.index)
     srcs_df['new'] = srcs_df.index.isin(
         new_sources_df.index.values.compute()
     )
 
+    # add new high sigma
     srcs_df = srcs_df.merge(
         new_sources_df[['new_high_sigma']],
         left_index=True, right_index=True, how='left'
     )
-    # srcs_df = pd.merge(
-    #     srcs_df,
-    #     new_sources_df["new_high_sigma"],
-    #     left_on="source",
-    #     right_index=True,
-    #     how="left",
-    # )
+
     srcs_df["new_high_sigma"] = srcs_df["new_high_sigma"].fillna(0.0)
 
     # calculate nearest neighbour
     ra, dec = dd.compute(srcs_df['wavg_ra'], srcs_df['wavg_dec'])
     srcs_skycoord = SkyCoord(ra, dec, unit=(u.deg, u.deg))
     del ra, dec
-    # srcs_skycoord = SkyCoord(
-    #     srcs_df["wavg_ra"].values, srcs_df["wavg_dec"].values, unit=(u.deg, u.deg)
-    # )
+
     _, d2d, _ = srcs_skycoord.match_to_catalog_sky(srcs_skycoord, nthneighbor=2)
 
     # add the separation distance in degrees
@@ -270,6 +262,10 @@ def final_operations(
         .reset_index()
         .rename(columns={"source": "from_source_id", "related_list": "to_source_id"})
     )
+
+    if related_df.empty:
+        # Add the 'from_source_id' column to the empty dataframe
+        related_df = pd.DataFrame(columns=["from_source_id", "to_source_id"])
 
     # drop relationships with the same source
     related_df = related_df.loc[

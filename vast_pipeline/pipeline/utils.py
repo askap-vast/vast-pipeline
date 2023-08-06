@@ -592,7 +592,7 @@ def groupby_collect_set(grp: pd.DataFrame) -> list[str]:
     """
     d = {}
 
-    lists = [list(i) if isinstance(i, np.ndarray) else [] for i in grp['related']]
+    lists = [list(i) if isinstance(i, np.ndarray) else ["NULL",] for i in grp['related']]
 
     the_list = list(set(chain.from_iterable(lists)))
 
@@ -989,6 +989,7 @@ def get_src_skyregion_merged_df(
     # calculate some metrics on sources
     # compute only some necessary metrics in the groupby
     timer = StopWatch()
+    # Drop forced measurements as they are not used in the ideal coverage
     srcs_df = parallel_groupby_coord(sources_df)
     logger.debug("Groupby-apply time: %.2f seconds", timer.reset())
 
@@ -1433,6 +1434,9 @@ def reconstruct_associtaion_dfs(
         if os.path.isfile(forced_parquet) or os.path.isdir(forced_parquet):
             img_fmeas_paths.append(forced_parquet)
 
+    # import ipdb; ipdb.set_trace()
+    logger.debug("Found %i forced measurement parquet files.", len(img_fmeas_paths))
+
     # Create union of paths.
     img_meas_paths += img_fmeas_paths
 
@@ -1539,10 +1543,10 @@ def reconstruct_associtaion_dfs(
         .index.values
     )
 
-    # import ipdb; ipdb.set_trace()
     # Make sure we attach the correct source id
     source_ids = sources_df.loc[relation_ids]["source"].values
-    sources_df["related"] = np.nan
+    sources_df["related"] = "NULL"
+    sources_df["related"] = sources_df["related"].apply(lambda x: [x,])
     relations_to_update = prev_relations.loc[source_ids].to_numpy().copy()
     relations_to_update = np.reshape(relations_to_update, relations_to_update.shape[0])
     sources_df.loc[relation_ids, "related"] = relations_to_update
@@ -1584,7 +1588,7 @@ def reconstruct_associtaion_dfs(
     # Create the unique skyc1_srcs dataframe.
     skyc1_srcs = (
         sources_df[~sources_df["forced"]]
-        .sort_values(by="id")
+        .sort_values(by=["epoch", "id"])
         .drop("related", axis=1)
         .drop_duplicates("source")
     ).copy(deep=True)

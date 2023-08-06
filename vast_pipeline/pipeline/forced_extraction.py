@@ -688,6 +688,16 @@ def forced_extraction(
     extr_df["related"] = "NULL"
     extr_df["related"] = extr_df["related"].apply(lambda x: [x,])
 
+    # And add an epoch column for the same reason
+    if sources_df['epoch'].dtype == 'object':
+        extr_df["epoch"] = "FORCED"
+    elif sources_df['epoch'].dtype == 'int':
+        extr_df["epoch"] = -1
+    elif sources_df['epoch'].dtype == 'float':
+        extr_df["epoch"] = -1.0
+    else:
+        extr_df["epoch"] = sources_df['epoch'].compute().iloc[0]
+
     # Transform the extr_df to a dask dataframe
     extr_df = dd.from_pandas(extr_df, npartitions=1)
 
