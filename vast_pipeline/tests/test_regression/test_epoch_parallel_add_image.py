@@ -275,7 +275,7 @@ class DeruiterEpochParallelAddImageTest(TestCase):
         '''
         See documentation for test_num_sources in property_check.
         '''
-        property_check.test_num_sources(self, self.sources, 617)
+        property_check.test_num_sources(self, self.sources, 620)
 
     def test_most_relations(self):
         '''
@@ -283,10 +283,12 @@ class DeruiterEpochParallelAddImageTest(TestCase):
         '''
         # this is the expected highest relation sources
         expected = pd.DataFrame(
-            [[322.752092, -3.981232, 3],
-             [322.752646, -3.982859, 3],
-             [322.752777, -3.983257, 3],
-             [322.752791, -3.982937, 3]],
+            [
+                [321.900886, -4.200861, 4],
+                [321.899517, -4.201971, 3],
+                [321.900505, -4.201181, 3],
+                [322.752092, -3.981232, 3]
+            ],
             columns=['wavg_ra', 'wavg_dec', 'relations']
         )
 

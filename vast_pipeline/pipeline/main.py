@@ -239,7 +239,7 @@ class Pipeline:
         sources_df = dd.from_pandas(
             sources_df,
             npartitions=dm.get_nr_workers()
-        )
+        ).repartition(partition_size="100MB")
         sources_df = dm.persist(sources_df)
 
         # STEP #3: Merge sky regions and sources ready for
@@ -266,7 +266,7 @@ class Pipeline:
         missing_sources_df = dd.from_pandas(
             missing_sources_df,
             npartitions=dm.get_nr_workers()
-        )
+        ).repartition(partition_size="100MB")
         missing_sources_df = dm.persist(missing_sources_df)
 
         # STEP #4 New source analysis
