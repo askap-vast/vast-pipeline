@@ -1383,7 +1383,6 @@ def reconstruct_associtaion_dfs(
         if os.path.isfile(forced_parquet) or os.path.isdir(forced_parquet):
             img_fmeas_paths.append(forced_parquet)
 
-    # import ipdb; ipdb.set_trace()
     logger.debug("Found %i forced measurement parquet files.", len(img_fmeas_paths))
 
     # Create union of paths.

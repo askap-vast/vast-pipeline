@@ -253,7 +253,6 @@ def final_operations(
     # 0       60              14396
     # 1       94              12961
 
-    # import ipdb; ipdb.set_trace()
     related_df = (
         srcs_df.loc[
             (srcs_df["related_list"].apply(len) > 0) & (srcs_df["related_list"].apply(lambda x: x[0] != "NULL")),
