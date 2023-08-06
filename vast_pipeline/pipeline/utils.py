@@ -708,57 +708,6 @@ def parallel_groupby(df: dd.DataFrame) -> dd.DataFrame:
     return out.persist()
 
 
-# def parallel_groupby(df: pd.DataFrame) -> pd.DataFrame:
-#     """
-#     Performs the parallel source dataframe operations to calculate the source
-#     metrics using Dask and returns the resulting dataframe.
-
-#     Args:
-#         df: The sources dataframe produced by the previous pipeline stages.
-
-#     Returns:
-#         The source dataframe with the calculated metric columns.
-#     """
-#     col_dtype = {
-#         "img_list": "O",
-#         "n_meas_forced": "i",
-#         "n_meas": "i",
-#         "n_meas_sel": "i",
-#         "n_sibl": "i",
-#         "wavg_ra": "f",
-#         "wavg_dec": "f",
-#         "avg_compactness": "f",
-#         "min_snr": "f",
-#         "max_snr": "f",
-#         "wavg_uncertainty_ew": "f",
-#         "wavg_uncertainty_ns": "f",
-#         "avg_flux_int": "f",
-#         "avg_flux_peak": "f",
-#         "max_flux_peak": "f",
-#         "max_flux_int": "f",
-#         "min_flux_peak": "f",
-#         "min_flux_int": "f",
-#         "min_flux_peak_isl_ratio": "f",
-#         "min_flux_int_isl_ratio": "f",
-#         "v_int": "f",
-#         "v_peak": "f",
-#         "eta_int": "f",
-#         "eta_peak": "f",
-#         "related_list": "O",
-#     }
-#     n_cpu = cpu_count() - 1
-#     out = dd.from_pandas(df, n_cpu)
-#     out = (
-#         out.groupby("source")
-#         .apply(groupby_funcs, meta=col_dtype)
-#         .compute(num_workers=n_cpu, scheduler="processes")
-#     )
-
-#     out["n_rel"] = out["related_list"].apply(lambda x: 0 if x == -1 else len(x))
-
-#     return out
-
-
 def parallel_groupby_coord(df: dd.core.DataFrame) -> pd.DataFrame:
     """Calculate the weighted average RA and Dec of the sources.
 
