@@ -9,6 +9,7 @@ import pandas as pd
 
 from typing import Tuple, Union, Optional
 from pathlib import Path
+from astropy.io import fits
 
 
 logger = logging.getLogger(__name__)
