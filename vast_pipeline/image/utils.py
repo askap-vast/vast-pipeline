@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 
 from typing import Tuple
+from pathlib import Path
 
 
 logger = logging.getLogger(__name__)
@@ -246,3 +247,32 @@ def calc_condon_flux_errors(
     except Exception as e:
         logger.debug("Error in the calculation of Condon errors for a source", exc_info=True)
         return 0., 0., 0., 0., 0., 0., 0.
+
+def open_fits(fits_path: Union[str, Path], memmap: Optional[bool]=True):
+    """
+    This function opens both compressed and uncompressed fits files.
+    
+    Args:
+        fits_path: Path to the fits file
+        memmap: Open the fits file with mmap.
+    
+    Returns:
+        HDUList loaded from the fits file
+    
+    Raises:
+        ValueError: File extension must be .fits or .fits.fz
+    """
+
+    if type(fits_path) == Path:
+        fits_path = str(fits_path)
+    
+    hdul = fits.open(fits_path, memmap=memmap)
+    
+    if fits_path.endswith('.fits'):
+        return hdul
+    elif fits_path.endswith('.fits.fz'):
+        return fits.HDUList(hdul[1:])
+    else:
+        raise ValueError("Unrecognised extension for {fits_path}."
+                         "File extension must be .fits or .fits.fz"
+                         )
