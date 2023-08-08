@@ -7,7 +7,7 @@ import logging
 import numpy as np
 import pandas as pd
 
-from typing import Tuple
+from typing import Tuple, Union, Optional
 from pathlib import Path
 
 
