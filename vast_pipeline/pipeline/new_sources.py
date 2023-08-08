@@ -14,7 +14,7 @@ from astropy.wcs.utils import (
 
 from vast_pipeline.models import Image, Run
 from vast_pipeline.utils.utils import StopWatch
-from vast_pipeline.pipeline.utils import open_fits
+from vast_pipeline.image.utils import open_fits
 
 
 logger = logging.getLogger(__name__)

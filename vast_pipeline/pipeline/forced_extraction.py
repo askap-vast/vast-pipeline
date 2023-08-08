@@ -20,7 +20,7 @@ from vast_pipeline.pipeline.loading import make_upload_measurements
 
 from forced_phot import ForcedPhot
 from ..utils.utils import StopWatch
-from vast_pipeline.pipeline.utils import open_fits
+from vast_pipeline.image.utils import open_fits
 
 
 logger = logging.getLogger(__name__)

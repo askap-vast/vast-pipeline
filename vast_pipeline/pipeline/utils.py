@@ -21,9 +21,9 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from psutil import cpu_count
 from itertools import chain
-from pathlib import Path
 
 from vast_pipeline.image.main import FitsImage, SelavyImage
+from vast_pipeline.image.utils import open_fits
 from vast_pipeline.utils.utils import (
     eq_to_cart, StopWatch, optimize_ints, optimize_floats
 )

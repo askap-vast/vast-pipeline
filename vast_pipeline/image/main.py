@@ -19,6 +19,7 @@ from .utils import calc_condon_flux_errors
 
 from vast_pipeline import models
 from vast_pipeline.survey.translators import tr_selavy
+from vast_pipeline.image.utils import open_fits
 
 
 logger = logging.getLogger(__name__)
@@ -116,7 +117,6 @@ class FitsImage(Image):
         Returns:
             The FITS header as an astropy.io.fits.Header object.
         """
-        from vast_pipeline.pipeline.utils import open_fits
         
         try:
             with open_fits(self.path) as hdulist:
