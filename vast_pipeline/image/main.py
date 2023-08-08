@@ -123,8 +123,8 @@ class FitsImage(Image):
                 hdu = hdulist[hdu_index]
         except Exception:
             raise IOError((
-                'Could not read this FITS file: '
-                f'{os.path.basename(self.path)}'
+                'Could not read FITS file: '
+                f'{self.path}'
             ))
 
         return hdu.header.copy()
