@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added links to Data Central DAS and the Fink Broker to the source page [#697](https://github.com/askap-vast/vast-pipeline/pull/697/)
 - Added `n_new_sources` column to run model to store the number of new sources in a pipeline run [#676](https://github.com/askap-vast/vast-pipeline/pull/676).
 - Added `MAX_CUTOUT_IMAGES` to the pipeline settings to limit the number of postage stamps displayed on the source detail page [#658](https://github.com/askap-vast/vast-pipeline/pull/658).
 - Added run config option to skip calculating measurement pair metrics [#655](https://github.com/askap-vast/vast-pipeline/pull/655).
@@ -105,6 +106,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#697](https://github.com/askap-vast/vast-pipeline/pull/697/): feat: Added links to Data Central DAS and the Fink Broker to the source page 
 - [#685](https://github.com/askap-vast/vast-pipeline/pull/685): docs: Updated `runpipeline` section on CLI docs.
 - [#676](https://github.com/askap-vast/vast-pipeline/pull/676): Removed home counts and new source count.
 - [#665](https://github.com/askap-vast/vast-pipeline/pull/665): Update Gr1N/setup-poetry to v7.
