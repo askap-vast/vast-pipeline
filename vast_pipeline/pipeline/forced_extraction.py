@@ -69,7 +69,8 @@ def get_data_from_parquet(
 
     Args:
         file_and_image_id:
-            a tuple containing the path of the measurements parquet file and the image ID.
+            a tuple containing the path of the measurements parquet file and
+            the image ID.
         p_run_path:
             Pipeline run path to get forced parquet in case of add mode.
         add_mode:
@@ -108,26 +109,27 @@ def get_data_from_parquet(
 def _forcedphot_preload(image: str,
                         background: str,
                         noise: str,
-                        memmap: Optional[bool]=False
+                        memmap: Optional[bool] = False
                         ):
     """
     Load the relevant image, background and noisemap files.
-    
+
     Args:
         image: a string with the path of the image file
         background: a string with the path of the background map
         noise: a string with the path of the noise map
-    
+
     Returns:
         A tuple containing the HDU lists
     """
-    
+
     image_hdul = open_fits(image, memmap=memmap)
     background_hdul = open_fits(background, memmap=memmap)
     noise_hdul = open_fits(noise, memmap=memmap)
-    
+
     return image_hdul, background_hdul, noise_hdul
-    
+
+
 def extract_from_image(
     df: pd.DataFrame,
     image: str,
@@ -172,12 +174,13 @@ def extract_from_image(
         unit=(u.deg, u.deg)
     )
     # load the image, background and noisemaps into memory
-    # a dedicated function may seem unneccesary, but will be useful if we split the load to a separate thread.
+    # a dedicated function may seem unneccesary, but will be useful if we
+    # split the load to a separate thread.
     forcedphot_input = _forcedphot_preload(image,
                                            background,
                                            noise,
                                            memmap=False
-    )
+                                           )
     FP = ForcedPhot(*forcedphot_input)
 
     flux, flux_err, chisq, DOF, cluster_id = FP.measure(
@@ -197,7 +200,7 @@ def finalise_forced_dfs(
     df: pd.DataFrame, prefix: str, max_id: int, beam_bmaj: float,
     beam_bmin: float, beam_bpa: float, id: int, datetime: datetime.datetime,
     image: str
-    ) -> pd.DataFrame:
+) -> pd.DataFrame:
     """
     Compute populate leftover columns for the dataframe with forced
     photometry data given the input parameters
@@ -254,7 +257,7 @@ def parallel_extraction(
     df: pd.DataFrame, df_images: pd.DataFrame, df_sources: pd.DataFrame,
     min_sigma: float, edge_buffer: float, cluster_threshold: float,
     allow_nan: bool, add_mode: bool, p_run_path: str
-    ) -> pd.DataFrame:
+) -> pd.DataFrame:
     """
     Parallelize forced extraction with Dask
 
@@ -291,7 +294,7 @@ def parallel_extraction(
     """
     # explode the lists in 'img_diff' column (this will make a copy of the df)
     out = (
-        df.rename(columns={'img_diff':'image', 'source':'source_tmp_id'})
+        df.rename(columns={'img_diff': 'image', 'source': 'source_tmp_id'})
         # merge the rms_min column from df_images
         .merge(
             df_images[['rms_min']],
@@ -316,8 +319,8 @@ def parallel_extraction(
     out['max_snr'] = out['flux_peak'].values / out['image_rms_min'].values
     out = out[out['max_snr'] > min_sigma].reset_index(drop=True)
     logger.debug("Min forced sigma dropped %i sources",
-        predrop_shape - out.shape[0]
-    )
+                 predrop_shape - out.shape[0]
+                 )
 
     # drop some columns that are no longer needed and the df should look like
     # out
@@ -340,7 +343,8 @@ def parallel_extraction(
     # create a list of dictionaries with image file paths and dataframes
     # with data related to each images
     def image_data_func(image_name: str) -> Dict[str, Any]:
-        nonlocal out  # `out` refers to the `out` declared in nearest enclosing scope
+        # `out` refers to the `out` declared in nearest enclosing scope
+        nonlocal out
         return {
             'image_id': df_images.at[image_name, 'id'],
             'image': df_images.at[image_name, 'path'],
@@ -415,7 +419,7 @@ def parallel_extraction(
         pd.concat(intermediate_df, axis=0, sort=False)
         .rename(
             columns={
-                'wavg_ra':'ra', 'wavg_dec':'dec', 'image_name': 'image'
+                'wavg_ra': 'ra', 'wavg_dec': 'dec', 'image_name': 'image'
             }
         )
     )
@@ -424,7 +428,7 @@ def parallel_extraction(
 
 
 def write_group_to_parquet(
-    df: pd.DataFrame, fname: str, add_mode: bool) -> None:
+        df: pd.DataFrame, fname: str, add_mode: bool) -> None:
     '''
     Write a dataframe correpondent to a single group/image
     to a parquet file.
@@ -451,7 +455,7 @@ def write_group_to_parquet(
 
 
 def parallel_write_parquet(
-    df: pd.DataFrame, run_path: str, add_mode: bool = False) -> None:
+        df: pd.DataFrame, run_path: str, add_mode: bool = False) -> None:
     '''
     Parallelize writing parquet files for forced measurements.
 
@@ -467,9 +471,10 @@ def parallel_write_parquet(
         None
     '''
     images = df['image'].unique().tolist()
-    get_fname = lambda n: os.path.join(
+
+    def get_fname(n): return os.path.join(
         run_path,
-        'forced_measurements_' + n.replace('.','_') + '.parquet'
+        'forced_measurements_' + n.replace('.', '_') + '.parquet'
     )
     dfs = list(map(lambda x: (df[df['image'] == x], get_fname(x)), images))
     n_cpu = cpu_count() - 1
