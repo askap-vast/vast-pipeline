@@ -16,7 +16,8 @@ echo "Unzipping archive to ${TMPDIR} ..."
 unzip -q -d ${TMPDIR} ${TMPFILE}
 
 echo "Moving data to relevant directory..."
-mv ${TMPDIR}/VAST_PIPELINE_TEST_DATASET/* $(pwd)/.
+#mv ${TMPDIR}/VAST_PIPELINE_TEST_DATASET/* $(pwd)/.
+mv ${TMPDIR}/pipeline-test-data/* $(pwd)/.
 
 echo "Deleting temporary files..."
 rm -r ${TMPFILE} ${TMPDIR}
