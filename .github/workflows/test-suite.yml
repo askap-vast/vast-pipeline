@@ -75,7 +75,7 @@ jobs:
 
       - name: Create database user and database name
         run: >
-          python ./init-tools/init-db.py
+          poetry run python ./init-tools/init-db.py
           localhost ${{ env.db_port }}
           postgres ${{ env.db_password }}
           vast vastpsw vastdb
@@ -88,4 +88,4 @@ jobs:
         working-directory: ./vast_pipeline/tests/regression-data
 
       - name: Run tests
-        run: ./manage.py test
+        run: poetry run python manage.py test
