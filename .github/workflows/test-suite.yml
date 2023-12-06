@@ -42,13 +42,6 @@ jobs:
           virtualenvs-create: true
           virtualenvs-in-project: true
       
-      - name: cache deps
-        id: cache-deps
-        uses: actions/cache@v2
-        with:
-          path: .venv
-          key: pydeps-${{ hashFiles('**/poetry.lock') }}
-      
       - uses: actions/setup-node@v2
         with:
           node-version: "12"
