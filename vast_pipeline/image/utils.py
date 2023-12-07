@@ -271,7 +271,9 @@ def open_fits(fits_path: Union[str, Path], memmap: Optional[bool] = True):
     hdul = fits.open(fits_path, memmap=memmap)
     
     # This is a messy way to check, but I can't think of a better one
-    if type(hdul[1]) == fits.hdu.compressed.CompImageHDU:
+    if len(hdul) == 1:
+        return hdul
+    elif type(hdul[1]) == fits.hdu.compressed.CompImageHDU:
         return fits.HDUList(hdul[1:])
     else:
         return hdul
