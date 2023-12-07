@@ -41,6 +41,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Updated path to test data in github actions and docs [#699](https://github.com/askap-vast/vast-pipeline/pull/699)
+- Changed GitHub actions test suite to install pipeline via poetry [#699](https://github.com/askap-vast/vast-pipeline/pull/699).
+- Updated GitHub actions ubuntu version to 20.04 [#699](https://github.com/askap-vast/vast-pipeline/pull/699).
+- Removed python 3.10 testing from GitHub actions [#699](https://github.com/askap-vast/vast-pipeline/pull/699).
 - Updated GitHub actions Gr1N/setup-poetry to v7 [#665](https://github.com/askap-vast/vast-pipeline/pull/665).
 - Changed lightcurve plot cursor hit-test mode from "vline" to "mouse" to avoid a regression in Bokeh [#652](https://github.com/askap-vast/vast-pipeline/pull/652).
 - Updated Bokeh from v2.3.3 to v2.4.2 [#652](https://github.com/askap-vast/vast-pipeline/pull/652).
@@ -106,6 +110,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#699](https://github.com/askap-vast/vast-pipeline/pull/699): docs, feat: Add new regression data download URL and updates to Github Actions
 - [#697](https://github.com/askap-vast/vast-pipeline/pull/697/): feat: Added links to Data Central DAS and the Fink Broker to the source page 
 - [#685](https://github.com/askap-vast/vast-pipeline/pull/685): docs: Updated `runpipeline` section on CLI docs.
 - [#676](https://github.com/askap-vast/vast-pipeline/pull/676): Removed home counts and new source count.
