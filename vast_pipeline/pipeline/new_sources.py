@@ -6,7 +6,6 @@ import dask.dataframe as dd
 from psutil import cpu_count
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.wcs.utils import (
     proj_plane_pixel_scales
