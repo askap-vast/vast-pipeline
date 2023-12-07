@@ -30,6 +30,10 @@ jobs:
         with:
           python-version: ${{ matrix.python_version }}
 
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v1
+        with:
+          version: "10.0"
       - name: cache poetry install
         uses: actions/cache@v2
         with:
