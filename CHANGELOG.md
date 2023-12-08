@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added support for compressed FITS files [#694](https://github.com/askap-vast/vast-pipeline/pull/694)
 - Added links to Data Central DAS and the Fink Broker to the source page [#697](https://github.com/askap-vast/vast-pipeline/pull/697/)
 - Added `n_new_sources` column to run model to store the number of new sources in a pipeline run [#676](https://github.com/askap-vast/vast-pipeline/pull/676).
 - Added `MAX_CUTOUT_IMAGES` to the pipeline settings to limit the number of postage stamps displayed on the source detail page [#658](https://github.com/askap-vast/vast-pipeline/pull/658).
@@ -41,6 +42,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Updated all FITS loading to use a wrapper that can handle compressed FITS files [#694](https://github.com/askap-vast/vast-pipeline/pull/694)
 - Updated path to test data in github actions and docs [#699](https://github.com/askap-vast/vast-pipeline/pull/699)
 - Changed GitHub actions test suite to install pipeline via poetry [#699](https://github.com/askap-vast/vast-pipeline/pull/699).
 - Updated GitHub actions ubuntu version to 20.04 [#699](https://github.com/askap-vast/vast-pipeline/pull/699).
