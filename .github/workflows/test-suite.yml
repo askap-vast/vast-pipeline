@@ -34,11 +34,6 @@ jobs:
         uses: KyleMayes/install-llvm-action@v1
         with:
           version: "10.0"
-      #- name: cache poetry install
-      #  uses: actions/cache@v2
-      #  with:
-      #    path: ~/.local
-      #    key: poetry-1.5.1-0
       
       - uses: snok/install-poetry@v1
         with:
