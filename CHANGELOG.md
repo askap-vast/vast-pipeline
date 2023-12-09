@@ -114,7 +114,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
-- [#702](https://github.com/askap-vast/vast-pipeline/pull/702): fix: Downgrade ci-docs to python 3.8 
+- [#694](https://github.com/askap-vast/vast-pipeline/pull/694): feat: Handle compressed fits files.
+- [#702](https://github.com/askap-vast/vast-pipeline/pull/702): fix: Downgrade ci-docs to python 3.8.
 - [#701](https://github.com/askap-vast/vast-pipeline/pull/701): fix: Update Gr1N poetry to v8, force python 3.8.10.
 - [#699](https://github.com/askap-vast/vast-pipeline/pull/699): docs, feat: Add new regression data download URL and updates to Github Actions.
 - [#697](https://github.com/askap-vast/vast-pipeline/pull/697/): feat: Added links to Data Central DAS and the Fink Broker to the source page.
