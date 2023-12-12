@@ -15,7 +15,6 @@ import dask
 import dask.dataframe as dd
 
 from typing import Any, List, Optional, Dict, Tuple, Union
-from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -23,6 +22,7 @@ from psutil import cpu_count
 from itertools import chain
 
 from vast_pipeline.image.main import FitsImage, SelavyImage
+from vast_pipeline.image.utils import open_fits
 from vast_pipeline.utils.utils import (
     eq_to_cart, StopWatch, optimize_ints, optimize_floats
 )
@@ -793,7 +793,7 @@ def get_rms_noise_image_values(rms_path: str) -> Tuple[float, float, float]:
     logger.debug('Extracting Image RMS values from Noise file...')
     med_val = min_val = max_val = 0.
     try:
-        with fits.open(rms_path) as f:
+        with open_fits(rms_path) as f:
             data = f[0].data
             data = data[np.logical_not(np.isnan(data))]
             data = data[data != 0]

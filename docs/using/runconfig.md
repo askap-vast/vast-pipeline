@@ -151,8 +151,7 @@ Boolean. Astropy warnings are suppressed in the logging output if set to `True`.
 
 **`inputs.image`**
 Line entries or epoch headed entries. 
-The full paths to the image FITS files to be processed. 
-Epoch mode is activated by including an extra key value with the epoch name, see the example below for a demonstration.
+The full paths to the image FITS files to be processed - these can be regular FITS files, or FITS files that use a [`CompImageHDU`](https://docs.astropy.org/en/stable/io/fits/api/images.html#astropy.io.fits.CompImageHDU). In principle the pipeline also supports [`.fits.fz`](https://heasarc.gsfc.nasa.gov/fitsio/fpack/) files, although this is not officially supported. Epoch mode is activated by including an extra key value with the epoch name, see the example below for a demonstration.
 Refer to [this section](../design/association.md#epoch-based-association) of the documentation for more information on epoch based association.
 
 <!-- markdownlint-disable MD046 -->

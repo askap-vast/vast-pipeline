@@ -7,7 +7,9 @@ import logging
 import numpy as np
 import pandas as pd
 
-from typing import Tuple
+from typing import Tuple, Union, Optional
+from pathlib import Path
+from astropy.io import fits
 
 
 logger = logging.getLogger(__name__)
@@ -81,7 +83,7 @@ def calc_error_radius(ra, ra_err, dec, dec_err) -> float:
             np.deg2rad(i),
             dec_1,
             np.deg2rad(j)
-        )) for i,j in zip(ra_offsets, dec_offsets)
+        )) for i, j in zip(ra_offsets, dec_offsets)
     ]
 
     seps = np.column_stack(seps)
@@ -190,7 +192,7 @@ def calc_condon_flux_errors(
                    (1. + (theta_B / major)**2)**alpha_maj2 *
                    (1. + (theta_b / minor)**2)**alpha_min2 *
                    snr**2)
-        rho_sq3 = ((major * minor / (4.* theta_B * theta_b)) *
+        rho_sq3 = ((major * minor / (4. * theta_B * theta_b)) *
                    (1. + (theta_B / major)**2)**alpha_maj3 *
                    (1. + (theta_b / minor)**2)**alpha_min3 *
                    snr**2)
@@ -210,9 +212,9 @@ def calc_condon_flux_errors(
 
         # ra and dec errors
         errorra = np.sqrt((error_par_major * np.sin(theta))**2 +
-                            (error_par_minor * np.cos(theta))**2)
+                          (error_par_minor * np.cos(theta))**2)
         errordec = np.sqrt((error_par_major * np.cos(theta))**2 +
-                            (error_par_minor * np.sin(theta))**2)
+                           (error_par_minor * np.sin(theta))**2)
 
         errormajor = np.sqrt(2) * major / rho1
         errorminor = np.sqrt(2) * minor / rho2
@@ -238,11 +240,40 @@ def calc_condon_flux_errors(
         help1 = (errormajor / major)**2
         help2 = (errorminor / minor)**2
         help3 = theta_B * theta_b / (major * minor)
-        errorflux = np.abs(flux_int) * np.sqrt(errorpeaksq / flux_peak**2 + help3 * (help1 + help2))
+        help4 = np.sqrt(errorpeaksq / flux_peak**2 + help3 * (help1 + help2))
+        errorflux = np.abs(flux_int) * help4
 
         # need to return flux_peak if used.
         return errorpeak, errorflux, errormajor, errorminor, errortheta, errorra, errordec
 
     except Exception as e:
-        logger.debug("Error in the calculation of Condon errors for a source", exc_info=True)
+        logger.debug(
+            "Error in the calculation of Condon errors for a source",
+            exc_info=True)
         return 0., 0., 0., 0., 0., 0., 0.
+
+
+def open_fits(fits_path: Union[str, Path], memmap: Optional[bool] = True):
+    """
+    This function opens both compressed and uncompressed fits files.
+
+    Args:
+        fits_path: Path to the fits file
+        memmap: Open the fits file with mmap.
+
+    Returns:
+        HDUList loaded from the fits file
+    """
+
+    if isinstance(fits_path, Path):
+        fits_path = str(fits_path)
+
+    hdul = fits.open(fits_path, memmap=memmap)
+    
+    # This is a messy way to check, but I can't think of a better one
+    if len(hdul) == 1:
+        return hdul
+    elif type(hdul[1]) == fits.hdu.compressed.CompImageHDU:
+        return fits.HDUList(hdul[1:])
+    else:
+        return hdul
