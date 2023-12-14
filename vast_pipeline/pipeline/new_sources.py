@@ -84,7 +84,7 @@ def get_image_rms_measurements(
         return group
     image = group.iloc[0]['img_diff_rms_path']
     get_rms_timer = StopWatch()
-   with open_fits(image) as hdul:
+    with open_fits(image) as hdul:
         header = hdul[0].header
         wcs = WCS(header, naxis=2)
         data = hdul[0].data.squeeze()
