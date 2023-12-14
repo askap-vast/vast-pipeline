@@ -19,6 +19,7 @@ from .utils import calc_condon_flux_errors
 
 from vast_pipeline import models
 from vast_pipeline.survey.translators import tr_selavy
+from vast_pipeline.image.utils import open_fits
 
 
 logger = logging.getLogger(__name__)
@@ -33,6 +34,7 @@ class Image(object):
         path (str): The system path to the image.
 
     """
+
     def __init__(self, path: str) -> None:
         """
         Initiliase an image object.
@@ -80,7 +82,7 @@ class FitsImage(Image):
 
     entire_image = True
 
-    def __init__(self, path: str, hdu_index: int=0) -> None:
+    def __init__(self, path: str, hdu_index: int = 0) -> None:
         """
         Initialise a FitsImage object.
 
@@ -107,7 +109,7 @@ class FitsImage(Image):
 
     def __get_header(self, hdu_index: int) -> fits.Header:
         """
-        Retrieves the header from teh FITS image.
+        Retrieves the header from the FITS image.
 
         Args:
             hdu_index:
@@ -116,13 +118,14 @@ class FitsImage(Image):
         Returns:
             The FITS header as an astropy.io.fits.Header object.
         """
+
         try:
-            with fits.open(self.path) as hdulist:
+            with open_fits(self.path) as hdulist:
                 hdu = hdulist[hdu_index]
         except Exception:
             raise IOError((
-                'Could not read this FITS file: '
-                f'{os.path.basename(self.path)}'
+                'Could not read FITS file: '
+                f'{self.path}'
             ))
 
         return hdu.header.copy()
@@ -223,7 +226,8 @@ class FitsImage(Image):
             The radius of the image in pixels.
         """
         if self.entire_image:
-            # a large circle that *should* include the whole image (and then some)
+            # a large circle that *should* include the whole image
+            # (and then some)
             diameter = np.hypot(header[fits_naxis1], header[fits_naxis2])
         else:
             # We simply place the largest circle we can in the centre.
@@ -244,10 +248,11 @@ class FitsImage(Image):
         self.freq_eff = None
         self.freq_bw = None
         try:
-            if ('ctype3' in header) and (header['ctype3'] in ('FREQ', 'VOPT')):
+            freq_keys = ('FREQ', 'VOPT')
+            if ('ctype3' in header) and (header['ctype3'] in freq_keys):
                 self.freq_eff = header['crval3']
                 self.freq_bw = header['cdelt3'] if 'cdelt3' in header else 0.0
-            elif ('ctype4' in header) and (header['ctype4'] in ('FREQ', 'VOPT')):
+            elif ('ctype4' in header) and (header['ctype4'] in freq_keys):
                 self.freq_eff = header['crval4']
                 self.freq_bw = header['cdelt4'] if 'cdelt4' in header else 0.0
             else:
@@ -271,6 +276,7 @@ class SelavyImage(FitsImage):
             associated with the image.
         config (Dict): The image configuration settings.
     """
+
     def __init__(
         self,
         path: str,
@@ -313,7 +319,8 @@ class SelavyImage(FitsImage):
             Dataframe containing the cleaned and processed Selavy components.
         """
         # TODO: improve with loading only the cols we need and set datatype
-        if self.selavy_path.endswith(".xml") or self.selavy_path.endswith(".vot"):
+        if self.selavy_path.endswith(
+                ".xml") or self.selavy_path.endswith(".vot"):
             df = Table.read(
                 self.selavy_path, format="votable", use_names_over_ids=True
             ).to_pandas()
@@ -460,12 +467,12 @@ class SelavyImage(FitsImage):
             .agg('sum')
         )
 
-        df['flux_int_isl_ratio'] =  (
+        df['flux_int_isl_ratio'] = (
             df['flux_int'].values
             / island_flux_totals.loc[df['island_id']]['flux_int'].values
         )
 
-        df['flux_peak_isl_ratio'] =  (
+        df['flux_peak_isl_ratio'] = (
             df['flux_peak'].values
             / island_flux_totals.loc[df['island_id']]['flux_peak'].values
         )

@@ -39,6 +39,14 @@
     <h1 class="h3 mb-2 text-gray-800"><strong>Source:</strong> {{ source.name }}</h1>
     <div class="">
       {% include 'source_fav_button.html' %}
+      <a href="https://das.datacentral.org.au/das?RA={{ source.aladin_ra|floatformat:6 }}&DEC={{ source.aladin_dec|floatformat:6 }}&FOV=2.0&ERR=10.0"
+        class="d-none d-sm-inline-block btn btn-sm btn-info btn-icon-split shadow-sm" target="_blank"
+        title="Data Central cone search with a 10 arcsec radius.">
+        <span class="icon text-white-600">
+          <i class="fas fa-info-circle fa-sm"></i>
+        </span>
+        <span class="text">DAS</span>
+        </a>
       <a href="http://simbad.u-strasbg.fr/simbad/sim-coo?CooEpoch=2000&Coord={{ source.aladin_ra|floatformat:6 }}d{{ source.aladin_dec|floatformat:6 }}d&Radius.unit=arcmin&CooEqui=2000&CooFrame=FK5&Radius=2'"
         class="d-none d-sm-inline-block btn btn-sm btn-info btn-icon-split shadow-sm" target="_blank"
         title="SIMBAD cone search with 2 arcmin radius.">
@@ -63,6 +71,14 @@
         </span>
         <span class="text">ZTF</span>
       </a>
+      <a href="https://fink-portal.org/?query_type=Conesearch&ra={{ source.aladin_ra|floatformat:6 }}&dec={{ source.aladin_dec|floatformat:6 }}&radius=10.0"
+        class="d-none d-sm-inline-block btn btn-sm btn-info btn-icon-split shadow-sm" target="_blank"
+        title="Fink cone search with a 10 arcsec radius.">
+        <span class="icon text-white-600">
+          <i class="fas fa-info-circle fa-sm"></i>
+        </span>
+        <span class="text">Fink</span>
+        </a>
       {% if source_previous_id %}
       <a href="{% url 'vast_pipeline:source_detail' source_previous_id %}" class="d-none d-sm-inline-block btn btn-sm btn-light btn-icon-split shadow-sm">
         <span class="icon text-gray-600">

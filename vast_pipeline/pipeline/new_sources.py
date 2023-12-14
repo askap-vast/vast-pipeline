@@ -6,7 +6,6 @@ import dask.dataframe as dd
 from psutil import cpu_count
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.wcs.utils import (
     proj_plane_pixel_scales
@@ -14,6 +13,7 @@ from astropy.wcs.utils import (
 
 from vast_pipeline.models import Image, Run
 from vast_pipeline.utils.utils import StopWatch
+from vast_pipeline.image.utils import open_fits
 
 
 logger = logging.getLogger(__name__)
@@ -84,7 +84,7 @@ def get_image_rms_measurements(
         return group
     image = group.iloc[0]['img_diff_rms_path']
     get_rms_timer = StopWatch()
-    with fits.open(image) as hdul:
+   with open_fits(image) as hdul:
         header = hdul[0].header
         wcs = WCS(header, naxis=2)
         data = hdul[0].data.squeeze()
@@ -103,7 +103,7 @@ def get_image_rms_measurements(
 
     npix = round(
         (nbeam / 2. * bmaj.to('arcsec') /
-        pixelscale).value
+         pixelscale).value
     )
 
     npix = int(round(npix * edge_buffer))
@@ -166,7 +166,7 @@ def get_image_rms_measurements(
 
     get_rms_timer.reset()
     # Get slices of each source and check NaN is not included.
-    for i,j in zip(array_coords[0], array_coords[1]):
+    for i, j in zip(array_coords[0], array_coords[1]):
         sl = tuple((
             slice(i - acceptable_no_nan_dist, i + acceptable_no_nan_dist),
             slice(j - acceptable_no_nan_dist, j + acceptable_no_nan_dist)
@@ -257,10 +257,10 @@ def new_sources(
     min_sigma: float, edge_buffer: float, p_run: Run
 ) -> pd.DataFrame:
     """
-    Processes the new sources detected to check that they are valid new sources.
-    This involves checking to see that the source *should* be seen at all in
-    the images where it is not detected. For valid new sources the snr
-    value the source would have in non-detected images is also calculated.
+    Processes the new sources detected to check that they are valid new
+    sources. This involves checking to see that the source *should* be seen at
+    all in     the images where it is not detected. For valid new sources the
+    snr value the source would have in non-detected images is also calculated.
 
     Args:
         sources_df:
@@ -369,7 +369,7 @@ def new_sources(
         left_on='detection',
         right_on='name',
         how='left'
-    ).rename(columns={'datetime':'detection_time'})
+    ).rename(columns={'datetime': 'detection_time'})
 
     new_sources_df = new_sources_df.merge(
         images_df[[
@@ -380,7 +380,7 @@ def new_sources(
         right_on='name',
         how='left'
     ).rename(columns={
-        'datetime':'img_diff_time',
+        'datetime': 'img_diff_time',
         'rms_min': 'img_diff_rms_min',
         'rms_median': 'img_diff_rms_median',
         'noise_path': 'img_diff_rms_path'
@@ -462,10 +462,11 @@ def new_sources(
         new_sources_df
         .drop_duplicates('source')
         .set_index('source')
-        .rename(columns={'true_sigma':'new_high_sigma'})
+        .rename(columns={'true_sigma': 'new_high_sigma'})
     )
 
-    # moving forward only the new_high_sigma columns is needed, drop all others.
+    # moving forward only the new_high_sigma columns is needed, drop all
+    # others.
     new_sources_df = new_sources_df[['new_high_sigma']]
     
     logger.debug(f"Time to to do final cleanup steps {debug_timer.reset()}s")
