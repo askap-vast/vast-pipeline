@@ -166,6 +166,7 @@ def extract_from_image(
         Dictionary with input dataframe with added columns (flux_int,
             flux_int_err, chi_squared_fit) and image name.
     """
+    timer = StopWatch()
     # create the skycoord obj to pass to the forced extraction
     # see usage https://github.com/dlakaplan/forced_phot
     P_islands = SkyCoord(
