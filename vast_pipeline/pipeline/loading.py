@@ -239,7 +239,7 @@ def make_upload_associations(associations_df: pd.DataFrame) -> None:
     bulk_upload_model(
         Association,
         association_models_generator(associations_df),
-        batch_size=100,
+        batch_size=10000,
         log_mem_usage=True
     )
 
