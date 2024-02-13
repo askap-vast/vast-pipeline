@@ -231,7 +231,7 @@ def parallel_get_rms_measurements(
         'img_diff_true_rms': 'f',
     }
 
-    n_cpu = cpu_count() - 1
+    n_cpu = 10 #cpu_count() - 1 # temporarily hardcode n_cpu
 
     out = (
         dd.from_pandas(out, n_cpu)

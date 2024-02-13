@@ -704,7 +704,7 @@ def parallel_groupby(df: pd.DataFrame) -> pd.DataFrame:
         'eta_peak': 'f',
         'related_list': 'O'
     }
-    n_cpu = cpu_count() - 1
+    n_cpu = 10 #cpu_count() - 1 # temporarily hardcode n_cpu
     out = dd.from_pandas(df, n_cpu)
     out = (
         out.groupby('source')
@@ -763,7 +763,7 @@ def parallel_groupby_coord(df: pd.DataFrame) -> pd.DataFrame:
         'wavg_ra': 'f',
         'wavg_dec': 'f',
     }
-    n_cpu = cpu_count() - 1
+    n_cpu = 10 #cpu_count() - 1 # temporarily hardcode n_cpu
     out = dd.from_pandas(df, n_cpu)
     out = (
         out.groupby('source')

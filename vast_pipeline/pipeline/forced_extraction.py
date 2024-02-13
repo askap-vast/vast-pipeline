@@ -395,7 +395,7 @@ def parallel_extraction(
     del col_to_drop
 
     #n_cpu = cpu_count() - 1 # this doesn't work because cpu_count returns the number of CPUs in the machine, not the container.
-    n_cpu = 6
+    n_cpu = 10
     bags = db.from_sequence(list_to_map, npartitions=len(list_to_map))
     forced_dfs = (
         bags.map(lambda x: extract_from_image(
@@ -482,7 +482,7 @@ def parallel_write_parquet(
         'forced_measurements_' + n.replace('.', '_') + '.parquet'
     )
     dfs = list(map(lambda x: (df[df['image'] == x], get_fname(x)), images))
-    n_cpu = cpu_count() - 1
+    n_cpu = 10 #cpu_count() - 1 # temporarily hardcode n_cpu
 
     # writing parquets using Dask bag
     bags = db.from_sequence(dfs)

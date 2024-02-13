@@ -64,7 +64,7 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
             vs_peak, vs_int - variability t-statistic
             m_peak, m_int - variability modulation index
     """
-    n_cpu = cpu_count() - 1
+    n_cpu = 10 #cpu_count() - 1 # temporarily hardcode n_cpu
 
     """Create a DataFrame containing all measurement ID combinations per source.
     Resultant DataFrame will have a MultiIndex(["source", RangeIndex]) where "source" is
