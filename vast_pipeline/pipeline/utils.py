@@ -706,7 +706,7 @@ def parallel_groupby(df: pd.DataFrame) -> pd.DataFrame:
     }
     n_cpu = 10 #cpu_count() - 1 # temporarily hardcode n_cpu
     from dask.distributed import Client
-    client = Client(n_workers=n_cpu, memory_limit="5GB")
+    client = Client(n_workers=n_cpu, memory_limit="3GB")
     
     logger.debug(f"Running parallel_groupby with {n_cpu} CPUs....")
     out = dd.from_pandas(df, n_cpu)
