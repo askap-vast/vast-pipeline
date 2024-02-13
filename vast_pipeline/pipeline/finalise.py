@@ -132,11 +132,15 @@ def final_operations(
         'Calculating statistics for %i sources...',
         sources_df.source.unique().shape[0]
     )
+    mem_usage = sources_df.memory_usage(deep=True).sum() / 1e6
+    logger.debug(f"sources_df memory: {mem_usage}MB")
+    
     srcs_df = parallel_groupby(sources_df)
+    
+    logger.info('Groupby-apply time: %.2f seconds', timer.reset())
     mem_usage = srcs_df.memory_usage(deep=True).sum() / 1e6
     logger.debug(f"Initial srcs_df memory: {mem_usage}MB")
     logger.debug(get_memory_usage())
-    logger.info('Groupby-apply time: %.2f seconds', timer.reset())
 
     # add new sources
     srcs_df["new"] = srcs_df.index.isin(new_sources_df.index)

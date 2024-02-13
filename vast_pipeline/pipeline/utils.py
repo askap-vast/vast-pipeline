@@ -705,6 +705,7 @@ def parallel_groupby(df: pd.DataFrame) -> pd.DataFrame:
         'related_list': 'O'
     }
     n_cpu = 10 #cpu_count() - 1 # temporarily hardcode n_cpu
+    logger.debug(f"Running parallel_groupby with {n_cpu} CPUs....")
     out = dd.from_pandas(df, n_cpu)
     out = (
         out.groupby('source')
