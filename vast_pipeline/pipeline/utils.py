@@ -705,11 +705,12 @@ def parallel_groupby(df: pd.DataFrame) -> pd.DataFrame:
         'related_list': 'O'
     }
     n_cpu = 10 #cpu_count() - 1 # temporarily hardcode n_cpu
-    from dask.distributed import Client
-    client = Client(n_workers=n_cpu, memory_limit="3GB")
+    #from dask.distributed import Client
+    #client = Client(n_workers=n_cpu, memory_limit="3GB")
+    chunksize=1e5
     
     logger.debug(f"Running parallel_groupby with {n_cpu} CPUs....")
-    out = dd.from_pandas(df, n_cpu)
+    out = dd.from_pandas(df, chunksize=chunksize)
     out = (
         out.groupby('source')
         .apply(
