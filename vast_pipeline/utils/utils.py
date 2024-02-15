@@ -236,7 +236,7 @@ def equ2gal(ra: float, dec: float) -> Tuple[float, float]:
         Galactic longitude in degrees.
         Galactic latitude in degrees.
     """
-    c = SkyCoord(np.float(ra), np.float(dec), unit=(u.deg, u.deg), frame="icrs")
+    c = SkyCoord(float(ra), float(dec), unit=(u.deg, u.deg), frame="icrs")
     l = c.galactic.l.deg
     b = c.galactic.b.deg
 

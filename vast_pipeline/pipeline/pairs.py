@@ -89,7 +89,9 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
         dd.from_pandas(df, n_cpu)
         .groupby("source")["id"]
         .apply(
-            lambda x: pd.DataFrame(list(combinations(x, 2))), meta={0: "i", 1: "i"},)
+            lambda x: pd.DataFrame(list(combinations(x, 2))),
+            meta={0: "i", 1: "i"},
+        )
         .compute(num_workers=n_cpu, scheduler="processes")
     )
 
@@ -109,40 +111,46 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
         33644   11128   6216  23534
     Where source is the source ID, id_a and id_b are measurement IDs.
     """
-    measurement_combinations = measurement_combinations.reset_index(
-        level=1, drop=True
-    ).rename(columns={0: "id_a", 1: "id_b"}).astype(int).reset_index()
+    measurement_combinations = (
+        measurement_combinations.reset_index(level=1, drop=True)
+        .rename(columns={0: "id_a", 1: "id_b"})
+        .astype(str)
+        .reset_index()
+    )
 
     # Dask has a tendency to swap which order the measurement pairs are
     # defined in, even if the dataframe is pre-sorted. We want the pairs to be
     # in date order (a < b) so the code below corrects any that are not.
     measurement_combinations = measurement_combinations.join(
-        df[['source', 'id', 'datetime']].set_index(['source', 'id']),
-        on=['source', 'id_a'],
+        df[["source", "id", "datetime"]].set_index(["source", "id"]),
+        on=["source", "id_a"],
     )
 
     measurement_combinations = measurement_combinations.join(
-        df[['source', 'id', 'datetime']].set_index(['source', 'id']),
-        on=['source', 'id_b'], lsuffix='_a', rsuffix='_b'
+        df[["source", "id", "datetime"]].set_index(["source", "id"]),
+        on=["source", "id_b"],
+        lsuffix="_a",
+        rsuffix="_b",
     )
 
     to_correct_mask = (
-        measurement_combinations['datetime_a']
-        > measurement_combinations['datetime_b']
+        measurement_combinations["datetime_a"] > measurement_combinations["datetime_b"]
     )
 
     if np.any(to_correct_mask):
-        logger.debug('Correcting measurement pairs order')
+        logger.debug("Correcting measurement pairs order")
         (
-            measurement_combinations.loc[to_correct_mask, 'id_a'],
-            measurement_combinations.loc[to_correct_mask, 'id_b']
-        ) = np.array([
-            measurement_combinations.loc[to_correct_mask, 'id_b'].values,
-            measurement_combinations.loc[to_correct_mask, 'id_a'].values
-        ])
+            measurement_combinations.loc[to_correct_mask, "id_a"],
+            measurement_combinations.loc[to_correct_mask, "id_b"],
+        ) = np.array(
+            [
+                measurement_combinations.loc[to_correct_mask, "id_b"].values,
+                measurement_combinations.loc[to_correct_mask, "id_a"].values,
+            ]
+        )
 
     measurement_combinations = measurement_combinations.drop(
-        ['datetime_a', 'datetime_b'], axis=1
+        ["datetime_a", "datetime_b"], axis=1
     )
 
     # add the measurement fluxes and errors
