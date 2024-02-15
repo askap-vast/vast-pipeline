@@ -707,10 +707,13 @@ def parallel_groupby(df: pd.DataFrame) -> pd.DataFrame:
     n_cpu = 10 #cpu_count() - 1 # temporarily hardcode n_cpu
     #from dask.distributed import Client
     #client = Client(n_workers=n_cpu, memory_limit="3GB")
-    chunksize=1e5
+    chunksize=10000
     
     logger.debug(f"Running parallel_groupby with {n_cpu} CPUs....")
+    logger.debug(f"Running parallel_groupby with {chunksize} chunks....")
     out = dd.from_pandas(df, chunksize=chunksize)
+    mem_per_partition = out.memory_usage_per_partition(index=True, deep=True)
+    logger.debug(f"Memory per partition: {mem_per_partition/(1024**2)}MB")
     out = (
         out.groupby('source')
         .apply(
