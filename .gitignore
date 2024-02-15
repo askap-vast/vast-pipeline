@@ -112,3 +112,6 @@ mypy.ini
 
 # mac specific
 .DS_store
+
+# ignore dask worker space
+dask-worker-space/

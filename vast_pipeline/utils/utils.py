@@ -13,6 +13,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord, Longitude, Latitude
 import numpy as np
 import pandas as pd
+import shutil
 
 
 logger = logging.getLogger(__name__)
@@ -236,7 +237,7 @@ def equ2gal(ra: float, dec: float) -> Tuple[float, float]:
         Galactic longitude in degrees.
         Galactic latitude in degrees.
     """
-    c = SkyCoord(np.float(ra), np.float(dec), unit=(u.deg, u.deg), frame="icrs")
+    c = SkyCoord(float(ra), float(dec), unit=(u.deg, u.deg), frame="icrs")
     l = c.galactic.l.deg
     b = c.galactic.b.deg
 
@@ -378,3 +379,56 @@ def dict_merge(
 
 def timeStamped(fname, fmt="%Y-%m-%d-%H-%M-%S_{fname}"):
     return datetime.now().strftime(fmt).format(fname=fname)
+
+
+def model_uuid_copy_check() -> str:
+    """
+    An SQL snippet to convert a string to a UUID.
+
+    It is used in the copy method as part of django-postgres-copy in the models.
+
+    Returns:
+        A SQL snippet to make sure UUID fields are converted correctly from strings.
+    """
+    return """
+            CASE
+                WHEN "%(name)s" ~* '^[a-f0-9]{8}-([a-f0-9]{4}-){3}[a-f0-9]{12}$' THEN "%(name)s"::UUID
+            END
+            """
+
+
+def delete_file_or_dir(path: str) -> None:
+    """
+    Delete a file or directory.
+
+    Args:
+        path: The path to the file or directory to delete.
+
+    Returns:
+        None
+    """
+    if os.path.isfile(path):
+        os.remove(path)
+    elif os.path.isdir(path):
+        shutil.rmtree(path)
+    else:
+        raise ValueError(f"Path {path} is not a file or directory.")
+
+
+def copy_file_or_dir(src: str, dst: str) -> None:
+    """
+    Copy a file or directory.
+
+    Args:
+        src: The path to the file or directory to copy.
+        dst: The path to the destination file or directory.
+
+    Returns:
+        None
+    """
+    if os.path.isfile(src):
+        shutil.copy(src, dst)
+    elif os.path.isdir(src):
+        shutil.copytree(src, dst)
+    else:
+        raise ValueError(f"Path {src} is not a file or directory.")

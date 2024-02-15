@@ -7,6 +7,7 @@ import os
 import logging
 import glob
 import shutil
+import uuid
 import numpy as np
 import pandas as pd
 import pyarrow as pa
@@ -18,25 +19,38 @@ from typing import Any, List, Optional, Dict, Tuple, Union
 from astropy.coordinates import SkyCoord, Angle
 from django.conf import settings
 from django.contrib.auth.models import User
-from psutil import cpu_count
 from itertools import chain
 
 from vast_pipeline.image.main import FitsImage, SelavyImage
 from vast_pipeline.image.utils import open_fits
 from vast_pipeline.utils.utils import (
-    eq_to_cart, StopWatch, optimize_ints, optimize_floats
+    copy_file_or_dir,
+    delete_file_or_dir,
+    eq_to_cart,
+    StopWatch,
+    optimize_ints,
+    optimize_floats,
 )
-from vast_pipeline.models import (
-    Band, Image, Run, SkyRegion
-)
+from vast_pipeline.models import Band, Image, Run, SkyRegion
 
 
 logger = logging.getLogger(__name__)
 dask.config.set({"multiprocessing.context": "fork"})
 
 
+# Dask custom aggregations
+# from https://docs.dask.org/en/latest/dataframe-groupby.html#aggregate
+collect_list = dd.Aggregation(
+    name='collect_list',
+    chunk=lambda s: s.apply(list),
+    agg=lambda s0: s0.apply(
+        lambda chunks: list(chain.from_iterable(chunks))
+    ),
+)
+
+
 def get_create_skyreg(image: Image) -> SkyRegion:
-    '''
+    """
     This creates a Sky Region object in Django ORM given the related
     image object.
 
@@ -45,18 +59,16 @@ def get_create_skyreg(image: Image) -> SkyRegion:
 
     Returns:
         The sky region Django ORM object.
-    '''
+    """
     # In the calculations below, it is assumed the image has square
     # pixels (this pipeline has been designed for ASKAP images, so it
     # should always be square). It will likely give wrong results if not
     skyregions = SkyRegion.objects.filter(
-        centre_ra=image.ra,
-        centre_dec=image.dec,
-        xtr_radius=image.fov_bmin
+        centre_ra=image.ra, centre_dec=image.dec, xtr_radius=image.fov_bmin
     )
     if skyregions:
         skyr = skyregions.get()
-        logger.info('Found sky region %s', skyr)
+        logger.info("Found sky region %s", skyr)
     else:
         x, y, z = eq_to_cart(image.ra, image.dec)
         skyr = SkyRegion(
@@ -70,13 +82,13 @@ def get_create_skyreg(image: Image) -> SkyRegion:
             z=z,
         )
         skyr.save()
-        logger.info('Created sky region %s', skyr)
+        logger.info("Created sky region %s", skyr)
 
     return skyr
 
 
 def get_create_img_band(image: FitsImage) -> Band:
-    '''
+    """
     Return the existing Band row for the given FitsImage.
     An image is considered to belong to a band if its frequency is within some
     tolerance of the band's frequency.
@@ -87,12 +99,12 @@ def get_create_img_band(image: FitsImage) -> Band:
 
     Returns:
         The band Django ORM object.
-    '''
+    """
     # For now we match bands using the central frequency.
     # This assumes that every band has a unique frequency,
     # which is true for the data we've used so far.
-    freq = int(image.freq_eff * 1.e-6)
-    freq_band = int(image.freq_bw * 1.e-6)
+    freq = int(image.freq_eff * 1.0e-6)
+    freq_band = int(image.freq_bw * 1.0e-6)
     # TODO: refine the band query
     for band in Band.objects.all():
         diff = abs(freq - band.frequency) / float(band.frequency)
@@ -101,7 +113,7 @@ def get_create_img_band(image: FitsImage) -> Band:
 
     # no band has been found so create it
     band = Band(name=str(freq), frequency=freq, bandwidth=freq_band)
-    logger.info('Adding new frequency band: %s', band)
+    logger.info("Adding new frequency band: %s", band)
     band.save()
 
     return band
@@ -131,27 +143,28 @@ def get_create_img(band_id: int, image: SelavyImage) -> Tuple[Image, bool]:
     else:
         # at this stage, measurement parquet file is not created but
         # assume location
-        img_folder_name = image.name.replace('.', '_')
+        img_folder_name = image.name.replace(".", "_")
         measurements_path = os.path.join(
             settings.PIPELINE_WORKING_DIR,
-            'images',
+            "images",
             img_folder_name,
-            'measurements.parquet'
-            )
-        img = Image(
-            band_id=band_id,
-            measurements_path=measurements_path
+            "measurements.parquet",
         )
+        img = Image(band_id=band_id, measurements_path=measurements_path)
 
         # set the attributes and save the image,
         # by selecting only valid (not hidden) attributes
         # FYI attributs and/or method starting with _ are hidden
         # and with __ can't be modified/called
         for fld in img._meta.get_fields():
-            if getattr(fld, 'attname', None) and (getattr(image, fld.attname, None) is not None):
+            if getattr(fld, "attname", None) and (
+                getattr(image, fld.attname, None) is not None
+            ):
                 setattr(img, fld.attname, getattr(image, fld.attname))
 
-        img.rms_median, img.rms_min, img.rms_max = get_rms_noise_image_values(img.noise_path)
+        img.rms_median, img.rms_min, img.rms_max = get_rms_noise_image_values(
+            img.noise_path
+        )
 
         # get create the sky region and associate with image
         img.skyreg = get_create_skyreg(img)
@@ -163,7 +176,7 @@ def get_create_img(band_id: int, image: SelavyImage) -> Tuple[Image, bool]:
 def get_create_p_run(
     name: str, path: str, description: str = None, user: User = None
 ) -> Tuple[Run, bool]:
-    '''
+    """
     Get or create a pipeline run in db, return the run django object and
     a flag True/False if has been created or already exists.
 
@@ -177,7 +190,7 @@ def get_create_p_run(
     Returns:
         The pipeline run object.
         Whether the pipeline run already existed ('True') or not ('False').
-    '''
+    """
     p_run = Run.objects.filter(name__exact=name)
     if p_run:
         return p_run.get(), True
@@ -207,18 +220,16 @@ def add_run_to_img(pipeline_run: Run, img: Image) -> None:
     skyreg = img.skyreg
     # check and add the many to many if not existent
     if not Image.objects.filter(id=img.id, run__id=pipeline_run.id).exists():
-        logger.info('Adding %s to image %s', pipeline_run, img.name)
+        logger.info("Adding %s to image %s", pipeline_run, img.name)
         img.run.add(pipeline_run)
 
     if pipeline_run not in skyreg.run.all():
-        logger.info('Adding %s to sky region %s', pipeline_run, skyreg)
+        logger.info("Adding %s to sky region %s", pipeline_run, skyreg)
         skyreg.run.add(pipeline_run)
 
 
 def remove_duplicate_measurements(
-    sources_df: pd.DataFrame,
-    dup_lim: Optional[Angle] = None,
-    ini_df: bool = False
+    sources_df: pd.DataFrame, dup_lim: Optional[Angle] = None, ini_df: bool = False
 ) -> pd.DataFrame:
     """
     Remove perceived duplicate sources from a dataframe of loaded
@@ -240,76 +251,56 @@ def remove_duplicate_measurements(
     Returns:
         The input sources_df with duplicate sources removed.
     """
-    logger.debug('Cleaning duplicate sources from epoch...')
+    logger.debug("Cleaning duplicate sources from epoch...")
 
     if dup_lim is None:
         dup_lim = Angle(2.5 * u.arcsec)
 
-    logger.debug(
-        'Using duplicate crossmatch radius of %.2f arcsec.', dup_lim.arcsec
-    )
+    logger.debug("Using duplicate crossmatch radius of %.2f arcsec.", dup_lim.arcsec)
 
     # sort by the distance from the image centre so we know
     # that the first source is always the one to keep
-    sources_df = sources_df.sort_values(by='dist_from_centre')
+    sources_df = sources_df.sort_values(by="dist_from_centre")
 
-    sources_sc = SkyCoord(
-        sources_df['ra'],
-        sources_df['dec'],
-        unit=(u.deg, u.deg)
-    )
+    sources_sc = SkyCoord(sources_df["ra"], sources_df["dec"], unit=(u.deg, u.deg))
 
     # perform search around sky to get all self matches
-    idxc, idxcatalog, *_ = sources_sc.search_around_sky(
-        sources_sc, dup_lim
-    )
+    idxc, idxcatalog, *_ = sources_sc.search_around_sky(sources_sc, dup_lim)
 
     # create df from results
     results = pd.DataFrame(
         data={
-            'source_id': idxc,
-            'match_id': idxcatalog,
-            'source_image': sources_df.iloc[idxc]['image'].tolist(),
-            'match_image': sources_df.iloc[idxcatalog]['image'].tolist()
+            "source_id": idxc,
+            "match_id": idxcatalog,
+            "source_image": sources_df.iloc[idxc]["image"].tolist(),
+            "match_image": sources_df.iloc[idxcatalog]["image"].tolist(),
         }
     )
 
     # Drop those that are matched from the same image
-    matching_image_mask = (
-        results['source_image'] != results['match_image']
-    )
+    matching_image_mask = results["source_image"] != results["match_image"]
 
-    results = (
-        results.loc[matching_image_mask]
-        .drop(['source_image', 'match_image'], axis=1)
+    results = results.loc[matching_image_mask].drop(
+        ["source_image", "match_image"], axis=1
     )
 
     # create a pair column defining each pair ith index
-    results['pair'] = results.apply(tuple, 1).apply(sorted).apply(tuple)
+    results["pair"] = results.apply(tuple, 1).apply(sorted).apply(tuple)
     # Drop the duplicate pairs (pairs are sorted so this works)
-    results = results.drop_duplicates('pair')
+    results = results.drop_duplicates("pair")
     # No longer need pair
-    results = results.drop('pair', axis=1)
+    results = results.drop("pair", axis=1)
     # Drop all self matches and we are left with those to drop
     # in the match id column.
-    to_drop = results.loc[
-        results['source_id'] != results['match_id'],
-        'match_id'
-    ]
+    to_drop = results.loc[results["source_id"] != results["match_id"], "match_id"]
     # Get the index values from the ith values
     to_drop_indexes = sources_df.iloc[to_drop].index.values
-    logger.debug(
-        "Dropping %i duplicate measurements.", to_drop_indexes.shape[0]
-    )
+    logger.debug("Dropping %i duplicate measurements.", to_drop_indexes.shape[0])
     # Drop them from sources
-    sources_df = sources_df.drop(to_drop_indexes).sort_values(by='ra')
+    sources_df = sources_df.drop(to_drop_indexes).sort_values(by="ra")
 
     # reset the source_df index
     sources_df = sources_df.reset_index(drop=True)
-
-    # Reset the source number
-    if ini_df:
-        sources_df['source'] = sources_df.index + 1
 
     del results
 
@@ -317,10 +308,7 @@ def remove_duplicate_measurements(
 
 
 def _load_measurements(
-    image: Image,
-    cols: List[str],
-    start_id: int = 0,
-    ini_df: bool = False
+    image: Image, cols: List[str], ini_df: bool = False
 ) -> pd.DataFrame:
     """
     Load the measurements for an image from the parquet file.
@@ -331,9 +319,6 @@ def _load_measurements(
             measurements.
         cols:
             The columns to load.
-        start_id:
-            The number to start from when setting the source ids (when
-            'ini_df' is 'True'). Defaults to 0.
         ini_df:
             Boolean to indicate whether these sources are part of the initial
             source list creation for association. If 'True' the source ids are
@@ -343,27 +328,23 @@ def _load_measurements(
         The measurements of the image with some extra values set ready for
             association.
     """
-    image_centre = SkyCoord(
-        image.ra,
-        image.dec,
-        unit=(u.deg, u.deg)
-    )
+    image_centre = SkyCoord(image.ra, image.dec, unit=(u.deg, u.deg))
 
     df = pd.read_parquet(image.measurements_path, columns=cols)
-    df['image'] = image.name
-    df['datetime'] = image.datetime
+    df["image"] = image.name
+    df["datetime"] = image.datetime
     # these are the first 'sources' if ini_df is True.
-    df['source'] = df.index + start_id + 1 if ini_df else -1
-    df['ra_source'] = df['ra']
-    df['dec_source'] = df['dec']
-    df['d2d'] = 0.
-    df['dr'] = 0.
-    df['related'] = None
+    df["source"] = df["id"].apply(lambda _: str(uuid.uuid4())) if ini_df else None
+    df["ra_source"] = df["ra"]
+    df["dec_source"] = df["dec"]
+    df["d2d"] = 0.0
+    df["dr"] = 0.0
+    df["related"] = None
 
-    sources_sc = SkyCoord(df['ra'], df['dec'], unit=(u.deg, u.deg))
+    sources_sc = SkyCoord(df["ra"], df["dec"], unit=(u.deg, u.deg))
 
     seps = sources_sc.separation(image_centre).degree
-    df['dist_from_centre'] = seps
+    df["dist_from_centre"] = seps
 
     del sources_sc
     del seps
@@ -373,11 +354,11 @@ def _load_measurements(
 
 def prep_skysrc_df(
     images: List[Image],
-    perc_error: float = 0.,
+    perc_error: float = 0.0,
     duplicate_limit: Optional[Angle] = None,
-    ini_df: bool = False
+    ini_df: bool = False,
 ) -> pd.DataFrame:
-    '''
+    """
     Initialise the source dataframe to use in association logic by
     reading the measurement parquet file and creating columns. When epoch
     based association is used it will also remove duplicate measurements from
@@ -402,25 +383,25 @@ def prep_skysrc_df(
     Returns:
         The measurements of the image(s) with some extra values set ready for
             association and duplicates removed if necessary.
-    '''
+    """
     cols = [
-        'id',
-        'ra',
-        'uncertainty_ew',
-        'weight_ew',
-        'dec',
-        'uncertainty_ns',
-        'weight_ns',
-        'flux_int',
-        'flux_int_err',
-        'flux_int_isl_ratio',
-        'flux_peak',
-        'flux_peak_err',
-        'flux_peak_isl_ratio',
-        'forced',
-        'compactness',
-        'has_siblings',
-        'snr'
+        "id",
+        "ra",
+        "uncertainty_ew",
+        "weight_ew",
+        "dec",
+        "uncertainty_ns",
+        "weight_ns",
+        "flux_int",
+        "flux_int_err",
+        "flux_int_isl_ratio",
+        "flux_peak",
+        "flux_peak_err",
+        "flux_peak_isl_ratio",
+        "forced",
+        "compactness",
+        "has_siblings",
+        "snr",
     ]
 
     df = _load_measurements(images[0], cols, ini_df=ini_df)
@@ -428,34 +409,26 @@ def prep_skysrc_df(
     if len(images) > 1:
         for img in images[1:]:
             df = pd.concat(
-                [
-                    df,
-                    _load_measurements(
-                        img, cols, df.source.max(), ini_df=ini_df
-                    )
-                ],
-                ignore_index=True
+                [df, _load_measurements(img, cols, ini_df=ini_df)],
+                ignore_index=True,
             )
 
-        df = remove_duplicate_measurements(
-            df, dup_lim=duplicate_limit, ini_df=ini_df
-        )
+        df = remove_duplicate_measurements(df, dup_lim=duplicate_limit, ini_df=ini_df)
 
-    df = df.drop('dist_from_centre', axis=1)
+    df = df.drop("dist_from_centre", axis=1)
 
     if perc_error != 0.0:
-        logger.info('Correcting flux errors with config error setting...')
-        for col in ['flux_int', 'flux_peak']:
-            df[f'{col}_err'] = np.hypot(
-                df[f'{col}_err'].values, perc_error * df[col].values
+        logger.info("Correcting flux errors with config error setting...")
+        for col in ["flux_int", "flux_peak"]:
+            df[f"{col}_err"] = np.hypot(
+                df[f"{col}_err"].values, perc_error * df[col].values
             )
 
     return df
 
 
 def add_new_one_to_many_relations(
-    row: pd.Series, advanced: bool = False,
-    source_ids: Optional[pd.DataFrame] = None
+    row: pd.Series, advanced: bool = False, source_ids: Optional[pd.DataFrame] = None
 ) -> List[int]:
     """
     This handles the relation information being created from the
@@ -490,8 +463,8 @@ def add_new_one_to_many_relations(
     if source_ids is None:
         source_ids = pd.DataFrame()
 
-    related_col = 'related_skyc1' if advanced else 'related'
-    source_col = 'source_skyc1' if advanced else 'source'
+    related_col = "related_skyc1" if advanced else "related"
+    source_col = "source_skyc1" if advanced else "source"
 
     # this is the not_original case where the original source id is appended.
     if source_ids.empty:
@@ -499,7 +472,9 @@ def add_new_one_to_many_relations(
             out = row[related_col]
             out.append(row[source_col])
         else:
-            out = [row[source_col], ]
+            out = [
+                row[source_col],
+            ]
 
     else:  # the original case to append all the new ids.
         source_ids = source_ids.loc[row[source_col]].iloc[0]
@@ -528,10 +503,10 @@ def add_new_many_to_one_relations(row: pd.Series) -> List[int]:
         The new related field for the source in question, containing the
             appended ids.
     """
-    out = row['new_relations'].copy()
+    out = row["new_relations"].copy()
 
-    if isinstance(row['related_skyc1'], list):
-        out += row['related_skyc1'].copy()
+    if isinstance(row["related_skyc1"], list):
+        out += row["related_skyc1"].copy()
 
     return out
 
@@ -547,234 +522,224 @@ def cross_join(left: pd.DataFrame, right: pd.DataFrame) -> pd.DataFrame:
     Returns:
         The resultant merged DataFrame.
     """
-    return (
-        left.assign(key=1)
-        .merge(right.assign(key=1), on='key')
-        .drop('key', axis=1)
-    )
+    return left.assign(key=1).merge(right.assign(key=1), on="key").drop("key", axis=1)
 
 
-def get_eta_metric(
-    row: Dict[str, float], df: pd.DataFrame, peak: bool = False
-) -> float:
+def get_eta_metric(grp: pd.DataFrame) -> pd.Series:
     '''
     Calculates the eta variability metric of a source.
     Works on the grouped by dataframe using the fluxes
     of the associated measurements.
-
-    Args:
-        row: Dictionary containing statistics for the current source.
-        df: The grouped by sources dataframe of the measurements containing all
-            the flux and flux error information,
-        peak: Whether to use peak_flux for the calculation. If False then the
-            integrated flux is used.
-
-    Returns:
-        The calculated eta value.
     '''
-    if row['n_meas'] == 1:
-        return 0.
+    n_meas = grp['id'].count()
+    if n_meas == 1:
+        return pd.Series({'eta_int': 0., 'eta_peak': 0.})
 
-    suffix = 'peak' if peak else 'int'
-    weights = 1. / df[f'flux_{suffix}_err'].values**2
-    fluxes = df[f'flux_{suffix}'].values
-    eta = (row['n_meas'] / (row['n_meas']-1)) * (
-        (weights * fluxes**2).mean() - (
-            (weights * fluxes).mean()**2 / weights.mean()
-        )
-    )
-    return eta
-
-
-def groupby_funcs(df: pd.DataFrame) -> pd.Series:
-    '''
-    Performs calculations on the unique sources to get the
-    lightcurve properties. Works on the grouped by source
-    dataframe.
-
-    Args:
-        df: The current iteration dataframe of the grouped by sources
-            dataframe.
-
-    Returns:
-        Pandas series containing the calculated metrics of the source.
-    '''
-    # calculated average ra, dec, fluxes and metrics
     d = {}
-    d['img_list'] = df['image'].values.tolist()
-    d['n_meas_forced'] = df['forced'].sum()
-    d['n_meas'] = df['id'].count()
-    d['n_meas_sel'] = d['n_meas'] - d['n_meas_forced']
-    d['n_sibl'] = df['has_siblings'].sum()
-    if d['n_meas_forced'] > 0:
-        non_forced_sel = ~df['forced']
+    for suffix in ['int', 'peak']:
+        weights = 1. / grp[f'flux_{suffix}_err'].values**2
+        fluxes = grp[f'flux_{suffix}'].values
+        d[f'eta_{suffix}'] = n_meas / (n_meas - 1) * (
+            (weights * fluxes**2).mean() - (
+                (weights * fluxes).mean()**2 / weights.mean()
+            )
+        )
+    return pd.Series(d)
+
+
+def aggr_based_on_selection(grp: pd.DataFrame) -> pd.Series:
+    '''
+    Performs aggregation based on the result of a selection
+    '''
+    n_meas_forced = grp['forced'].sum()
+    d = {}
+    if n_meas_forced > 0:
+        non_forced_sel = grp['forced'] != True
         d['wavg_ra'] = (
-            df.loc[non_forced_sel, 'interim_ew'].sum() /
-            df.loc[non_forced_sel, 'weight_ew'].sum()
+            grp.loc[non_forced_sel, 'interim_ew'].sum() /
+            grp.loc[non_forced_sel, 'weight_ew'].sum()
         )
         d['wavg_dec'] = (
-            df.loc[non_forced_sel, 'interim_ns'].sum() /
-            df.loc[non_forced_sel, 'weight_ns'].sum()
+            grp.loc[non_forced_sel, 'interim_ns'].sum() /
+            grp.loc[non_forced_sel, 'weight_ns'].sum()
         )
-        d['avg_compactness'] = df.loc[
+        d['avg_compactness'] = grp.loc[
             non_forced_sel, 'compactness'
         ].mean()
-        d['min_snr'] = df.loc[
+        d['min_snr'] = grp.loc[
             non_forced_sel, 'snr'
         ].min()
-        d['max_snr'] = df.loc[
+        d['max_snr'] = grp.loc[
             non_forced_sel, 'snr'
         ].max()
-
     else:
-        d['wavg_ra'] = df['interim_ew'].sum() / df['weight_ew'].sum()
-        d['wavg_dec'] = df['interim_ns'].sum() / df['weight_ns'].sum()
-        d['avg_compactness'] = df['compactness'].mean()
-        d['min_snr'] = df['snr'].min()
-        d['max_snr'] = df['snr'].max()
-
-    d['wavg_uncertainty_ew'] = 1. / np.sqrt(df['weight_ew'].sum())
-    d['wavg_uncertainty_ns'] = 1. / np.sqrt(df['weight_ns'].sum())
-    for col in ['avg_flux_int', 'avg_flux_peak']:
-        d[col] = df[col.split('_', 1)[1]].mean()
-    for col in ['max_flux_peak', 'max_flux_int']:
-        d[col] = df[col.split('_', 1)[1]].max()
-    for col in ['min_flux_peak', 'min_flux_int']:
-        d[col] = df[col.split('_', 1)[1]].min()
-    for col in ['min_flux_peak_isl_ratio', 'min_flux_int_isl_ratio']:
-        d[col] = df[col.split('_', 1)[1]].min()
-
-    for col in ['flux_int', 'flux_peak']:
-        d[f'{col}_sq'] = (df[col]**2).mean()
-    d['v_int'] = df['flux_int'].std() / df['flux_int'].mean()
-    d['v_peak'] = df['flux_peak'].std() / df['flux_peak'].mean()
-    d['eta_int'] = get_eta_metric(d, df)
-    d['eta_peak'] = get_eta_metric(d, df, peak=True)
-    # remove not used cols
-    for col in ['flux_int_sq', 'flux_peak_sq']:
-        d.pop(col)
-
-    # get unique related sources
-    list_uniq_related = list(set(
-        chain.from_iterable(
-            lst for lst in df['related'] if isinstance(lst, list)
-        )
-    ))
-    d['related_list'] = list_uniq_related if list_uniq_related else -1
-
-    return pd.Series(d).fillna(value={"v_int": 0.0, "v_peak": 0.0})
+        d['wavg_ra'] = grp['interim_ew'].sum() / grp['weight_ew'].sum()
+        d['wavg_dec'] = grp['interim_ns'].sum() / grp['weight_ns'].sum()
+        d['avg_compactness'] = grp['compactness'].mean()
+        d['min_snr'] = grp['snr'].min()
+        d['max_snr'] = grp['snr'].max()
+    return pd.Series(d)
 
 
-def parallel_groupby(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Performs the parallel source dataframe operations to calculate the source
-    metrics using Dask and returns the resulting dataframe.
+def groupby_collect_set(grp: pd.DataFrame) -> list[str]:
+    """Collect the unique set of lists from the column.
 
     Args:
-        df: The sources dataframe produced by the previous pipeline stages.
+        df: The dataframe to collect the lists from.
 
     Returns:
-        The source dataframe with the calculated metric columns.
-    """
-    col_dtype = {
-        'img_list': 'O',
-        'n_meas_forced': 'i',
-        'n_meas': 'i',
-        'n_meas_sel': 'i',
-        'n_sibl': 'i',
-        'wavg_ra': 'f',
-        'wavg_dec': 'f',
-        'avg_compactness': 'f',
-        'min_snr': 'f',
-        'max_snr': 'f',
-        'wavg_uncertainty_ew': 'f',
-        'wavg_uncertainty_ns': 'f',
-        'avg_flux_int': 'f',
-        'avg_flux_peak': 'f',
-        'max_flux_peak': 'f',
-        'max_flux_int': 'f',
-        'min_flux_peak': 'f',
-        'min_flux_int': 'f',
-        'min_flux_peak_isl_ratio': 'f',
-        'min_flux_int_isl_ratio': 'f',
-        'v_int': 'f',
-        'v_peak': 'f',
-        'eta_int': 'f',
-        'eta_peak': 'f',
-        'related_list': 'O'
-    }
-    n_cpu = cpu_count() - 1
-    out = dd.from_pandas(df, n_cpu)
-    out = (
-        out.groupby('source')
-        .apply(
-            groupby_funcs,
-            meta=col_dtype
-        )
-        .compute(num_workers=n_cpu, scheduler='processes')
-    )
-
-    out['n_rel'] = out['related_list'].apply(lambda x: 0 if x == -1 else len(x))
-
-    return out
-
-
-def calc_ave_coord(grp: pd.DataFrame) -> pd.Series:
-    """
-    Calculates the average coordinate of the grouped by sources dataframe for
-    each unique group, along with defining the image and epoch list for each
-    unique source (group).
-
-    Args:
-        grp: The current group dataframe (unique source) of the grouped by
-            dataframe being acted upon.
-
-    Returns:
-        A pandas series containing the average coordinate along with the
-            image and epoch lists.
+        The unique set of lists.
     """
     d = {}
-    grp = grp.sort_values(by='datetime')
-    d['img_list'] = grp['image'].values.tolist()
-    d['epoch_list'] = grp['epoch'].values.tolist()
-    d['wavg_ra'] = grp['interim_ew'].sum() / grp['weight_ew'].sum()
-    d['wavg_dec'] = grp['interim_ns'].sum() / grp['weight_ns'].sum()
+
+    lists = [list(i) if isinstance(i, np.ndarray) else ["NULL",] for i in grp['related']]
+
+    the_list = list(set(chain.from_iterable(lists)))
+
+    # Remove 'NULL' from the list if the length is > 1
+    if len(the_list) > 1 and 'NULL' in the_list:
+        the_list.remove('NULL')
+
+    d['related_list'] = the_list
 
     return pd.Series(d)
 
 
-def parallel_groupby_coord(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    This function uses Dask to perform the average coordinate and unique image
-    and epoch lists calculation. The result from the Dask compute is returned
-    which is a dataframe containing the results for each source.
+def parallel_groupby(df: dd.DataFrame) -> dd.DataFrame:
+    '''
+    Performs calculations on the unique sources to get the
+    lightcurve properties. Works on the grouped by source
+    dataframe.
+    '''
+    # create list of output columns and dicts with aggregations and rename maps
+    # CANNOT get this to work and I don't know why
+    # collect_set = dd.Aggregation(
+    #     name='collect_set',
+    #     chunk=lambda s: s.apply(lambda x: list(x) if isinstance(x, np.ndarray) else []),
+    #     agg=lambda s0: s0.apply(
+    #         lambda chunks: list(set(chain.from_iterable(chunks)))
+    #     )
+    # )
 
-    Args:
-        df: The sources dataframe produced by the pipeline.
+    aggregations = {
+        'image': collect_list,
+        'forced': 'sum',
+        'id': 'count',
+        'has_siblings': 'sum',
+        'weight_ew': 'sum',
+        'weight_ns': 'sum',
+        'flux_int': ['mean', 'std', 'max', 'min'],
+        'flux_peak': ['mean', 'std', 'max', 'min'],
+        'flux_peak_isl_ratio': 'min',
+        'flux_int_isl_ratio': 'min',
+    }
 
-    Returns:
-        The resulting average coordinate values and unique image and epoch
-            lists for each unique source (group).
-    """
+    renaming = {
+        'image_collect_list': 'img_list',
+        'forced_sum': 'n_meas_forced',
+        'id_count': 'n_meas',
+        'has_siblings_sum': 'n_sibl',
+        'flux_int_mean': 'avg_flux_int',
+        'flux_peak_mean': 'avg_flux_peak',
+        'flux_peak_max': 'max_flux_peak',
+        'flux_peak_min': 'min_flux_peak',
+        'flux_int_max': 'max_flux_int',
+        'flux_int_min': 'min_flux_int',
+        'flux_peak_isl_ratio_min': 'min_flux_peak_isl_ratio',
+        'flux_int_isl_ratio_min': 'min_flux_int_isl_ratio',
+    }
+
+    groupby = df.groupby('source')
+    out = groupby.agg(aggregations)
+    # collapse columns Multindex
+    out.columns = ['_'.join(col) for col in out.columns.to_flat_index()]
+    # do some other column calcs
+    out['wavg_uncertainty_ew'] = 1. / np.sqrt(out['weight_ew_sum'])
+    out['wavg_uncertainty_ns'] = 1. / np.sqrt(out['weight_ns_sum'])
+    out['v_int'] = out['flux_int_std'] / out['flux_int_mean']
+    out['v_peak'] = out['flux_peak_std'] / out['flux_peak_mean']
+    out['v_int'] = out['v_int'].fillna(0.0)
+    out['v_peak'] = out['v_peak'].fillna(0.0)
+
+    # do complex aggregations using groupby-apply
     col_dtype = {
-        'img_list': 'O',
-        'epoch_list': 'O',
         'wavg_ra': 'f',
         'wavg_dec': 'f',
+        'avg_compactness': 'f',
+        'min_snr': 'f',
+        'max_snr': 'f'
     }
-    n_cpu = cpu_count() - 1
-    out = dd.from_pandas(df, n_cpu)
     out = (
-        out.groupby('source')
-        .apply(calc_ave_coord, meta=col_dtype)
-        .compute(num_workers=n_cpu, scheduler='processes')
+        out.merge(
+            groupby.apply(aggr_based_on_selection, meta=col_dtype),
+            left_index=True,
+            right_index=True
+        ).repartition(npartitions=1)
+        .merge(
+            groupby.apply(
+                get_eta_metric,
+                meta={'eta_int': 'f', 'eta_peak': 'f'}
+            ),
+            left_index=True,
+            right_index=True
+        ).repartition(npartitions=1)
+        .merge(
+            groupby.apply(groupby_collect_set, meta={'related_list': 'O'}),
+            left_index=True,
+            right_index=True
+        ).repartition(npartitions=1)
     )
 
-    return out
+    out = out.rename(columns=renaming)
+    out['n_meas_sel'] = out['n_meas'] - out['n_meas_forced']
+    out['n_rel'] = out['related_list'].apply(len, meta=('related_list', 'int64'))
+
+    # select only columns we need
+    out_cols = [
+        'img_list', 'n_meas_forced', 'n_meas', 'n_meas_sel', 'n_sibl',
+        'wavg_ra', 'wavg_dec', 'avg_compactness', 'min_snr', 'max_snr',
+        'wavg_uncertainty_ew', 'wavg_uncertainty_ns', 'avg_flux_int',
+        'max_flux_int', 'min_flux_int',  'avg_flux_peak', 'max_flux_peak',
+        'min_flux_peak', 'min_flux_peak_isl_ratio', 'min_flux_int_isl_ratio',
+        'v_int', 'v_peak', 'eta_int', 'eta_peak', 'related_list', 'n_rel'
+    ]
+    out = out[out_cols]
+
+    return out.persist()
+
+
+def parallel_groupby_coord(df: dd.core.DataFrame) -> pd.DataFrame:
+    """Calculate the weighted average RA and Dec of the sources.
+
+    Note that Sergio had the idea to persist the dataframe result and keep it in the
+    cluster. However since then the ideal image method uses the astropy match sky
+    method which relies on being able to iloc the dataframe. This would be really
+    difficult to do with a persisted dataframe. So it is computed.
+
+    Args:
+        df: The persisted sources dataframe.
+
+    Returns:
+        The average coordinates of the sources along with image and epoch lists.
+    """
+    cols = [
+        'source', 'image', 'epoch', 'interim_ew', 'weight_ew', 'interim_ns', 'weight_ns'
+    ]
+    cols_to_sum = ['interim_ew', 'weight_ew', 'interim_ns', 'weight_ns']
+
+    groups = df[cols].groupby('source')
+    out = groups[cols_to_sum].agg('sum')
+    out['wavg_ra'] = out['interim_ew'] / out['weight_ew']
+    out['wavg_dec'] = out['interim_ns'] / out['weight_ns']
+    out = out.drop(cols_to_sum, axis=1)
+    out['img_list'] = groups['image'].agg(collect_list)
+    out['epoch_list'] = groups['epoch'].agg(collect_list)
+
+    return out.compute()
 
 
 def get_rms_noise_image_values(rms_path: str) -> Tuple[float, float, float]:
-    '''
+    """
     Open the RMS noise FITS file and compute the median, max and min
     rms values to be added to the image model and then used in the
     calculations.
@@ -789,20 +754,20 @@ def get_rms_noise_image_values(rms_path: str) -> Tuple[float, float, float]:
 
     Raises:
         IOError: Raised when the RMS FITS file cannot be found.
-    '''
-    logger.debug('Extracting Image RMS values from Noise file...')
-    med_val = min_val = max_val = 0.
+    """
+    logger.debug("Extracting Image RMS values from Noise file...")
+    med_val = min_val = max_val = 0.0
     try:
         with open_fits(rms_path) as f:
             data = f[0].data
             data = data[np.logical_not(np.isnan(data))]
             data = data[data != 0]
-            med_val = np.median(data) * 1e+3
-            min_val = np.min(data) * 1e+3
-            max_val = np.max(data) * 1e+3
+            med_val = np.median(data) * 1e3
+            min_val = np.min(data) * 1e3
+            max_val = np.max(data) * 1e3
             del data
     except Exception:
-        raise IOError(f'Could not read this RMS FITS file: {rms_path}')
+        raise IOError(f"Could not read this RMS FITS file: {rms_path}")
 
     return med_val, min_val, max_val
 
@@ -821,9 +786,9 @@ def get_image_list_diff(row: pd.Series) -> Union[List[str], int]:
         A list of the images missing from the observed image list.
         A '-1' integer value if there are no missing images.
     """
-    out = list(
-        filter(lambda arg: arg not in row['img_list'], row['skyreg_img_list'])
-    )
+    out = list(filter(
+        lambda arg: arg not in row["img_list"], row["skyreg_img_list"]
+    ))
 
     # set empty list to -1
     if not out:
@@ -832,15 +797,15 @@ def get_image_list_diff(row: pd.Series) -> Union[List[str], int]:
     # Check that an epoch has not already been seen (just not in the 'ideal'
     # image)
     out_epochs = [
-        row['skyreg_epoch'][pair[0]] for pair in enumerate(
-            row['skyreg_img_list']
-        ) if pair[1] in out
+        row["skyreg_epoch"][pair[0]]
+        for pair in enumerate(row["skyreg_img_list"])
+        if pair[1] in out
     ]
 
     out = [
-        out[pair[0]] for pair in enumerate(
-            out_epochs
-        ) if pair[1] not in row['epoch_list']
+        out[pair[0]]
+        for pair in enumerate(out_epochs)
+        if pair[1] not in row["epoch_list"]
     ]
 
     if not out:
@@ -863,11 +828,20 @@ def get_names_and_epochs(grp: pd.DataFrame) -> pd.Series:
             image names, epochs and datetimes.
     """
     d = {}
-    d['skyreg_img_epoch_list'] = [[[x, ], y, z] for x, y, z in zip(
-        grp['name'].values.tolist(),
-        grp['epoch'].values.tolist(),
-        grp['datetime'].values.tolist()
-    )]
+    d["skyreg_img_epoch_list"] = [
+        [
+            [
+                x,
+            ],
+            y,
+            z,
+        ]
+        for x, y, z in zip(
+            grp["name"].values.tolist(),
+            grp["epoch"].values.tolist(),
+            grp["datetime"].values.tolist(),
+        )
+    ]
 
     return pd.Series(d)
 
@@ -884,12 +858,12 @@ def check_primary_image(row: pd.Series) -> bool:
     Returns:
         True if primary in image list else False.
     """
-    return row['primary'] in row['img_list']
+    return row["primary"] in row["img_list"]
 
 
 def get_src_skyregion_merged_df(
-    sources_df: pd.DataFrame, images_df: pd.DataFrame, skyreg_df: pd.DataFrame
-) -> pd.DataFrame:
+    sources_df: dd.core.DataFrame, images_df: pd.DataFrame, skyreg_df: pd.DataFrame
+) -> dd.core.DataFrame:
     """
     Analyses the current sources_df to determine what the 'ideal coverage'
     for each source should be. In other words, what images is the source
@@ -951,34 +925,22 @@ def get_src_skyregion_merged_df(
 
     merged_timer = StopWatch()
 
-    skyreg_df = skyreg_df.drop(
-        ['x', 'y', 'z', 'width_ra', 'width_dec'], axis=1
-    )
+    skyreg_df = skyreg_df.drop(["x", "y", "z", "width_ra", "width_dec"], axis=1)
 
-    images_df['name'] = images_df['image_dj'].apply(
-        lambda x: x.name
-    )
-    images_df['datetime'] = images_df['image_dj'].apply(
-        lambda x: x.datetime
-    )
+    images_df["name"] = images_df["image_dj"].apply(lambda x: x.name)
+    images_df["datetime"] = images_df["image_dj"].apply(lambda x: x.datetime)
 
     skyreg_df = skyreg_df.join(
-        pd.DataFrame(
-            images_df.groupby('skyreg_id').apply(
-                get_names_and_epochs
-            )
-        ),
-        on='id'
+        pd.DataFrame(images_df.groupby("skyreg_id").apply(get_names_and_epochs)),
+        on="id",
     )
 
-    sources_df = sources_df.sort_values(by='datetime')
     # calculate some metrics on sources
     # compute only some necessary metrics in the groupby
     timer = StopWatch()
+    # Drop forced measurements as they are not used in the ideal coverage
     srcs_df = parallel_groupby_coord(sources_df)
-    logger.debug('Groupby-apply time: %.2f seconds', timer.reset())
-
-    del sources_df
+    logger.debug("Groupby-apply time: %.2f seconds", timer.reset())
 
     # crossmatch sources with sky regions up to the max sky region radius
     skyreg_coords = SkyCoord(
@@ -1009,89 +971,60 @@ def get_src_skyregion_merged_df(
 
     del skyreg_df
 
-    src_skyrg_df[
-        ['skyreg_img_list', 'skyreg_epoch', 'skyreg_datetime']
-    ] = pd.DataFrame(
-        src_skyrg_df['skyreg_img_epoch_list'].tolist(),
-        index=src_skyrg_df.index
+    src_skyrg_df[["skyreg_img_list", "skyreg_epoch", "skyreg_datetime"]] = pd.DataFrame(
+        src_skyrg_df["skyreg_img_epoch_list"].tolist(), index=src_skyrg_df.index
     )
 
-    src_skyrg_df = src_skyrg_df.drop('skyreg_img_epoch_list', axis=1)
+    src_skyrg_df = src_skyrg_df.drop("skyreg_img_epoch_list", axis=1)
 
     src_skyrg_df = (
-        src_skyrg_df.sort_values(
-            ['source', 'sep']
-        )
-        .drop_duplicates(['source', 'skyreg_epoch'])
-        .sort_values(by='skyreg_datetime')
-        .drop(
-            ['sep', 'skyreg_datetime'],
-            axis=1
-        )
+        src_skyrg_df.sort_values(["source", "sep"])
+        .drop_duplicates(["source", "skyreg_epoch"])
+        .sort_values(by="skyreg_datetime")
+        .drop(["sep", "skyreg_datetime"], axis=1)
     )
     # annoyingly epoch needs to be not a list to drop duplicates
     # but then we need to sum the epochs into a list
-    src_skyrg_df['skyreg_epoch'] = src_skyrg_df['skyreg_epoch'].apply(
-        lambda x: [x, ]
+    src_skyrg_df["skyreg_epoch"] = src_skyrg_df["skyreg_epoch"].apply(
+        lambda x: [
+            x,
+        ]
     )
 
-    src_skyrg_df = (
-        src_skyrg_df.groupby('source')
-        .sum(numeric_only=False)  # sum because we need to preserve order
-    )
+    src_skyrg_df = src_skyrg_df.groupby("source").sum(
+        numeric_only=False
+    )  # sum because we need to preserve order
 
     # merge into main df and compare the images
-    srcs_df = srcs_df.merge(
-        src_skyrg_df, left_index=True, right_index=True
-    )
+    srcs_df = srcs_df.merge(src_skyrg_df, left_index=True, right_index=True)
 
     del src_skyrg_df
 
-    srcs_df['img_diff'] = srcs_df[
-        ['img_list', 'skyreg_img_list', 'epoch_list', 'skyreg_epoch']
-    ].apply(
-        get_image_list_diff, axis=1
+    srcs_df["img_diff"] = srcs_df[
+        ["img_list", "skyreg_img_list", "epoch_list", "skyreg_epoch"]
+    ].apply(get_image_list_diff, axis=1)
+
+    srcs_df = srcs_df.loc[srcs_df["img_diff"] != -1]
+
+    srcs_df = srcs_df.drop(["epoch_list", "skyreg_epoch"], axis=1)
+
+    srcs_df["primary"] = srcs_df["skyreg_img_list"].apply(lambda x: x[0])
+
+    srcs_df["detection"] = srcs_df["img_list"].apply(lambda x: x[0])
+
+    srcs_df["in_primary"] = srcs_df[["primary", "img_list"]].apply(
+        check_primary_image, axis=1
     )
 
-    srcs_df = srcs_df.loc[
-        srcs_df['img_diff'] != -1
-    ]
+    srcs_df = srcs_df.drop(["img_list", "skyreg_img_list", "primary"], axis=1)
 
-    srcs_df = srcs_df.drop(
-        ['epoch_list', 'skyreg_epoch'],
-        axis=1
-    )
-
-    srcs_df['primary'] = srcs_df[
-        'skyreg_img_list'
-    ].apply(lambda x: x[0])
-
-    srcs_df['detection'] = srcs_df[
-        'img_list'
-    ].apply(lambda x: x[0])
-
-    srcs_df['in_primary'] = srcs_df[
-        ['primary', 'img_list']
-    ].apply(
-        check_primary_image,
-        axis=1
-    )
-
-    srcs_df = srcs_df.drop(['img_list', 'skyreg_img_list', 'primary'], axis=1)
-
-    logger.info(
-        'Ideal source coverage time: %.2f seconds', merged_timer.reset()
-    )
+    logger.info("Ideal source coverage time: %.2f seconds", merged_timer.reset())
 
     return srcs_df
 
 
-def _get_skyregion_relations(
-    row: pd.Series,
-    coords: SkyCoord,
-    ids: pd.core.indexes.numeric.Int64Index
-) -> List[int]:
-    '''
+def _get_skyregion_relations(row: pd.Series, coords: SkyCoord, ids: int) -> List[int]:
+    """
     For each sky region row a list is returned that
     contains the ids of other sky regions that overlap
     with the row sky region (including itself).
@@ -1107,18 +1040,14 @@ def _get_skyregion_relations(
     Returns:
         A list of other sky regions (including self) that are within the
             'xtr_radius' of the sky region in the row.
-    '''
-    target = SkyCoord(
-        row['centre_ra'],
-        row['centre_dec'],
-        unit=(u.deg, u.deg)
-    )
+    """
+    target = SkyCoord(row["centre_ra"], row["centre_dec"], unit=(u.deg, u.deg))
 
     seps = target.separation(coords)
 
     # place a slight buffer on the radius to make sure
     # any neighbouring fields are caught
-    mask = seps <= row['xtr_radius'] * 1.1 * u.deg
+    mask = seps <= row["xtr_radius"] * 1.1 * u.deg
 
     related_ids = ids[mask].to_list()
 
@@ -1155,28 +1084,19 @@ def group_skyregions(df: pd.DataFrame) -> pd.DataFrame:
             |  1 |              2 |
             +----+----------------+
     """
-    sr_coords = SkyCoord(
-        df['centre_ra'],
-        df['centre_dec'],
-        unit=(u.deg, u.deg)
-    )
+    sr_coords = SkyCoord(df["centre_ra"], df["centre_dec"], unit=(u.deg, u.deg))
 
-    df = df.set_index('id')
+    df = df.set_index("id")
 
-    results = df.apply(
-        _get_skyregion_relations,
-        args=(sr_coords, df.index),
-        axis=1
-    )
+    results = df.apply(_get_skyregion_relations, args=(sr_coords, df.index), axis=1)
 
     skyreg_groups: Dict[int, List[Any]] = {}
 
     master_done = []  # keep track of all checked ids in master done
 
-    for skyreg_id, neighbours in results.iteritems():
-
+    for skyreg_id, neighbours in results.items():
         if skyreg_id not in master_done:
-            local_done = []   # a local done list for the sky region group.
+            local_done = []  # a local done list for the sky region group.
             # add the current skyreg_id to both master and local done.
             master_done.append(skyreg_id)
             local_done.append(skyreg_id)
@@ -1221,9 +1141,9 @@ def group_skyregions(df: pd.DataFrame) -> pd.DataFrame:
         for j in skyreg_groups[i]:
             skyreg_group_ids[j] = i
 
-    skyreg_group_ids = pd.DataFrame.from_dict(
-        skyreg_group_ids, orient='index'
-    ).rename(columns={0: 'skyreg_group'})
+    skyreg_group_ids = pd.DataFrame.from_dict(skyreg_group_ids, orient="index").rename(
+        columns={0: "skyreg_group"}
+    )
 
     return skyreg_group_ids
 
@@ -1264,27 +1184,22 @@ def get_parallel_assoc_image_df(
     # |  6 | VAST_2118-06A.EPOCH06x.I.fits |           3 |              1 |
     # |  7 | VAST_0127-73A.EPOCH08.I.fits  |           1 |              2 |
     # +----+-------------------------------+-------------+----------------+
-    skyreg_ids = [i.skyreg_id for i in images]
+    skyreg_ids = [str(i.skyreg_id) for i in images]
 
-    images_df = pd.DataFrame({
-        'image_dj': images,
-        'skyreg_id': skyreg_ids,
-    })
+    images_df = pd.DataFrame(
+        {
+            "image_dj": images,
+            "skyreg_id": skyreg_ids,
+        }
+    )
 
     images_df = images_df.merge(
-        skyregion_groups,
-        how='left',
-        left_on='skyreg_id',
-        right_index=True
+        skyregion_groups, how="left", left_on="skyreg_id", right_index=True
     )
 
-    images_df['image_name'] = images_df['image_dj'].apply(
-        lambda x: x.name
-    )
+    images_df["image_name"] = images_df["image_dj"].apply(lambda x: x.name)
 
-    images_df['image_datetime'] = images_df['image_dj'].apply(
-        lambda x: x.datetime
-    )
+    images_df["image_datetime"] = images_df["image_dj"].apply(lambda x: x.datetime)
 
     return images_df
 
@@ -1301,58 +1216,41 @@ def create_measurements_arrow_file(p_run: Run) -> None:
     Returns:
         None
     """
-    logger.info('Creating measurements.arrow for run %s.', p_run.name)
+    logger.info("Creating measurements.arrow for run %s.", p_run.name)
 
-    associations = pd.read_parquet(
-        os.path.join(
-            p_run.path,
-            'associations.parquet'
-        )
-    )
-    images = pd.read_parquet(
-        os.path.join(
-            p_run.path,
-            'images.parquet'
-        )
-    )
+    associations = pd.read_parquet(os.path.join(p_run.path, "associations.parquet"))
+    images = pd.read_parquet(os.path.join(p_run.path, "images.parquet"))
 
-    m_files = images['measurements_path'].tolist()
+    m_files = images["measurements_path"].tolist()
 
-    m_files += glob.glob(os.path.join(
-        p_run.path,
-        'forced*.parquet'
-    ))
+    m_files += glob.glob(os.path.join(p_run.path, "forced*.parquet"))
 
-    logger.debug('Loading %i files...', len(m_files))
-    measurements = dd.read_parquet(m_files, engine='pyarrow').compute()
+    logger.debug("Loading %i files...", len(m_files))
+    measurements = dd.read_parquet(m_files, engine="pyarrow").compute()
 
     measurements = measurements.loc[
-        measurements['id'].isin(associations['meas_id'].values)
+        measurements["id"].isin(associations["meas_id"].values)
     ]
 
     measurements = (
-        associations.loc[:, ['meas_id', 'source_id']]
-        .set_index('meas_id')
-        .merge(
-            measurements,
-            left_index=True,
-            right_on='id'
-        )
-        .rename(columns={'source_id': 'source'})
+        associations.loc[:, ["meas_id", "source_id"]]
+        .set_index("meas_id")
+        .merge(measurements, left_index=True, right_on="id")
+        .rename(columns={"source_id": "source"})
     )
 
     # drop timezone from datetime for vaex compatibility
     # TODO: Look to keep the timezone if/when vaex is compatible.
-    measurements['time'] = measurements['time'].dt.tz_localize(None)
+    measurements["time"] = measurements["time"].dt.tz_localize(None)
 
-    logger.debug('Optimising dataframes.')
+    logger.debug("Optimising dataframes.")
     measurements = optimize_ints(optimize_floats(measurements))
 
     logger.debug("Loading to pyarrow table.")
     measurements = pa.Table.from_pandas(measurements)
 
     logger.debug("Exporting to arrow file.")
-    outname = os.path.join(p_run.path, 'measurements.arrow')
+    outname = os.path.join(p_run.path, "measurements.arrow")
 
     local = pa.fs.LocalFileSystem()
 
@@ -1373,23 +1271,20 @@ def create_measurement_pairs_arrow_file(p_run: Run) -> None:
     Returns:
         None
     """
-    logger.info('Creating measurement_pairs.arrow for run %s.', p_run.name)
+    logger.info("Creating measurement_pairs.arrow for run %s.", p_run.name)
 
     measurement_pairs_df = pd.read_parquet(
-        os.path.join(
-            p_run.path,
-            'measurement_pairs.parquet'
-        )
+        os.path.join(p_run.path, "measurement_pairs.parquet")
     )
 
-    logger.debug('Optimising dataframe.')
+    logger.debug("Optimising dataframe.")
     measurement_pairs_df = optimize_ints(optimize_floats(measurement_pairs_df))
 
     logger.debug("Loading to pyarrow table.")
     measurement_pairs_df = pa.Table.from_pandas(measurement_pairs_df)
 
     logger.debug("Exporting to arrow file.")
-    outname = os.path.join(p_run.path, 'measurement_pairs.arrow')
+    outname = os.path.join(p_run.path, "measurement_pairs.arrow")
 
     local = pa.fs.LocalFileSystem()
 
@@ -1413,14 +1308,16 @@ def backup_parquets(p_run_path: str) -> None:
     parquets = (
         glob.glob(os.path.join(p_run_path, "*.parquet"))
         # TODO Remove arrow when arrow files are no longer required.
-        + glob.glob(os.path.join(p_run_path, "*.arrow")))
+        + glob.glob(os.path.join(p_run_path, "*.arrow"))
+    )
 
     for i in parquets:
-        backup_name = i + '.bak'
-        if os.path.isfile(backup_name):
-            logger.debug(f'Removing old backup file: {backup_name}.')
-            os.remove(backup_name)
-        shutil.copyfile(i, backup_name)
+        backup_name = i + ".bak"
+        if os.path.isfile(backup_name) or os.path.isdir(backup_name):
+            logger.debug(f"Removing old backup file: {backup_name}.")
+            delete_file_or_dir(backup_name)
+
+        copy_file_or_dir(i, backup_name)
 
 
 def create_temp_config_file(p_run_path: str) -> None:
@@ -1437,18 +1334,17 @@ def create_temp_config_file(p_run_path: str) -> None:
     Returns:
         None
     """
-    config_name = 'config.yaml'
-    temp_config_name = 'config_temp.yaml'
+    config_name = "config.yaml"
+    temp_config_name = "config_temp.yaml"
 
     shutil.copyfile(
         os.path.join(p_run_path, config_name),
-        os.path.join(p_run_path, temp_config_name)
+        os.path.join(p_run_path, temp_config_name),
     )
 
 
 def reconstruct_associtaion_dfs(
-    images_df_done: pd.DataFrame,
-    previous_parquet_paths: Dict[str, str]
+    images_df_done: pd.DataFrame, previous_parquet_paths: Dict[str, str]
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     This function is used with add image mode and performs the necessary
@@ -1467,208 +1363,258 @@ def reconstruct_associtaion_dfs(
         The reconstructed `sources_df` dataframe.
         The reconstructed `skyc1_srs` dataframes.
     """
-    prev_associations = pd.read_parquet(previous_parquet_paths['associations'])
+    prev_associations = pd.read_parquet(previous_parquet_paths["associations"])
 
     # Get the parquet paths from the image objects
     img_meas_paths = (
-        images_df_done['image_dj'].apply(lambda x: x.measurements_path)
-        .to_list()
+        images_df_done["image_dj"].apply(lambda x: x.measurements_path).to_list()
     )
 
     # Obtain the pipeline run path in order to fetch forced measurements.
-    run_path = previous_parquet_paths['sources'].replace(
-        'sources.parquet.bak', ''
-    )
+    run_path = previous_parquet_paths["sources"].replace("sources.parquet.bak", "")
 
     # Get the forced measurement paths.
     img_fmeas_paths = []
 
     for i in images_df_done.image_name.values:
         forced_parquet = os.path.join(
-            run_path, "forced_measurements_{}.parquet".format(
-                i.replace(".", "_")
-            )
+            run_path, "forced_measurements_{}.parquet".format(i.replace(".", "_"))
         )
-        if os.path.isfile(forced_parquet):
+        if os.path.isfile(forced_parquet) or os.path.isdir(forced_parquet):
             img_fmeas_paths.append(forced_parquet)
+
+    logger.debug("Found %i forced measurement parquet files.", len(img_fmeas_paths))
 
     # Create union of paths.
     img_meas_paths += img_fmeas_paths
 
     # Define the columns that are required
     cols = [
-        'id',
-        'ra',
-        'uncertainty_ew',
-        'weight_ew',
-        'dec',
-        'uncertainty_ns',
-        'weight_ns',
-        'flux_int',
-        'flux_int_err',
-        'flux_int_isl_ratio',
-        'flux_peak',
-        'flux_peak_err',
-        'flux_peak_isl_ratio',
-        'forced',
-        'compactness',
-        'has_siblings',
-        'snr',
-        'image_id',
-        'time',
+        "id",
+        "ra",
+        "uncertainty_ew",
+        "weight_ew",
+        "dec",
+        "uncertainty_ns",
+        "weight_ns",
+        "flux_int",
+        "flux_int_err",
+        "flux_int_isl_ratio",
+        "flux_peak",
+        "flux_peak_err",
+        "flux_peak_isl_ratio",
+        "forced",
+        "compactness",
+        "has_siblings",
+        "snr",
+        "image_id",
+        "time",
     ]
 
     # Open all the parquets
-    logger.debug(
-        "Opening all measurement parquet files to use in reconstruction..."
-    )
-    measurements = pd.concat(
-        [pd.read_parquet(f, columns=cols) for f in img_meas_paths]
-    )
+    logger.debug("Opening all measurement parquet files to use in reconstruction...")
+    measurements = pd.concat([pd.read_parquet(f, columns=cols) for f in img_meas_paths])
 
     # Create mask to drop measurements for epoch mode (epoch based mode).
-    measurements_mask = measurements['id'].isin(
-        prev_associations['meas_id'])
-    measurements = measurements.loc[measurements_mask].set_index('id')
+    measurements_mask = measurements["id"].isin(prev_associations["meas_id"])
+    measurements = measurements.loc[measurements_mask].set_index("id")
 
     # Set the index on images_df for faster merging.
-    images_df_done['image_id'] = images_df_done['image_dj'].apply(
-        lambda x: x.id).values
-    images_df_done = images_df_done.set_index('image_id')
+    images_df_done["image_id"] = images_df_done["image_dj"].apply(lambda x: str(x.id)).values
+    images_df_done = images_df_done.set_index("image_id")
 
     # Merge image information to measurements
-    measurements = (
-        measurements.merge(
-            images_df_done[['image_name', 'epoch']],
-            left_on='image_id', right_index=True
-        )
-        .rename(columns={'image_name': 'image'})
-    )
+    measurements = measurements.merge(
+        images_df_done[["image_name", "epoch"]], left_on="image_id", right_index=True
+    ).rename(columns={"image_name": "image"})
 
     # Drop any associations that are not used in this sky region group.
-    associations_mask = prev_associations['meas_id'].isin(
-        measurements.index.values)
+    associations_mask = prev_associations["meas_id"].isin(measurements.index.values)
 
     prev_associations = prev_associations.loc[associations_mask]
 
     # Merge measurements into the associations to form the sources_df.
-    sources_df = (
-        prev_associations.merge(
-            measurements, left_on='meas_id', right_index=True
-        )
-        .rename(columns={
-            'source_id': 'source', 'time': 'datetime', 'meas_id': 'id',
-            'ra': 'ra_source', 'dec': 'dec_source',
-            'uncertainty_ew': 'uncertainty_ew_source',
-            'uncertainty_ns': 'uncertainty_ns_source',
-        })
-    )
+    sources_df = prev_associations.merge(
+        measurements, left_on="meas_id", right_index=True
+    ).rename(
+        columns={
+            "source_id": "source",
+            "time": "datetime",
+            "meas_id": "id",
+            "ra": "ra_source",
+            "dec": "dec_source",
+            "uncertainty_ew": "uncertainty_ew_source",
+            "uncertainty_ns": "uncertainty_ns_source",
+        }
+    ).reset_index(drop=True)
 
     # Load up the previous unique sources.
     prev_sources = pd.read_parquet(
-        previous_parquet_paths['sources'], columns=[
-            'wavg_ra', 'wavg_dec',
-            'wavg_uncertainty_ew', 'wavg_uncertainty_ns',
-        ]
+        previous_parquet_paths["sources"],
+        columns=[
+            "wavg_ra",
+            "wavg_dec",
+            "wavg_uncertainty_ew",
+            "wavg_uncertainty_ns",
+        ],
     )
 
     # Merge the wavg ra and dec to the sources_df - this is required to
     # create the skyc1_srcs below (but MUST be converted back to the source
     # ra and dec)
-    sources_df = (
-        sources_df.merge(
-            prev_sources, left_on='source', right_index=True)
-        .rename(columns={
-            'wavg_ra': 'ra', 'wavg_dec': 'dec',
-            'wavg_uncertainty_ew': 'uncertainty_ew',
-            'wavg_uncertainty_ns': 'uncertainty_ns',
-        })
-    )
+    sources_df = sources_df.merge(
+        prev_sources, left_on="source", right_index=True
+    ).rename(
+        columns={
+            "wavg_ra": "ra",
+            "wavg_dec": "dec",
+            "wavg_uncertainty_ew": "uncertainty_ew",
+            "wavg_uncertainty_ns": "uncertainty_ns",
+        }
+    ).reset_index(drop=True)
 
     # Load the previous relations
-    prev_relations = pd.read_parquet(previous_parquet_paths['relations'])
+    prev_relations = pd.read_parquet(previous_parquet_paths["relations"])
 
     # Form relation lists to merge in.
     prev_relations = pd.DataFrame(
-        prev_relations
-        .groupby('from_source_id')['to_source_id']
-        .apply(lambda x: x.values.tolist())
-    ).rename(columns={'to_source_id': 'related'})
+        prev_relations.groupby("from_source_id")["to_source_id"].apply(
+            lambda x: x.values.tolist()
+        )
+    ).rename(columns={"to_source_id": "related"})
 
     # Append the relations to only the last instance of each source
     # First get the ids of the sources
-    relation_ids = sources_df[
-        sources_df.source.isin(prev_relations.index.values)].drop_duplicates(
-            'source', keep='last'
-        ).index.values
+    relation_ids = (
+        sources_df[sources_df["source"].isin(prev_relations.index.values)]
+        .drop_duplicates("source", keep="last")
+        .index.values
+    )
+
     # Make sure we attach the correct source id
-    source_ids = sources_df.loc[relation_ids].source.values
-    sources_df['related'] = np.nan
+    source_ids = sources_df.loc[relation_ids]["source"].values
+    sources_df["related"] = "NULL"
+    sources_df["related"] = sources_df["related"].apply(lambda x: [x,])
     relations_to_update = prev_relations.loc[source_ids].to_numpy().copy()
-    relations_to_update = np.reshape(
-        relations_to_update, relations_to_update.shape[0])
-    sources_df.loc[relation_ids, 'related'] = relations_to_update
+    relations_to_update = np.reshape(relations_to_update, relations_to_update.shape[0])
+    sources_df.loc[relation_ids, "related"] = relations_to_update
 
     # Reorder so we don't mess up the dask metas.
-    sources_df = sources_df[[
-        'id', 'uncertainty_ew', 'weight_ew', 'uncertainty_ns', 'weight_ns',
-        'flux_int', 'flux_int_err', 'flux_int_isl_ratio', 'flux_peak',
-        'flux_peak_err', 'flux_peak_isl_ratio', 'forced', 'compactness',
-        'has_siblings', 'snr', 'image', 'datetime', 'source', 'ra', 'dec',
-        'ra_source', 'dec_source', 'd2d', 'dr', 'related', 'epoch',
-        'uncertainty_ew_source', 'uncertainty_ns_source'
-    ]]
+    sources_df = sources_df[
+        [
+            "id",
+            "uncertainty_ew",
+            "weight_ew",
+            "uncertainty_ns",
+            "weight_ns",
+            "flux_int",
+            "flux_int_err",
+            "flux_int_isl_ratio",
+            "flux_peak",
+            "flux_peak_err",
+            "flux_peak_isl_ratio",
+            "forced",
+            "compactness",
+            "has_siblings",
+            "snr",
+            "image",
+            "datetime",
+            "source",
+            "ra",
+            "dec",
+            "ra_source",
+            "dec_source",
+            "d2d",
+            "dr",
+            "related",
+            "epoch",
+            "uncertainty_ew_source",
+            "uncertainty_ns_source",
+        ]
+    ]
 
     # Create the unique skyc1_srcs dataframe.
     skyc1_srcs = (
-        sources_df[~sources_df['forced']]
-        .sort_values(by='id')
-        .drop('related', axis=1)
-        .drop_duplicates('source')
+        sources_df[~sources_df["forced"]]
+        .sort_values(by=["epoch", "id"])
+        .drop("related", axis=1)
+        .drop_duplicates("source")
     ).copy(deep=True)
 
     # Get relations into the skyc1_srcs (as we only keep the first instance
     # which does not have the relation information)
     skyc1_srcs = skyc1_srcs.merge(
-        prev_relations, how='left', left_on='source', right_index=True
+        prev_relations, how="left", left_on="source", right_index=True
     )
 
     # Need to break the pointer relationship between the related sources (
     # deep=True copy does not truly copy mutable type objects)
     relation_mask = skyc1_srcs.related.notna()
-    relation_vals = skyc1_srcs.loc[relation_mask, 'related'].to_list()
-    new_relation_vals = [x.copy() for x in relation_vals]
-    skyc1_srcs.loc[relation_mask, 'related'] = new_relation_vals
+    relation_vals = skyc1_srcs.loc[relation_mask, "related"].to_list()
+    new_relation_vals = np.array([x.copy() for x in relation_vals], dtype='object')
+    skyc1_srcs.loc[relation_mask, "related"] = new_relation_vals
 
     # Reorder so we don't mess up the dask metas.
-    skyc1_srcs = skyc1_srcs[[
-        'id', 'ra', 'uncertainty_ew', 'weight_ew', 'dec', 'uncertainty_ns',
-        'weight_ns', 'flux_int', 'flux_int_err', 'flux_int_isl_ratio',
-        'flux_peak', 'flux_peak_err', 'flux_peak_isl_ratio', 'forced',
-        'compactness', 'has_siblings', 'snr', 'image', 'datetime', 'source',
-        'ra_source', 'dec_source', 'd2d', 'dr', 'related', 'epoch'
-    ]].reset_index(drop=True)
+    skyc1_srcs = skyc1_srcs[
+        [
+            "id",
+            "ra",
+            "uncertainty_ew",
+            "weight_ew",
+            "dec",
+            "uncertainty_ns",
+            "weight_ns",
+            "flux_int",
+            "flux_int_err",
+            "flux_int_isl_ratio",
+            "flux_peak",
+            "flux_peak_err",
+            "flux_peak_isl_ratio",
+            "forced",
+            "compactness",
+            "has_siblings",
+            "snr",
+            "image",
+            "datetime",
+            "source",
+            "ra_source",
+            "dec_source",
+            "d2d",
+            "dr",
+            "related",
+            "epoch",
+        ]
+    ].reset_index(drop=True)
 
     # Finally move the source ra and dec back to the sources_df ra and dec
     # columns
-    sources_df['ra'] = sources_df['ra_source']
-    sources_df['dec'] = sources_df['dec_source']
-    sources_df['uncertainty_ew'] = sources_df['uncertainty_ew_source']
-    sources_df['uncertainty_ns'] = sources_df['uncertainty_ns_source']
+    sources_df["ra"] = sources_df["ra_source"]
+    sources_df["dec"] = sources_df["dec_source"]
+    sources_df["uncertainty_ew"] = sources_df["uncertainty_ew_source"]
+    sources_df["uncertainty_ns"] = sources_df["uncertainty_ns_source"]
 
     # Drop not needed columns for the sources_df.
-    sources_df = sources_df.drop([
-        'uncertainty_ew_source', 'uncertainty_ns_source'
-    ], axis=1).reset_index(drop=True)
+    sources_df = sources_df.drop(
+        ["uncertainty_ew_source", "uncertainty_ns_source"], axis=1
+    ).reset_index(drop=True)
 
     return sources_df, skyc1_srcs
 
 
+def _convert_uuid_col_to_str(series: pd.Series) -> pd.Series:
+    """Converts a UUID column to a string column.
+
+    Args:
+        series: A pandas series containing UUIDs.
+
+    Returns:
+        A pandas series containing strings.
+    """
+    return series.astype(str)
+
+
 def write_parquets(
-    images: List[Image],
-    skyregions: List[SkyRegion],
-    bands: List[Band],
-    run_path: str
+    images: List[Image], skyregions: List[SkyRegion], bands: List[Band], run_path: str
 ) -> pd.DataFrame:
     """
     This function saves images, skyregions and bands to parquet files.
@@ -1686,24 +1632,21 @@ def write_parquets(
     """
     # write images parquet file under pipeline run folder
     images_df = pd.DataFrame(map(lambda x: x.__dict__, images))
-    images_df = images_df.drop('_state', axis=1)
-    images_df.to_parquet(
-        os.path.join(run_path, 'images.parquet'),
-        index=False
-    )
+    images_df = images_df.drop("_state", axis=1)
+    for col in ["id", "skyreg_id", "band_id"]:
+        images_df[col] = _convert_uuid_col_to_str(images_df[col])
+    images_df.to_parquet(os.path.join(run_path, "images.parquet"), index=False)
+
     # write skyregions parquet file under pipeline run folder
     skyregs_df = pd.DataFrame(map(lambda x: x.__dict__, skyregions))
-    skyregs_df = skyregs_df.drop('_state', axis=1)
-    skyregs_df.to_parquet(
-        os.path.join(run_path, 'skyregions.parquet'),
-        index=False
-    )
+    skyregs_df = skyregs_df.drop("_state", axis=1)
+    skyregs_df["id"] = _convert_uuid_col_to_str(skyregs_df["id"])
+    skyregs_df.to_parquet(os.path.join(run_path, "skyregions.parquet"), index=False)
+
     # write skyregions parquet file under pipeline run folder
     bands_df = pd.DataFrame(map(lambda x: x.__dict__, bands))
-    bands_df = bands_df.drop('_state', axis=1)
-    bands_df.to_parquet(
-        os.path.join(run_path, 'bands.parquet'),
-        index=False
-    )
+    bands_df = bands_df.drop("_state", axis=1)
+    bands_df["id"] = _convert_uuid_col_to_str(bands_df["id"])
+    bands_df.to_parquet(os.path.join(run_path, "bands.parquet"), index=False)
 
     return skyregs_df
