@@ -934,15 +934,7 @@ def advanced_association(
             association.
     '''
     # read the needed sources fields
-    # Step 1: get matches within semimajor axis of image.
-    logger.debug(f"bw_max: {bw_max}")
-    logger.debug(f"skyc2: {skyc2}")
-    logger.debug(f"skyc1: {skyc1}")
-    logger.debug(f"skyc1 RA NaN: {np.isnan(skyc1.ra.deg).sum()}")
-    logger.debug(f"skyc1 Dec NaN: {np.isnan(skyc1.dec.deg).sum()}")
-    logger.debug(f"skyc2 RA NaN: {np.isnan(skyc2.ra.deg).sum()}")
-    logger.debug(f"skyc2 Dec NaN: {np.isnan(skyc2.dec.deg).sum()}")
-    
+    # Step 1: get matches within semimajor axis of image.    
     idx_skyc1, idx_skyc2, d2d, d3d = skyc2.search_around_sky(
         skyc1, bw_max
     )
@@ -1229,13 +1221,6 @@ def association(
         skyc1_srcs['dec'].values,
         unit=(u.deg, u.deg)
     )
-    
-    logger.debug(skyc1_srcs)
-    logger.debug(skyc1_srcs.query('ra.isnull() | dec.isnull()', engine='python'))
-    logger.debug(skyc1_srcs.query('ra.isnull()', engine='python'))
-    logger.debug(f"skyc1: {skyc1}")
-    logger.debug(f"skyc1: {skyc1[np.isnan(skyc1.ra.deg)]}")
-    logger.debug("\n\n\n\n")
 
     for it, epoch in enumerate(unique_epochs[start_epoch:]):
         logger.info('Association iteration: #%i%s', it + 1, skyreg_tag)
@@ -1260,16 +1245,6 @@ def association(
             skyc2_srcs['dec'].values,
             unit=(u.deg, u.deg)
         )
-        
-        logger.debug("skyc2_srcs:")
-        logger.debug(skyc2_srcs)
-        logger.debug(skyc2_srcs.query('ra.isnull() | dec.isnull()', engine='python'))
-        logger.debug(f"skyc2: {skyc2}")
-        
-        logger.debug("skyc1_srcs:")
-        logger.debug(skyc1_srcs)
-        logger.debug(skyc1_srcs.query('ra.isnull() | dec.isnull()', engine='python'))
-        logger.debug(f"skyc1: {skyc1}")
 
         if method == 'basic':
             sources_df, skyc1_srcs = basic_association(
@@ -1324,18 +1299,6 @@ def association(
 
         sources_df = sources_df.drop(['ra_wrap'], axis=1)
         
-        logger.debug(f"weight_ew NaN counts: {sources_df['weight_ew'].isna().sum()}")
-        logger.debug(f"weight_ew inf counts: {np.isinf(sources_df['weight_ew']).sum()}")
-        logger.debug(f"weight_ns NaN counts: {sources_df['weight_ns'].isna().sum()}")
-        logger.debug(f"interim_ew NaN counts: {sources_df['interim_ew'].isna().sum()}")
-        logger.debug(f"interim_ew inf counts: {np.isinf(sources_df['interim_ew']).sum()}")
-        logger.debug(f"interim_ns NaN counts: {sources_df['interim_ns'].isna().sum()}")
-        logger.debug(f"interim_ns inf counts: {np.isinf(sources_df['interim_ns']).sum()}")
-        logger.debug(f"weight_ew zero counts: {(sources_df['weight_ew'] == 0.0).sum()}")
-        logger.debug(f"weight_ns zero counts: {(sources_df['weight_ns'] == 0.0).sum()}")
-
-        logger.debug(f"uncertainty ew: {sources_df['uncertainty_ew']}")
-        
         tmp_srcs_df = (
             sources_df.loc[
                 (sources_df['source'] != -1) & (sources_df['forced'] == False),
@@ -1356,9 +1319,6 @@ def association(
         wm_dec = tmp_srcs_df['interim_ns'].sum() / tmp_srcs_df['weight_ns'].sum()
         wm_uncertainty_ns = 1. / np.sqrt(tmp_srcs_df['weight_ns'].sum())
 
-        logger.debug(f"wm_ra NaN counts: {wm_ra.isna().sum()}")
-        logger.debug(f"wm_dec NaN counts: {wm_dec.isna().sum()}")
-
         weighted_df = (
             pd.concat(
                 [wm_ra, wm_uncertainty_ew, wm_dec, wm_uncertainty_ns],
@@ -1376,18 +1336,6 @@ def association(
         )
         nan_indices = weighted_df.query("ra.isnull()", engine='python').index
         nan_sources = weighted_df.iloc[nan_indices].source.values
-        
-        logger.debug("Temp sources column info:")
-        for source, group in tmp_srcs_df:
-            if source in nan_sources:
-                logger.debug(source)
-                
-                for column in group.columns:
-                    logger.debug(group[column])
-        
-        logger.debug("Weighted df column info:")
-        for column in weighted_df.columns:
-            logger.debug(weighted_df.iloc[nan_indices][column])
     
         # correct the RA wrapping
         ra_wrap_mask = weighted_df.ra >= 360.
@@ -1422,10 +1370,6 @@ def association(
                 'uncertainty_ns_skyc2'
             ], axis=1
         )
-        
-        logger.debug("skyc1_srcs column info:")
-        for column in skyc1_srcs.columns:
-            logger.debug(skyc1_srcs.iloc[nan_indices][column])
 
         # generate new sky coord ready for next iteration
         skyc1 = SkyCoord(
