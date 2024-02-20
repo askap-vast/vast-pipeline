@@ -65,6 +65,17 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
             m_peak, m_int - variability modulation index
     """
     n_cpu = 10 #cpu_count() - 1 # temporarily hardcode n_cpu
+    
+    partition_size_mb=100
+    mem_usage_mb = df.memory_usage(deep=True).sum() / 1e6
+    npartitions = int(np.ceil(mem_usage_mb/partition_size_mb))
+    
+    if npartitions < n_cpu:
+        npartitions=n_cpu
+    logger.debug(f"Running calculate_measurement_pair_metrics with {n_cpu} CPUs....")
+    logger.debug(f"and using {npartitions} partions of {partition_size_mb}MB...")
+    
+    out = dd.from_pandas(df.set_index('source'), npartitions=npartitions)
 
     """Create a DataFrame containing all measurement ID combinations per source.
     Resultant DataFrame will have a MultiIndex(["source", RangeIndex]) where "source" is
@@ -85,8 +96,10 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
                 2  12929  21994
         11128   0   6216  23534
     """
+    
+    
     measurement_combinations = (
-        dd.from_pandas(df, n_cpu)
+        dd.from_pandas(df.set_index("source"), npartitions=npartitions)
         .groupby("source")["id"]
         .apply(
             lambda x: pd.DataFrame(list(combinations(x, 2))), meta={0: "i", 1: "i"},)
