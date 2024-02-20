@@ -1590,10 +1590,18 @@ def parallel_association(
     id_incr_par_assoc = max(done_source_ids) if add_mode else 0
 
     n_cpu = 10 #cpu_count() - 1 # temporarily hardcode n_cpu
+    partition_size_mb=100
+    mem_usage_mb = images_df.memory_usage(deep=True).sum() / 1e6
+    npartitions = int(np.ceil(mem_usage_mb/partition_size_mb))
+    
+    if npartitions < n_cpu:
+        npartitions=n_cpu
+    logger.debug(f"Running parallel_association with {n_cpu} CPUs....")
+    logger.debug(f"and using {npartitions} partions of {partition_size_mb}MB...")
 
     # pass each skyreg_group through the normal association process.
     results = (
-        dd.from_pandas(images_df, n_cpu)
+        dd.from_pandas(images_df.set_index('skyreg_group'), npartitions=npartitions)
         .groupby('skyreg_group')
         .apply(
             association,
