@@ -5,7 +5,7 @@ import pandas as pd
 
 from typing import List, Optional, Dict, Tuple, Generator, Iterable
 from itertools import islice
-from django.db import transaction, connection, models
+from django.db import transaction, connection, models, reset_queries
 
 from vast_pipeline.image.main import SelavyImage
 from vast_pipeline.pipeline.model_generator import (
@@ -53,6 +53,8 @@ def bulk_upload_model(
         None or a list of the database IDs of the uploaded objects.
 
     '''
+    reset_queries()
+    
     bulk_ids = []
     while True:
         items = list(islice(generator, batch_size))
