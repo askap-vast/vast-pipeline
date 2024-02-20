@@ -777,7 +777,16 @@ def parallel_groupby_coord(df: pd.DataFrame) -> pd.DataFrame:
         'wavg_dec': 'f',
     }
     n_cpu = 10 #cpu_count() - 1 # temporarily hardcode n_cpu
-    out = dd.from_pandas(df, n_cpu)
+    partition_size_mb=100
+    mem_usage_mb = df.memory_usage(deep=True).sum() / 1e6
+    npartitions = int(np.ceil(mem_usage_mb/partition_size_mb))
+    
+    if npartitions < n_cpu:
+        npartitions=n_cpu
+    logger.debug(f"Running parallel_groupby with {n_cpu} CPUs....")
+    logger.debug(f"and using {npartitions} partions of {partition_size_mb}MB...")
+    
+    out = dd.from_pandas(df.set_index('source'), npartitions=npartitions)
     out = (
         out.groupby('source')
         .apply(calc_ave_coord, meta=col_dtype)
