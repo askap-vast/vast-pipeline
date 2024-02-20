@@ -783,7 +783,7 @@ def parallel_groupby_coord(df: pd.DataFrame) -> pd.DataFrame:
     
     if npartitions < n_cpu:
         npartitions=n_cpu
-    logger.debug(f"Running parallel_groupby with {n_cpu} CPUs....")
+    logger.debug(f"Running parallel_groupby_coord with {n_cpu} CPUs....")
     logger.debug(f"and using {npartitions} partions of {partition_size_mb}MB...")
     
     out = dd.from_pandas(df.set_index('source'), npartitions=npartitions)
