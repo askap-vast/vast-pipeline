@@ -238,12 +238,15 @@ def make_upload_associations(associations_df: pd.DataFrame) -> None:
     mem_usage = associations_df.memory_usage(deep=True).sum() / 1e6
     logger.debug(f"associations_df memory usage: {mem_usage}MB")
     logger.debug(get_memory_usage())
-    bulk_upload_model(
-        Association,
-        association_models_generator(associations_df),
-        batch_size=10000,
-        log_mem_usage=True
-    )
+    
+    assoc_chunk_size = 100000
+    for i in range(0,len(df),assoc_chunk_size)
+        bulk_upload_model(
+            Association,
+            association_models_generator(associations_df[i:i+assoc_chunk_size]),
+            batch_size=10000,
+            log_mem_usage=True
+        )
 
 
 def make_upload_measurements(measurements_df: pd.DataFrame) -> pd.DataFrame:
