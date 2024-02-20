@@ -232,9 +232,17 @@ def parallel_get_rms_measurements(
     }
 
     n_cpu = 10 #cpu_count() - 1 # temporarily hardcode n_cpu
-
+    partition_size_mb=100
+    mem_usage_mb = df.memory_usage(deep=True).sum() / 1e6
+    npartitions = int(np.ceil(mem_usage_mb/partition_size_mb))
+    
+    if npartitions < n_cpu:
+        npartitions=n_cpu
+    logger.debug(f"Running parallel_get_rms_measurements with {n_cpu} CPUs....")
+    logger.debug(f"and using {npartitions} partions of {partition_size_mb}MB...")
+    
     out = (
-        dd.from_pandas(out, n_cpu)
+        dd.from_pandas(out.set_index('img_diff_rms_path'), npartitions=npartitions)
         .groupby('img_diff_rms_path')
         .apply(
             get_image_rms_measurements,
