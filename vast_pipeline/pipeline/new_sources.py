@@ -240,9 +240,11 @@ def parallel_get_rms_measurements(
         npartitions=n_cpu
     logger.debug(f"Running parallel_get_rms_measurements with {n_cpu} CPUs....")
     logger.debug(f"and using {npartitions} partions of {partition_size_mb}MB...")
-    
+    #out = out.set_index('img_diff_rms_path')
+    #logger.debug(out)
+    #logger.debug(out['img_diff_rms_path'])
     out = (
-        dd.from_pandas(out.set_index('img_diff_rms_path'), npartitions=npartitions)
+        dd.from_pandas(out, npartitions=npartitions)
         .groupby('img_diff_rms_path')
         .apply(
             get_image_rms_measurements,
