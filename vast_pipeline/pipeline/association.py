@@ -934,7 +934,7 @@ def advanced_association(
             association.
     '''
     # read the needed sources fields
-    # Step 1: get matches within semimajor axis of image.
+    # Step 1: get matches within semimajor axis of image.    
     idx_skyc1, idx_skyc2, d2d, d3d = skyc2.search_around_sky(
         skyc1, bw_max
     )
@@ -1298,7 +1298,7 @@ def association(
         )
 
         sources_df = sources_df.drop(['ra_wrap'], axis=1)
-
+        
         tmp_srcs_df = (
             sources_df.loc[
                 (sources_df['source'] != -1) & (sources_df['forced'] == False),
@@ -1334,7 +1334,9 @@ def association(
                     'weight_ns': 'uncertainty_ns'
             })
         )
-
+        nan_indices = weighted_df.query("ra.isnull()", engine='python').index
+        nan_sources = weighted_df.iloc[nan_indices].source.values
+    
         # correct the RA wrapping
         ra_wrap_mask = weighted_df.ra >= 360.
         weighted_df.loc[
@@ -1587,11 +1589,19 @@ def parallel_association(
     # getting duplicates in the result laater
     id_incr_par_assoc = max(done_source_ids) if add_mode else 0
 
-    n_cpu = cpu_count() - 1
+    n_cpu = 10 #cpu_count() - 1 # temporarily hardcode n_cpu
+    partition_size_mb=100
+    mem_usage_mb = images_df.memory_usage(deep=True).sum() / 1e6
+    npartitions = int(np.ceil(mem_usage_mb/partition_size_mb))
+    
+    if npartitions < n_cpu:
+        npartitions=n_cpu
+    logger.debug(f"Running parallel_association with {n_cpu} CPUs....")
+    logger.debug(f"and using {npartitions} partions of {partition_size_mb}MB...")
 
     # pass each skyreg_group through the normal association process.
     results = (
-        dd.from_pandas(images_df, n_cpu)
+        dd.from_pandas(images_df.set_index('skyreg_group'), npartitions=npartitions)
         .groupby('skyreg_group')
         .apply(
             association,

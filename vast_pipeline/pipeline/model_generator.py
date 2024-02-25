@@ -87,6 +87,7 @@ def association_models_generator(
     Returns:
         An iterable generator object containing the yielded Association objects.
     """
+    logger.debug(f"Building {len(assoc_df)} association generators")
     for i, row in assoc_df.iterrows():
         yield Association(
             meas_id=row['id'],
@@ -94,6 +95,7 @@ def association_models_generator(
             d2d=row['d2d'],
             dr=row['dr'],
         )
+    logger.debug(f"Built {len(assoc_df)} association generators")
 
 
 def related_models_generator(

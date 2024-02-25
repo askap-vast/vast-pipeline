@@ -29,6 +29,7 @@ from vast_pipeline.utils.utils import (
 from vast_pipeline.models import (
     Band, Image, Run, SkyRegion
 )
+import psutil
 
 
 logger = logging.getLogger(__name__)
@@ -703,8 +704,21 @@ def parallel_groupby(df: pd.DataFrame) -> pd.DataFrame:
         'eta_peak': 'f',
         'related_list': 'O'
     }
-    n_cpu = cpu_count() - 1
-    out = dd.from_pandas(df, n_cpu)
+    n_cpu = 10 #cpu_count() - 1 # temporarily hardcode n_cpu
+    #from dask.distributed import Client
+    #client = Client(n_workers=n_cpu, memory_limit="3GB")
+    #chunksize=10000
+    partition_size_mb=100
+    mem_usage_mb = df.memory_usage(deep=True).sum() / 1e6
+    npartitions = int(np.ceil(mem_usage_mb/partition_size_mb))
+    
+    if npartitions < n_cpu:
+        npartitions=n_cpu
+    logger.debug(f"Running parallel_groupby with {n_cpu} CPUs....")
+    logger.debug(f"and using {npartitions} partions of {partition_size_mb}MB...")
+    
+    out = dd.from_pandas(df.set_index('source'), npartitions=npartitions)
+    
     out = (
         out.groupby('source')
         .apply(
@@ -762,8 +776,17 @@ def parallel_groupby_coord(df: pd.DataFrame) -> pd.DataFrame:
         'wavg_ra': 'f',
         'wavg_dec': 'f',
     }
-    n_cpu = cpu_count() - 1
-    out = dd.from_pandas(df, n_cpu)
+    n_cpu = 10 #cpu_count() - 1 # temporarily hardcode n_cpu
+    partition_size_mb=100
+    mem_usage_mb = df.memory_usage(deep=True).sum() / 1e6
+    npartitions = int(np.ceil(mem_usage_mb/partition_size_mb))
+    
+    if npartitions < n_cpu:
+        npartitions=n_cpu
+    logger.debug(f"Running parallel_groupby_coord with {n_cpu} CPUs....")
+    logger.debug(f"and using {npartitions} partions of {partition_size_mb}MB...")
+    
+    out = dd.from_pandas(df.set_index('source'), npartitions=npartitions)
     out = (
         out.groupby('source')
         .apply(calc_ave_coord, meta=col_dtype)
@@ -948,6 +971,7 @@ def get_src_skyregion_merged_df(
     #  VAST_0127-73A.EPOCH01.I.fits | True         |
     # ------------------------------+--------------+
     logger.info("Creating ideal source coverage df...")
+    #logger.debug(sources_df.head())
 
     merged_timer = StopWatch()
 
@@ -1707,3 +1731,15 @@ def write_parquets(
     )
 
     return skyregs_df
+
+def get_memory_usage():
+    """
+    This function gets the current memory usage and returns a string.
+    
+    Returns:
+        A string containing the current resource usage.
+    """
+    mem = psutil.virtual_memory()[3] #resource usage in bytes
+    mem = mem / 1024**3 #resource usage in GB
+    
+    return f"Current memory usage: {mem:.3f}GB"

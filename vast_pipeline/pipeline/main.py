@@ -28,7 +28,8 @@ from .utils import (
     get_src_skyregion_merged_df,
     group_skyregions,
     get_parallel_assoc_image_df,
-    write_parquets
+    write_parquets,
+    get_memory_usage
 )
 
 from .errors import MaxPipelineRunsError
@@ -232,7 +233,9 @@ class Pipeline():
                 self.previous_parquets,
                 done_images_df
             )
-
+        mem_usage = sources_df.memory_usage(deep=True).sum() / 1e6
+        logger.debug(f"Step 2: sources_df memory usage: {mem_usage}MB")
+        logger.debug(get_memory_usage())
         # Obtain the number of selavy measurements for the run
         # n_selavy_measurements = sources_df.
         nr_selavy_measurements = sources_df['id'].unique().shape[0]
@@ -285,8 +288,12 @@ class Pipeline():
                 done_images_df,
                 done_source_ids
             )
+            mem_usage = sources_df.memory_usage(deep=True).sum() / 1e6
+            logger.debug(f"Step 5: sources_df memory usage: {mem_usage}MB")
+            logger.debug(get_memory_usage())
 
         del missing_sources_df
+        logger.debug(get_memory_usage())
 
         # STEP #6: finalise the df getting unique sources, calculating
         # metrics and upload data to database
@@ -300,6 +307,7 @@ class Pipeline():
             done_source_ids,
             self.previous_parquets
         )
+        logger.debug(get_memory_usage())
 
         # calculate number processed images
         nr_img_processed = len(images)

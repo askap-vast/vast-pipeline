@@ -166,6 +166,7 @@ def extract_from_image(
         Dictionary with input dataframe with added columns (flux_int,
             flux_int_err, chi_squared_fit) and image name.
     """
+    timer = StopWatch()
     # create the skycoord obj to pass to the forced extraction
     # see usage https://github.com/dlakaplan/forced_phot
     P_islands = SkyCoord(
@@ -173,6 +174,7 @@ def extract_from_image(
         df['wavg_dec'].values,
         unit=(u.deg, u.deg)
     )
+
     # load the image, background and noisemaps into memory
     # a dedicated function may seem unneccesary, but will be useful if we
     # split the load to a separate thread.
@@ -183,12 +185,14 @@ def extract_from_image(
                                            )
     FP = ForcedPhot(*forcedphot_input)
 
+
     flux, flux_err, chisq, DOF, cluster_id = FP.measure(
         P_islands,
         cluster_threshold=cluster_threshold,
         allow_nan=allow_nan,
         edge_buffer=edge_buffer
     )
+    logger.debug(f"Time to measure FP for {image}: {timer.reset()}s")
     df['flux_int'] = flux * 1.e3
     df['flux_int_err'] = flux_err * 1.e3
     df['chi_squared_fit'] = chisq
@@ -238,7 +242,7 @@ def finalise_forced_dfs(
     df['component_id'] = df['island_id'].str.replace(
         'island', 'component'
     ) + 'a'
-    img_prefix = image.split('.')[0] + '_'
+    img_prefix = ""#image.split('.')[0] + '_'
     df['name'] = img_prefix + df['component_id']
     # assign all the other columns
     # convert fluxes to mJy
@@ -390,7 +394,8 @@ def parallel_extraction(
     )
     del col_to_drop
 
-    n_cpu = cpu_count() - 1
+    #n_cpu = cpu_count() - 1 # this doesn't work because cpu_count returns the number of CPUs in the machine, not the container.
+    n_cpu = 10
     bags = db.from_sequence(list_to_map, npartitions=len(list_to_map))
     forced_dfs = (
         bags.map(lambda x: extract_from_image(
@@ -399,7 +404,7 @@ def parallel_extraction(
             allow_nan=allow_nan,
             **x
         ))
-        .compute()
+        .compute(scheduler='processes', num_workers=n_cpu)
     )
     del bags
     # create intermediates dfs combining the mapping data and the forced
@@ -477,7 +482,7 @@ def parallel_write_parquet(
         'forced_measurements_' + n.replace('.', '_') + '.parquet'
     )
     dfs = list(map(lambda x: (df[df['image'] == x], get_fname(x)), images))
-    n_cpu = cpu_count() - 1
+    n_cpu = 10 #cpu_count() - 1 # temporarily hardcode n_cpu
 
     # writing parquets using Dask bag
     bags = db.from_sequence(dfs)
@@ -610,7 +615,7 @@ def forced_extraction(
     )
 
     # make measurement names unique for db constraint
-    extr_df['name'] = extr_df['name'] + f'_f_run{p_run.id:06d}'
+    extr_df['name'] = extr_df['name'] + f'_f_run{p_run.id:03d}'
 
     # select sensible flux values and set the columns with fix values
     values = {
@@ -678,6 +683,19 @@ def forced_extraction(
     extr_df = extr_df[col_order + remaining]
 
     # upload the measurements, a column 'id' is returned with the DB id
+    long_names = extr_df.loc[extr_df['name'].str.len() > 63]
+    long_comps = extr_df.loc[extr_df['component_id'].str.len() > 63]
+    long_isls = extr_df.loc[extr_df['island_id'].str.len() > 63]
+    
+    if len(long_names) > 0:
+        logger.debug("Entries with long names:")
+        logger.debug(long_names)
+    if len(long_comps) > 0:
+        logger.debug("Entries with long component ids:")
+        logger.debug(long_comps)
+    if len(long_isls) > 0:
+        logger.debug("Entries with long island ids:")
+        logger.debug(long_isls)
     extr_df = make_upload_measurements(extr_df)
 
     extr_df = extr_df.rename(columns={'source_tmp_id': 'source'})
