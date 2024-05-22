@@ -431,14 +431,10 @@ class SelavyImage(FitsImage):
 
             logger.debug("Condon errors done.")
 
-        logger.debug("Calculating positional errors...")
         # TODO: avoid extra column given that it is a single value
         df['ew_sys_err'] = self.config["ra_uncertainty"] / 3600.
         df['ns_sys_err'] = self.config["dec_uncertainty"] / 3600.
 
-        
-        logger.debug(df['ra_err'])
-        logger.debug(df['ra_err'].mean())
         
         df['error_radius'] = calc_error_radius(
             df['ra'].values,
@@ -451,9 +447,6 @@ class SelavyImage(FitsImage):
             df['ew_sys_err'].values, df['error_radius'].values
         )
         
-        logger.debug(df['uncertainty_ew'])
-        logger.debug(df['uncertainty_ew'].mean())
-
         df['uncertainty_ns'] = np.hypot(
             df['ns_sys_err'].values, df['error_radius'].values
         )
@@ -461,8 +454,7 @@ class SelavyImage(FitsImage):
         # weight calculations to use later
         df['weight_ew'] = 1. / df['uncertainty_ew'].values**2
         df['weight_ns'] = 1. / df['uncertainty_ns'].values**2
-        logger.debug('Positional errors done.')
-
+        
         # Initialise the forced column as False
         df['forced'] = False
 

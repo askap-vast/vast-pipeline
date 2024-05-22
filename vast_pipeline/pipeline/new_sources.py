@@ -344,8 +344,6 @@ def new_sources(
         ).values(*tuple(cols))
     )).set_index('name')
     
-    logger.debug(f"Time to make images_df: {debug_timer.reset()}s")
-
     # Get rid of sources that are not 'new', i.e. sources which the
     # first sky region image is not in the image list
     new_sources_df = missing_sources_df[
@@ -353,8 +351,7 @@ def new_sources(
     ].drop(
         columns=['in_primary']
     )
-    logger.debug(f"Time to make new_sources_df: {debug_timer.reset()}s")
-
+    
     # Check if the previous sources would have actually been seen
     # i.e. are the previous images sensitive enough
 
