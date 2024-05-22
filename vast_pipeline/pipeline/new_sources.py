@@ -112,10 +112,7 @@ def get_image_rms_measurements(
     coords = SkyCoord(
         group.wavg_ra, group.wavg_dec, unit=(u.deg, u.deg)
     )
-    logger.debug(f"{image} - Time to generate SkyCoord: {get_rms_timer.reset()}s")
-
     array_coords = gen_array_coords_from_wcs(coords, wcs)
-    logger.debug(f"{image} - Time to generate array_coords: {get_rms_timer.reset()}s")
 
     # check for pixel wrapping
     x_valid = np.logical_or(
@@ -135,8 +132,6 @@ def get_image_rms_measurements(
     valid_indexes = group[valid].index.values
 
     group = group.loc[valid_indexes]
-    
-    logger.debug(f"{image} - Time to get valid indices: {get_rms_timer.reset()}s")
 
     if group.empty:
         # early return if all sources failed range check
@@ -153,10 +148,8 @@ def get_image_rms_measurements(
     coords = SkyCoord(
         group.wavg_ra, group.wavg_dec, unit=(u.deg, u.deg)
     )
-    logger.debug(f"{image} - Time to generate second SkyCoord: {get_rms_timer.reset()}s")
 
     array_coords = gen_array_coords_from_wcs(coords, wcs)
-    logger.debug(f"{image} - Time to generate second array_coords: {get_rms_timer.reset()}s")
 
     acceptable_no_nan_dist = int(
         round(bmaj.to('arcsec').value / 2. / pixelscale.value)
@@ -177,8 +170,6 @@ def get_image_rms_measurements(
             nan_valid.append(True)
 
     valid_indexes = group[nan_valid].index.values
-    
-    logger.debug(f"{image} - Time to get second valid indices: {get_rms_timer.reset()}s")
 
     if np.any(nan_valid):
         # only run if there are actual values to measure
