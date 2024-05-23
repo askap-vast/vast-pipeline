@@ -216,7 +216,7 @@ def parallel_get_rms_measurements(
         The original input dataframe with the 'img_diff_true_rms' column
             added. The column will contain 'NaN' entires for sources that fail.
     """
-    df.to_csv('parallel_get_rms_measurements_input.csv')
+    #df.to_csv('parallel_get_rms_measurements_input.csv')
     
     out = df[[
         'source', 'wavg_ra', 'wavg_dec',
@@ -269,7 +269,8 @@ def parallel_get_rms_measurements(
     logger.debug("Starting df merge...")
     
     df_to_merge = (df.sort_values(
-                        by=['source', 'flux_peak']
+                        by=['source', 'flux_peak'],
+                        ascending=False
                    )
                    .drop_duplicates('source')
                    .drop(['img_diff_rms_path'], axis=1)
@@ -280,11 +281,8 @@ def parallel_get_rms_measurements(
                     .drop_duplicates('source')
                    )
     
-    #logger.debug(df_to_merge.columns)
-    #logger.debug(df.columns)
-    #logger.debug(f"Length df to merge: {len(df_to_merge)}")
-    df = df.merge(
-        out[['source', 'img_diff_true_rms']],
+    df = df_to_merge.merge(
+        out_to_merge[['source', 'img_diff_true_rms']],
         left_on='source', right_on='source',
         how='left'
     )
@@ -294,15 +292,7 @@ def parallel_get_rms_measurements(
     logger.debug(f"Merged df length: {len(df)}")
     logger.debug(f"Merged df mem usage: {mem_usage_mb}MB")
     logger.debug(df)
-    logger.debug(df.columns)
     
-    
-    df_readable = df
-    df_readable['name'] = df.img_diff_rms_path.str.split('/').str[-1]
-    logger.debug(df_readable[['source', 'name', 'img_diff_true_rms']])
-    logger.debug(df_readable.source.sort_values())
-    logger.debug(df_readable.img_diff_true_rms.sort_values())
-
     return df
 
 
@@ -508,7 +498,7 @@ def new_sources(
     new_sources_df = new_sources_df.sort_values(
         by=['source', 'true_sigma'], ascending=False
     )
-    new_sources_df.to_csv('new_sources_df_before_drop.csv')
+    #new_sources_df.to_csv('new_sources_df_before_drop.csv')
 
     # keep only the highest for each source, rename for the daatabase
     new_sources_df = (
@@ -523,14 +513,12 @@ def new_sources(
     # others.
     new_sources_df = new_sources_df[['new_high_sigma']]
     
-    new_sources_df.to_csv('new_high_sigma_orig_corrected.csv')
+    #new_sources_df.to_csv('new_high_sigma_newcalc2.csv')
     
     logger.debug(f"Time to to do final cleanup steps {debug_timer.reset()}s")
 
     logger.info(
         'Total new source analysis time: %.2f seconds', timer.reset_init()
     )
-    
-    raise Exception("End of new source calc")
 
     return new_sources_df
