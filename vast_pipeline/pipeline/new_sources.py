@@ -430,7 +430,8 @@ def new_sources(
 
     # We only care about the highest true sigma
     new_sources_df = new_sources_df.sort_values(
-        by=['source', 'true_sigma']
+        by=['source', 'true_sigma'],
+        ascending=False
     )
 
     # keep only the highest for each source, rename for the daatabase
