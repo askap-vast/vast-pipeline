@@ -175,6 +175,7 @@ def final_operations(
 
     # create measurement pairs, aka 2-epoch metrics
     if calculate_pairs:
+        sources_df.to_parquet('calcalate_measurement_pair_metrics_input_df.parquet')
         timer.reset()
         measurement_pairs_df = calculate_measurement_pair_metrics(sources_df)
         logger.info('Measurement pair metrics time: %.2f seconds', timer.reset())

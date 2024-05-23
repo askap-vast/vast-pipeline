@@ -294,6 +294,10 @@ class Pipeline():
 
         del missing_sources_df
         logger.debug(get_memory_usage())
+        
+        sources_df.to_parquet('final_operations_input_sources_df.parquet')
+        new_sources_df.to_parquet('final_operations_input_new_sources_df.parquet')
+        
 
         # STEP #6: finalise the df getting unique sources, calculating
         # metrics and upload data to database
