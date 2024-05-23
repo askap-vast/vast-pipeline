@@ -75,7 +75,7 @@ def get_image_rms_measurements(
         edge_buffer:
             Multiplicative factor applied to nbeam to act as a buffer.
 
-    Returns:
+    Returns:F
         The group dataframe with the 'img_diff_true_rms' column added. The
             column will contain 'NaN' entires for sources that fail.
     """
@@ -216,6 +216,8 @@ def parallel_get_rms_measurements(
         The original input dataframe with the 'img_diff_true_rms' column
             added. The column will contain 'NaN' entires for sources that fail.
     """
+    df.to_csv('parallel_get_rms_measurements_input.csv')
+    
     out = df[[
         'source', 'wavg_ra', 'wavg_dec',
         'img_diff_rms_path'
@@ -266,14 +268,20 @@ def parallel_get_rms_measurements(
     
     logger.debug("Starting df merge...")
     
-    #df_to_merge = (df.sort_values(
-    #                    by=['source', 'flux_peak']
-    #               )
-    #               .drop_duplicates('source')
-    #               .drop(['img_diff_rms_path'], axis=1)
-    #)
+    df_to_merge = (df.sort_values(
+                        by=['source', 'flux_peak']
+                   )
+                   .drop_duplicates('source')
+                   .drop(['img_diff_rms_path'], axis=1)
+    )
+    out_to_merge = (out.sort_values(
+                        by=['source','img_diff_true_rms']
+                        )
+                    .drop_duplicates('source')
+                   )
+    
     #logger.debug(df_to_merge.columns)
-    logger.debug(df.columns)
+    #logger.debug(df.columns)
     #logger.debug(f"Length df to merge: {len(df_to_merge)}")
     df = df.merge(
         out[['source', 'img_diff_true_rms']],
@@ -498,8 +506,9 @@ def new_sources(
 
     # We only care about the highest true sigma
     new_sources_df = new_sources_df.sort_values(
-        by=['source', 'true_sigma']
+        by=['source', 'true_sigma'], ascending=False
     )
+    new_sources_df.to_csv('new_sources_df_before_drop.csv')
 
     # keep only the highest for each source, rename for the daatabase
     new_sources_df = (
@@ -507,16 +516,21 @@ def new_sources(
         .drop_duplicates('source')
         .set_index('source')
         .rename(columns={'true_sigma': 'new_high_sigma'})
+        .sort_values('source')
     )
 
     # moving forward only the new_high_sigma columns is needed, drop all
     # others.
     new_sources_df = new_sources_df[['new_high_sigma']]
     
+    new_sources_df.to_csv('new_high_sigma_orig_corrected.csv')
+    
     logger.debug(f"Time to to do final cleanup steps {debug_timer.reset()}s")
 
     logger.info(
         'Total new source analysis time: %.2f seconds', timer.reset_init()
     )
+    
+    raise Exception("End of new source calc")
 
     return new_sources_df
