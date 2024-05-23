@@ -79,10 +79,17 @@ def get_image_rms_measurements(
         The group dataframe with the 'img_diff_true_rms' column added. The
             column will contain 'NaN' entires for sources that fail.
     """
+    
     if len(group) == 0:
         # input dataframe is empty, nothing to do
+        logger.debug(f"No image RMS measurements to get, returning")
         return group
+    
     image = group.iloc[0]['img_diff_rms_path']
+    logger.debug(f"{image} - num. meas. to get: {len(group)}")
+    partition_mem = group.memory_usage(deep=True).sum() / 1e6
+    logger.debug(f"{image} - partition memory usage: {partition_mem}MB")
+    
     get_rms_timer = StopWatch()
     with open_fits(image) as hdul:
         header = hdul[0].header
@@ -229,8 +236,9 @@ def parallel_get_rms_measurements(
     
     if npartitions < n_cpu:
         npartitions=n_cpu
-    logger.debug(f"Running parallel_get_rms_measurements with {n_cpu} CPUs....")
-    logger.debug(f"and using {npartitions} partions of {partition_size_mb}MB...")
+    logger.debug(f"df mem usage: {mem_usage_mb}MB")
+    logger.debug(f"Applying get_rms_measurements with {n_cpu} CPUs....")
+    logger.debug(f"and using {npartitions} partitions of {partition_size_mb}MB...")
     #out = out.set_index('img_diff_rms_path')
     #logger.debug(out)
     #logger.debug(out['img_diff_rms_path'])
@@ -243,12 +251,49 @@ def parallel_get_rms_measurements(
             meta=col_dtype
         ).compute(num_workers=n_cpu, scheduler='processes')
     )
-
+    logger.debug("Finished applying get_image_rms_measurements")
+    
+    mem_usage_mb = df.memory_usage(deep=True).sum() / 1e6
+    logger.debug(f"df length: {len(df)}")
+    logger.debug(f"df mem usage: {mem_usage_mb}MB")
+    
+    mem_usage_mb = out.memory_usage(deep=True).sum() / 1e6
+    logger.debug(f"out length: {len(out)}")
+    logger.debug(f"out mem usage: {mem_usage_mb}MB")
+    
+    logger.debug(f"Number source NaN: {out.source.isna().sum()}")
+    logger.debug(f"Number rms NaN: {out.img_diff_true_rms.isna().sum()}")
+    
+    logger.debug("Starting df merge...")
+    
+    #df_to_merge = (df.sort_values(
+    #                    by=['source', 'flux_peak']
+    #               )
+    #               .drop_duplicates('source')
+    #               .drop(['img_diff_rms_path'], axis=1)
+    #)
+    #logger.debug(df_to_merge.columns)
+    logger.debug(df.columns)
+    #logger.debug(f"Length df to merge: {len(df_to_merge)}")
     df = df.merge(
         out[['source', 'img_diff_true_rms']],
         left_on='source', right_on='source',
         how='left'
     )
+    logger.debug("Finished df merge...")
+    
+    mem_usage_mb = df.memory_usage(deep=True).sum() / 1e6
+    logger.debug(f"Merged df length: {len(df)}")
+    logger.debug(f"Merged df mem usage: {mem_usage_mb}MB")
+    logger.debug(df)
+    logger.debug(df.columns)
+    
+    
+    df_readable = df
+    df_readable['name'] = df.img_diff_rms_path.str.split('/').str[-1]
+    logger.debug(df_readable[['source', 'name', 'img_diff_true_rms']])
+    logger.debug(df_readable.source.sort_values())
+    logger.debug(df_readable.img_diff_true_rms.sort_values())
 
     return df
 
@@ -431,6 +476,7 @@ def new_sources(
 
     # measure the actual rms in the previous images at
     # the source location.
+    logger.debug("Getting rms measurements...")
     new_sources_df = parallel_get_rms_measurements(
         new_sources_df, edge_buffer=edge_buffer
     )
