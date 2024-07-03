@@ -1707,3 +1707,24 @@ def write_parquets(
     )
 
     return skyregs_df
+    
+def calculate_n_partitions(df, n_cpu, partition_size=100):
+    """
+    This function will calculate how many partitions a dataframe should be
+    split into.
+    
+    Args:
+        df: The pandas dataframe to be partitionined.
+        n_cpu: The number of available CPUs.
+        partition_size: The optimal partition size in MB.
+    Returns:
+        The optimal number of partitions.
+    """
+    mem_usage_mb = df.memory_usage(deep=True).sum() / 1e6
+    n_partitions = int(np.ceil(mem_usage_mb/partition_size_mb))
+    
+    # n_partitions should be >= n_cpu for optimal parallel processing
+    if n_partitions < n_cpu:
+        n_partitions=n_cpu
+    
+    return n_partitions
