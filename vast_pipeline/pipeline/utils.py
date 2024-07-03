@@ -1714,7 +1714,7 @@ def write_parquets(
 
     return skyregs_df
     
-def calculate_n_partitions(df, n_cpu, partition_size=100):
+def calculate_n_partitions(df, n_cpu, partition_size_mb=100):
     """
     This function will calculate how many partitions a dataframe should be
     split into.
