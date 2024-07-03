@@ -766,7 +766,10 @@ def parallel_groupby_coord(df: pd.DataFrame) -> pd.DataFrame:
         'wavg_dec': 'f',
     }
     n_cpu = cpu_count() - 1
-    out = dd.from_pandas(df, n_cpu)
+    logger.debug(f"Running association with {n_cpu} CPUs")
+    n_partitions = calculate_n_partitions(images_df, n_cpu)
+
+    out = dd.from_pandas(df.set_index('source'), npartitions=n_partitions)
     out = (
         out.groupby('source')
         .apply(calc_ave_coord, meta=col_dtype)
