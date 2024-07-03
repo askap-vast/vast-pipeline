@@ -66,7 +66,7 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
     """
     n_cpu = cpu_count() - 1
     logger.debug(f"Running association with {n_cpu} CPUs")
-    n_partitions = calculate_n_partitions(images_df, n_cpu)
+    n_partitions = calculate_n_partitions(images_df.set_index('source'), n_cpu)
 
     """Create a DataFrame containing all measurement ID combinations per source.
     Resultant DataFrame will have a MultiIndex(["source", RangeIndex]) where "source" is
