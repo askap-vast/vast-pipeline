@@ -6,6 +6,8 @@ import numpy as np
 import pandas as pd
 from psutil import cpu_count
 
+from vast_pipeline.pipeline.utils import calculate_n_partitions
+
 
 logger = logging.getLogger(__name__)
 
