@@ -20,8 +20,7 @@ from .utils import (
     reconstruct_associtaion_dfs
 )
 from vast_pipeline.pipeline.config import PipelineConfig
-from vast_pipeline.utils.utils import StopWatch
-from vast_pipeline.pipeline.utils import calculate_n_partitions
+from vast_pipeline.utils.utils import StopWatch, calculate_n_partitions
 
 
 logger = logging.getLogger(__name__)
