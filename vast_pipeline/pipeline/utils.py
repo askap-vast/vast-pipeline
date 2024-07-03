@@ -705,7 +705,7 @@ def parallel_groupby(df: pd.DataFrame) -> pd.DataFrame:
     }
     n_cpu = cpu_count() - 1
     logger.debug(f"Running association with {n_cpu} CPUs")
-    n_partitions = calculate_n_partitions(images_df, n_cpu)
+    n_partitions = calculate_n_partitions(df, n_cpu)
 
     out = dd.from_pandas(df.set_index('source'), npartitions=n_partitions)
     out = (
@@ -767,7 +767,7 @@ def parallel_groupby_coord(df: pd.DataFrame) -> pd.DataFrame:
     }
     n_cpu = cpu_count() - 1
     logger.debug(f"Running association with {n_cpu} CPUs")
-    n_partitions = calculate_n_partitions(images_df, n_cpu)
+    n_partitions = calculate_n_partitions(df, n_cpu)
 
     out = dd.from_pandas(df.set_index('source'), npartitions=n_partitions)
     out = (
