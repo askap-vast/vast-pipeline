@@ -704,7 +704,10 @@ def parallel_groupby(df: pd.DataFrame) -> pd.DataFrame:
         'related_list': 'O'
     }
     n_cpu = cpu_count() - 1
-    out = dd.from_pandas(df, n_cpu)
+    logger.debug(f"Running association with {n_cpu} CPUs")
+    n_partitions = calculate_n_partitions(images_df, n_cpu)
+
+    out = dd.from_pandas(df.set_index('source'), npartitions=n_partitions)
     out = (
         out.groupby('source')
         .apply(
@@ -1727,4 +1730,6 @@ def calculate_n_partitions(df, n_cpu, partition_size=100):
     if n_partitions < n_cpu:
         n_partitions=n_cpu
     
+    logger.debug("Using {n_partitions} partions of {partition_size}MB")
+
     return n_partitions
