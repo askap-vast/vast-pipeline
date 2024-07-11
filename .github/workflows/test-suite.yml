@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         #python_version: ["3.8.12", "3.9.10"]
-        python_version: ["3.9.10"]
+        python_version: ["3.9.10", "3.11.8"]
 
     steps:
       - uses: actions/checkout@v2
@@ -47,8 +47,7 @@ jobs:
         with:
           path: .venv
           key: pydeps-${{ hashFiles('**/poetry.lock') }}
-      
-      - run: pip wheel --use-pep517 "numba (==0.51.2)" # temporarily force numba install
+
       - run: poetry install --no-interaction --no-root
         if: steps.cache-deps.outputs.cache-hit != 'true'
       
