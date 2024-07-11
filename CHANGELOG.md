@@ -42,6 +42,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Use chunks for associations upload [#726](https://github.com/askap-vast/vast-pipeline/pull/726)
 - Updated all FITS loading to use a wrapper that can handle compressed FITS files [#694](https://github.com/askap-vast/vast-pipeline/pull/694)
 - Downgrade ci-docs to python 3.8 [#702](https://github.com/askap-vast/vast-pipeline/pull/702)
 - Update Gr1N poetry to v8, force python 3.8.10 [#701](https://github.com/askap-vast/vast-pipeline/pull/701)
@@ -76,6 +77,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fix memory leak in model upload [#726](https://github.com/askap-vast/vast-pipeline/pull/726)
 - Fixed outdated `runpipeline` section on CLI docs page [#685](https://github.com/askap-vast/vast-pipeline/pull/685).
 - Fixed link to JupyterHub [#676](https://github.com/askap-vast/vast-pipeline/pull/676).
 - Ensure Image models are not created if the catalogue ingest fails [#648](https://github.com/askap-vast/vast-pipeline/pull/648).
@@ -114,6 +116,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#726](https://github.com/askap-vast/vast-pipeline/pull/726): fix: Fix memory leak in model upload and use chunks for associations upload
 - [#694](https://github.com/askap-vast/vast-pipeline/pull/694): feat: Handle compressed fits files.
 - [#702](https://github.com/askap-vast/vast-pipeline/pull/702): fix: Downgrade ci-docs to python 3.8.
 - [#701](https://github.com/askap-vast/vast-pipeline/pull/701): fix: Update Gr1N poetry to v8, force python 3.8.10.
