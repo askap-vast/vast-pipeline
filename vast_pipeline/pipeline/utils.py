@@ -1707,15 +1707,3 @@ def write_parquets(
     )
 
     return skyregs_df
-
-def get_memory_usage():
-    """
-    This function gets the current memory usage and returns a string.
-    
-    Returns:
-        A string containing the current resource usage.
-    """
-    mem = psutil.virtual_memory()[3] #resource usage in bytes
-    mem = mem / 1024**3 #resource usage in GB
-
-    return f"Current memory usage: {mem:.3f}GB"
