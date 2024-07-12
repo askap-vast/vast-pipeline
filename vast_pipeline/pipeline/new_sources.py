@@ -12,7 +12,7 @@ from astropy.wcs.utils import (
 )
 
 from vast_pipeline.models import Image, Run
-from vast_pipeline.utils.utils import StopWatch
+from vast_pipeline.utils.utils import StopWatch, calculate_n_partitions
 from vast_pipeline.image.utils import open_fits
 
 
@@ -219,9 +219,11 @@ def parallel_get_rms_measurements(
     }
 
     n_cpu = cpu_count() - 1
+    logger.debug(f"Running association with {n_cpu} CPUs")
+    n_partitions = calculate_n_partitions(out, n_cpu)
 
     out = (
-        dd.from_pandas(out, n_cpu)
+        dd.from_pandas(out, npartitions=n_partitions)
         .groupby('img_diff_rms_path')
         .apply(
             get_image_rms_measurements,

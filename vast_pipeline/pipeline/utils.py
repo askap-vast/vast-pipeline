@@ -24,7 +24,8 @@ from itertools import chain
 from vast_pipeline.image.main import FitsImage, SelavyImage
 from vast_pipeline.image.utils import open_fits
 from vast_pipeline.utils.utils import (
-    eq_to_cart, StopWatch, optimize_ints, optimize_floats
+    eq_to_cart, StopWatch, optimize_ints, optimize_floats,
+    calculate_n_partitions
 )
 from vast_pipeline.models import (
     Band, Image, Run, SkyRegion
@@ -704,7 +705,10 @@ def parallel_groupby(df: pd.DataFrame) -> pd.DataFrame:
         'related_list': 'O'
     }
     n_cpu = cpu_count() - 1
-    out = dd.from_pandas(df, n_cpu)
+    logger.debug(f"Running association with {n_cpu} CPUs")
+    n_partitions = calculate_n_partitions(df, n_cpu)
+
+    out = dd.from_pandas(df.set_index('source'), npartitions=n_partitions)
     out = (
         out.groupby('source')
         .apply(
@@ -763,7 +767,10 @@ def parallel_groupby_coord(df: pd.DataFrame) -> pd.DataFrame:
         'wavg_dec': 'f',
     }
     n_cpu = cpu_count() - 1
-    out = dd.from_pandas(df, n_cpu)
+    logger.debug(f"Running association with {n_cpu} CPUs")
+    n_partitions = calculate_n_partitions(df, n_cpu)
+
+    out = dd.from_pandas(df.set_index('source'), npartitions=n_partitions)
     out = (
         out.groupby('source')
         .apply(calc_ave_coord, meta=col_dtype)
