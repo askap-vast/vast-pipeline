@@ -232,8 +232,21 @@ def parallel_get_rms_measurements(
         ).compute(num_workers=n_cpu, scheduler='processes')
     )
 
-    df = df.merge(
-        out[['source', 'img_diff_true_rms']],
+    df_to_merge = (df.sort_values(
+                        by=['source', 'flux_peak'],
+                        ascending=False
+                   )
+                   .drop_duplicates('source')
+                   .drop(['img_diff_rms_path'], axis=1)
+    )
+    out_to_merge = (out.sort_values(
+                        by=['source','img_diff_true_rms']
+                        )
+                    .drop_duplicates('source')
+                   )
+
+    df = df_to_merge.merge(
+        out_to_merge[['source', 'img_diff_true_rms']],
         left_on='source', right_on='source',
         how='left'
     )
