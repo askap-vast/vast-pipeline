@@ -6,6 +6,8 @@ import numpy as np
 import pandas as pd
 from psutil import cpu_count
 
+from vast_pipeline.utils.utils import calculate_n_partitions
+
 
 logger = logging.getLogger(__name__)
 
@@ -64,18 +66,9 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
             vs_peak, vs_int - variability t-statistic
             m_peak, m_int - variability modulation index
     """
-    n_cpu = 10 #cpu_count() - 1 # temporarily hardcode n_cpu
-    
-    partition_size_mb=100
-    mem_usage_mb = df.memory_usage(deep=True).sum() / 1e6
-    npartitions = int(np.ceil(mem_usage_mb/partition_size_mb))
-    
-    if npartitions < n_cpu:
-        npartitions=n_cpu
-    logger.debug(f"Running calculate_measurement_pair_metrics with {n_cpu} CPUs....")
-    logger.debug(f"and using {npartitions} partions of {partition_size_mb}MB...")
-    
-    out = dd.from_pandas(df.set_index('source'), npartitions=npartitions)
+    n_cpu = cpu_count() - 1
+    logger.debug(f"Running association with {n_cpu} CPUs")
+    n_partitions = calculate_n_partitions(df.set_index('source'), n_cpu)
 
     """Create a DataFrame containing all measurement ID combinations per source.
     Resultant DataFrame will have a MultiIndex(["source", RangeIndex]) where "source" is
@@ -99,7 +92,7 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
     
     
     measurement_combinations = (
-        dd.from_pandas(df.set_index("source"), npartitions=npartitions)
+        dd.from_pandas(df, npartitions=n_partitions)
         .groupby("source")["id"]
         .apply(
             lambda x: pd.DataFrame(list(combinations(x, 2))), meta={0: "i", 1: "i"},)

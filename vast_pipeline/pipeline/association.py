@@ -20,7 +20,7 @@ from .utils import (
     reconstruct_associtaion_dfs
 )
 from vast_pipeline.pipeline.config import PipelineConfig
-from vast_pipeline.utils.utils import StopWatch
+from vast_pipeline.utils.utils import StopWatch, calculate_n_partitions
 
 
 logger = logging.getLogger(__name__)
@@ -1589,19 +1589,13 @@ def parallel_association(
     # getting duplicates in the result laater
     id_incr_par_assoc = max(done_source_ids) if add_mode else 0
 
-    n_cpu = 10 #cpu_count() - 1 # temporarily hardcode n_cpu
-    partition_size_mb=100
-    mem_usage_mb = images_df.memory_usage(deep=True).sum() / 1e6
-    npartitions = int(np.ceil(mem_usage_mb/partition_size_mb))
+    n_cpu = cpu_count() - 1
+    logger.debug(f"Running association with {n_cpu} CPUs")
+    n_partitions = calculate_n_partitions(images_df, n_cpu)
     
-    if npartitions < n_cpu:
-        npartitions=n_cpu
-    logger.debug(f"Running parallel_association with {n_cpu} CPUs....")
-    logger.debug(f"and using {npartitions} partions of {partition_size_mb}MB...")
-
     # pass each skyreg_group through the normal association process.
     results = (
-        dd.from_pandas(images_df.set_index('skyreg_group'), npartitions=npartitions)
+        dd.from_pandas(images_df.set_index('skyreg_group'), npartitions=n_partitions)
         .groupby('skyreg_group')
         .apply(
             association,

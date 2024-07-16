@@ -12,7 +12,7 @@ from astropy.wcs.utils import (
 )
 
 from vast_pipeline.models import Image, Run
-from vast_pipeline.utils.utils import StopWatch
+from vast_pipeline.utils.utils import StopWatch, calculate_n_partitions
 from vast_pipeline.image.utils import open_fits
 
 
@@ -231,21 +231,12 @@ def parallel_get_rms_measurements(
         'img_diff_true_rms': 'f',
     }
 
-    n_cpu = 10 #cpu_count() - 1 # temporarily hardcode n_cpu
-    partition_size_mb=100
-    mem_usage_mb = out.memory_usage(deep=True).sum() / 1e6
-    npartitions = int(np.ceil(mem_usage_mb/partition_size_mb))
-    
-    if npartitions < n_cpu:
-        npartitions=n_cpu
-    logger.debug(f"df mem usage: {mem_usage_mb}MB")
-    logger.debug(f"Applying get_rms_measurements with {n_cpu} CPUs....")
-    logger.debug(f"and using {npartitions} partitions of {partition_size_mb}MB...")
-    #out = out.set_index('img_diff_rms_path')
-    #logger.debug(out)
-    #logger.debug(out['img_diff_rms_path'])
+    n_cpu = cpu_count() - 1
+    logger.debug(f"Running association with {n_cpu} CPUs")
+    n_partitions = calculate_n_partitions(out, n_cpu)
+
     out = (
-        dd.from_pandas(out, npartitions=npartitions)
+        dd.from_pandas(out, npartitions=n_partitions)
         .groupby('img_diff_rms_path')
         .apply(
             get_image_rms_measurements,
