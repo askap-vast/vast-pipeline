@@ -431,7 +431,6 @@ def new_sources(
 
     # measure the actual rms in the previous images at
     # the source location.
-    new_sources_df.to_csv('new_sources_debug_data/new_sources_df.csv')
     
     # PR#713: This part of the code should be rewritten to reflect the new
     # behaviour of parallel_get_rms_measurements. That function should be
@@ -468,8 +467,6 @@ def new_sources(
         .set_index('source')
         .rename(columns={'true_sigma': 'new_high_sigma'})
     )
-    
-    new_sources_df.to_csv('new_sources_orig.csv')  
 
     # moving forward only the new_high_sigma columns is needed, drop all
     # others.
