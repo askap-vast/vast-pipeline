@@ -205,7 +205,7 @@ def parallel_get_rms_measurements(
         The original input dataframe with the 'img_diff_true_rms' column
             added. The column will contain 'NaN' entires for sources that fail.
     """
-    
+
     out = df[[
         'source', 'wavg_ra', 'wavg_dec',
         'img_diff_rms_path'
@@ -233,7 +233,7 @@ def parallel_get_rms_measurements(
         ).compute(num_workers=n_cpu, scheduler='processes')
     )
 
-    # We don't need all of the RMS measurements, just the lowest. Keeping all 
+    # We don't need all of the RMS measurements, just the lowest. Keeping all
     # of them results in huge memory usage when merging. However, there is an
     # existing bug: https://github.com/askap-vast/vast-pipeline/issues/713
     # that means that we actually want the _highest_ in order to reproduce the
@@ -242,14 +242,13 @@ def parallel_get_rms_measurements(
 
     df_to_merge = (df.drop_duplicates('source')
                    .drop(['img_diff_rms_path'], axis=1)
-    )
-    
-    out_to_merge = (out.sort_values(
-                        by=['source','img_diff_true_rms'], ascending=False
-                        )
-                    .drop_duplicates('source')
                    )
-   
+
+    out_to_merge = (out.sort_values(
+        by=['source', 'img_diff_true_rms'], ascending=False
+    )
+        .drop_duplicates('source')
+    )
 
     df = df_to_merge.merge(
         out_to_merge[['source', 'img_diff_true_rms']],
@@ -431,7 +430,7 @@ def new_sources(
 
     # measure the actual rms in the previous images at
     # the source location.
-    
+
     # PR#713: This part of the code should be rewritten to reflect the new
     # behaviour of parallel_get_rms_measurements. That function should be
     # renamed to something like parallel_get_new_high_sigma and all of the
@@ -456,14 +455,14 @@ def new_sources(
     )
 
     # We only care about the highest true sigma
-    #new_sources_df = new_sources_df.sort_values(
+    # new_sources_df = new_sources_df.sort_values(
     #    by=['source', 'true_sigma']
-    #)
+    # )
 
     # keep only the highest for each source, rename for the daatabase
     new_sources_df = (
         new_sources_df
-        #.drop_duplicates('source')
+        # .drop_duplicates('source')
         .set_index('source')
         .rename(columns={'true_sigma': 'new_high_sigma'})
     )
