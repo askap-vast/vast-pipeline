@@ -6,6 +6,8 @@ import numpy as np
 import pandas as pd
 from psutil import cpu_count
 
+from vast_pipeline.utils.utils import calculate_n_partitions
+
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +67,8 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
             m_peak, m_int - variability modulation index
     """
     n_cpu = cpu_count() - 1
+    logger.debug(f"Running association with {n_cpu} CPUs")
+    n_partitions = calculate_n_partitions(df.set_index('source'), n_cpu)
 
     """Create a DataFrame containing all measurement ID combinations per source.
     Resultant DataFrame will have a MultiIndex(["source", RangeIndex]) where "source" is
@@ -86,7 +90,7 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
         11128   0   6216  23534
     """
     measurement_combinations = (
-        dd.from_pandas(df, n_cpu)
+        dd.from_pandas(df, npartitions=n_partitions)
         .groupby("source")["id"]
         .apply(
             lambda x: pd.DataFrame(list(combinations(x, 2))), meta={0: "i", 1: "i"},)
