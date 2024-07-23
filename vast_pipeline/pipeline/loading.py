@@ -5,7 +5,7 @@ import pandas as pd
 
 from typing import List, Optional, Dict, Tuple, Generator, Iterable
 from itertools import islice
-from django.db import transaction, connection, models
+from django.db import transaction, connection, models, reset_queries
 
 from vast_pipeline.image.main import SelavyImage
 from vast_pipeline.pipeline.model_generator import (
@@ -29,7 +29,8 @@ logger = logging.getLogger(__name__)
 def bulk_upload_model(
     djmodel: models.Model,
     generator: Iterable[Generator[models.Model, None, None]],
-    batch_size: int=10_000, return_ids: bool=False
+    batch_size: int=10_000,
+    return_ids: bool=False,
 ) -> List[int]:
     '''
     Bulk upload a list of generator objects of django models to db.
@@ -49,6 +50,8 @@ def bulk_upload_model(
         None or a list of the database IDs of the uploaded objects.
 
     '''
+    reset_queries()
+    
     bulk_ids = []
     while True:
         items = list(islice(generator, batch_size))
@@ -220,9 +223,12 @@ def make_upload_associations(associations_df: pd.DataFrame) -> None:
         None.
     """
     logger.info('Upload associations...')
-    bulk_upload_model(
-        Association, association_models_generator(associations_df)
-    )
+    assoc_chunk_size = 100000
+    for i in range(0,len(associations_df),assoc_chunk_size):
+        bulk_upload_model(
+            Association,
+            association_models_generator(associations_df[i:i+assoc_chunk_size])
+        )
 
 
 def make_upload_measurements(measurements_df: pd.DataFrame) -> pd.DataFrame:
