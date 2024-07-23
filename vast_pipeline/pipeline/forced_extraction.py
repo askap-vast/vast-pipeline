@@ -238,8 +238,7 @@ def finalise_forced_dfs(
     df['component_id'] = df['island_id'].str.replace(
         'island', 'component'
     ) + 'a'
-    img_prefix = image.split('.')[0] + '_'
-    df['name'] = img_prefix + df['component_id']
+    df['name'] = df['component_id']
     # assign all the other columns
     # convert fluxes to mJy
     # store source bmaj and bmin in arcsec
@@ -610,7 +609,7 @@ def forced_extraction(
     )
 
     # make measurement names unique for db constraint
-    extr_df['name'] = extr_df['name'] + f'_f_run{p_run.id:06d}'
+    extr_df['name'] = extr_df['name'] + f'_f_run{p_run.id:03d}'
 
     # select sensible flux values and set the columns with fix values
     values = {
