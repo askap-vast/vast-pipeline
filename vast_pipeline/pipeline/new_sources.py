@@ -185,14 +185,14 @@ def get_image_rms_measurements(
     return group
 
 
-def parallel_get_rms_measurements(
+def parallel_get_new_high_sigma(
     df: pd.DataFrame, edge_buffer: float = 1.0
 ) -> pd.DataFrame:
     """
-    Wrapper function to use 'get_image_rms_measurements'
-    in parallel with Dask. nbeam is not an option here as that parameter
-    is fixed in forced extraction and so is made sure to be fixed here to. This
-    may change in the future.
+    Wrapper function to use 'get_image_rms_measurements' in parallel with Dask
+    and calculate the new high sigma. nbeam is not an option here as that
+    parameter is fixed in forced extraction and so is made sure to be fixed
+    here to. This may change in the future.
 
     Args:
         df:
@@ -243,13 +243,38 @@ def parallel_get_rms_measurements(
         .drop_duplicates('source')
     )
 
-    df = df_to_merge.merge(
+    new_sources_df = df_to_merge.merge(
         out_to_merge[['source', 'img_diff_true_rms']],
         left_on='source', right_on='source',
         how='left'
     )
+    
+    # this removes those that are out of range
+    new_sources_df['img_diff_true_rms'] = (
+        new_sources_df['img_diff_true_rms'].fillna(0.)
+    )
+    new_sources_df = new_sources_df[
+        new_sources_df['img_diff_true_rms'] != 0
+    ]
 
-    return df
+    # calculate the true sigma
+    new_sources_df['true_sigma'] = (
+        new_sources_df['flux_peak'].values
+        / new_sources_df['img_diff_true_rms'].values
+    )
+
+    # keep only the highest for each source, rename for the daatabase
+    new_sources_df = (
+        new_sources_df
+        .set_index('source')
+        .rename(columns={'true_sigma': 'new_high_sigma'})
+    )
+
+    # moving forward only the new_high_sigma columns is needed, drop all
+    # others.
+    new_sources_df = new_sources_df[['new_high_sigma']]
+
+    return new_sources_df
 
 
 def new_sources(
@@ -422,41 +447,11 @@ def new_sources(
     # to measure the true rms at the source location.
 
     # measure the actual rms in the previous images at
-    # the source location.
+    # the source location and calculate the corresponding S/N
 
-    # PR#713: This part of the code should be rewritten to reflect the new
-    # behaviour of parallel_get_rms_measurements. That function should be
-    # renamed to something like parallel_get_new_high_sigma and all of the
-    # subsequent code in this function moved into it.
-
-    new_sources_df = parallel_get_rms_measurements(
+    new_sources_df = parallel_get_new_high_sigma(
         new_sources_df, edge_buffer=edge_buffer
     )
-
-    # this removes those that are out of range
-    new_sources_df['img_diff_true_rms'] = (
-        new_sources_df['img_diff_true_rms'].fillna(0.)
-    )
-    new_sources_df = new_sources_df[
-        new_sources_df['img_diff_true_rms'] != 0
-    ]
-
-    # calculate the true sigma
-    new_sources_df['true_sigma'] = (
-        new_sources_df['flux_peak'].values
-        / new_sources_df['img_diff_true_rms'].values
-    )
-
-    # keep only the highest for each source, rename for the daatabase
-    new_sources_df = (
-        new_sources_df
-        .set_index('source')
-        .rename(columns={'true_sigma': 'new_high_sigma'})
-    )
-
-    # moving forward only the new_high_sigma columns is needed, drop all
-    # others.
-    new_sources_df = new_sources_df[['new_high_sigma']]
 
     logger.info(
         'Total new source analysis time: %.2f seconds', timer.reset_init()
