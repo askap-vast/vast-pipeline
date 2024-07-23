@@ -1096,7 +1096,7 @@ def get_src_skyregion_merged_df(
 def _get_skyregion_relations(
     row: pd.Series,
     coords: SkyCoord,
-    ids: pd.core.indexes.numeric.Int64Index
+    ids: int
 ) -> List[int]:
     '''
     For each sky region row a list is returned that
@@ -1180,7 +1180,7 @@ def group_skyregions(df: pd.DataFrame) -> pd.DataFrame:
 
     master_done = []  # keep track of all checked ids in master done
 
-    for skyreg_id, neighbours in results.iteritems():
+    for skyreg_id, neighbours in results.items():
 
         if skyreg_id not in master_done:
             local_done = []   # a local done list for the sky region group.
