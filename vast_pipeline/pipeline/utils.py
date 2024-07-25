@@ -13,6 +13,7 @@ import pyarrow as pa
 import astropy.units as u
 import dask
 import dask.dataframe as dd
+import psutil
 
 from typing import Any, List, Optional, Dict, Tuple, Union
 from astropy.coordinates import SkyCoord, Angle
