@@ -13,6 +13,8 @@ from vast_pipeline.models import Run
 from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
 from ..helpers import get_p_run_name
 
+from ...utils.delete_raw import delete_pipeline_run_raw_sql
+
 logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
@@ -138,7 +140,7 @@ class Command(BaseCommand):
             with transaction.atomic():
                 p_run.status = 'DEL'
                 p_run.save()
-            p_run.delete()
+            delete_pipeline_run_raw_sql(p_run)
             record_segment('delete_db')
 
             segment_start = time.time()
