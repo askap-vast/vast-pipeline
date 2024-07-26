@@ -240,7 +240,7 @@ def make_upload_associations(associations_df: pd.DataFrame) -> None:
     logger.debug(f"associations_df memory usage: {mem_usage}MB")
     log_total_memory_usage()
 
-    ssoc_chunk_size = 100000
+    assoc_chunk_size = 100000
     for i in range(0,len(associations_df),assoc_chunk_size):
         bulk_upload_model(
             Association,
