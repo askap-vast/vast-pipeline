@@ -397,7 +397,9 @@ def calculate_n_partitions(df, n_cpu, partition_size_mb=100):
     # n_partitions should be >= n_cpu for optimal parallel processing
     if n_partitions < n_cpu:
         n_partitions=n_cpu
+
+    partition_size_mb = int(np.ceil(mem_usage_mb/n_partitions))
     
-    logger.debug("Using {n_partitions} partions of {partition_size}MB")
+    logger.debug(f"Using {n_partitions} partions of {partition_size_mb}MB")
 
     return n_partitions
