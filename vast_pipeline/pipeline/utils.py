@@ -1477,11 +1477,15 @@ def reconstruct_associtaion_dfs(
     """
     prev_associations = pd.read_parquet(previous_parquet_paths['associations'])
 
+    logger.debug(images_df_done)
+    logger.debug(images_df_done['image_dj'])
+
     # Get the parquet paths from the image objects
     img_meas_paths = (
         images_df_done['image_dj'].apply(lambda x: x.measurements_path)
         .to_list()
     )
+    logger.debug(img_meas_paths)
 
     # Obtain the pipeline run path in order to fetch forced measurements.
     run_path = previous_parquet_paths['sources'].replace(
