@@ -224,13 +224,13 @@ def final_operations(
         
         mem_usage = get_df_memory_usage(srcs_df_upload)
         logger.debug(f"srcs_df_upload initial memory: {mem_usage}MB")
-        get_total_memory_usage()
+        log_total_memory_usage()
         
         srcs_df_upload = make_upload_sources(srcs_df_upload, p_run, add_mode)
         
         mem_usage = get_df_memory_usage(srcs_df_upload)
         logger.debug(f"srcs_df_upload memory after upload: {mem_usage}MB")
-        get_total_memory_usage()
+        log_total_memory_usage()
         
         # And now update
         srcs_df_update = srcs_df.loc[src_done_mask].copy()
@@ -238,12 +238,12 @@ def final_operations(
             f"Updating {srcs_df_update.shape[0]} sources with new metrics.")
         mem_usage = get_df_memory_usage(srcs_df_update)
         logger.debug(f"srcs_df_update memory: {mem_usage}MB")
-        get_total_memory_usage()
+        log_total_memory_usage()
         
         srcs_df = update_sources(srcs_df_update, batch_size=1000)
         mem_usage = get_df_memory_usage(srcs_df_update)
         logger.debug(f"srcs_df_update memory: {mem_usage}MB")
-        get_total_memory_usage()
+        log_total_memory_usage()
         # Add back together
         if not srcs_df_upload.empty:
             srcs_df = pd.concat([srcs_df, srcs_df_upload])
@@ -252,7 +252,7 @@ def final_operations(
 
     mem_usage = get_df_memory_usage(srcs_df)
     logger.debug(f"srcs_df memory after uploading sources: {mem_usage}MB")
-    get_total_memory_usage()
+    log_total_memory_usage()
 
     # gather the related df, upload to db and save to parquet file
     # the df will look like
@@ -316,7 +316,7 @@ def final_operations(
     
     mem_usage = get_df_memory_usage(sources_df)
     logger.debug(f"sources_df memory after srcs_df merge: {mem_usage}MB")
-    get_total_memory_usage()
+    log_total_memory_usage()
 
     if add_mode:
         # Load old associations so the already uploaded ones can be removed
