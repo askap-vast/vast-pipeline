@@ -79,6 +79,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Updated github action syntax to correctly call docker compose [#736](https://github.com/askap-vast/vast-pipeline/pull/736)
 - Fix memory leak in new_sources merge [#730](https://github.com/askap-vast/vast-pipeline/pull/730)
 - Fix memory leak in model upload [#726](https://github.com/askap-vast/vast-pipeline/pull/726)
 - Implemented sensible dask dataframe partitioning [#724](https://github.com/askap-vast/vast-pipeline/pull/724)
@@ -120,6 +121,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#736](https://github.com/askap-vast/vast-pipeline/pull/736): fix: Updated github action syntax to correctly call docker compose 
 - [#730](https://github.com/askap-vast/vast-pipeline/pull/730): fix: Fix memory leak in new_sources merge
 - [#726](https://github.com/askap-vast/vast-pipeline/pull/726): fix: Fix memory leak in model upload and use chunks for associations upload
 - [#724](https://github.com/askap-vast/vast-pipeline/pull/724): fix, feat: Implemented sensible dask dataframe partitioning
