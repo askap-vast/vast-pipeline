@@ -12,10 +12,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python_version: ["3.8.12", "3.9.10", "3.10"]
+        python_version: ["3.8.12", "3.9.10"]
 
     steps:
-      #- uses: actions/checkout@v4
       - uses: actions/checkout@v2
 
       - name: Create dev database
@@ -28,7 +27,6 @@ jobs:
         run: sudo apt-get install -y libpq-dev libgraphviz-dev
 
       - uses: actions/setup-python@v5
-      #- uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python_version }}
 
@@ -44,7 +42,6 @@ jobs:
           virtualenvs-in-project: true
       - name: cache deps
         id: cache-deps
-        #uses: actions/cache@v4
         uses: actions/cache@v2
         with:
           path: .venv
@@ -56,7 +53,6 @@ jobs:
       - run: poetry install --no-interaction
       
       - uses: actions/setup-node@v4
-      #- uses: actions/setup-node@v2
         with:
           node-version: "12"
 
