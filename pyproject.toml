@@ -44,8 +44,8 @@ channels = "^3.0.4"
 param = "<2.0.0"
 
 [tool.poetry.dev-dependencies]
-mkdocs-material = "^8.2.4"
-mkdocstrings = {extras = ["python"], version = "^0.18.0"}
+mkdocs-material = "^9.4"
+mkdocstrings = {extras = ["python"], version = "^0.25.0"}
 mkdocs-minify-plugin = "^0"
 mkdocs-material-extensions = "^1.0.1"
 mkdocs-gen-files = "^0"
@@ -64,6 +64,7 @@ django-stubs = "^1.9.0"
 lightgallery = "^0"
 mkdocs-git-revision-date-localized-plugin = "^0"
 mike = "^1.1.2"
+markdown = "3.3.7"
 
 [tool.poetry.extras]
 prod = ["gevent", "gunicorn"]
