@@ -14,8 +14,9 @@ from vast_pipeline.pipeline.loading import (
     update_sources
 )
 from vast_pipeline.pipeline.pairs import calculate_measurement_pair_metrics
-from vast_pipeline.pipeline.utils import parallel_groupby, get_df_memory_usage, log_total_memory_usage
-
+from vast_pipeline.pipeline.utils import (
+    parallel_groupby, get_df_memory_usage, log_total_memory_usage
+)
 
 logger = logging.getLogger(__name__)
 
@@ -108,8 +109,8 @@ def final_operations(
             The new sources dataframe, only contains the
             'new_source_high_sigma' column (source_id is the index).
         calculate_pairs:
-            Whether to calculate the measurement pairs and their 2-epoch metrics, Vs and
-            m.
+            Whether to calculate the measurement pairs and their 2-epoch
+            metrics, Vs and m.
         source_aggregate_pair_metrics_min_abs_vs:
             Only measurement pairs where the Vs metric exceeds this value
             are selected for the aggregate pair metrics that are stored in
@@ -121,10 +122,10 @@ def final_operations(
             in the previous run in add mode.
 
     Returns:
-        The number of sources contained in the pipeline run (used in the next steps
-            of main.py).
-        The number of new sources contained in the pipeline run (used in the next steps
-            of main.py).
+        The number of sources contained in the pipeline run (used in the next
+            steps of main.py).
+        The number of new sources contained in the pipeline run (used in the
+            next steps of main.py).
     """
     timer = StopWatch()
 
@@ -186,22 +187,27 @@ def final_operations(
         logger.debug(f"measurment_pairs_df memory: {mem_usage}MB")
         log_total_memory_usage()
 
-        # calculate measurement pair metric aggregates for sources by finding the row indices
-        # of the aggregate max of the abs(m) metric for each flux type.
+        # calculate measurement pair metric aggregates for sources by finding
+        # the row indices of the aggregate max of the abs(m) metric for each
+        # flux type.
         pair_agg_metrics = pd.merge(
             calculate_measurement_pair_aggregate_metrics(
-                measurement_pairs_df, source_aggregate_pair_metrics_min_abs_vs, flux_type="peak",
+                measurement_pairs_df,
+                source_aggregate_pair_metrics_min_abs_vs,
+                flux_type="peak",
             ),
             calculate_measurement_pair_aggregate_metrics(
-                measurement_pairs_df, source_aggregate_pair_metrics_min_abs_vs, flux_type="int",
+                measurement_pairs_df,
+                source_aggregate_pair_metrics_min_abs_vs,
+                flux_type="int",
             ),
             how="outer",
             left_index=True,
             right_index=True,
         )
 
-        # join with sources and replace agg metrics NaNs with 0 as the DataTables API JSON
-        # serialization doesn't like them
+        # join with sources and replace agg metrics NaNs with 0 as the
+        # DataTables API JSON serialization doesn't like them
         srcs_df = srcs_df.join(pair_agg_metrics).fillna(value={
             "vs_abs_significant_max_peak": 0.0,
             "m_abs_significant_max_peak": 0.0,
@@ -216,7 +222,8 @@ def final_operations(
         log_total_memory_usage()
     else:
         logger.info(
-            "Skipping measurement pair metric calculation as specified in the run configuration."
+            "Skipping measurement pair metric calculation as specified in "
+            "the run configuration."
         )
 
     # upload sources to DB, column 'id' with DB id is contained in return
@@ -274,7 +281,9 @@ def final_operations(
     related_df = (
         srcs_df.loc[srcs_df["related_list"] != -1, ["id", "related_list"]]
         .explode("related_list")
-        .rename(columns={"id": "from_source_id", "related_list": "to_source_id"})
+        .rename(columns={"id": "from_source_id",
+                         "related_list": "to_source_id"
+                         })
     )
 
     # for the column 'from_source_id', replace relation source ids with db id

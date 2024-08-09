@@ -14,9 +14,7 @@ from astropy.wcs.utils import (
 from vast_pipeline.models import Image, Run
 
 from vast_pipeline.utils.utils import StopWatch, calculate_n_partitions
-from vast_pipeline.pipeline.utils import (
-    get_df_memory_usage, log_total_memory_usage
-)
+from vast_pipeline.pipeline.utils import get_df_memory_usage
 from vast_pipeline.image.utils import open_fits
 
 
@@ -305,7 +303,8 @@ def new_sources(
                 img_list - list of images, List.
                 wavg_ra - weighted average RA, float.
                 wavg_dec - weighted average Dec, float.
-                skyreg_img_list - list of sky regions of images in img_list, List.
+                skyreg_img_list - list of sky regions of images in img_list,
+                    List.
                 img_diff - The images missing from coverage, List.
                 primary - What should be the first image, str.
                 detection - The first detection image, str.
@@ -315,8 +314,10 @@ def new_sources(
                 img_diff_rms_median - Median rms of diff images, float.
                 img_diff_rms_path - rms path of diff images, str.
                 flux_peak - Flux peak of source (detection), float.
-                diff_sigma - SNR in differnce images (compared to minimum), float.
-                img_diff_true_rms - The true rms value from the diff images, float.
+                diff_sigma - SNR in differnce images (compared to minimum),
+                    float.
+                img_diff_true_rms - The true rms value from the diff images,
+                    float.
                 new_high_sigma - peak flux / true rms value, float.
     """
     # Missing sources df layout
@@ -403,7 +404,9 @@ def new_sources(
         'noise_path': 'img_diff_rms_path'
     })
 
-    logger.debug(f"Time to reset & merge image info into new_sources_df: {debug_timer.reset()}s")
+    logger.debug(f"Time to reset & merge image info into new_sources_df: "
+                 f"{debug_timer.reset()}s"
+                 )
 
     # Select only those images that come before the detection image
     # in time.
@@ -418,7 +421,9 @@ def new_sources(
         how='left'
     ).drop(columns=['image'])
 
-    logger.debug(f"Time to merge detection fluxes into new_sources_df: {debug_timer.reset()}s")
+    logger.debug(f"Time to merge detection fluxes into new_sources_df: "
+                 f"{debug_timer.reset()}s"
+                 )
 
     # calculate the sigma of the source if it was placed in the
     # minimum rms region of the previous images
@@ -432,7 +437,9 @@ def new_sources(
         new_sources_df['diff_sigma'] >= min_sigma
     ]
 
-    logger.debug(f"Time to do new_sources_df threshold calcs: {debug_timer.reset()}s")
+    logger.debug(f"Time to do new_sources_df threshold calcs: "
+                 f"{debug_timer.reset()}s"
+                 )
 
     # Now have list of sources that should have been seen before given
     # previous images minimum rms values.

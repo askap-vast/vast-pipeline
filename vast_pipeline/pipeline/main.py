@@ -40,31 +40,33 @@ logger = logging.getLogger(__name__)
 
 
 class Pipeline():
-    """Instance of a pipeline. All the methods runs the pipeline opearations, such as
-    association.
+    """Instance of a pipeline. All the methods runs the pipeline opearations,
+    such as association.
 
     Attributes:
         name (str): The name of the pipeline run.
         config (PipelineConfig): The pipeline run configuration.
-        img_paths: A dict mapping input image paths to their selavy/noise/background
-            counterpart path. e.g. `img_paths["selavy"][<image_path>]` contains the
-            selavy catalogue file path for `<image_path>`.
+        img_paths: A dict mapping input image paths to their
+            selavy/noise/background counterpart path. e.g.
+            `img_paths["selavy"][<image_path>]` contains the selavy catalogue
+            file path for `<image_path>`.
         img_epochs: A dict mapping input image names to their provided epoch.
-        add_mode: A boolean indicating if this run is adding new images to a previously
-            executed pipeline run.
-        previous_parquets: A dict mapping that provides the paths to parquet files for
-            previous executions of this pipeline run.
+        add_mode: A boolean indicating if this run is adding new images to a
+            previously executed pipeline run.
+        previous_parquets: A dict mapping that provides the paths to parquet
+            files for previous executions of this pipeline run.
     """
 
     def __init__(self, name: str, config_path: str,
                  validate_config: bool = True):
-        """Initialise an instance of Pipeline with a name and configuration file path.
+        """Initialise an instance of Pipeline with a name and configuration
+        file path.
 
         Args:
             name (str): The name of the pipeline run.
             config_path (str): The path to a YAML run configuration file.
-            validate_config (bool, optional): Validate the run configuration immediately.
-                Defaults to True.
+            validate_config (bool, optional): Validate the run configuration
+                immediately. Defaults to True.
         """
         self.name: str = name
         self.config: PipelineConfig = PipelineConfig.from_file(
@@ -74,7 +76,9 @@ class Pipeline():
             'selavy': {},
             'noise': {},
             'background': {},
-        }  # maps input image paths to their selavy/noise/background counterpart path
+        } 
+        # maps input image paths to their selavy/noise/background
+        # counterpart path
         # maps image names to their provided epoch
         self.img_epochs: Dict[str, str] = {}
         self.add_mode: bool = False
@@ -96,7 +100,8 @@ class Pipeline():
                 self.img_paths["selavy"][x] = y
                 self.img_epochs[os.path.basename(x)] = key
             for x, y in zip(
-                self.config["inputs"]["image"][key], self.config["inputs"]["noise"][key]
+                self.config["inputs"]["image"][key],
+                self.config["inputs"]["noise"][key]
             ):
                 self.img_paths["noise"][x] = y
             if "background" in self.config["inputs"]:
