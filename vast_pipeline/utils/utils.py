@@ -135,7 +135,7 @@ def deg2dms(
         # find the decimal point char position and the number of decimal places in the
         # rendered input coordinate (in DMS format, not decimal deg)
         dp_pos = output_str.find(".")
-        n_dp = len(output_str[dp_pos + 1 :]) if dp_pos >= 0 else 0
+        n_dp = len(output_str[dp_pos + 1:]) if dp_pos >= 0 else 0
 
         # if the input coordinate precision is less than the requsted output precision,
         # pad the end with zeroes
@@ -191,7 +191,8 @@ def deg2hms(
         >>> deg2hms(188.73658333333333, precision=1, truncate=True)
         '12:34:56.7'
     """
-    # use the deg2dms formatter, replace d with h, and cut off the leading ± sign
+    # use the deg2dms formatter, replace d with h, and cut off the leading ±
+    # sign
     return deg2dms(
         deg / 15.0,
         dms_format=hms_format,
@@ -236,7 +237,13 @@ def equ2gal(ra: float, dec: float) -> Tuple[float, float]:
         Galactic longitude in degrees.
         Galactic latitude in degrees.
     """
-    c = SkyCoord(np.float(ra), np.float(dec), unit=(u.deg, u.deg), frame="icrs")
+    c = SkyCoord(
+        np.float(ra),
+        np.float(dec),
+        unit=(
+            u.deg,
+            u.deg),
+        frame="icrs")
     l = c.galactic.l.deg
     b = c.galactic.b.deg
 
@@ -255,7 +262,10 @@ def gal2equ(l: float, b: float) -> Tuple[float, float]:
         Right ascension in degrees.
         Declination in degrees.
     """
-    c = SkyCoord(l=np.float(l) * u.deg, b=np.float(b) * u.deg, frame="galactic")
+    c = SkyCoord(
+        l=np.float(l) * u.deg,
+        b=np.float(b) * u.deg,
+        frame="galactic")
     ra = c.icrs.ra.deg
     dec = c.icrs.dec.deg
 
@@ -281,7 +291,8 @@ def parse_coord(coord_string: str, coord_frame: str = "icrs") -> SkyCoord:
     """
     # if both coord components are decimals, assume they're in degrees, otherwise assume
     # hourangles and degrees. Note that the unit parameter is ignored if the units are
-    # not ambiguous i.e. if coord_string contains the units (e.g. 18.4d, 5h35m, etc)
+    # not ambiguous i.e. if coord_string contains the units (e.g. 18.4d,
+    # 5h35m, etc)
     try:
         _ = [float(x) for x in coord_string.split()]
         unit = "deg"
@@ -361,7 +372,8 @@ def dict_merge(
     """
     dct = dct.copy()
     if not add_keys:
-        merge_dct = {k: merge_dct[k] for k in set(dct).intersection(set(merge_dct))}
+        merge_dct = {k: merge_dct[k]
+                     for k in set(dct).intersection(set(merge_dct))}
 
     for k, v in merge_dct.items():
         if (
@@ -379,11 +391,12 @@ def dict_merge(
 def timeStamped(fname, fmt="%Y-%m-%d-%H-%M-%S_{fname}"):
     return datetime.now().strftime(fmt).format(fname=fname)
 
+
 def calculate_n_partitions(df, n_cpu, partition_size_mb=100):
     """
     This function will calculate how many partitions a dataframe should be
     split into.
-    
+
     Args:
         df: The pandas dataframe to be partitionined.
         n_cpu: The number of available CPUs.
@@ -392,14 +405,14 @@ def calculate_n_partitions(df, n_cpu, partition_size_mb=100):
         The optimal number of partitions.
     """
     mem_usage_mb = df.memory_usage(deep=True).sum() / 1e6
-    n_partitions = int(np.ceil(mem_usage_mb/partition_size_mb))
-    
+    n_partitions = int(np.ceil(mem_usage_mb / partition_size_mb))
+
     # n_partitions should be >= n_cpu for optimal parallel processing
     if n_partitions < n_cpu:
-        n_partitions=n_cpu
+        n_partitions = n_cpu
 
-    partition_size_mb = int(np.ceil(mem_usage_mb/n_partitions))
-    
+    partition_size_mb = int(np.ceil(mem_usage_mb / n_partitions))
+
     logger.debug(f"Using {n_partitions} partions of {partition_size_mb}MB")
 
     return n_partitions
