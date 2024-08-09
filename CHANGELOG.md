@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Add support for python 3.10 [#740](https://github.com/askap-vast/vast-pipeline/pull/740)
 - Added support calculate_n_partitions for sensible dask dataframe partitioning [#724](https://github.com/askap-vast/vast-pipeline/pull/724)
 - Added support for compressed FITS files [#694](https://github.com/askap-vast/vast-pipeline/pull/694)
 - Added links to Data Central DAS and the Fink Broker to the source page [#697](https://github.com/askap-vast/vast-pipeline/pull/697/)
@@ -125,6 +126,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#740](https://github.com/askap-vast/vast-pipeline/pull/740): feat: Add support for python 3.10
 - [#728](https://github.com/askap-vast/vast-pipeline/pull/728): fix: Adjust package versions and fix mkdocs serve issues
 - [#728](https://github.com/askap-vast/vast-pipeline/pull/728): fix: Adjust package versions and fix python 3.9 tests breaking on github actions
 - [#736](https://github.com/askap-vast/vast-pipeline/pull/736): fix: Updated github action syntax to correctly call docker compose 
