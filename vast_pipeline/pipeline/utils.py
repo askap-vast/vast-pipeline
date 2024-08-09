@@ -139,7 +139,7 @@ def get_create_img(band_id: int, image: SelavyImage) -> Tuple[Image, bool]:
             'images',
             img_folder_name,
             'measurements.parquet'
-            )
+        )
         img = Image(
             band_id=band_id,
             measurements_path=measurements_path
@@ -150,10 +150,12 @@ def get_create_img(band_id: int, image: SelavyImage) -> Tuple[Image, bool]:
         # FYI attributs and/or method starting with _ are hidden
         # and with __ can't be modified/called
         for fld in img._meta.get_fields():
-            if getattr(fld, 'attname', None) and (getattr(image, fld.attname, None) is not None):
+            if getattr(fld, 'attname', None) and (
+                    getattr(image, fld.attname, None) is not None):
                 setattr(img, fld.attname, getattr(image, fld.attname))
 
-        img.rms_median, img.rms_min, img.rms_max = get_rms_noise_image_values(img.noise_path)
+        img.rms_median, img.rms_min, img.rms_max = get_rms_noise_image_values(
+            img.noise_path)
 
         # get create the sky region and associate with image
         img.skyreg = get_create_skyreg(img)
@@ -580,7 +582,7 @@ def get_eta_metric(
     suffix = 'peak' if peak else 'int'
     weights = 1. / df[f'flux_{suffix}_err'].values**2
     fluxes = df[f'flux_{suffix}'].values
-    eta = (row['n_meas'] / (row['n_meas']-1)) * (
+    eta = (row['n_meas'] / (row['n_meas'] - 1)) * (
         (weights * fluxes**2).mean() - (
             (weights * fluxes).mean()**2 / weights.mean()
         )
@@ -719,7 +721,8 @@ def parallel_groupby(df: pd.DataFrame) -> pd.DataFrame:
         .compute(num_workers=n_cpu, scheduler='processes')
     )
 
-    out['n_rel'] = out['related_list'].apply(lambda x: 0 if x == -1 else len(x))
+    out['n_rel'] = out['related_list'].apply(
+        lambda x: 0 if x == -1 else len(x))
 
     return out
 
@@ -992,11 +995,17 @@ def get_src_skyregion_merged_df(
     skyreg_coords = SkyCoord(
         ra=skyreg_df.centre_ra, dec=skyreg_df.centre_dec, unit="deg"
     )
-    srcs_coords = SkyCoord(ra=srcs_df.wavg_ra, dec=srcs_df.wavg_dec, unit="deg")
+    srcs_coords = SkyCoord(
+        ra=srcs_df.wavg_ra,
+        dec=srcs_df.wavg_dec,
+        unit="deg")
     skyreg_idx, srcs_idx, sep, _ = srcs_coords.search_around_sky(
         skyreg_coords, skyreg_df.xtr_radius.max() * u.deg
     )
-    skyreg_df = skyreg_df.drop(columns=["centre_ra", "centre_dec"]).set_index("id")
+    skyreg_df = skyreg_df.drop(
+        columns=[
+            "centre_ra",
+            "centre_dec"]).set_index("id")
 
     # select rows where separation is less than sky region radius
     # drop not more useful columns and groupby source id
@@ -1612,7 +1621,7 @@ def reconstruct_associtaion_dfs(
     relation_ids = sources_df[
         sources_df.source.isin(prev_relations.index.values)].drop_duplicates(
             'source', keep='last'
-        ).index.values
+    ).index.values
     # Make sure we attach the correct source id
     source_ids = sources_df.loc[relation_ids].source.values
     sources_df['related'] = np.nan
@@ -1720,22 +1729,24 @@ def write_parquets(
 
     return skyregs_df
 
+
 def get_total_memory_usage():
     """
     This function gets the current memory usage and returns a string.
-    
+
     Returns:
         A float containing the current resource usage.
     """
-    mem = psutil.virtual_memory()[3] #resource usage in bytes
-    mem = mem / 1024**3 #resource usage in GB
+    mem = psutil.virtual_memory()[3]  # resource usage in bytes
+    mem = mem / 1024**3  # resource usage in GB
 
     return mem
-    
+
+
 def log_total_memory_usage():
     """
     This function gets the current memory usage and logs it.
-    
+
     Returns:
         None
     """
@@ -1743,11 +1754,12 @@ def log_total_memory_usage():
 
     logger.debug(f"Current memory usage: {mem:.3f}GB")
 
+
 def get_df_memory_usage(df):
     """
     This function calculates the memory usage of a pandas dataframe and
     logs it.
-    
+
     Args:
         df: The pandas dataframe to calculate the memory usage of.
 

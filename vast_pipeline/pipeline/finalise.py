@@ -67,7 +67,8 @@ def calculate_measurement_pair_aggregate_metrics(
             check_df
             .groupby("source")
             .agg(m_abs_max_idx=(f"m_{flux_type}", lambda x: x.abs().idxmax()),)
-            .astype(np.int32)["m_abs_max_idx"]  # cast row indices to int and select them
+            # cast row indices to int and select them
+            .astype(np.int32)["m_abs_max_idx"]
             .reset_index(drop=True)  # keep only the row indices
         ][[f"vs_{flux_type}", f"m_{flux_type}", "source"]]
 
@@ -151,7 +152,7 @@ def final_operations(
         how="left",
     )
     srcs_df["new_high_sigma"] = srcs_df["new_high_sigma"].fillna(0.0)
-    
+
     mem_usage = get_df_memory_usage(srcs_df)
     logger.debug(f"srcs_df memory after adding new sources: {mem_usage}MB")
     log_total_memory_usage()
@@ -169,7 +170,7 @@ def final_operations(
 
     # add the separation distance in degrees
     srcs_df['n_neighbour_dist'] = d2d.deg
-    
+
     mem_usage = get_df_memory_usage(srcs_df)
     logger.debug(f"srcs_df memory after nearest-neighbour: {mem_usage}MB")
     log_total_memory_usage()
@@ -178,7 +179,9 @@ def final_operations(
     if calculate_pairs:
         timer.reset()
         measurement_pairs_df = calculate_measurement_pair_metrics(sources_df)
-        logger.info('Measurement pair metrics time: %.2f seconds', timer.reset())
+        logger.info(
+            'Measurement pair metrics time: %.2f seconds',
+            timer.reset())
         mem_usage = get_df_memory_usage(measurement_pairs_df)
         logger.debug(f"measurment_pairs_df memory: {mem_usage}MB")
         log_total_memory_usage()
@@ -205,7 +208,9 @@ def final_operations(
             "vs_abs_significant_max_int": 0.0,
             "m_abs_significant_max_int": 0.0,
         })
-        logger.info("Measurement pair aggregate metrics time: %.2f seconds", timer.reset())
+        logger.info(
+            "Measurement pair aggregate metrics time: %.2f seconds",
+            timer.reset())
         mem_usage = get_df_memory_usage(srcs_df)
         logger.debug(f"srcs_df memory after calculate_pairs: {mem_usage}MB")
         log_total_memory_usage()
@@ -221,17 +226,17 @@ def final_operations(
         # upload new ones first (new id's are fetched)
         src_done_mask = srcs_df.index.isin(done_source_ids)
         srcs_df_upload = srcs_df.loc[~src_done_mask].copy()
-        
+
         mem_usage = get_df_memory_usage(srcs_df_upload)
         logger.debug(f"srcs_df_upload initial memory: {mem_usage}MB")
         log_total_memory_usage()
-        
+
         srcs_df_upload = make_upload_sources(srcs_df_upload, p_run, add_mode)
-        
+
         mem_usage = get_df_memory_usage(srcs_df_upload)
         logger.debug(f"srcs_df_upload memory after upload: {mem_usage}MB")
         log_total_memory_usage()
-        
+
         # And now update
         srcs_df_update = srcs_df.loc[src_done_mask].copy()
         logger.info(
@@ -239,7 +244,7 @@ def final_operations(
         mem_usage = get_df_memory_usage(srcs_df_update)
         logger.debug(f"srcs_df_update memory: {mem_usage}MB")
         log_total_memory_usage()
-        
+
         srcs_df = update_sources(srcs_df_update, batch_size=1000)
         mem_usage = get_df_memory_usage(srcs_df_update)
         logger.debug(f"srcs_df_update memory: {mem_usage}MB")
@@ -273,9 +278,11 @@ def final_operations(
     )
 
     # for the column 'from_source_id', replace relation source ids with db id
-    related_df["to_source_id"] = related_df["to_source_id"].map(srcs_df["id"].to_dict())
+    related_df["to_source_id"] = related_df["to_source_id"].map(
+        srcs_df["id"].to_dict())
     # drop relationships with the same source
-    related_df = related_df[related_df["from_source_id"] != related_df["to_source_id"]]
+    related_df = related_df[related_df["from_source_id"]
+                            != related_df["to_source_id"]]
 
     # write symmetrical relations to parquet
     related_df.to_parquet(
@@ -304,7 +311,8 @@ def final_operations(
     # write sources to parquet file
     srcs_df = srcs_df.drop(["related_list", "img_list"], axis=1)
     (
-        srcs_df.set_index('id')  # set the index to db ids, dropping the source idx
+        # set the index to db ids, dropping the source idx
+        srcs_df.set_index('id')
         .to_parquet(os.path.join(p_run.path, 'sources.parquet'))
     )
 
@@ -313,7 +321,7 @@ def final_operations(
         sources_df.drop('related', axis=1)
         .merge(srcs_df.rename(columns={'id': 'source_id'}), on='source')
     )
-    
+
     mem_usage = get_df_memory_usage(sources_df)
     logger.debug(f"sources_df memory after srcs_df merge: {mem_usage}MB")
     log_total_memory_usage()
@@ -362,7 +370,9 @@ def final_operations(
             os.path.join(p_run.path, "measurement_pairs.parquet"), index=False
         )
 
-    logger.info("Total final operations time: %.2f seconds", timer.reset_init())
+    logger.info(
+        "Total final operations time: %.2f seconds",
+        timer.reset_init())
 
     nr_sources = srcs_df["id"].count()
     nr_new_sources = srcs_df['new'].sum()

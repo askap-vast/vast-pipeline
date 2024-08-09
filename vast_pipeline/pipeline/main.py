@@ -55,7 +55,9 @@ class Pipeline():
         previous_parquets: A dict mapping that provides the paths to parquet files for
             previous executions of this pipeline run.
     """
-    def __init__(self, name: str, config_path: str, validate_config: bool = True):
+
+    def __init__(self, name: str, config_path: str,
+                 validate_config: bool = True):
         """Initialise an instance of Pipeline with a name and configuration file path.
 
         Args:
@@ -73,7 +75,8 @@ class Pipeline():
             'noise': {},
             'background': {},
         }  # maps input image paths to their selavy/noise/background counterpart path
-        self.img_epochs: Dict[str, str] = {}  # maps image names to their provided epoch
+        # maps image names to their provided epoch
+        self.img_epochs: Dict[str, str] = {}
         self.add_mode: bool = False
         self.previous_parquets: Dict[str, str]
 
@@ -142,7 +145,8 @@ class Pipeline():
                 add_run_to_img(p_run, img)
 
         # write parquet files and retrieve skyregions as a dataframe
-        skyregs_df = write_parquets(images, skyregions, bands, self.config["run"]["path"])
+        skyregs_df = write_parquets(
+            images, skyregions, bands, self.config["run"]["path"])
 
         # STEP #2: measurements association
         # order images by time
@@ -347,7 +351,7 @@ class Pipeline():
             raise MaxPipelineRunsError
 
     @staticmethod
-    def set_status(pipe_run: Run, status: str=None) -> None:
+    def set_status(pipe_run: Run, status: str = None) -> None:
         """
         Function to change the status of a pipeline run model object and save
         to the database.
@@ -359,7 +363,7 @@ class Pipeline():
         Returns:
             None
         """
-        #TODO: This function gives no feedback if the status is not accepted?
+        # TODO: This function gives no feedback if the status is not accepted?
         choices = [x[0] for x in Run._meta.get_field('status').choices]
         if status and status in choices and pipe_run.status != status:
             with transaction.atomic():
