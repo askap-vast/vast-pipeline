@@ -76,7 +76,7 @@ class Pipeline():
             'selavy': {},
             'noise': {},
             'background': {},
-        } 
+        }
         # maps input image paths to their selavy/noise/background
         # counterpart path
         # maps image names to their provided epoch
