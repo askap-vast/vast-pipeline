@@ -8,13 +8,13 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v5
         with:
-          python-version: 3.8
-      - uses: Gr1N/setup-poetry@v8
+          python-version: 3.9
+      - uses: Gr1N/setup-poetry@v9
       - name: Set release notes tag
         run: |
           export RELEASE_TAG_VERSION=${{ github.event.release.tag_name }}
