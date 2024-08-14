@@ -5,9 +5,7 @@ import dask.dataframe as dd
 import numpy as np
 import pandas as pd
 from psutil import cpu_count
-
 from vast_pipeline.utils.utils import calculate_n_partitions
-
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +44,7 @@ def calculate_m_metric(flux_a: float, flux_b: float) -> float:
     return 2 * ((flux_a - flux_b) / (flux_a + flux_b))
 
 
-def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
+def calculate_measurement_pair_metrics(df: pd.DataFrame, path=".") -> dd.DataFrame:
     """Generate a DataFrame of measurement pairs and their 2-epoch variability metrics
     from a DataFrame of measurements. For more information on the variability metrics, see
     Section 5 of Mooley et al. (2016), DOI: 10.3847/0004-637X/818/2/105.
@@ -66,6 +64,17 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
             vs_peak, vs_int - variability t-statistic
             m_peak, m_int - variability modulation index
     """
+    # n_cpu = 10 #cpu_count() - 1 # temporarily hardcode n_cpu
+    
+    # partition_size_mb=100
+    # mem_usage_mb = df.memory_usage(deep=True).sum() / 1e6
+    # npartitions = int(np.ceil(mem_usage_mb/partition_size_mb))
+    
+    # if npartitions < n_cpu:
+    #     npartitions=n_cpu
+    # logger.debug(f"Running calculate_measurement_pair_metrics with {n_cpu} CPUs....")
+    # logger.debug(f"and using {npartitions} partions of {partition_size_mb}MB...")
+    
     n_cpu = cpu_count() - 1
     logger.debug(f"Running association with {n_cpu} CPUs")
     n_partitions = calculate_n_partitions(df.set_index('source'), n_cpu)
@@ -89,100 +98,79 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
                 2  12929  21994
         11128   0   6216  23534
     """
-    measurement_combinations = (
-        dd.from_pandas(df, npartitions=n_partitions)
-        .groupby("source")["id"]
-        .apply(
-            lambda x: pd.DataFrame(list(combinations(x, 2))), meta={0: "i", 1: "i"},)
-        .compute(num_workers=n_cpu, scheduler="processes")
-    )
+    df = df.sort_values(["source", "datetime"]).reset_index(drop=True)
+    df = df.set_index("source")
+    
+    # select relevant columns
+    df = df[["id", "datetime", "flux_int", "flux_int_err",
+               "flux_peak", "flux_peak_err", "image"]].rename(columns={"image": "image_name"})
+    
+    # add a new column which gives a unique identification number for each row
+    scale = 10**(len(str(df.index[-1])))
+    df["uind"] = df["id"] + df.index/scale
+    if df["uind"].duplicated().any():
+        print("something wrong with the unique identifier")
 
-    """Drop the RangeIndex from the MultiIndex as it isn't required and rename the columns.
-    Example resultant DataFrame:
-               source   id_a   id_b
-        0           1      1   9284
-        1           1      1  17597
-        2           1      1  26984
-        3           1   9284  17597
-        4           1   9284  26984
-        ...       ...    ...    ...
-        33640   11105  11845  19961
-        33641   11124   3573  12929
-        33642   11124   3573  21994
-        33643   11124  12929  21994
-        33644   11128   6216  23534
-    Where source is the source ID, id_a and id_b are measurement IDs.
-    """
-    measurement_combinations = measurement_combinations.reset_index(
-        level=1, drop=True
-    ).rename(columns={0: "id_a", 1: "id_b"}).astype(int).reset_index()
-
-    # Dask has a tendency to swap which order the measurement pairs are
-    # defined in, even if the dataframe is pre-sorted. We want the pairs to be
-    # in date order (a < b) so the code below corrects any that are not.
-    measurement_combinations = measurement_combinations.join(
-        df[['source', 'id', 'datetime']].set_index(['source', 'id']),
-        on=['source', 'id_a'],
-    )
-
-    measurement_combinations = measurement_combinations.join(
-        df[['source', 'id', 'datetime']].set_index(['source', 'id']),
-        on=['source', 'id_b'], lsuffix='_a', rsuffix='_b'
-    )
-
-    to_correct_mask = (
-        measurement_combinations['datetime_a']
-        > measurement_combinations['datetime_b']
-    )
-
-    if np.any(to_correct_mask):
-        logger.debug('Correcting measurement pairs order')
-        (
-            measurement_combinations.loc[to_correct_mask, 'id_a'],
-            measurement_combinations.loc[to_correct_mask, 'id_b']
-        ) = np.array([
-            measurement_combinations.loc[to_correct_mask, 'id_b'].values,
-            measurement_combinations.loc[to_correct_mask, 'id_a'].values
-        ])
-
-    measurement_combinations = measurement_combinations.drop(
-        ['datetime_a', 'datetime_b'], axis=1
-    )
-
-    # add the measurement fluxes and errors
-    association_fluxes = df.set_index(["source", "id"])[
-        ["flux_int", "flux_int_err", "flux_peak", "flux_peak_err", "image"]
-    ].rename(columns={"image": "image_name"})
-    measurement_combinations = measurement_combinations.join(
-        association_fluxes,
-        on=["source", "id_a"],
-    ).join(
-        association_fluxes,
-        on=["source", "id_b"],
-        lsuffix="_a",
-        rsuffix="_b",
-    )
+    # ingest to dask
+    ddf = dd.from_pandas(df, npartitions=24) # temp: hard coded for now
+    
+    def get_pair_partition(partition, scale):
+        # Extract combinations for each group within the partition
+        result = []
+        for name, group in partition.groupby("source"):
+            combs = list(combinations(group['id'], 2))
+            dec = name/scale
+            for comb in combs:
+                result.append((comb[0]+dec, comb[1]+dec, name))  # Include source if needed
+        res = pd.DataFrame(result, columns=["uind_a", "uind_b", "source"])
+        
+        return res
+    
+    def merge_pair_partitions(df1_partition, df2_partition, col1, col2, suffixes=("_x", "_y")):
+        return df1_partition.merge(df2_partition, left_on=col1, right_on=col2, suffixes=suffixes).drop(col2, axis=1)
+        
+        
+    pairs = ddf.map_partitions(get_pair_partition, scale, meta={"uind_a":"float64", "uind_b":"float64", "source":"int32"})
+    
+    result = dd.map_partitions(merge_pair_partitions, pairs, ddf, "uind_a", "uind")
+    result = dd.map_partitions(merge_pair_partitions, result, ddf, "uind_b", "uind", suffixes=("_a", "_b"))
 
     # calculate 2-epoch metrics
-    measurement_combinations["vs_peak"] = calculate_vs_metric(
-        measurement_combinations.flux_peak_a,
-        measurement_combinations.flux_peak_b,
-        measurement_combinations.flux_peak_err_a,
-        measurement_combinations.flux_peak_err_b,
+    result["vs_peak"] = calculate_vs_metric(
+        result["flux_peak_a"],
+        result["flux_peak_b"],
+        result["flux_peak_err_a"],
+        result["flux_peak_err_b"],
     )
-    measurement_combinations["vs_int"] = calculate_vs_metric(
-        measurement_combinations.flux_int_a,
-        measurement_combinations.flux_int_b,
-        measurement_combinations.flux_int_err_a,
-        measurement_combinations.flux_int_err_b,
-    )
-    measurement_combinations["m_peak"] = calculate_m_metric(
-        measurement_combinations.flux_peak_a,
-        measurement_combinations.flux_peak_b,
-    )
-    measurement_combinations["m_int"] = calculate_m_metric(
-        measurement_combinations.flux_int_a,
-        measurement_combinations.flux_int_b,
+    
+    result["vs_int"] = calculate_vs_metric(
+        result.flux_int_a,
+        result.flux_int_b,
+        result.flux_int_err_a,
+        result.flux_int_err_b,
     )
 
-    return measurement_combinations
+    result["m_peak"] = calculate_m_metric(
+        result.flux_peak_a,
+        result.flux_peak_b,
+    )
+
+    result["m_int"] = calculate_m_metric(
+        result.flux_int_a,
+        result.flux_int_b,
+    )
+    
+    # remove datetime columns
+    # todo: double check whether we need to ingest them to dask at the first place
+    result = result.drop(["datetime_a", "datetime_b"], axis=1)
+
+    # get absolute value of metrics
+    result['vs_peak_abs'] = result['vs_peak'].abs()
+    result['vs_int_abs'] = result['vs_int'].abs()
+    result['m_peak_abs'] = result['m_peak'].abs()
+    result['m_int_abs'] = result['m_int'].abs()
+    
+    result.to_parquet(path+"/pair_metric", write_index=False, overwrite=True, compute=True)
+    
+    return result
+    
