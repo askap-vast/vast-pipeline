@@ -2,7 +2,7 @@
 
 <!-- created with https://shields.io/category/monitoring -->
 [![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/)
-[![Nimbus](https://img.shields.io/website?down_color=red&down_message=offline&label=Nimbus&up_color=green&up_message=online&url=https%3A%2F%2Fdata.vast-survey.org%2Fpipeline%2F)](https://data.vast-survey.org/pipeline/)
+[![Nimbus](https://img.shields.io/website?down_color=red&down_message=offline&label=Nimbus&up_color=green&up_message=online&url=https%3A%2F%2Fdev.pipeline.vast-survey.org)](https://dev.pipeline.vast-survey.org)
 ![Tests](https://github.com/askap-vast/vast-pipeline/workflows/test-suite/badge.svg)
 [![documentation](https://img.shields.io/badge/docs-mkdocs%20material-blue.svg?style=flat)](https://vast-survey.org/vast-pipeline/)
 <!-- TODO: replace above with this below when repo is public -->
