@@ -165,10 +165,10 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame, path=".") -> dd.DataFra
     result = result.drop(["datetime_a", "datetime_b"], axis=1)
 
     # get absolute value of metrics
-    result['vs_peak_abs'] = result['vs_peak'].abs()
-    result['vs_int_abs'] = result['vs_int'].abs()
-    result['m_peak_abs'] = result['m_peak'].abs()
-    result['m_int_abs'] = result['m_int'].abs()
+    result['vs_abs_significant_max_peak'] = result['vs_peak'].abs()
+    result['vs_abs_significant_max_int'] = result['vs_int'].abs()
+    result['m_abs_significant_max_peak'] = result['m_peak'].abs()
+    result['m_abs_significant_max_int'] = result['m_int'].abs()
     
     result.to_parquet(path+"/pair_metric", write_index=False, overwrite=True, compute=True)
     

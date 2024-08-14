@@ -2,6 +2,9 @@ import os
 import logging
 import numpy as np
 import pandas as pd
+import dask.dataframe as dd
+from dask.distributed import Client, LocalCluster
+import webbrowser
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -19,12 +22,18 @@ from vast_pipeline.pipeline.utils import parallel_groupby
 
 logger = logging.getLogger(__name__)
 
+cluster = LocalCluster()
+client = Client(cluster)
+print(client)
+url = client.dashboard_link
+webbrowser.open_new_tab(url)
+
 
 def calculate_measurement_pair_aggregate_metrics(
-    measurement_pairs_df: pd.DataFrame,
+    pairs_parquet_dir: str,
     min_vs: float,
     flux_type: str = "peak",
-) -> pd.DataFrame:
+) -> dd.DataFrame:
     """
     Calculate the aggregate maximum measurement pair variability metrics
     to be stored in `Source` objects. Only measurement pairs with
@@ -35,9 +44,8 @@ def calculate_measurement_pair_aggregate_metrics(
     this row are returned for each source.
 
     Args:
-        measurement_pairs_df:
-            The measurement pairs and their variability metrics. Must at least
-            contain the columns: source, vs_{flux_type}, m_{flux_type}.
+        measurement_pairs_parquet_dir:
+            The directory where parquets of measurement pairs are saved
         min_vs:
             The minimum value of the Vs metric (i.e. column `vs_{flux_type}`)
             the measurement pair must have to be included in the aggregate
@@ -51,32 +59,23 @@ def calculate_measurement_pair_aggregate_metrics(
             The metric columns are named: `vs_abs_significant_max_{flux_type}`
             and `m_abs_significant_max_{flux_type}`.
     """
-    check_df = measurement_pairs_df.query(f"abs(vs_{flux_type}) >= @min_vs")
+    # ingest parquet files
+    columns = ["source", f"vs_abs_significant_max_{flux_type}", f"m_abs_significant_max_{flux_type}"]
+    filters = [(f"vs_abs_significant_max_{flux_type}", ">=", min_vs)]
 
-    # This check is performed due to a bug that was occuring after updating the
-    # pandas dependancy (1.4) when performing the tests. The bug was that the
-    # grouby and agg stage below was being performed on an empty series in the
-    # basic association test and causing a failure. Hence this only performs
-    # the groupby if the original query dataframe is not empty.
-    if check_df.empty:
-        pair_agg_metrics = pd.DataFrame(
-            columns=[f"vs_{flux_type}", f"m_{flux_type}", "source"]
-        )
-    else:
-        pair_agg_metrics = measurement_pairs_df.iloc[
-            check_df
-            .groupby("source")
-            .agg(m_abs_max_idx=(f"m_{flux_type}", lambda x: x.abs().idxmax()),)
-            .astype(np.int32)["m_abs_max_idx"]  # cast row indices to int and select them
-            .reset_index(drop=True)  # keep only the row indices
-        ][[f"vs_{flux_type}", f"m_{flux_type}", "source"]]
+    pair_filtered = dd.read_parquet(pairs_parquet_dir, columns=columns, filters=filters)
 
-    pair_agg_metrics = pair_agg_metrics.abs().rename(columns={
-        f"vs_{flux_type}": f"vs_abs_significant_max_{flux_type}",
-        f"m_{flux_type}": f"m_abs_significant_max_{flux_type}",
-    }).set_index('source')
+    def get_max_flux(partition):
+        inds = []
+        for name, group in partition.groupby("source"):
+            idx = group[f"m_abs_significant_max_{flux_type}"].idxmax()
+            inds.append(idx)
+        return partition.loc[inds]
+    
+
+    pair_agg_metrics = pair_filtered.map_partitions(get_max_flux)
+
     return pair_agg_metrics
-
 
 def final_operations(
     sources_df: pd.DataFrame,
@@ -163,23 +162,17 @@ def final_operations(
     # create measurement pairs, aka 2-epoch metrics
     if calculate_pairs:
         timer.reset()
-        measurement_pairs_df = calculate_measurement_pair_metrics(sources_df)
+        pair_dir = os.path.join(p_run.path, 'pair_metric')
+        measurement_pairs_df = calculate_measurement_pair_metrics(sources_df, pair_dir)
         logger.info('Measurement pair metrics time: %.2f seconds', timer.reset())
-
-        # calculate measurement pair metric aggregates for sources by finding the row indices
-        # of the aggregate max of the abs(m) metric for each flux type.
-        pair_agg_metrics = pd.merge(
-            calculate_measurement_pair_aggregate_metrics(
-                measurement_pairs_df, source_aggregate_pair_metrics_min_abs_vs, flux_type="peak",
-            ),
-            calculate_measurement_pair_aggregate_metrics(
-                measurement_pairs_df, source_aggregate_pair_metrics_min_abs_vs, flux_type="int",
-            ),
-            how="outer",
-            left_index=True,
-            right_index=True,
-        )
-
+        
+        # get maximum measurement pair metrics
+        max_peak_pairs = calculate_measurement_pair_aggregate_metrics(pair_dir, source_aggregate_pair_metrics_min_abs_vs, flux_type="peak")
+        max_int_pairs = calculate_measurement_pair_aggregate_metrics(pair_dir, source_aggregate_pair_metrics_min_abs_vs, flux_type="int")
+        pair_agg_metrics = dd.map_partitions(dd.merge, max_peak_pairs, max_int_pairs, on="source", how="outer", enforce_metadata=False)
+        pair_agg_metrics = pair_agg_metrics.set_index("source")
+        pair_agg_metrics = pair_agg_metrics.compute()
+       
         # join with sources and replace agg metrics NaNs with 0 as the DataTables API JSON
         # serialization doesn't like them
         srcs_df = srcs_df.join(pair_agg_metrics).fillna(value={
@@ -193,7 +186,7 @@ def final_operations(
         logger.info(
             "Skipping measurement pair metric calculation as specified in the run configuration."
         )
-
+    
     # upload sources to DB, column 'id' with DB id is contained in return
     if add_mode:
         # if add mode is being used some sources need to updated where as some
