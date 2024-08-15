@@ -172,5 +172,4 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame, path=".") -> dd.DataFra
     
     result.to_parquet(path+"/pair_metric", write_index=False, overwrite=True, compute=True)
     
-    return result
     

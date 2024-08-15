@@ -163,7 +163,7 @@ def final_operations(
     if calculate_pairs:
         timer.reset()
         pair_dir = os.path.join(p_run.path, 'pair_metric')
-        measurement_pairs_df = calculate_measurement_pair_metrics(sources_df, pair_dir)
+        calculate_measurement_pair_metrics(sources_df, pair_dir)
         logger.info('Measurement pair metrics time: %.2f seconds', timer.reset())
         
         # get maximum measurement pair metrics
