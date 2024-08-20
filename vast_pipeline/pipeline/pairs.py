@@ -171,4 +171,4 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame, pairs_dir="./measuremen
     # import matplotlib.pyplot as plt
     # ms.plot()
     # plt.savefig("dev_memory.png")
-    return source_divisions
+    return n_partitions, source_divisions

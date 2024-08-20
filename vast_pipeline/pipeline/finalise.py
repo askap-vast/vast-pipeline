@@ -168,7 +168,7 @@ def final_operations(
     if calculate_pairs:
         timer.reset()
         pairs_dir = os.path.join(p_run.path, 'measurement_pair_metrics')
-        source_divisions = calculate_measurement_pair_metrics(sources_df, pairs_dir)
+        n_partitions, source_divisions = calculate_measurement_pair_metrics(sources_df, pairs_dir)
         logger.info('Measurement pair metrics time: %.2f seconds', timer.reset())
         
         # get maximum measurement pair metrics
@@ -310,7 +310,7 @@ def final_operations(
 
     if calculate_pairs:
         # ingest to dask data frames
-        srcs_df_id = dd.from_pandas(srcs_df.id.rename("source_id"), npartitions=24)
+        srcs_df_id = dd.from_pandas(srcs_df.id.rename("source_id"), npartitions=n_partitions)
         srcs_df_id = srcs_df_id.repartition(divisions=source_divisions)
 
         columns = ['source', 'id_a', 'id_b', 'flux_int_a', 'flux_int_err_a', 'flux_peak_a',
