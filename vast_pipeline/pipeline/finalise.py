@@ -5,6 +5,8 @@ import pandas as pd
 import dask.dataframe as dd
 from dask.distributed import Client, LocalCluster
 import webbrowser
+from distributed.diagnostics import MemorySampler
+import matplotlib.pyplot as plt
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -21,12 +23,15 @@ from vast_pipeline.pipeline.utils import parallel_groupby
 
 
 logger = logging.getLogger(__name__)
+ms = MemorySampler()
 
 cluster = LocalCluster()
+# cluster = LocalCluster(n_workers=4, memory_limit="2GiB")
 client = Client(cluster)
 print(client)
 url = client.dashboard_link
 webbrowser.open_new_tab(url)
+
 
 
 def calculate_measurement_pair_aggregate_metrics(
@@ -162,16 +167,27 @@ def final_operations(
     # create measurement pairs, aka 2-epoch metrics
     if calculate_pairs:
         timer.reset()
-        pair_dir = os.path.join(p_run.path, 'pair_metric')
-        calculate_measurement_pair_metrics(sources_df, pair_dir)
+        pairs_dir = os.path.join(p_run.path, 'measurement_pair_metrics')
+        source_divisions = calculate_measurement_pair_metrics(sources_df, pairs_dir)
         logger.info('Measurement pair metrics time: %.2f seconds', timer.reset())
         
         # get maximum measurement pair metrics
-        max_peak_pairs = calculate_measurement_pair_aggregate_metrics(pair_dir, source_aggregate_pair_metrics_min_abs_vs, flux_type="peak")
-        max_int_pairs = calculate_measurement_pair_aggregate_metrics(pair_dir, source_aggregate_pair_metrics_min_abs_vs, flux_type="int")
-        pair_agg_metrics = dd.map_partitions(dd.merge, max_peak_pairs, max_int_pairs, on="source", how="outer", enforce_metadata=False)
-        pair_agg_metrics = pair_agg_metrics.set_index("source")
-        pair_agg_metrics = pair_agg_metrics.compute()
+        max_peak_pairs = calculate_measurement_pair_aggregate_metrics(pairs_dir, source_aggregate_pair_metrics_min_abs_vs, flux_type="peak")
+        max_int_pairs = calculate_measurement_pair_aggregate_metrics(pairs_dir, source_aggregate_pair_metrics_min_abs_vs, flux_type="int")
+
+        if max_peak_pairs.npartitions == max_int_pairs.npartitions:
+            pair_agg_metrics = dd.map_partitions(dd.merge, max_peak_pairs, max_int_pairs, on="source", how="outer", enforce_metadata=False)
+            pair_agg_metrics = pair_agg_metrics.set_index("source")
+            with ms.sample("agg_metrics"):
+                pair_agg_metrics = pair_agg_metrics.compute()
+        else:
+            with ms.sample("agg_metrics_1"):
+                max_peak_pairs = max_peak_pairs.compute()
+            with ms.sample("agg_metrics_2"):
+                max_int_pairs = max_int_pairs.compute()
+            pair_agg_metrics = max_peak_pairs.merge(max_int_pairs, on="source", how="outer")
+            pair_agg_metrics = pair_agg_metrics.set_index("source")
+        
        
         # join with sources and replace agg metrics NaNs with 0 as the DataTables API JSON
         # serialization doesn't like them
@@ -293,27 +309,46 @@ def final_operations(
     ].to_parquet(os.path.join(p_run.path, 'associations.parquet'))
 
     if calculate_pairs:
-        # get the Source object primary keys for the measurement pairs
-        measurement_pairs_df = measurement_pairs_df.join(
-            srcs_df.id.rename("source_id"), on="source"
-        )
+        # ingest to dask data frames
+        srcs_df_id = dd.from_pandas(srcs_df.id.rename("source_id"), npartitions=24)
+        srcs_df_id = srcs_df_id.repartition(divisions=source_divisions)
 
+        columns = ['source', 'id_a', 'id_b', 'flux_int_a', 'flux_int_err_a', 'flux_peak_a',
+       'flux_peak_err_a', 'image_name_a', 'flux_int_b', 'flux_int_err_b',
+       'flux_peak_b', 'flux_peak_err_b', 'image_name_b', 'vs_peak', 'vs_int',
+       'm_peak', 'm_int']
+
+        measurement_pairs_df = dd.read_parquet(pairs_dir, columns=columns)
+
+        def cus_merge(partition1, partition2, on):
+            return dd.merge(partition1, partition2, on=on)
+        
+        if srcs_df_id.npartitions == measurement_pairs_df.npartitions:
+            measurement_pairs_df = measurement_pairs_df.map_partitions(cus_merge, srcs_df_id, on="source", align_dataframes=False)
+        else:
+            measurement_pairs_df = measurement_pairs_df.merge(srcs_df_id, on="source")
+       
         # optimize measurement pair DataFrame and save to parquet file
-        measurement_pairs_df = optimize_ints(
-            optimize_floats(
-                measurement_pairs_df.drop(columns=["source"]).rename(
-                    columns={"id_a": "meas_id_a", "id_b": "meas_id_b"}
-                )
-            )
-        )
-        measurement_pairs_df.to_parquet(
-            os.path.join(p_run.path, "measurement_pairs.parquet"), index=False
-        )
+        # measurement_pairs_df = optimize_ints(
+        #     optimize_floats(
+        #         measurement_pairs_df.drop(columns=["source"]).rename(
+        #             columns={"id_a": "meas_id_a", "id_b": "meas_id_b"}
+        #         )
+        #     )
+        # )
+        def rename_out(i):
+            return f"processed.{i}.parquet"
+        
+        measurement_pairs_df = measurement_pairs_df.drop("source", axis=1).rename(columns={"id_a": "meas_id_a", "id_b": "meas_id_b"})
+        with ms.sample("save_pairs"):
+            measurement_pairs_df.to_parquet(pairs_dir, write_index=False, name_function=rename_out)
 
     logger.info("Total final operations time: %.2f seconds", timer.reset_init())
 
     nr_sources = srcs_df["id"].count()
     nr_new_sources = srcs_df['new'].sum()
-
+    # ms.plot()
+    # plt.savefig("overall_memory.png")
+    
     # calculate and return total number of extracted sources
     return (nr_sources, nr_new_sources)

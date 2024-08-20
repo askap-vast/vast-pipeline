@@ -6,9 +6,11 @@ import numpy as np
 import pandas as pd
 from psutil import cpu_count
 from vast_pipeline.utils.utils import calculate_n_partitions
+from distributed.diagnostics import MemorySampler
 
 logger = logging.getLogger(__name__)
 
+ms = MemorySampler()
 
 def calculate_vs_metric(
     flux_a: float, flux_b: float, flux_err_a: float, flux_err_b: float
@@ -44,7 +46,7 @@ def calculate_m_metric(flux_a: float, flux_b: float) -> float:
     return 2 * ((flux_a - flux_b) / (flux_a + flux_b))
 
 
-def calculate_measurement_pair_metrics(df: pd.DataFrame, path=".") -> dd.DataFrame:
+def calculate_measurement_pair_metrics(df: pd.DataFrame, pairs_dir="./measurement_pair_metrics") -> dd.DataFrame:
     """Generate a DataFrame of measurement pairs and their 2-epoch variability metrics
     from a DataFrame of measurements. For more information on the variability metrics, see
     Section 5 of Mooley et al. (2016), DOI: 10.3847/0004-637X/818/2/105.
@@ -64,16 +66,6 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame, path=".") -> dd.DataFra
             vs_peak, vs_int - variability t-statistic
             m_peak, m_int - variability modulation index
     """
-    # n_cpu = 10 #cpu_count() - 1 # temporarily hardcode n_cpu
-    
-    # partition_size_mb=100
-    # mem_usage_mb = df.memory_usage(deep=True).sum() / 1e6
-    # npartitions = int(np.ceil(mem_usage_mb/partition_size_mb))
-    
-    # if npartitions < n_cpu:
-    #     npartitions=n_cpu
-    # logger.debug(f"Running calculate_measurement_pair_metrics with {n_cpu} CPUs....")
-    # logger.debug(f"and using {npartitions} partions of {partition_size_mb}MB...")
     
     n_cpu = cpu_count() - 1
     logger.debug(f"Running association with {n_cpu} CPUs")
@@ -106,22 +98,26 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame, path=".") -> dd.DataFra
                "flux_peak", "flux_peak_err", "image"]].rename(columns={"image": "image_name"})
     
     # add a new column which gives a unique identification number for each row
-    scale = 10**(len(str(df.index[-1])))
-    df["uind"] = df["id"] + df.index/scale
+    scale = 10**(len(str(df.id.max())))
+    df["uind"] = df.index + df["id"]/scale
     if df["uind"].duplicated().any():
-        print("something wrong with the unique identifier")
+        print("something wrong with the unique identifier") # temp debug
 
     # ingest to dask
-    ddf = dd.from_pandas(df, npartitions=24) # temp: hard coded for now
+    ddf = dd.from_pandas(df, npartitions=n_partitions)
+
+    # keep record of divisions
+    source_divisions = ddf.divisions
     
     def get_pair_partition(partition, scale):
         # Extract combinations for each group within the partition
         result = []
         for name, group in partition.groupby("source"):
             combs = list(combinations(group['id'], 2))
-            dec = name/scale
+            
             for comb in combs:
-                result.append((comb[0]+dec, comb[1]+dec, name))  # Include source if needed
+                result.append((name+comb[0]/scale, name+comb[1]/scale, name))
+
         res = pd.DataFrame(result, columns=["uind_a", "uind_b", "source"])
         
         return res
@@ -129,9 +125,9 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame, path=".") -> dd.DataFra
     def merge_pair_partitions(df1_partition, df2_partition, col1, col2, suffixes=("_x", "_y")):
         return df1_partition.merge(df2_partition, left_on=col1, right_on=col2, suffixes=suffixes).drop(col2, axis=1)
         
-        
+    # obtain pairs
     pairs = ddf.map_partitions(get_pair_partition, scale, meta={"uind_a":"float64", "uind_b":"float64", "source":"int32"})
-    
+
     result = dd.map_partitions(merge_pair_partitions, pairs, ddf, "uind_a", "uind")
     result = dd.map_partitions(merge_pair_partitions, result, ddf, "uind_b", "uind", suffixes=("_a", "_b"))
 
@@ -170,6 +166,9 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame, path=".") -> dd.DataFra
     result['m_abs_significant_max_peak'] = result['m_peak'].abs()
     result['m_abs_significant_max_int'] = result['m_int'].abs()
     
-    result.to_parquet(path+"/pair_metric", write_index=False, overwrite=True, compute=True)
-    
-    
+    with ms.sample("pair calculation"):
+        result.to_parquet(pairs_dir, write_index=False, overwrite=True, compute=True)
+    # import matplotlib.pyplot as plt
+    # ms.plot()
+    # plt.savefig("dev_memory.png")
+    return source_divisions
