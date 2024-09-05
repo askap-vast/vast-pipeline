@@ -46,9 +46,21 @@ def delete_pipeline_run_raw_sql(p_run):
         # Iterate over each image ID and delete related information
         for image_id_tuple in image_ids:
             image_id = image_id_tuple[0]
-            cursor.execute("DELETE FROM vast_pipeline_measurement WHERE image_id = %s;", (image_id,))
-            cursor.execute("DELETE FROM vast_pipeline_image_run WHERE image_id = %s;", (image_id,))
-            cursor.execute("DELETE FROM vast_pipeline_image WHERE id = %s;", (image_id,))
+            try:
+                cursor.execute("DELETE FROM vast_pipeline_measurement WHERE image_id = %s;", (image_id,))
+            except Exception as e:
+                print("++++++++++++++++++++++++++++++++")
+                print(e, image_id)
+                print("++++++++++++++++++++++++++++++++")
+                pass
+            cursor.execute("DELETE FROM vast_pipeline_image_run WHERE image_id = %s AND run_id = %s;", (image_id, p_run_id))
+            try:
+                cursor.execute("DELETE FROM vast_pipeline_image WHERE id = %s;", (image_id,))
+            except Exception as e:
+                print("++++++++++++++++++++++++++++++++")
+                print(e, image_id)
+                print("++++++++++++++++++++++++++++++++")
+                pass
 
         # Fetch skyregion IDs associated with the pipeline run
         cursor.execute("SELECT skyregion_id FROM vast_pipeline_skyregion_run WHERE run_id = %s;", (p_run_id,))
@@ -57,8 +69,14 @@ def delete_pipeline_run_raw_sql(p_run):
         # Iterate over each skyregion ID and delete related information
         for sky_id_tuple in sky_ids:
             sky_id = sky_id_tuple[0]
-            cursor.execute("DELETE FROM vast_pipeline_skyregion_run WHERE skyregion_id = %s;", (sky_id,))
-            cursor.execute("DELETE FROM vast_pipeline_skyregion WHERE id = %s;", (sky_id,))
+            cursor.execute("DELETE FROM vast_pipeline_skyregion_run WHERE skyregion_id = %s AND run_id = %s;", (sky_id, p_run_id))
+            try:
+                cursor.execute("DELETE FROM vast_pipeline_skyregion WHERE id = %s;", (sky_id,))
+            except Exception as e:
+                print("++++++++++++++++++++++++++++++++")
+                print(e, sky_id)
+                print("++++++++++++++++++++++++++++++++")
+                pass
 
         # Finally delete the pipeline run
         cursor.execute("DELETE FROM vast_pipeline_run WHERE id = %s;", (p_run_id,))
