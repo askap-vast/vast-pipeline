@@ -2,10 +2,13 @@ import os
 import logging
 import numpy as np
 import pandas as pd
+import dask
 import dask.dataframe as dd
 from dask.distributed import Client, LocalCluster
 import webbrowser
 from distributed.diagnostics import MemorySampler
+import matplotlib
+matplotlib.use("agg")
 import matplotlib.pyplot as plt
 
 from astropy import units as u
@@ -21,18 +24,10 @@ from vast_pipeline.pipeline.loading import (
 from vast_pipeline.pipeline.pairs import calculate_measurement_pair_metrics
 from vast_pipeline.pipeline.utils import parallel_groupby
 
+dask.config.set({'distributed.worker.multiprocessing-method': 'fork'})
 
 logger = logging.getLogger(__name__)
 ms = MemorySampler()
-
-cluster = LocalCluster()
-# cluster = LocalCluster(n_workers=4, memory_limit="2GiB")
-client = Client(cluster)
-print(client)
-url = client.dashboard_link
-webbrowser.open_new_tab(url)
-
-
 
 def calculate_measurement_pair_aggregate_metrics(
     pairs_parquet_dir: str,
@@ -166,6 +161,13 @@ def final_operations(
 
     # create measurement pairs, aka 2-epoch metrics
     if calculate_pairs:
+        # setup dask client
+        cluster = LocalCluster()
+        # cluster = LocalCluster(n_workers=4, memory_limit="2GiB")
+        client = Client(cluster)
+        print(client)
+        url = client.dashboard_link
+        webbrowser.open_new_tab(url)
         timer.reset()
         pairs_dir = os.path.join(p_run.path, 'measurement_pair_metrics')
         n_partitions, source_divisions = calculate_measurement_pair_metrics(sources_df, pairs_dir)
@@ -327,19 +329,17 @@ def final_operations(
             measurement_pairs_df = measurement_pairs_df.map_partitions(cus_merge, srcs_df_id, on="source", align_dataframes=False)
         else:
             measurement_pairs_df = measurement_pairs_df.merge(srcs_df_id, on="source")
-       
+        
         # optimize measurement pair DataFrame and save to parquet file
-        # measurement_pairs_df = optimize_ints(
-        #     optimize_floats(
-        #         measurement_pairs_df.drop(columns=["source"]).rename(
-        #             columns={"id_a": "meas_id_a", "id_b": "meas_id_b"}
-        #         )
-        #     )
-        # )
+       
+        measurement_pairs_df = measurement_pairs_df.drop("source", axis=1).rename(columns={"id_a": "meas_id_a", "id_b": "meas_id_b"})
+        measurement_pairs_df = measurement_pairs_df.map_partitions(optimize_floats)
+        measurement_pairs_df = measurement_pairs_df.map_partitions(optimize_ints)
+
         def rename_out(i):
             return f"processed.{i}.parquet"
         
-        measurement_pairs_df = measurement_pairs_df.drop("source", axis=1).rename(columns={"id_a": "meas_id_a", "id_b": "meas_id_b"})
+        
         with ms.sample("save_pairs"):
             measurement_pairs_df.to_parquet(pairs_dir, write_index=False, name_function=rename_out)
 
@@ -349,6 +349,8 @@ def final_operations(
     nr_new_sources = srcs_df['new'].sum()
     # ms.plot()
     # plt.savefig("overall_memory.png")
-    
+    # breakpoint()
     # calculate and return total number of extracted sources
+    logger.info("The total number of extracted sources: {}".format(nr_sources))
+    logger.info("The total number of new extracted source: {}".format(nr_new_sources))
     return (nr_sources, nr_new_sources)
