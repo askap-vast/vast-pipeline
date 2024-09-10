@@ -132,6 +132,18 @@ class Command(BaseCommand):
                             f'Parquet file "{os.path.basename(parquet)}" not existent'
                         ))
                         pass
+                    
+                # Delete parquets from pair measurement
+                pairs_path = os.path.join(p_run.path, "measurement_pair_metrics")
+                if os.path.exists(pairs_path):
+                    try:
+                        shutil.rmtree(pairs_path)
+                    except Exception as e:
+                        self.stdout.write(self.style.WARNING(
+                        f'Issues in removing pair measurement metric folder: {e}'
+                        ))
+                        pass
+
 
             if options['remove_all']:
                 logger.info('Deleting pipeline folder')
