@@ -104,12 +104,12 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame, pairs_dir="./measuremen
         print("something wrong with the unique identifier") # temp debug
 
     # ingest to dask
-    ddf = dd.from_pandas(df, npartitions=n_partitions)
+    ddf = dd.from_pandas(df, npartitions=100)
 
     # keep record of divisions
     source_divisions = ddf.divisions
     
-    def get_pair_partition(partition, scale):
+    def _get_pair_partition(partition, scale):
         # Extract combinations for each group within the partition
         result = []
         for name, group in partition.groupby("source"):
@@ -119,17 +119,18 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame, pairs_dir="./measuremen
                 result.append((name+comb[0]/scale, name+comb[1]/scale, name))
 
         res = pd.DataFrame(result, columns=["uind_a", "uind_b", "source"])
-        
+        res = res.sort_values(by=["source", "uind_a", "uind_b"])
         return res
     
-    def merge_pair_partitions(df1_partition, df2_partition, col1, col2, suffixes=("_x", "_y")):
-        return df1_partition.merge(df2_partition, left_on=col1, right_on=col2, suffixes=suffixes).drop(col2, axis=1)
+    def _merge_pair_partitions(df1_partition, df2_partition, col1, col2, suffixes=("_x", "_y")):
+        return df1_partition.merge(df2_partition, left_on=col1, right_on=col2, how="left", suffixes=suffixes).drop(col2, axis=1)
         
     # obtain pairs
-    pairs = ddf.map_partitions(get_pair_partition, scale, meta={"uind_a":"float64", "uind_b":"float64", "source":"int32"})
-
-    result = dd.map_partitions(merge_pair_partitions, pairs, ddf, "uind_a", "uind")
-    result = dd.map_partitions(merge_pair_partitions, result, ddf, "uind_b", "uind", suffixes=("_a", "_b"))
+    pairs = ddf.map_partitions(_get_pair_partition, scale, meta={"uind_a":"float64", "uind_b":"float64", "source":"int32"})
+    
+    result = dd.map_partitions(_merge_pair_partitions, pairs, ddf, "uind_a", "uind")
+   
+    result = dd.map_partitions(_merge_pair_partitions, result, ddf, "uind_b", "uind", suffixes=("_a", "_b"))
 
     # calculate 2-epoch metrics
     result["vs_peak"] = calculate_vs_metric(
@@ -167,7 +168,7 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame, pairs_dir="./measuremen
     result['m_abs_significant_max_int'] = result['m_int'].abs()
     
     with ms.sample("pair calculation"):
-        result.to_parquet(pairs_dir, write_index=False, overwrite=True, compute=True)
+        result.to_parquet(pairs_dir, write_index=False, overwrite=True, compute=True, engine="pyarrow", schema="infer")
     # import matplotlib.pyplot as plt
     # ms.plot()
     # plt.savefig("dev_memory.png")
