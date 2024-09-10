@@ -10,6 +10,9 @@ from distributed.diagnostics import MemorySampler
 import matplotlib
 matplotlib.use("agg")
 import matplotlib.pyplot as plt
+import shutil
+import warnings
+import pyarrow as pa
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -65,15 +68,15 @@ def calculate_measurement_pair_aggregate_metrics(
 
     pair_filtered = dd.read_parquet(pairs_parquet_dir, columns=columns, filters=filters)
 
-    def get_max_flux(partition):
+    def _get_max_flux(partition):
         inds = []
-        for name, group in partition.groupby("source"):
+        for _, group in partition.groupby("source"):
             idx = group[f"m_abs_significant_max_{flux_type}"].idxmax()
             inds.append(idx)
         return partition.loc[inds]
     
 
-    pair_agg_metrics = pair_filtered.map_partitions(get_max_flux)
+    pair_agg_metrics = pair_filtered.map_partitions(_get_max_flux)
 
     return pair_agg_metrics
 
@@ -170,18 +173,21 @@ def final_operations(
         webbrowser.open_new_tab(url)
         timer.reset()
         pairs_dir = os.path.join(p_run.path, 'measurement_pair_metrics')
-        n_partitions, source_divisions = calculate_measurement_pair_metrics(sources_df, pairs_dir)
+        pairs_dir_tmp = os.path.join(pairs_dir, "tmp")
+        n_partitions, source_divisions = calculate_measurement_pair_metrics(sources_df, pairs_dir_tmp)
         logger.info('Measurement pair metrics time: %.2f seconds', timer.reset())
         
         # get maximum measurement pair metrics
-        max_peak_pairs = calculate_measurement_pair_aggregate_metrics(pairs_dir, source_aggregate_pair_metrics_min_abs_vs, flux_type="peak")
-        max_int_pairs = calculate_measurement_pair_aggregate_metrics(pairs_dir, source_aggregate_pair_metrics_min_abs_vs, flux_type="int")
-
-        if max_peak_pairs.npartitions == max_int_pairs.npartitions:
-            pair_agg_metrics = dd.map_partitions(dd.merge, max_peak_pairs, max_int_pairs, on="source", how="outer", enforce_metadata=False)
+        max_peak_pairs = calculate_measurement_pair_aggregate_metrics(pairs_dir_tmp, source_aggregate_pair_metrics_min_abs_vs, flux_type="peak")
+        max_int_pairs = calculate_measurement_pair_aggregate_metrics(pairs_dir_tmp, source_aggregate_pair_metrics_min_abs_vs, flux_type="int")
+       
+        if max_peak_pairs.npartitions == max_int_pairs.npartitions == n_partitions:
+            pair_agg_metrics = dd.map_partitions(dd.merge, max_peak_pairs, max_int_pairs, on="source", how="outer", enforce_metadata=False, align_dataframes=False)
             pair_agg_metrics = pair_agg_metrics.set_index("source")
+            
             with ms.sample("agg_metrics"):
                 pair_agg_metrics = pair_agg_metrics.compute()
+            
         else:
             with ms.sample("agg_metrics_1"):
                 max_peak_pairs = max_peak_pairs.compute()
@@ -311,6 +317,7 @@ def final_operations(
     ].to_parquet(os.path.join(p_run.path, 'associations.parquet'))
 
     if calculate_pairs:
+        timer.reset()
         # ingest to dask data frames
         srcs_df_id = dd.from_pandas(srcs_df.id.rename("source_id"), npartitions=n_partitions)
         srcs_df_id = srcs_df_id.repartition(divisions=source_divisions)
@@ -320,29 +327,44 @@ def final_operations(
        'flux_peak_b', 'flux_peak_err_b', 'image_name_b', 'vs_peak', 'vs_int',
        'm_peak', 'm_int']
 
-        measurement_pairs_df = dd.read_parquet(pairs_dir, columns=columns)
-
-        def cus_merge(partition1, partition2, on):
-            return dd.merge(partition1, partition2, on=on)
+        measurement_pairs_df = dd.read_parquet(pairs_dir_tmp, columns=columns)
         
         if srcs_df_id.npartitions == measurement_pairs_df.npartitions:
-            measurement_pairs_df = measurement_pairs_df.map_partitions(cus_merge, srcs_df_id, on="source", align_dataframes=False)
+            measurement_pairs_df = measurement_pairs_df.map_partitions(dd.merge, srcs_df_id, how="left", on="source", align_dataframes=False, enforce_metadata=False)
         else:
-            measurement_pairs_df = measurement_pairs_df.merge(srcs_df_id, on="source")
-        
-        # optimize measurement pair DataFrame and save to parquet file
-       
+            measurement_pairs_df = measurement_pairs_df.merge(srcs_df_id, how="left", on="source")
+
         measurement_pairs_df = measurement_pairs_df.drop("source", axis=1).rename(columns={"id_a": "meas_id_a", "id_b": "meas_id_b"})
-        measurement_pairs_df = measurement_pairs_df.map_partitions(optimize_floats)
-        measurement_pairs_df = measurement_pairs_df.map_partitions(optimize_ints)
-
-        def rename_out(i):
-            return f"processed.{i}.parquet"
         
+        # try to optimize measurement pair DataFrame and save to parquet file  
+        # fall back to original dtypes if downcasting fails due to inconsistent issue
         
-        with ms.sample("save_pairs"):
-            measurement_pairs_df.to_parquet(pairs_dir, write_index=False, name_function=rename_out)
+        # get the schema before downcasting
+        measurement_pairs_df._meta[['image_name_a', 'image_name_b']] = measurement_pairs_df._meta[['image_name_a', 'image_name_b']].astype("string")
+        o_schema = pa.Schema.from_pandas(measurement_pairs_df._meta, preserve_index=False)
+        
+        try:
+            measurement_pairs_df = measurement_pairs_df.map_partitions(optimize_floats, enforce_metadata=False)
+            measurement_pairs_df = measurement_pairs_df.map_partitions(optimize_ints, enforce_metadata=False)
 
+            with ms.sample("save_pairs"):
+                measurement_pairs_df.to_parquet(pairs_dir, write_index=False)
+        except Exception as e:
+            warnings.warn(f"str{e}; skip downcast int/float")
+            with ms.sample("save_pairs"):
+                measurement_pairs_df.to_parquet(pairs_dir, write_index=False, schema=o_schema)
+
+
+        client.close()
+
+        # clear the temporary folder
+        try:
+            shutil.rmtree(pairs_dir_tmp)
+        except Exception as e:
+            warnings.warn(f"Warning: Issues in removing pair calculation tmp folder: {e}")
+            pass
+
+        logger.info("Write the final version of measurement pair dataframe into files time: %.2f seconds", timer.reset())
     logger.info("Total final operations time: %.2f seconds", timer.reset_init())
 
     nr_sources = srcs_df["id"].count()
