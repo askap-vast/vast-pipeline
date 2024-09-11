@@ -13,7 +13,7 @@ from vast_pipeline.models import Run
 from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
 from ..helpers import get_p_run_name
 
-from ...utils.delete_raw import delete_pipeline_run_raw_sql
+from ...utils.delete_run import delete_pipeline_run_raw_sql
 from memory_profiler import profile
 
 logger = logging.getLogger(__name__)
