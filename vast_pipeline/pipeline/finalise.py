@@ -4,16 +4,13 @@ import numpy as np
 import pandas as pd
 import dask
 import dask.dataframe as dd
-from dask.distributed import Client, LocalCluster
-import webbrowser
-from distributed.diagnostics import MemorySampler
-from dask.distributed import performance_report
-import matplotlib
-matplotlib.use("agg")
-import matplotlib.pyplot as plt
+from dask.diagnostics import Profiler, ResourceProfiler, CacheProfiler, ProgressBar, visualize
+
 import shutil
 import warnings
 import pyarrow as pa
+
+from psutil import cpu_count
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -28,10 +25,11 @@ from vast_pipeline.pipeline.loading import (
 from vast_pipeline.pipeline.pairs import calculate_measurement_pair_metrics
 from vast_pipeline.pipeline.utils import parallel_groupby
 
-dask.config.set({'distributed.worker.multiprocessing-method': 'fork'})
+dask.config.set({"multiprocessing.context": "fork"})
 
 logger = logging.getLogger(__name__)
-ms = MemorySampler()
+
+n_cpu = cpu_count() - 1
 
 def calculate_measurement_pair_aggregate_metrics(
     pairs_parquet_dir: str,
@@ -165,14 +163,6 @@ def final_operations(
 
     # create measurement pairs, aka 2-epoch metrics
     if calculate_pairs:
-        # setup dask client
-        cluster = LocalCluster()
-        # cluster = LocalCluster(n_workers=4, memory_limit="2GiB")
-        client = Client(cluster)
-        print(client)
-        url = client.dashboard_link
-        print("dashboard link: ", url)
-        # webbrowser.open_new_tab(url)
         timer.reset()
         pairs_dir = os.path.join(p_run.path, 'measurement_pair_metrics')
         pairs_dir_tmp = os.path.join(pairs_dir, "tmp")
@@ -181,6 +171,8 @@ def final_operations(
         dask_profile_dir = os.path.join(p_run.path, 'dask-profile')
         if not os.path.exists(dask_profile_dir):
             os.makedirs(dask_profile_dir)
+        # setup compute arguments
+        compute_args={"num_workers": n_cpu, "scheduler": "processes"}
 
         n_partitions, source_divisions = calculate_measurement_pair_metrics(sources_df, pairs_dir_tmp, dask_profile_dir)
         logger.info('Measurement pair metrics time: %.2f seconds', timer.reset())
@@ -194,14 +186,16 @@ def final_operations(
             pair_agg_metrics = dd.map_partitions(dd.merge, max_peak_pairs, max_int_pairs, on="source", how="outer", enforce_metadata=False, align_dataframes=False)
             pair_agg_metrics = pair_agg_metrics.set_index("source")
             
-            with ms.sample("agg_metrics"), performance_report(filename=dask_profile_dir+"/dask-agg-metrics.html"):
-                pair_agg_metrics = pair_agg_metrics.compute()
+            with Profiler() as prof, ResourceProfiler(dt=0.25) as rprof, CacheProfiler() as cprof, ProgressBar():
+                pair_agg_metrics = pair_agg_metrics.compute(num_workers=n_cpu, scheduler="processes")
+            visualize([prof, rprof, cprof], filename=dask_profile_dir+"/agg_metrics.html", show=False)
             
         else:
-            with ms.sample("agg_metrics_peak"), performance_report(filename=dask_profile_dir+"/dask-agg-metrics-peak.html"):
-                max_peak_pairs = max_peak_pairs.compute()
-            with ms.sample("agg_metrics_int"), performance_report(filename=dask_profile_dir+"/dask-agg-metrics-int.html"):
-                max_int_pairs = max_int_pairs.compute()
+            with Profiler() as prof, ResourceProfiler(dt=0.25) as rprof, CacheProfiler() as cprof, ProgressBar():
+                max_peak_pairs = max_peak_pairs.compute(num_workers=n_cpu, scheduler="processes")
+                max_int_pairs = max_int_pairs.compute(num_workers=n_cpu, scheduler="processes")
+            visualize([prof, rprof, cprof], filename=dask_profile_dir+"/agg_metrics_individual.html", show=False)
+
             pair_agg_metrics = max_peak_pairs.merge(max_int_pairs, on="source", how="outer")
             pair_agg_metrics = pair_agg_metrics.set_index("source")
         
@@ -356,17 +350,15 @@ def final_operations(
             measurement_pairs_df = measurement_pairs_df.map_partitions(optimize_floats, enforce_metadata=False)
             measurement_pairs_df = measurement_pairs_df.map_partitions(optimize_ints, enforce_metadata=False)
 
-            with ms.sample("save_pairs"), performance_report(filename=dask_profile_dir+"/dask-save-pairs.html"):
-                measurement_pairs_df.to_parquet(pairs_dir, write_index=False)
+            with Profiler() as prof, ResourceProfiler(dt=0.25) as rprof, CacheProfiler() as cprof, ProgressBar():
+                measurement_pairs_df.to_parquet(pairs_dir, write_index=False, compute_kwargs=compute_args)
+            visualize([prof, rprof, cprof], filename=dask_profile_dir+"/save-pairs.html", show=False)
         except Exception as e:
             warnings.warn(f"str{e}; skip downcast int/float")
-            with ms.sample("save_pairs"), performance_report(filename=dask_profile_dir+"/dask-save-pairs.html"):
-                measurement_pairs_df.to_parquet(pairs_dir, write_index=False, schema=o_schema)
+            with Profiler() as prof, ResourceProfiler(dt=0.25) as rprof, CacheProfiler() as cprof, ProgressBar():
+                measurement_pairs_df.to_parquet(pairs_dir, write_index=False, schema=o_schema, compute_kwargs=compute_args)
+            visualize([prof, rprof, cprof], filename=dask_profile_dir+"/save-pairs.html", show=False)
 
-
-        client.close()
-        ms.plot()
-        plt.savefig(dask_profile_dir+"/pair_agg_save_memory.png")
 
         # clear the temporary folder
         try:

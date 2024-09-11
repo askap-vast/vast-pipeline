@@ -6,17 +6,11 @@ import numpy as np
 import pandas as pd
 from psutil import cpu_count
 from vast_pipeline.utils.utils import calculate_n_partitions
-from distributed.diagnostics import MemorySampler
-from dask.distributed import performance_report
-import matplotlib
-matplotlib.use("agg")
-import matplotlib.pyplot as plt
 
+from dask.diagnostics import Profiler, ResourceProfiler, CacheProfiler, ProgressBar, visualize
 
 
 logger = logging.getLogger(__name__)
-
-ms = MemorySampler()
 
 def calculate_vs_metric(
     flux_a: float, flux_b: float, flux_err_a: float, flux_err_b: float
@@ -174,10 +168,11 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame, pairs_dir="./measuremen
     result['m_abs_significant_max_peak'] = result['m_peak'].abs()
     result['m_abs_significant_max_int'] = result['m_int'].abs()
     
-    with ms.sample("pair calculation"), performance_report(filename=profile_dir+"/dask-pairs.html"):
-        result.to_parquet(pairs_dir, write_index=False, overwrite=True, compute=True, engine="pyarrow", schema="infer")
+    with Profiler() as prof, ResourceProfiler(dt=0.25) as rprof, CacheProfiler() as cprof, ProgressBar():
+        result.to_parquet(pairs_dir, write_index=False, overwrite=True, compute=True, 
+                          compute_kwargs={"num_workers": n_cpu, "scheduler": "processes"},
+                            engine="pyarrow", schema="infer")
     
-    ms.plot()
-    plt.savefig(profile_dir + "/pairs_memory.png")
-    
+    visualize([prof, rprof, cprof], filename=profile_dir+"/pairs.html", show=False)
+   
     return n_partitions, source_divisions
