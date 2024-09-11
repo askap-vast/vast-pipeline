@@ -6,17 +6,8 @@ import numpy as np
 import pandas as pd
 from psutil import cpu_count
 from vast_pipeline.utils.utils import calculate_n_partitions
-from distributed.diagnostics import MemorySampler
-from dask.distributed import performance_report
-import matplotlib
-matplotlib.use("agg")
-import matplotlib.pyplot as plt
-
-
 
 logger = logging.getLogger(__name__)
-
-ms = MemorySampler()
 
 def calculate_vs_metric(
     flux_a: float, flux_b: float, flux_err_a: float, flux_err_b: float
@@ -52,7 +43,7 @@ def calculate_m_metric(flux_a: float, flux_b: float) -> float:
     return 2 * ((flux_a - flux_b) / (flux_a + flux_b))
 
 
-def calculate_measurement_pair_metrics(df: pd.DataFrame, pairs_dir="./measurement_pair_metrics", profile_dir="./") -> dd.DataFrame:
+def calculate_measurement_pair_metrics(df: pd.DataFrame, pairs_dir="./measurement_pair_metrics") -> dd.DataFrame:
     """Generate a DataFrame of measurement pairs and their 2-epoch variability metrics
     from a DataFrame of measurements. For more information on the variability metrics, see
     Section 5 of Mooley et al. (2016), DOI: 10.3847/0004-637X/818/2/105.
@@ -173,11 +164,7 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame, pairs_dir="./measuremen
     result['vs_abs_significant_max_int'] = result['vs_int'].abs()
     result['m_abs_significant_max_peak'] = result['m_peak'].abs()
     result['m_abs_significant_max_int'] = result['m_int'].abs()
-    
-    with ms.sample("pair calculation"), performance_report(filename=profile_dir+"/dask-pairs.html"):
-        result.to_parquet(pairs_dir, write_index=False, overwrite=True, compute=True, engine="pyarrow", schema="infer")
-    
-    ms.plot()
-    plt.savefig(profile_dir + "/pairs_memory.png")
+        
+    result.to_parquet(pairs_dir, write_index=False, overwrite=True, compute=True, engine="pyarrow", schema="infer")
     
     return n_partitions, source_divisions
