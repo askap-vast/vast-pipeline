@@ -4,6 +4,7 @@ import logging
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
+from numba import njit
 from psutil import cpu_count
 from vast_pipeline.utils.utils import calculate_n_partitions
 from distributed.diagnostics import MemorySampler
@@ -18,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 ms = MemorySampler()
 
+@njit
 def calculate_vs_metric(
     flux_a: float, flux_b: float, flux_err_a: float, flux_err_b: float
 ) -> float:
@@ -36,7 +38,7 @@ def calculate_vs_metric(
     """
     return (flux_a - flux_b) / np.hypot(flux_err_a, flux_err_b)
 
-
+@njit
 def calculate_m_metric(flux_a: float, flux_b: float) -> float:
     """Calculate the m variability metric which is the modulation index between two fluxes.
     This is proportional to the fractional variability.
@@ -139,41 +141,67 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame, pairs_dir="./measuremen
     result = dd.map_partitions(_merge_pair_partitions, result, ddf, "uind_b", "uind", suffixes=("_a", "_b"))
 
     # calculate 2-epoch metrics
-    
-    result["vs_peak"] = calculate_vs_metric(
-        result["flux_peak_a"],
-        result["flux_peak_b"],
-        result["flux_peak_err_a"],
-        result["flux_peak_err_b"],
-    )
-    
-    result["vs_int"] = calculate_vs_metric(
-        result.flux_int_a,
-        result.flux_int_b,
-        result.flux_int_err_a,
-        result.flux_int_err_b,
-    )
-    
-    result["m_peak"] = calculate_m_metric(
-        result.flux_peak_a,
-        result.flux_peak_b,
-    )
 
-    result["m_int"] = calculate_m_metric(
-        result.flux_int_a,
-        result.flux_int_b,
-    )
+    def _compute_metric_partition(partition, flux_a, flux_b, flux_err_a, flux_err_b, res_col1, res_col2, res_col3, res_col4):
+        flux_a = partition[flux_a].to_numpy()
+        flux_b = partition[flux_b].to_numpy()
+        flux_a_err = partition[flux_err_a].to_numpy()
+        flux_b_err = partition[flux_err_b].to_numpy()
+        res_vs = calculate_vs_metric(flux_a, flux_b, flux_a_err, flux_b_err)
+        res_m = calculate_m_metric(flux_a, flux_b)                         
+        partition[res_col1] = res_vs
+        partition[res_col2] = res_m
+        partition[res_col3] = np.abs(res_vs)
+        partition[res_col4] = np.abs(res_m)
+
+        return partition
+    
+    args_string = ["flux_{}_a", "flux_{}_b", "flux_{}_err_a", "flux_{}_err_b", "vs_{}", "m_{}", "vs_abs_significant_max_{}", "m_abs_significant_max_{}"]
+    args_peak = tuple([s.format("peak") for s in args_string])
+    args_int = tuple([s.format("int") for s in args_string])
+    result = result.map_partitions(_compute_metric_partition, *args_peak)
+    # result["vs_peak"] = calculate_vs_metric(
+    #     result["flux_peak_a"],
+    #     result["flux_peak_b"],
+    #     result["flux_peak_err_a"],
+    #     result["flux_peak_err_b"],
+    # )
+    result = result.map_partitions(_compute_metric_partition, *args_int)
+    # result["vs_int"] = calculate_vs_metric(
+    #     result.flux_int_a,
+    #     result.flux_int_b,
+    #     result.flux_int_err_a,
+    #     result.flux_int_err_b,
+    # )
+    # def _compute_metric_partition(partition, flux_a, flux_b, res_col1, res_col2):
+    #     res = calculate_m_metric(partition[flux_a].to_numpy(), partition[flux_b].to_numpy())
+    #     partition[res_col] = res
+    #     return partition
+    
+    # result = result.map_partitions(_compute_m_metric_partition, "flux_peak_a", "flux_peak_b", "m_peak")
+    # result["m_peak"] = calculate_m_metric(
+    #     result.flux_peak_a,
+    #     result.flux_peak_b,
+    # )
+
+    # result = result.map_partitions(_compute_m_metric_partition, "flux_int_a", "flux_int_b", "m_int")
+    # result["m_int"] = calculate_m_metric(
+    #     result.flux_int_a,
+    #     result.flux_int_b,
+    # )
     
     # remove datetime columns
     # todo: double check whether we need to ingest them to dask at the first place
     # result = result.drop(["datetime_a", "datetime_b"], axis=1)
 
     # get absolute value of metrics
-    result['vs_abs_significant_max_peak'] = result['vs_peak'].abs()
-    result['vs_abs_significant_max_int'] = result['vs_int'].abs()
-    result['m_abs_significant_max_peak'] = result['m_peak'].abs()
-    result['m_abs_significant_max_int'] = result['m_int'].abs()
+    # result['vs_abs_significant_max_peak'] = result['vs_peak'].abs()
+    # result['vs_abs_significant_max_int'] = result['vs_int'].abs()
+    # result['m_abs_significant_max_peak'] = result['m_peak'].abs()
+    # result['m_abs_significant_max_int'] = result['m_int'].abs()
     
+    # with ms.sample("pair calculation"):
+
     with ms.sample("pair calculation"), performance_report(filename=profile_dir+"/dask-pairs.html"):
         result.to_parquet(pairs_dir, write_index=False, overwrite=True, compute=True, engine="pyarrow", schema="infer")
     
