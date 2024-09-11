@@ -171,7 +171,8 @@ def final_operations(
         client = Client(cluster)
         print(client)
         url = client.dashboard_link
-        webbrowser.open_new_tab(url)
+        print("dashboard link: ", url)
+        # webbrowser.open_new_tab(url)
         timer.reset()
         pairs_dir = os.path.join(p_run.path, 'measurement_pair_metrics')
         pairs_dir_tmp = os.path.join(pairs_dir, "tmp")
@@ -180,7 +181,7 @@ def final_operations(
         dask_profile_dir = os.path.join(p_run.path, 'dask-profile')
         if not os.path.exists(dask_profile_dir):
             os.makedirs(dask_profile_dir)
-            
+
         n_partitions, source_divisions = calculate_measurement_pair_metrics(sources_df, pairs_dir_tmp, dask_profile_dir)
         logger.info('Measurement pair metrics time: %.2f seconds', timer.reset())
         
@@ -366,6 +367,7 @@ def final_operations(
         client.close()
         ms.plot()
         plt.savefig(dask_profile_dir+"/pair_agg_save_memory.png")
+
         # clear the temporary folder
         try:
             shutil.rmtree(pairs_dir_tmp)
@@ -378,9 +380,7 @@ def final_operations(
 
     nr_sources = srcs_df["id"].count()
     nr_new_sources = srcs_df['new'].sum()
-    # ms.plot()
-    # plt.savefig("overall_memory.png")
-    # breakpoint()
+    
     # calculate and return total number of extracted sources
     logger.info("The total number of extracted sources: {}".format(nr_sources))
     logger.info("The total number of new extracted source: {}".format(nr_new_sources))

@@ -110,7 +110,7 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame, pairs_dir="./measuremen
         print("something wrong with the unique identifier") # temp debug
 
     # ingest to dask
-    ddf = dd.from_pandas(df, npartitions=24)
+    ddf = dd.from_pandas(df, npartitions=n_partitions)
 
     # keep record of divisions
     source_divisions = ddf.divisions
