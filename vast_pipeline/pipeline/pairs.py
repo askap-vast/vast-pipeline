@@ -7,6 +7,12 @@ import pandas as pd
 from psutil import cpu_count
 from vast_pipeline.utils.utils import calculate_n_partitions
 from distributed.diagnostics import MemorySampler
+from dask.distributed import performance_report
+import matplotlib
+matplotlib.use("agg")
+import matplotlib.pyplot as plt
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +52,7 @@ def calculate_m_metric(flux_a: float, flux_b: float) -> float:
     return 2 * ((flux_a - flux_b) / (flux_a + flux_b))
 
 
-def calculate_measurement_pair_metrics(df: pd.DataFrame, pairs_dir="./measurement_pair_metrics") -> dd.DataFrame:
+def calculate_measurement_pair_metrics(df: pd.DataFrame, pairs_dir="./measurement_pair_metrics", profile_dir="./") -> dd.DataFrame:
     """Generate a DataFrame of measurement pairs and their 2-epoch variability metrics
     from a DataFrame of measurements. For more information on the variability metrics, see
     Section 5 of Mooley et al. (2016), DOI: 10.3847/0004-637X/818/2/105.
@@ -94,7 +100,7 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame, pairs_dir="./measuremen
     df = df.set_index("source")
     
     # select relevant columns
-    df = df[["id", "datetime", "flux_int", "flux_int_err",
+    df = df[["id", "flux_int", "flux_int_err",
                "flux_peak", "flux_peak_err", "image"]].rename(columns={"image": "image_name"})
     
     # add a new column which gives a unique identification number for each row
@@ -104,7 +110,7 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame, pairs_dir="./measuremen
         print("something wrong with the unique identifier") # temp debug
 
     # ingest to dask
-    ddf = dd.from_pandas(df, npartitions=100)
+    ddf = dd.from_pandas(df, npartitions=24)
 
     # keep record of divisions
     source_divisions = ddf.divisions
@@ -133,6 +139,7 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame, pairs_dir="./measuremen
     result = dd.map_partitions(_merge_pair_partitions, result, ddf, "uind_b", "uind", suffixes=("_a", "_b"))
 
     # calculate 2-epoch metrics
+    
     result["vs_peak"] = calculate_vs_metric(
         result["flux_peak_a"],
         result["flux_peak_b"],
@@ -146,7 +153,7 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame, pairs_dir="./measuremen
         result.flux_int_err_a,
         result.flux_int_err_b,
     )
-
+    
     result["m_peak"] = calculate_m_metric(
         result.flux_peak_a,
         result.flux_peak_b,
@@ -159,7 +166,7 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame, pairs_dir="./measuremen
     
     # remove datetime columns
     # todo: double check whether we need to ingest them to dask at the first place
-    result = result.drop(["datetime_a", "datetime_b"], axis=1)
+    # result = result.drop(["datetime_a", "datetime_b"], axis=1)
 
     # get absolute value of metrics
     result['vs_abs_significant_max_peak'] = result['vs_peak'].abs()
@@ -167,9 +174,10 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame, pairs_dir="./measuremen
     result['m_abs_significant_max_peak'] = result['m_peak'].abs()
     result['m_abs_significant_max_int'] = result['m_int'].abs()
     
-    with ms.sample("pair calculation"):
+    with ms.sample("pair calculation"), performance_report(filename=profile_dir+"/dask-pairs.html"):
         result.to_parquet(pairs_dir, write_index=False, overwrite=True, compute=True, engine="pyarrow", schema="infer")
-    # import matplotlib.pyplot as plt
-    # ms.plot()
-    # plt.savefig("dev_memory.png")
+    
+    ms.plot()
+    plt.savefig(profile_dir + "/pairs_memory.png")
+    
     return n_partitions, source_divisions
