@@ -173,6 +173,6 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame, pairs_dir="./measuremen
                           compute_kwargs={"num_workers": n_cpu, "scheduler": "processes"},
                             engine="pyarrow", schema="infer")
     
-    visualize([prof, rprof, cprof], filename=profile_dir+"/pairs.html", show=False)
+    visualize([prof, rprof, cprof], filename=profile_dir+"/pairs-local.html", show=False)
    
     return n_partitions, source_divisions

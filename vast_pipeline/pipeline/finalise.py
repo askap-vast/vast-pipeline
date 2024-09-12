@@ -188,13 +188,13 @@ def final_operations(
             
             with Profiler() as prof, ResourceProfiler(dt=0.25) as rprof, CacheProfiler() as cprof, ProgressBar():
                 pair_agg_metrics = pair_agg_metrics.compute(num_workers=n_cpu, scheduler="processes")
-            visualize([prof, rprof, cprof], filename=dask_profile_dir+"/agg_metrics.html", show=False)
+            visualize([prof, rprof, cprof], filename=dask_profile_dir+"/agg_metrics_local.html", show=False)
             
         else:
             with Profiler() as prof, ResourceProfiler(dt=0.25) as rprof, CacheProfiler() as cprof, ProgressBar():
                 max_peak_pairs = max_peak_pairs.compute(num_workers=n_cpu, scheduler="processes")
                 max_int_pairs = max_int_pairs.compute(num_workers=n_cpu, scheduler="processes")
-            visualize([prof, rprof, cprof], filename=dask_profile_dir+"/agg_metrics_individual.html", show=False)
+            visualize([prof, rprof, cprof], filename=dask_profile_dir+"/agg_metrics_individual_local.html", show=False)
 
             pair_agg_metrics = max_peak_pairs.merge(max_int_pairs, on="source", how="outer")
             pair_agg_metrics = pair_agg_metrics.set_index("source")
@@ -352,12 +352,12 @@ def final_operations(
 
             with Profiler() as prof, ResourceProfiler(dt=0.25) as rprof, CacheProfiler() as cprof, ProgressBar():
                 measurement_pairs_df.to_parquet(pairs_dir, write_index=False, compute_kwargs=compute_args)
-            visualize([prof, rprof, cprof], filename=dask_profile_dir+"/save-pairs.html", show=False)
+            visualize([prof, rprof, cprof], filename=dask_profile_dir+"/save-pairs-local.html", show=False)
         except Exception as e:
             warnings.warn(f"str{e}; skip downcast int/float")
             with Profiler() as prof, ResourceProfiler(dt=0.25) as rprof, CacheProfiler() as cprof, ProgressBar():
                 measurement_pairs_df.to_parquet(pairs_dir, write_index=False, schema=o_schema, compute_kwargs=compute_args)
-            visualize([prof, rprof, cprof], filename=dask_profile_dir+"/save-pairs.html", show=False)
+            visualize([prof, rprof, cprof], filename=dask_profile_dir+"/save-pairs-local.html", show=False)
 
 
         # clear the temporary folder
