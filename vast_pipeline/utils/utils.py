@@ -379,7 +379,7 @@ def dict_merge(
 def timeStamped(fname, fmt="%Y-%m-%d-%H-%M-%S_{fname}"):
     return datetime.now().strftime(fmt).format(fname=fname)
 
-def calculate_n_partitions(df, n_cpu, partition_size_mb=100):
+def calculate_n_partitions(df, n_cpu, partition_size_mb=15):
     """
     This function will calculate how many partitions a dataframe should be
     split into.
