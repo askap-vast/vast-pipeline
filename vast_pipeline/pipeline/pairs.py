@@ -202,10 +202,10 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame, pairs_dir="./measuremen
     
     # with ms.sample("pair calculation"):
 
-    with ms.sample("pair calculation"), performance_report(filename=profile_dir+"/dask-pairs.html"):
+    with ms.sample("pair calculation"), performance_report(filename=profile_dir+"/dask-pairs-numba.html"):
         result.to_parquet(pairs_dir, write_index=False, overwrite=True, compute=True, engine="pyarrow", schema="infer")
     
     ms.plot()
-    plt.savefig(profile_dir + "/pairs_memory.png")
+    plt.savefig(profile_dir + "/pairs_memory_numba.png")
     
     return n_partitions, source_divisions

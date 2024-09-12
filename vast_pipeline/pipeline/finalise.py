@@ -194,13 +194,13 @@ def final_operations(
             pair_agg_metrics = dd.map_partitions(dd.merge, max_peak_pairs, max_int_pairs, on="source", how="outer", enforce_metadata=False, align_dataframes=False)
             pair_agg_metrics = pair_agg_metrics.set_index("source")
             
-            with ms.sample("agg_metrics"), performance_report(filename=dask_profile_dir+"/dask-agg-metrics.html"):
+            with ms.sample("agg_metrics"), performance_report(filename=dask_profile_dir+"/dask-agg-metrics-numba.html"):
                 pair_agg_metrics = pair_agg_metrics.compute()
             
         else:
-            with ms.sample("agg_metrics_peak"), performance_report(filename=dask_profile_dir+"/dask-agg-metrics-peak.html"):
+            with ms.sample("agg_metrics_peak"), performance_report(filename=dask_profile_dir+"/dask-agg-metrics-peak-numba.html"):
                 max_peak_pairs = max_peak_pairs.compute()
-            with ms.sample("agg_metrics_int"), performance_report(filename=dask_profile_dir+"/dask-agg-metrics-int.html"):
+            with ms.sample("agg_metrics_int"), performance_report(filename=dask_profile_dir+"/dask-agg-metrics-int-numba.html"):
                 max_int_pairs = max_int_pairs.compute()
             pair_agg_metrics = max_peak_pairs.merge(max_int_pairs, on="source", how="outer")
             pair_agg_metrics = pair_agg_metrics.set_index("source")
@@ -356,17 +356,17 @@ def final_operations(
             measurement_pairs_df = measurement_pairs_df.map_partitions(optimize_floats, enforce_metadata=False)
             measurement_pairs_df = measurement_pairs_df.map_partitions(optimize_ints, enforce_metadata=False)
 
-            with ms.sample("save_pairs"), performance_report(filename=dask_profile_dir+"/dask-save-pairs.html"):
+            with ms.sample("save_pairs"), performance_report(filename=dask_profile_dir+"/dask-save-pairs-numba.html"):
                 measurement_pairs_df.to_parquet(pairs_dir, write_index=False)
         except Exception as e:
             warnings.warn(f"str{e}; skip downcast int/float")
-            with ms.sample("save_pairs"), performance_report(filename=dask_profile_dir+"/dask-save-pairs.html"):
+            with ms.sample("save_pairs"), performance_report(filename=dask_profile_dir+"/dask-save-pairs-numba.html"):
                 measurement_pairs_df.to_parquet(pairs_dir, write_index=False, schema=o_schema)
 
 
         client.close()
         ms.plot()
-        plt.savefig(dask_profile_dir+"/pair_agg_save_memory.png")
+        plt.savefig(dask_profile_dir+"/pair_agg_save_memory_numba.png")
 
         # clear the temporary folder
         try:
