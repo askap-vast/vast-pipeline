@@ -9,6 +9,7 @@ from dask.distributed import Client, LocalCluster
 import shutil
 import warnings
 import pyarrow as pa
+from psutil import cpu_count
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -24,6 +25,8 @@ from vast_pipeline.pipeline.pairs import calculate_measurement_pair_metrics
 from vast_pipeline.pipeline.utils import parallel_groupby
 
 dask.config.set({'distributed.worker.multiprocessing-method': 'fork'})
+
+n_cpu = cpu_count() - 1
 
 logger = logging.getLogger(__name__)
 
@@ -160,8 +163,8 @@ def final_operations(
     # create measurement pairs, aka 2-epoch metrics
     if calculate_pairs:
         # setup dask client
-        cluster = LocalCluster()
-        # cluster = LocalCluster(n_workers=4, memory_limit="2GiB")
+        # cluster = LocalCluster()
+        cluster = LocalCluster(n_workers=n_cpu, memory_limit="3GiB")
         client = Client(cluster)
         print(client)
         url = client.dashboard_link
