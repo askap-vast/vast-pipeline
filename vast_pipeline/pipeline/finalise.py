@@ -208,7 +208,8 @@ def final_operations(
             pair_agg_metrics = max_peak_pairs.merge(max_int_pairs, on="source", how="outer")
             pair_agg_metrics = pair_agg_metrics.set_index("source")
         
-       
+        # restart all the workers
+        client.restart()
         # join with sources and replace agg metrics NaNs with 0 as the DataTables API JSON
         # serialization doesn't like them
         srcs_df = srcs_df.join(pair_agg_metrics).fillna(value={
