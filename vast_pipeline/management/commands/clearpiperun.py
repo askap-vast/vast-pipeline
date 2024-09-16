@@ -14,7 +14,7 @@ from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
 from ..helpers import get_p_run_name
 
 from ...utils.delete_run import delete_pipeline_run_raw_sql
-from memory_profiler import profile
+#from memory_profiler import profile
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +70,7 @@ class Command(BaseCommand):
             help='Flag to remove all the content of the pipeline run(s) folder.'
         )
 
-    @profile
+    #@profile
     def handle(self, *args, **options) -> None:
         """
         Handle function of the command.
@@ -89,13 +89,13 @@ class Command(BaseCommand):
         segment_times = {}  # Dictionary to store segment times
         segment_memory = {}  # Dictionary to store segment memory usage
 
-        def record_segment(name):
-            """ Helper function to record time and memory usage for segments. """
-            current_time = time.time()
-            current_memory = process.memory_info().rss
-            segment_times[name] = current_time - segment_start
-            segment_memory[name] = current_memory - segment_memory_start
-            return current_time, current_memory
+        #def record_segment(name):
+        #    """ Helper function to record time and memory usage for segments. """
+        #    current_time = time.time()
+        #    current_memory = process.memory_info().rss
+        #    segment_times[name] = current_time - segment_start
+        #    segment_memory[name] = current_memory - segment_memory_start
+        #    return current_time, current_memory
 
         # configure logging
         segment_start = time.time()
@@ -106,7 +106,7 @@ class Command(BaseCommand):
             root_logger.setLevel(logging.DEBUG)
             # set the traceback on
             options['traceback'] = True
-        record_segment('configure_logging')
+        #record_segment('configure_logging')
 
         segment_start = time.time()
         segment_memory_start = process.memory_info().rss
@@ -114,7 +114,7 @@ class Command(BaseCommand):
             raise CommandError(
                 '"--keep-parquets" flag is incompatible with "--remove-all" flag'
             )
-        record_segment('flag_check')
+        #record_segment('flag_check')
 
         piperuns = options['piperuns']
         flag_all_runs = True if 'clearall' in piperuns else False
@@ -124,7 +124,7 @@ class Command(BaseCommand):
         if flag_all_runs:
             logger.info('clearing all pipeline run in the database')
             piperuns = list(Run.objects.values_list('name', flat=True))
-        record_segment('run_list')
+        #record_segment('run_list')
 
         for piperun in piperuns:
             segment_start = time.time()
@@ -134,7 +134,7 @@ class Command(BaseCommand):
                 p_run = Run.objects.get(name=p_run_name)
             except Run.DoesNotExist:
                 raise CommandError(f'Pipeline run {p_run_name} does not exist')
-            record_segment('get_run')
+            #record_segment('get_run')
 
             segment_start = time.time()
             segment_memory_start = process.memory_info().rss
@@ -143,13 +143,13 @@ class Command(BaseCommand):
                 p_run.status = 'DEL'
                 p_run.save()
             delete_pipeline_run_raw_sql(p_run)
-            record_segment('delete_db')
+            #record_segment('delete_db')
 
             segment_start = time.time()
             segment_memory_start = process.memory_info().rss
             # remove forced measurements in db if presents
             forced_parquets = remove_forced_meas(p_run.path)
-            record_segment('remove_forced')
+            #record_segment('remove_forced')
 
             segment_start = time.time()
             segment_memory_start = process.memory_info().rss
@@ -168,7 +168,7 @@ class Command(BaseCommand):
                             f'Parquet file "{os.path.basename(parquet)}" not existent'
                         ))
                         pass
-            record_segment('delete_files')
+            #record_segment('delete_files')
 
             segment_start = time.time()
             segment_memory_start = process.memory_info().rss
@@ -181,7 +181,7 @@ class Command(BaseCommand):
                         f'Issues in removing run folder: {e}'
                     ))
                     pass
-            record_segment('remove_folder')
+            #record_segment('remove_folder')
 
         end_time = time.time()  # Record the end time
         end_memory = process.memory_info().rss  # Record the end memory usage
