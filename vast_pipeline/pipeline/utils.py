@@ -806,8 +806,7 @@ def get_rms_noise_image_values(rms_path: str) -> Tuple[float, float, float]:
     try:
         with open_fits(rms_path) as f:
             data = f[0].data
-            data = data[np.logical_not(np.isnan(data))]
-            data = data[data != 0]
+            data = data[np.isfinite(data) & (data >= 0.)]
             med_val = np.median(data) * 1e+3
             min_val = np.min(data) * 1e+3
             max_val = np.max(data) * 1e+3
