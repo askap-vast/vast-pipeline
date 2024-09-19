@@ -813,6 +813,7 @@ def get_rms_noise_image_values(rms_path: str) -> Tuple[float, float, float]:
             del data
     except Exception:
         raise IOError(f'Could not read this RMS FITS file: {rms_path}')
+    logger.debug('Image RMS Min: %.3g Max: %.3g Median: %.3g', min_val, max_val, med_val)
 
     return med_val, min_val, max_val
 
