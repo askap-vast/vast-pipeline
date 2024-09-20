@@ -34,8 +34,9 @@ def delete_pipeline_run_raw_sql(p_run):
         source_ids = cursor.fetchall()
 
         # Iterate over each source ID and delete related information
-        logger.info(f"Iterating over {len(source_ids)} sources to delete tags and relations")
-        for source_id_tuple in tqdm(source_ids):
+        n_source_ids = len(source_ids)
+        logger.info(f"Iterating over {n_source_ids} sources to delete tags and relations")
+        for i, source_id_tuple in enumerate(source_ids):
             source_id = source_id_tuple[0]
 
             # Delete entries from vast_pipeline_sourcefav for each source_id
@@ -64,6 +65,7 @@ def delete_pipeline_run_raw_sql(p_run):
 
             sql_cmd = f"DELETE FROM vast_pipeline_association WHERE source_id = {source_id};"
             _run_raw_sql(sql_cmd, cursor, log=True)
+            logger.debug(f"Finished {source_id} ({i} of {n_source_ids})")
 
         # Delete source
         sql_cmd = f"DELETE FROM vast_pipeline_source WHERE run_id = {p_run_id};"
