@@ -386,18 +386,15 @@ class PipelineConfig:
             for input_type in inputs.keys()
         }
         # map input type to total number of files from all epochs
-        n_files_by_input_type = {}
+        n_files_by_input_type: Dict[str, int] = {}
+        epoch_n_files: Dict[str, Dict[str, int]] = {}
+        n_files = 0
         for input_type, epochs_set in epochs_by_input_type.items():
+            epoch_n_files[input_type] = {}
             n_files_by_input_type[input_type] = 0
             for epoch in epochs_set:
-                n_files_by_input_type[input_type] += len(inputs[input_type][epoch])
-        n_files = 0  # total number of input files
-        # map input type to a mapping of epoch to file count
-        epoch_n_files: Dict[str, Dict[str, int]] = {}
-        for input_type in inputs.keys():
-            epoch_n_files[input_type] = {}
-            for epoch in inputs[input_type].keys():
                 n = len(inputs[input_type][epoch])
+                n_files_by_input_type[input_type] += n
                 epoch_n_files[input_type][epoch] = n
                 n_files += n
 
