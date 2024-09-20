@@ -123,7 +123,7 @@ def delete_pipeline_run_raw_sql(p_run):
         n_sky_ids = len(sky_ids)
         logger.info(f"Iterating over {n_sky_ids} skyregion IDs to delete skyregions")
         timer.reset()
-        for sky_id_tuple in tqdm(sky_ids):
+        for sky_id_tuple in sky_ids:
             sky_id = sky_id_tuple[0]
             sql_cmd = f"DELETE FROM vast_pipeline_skyregion_run WHERE skyregion_id = {sky_id} AND run_id = {p_run_id};"
             _run_raw_sql(sql_cmd, cursor, log=True)
