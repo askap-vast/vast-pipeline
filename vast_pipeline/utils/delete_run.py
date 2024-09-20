@@ -69,7 +69,7 @@ def delete_pipeline_run_raw_sql(p_run):
             
             if i % 1000 == 0:
                 logger.info(f"Finished {source_id} ({i} of {n_source_ids})")
-        logger.info(f"Time to iterate over {n_source_ids}: {timer.reset()}")
+        logger.info(f"Time to iterate over {n_source_ids} source ids: {timer.reset()}")
 
         # Delete source
         sql_cmd = f"DELETE FROM vast_pipeline_source WHERE run_id = {p_run_id};"
@@ -112,7 +112,7 @@ def delete_pipeline_run_raw_sql(p_run):
                 print(e, image_id)
                 print("++++++++++++++++++++++++++++++++")
                 pass
-        logger.info(f"Time to iterate over {n_image_ids}: {timer.reset()}")
+        logger.info(f"Time to iterate over {n_image_ids} image ids: {timer.reset()}")
 
         # Fetch skyregion IDs associated with the pipeline run
         sql_cmd = f"SELECT skyregion_id FROM vast_pipeline_skyregion_run WHERE run_id = {p_run_id};"
@@ -135,7 +135,7 @@ def delete_pipeline_run_raw_sql(p_run):
                 print(e, sky_id)
                 print("++++++++++++++++++++++++++++++++")
                 pass
-        logger.info(f"Time to iterate over {n_sky_ids}: {timer.reset()}")
+        logger.info(f"Time to iterate over {n_sky_ids} sky ids: {timer.reset()}")
 
         # Finally delete the pipeline run
         sql_cmd = f"DELETE FROM vast_pipeline_run WHERE id = {p_run_id};"
