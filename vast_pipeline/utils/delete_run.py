@@ -41,31 +41,33 @@ def delete_pipeline_run_raw_sql(p_run):
 
             # Delete entries from vast_pipeline_sourcefav for each source_id
             sql_cmd = f"DELETE FROM vast_pipeline_sourcefav WHERE source_id = {source_id};"
-            _run_raw_sql(sql_cmd, cursor, log=True)
+            _run_raw_sql(sql_cmd, cursor, log=False)
 
             # Find source tags related to the source and delete them
             sql_cmd = f"SELECT tagulous_source_tags_id FROM vast_pipeline_source_tags WHERE source_id = {source_id};"
-            _run_raw_sql(sql_cmd, cursor, log=True)
+            _run_raw_sql(sql_cmd, cursor, log=False)
             tagulous_source_tags_ids = cursor.fetchall()
 
             for tagulous_source_tags_id_tuple in tagulous_source_tags_ids:
                 tagulous_source_tags_id = tagulous_source_tags_id_tuple[0]
                 sql_cmd = f"DELETE FROM vast_pipeline_tagulous_source_tags WHERE id = {tagulous_source_tags_id};"
-                _run_raw_sql(sql_cmd, cursor, log=True)
+                _run_raw_sql(sql_cmd, cursor, log=False)
 
             # Delete from vast_pipeline_source_tags for the source_id
             sql_cmd = f"DELETE FROM vast_pipeline_source_tags WHERE source_id = {source_id};"
-            _run_raw_sql(sql_cmd, cursor, log=True)
+            _run_raw_sql(sql_cmd, cursor, log=False)
 
             # Delete from related source
             sql_cmd = f"DELETE FROM vast_pipeline_relatedsource WHERE from_source_id = {source_id};"
-            _run_raw_sql(sql_cmd, cursor, log=True)
+            _run_raw_sql(sql_cmd, cursor, log=False)
             sql_cmd = f"DELETE FROM vast_pipeline_relatedsource WHERE to_source_id = {source_id};"
-            _run_raw_sql(sql_cmd, cursor, log=True)
+            _run_raw_sql(sql_cmd, cursor, log=False)
 
             sql_cmd = f"DELETE FROM vast_pipeline_association WHERE source_id = {source_id};"
-            _run_raw_sql(sql_cmd, cursor, log=True)
-            logger.debug(f"Finished {source_id} ({i} of {n_source_ids})")
+            _run_raw_sql(sql_cmd, cursor, log=False)
+            
+            if i % 10000 == 0:
+                logger.debug(f"Finished {source_id} ({i} of {n_source_ids})")
 
         # Delete source
         sql_cmd = f"DELETE FROM vast_pipeline_source WHERE run_id = {p_run_id};"
@@ -85,8 +87,9 @@ def delete_pipeline_run_raw_sql(p_run):
         image_ids = cursor.fetchall()
 
         # Iterate over each image ID and delete related information
-        logger.info(f"Iterating over {len(image_ids)} images to delete measurements and images")
-        for image_id_tuple in tqdm(image_ids):
+        n_image_ids = len(image_ids)
+        logger.info(f"Iterating over {n_image_ids} images to delete measurements and images")
+        for image_id_tuple in image_ids:
             image_id = image_id_tuple[0]
             try:
                 sql_cmd = f"DELETE FROM vast_pipeline_measurement WHERE image_id = {image_id};"
@@ -113,7 +116,8 @@ def delete_pipeline_run_raw_sql(p_run):
         sky_ids = cursor.fetchall()
 
         # Iterate over each skyregion ID and delete related information
-        logger.info(f"Iterating over {len(sky_ids)} skyregion IDs to delete skyregions")
+        n_sky_ids = len(sky_ids)
+        logger.info(f"Iterating over {n_sky_ids} skyregion IDs to delete skyregions")
         for sky_id_tuple in tqdm(sky_ids):
             sky_id = sky_id_tuple[0]
             sql_cmd = f"DELETE FROM vast_pipeline_skyregion_run WHERE skyregion_id = {sky_id} AND run_id = {p_run_id};"
