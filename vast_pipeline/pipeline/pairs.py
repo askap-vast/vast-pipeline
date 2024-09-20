@@ -15,6 +15,8 @@ import matplotlib.pyplot as plt
 
 
 logger = logging.getLogger(__name__)
+# disable font manager logger
+logging.getLogger('matplotlib.font_manager').disabled = True
 
 ms = MemorySampler()
 
