@@ -25,8 +25,8 @@ def delete_pipeline_run_raw_sql(p_run):
         #_run_raw_sql(sql_cmd, cursor)
         
         # Disable triggers
-        #isql_cmd = "ALTER TABLE vast_pipeline_source DISABLE TRIGGER ALL;"
-        #_run_raw_sql(sql_cmd, cursor)
+        sql_cmd = "ALTER TABLE vast_pipeline_source DISABLE TRIGGER ALL;"
+        _run_raw_sql(sql_cmd, cursor)
         
         # Fetch source IDs associated with the pipeline run
         sql_cmd = f"SELECT id FROM vast_pipeline_source WHERE run_id = {p_run_id};"
@@ -76,8 +76,8 @@ def delete_pipeline_run_raw_sql(p_run):
         _run_raw_sql(sql_cmd, cursor)
         
         # Enable triggers
-        #sql_cmd = "ALTER TABLE vast_pipeline_source ENABLE TRIGGER ALL;"
-        #_run_raw_sql(sql_cmd, cursor)
+        sql_cmd = "ALTER TABLE vast_pipeline_source ENABLE TRIGGER ALL;"
+        _run_raw_sql(sql_cmd, cursor)
 
         # Delete comments
         sql_cmd = f"DELETE FROM vast_pipeline_comment WHERE object_id = {p_run_id};"
