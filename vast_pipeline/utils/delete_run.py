@@ -1,7 +1,7 @@
 import logging
 
 from django.db import connection
-from tqdm import tqdm
+from vast_pipeline.utils.utils import StopWatch
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +36,7 @@ def delete_pipeline_run_raw_sql(p_run):
         # Iterate over each source ID and delete related information
         n_source_ids = len(source_ids)
         logger.info(f"Iterating over {n_source_ids} sources to delete tags and relations")
+        timer = StopWatch()
         for i, source_id_tuple in enumerate(source_ids):
             source_id = source_id_tuple[0]
 
@@ -66,8 +67,9 @@ def delete_pipeline_run_raw_sql(p_run):
             sql_cmd = f"DELETE FROM vast_pipeline_association WHERE source_id = {source_id};"
             _run_raw_sql(sql_cmd, cursor, log=False)
             
-            if i % 10000 == 0:
-                logger.debug(f"Finished {source_id} ({i} of {n_source_ids})")
+            if i % 1000 == 0:
+                logger.info(f"Finished {source_id} ({i} of {n_source_ids})")
+        logger.info(f"Time to iterate over {n_source_ids}: {timer.reset()}")
 
         # Delete source
         sql_cmd = f"DELETE FROM vast_pipeline_source WHERE run_id = {p_run_id};"
@@ -89,6 +91,7 @@ def delete_pipeline_run_raw_sql(p_run):
         # Iterate over each image ID and delete related information
         n_image_ids = len(image_ids)
         logger.info(f"Iterating over {n_image_ids} images to delete measurements and images")
+        timer.reset()
         for image_id_tuple in image_ids:
             image_id = image_id_tuple[0]
             try:
@@ -109,6 +112,7 @@ def delete_pipeline_run_raw_sql(p_run):
                 print(e, image_id)
                 print("++++++++++++++++++++++++++++++++")
                 pass
+        logger.info(f"Time to iterate over {n_image_ids}: {timer.reset()}")
 
         # Fetch skyregion IDs associated with the pipeline run
         sql_cmd = f"SELECT skyregion_id FROM vast_pipeline_skyregion_run WHERE run_id = {p_run_id};"
@@ -118,6 +122,7 @@ def delete_pipeline_run_raw_sql(p_run):
         # Iterate over each skyregion ID and delete related information
         n_sky_ids = len(sky_ids)
         logger.info(f"Iterating over {n_sky_ids} skyregion IDs to delete skyregions")
+        timer.reset()
         for sky_id_tuple in tqdm(sky_ids):
             sky_id = sky_id_tuple[0]
             sql_cmd = f"DELETE FROM vast_pipeline_skyregion_run WHERE skyregion_id = {sky_id} AND run_id = {p_run_id};"
@@ -130,6 +135,7 @@ def delete_pipeline_run_raw_sql(p_run):
                 print(e, sky_id)
                 print("++++++++++++++++++++++++++++++++")
                 pass
+        logger.info(f"Time to iterate over {n_sky_ids}: {timer.reset()}")
 
         # Finally delete the pipeline run
         sql_cmd = f"DELETE FROM vast_pipeline_run WHERE id = {p_run_id};"
