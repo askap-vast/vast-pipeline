@@ -156,6 +156,8 @@ class PipelineConfig:
             raise PipelineConfigError(e)
 
         # detect simple list inputs and convert them to epoch-mode inputs
+        yaml_inputs = self._yaml["inputs"]
+        inputs = yaml_inputs.data
         for input_file_type in self._REQUIRED_INPUT_TYPES:
             # skip missing optional input types, e.g. background
             if (
@@ -164,7 +166,7 @@ class PipelineConfig:
             ):
                 continue
 
-            input_files = self["inputs"][input_file_type]
+            input_files = inputs[input_file_type]
 
             # resolve glob expressions if present
             if isinstance(input_files, dict):
@@ -173,11 +175,9 @@ class PipelineConfig:
                     # resolve the glob expressions
                     self.epoch_based = False
                     file_list = self._resolve_glob_expressions(
-                        self._yaml["inputs"][input_file_type]
+                        yaml_inputs[input_file_type]
                     )
-                    self._yaml["inputs"][input_file_type] = self._create_input_epochs(
-                        file_list
-                    )
+                    inputs[input_file_type] = self._create_input_epochs(file_list)
                 else:
                     # epoch-mode with either a list of files or glob expressions
                     self.epoch_based = True
@@ -185,16 +185,17 @@ class PipelineConfig:
                         if "glob" in input_files[epoch]:
                             # resolve the glob expressions
                             file_list = self._resolve_glob_expressions(
-                                self._yaml["inputs"][input_file_type][epoch]
+                                yaml_inputs[input_file_type][epoch]
                             )
-                            self._yaml["inputs"][input_file_type][epoch] = file_list
+                            inputs[input_file_type][epoch] = file_list
             else:
                 # Epoch-based association not requested and no globs present. Replace
                 # input lists with dicts where each input file has it's own epoch.
                 self.epoch_based = False
-                self._yaml["inputs"][input_file_type] = self._create_input_epochs(
+                inputs[input_file_type] = self._create_input_epochs(
                     input_files
                 )
+        self._yaml["inputs"] = inputs
 
     def __getitem__(self, name: str):
         """Retrieves the requested YAML chunk as a native Python object."""
