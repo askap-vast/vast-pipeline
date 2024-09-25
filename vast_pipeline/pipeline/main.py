@@ -92,22 +92,23 @@ class Pipeline():
         Returns:
             None
         """
-        for key in sorted(self.config["inputs"]["image"].keys()):
+        inputs = self.config["inputs"]
+        for key in sorted(inputs["image"].keys()):
             for x, y in zip(
-                self.config["inputs"]["image"][key],
-                self.config["inputs"]["selavy"][key],
+                inputs["image"][key],
+                inputs["selavy"][key],
             ):
                 self.img_paths["selavy"][x] = y
                 self.img_epochs[os.path.basename(x)] = key
             for x, y in zip(
-                self.config["inputs"]["image"][key],
-                self.config["inputs"]["noise"][key]
+                inputs["image"][key],
+                inputs["noise"][key]
             ):
                 self.img_paths["noise"][x] = y
             if "background" in self.config["inputs"]:
                 for x, y in zip(
-                    self.config["inputs"]["image"][key],
-                    self.config["inputs"]["background"][key],
+                    inputs["image"][key],
+                    inputs["background"][key],
                 ):
                     self.img_paths["background"][x] = y
 

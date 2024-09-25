@@ -83,6 +83,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Optimise YAML config parsing [#754](https://github.com/askap-vast/vast-pipeline/pull/754)
 - Fixed mkdocs serving issues [#728](https://github.com/askap-vast/vast-pipeline/pull/728)
 - Fixed python 3.9 testing failing on github actions [#728](https://github.com/askap-vast/vast-pipeline/pull/728)
 - Updated github action syntax to correctly call docker compose [#736](https://github.com/askap-vast/vast-pipeline/pull/736)
@@ -127,6 +128,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#754](https://github.com/askap-vast/vast-pipeline/pull/754): fix: Optimise YAML config parsing
 - [#725](https://github.com/askap-vast/vast-pipeline/pull/725): feat: Added further memory usage and timing debug logging 
 - [#740](https://github.com/askap-vast/vast-pipeline/pull/740): feat: Add support for python 3.10
 - [#728](https://github.com/askap-vast/vast-pipeline/pull/728): fix: Adjust package versions and fix mkdocs serve issues
