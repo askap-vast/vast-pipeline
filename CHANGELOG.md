@@ -83,7 +83,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
-- Fixed noise image statistics [#755](https://github.com/askap-vast/vast-pipeline/pull/755)
+- Fixed handling of NaNs and negatives in noise image statistics [#755](https://github.com/askap-vast/vast-pipeline/pull/755)
 - Optimise YAML config parsing [#754](https://github.com/askap-vast/vast-pipeline/pull/754)
 - Fixed mkdocs serving issues [#728](https://github.com/askap-vast/vast-pipeline/pull/728)
 - Fixed python 3.9 testing failing on github actions [#728](https://github.com/askap-vast/vast-pipeline/pull/728)
