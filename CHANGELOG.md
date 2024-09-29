@@ -129,7 +129,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
-- [#755](https://github.com/askap-vast/vast-pipeline/pull/755): fix: Fixed noise image statistics
+- [#755](https://github.com/askap-vast/vast-pipeline/pull/755): fix: Fixed handling of NaNs and negatives in noise image statistics
 - [#754](https://github.com/askap-vast/vast-pipeline/pull/754): fix: Optimise YAML config parsing
 - [#725](https://github.com/askap-vast/vast-pipeline/pull/725): feat: Added further memory usage and timing debug logging 
 - [#740](https://github.com/askap-vast/vast-pipeline/pull/740): feat: Add support for python 3.10
