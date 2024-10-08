@@ -57,9 +57,9 @@ def get_create_skyreg(image: Image, radius: float = 10.) -> SkyRegion:
     # Get SkyRegions and image radii areas within `radius` arcsec
     radius_deg = radius/3600.
     skyregions = SkyRegion.objects.cone_search(
-        ra=image.ra,
-        dec=image.dec,
-        radius_deg=radius_deg
+        ra=float(image.ra),
+        dec=float(image.dec),
+        radius_deg=float(radius_deg)
     ).filter(
         xtr_radius__range=(
             image.fov_bmin - radius_deg/2.,
