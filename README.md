@@ -17,7 +17,7 @@ If using this tool in your research, please cite Murphy, et al. (2021).
 ## Features
 
 * Code base in `Python 3.8+`
-* Source association/manipulations using `Astropy4+` and `Pandas1+` dataframe
+* Source association/manipulations using `Astropy5+` and `Pandas1+` dataframe
 * Association methods: basic (`Astropy` crossmatch), advanced (search with a fixed distance), De Ruiter
 * Flagging of "New Source" and "Related Source"
 * Forced Extraction (Monitor) backward and forward in time
@@ -33,20 +33,26 @@ If using this tool in your research, please cite Murphy, et al. (2021).
 
 ## Contributors
 
-* Sergio Pintaldi – [Sydney Informatics Hub](https://informatics.sydney.edu.au)
+### Active
+* Dougal Dobie – [Sydney Institute for Astronomy](https://sifa.sydney.edu.au/) and [OzGrav](https://www.ozgrav.org)
+* Tom Mauch – [Sydney Informatics Hub](https://informatics.sydney.edu.au)
 * Adam Stewart – [Sydney Institute for Astronomy](https://sifa.sydney.edu.au/)
+
+### Former
+* Sergio Pintaldi – [Sydney Informatics Hub](https://informatics.sydney.edu.au)
 * Andrew O'Brien – [Department of Physics, University of Wisconsin-Milwaukee](https://uwm.edu/physics/research/astronomy-gravitation-cosmology/)
 * Tara Murphy – [Sydney Institute for Astronomy](https://sifa.sydney.edu.au/)
 * David Kaplan – [Department of Physics, University of Wisconsin-Milwaukee](https://uwm.edu/physics/research/astronomy-gravitation-cosmology/)
-* Shibli Saleheen – [ADACS](https://adacs.org.au/who-we-are/our-team/)
-* David Liptai – [ADACS](https://adacs.org.au/who-we-are/our-team/)
-* Ella Xi Wang – [ADACS](https://adacs.org.au/who-we-are/our-team/)
+* Shibli Saleheen – [ADACS](https://adacs.org.au/)
+* David Liptai – [ADACS](https://adacs.org.au/)
+* Ella Xi Wang – [ADACS](https://adacs.org.au/)
 
 ## Acknowledgements
 
 The VAST Pipeline development was supported by:
 
 * The Australian Research Council through grants FT150100099 and DP190100561.
+* The Australian Research Council Centre of Excellence for Gravitational Wave Discovery (OzGrav), project numbers CE170100004 and CE230100016.
 * The Sydney Informatics Hub (SIH), a core research facility at the University of Sydney.
 * Software support resources awarded under the Astronomy Data and Computing Services (ADACS) Merit Allocation Program. ADACS is funded from the Astronomy National Collaborative Research Infrastructure Strategy (NCRIS) allocation provided by the Australian Government and managed by Astronomy Australia Limited (AAL).
 * NSF grant AST-1816492.

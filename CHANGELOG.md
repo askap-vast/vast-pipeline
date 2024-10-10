@@ -45,6 +45,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Updated README.md [#758](https://github.com/askap-vast/vast-pipeline/pull/758)
 - Force dask<2022.4.2, numpy<1.23, param<2.0 [#728](https://github.com/askap-vast/vast-pipeline/pull/728)
 - Bumped versions for github actions packages [#728](https://github.com/askap-vast/vast-pipeline/pull/728)
 - Changed pipeline.new_sources.parallel_get_rms_measurements to drop all but one RMS measurmeents [#730](https://github.com/askap-vast/vast-pipeline/pull/730)
@@ -129,6 +130,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#758](https://github.com/askap-vast/vast-pipeline/pull/758): docs: Updated README.md 
 - [#755](https://github.com/askap-vast/vast-pipeline/pull/755): fix: Fixed handling of NaNs and negatives in noise image statistics
 - [#754](https://github.com/askap-vast/vast-pipeline/pull/754): fix: Optimise YAML config parsing
 - [#725](https://github.com/askap-vast/vast-pipeline/pull/725): feat: Added further memory usage and timing debug logging 
