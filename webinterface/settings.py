@@ -143,6 +143,9 @@ SOCIAL_AUTH_GITHUB_ORG_SCOPE = ['read:org', 'user:email']
 
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
+TNS_API_KEY = env('TNS_API_KEY', default=None)
+TNS_USER_AGENT = env('TNS_USER_AGENT', default=None)
+
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
@@ -162,7 +165,7 @@ CACHES = {
 Q_CLUSTER = {
     'name': 'VastPipeline',
     'workers': 3,
-    'timeout': 86400,
+    'timeout': env('Q_CLUSTER_TIMEOUT', cast=int, default=86400),
     'queue_limit': 6,
     'ack_failures': True,
     'bulk': 10,
@@ -170,7 +173,8 @@ Q_CLUSTER = {
     'label': 'Django Q tasks',
     'daemonize_workers': False,
     'recycle': 100,
-    'retry': 86402
+    'retry': env('Q_CLUSTER_RETRY', cast=int, default=86402),
+    'max_attempts': env('Q_CLUSTER_MAX_ATTEMPTS', cast=int, default=1),
 }
 
 # REST framework settings
@@ -283,7 +287,10 @@ RAW_IMAGE_DIR = env('RAW_IMAGE_DIR', cast=str, default=os.path.join(BASE_DIR, 'r
 if '/' not in RAW_IMAGE_DIR:
     RAW_IMAGE_DIR = os.path.join(BASE_DIR, RAW_IMAGE_DIR)
 
-# extra user-supplied data folder, relative to the user's home directory on the deployment machine
+# extra user-supplied data folder
+# HOME_DATA_DIR is relative to HOME_DATA_ROOT if HOME_DATA_ROOT is not None
+# otherwise, HOME_DATA_DIR is relative to the user's home directory on the deployment machine
+HOME_DATA_ROOT = env('HOME_DATA_ROOT', default=None)
 HOME_DATA_DIR = env('HOME_DATA_DIR', cast=str, default='vast-pipeline-extra-data')
 
 # allowed source finders
@@ -327,6 +334,7 @@ PIPE_RUN_CONFIG_DEFAULTS = {
     'selavy_local_rms_zero_fill_value': 0.2,
     'create_measurements_arrow_files': False,
     'suppress_astropy_warnings': True,
+    'pair_metrics': True,
     'source_aggregate_pair_metrics_min_abs_vs': 4.3,
 }
 
@@ -336,5 +344,11 @@ MAX_PIPELINE_RUNS = env('MAX_PIPELINE_RUNS', cast=int, default=3)
 # maximum number of images for non-admin runs
 MAX_PIPERUN_IMAGES = env('MAX_PIPERUN_IMAGES', cast=int, default=200)
 
+# maximum number of cutout images to render on the source detail page
+MAX_CUTOUT_IMAGES = env('MAX_CUTOUT_IMAGES', cast=int, default=30)
+
 # pipeline maintainance message/banner
 PIPELINE_MAINTAINANCE_MESSAGE = env('PIPELINE_MAINTAINANCE_MESSAGE', cast=str, default=None)
+
+# web server eta v plot datashader threshold
+ETA_V_DATASHADER_THRESHOLD = env('ETA_V_DATASHADER_THRESHOLD', cast=int, default=20000)

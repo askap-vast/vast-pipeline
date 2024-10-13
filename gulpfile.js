@@ -105,6 +105,7 @@ function js9Config(bc) {
     "wcs",
     "zoom"
   ]
+  js9Config.globalOpts.updateTitlebar = false
   js9Config.textColorOpts = { "info": "#000064" }
 
   let outConfig = 'var JS9Prefs = ' + JSON.stringify(js9Config)
@@ -129,13 +130,18 @@ function js9MoveGif() {
 }
 
 function js9FixStaticUrl(bc) {
-  const result = require('dotenv').config({ 'path': './webinterface/.env' })
-  if (result.error) {
-    throw result.error
+  // If STATIC_URL isn't in the env, load it from the .env file. We also need BASE_URL
+  // but since it's optional it may not be set.
+  if (process.env.STATIC_URL === undefined) {
+    const result = require('dotenv').config({ 'path': './webinterface/.env' })
+    // note that .config automatically copies the env vars to process.env
+    if (result.error) {
+      throw result.error
+    }
   }
-  let base_url = result.parsed.BASE_URL || null,
-    static_url = result.parsed.STATIC_URL || '/static/',
-    fileContent = fs.readFileSync(paths.js9Target + '/js9prefs.js', 'utf8')
+  let base_url = process.env.BASE_URL || null
+  let static_url = process.env.STATIC_URL || '/static/'
+  let fileContent = fs.readFileSync(paths.js9Target + '/js9prefs.js', 'utf8')
   let serving_url = (base_url) ? '/' + base_url.split('/').join('') + '/' + static_url.split('/').join('') + '/' : static_url
   return fs.writeFile(
     paths.js9Target + '/js9prefs.js',
@@ -168,7 +174,7 @@ function clean() {
 
 // Bring third party dependencies from node_modules into vendor directory
 function modules() {
-  // Bootstrap JS 
+  // Bootstrap JS
   var bootstrapJS = gulp.src('./node_modules/startbootstrap-sb-admin-2/vendor/bootstrap/js/*')
     .pipe(gulp.dest(paths.vendor + '/bootstrap/js'));
 
@@ -180,6 +186,8 @@ function modules() {
 
   // Bokeh
   var bokehJS = gulp.src('./node_modules/@bokeh/bokehjs/build/js/bokeh.min.js')
+    .pipe(gulp.dest(paths.vendor + '/bokehjs'));
+  var bokehJSwidgets = gulp.src('./node_modules/@bokeh/bokehjs/build/js/bokeh-widgets.min.js')
     .pipe(gulp.dest(paths.vendor + '/bokehjs'));
 
   // SB Admin 2 Bootstrap template
@@ -258,7 +266,7 @@ function modules() {
   var prismJsLineNumCss = gulp.src('./node_modules/prismjs/plugins/line-numbers/prism-line-numbers.css')
     .pipe(gulp.dest(paths.vendor + '/prismjs/line-numbers'));
 
-  return merge(bootstrapJS, bootstrapSbAdmin2, bootstrap4toggle, bokehJS, dataTables, dataTablesButtons, fontAwesome, jquery, jqueryEasing, jszip, d3Celestial, d3CelestialData, d3CelestialImage, particlesJs, prismJs, prismJsYaml, prismJsLineNum, prismJsCss, prismJsLineNumCss);
+  return merge(bootstrapJS, bootstrapSbAdmin2, bootstrap4toggle, bokehJS, bokehJSwidgets, dataTables, dataTablesButtons, fontAwesome, jquery, jqueryEasing, jszip, d3Celestial, d3CelestialData, d3CelestialImage, particlesJs, prismJs, prismJsYaml, prismJsLineNum, prismJsCss, prismJsLineNumCss);
 }
 
 // SCSS task

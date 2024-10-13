@@ -2,9 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), with an added `List of PRs` section and links to the relevant PRs on the individal updates. This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), with an added `List of PRs` section and links to the relevant PRs on the individual updates. This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/v1.0.0...HEAD)
+## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/v1.1.0...HEAD)
 
 #### Added
 
@@ -15,6 +15,199 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### Removed
 
 #### List of PRs
+
+## [1.1.0](https://github.com/askap-vast/vast-pipeline/releases/v1.1.0) (2024-10-14)
+
+#### Added
+
+- Added further memory usage and timing debug logging [#725](https://github.com/askap-vast/vast-pipeline/pull/725)
+- Add support for python 3.10 [#740](https://github.com/askap-vast/vast-pipeline/pull/740)
+- Added support calculate_n_partitions for sensible dask dataframe partitioning [#724](https://github.com/askap-vast/vast-pipeline/pull/724)
+- Added support for compressed FITS files [#694](https://github.com/askap-vast/vast-pipeline/pull/694)
+- Added links to Data Central DAS and the Fink Broker to the source page [#697](https://github.com/askap-vast/vast-pipeline/pull/697/)
+- Added `n_new_sources` column to run model to store the number of new sources in a pipeline run [#676](https://github.com/askap-vast/vast-pipeline/pull/676).
+- Added `MAX_CUTOUT_IMAGES` to the pipeline settings to limit the number of postage stamps displayed on the source detail page [#658](https://github.com/askap-vast/vast-pipeline/pull/658).
+- Added run config option to skip calculating measurement pair metrics [#655](https://github.com/askap-vast/vast-pipeline/pull/655).
+- Added support for Python 3.10 [#641](https://github.com/askap-vast/vast-pipeline/pull/641).
+- Added documentation versioning [#627](https://github.com/askap-vast/vast-pipeline/pull/627).
+- Added a ZTF cone search button on the source detail page [#626](https://github.com/askap-vast/vast-pipeline/pull/626).
+- Added the 0-based index of each measurement to the image cutout card headers [#625](https://github.com/askap-vast/vast-pipeline/pull/625).
+- Added Bokeh hover tooltip to measurement pair graph to display pair metrics [#625](https://github.com/askap-vast/vast-pipeline/pull/625).
+- Added new VAST surveys (13-21) to the Aladin Lite panel [#622](https://github.com/askap-vast/vast-pipeline/pull/622).
+- Added eta-V plot analysis page along with documentation [#586](https://github.com/askap-vast/vast-pipeline/pull/586).
+- Added thumbnails to light curve tooltips [#586](https://github.com/askap-vast/vast-pipeline/pull/586).
+- Added logfile dropdown selection to run detail page [#595](https://github.com/askap-vast/vast-pipeline/pull/595).
+- Added datetime stamps to all log files [#595](https://github.com/askap-vast/vast-pipeline/pull/595).
+- Added new log files for arrow file creation and restore run and added to run detail page [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
+- Added restore run test [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
+- Added new run status of `DEL`, `Deleting` [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
+- Added documentation pages on new action buttons [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
+- Added UI action buttons to run-detail page to allow arrow file generation, deletion and restoration [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
+- Added try-except error capture on pre-run checks to correctly assign pipeline run as failed if an error occurs [#576](https://github.com/askap-vast/vast-pipeline/pull/576).
+- Added support for ingesting Selavy catalogues in VOTable (XML) and CSV format [#565](https://github.com/askap-vast/vast-pipeline/pull/565)
+- Added new commands: `initingest` and `ingestimages` [#544](https://github.com/askap-vast/vast-pipeline/pull/544)
+- Added documentation on the data required to run the pipeline [#572](https://github.com/askap-vast/vast-pipeline/pull/572).
+- Added support for ingesting Selavy catalogues in VOTable (XML) and CSV format [#565](https://github.com/askap-vast/vast-pipeline/pull/565).
+- Added new commands: `initingest` and `ingestimages` [#544](https://github.com/askap-vast/vast-pipeline/pull/544).
+- Added TNS cone search to the external search results on the source detail page [#557](https://github.com/askap-vast/vast-pipeline/pull/557).
+- Added `HOME_DATA_ROOT` to the pipeline settings to override the OS default home directory location [#559](https://github.com/askap-vast/vast-pipeline/pull/559).
+- Added processing spinner to source query table [#551](https://github.com/askap-vast/vast-pipeline/pull/551).
+- Added `site_url` to the mkdocs config so static asset URLs have the correct base URL [#543](https://github.com/askap-vast/vast-pipeline/pull/543).
+- Added basic linter to CI/CD [#546](https://github.com/askap-vast/vast-pipeline/pull/546)
+
+#### Changed
+
+- Force dask<2022.4.2, numpy<1.23, param<2.0 [#728](https://github.com/askap-vast/vast-pipeline/pull/728)
+- Bumped versions for github actions packages [#728](https://github.com/askap-vast/vast-pipeline/pull/728)
+- Changed pipeline.new_sources.parallel_get_rms_measurements to drop all but one RMS measurmeents [#730](https://github.com/askap-vast/vast-pipeline/pull/730)
+- Use chunks for associations upload [#726](https://github.com/askap-vast/vast-pipeline/pull/726)
+- Updated all FITS loading to use a wrapper that can handle compressed FITS files [#694](https://github.com/askap-vast/vast-pipeline/pull/694)
+- Downgrade ci-docs to python 3.8 [#702](https://github.com/askap-vast/vast-pipeline/pull/702)
+- Update Gr1N poetry to v8, force python 3.8.10 [#701](https://github.com/askap-vast/vast-pipeline/pull/701)
+- Updated path to test data in github actions and docs [#699](https://github.com/askap-vast/vast-pipeline/pull/699)
+- Changed GitHub actions test suite to install pipeline via poetry [#699](https://github.com/askap-vast/vast-pipeline/pull/699).
+- Updated GitHub actions ubuntu version to 20.04 [#699](https://github.com/askap-vast/vast-pipeline/pull/699).
+- Removed python 3.10 testing from GitHub actions [#699](https://github.com/askap-vast/vast-pipeline/pull/699).
+- Updated GitHub actions Gr1N/setup-poetry to v7 [#665](https://github.com/askap-vast/vast-pipeline/pull/665).
+- Changed lightcurve plot cursor hit-test mode from "vline" to "mouse" to avoid a regression in Bokeh [#652](https://github.com/askap-vast/vast-pipeline/pull/652).
+- Updated Bokeh from v2.3.3 to v2.4.2 [#652](https://github.com/askap-vast/vast-pipeline/pull/652).
+- Source query results table is no longer populated by default, a query must be submitted first [#638](https://github.com/askap-vast/vast-pipeline/pull/638).
+- Bumped major versions of astropy (5.0) and pyarrow (7.0) [#641](https://github.com/askap-vast/vast-pipeline/pull/641).
+- Addressed future pandas append deprecation, migrated all uses to pd.concat [#643](https://github.com/askap-vast/vast-pipeline/pull/643).
+- Bumped all documentation dependancies to latest versions (incl. mkdocs-material minimum 8.2.4) [#627](https://github.com/askap-vast/vast-pipeline/pull/627).
+- Changed GitHub workflows for new documentation versioning [#627](https://github.com/askap-vast/vast-pipeline/pull/627).
+- Bumped Jinja2 to 3.0.3 to fix a Markupsafe error caused by a removed function [#634](https://github.com/askap-vast/vast-pipeline/pull/634).
+- Dependancies updated using npm audit fix (non-breaking) [#620](https://github.com/askap-vast/vast-pipeline/pull/620).
+- Refactored adding source to favourites button to use ajax to avoid page reload [#614](https://github.com/askap-vast/vast-pipeline/pull/614).
+- Bumped test python versions to 3.7.12, 3.8.12 and 3.9.10 [#586](https://github.com/askap-vast/vast-pipeline/pull/586).
+- Bumped various dependencies using a fresh poetry.lock file [#586](https://github.com/askap-vast/vast-pipeline/pull/586).
+- Bumped bokeh packages to 2.3.3 [#586](https://github.com/askap-vast/vast-pipeline/pull/586).
+- Django-Q config variable `max_attempts` is configurable in the .env file [#595](https://github.com/askap-vast/vast-pipeline/pull/595).
+- Replaced `models.MeasurementPair` model with a dataclass [#590](https://github.com/askap-vast/vast-pipeline/pull/590).
+- Django-Q config variables `timeout` and `retry` are configurable in the .env file [#589](https://github.com/askap-vast/vast-pipeline/pull/589).
+- Changed restore run command to only allow one run as input [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
+- Changed existing documentation pages to reflect new buttons [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
+- Moved creation of output backup files to occur before the config check [#576](https://github.com/askap-vast/vast-pipeline/pull/576).
+- Association test data updated with d2d fix [#574](https://github.com/askap-vast/vast-pipeline/pull/574).
+- Removed the timezone from the Timestamps being written to the the arrow file as this causes problems with vaex [#571](https://github.com/askap-vast/vast-pipeline/pull/571).
+- Reduced the memory footprint for computing the ideal source coverages by sky regions [#555](https://github.com/askap-vast/vast-pipeline/pull/555).
+- Gulp will only read `webinterface/.env` if the required vars are undefined in the current environment [#548](https://github.com/askap-vast/vast-pipeline/pull/548).
+
+#### Fixed
+
+- Fixed handling of NaNs and negatives in noise image statistics [#755](https://github.com/askap-vast/vast-pipeline/pull/755)
+- Optimise YAML config parsing [#754](https://github.com/askap-vast/vast-pipeline/pull/754)
+- Fixed mkdocs serving issues [#728](https://github.com/askap-vast/vast-pipeline/pull/728)
+- Fixed python 3.9 testing failing on github actions [#728](https://github.com/askap-vast/vast-pipeline/pull/728)
+- Updated github action syntax to correctly call docker compose [#736](https://github.com/askap-vast/vast-pipeline/pull/736)
+- Fix memory leak in new_sources merge [#730](https://github.com/askap-vast/vast-pipeline/pull/730)
+- Fix memory leak in model upload [#726](https://github.com/askap-vast/vast-pipeline/pull/726)
+- Implemented sensible dask dataframe partitioning [#724](https://github.com/askap-vast/vast-pipeline/pull/724)
+- Fixed outdated `runpipeline` section on CLI docs page [#685](https://github.com/askap-vast/vast-pipeline/pull/685).
+- Fixed link to JupyterHub [#676](https://github.com/askap-vast/vast-pipeline/pull/676).
+- Ensure Image models are not created if the catalogue ingest fails [#648](https://github.com/askap-vast/vast-pipeline/pull/648).
+- Fixed run failures caused by attempting to force fit images with empty catalogues [#653](https://github.com/askap-vast/vast-pipeline/pull/653).
+- Fixed a Bokeh regression that requires LabelSet values to be strings [#652](https://github.com/askap-vast/vast-pipeline/pull/652).
+- Fixed deprecation warning on astroquery Ned import [#644](https://github.com/askap-vast/vast-pipeline/pull/644).
+- Fixed a regression from pandas==1.4.0 that caused empty groups to be passed to an apply function in parallel association [#642](https://github.com/askap-vast/vast-pipeline/pull/642).
+- Fixed docs issue that stopped serializers and views being shown in the code reference [#627](https://github.com/askap-vast/vast-pipeline/pull/627).
+- Fixed broken links to external search results from NED by URI encoding source names [#633](https://github.com/askap-vast/vast-pipeline/pull/633).
+- Fixed a regression from pandas==1.4.0 that caused empty groups to be passed to an apply function [#632](https://github.com/askap-vast/vast-pipeline/pull/632).
+- Fixed source names to be IAU compliant [#618](https://github.com/askap-vast/vast-pipeline/pull/618).
+- Fixed broken NED links for coordinates with many decimal places [#623](https://github.com/askap-vast/vast-pipeline/pull/623).
+- Added an error handler for the external source queries (e.g. SIMBAD) [#616](https://github.com/askap-vast/vast-pipeline/pull/616).
+- Stopped JS9 from changing the page titles [#597](https://github.com/askap-vast/vast-pipeline/pull/597).
+- Fixed regression issues with pandas 1.4 [#586](https://github.com/askap-vast/vast-pipeline/pull/586).
+- Fixed config being copied before run was confirmed to actually go ahead for existing runs [#595](https://github.com/askap-vast/vast-pipeline/pull/595).
+- Fixed forced measurements being removed from associations during the restore run process [#600](https://github.com/askap-vast/vast-pipeline/pull/600).
+- Fixed measurement FITS cutout bug [#588](https://github.com/askap-vast/vast-pipeline/pull/588).
+- Fixed removal of image and sky region objects when a run is deleted [#585](https://github.com/askap-vast/vast-pipeline/pull/585).
+- Fixed testing pandas equal deprecation warning [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
+- Fixed restore run relations issue [#580](https://github.com/askap-vast/vast-pipeline/pull/580).
+- Fixed logic for full re-run requirement when UI run is being re-run from an error status [#576](https://github.com/askap-vast/vast-pipeline/pull/576).
+- Fixed d2d not being carried through the advanced association process [#574](https://github.com/askap-vast/vast-pipeline/pull/574).
+- Fixed old dictionary references in the documentation run config page [#572](https://github.com/askap-vast/vast-pipeline/pull/572).
+- Fixed a regression from pandas=1.3.0 that caused non-numeric columns to be dropped after a groupby sum operation [#567](https://github.com/askap-vast/vast-pipeline/pull/567).
+- Fixed permission error for regular users when trying to launch an initialised run [#563](https://github.com/askap-vast/vast-pipeline/pull/563).
+- Fixed outdated installation link in README [#543](https://github.com/askap-vast/vast-pipeline/pull/543).
+
+#### Removed
+
+- Removed sky coverage plot from homepage [#676](https://github.com/askap-vast/vast-pipeline/pull/676).
+- Removed various counts from homepage [#676](https://github.com/askap-vast/vast-pipeline/pull/676).
+- Removed support for Python 3.7 [#641](https://github.com/askap-vast/vast-pipeline/pull/641).
+- Removed Measurements table page and measurements table from run detail page [#636](https://github.com/askap-vast/vast-pipeline/pull/636).
+- Removed the unique constraint on `models.Measurement.name` [#583](https://github.com/askap-vast/vast-pipeline/pull/583).
+
+#### List of PRs
+
+- [#755](https://github.com/askap-vast/vast-pipeline/pull/755): fix: Fixed handling of NaNs and negatives in noise image statistics
+- [#754](https://github.com/askap-vast/vast-pipeline/pull/754): fix: Optimise YAML config parsing
+- [#725](https://github.com/askap-vast/vast-pipeline/pull/725): feat: Added further memory usage and timing debug logging 
+- [#740](https://github.com/askap-vast/vast-pipeline/pull/740): feat: Add support for python 3.10
+- [#728](https://github.com/askap-vast/vast-pipeline/pull/728): fix: Adjust package versions and fix mkdocs serve issues
+- [#728](https://github.com/askap-vast/vast-pipeline/pull/728): fix: Adjust package versions and fix python 3.9 tests breaking on github actions
+- [#736](https://github.com/askap-vast/vast-pipeline/pull/736): fix: Updated github action syntax to correctly call docker compose 
+- [#730](https://github.com/askap-vast/vast-pipeline/pull/730): fix: Fix memory leak in new_sources merge
+- [#726](https://github.com/askap-vast/vast-pipeline/pull/726): fix: Fix memory leak in model upload and use chunks for associations upload
+- [#724](https://github.com/askap-vast/vast-pipeline/pull/724): fix, feat: Implemented sensible dask dataframe partitioning
+- [#694](https://github.com/askap-vast/vast-pipeline/pull/694): feat: Handle compressed fits files.
+- [#702](https://github.com/askap-vast/vast-pipeline/pull/702): fix: Downgrade ci-docs to python 3.8.
+- [#701](https://github.com/askap-vast/vast-pipeline/pull/701): fix: Update Gr1N poetry to v8, force python 3.8.10.
+- [#699](https://github.com/askap-vast/vast-pipeline/pull/699): docs, feat: Add new regression data download URL and updates to Github Actions.
+- [#697](https://github.com/askap-vast/vast-pipeline/pull/697/): feat: Added links to Data Central DAS and the Fink Broker to the source page.
+- [#685](https://github.com/askap-vast/vast-pipeline/pull/685): docs: Updated `runpipeline` section on CLI docs.
+- [#676](https://github.com/askap-vast/vast-pipeline/pull/676): Removed home counts and new source count.
+- [#665](https://github.com/askap-vast/vast-pipeline/pull/665): Update Gr1N/setup-poetry to v7.
+- [#658](https://github.com/askap-vast/vast-pipeline/pull/658): feat: Add MAX_CUTOUT_IMAGES setting.
+- [#655](https://github.com/askap-vast/vast-pipeline/pull/655): feat: Add run config option to disable measurement pairs.
+- [#648](https://github.com/askap-vast/vast-pipeline/pull/648): fix: make Image and Measurement creation atomic together.
+- [#653](https://github.com/askap-vast/vast-pipeline/pull/653): fix: Allow forced fitting on images with empty catalogues.
+- [#652](https://github.com/askap-vast/vast-pipeline/pull/652): dep, fix: Bump bokeh 2.4.2.
+- [#644](https://github.com/askap-vast/vast-pipeline/pull/644): fix: Fix astroquery Ned import deprecation.
+- [#638](https://github.com/askap-vast/vast-pipeline/pull/638): feat: Support defer loading of dataTables data.
+- [#641](https://github.com/askap-vast/vast-pipeline/pull/641): dep: Drop Python 3.7 and dependency refresh.
+- [#643](https://github.com/askap-vast/vast-pipeline/pull/643): fix: Addressed pandas DataFrame.append deprecation.
+- [#642](https://github.com/askap-vast/vast-pipeline/pull/642): fix: Fix empty groups in parallel association.
+- [#636](https://github.com/askap-vast/vast-pipeline/pull/636): fix, doc: Remove excessive measurement tables.
+- [#627](https://github.com/askap-vast/vast-pipeline/pull/627): dep, docs: Documentation update and versioning.
+- [#633](https://github.com/askap-vast/vast-pipeline/pull/633): fix: URI encode NED object names.
+- [#632](https://github.com/askap-vast/vast-pipeline/pull/632): fix: skip empty groups in new sources groupby-apply.
+- [#634](https://github.com/askap-vast/vast-pipeline/pull/634): dep: bump Jinja2 to v3.
+- [#626](https://github.com/askap-vast/vast-pipeline/pull/626): feat: Add a ZTF cone search link.
+- [#618](https://github.com/askap-vast/vast-pipeline/pull/618): fix: Produce IAU compliant source names.
+- [#625](https://github.com/askap-vast/vast-pipeline/pull/625): feat: Pair metrics hover tooltip.
+- [#620](https://github.com/askap-vast/vast-pipeline/pull/620): dep: Non-breaking npm audit fix update.
+- [#622](https://github.com/askap-vast/vast-pipeline/pull/622): feat: Updated Aladin VAST surveys.
+- [#623](https://github.com/askap-vast/vast-pipeline/pull/623): fix: fixed NED links.
+- [#616](https://github.com/askap-vast/vast-pipeline/pull/616): fix: added error handling to external queries.
+- [#614](https://github.com/askap-vast/vast-pipeline/pull/614): feat: Refactored add to favourites button to avoid refresh.
+- [#597](https://github.com/askap-vast/vast-pipeline/pull/597): fix: Update detail page titles.
+- [#586](https://github.com/askap-vast/vast-pipeline/pull/586): feat, dep, doc: Add an eta-v analysis page for the source query.
+- [#595](https://github.com/askap-vast/vast-pipeline/pull/595): fix: Add date and time stamp to log files.
+- [#600](https://github.com/askap-vast/vast-pipeline/pull/600): fix: Fixed restore run forced measurements associations.
+- [#590](https://github.com/askap-vast/vast-pipeline/pull/590): fix: Remove MeasurementPair model.
+- [#589](https://github.com/askap-vast/vast-pipeline/pull/589): fix: expose django-q timeout and retry to env vars.
+- [#588](https://github.com/askap-vast/vast-pipeline/pull/588): fix: change cutout endpoint to use measurement ID.
+- [#585](https://github.com/askap-vast/vast-pipeline/pull/585): fix: Clean up m2m related objects when deleting a run.
+- [#583](https://github.com/askap-vast/vast-pipeline/pull/583): fix: remove unique constraint from Measurement.name.
+- [#580](https://github.com/askap-vast/vast-pipeline/pull/580): feat, fix, doc: Added UI run action buttons.
+- [#576](https://github.com/askap-vast/vast-pipeline/pull/576): fix: Fixed UI re-run from errored status.
+- [#574](https://github.com/askap-vast/vast-pipeline/pull/574): fix: Fixed d2d assignment in advanced association.
+- [#572](https://github.com/askap-vast/vast-pipeline/pull/572): doc: Added required data page to documentation.
+- [#571](https://github.com/askap-vast/vast-pipeline/pull/571): fix: Removed timezone from measurements arrow file time column
+- [#565](https://github.com/askap-vast/vast-pipeline/pull/565): feat: added support for reading selavy VOTables and CSVs.
+- [#567](https://github.com/askap-vast/vast-pipeline/pull/567): fix: fixed pandas=1.3.0 groupby sum regression.
+- [#563](https://github.com/askap-vast/vast-pipeline/pull/563): fix: fixed launch run user permission bug.
+- [#544](https://github.com/askap-vast/vast-pipeline/pull/544): feat: new command to ingest images without running the full pipeline.
+- [#557](https://github.com/askap-vast/vast-pipeline/pull/557): feat: Add TNS external search for sources.
+- [#559](https://github.com/askap-vast/vast-pipeline/pull/559): feat: added HOME_DATA_ROOT setting.
+- [#555](https://github.com/askap-vast/vast-pipeline/pull/555): fix: compute ideal source coverage with astropy xmatch.
+- [#551](https://github.com/askap-vast/vast-pipeline/pull/551): feat: added processing spinner to source query table.
+- [#550](https://github.com/askap-vast/vast-pipeline/pull/550): fix: missing changelog entry
+- [#548](https://github.com/askap-vast/vast-pipeline/pull/548): fix: only read .env if required vars are undefined.
+- [#546](https://github.com/askap-vast/vast-pipeline/pull/546): feat, fix: remove unused imports, and added basic linter during CI/CD.
+- [#543](https://github.com/askap-vast/vast-pipeline/pull/543): fix, doc: Fix README link and documentation 404 assets.
 
 ## [1.0.0](https://github.com/askap-vast/vast-pipeline/releases/v1.0.0) (2021-05-21)
 

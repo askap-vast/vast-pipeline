@@ -193,7 +193,7 @@ class ExternalSearchSerializer(serializers.Serializer):
         help_text="Result origin database, e.g. SIMBAD or NED."
     )
     separation_arcsec = serializers.FloatField()
-    otype = serializers.CharField(help_text="Object type, e.g. QSO.")
+    otype = serializers.CharField(allow_blank=True, help_text="Object type, e.g. QSO.")
     otype_long = serializers.CharField(
         allow_blank=True,
         help_text="Longer form of object type, e.g. quasar. Only supplied for SIMBAD results.",

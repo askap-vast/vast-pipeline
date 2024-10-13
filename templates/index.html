@@ -33,15 +33,14 @@
   </div>
 
   <div class="row">
-    
+
     <!-- Nr Piperuns -->
-    <div class="col-xl-3 col-md-6 mb-4">
+    <div class="col-xl-4 col-md-6 mb-4">
         <div class="card border-left-success shadow h-100 py-2">
           <div class="card-body">
             <div class="row no-gutters align-items-center">
               <div class="col mr-2">
-                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Nr Pipeline Runs</div>
-                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totals.nr_pruns|intcomma }}</div>
+                <div class="text font-weight-bold text-success mb-1">Go to Pipeline Runs</div>
               </div>
               <div class="col-auto">
                 <i class="fas fa-bookmark fa-2x text-gray-300"></i>
@@ -52,14 +51,30 @@
         </div>
     </div>
 
+    <!-- Nr Sources -->
+    <div class="col-xl-4 col-md-6 mb-4">
+      <div class="card border-left-warning shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text font-weight-bold text-warning mb-1">Go to Source Query</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-share-alt fa-2x text-gray-300"></i>
+            </div>
+          </div>
+          <a href="{% url 'vast_pipeline:source_query' %}" class="stretched-link"></a>
+        </div>
+      </div>
+    </div>
+
     <!-- Nr Images -->
-    <div class="col-xl-3 col-md-6 mb-4">
+    <div class="col-xl-4 col-md-6 mb-4">
         <div class="card border-left-primary shadow h-100 py-2">
           <div class="card-body">
             <div class="row no-gutters align-items-center">
               <div class="col mr-2">
-                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Nr Images</div>
-                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totals.nr_imgs|intcomma }}</div>
+                <div class="text font-weight-bold text-primary mb-1">Go to Images</div>
               </div>
               <div class="col-auto">
                 <i class="fas fa-images fa-2x text-gray-300"></i>
@@ -70,46 +85,10 @@
         </div>
     </div>
 
-    <!-- Extracted Sources -->
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-info shadow h-100 py-2">
-          <div class="card-body">
-            <div class="row no-gutters align-items-center">
-              <div class="col mr-2">
-                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Nr Measurements</div>
-                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totals.nr_meas|intcomma }}</div>
-              </div>
-              <div class="col-auto">
-                <i class="fas fa-bolt fa-2x text-gray-300"></i>
-              </div>
-            </div>
-            <a href="{% url 'vast_pipeline:measurement_index' %}" class="stretched-link"></a>
-          </div>
-        </div>
-    </div>
-          
-    <!-- Nr Sources -->
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-warning shadow h-100 py-2">
-          <div class="card-body">
-            <div class="row no-gutters align-items-center">
-              <div class="col mr-2">
-                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Total Nr Sources</div>
-                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totals.nr_srcs|intcomma }}</div>
-              </div>
-              <div class="col-auto">
-                <i class="fas fa-share-alt fa-2x text-gray-300"></i>
-              </div>
-            </div>
-            <a href="{% url 'vast_pipeline:source_query' %}" class="stretched-link"></a>
-          </div>
-        </div>
-    </div>
-
   </div>
-  
+
   <div class="row">
-    <div class="col-lg-5">
+    <div class="col-lg-12">
       <!-- Change Log card -->
       <div class="card shadow mb-4">
         <div class="card-header py-3">
@@ -127,32 +106,8 @@
         </div>
       </div>
     </div>
-    
-    <!-- Sky Regions -->
-   	<div class="col-lg-7">
-       <div class="card shadow mb-4">
-         <div class="card-header py-3">
-           <h6 class="m-0 font-weight-bold text-primary">Current Sky Regions</h6>
-         </div>
-         <div class="card-body">
-           <div id="celestial-map"></div>
-         </div>
-       </div>
-   	</div>
   </div>
-
 </div>
 <!-- /.container-fluid -->
 
 {% endblock content %}
-
-{% block custom_page_scripts %}
-
-<!-- Chart scripts -->
-{{ d3_celestial_skyregions|json_script:"skyregion-data" }}
-<script type="text/javascript" src="{% static 'vendor/d3-celestial/d3.min.js' %}"></script>
-<script type="text/javascript" src="{% static 'vendor/d3-celestial/d3.geo.projection.min.js' %}"></script>
-<script type="text/javascript" src="{% static 'vendor/d3-celestial/celestial.min.js' %}"></script>
-<script id="d3CelestialScript" type="text/javascript" src="{% static 'js/d3-celestial-script.min.js' %}" staticUrl="{{ static_url }}"></script>
-
-{% endblock custom_page_scripts %}

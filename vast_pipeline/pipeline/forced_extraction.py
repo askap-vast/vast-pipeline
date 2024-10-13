@@ -13,17 +13,14 @@ from astropy.coordinates import SkyCoord
 from django.conf import settings
 from django.db import transaction
 from pyarrow.parquet import read_schema
-from typing import List, Tuple, Dict
+from typing import Any, List, Tuple, Dict, Optional
 
 from vast_pipeline.models import Image, Measurement, Run
-from vast_pipeline.image.utils import on_sky_sep
 from vast_pipeline.pipeline.loading import make_upload_measurements
 
 from forced_phot import ForcedPhot
-from .utils import (
-    cross_join, parallel_groupby_coord
-)
 from ..utils.utils import StopWatch
+from vast_pipeline.image.utils import open_fits
 
 
 logger = logging.getLogger(__name__)
@@ -65,13 +62,15 @@ def remove_forced_meas(run_path: str) -> None:
 
 
 def get_data_from_parquet(
-    file: str, p_run_path: str, add_mode: bool = False,) -> Dict:
+    file_and_image_id: Tuple[str, int], p_run_path: str, add_mode: bool = False
+) -> Dict:
     '''
     Get the prefix, max id and image id from the measurements parquets
 
     Args:
-        file:
-            a string with the path of the measurements parquet file
+        file_and_image_id:
+            a tuple containing the path of the measurements parquet file and
+            the image ID.
         p_run_path:
             Pipeline run path to get forced parquet in case of add mode.
         add_mode:
@@ -80,8 +79,9 @@ def get_data_from_parquet(
 
     Returns:
         Dictionary with prefix string, an interger max_id and a string with the
-        id of the image
+            id of the image.
     '''
+    file, image_id = file_and_image_id
     if add_mode:
         image_name = file.split("/")[-2]
         forced_parquet = os.path.join(
@@ -92,20 +92,54 @@ def get_data_from_parquet(
             file = forced_parquet
     # get max component id from parquet file
     df = pd.read_parquet(file, columns=['island_id', 'image_id'])
-    prefix = df['island_id'].iloc[0].rsplit('_', maxsplit=1)[0] + '_'
-    max_id = (
-        df['island_id'].str.rsplit('_', n=1)
-        .str.get(-1)
-        .astype(int)
-        .values.max() + 1
-    )
-    return {'prefix': prefix, 'max_id': max_id, 'id': df['image_id'].iloc[0]}
+    if len(df) > 0:
+        prefix = df['island_id'].iloc[0].rsplit('_', maxsplit=1)[0] + '_'
+        max_id = (
+            df['island_id'].str.rsplit('_', n=1)
+            .str.get(-1)
+            .astype(int)
+            .values.max() + 1
+        )
+    else:
+        prefix = "island_"
+        max_id = 1
+    return {'prefix': prefix, 'max_id': max_id, 'id': image_id}
+
+
+def _forcedphot_preload(image: str,
+                        background: str,
+                        noise: str,
+                        memmap: Optional[bool] = False
+                        ):
+    """
+    Load the relevant image, background and noisemap files.
+
+    Args:
+        image: a string with the path of the image file
+        background: a string with the path of the background map
+        noise: a string with the path of the noise map
+
+    Returns:
+        A tuple containing the HDU lists
+    """
+
+    image_hdul = open_fits(image, memmap=memmap)
+    background_hdul = open_fits(background, memmap=memmap)
+    noise_hdul = open_fits(noise, memmap=memmap)
+
+    return image_hdul, background_hdul, noise_hdul
 
 
 def extract_from_image(
-    df: pd.DataFrame, image: str, background: str, noise: str,
-    edge_buffer: float, cluster_threshold: float, allow_nan: bool
-    ) -> Dict:
+    df: pd.DataFrame,
+    image: str,
+    background: str,
+    noise: str,
+    edge_buffer: float,
+    cluster_threshold: float,
+    allow_nan: bool,
+    **kwargs,
+) -> Dict:
     """
     Extract the flux, its erros and chi squared data from the image
     files (image FIT, background and noise files) and return a dictionary
@@ -130,8 +164,10 @@ def extract_from_image(
 
     Returns:
         Dictionary with input dataframe with added columns (flux_int,
-        flux_int_err, chi_squared_fit) and image name.
+            flux_int_err, chi_squared_fit) and image name.
     """
+    timer = StopWatch()
+
     # create the skycoord obj to pass to the forced extraction
     # see usage https://github.com/dlakaplan/forced_phot
     P_islands = SkyCoord(
@@ -139,8 +175,16 @@ def extract_from_image(
         df['wavg_dec'].values,
         unit=(u.deg, u.deg)
     )
+    # load the image, background and noisemaps into memory
+    # a dedicated function may seem unneccesary, but will be useful if we
+    # split the load to a separate thread.
+    forcedphot_input = _forcedphot_preload(image,
+                                           background,
+                                           noise,
+                                           memmap=False
+                                           )
+    FP = ForcedPhot(*forcedphot_input)
 
-    FP = ForcedPhot(image, background, noise)
     flux, flux_err, chisq, DOF, cluster_id = FP.measure(
         P_islands,
         cluster_threshold=cluster_threshold,
@@ -151,6 +195,8 @@ def extract_from_image(
     df['flux_int_err'] = flux_err * 1.e3
     df['chi_squared_fit'] = chisq
 
+    logger.debug(f"Time to measure FP for {image}: {timer.reset()}s")
+
     return {'df': df, 'image': df['image_name'].iloc[0]}
 
 
@@ -158,7 +204,7 @@ def finalise_forced_dfs(
     df: pd.DataFrame, prefix: str, max_id: int, beam_bmaj: float,
     beam_bmin: float, beam_bpa: float, id: int, datetime: datetime.datetime,
     image: str
-    ) -> pd.DataFrame:
+) -> pd.DataFrame:
     """
     Compute populate leftover columns for the dataframe with forced
     photometry data given the input parameters
@@ -186,7 +232,7 @@ def finalise_forced_dfs(
 
     Returns:
         Input dataframe with added columns island_id, component_id,
-        name, bmaj, bmin, pa, image_id, time.
+            name, bmaj, bmin, pa, image_id, time.
     """
     # make up the measurements name from the image island_id and component_id
     df['island_id'] = np.char.add(
@@ -215,7 +261,7 @@ def parallel_extraction(
     df: pd.DataFrame, df_images: pd.DataFrame, df_sources: pd.DataFrame,
     min_sigma: float, edge_buffer: float, cluster_threshold: float,
     allow_nan: bool, add_mode: bool, p_run_path: str
-    ) -> pd.DataFrame:
+) -> pd.DataFrame:
     """
     Parallelize forced extraction with Dask
 
@@ -247,12 +293,12 @@ def parallel_extraction(
 
     Returns:
         Dataframe with forced extracted measurements data, columns are
-        'source_tmp_id', 'ra', 'dec', 'image', 'flux_peak', 'island_id',
-        'component_id', 'name', 'flux_int', 'flux_int_err'
+            'source_tmp_id', 'ra', 'dec', 'image', 'flux_peak', 'island_id',
+            'component_id', 'name', 'flux_int', 'flux_int_err'
     """
     # explode the lists in 'img_diff' column (this will make a copy of the df)
     out = (
-        df.rename(columns={'img_diff':'image', 'source':'source_tmp_id'})
+        df.rename(columns={'img_diff': 'image', 'source': 'source_tmp_id'})
         # merge the rms_min column from df_images
         .merge(
             df_images[['rms_min']],
@@ -277,8 +323,8 @@ def parallel_extraction(
     out['max_snr'] = out['flux_peak'].values / out['image_rms_min'].values
     out = out[out['max_snr'] > min_sigma].reset_index(drop=True)
     logger.debug("Min forced sigma dropped %i sources",
-        predrop_shape - out.shape[0]
-    )
+                 predrop_shape - out.shape[0]
+                 )
 
     # drop some columns that are no longer needed and the df should look like
     # out
@@ -297,19 +343,27 @@ def parallel_extraction(
 
     # get the unique images to extract from
     unique_images_to_extract = out['image_name'].unique().tolist()
+
     # create a list of dictionaries with image file paths and dataframes
     # with data related to each images
-    image_data_func = lambda x: {
-        'image': df_images.at[x, 'path'],
-        'background': df_images.at[x, 'background_path'],
-        'noise': df_images.at[x, 'noise_path'],
-        'df': out[out['image_name'] == x]
-    }
+    def image_data_func(image_name: str) -> Dict[str, Any]:
+        # `out` refers to the `out` declared in nearest enclosing scope
+        nonlocal out
+        return {
+            'image_id': df_images.at[image_name, 'id'],
+            'image': df_images.at[image_name, 'path'],
+            'background': df_images.at[image_name, 'background_path'],
+            'noise': df_images.at[image_name, 'noise_path'],
+            'df': out[out['image_name'] == image_name]
+        }
     list_to_map = list(map(image_data_func, unique_images_to_extract))
     # create a list of all the measurements parquet files to extract data from,
     # such as prefix and max_id
     list_meas_parquets = list(map(
-        lambda el: df_images.at[el, 'measurements_path'],
+        lambda image_name: (
+            df_images.at[image_name, 'measurements_path'],
+            df_images.at[image_name, 'id'],
+        ),
         unique_images_to_extract
     ))
     del out, unique_images_to_extract, image_data_func
@@ -369,7 +423,7 @@ def parallel_extraction(
         pd.concat(intermediate_df, axis=0, sort=False)
         .rename(
             columns={
-                'wavg_ra':'ra', 'wavg_dec':'dec', 'image_name': 'image'
+                'wavg_ra': 'ra', 'wavg_dec': 'dec', 'image_name': 'image'
             }
         )
     )
@@ -378,7 +432,7 @@ def parallel_extraction(
 
 
 def write_group_to_parquet(
-    df: pd.DataFrame, fname: str, add_mode: bool) -> None:
+        df: pd.DataFrame, fname: str, add_mode: bool) -> None:
     '''
     Write a dataframe correpondent to a single group/image
     to a parquet file.
@@ -397,7 +451,7 @@ def write_group_to_parquet(
     out_df = df.drop(['d2d', 'dr', 'source', 'image'], axis=1)
     if os.path.isfile(fname) and add_mode:
         exist_df = pd.read_parquet(fname)
-        out_df = exist_df.append(out_df)
+        out_df = pd.concat([exist_df, out_df])
 
     out_df.to_parquet(fname, index=False)
 
@@ -405,7 +459,7 @@ def write_group_to_parquet(
 
 
 def parallel_write_parquet(
-    df: pd.DataFrame, run_path: str, add_mode: bool = False) -> None:
+        df: pd.DataFrame, run_path: str, add_mode: bool = False) -> None:
     '''
     Parallelize writing parquet files for forced measurements.
 
@@ -421,9 +475,10 @@ def parallel_write_parquet(
         None
     '''
     images = df['image'].unique().tolist()
-    get_fname = lambda n: os.path.join(
+
+    def get_fname(n): return os.path.join(
         run_path,
-        'forced_measurements_' + n.replace('.','_') + '.parquet'
+        'forced_measurements_' + n.replace('.', '_') + '.parquet'
     )
     dfs = list(map(lambda x: (df[df['image'] == x], get_fname(x)), images))
     n_cpu = cpu_count() - 1
@@ -479,8 +534,8 @@ def forced_extraction(
             run (used in add image mode).
 
     Returns:
-        The sources_df with the extracted sources added and n_forced is the
-        total number of forced measurements present in the run.
+        The `sources_df` with the extracted sources added.
+        The total number of forced measurements present in the run.
     """
     logger.info(
         'Starting force extraction step.'
@@ -533,14 +588,15 @@ def forced_extraction(
         # 3. A new relation has been created and they need the forced
         # measuremnts filled in (actually covered by 2.)
 
-        extr_df = (
-            extr_df[~extr_df['img_diff'].isin(done_images_df['name'])]
-            .append(extr_df[
-                (~extr_df['source'].isin(done_source_ids))
-                & (extr_df['img_diff'].isin(done_images_df.name))
-            ])
-            .sort_index()
-        )
+        extr_df = pd.concat(
+            [
+                extr_df[~extr_df['img_diff'].isin(done_images_df['name'])],
+                extr_df[
+                    (~extr_df['source'].isin(done_source_ids))
+                    & (extr_df['img_diff'].isin(done_images_df.name))
+                ]
+            ]
+        ).sort_index()
 
         logger.info(
             f"{extr_df.shape[0]} new measurements to force extract"
@@ -640,8 +696,11 @@ def forced_extraction(
     extr_df = extr_df.rename(columns={'time': 'datetime'})
 
     # append new meas into main df and proceed with source groupby etc
-    sources_df = sources_df.append(
-        extr_df.loc[:, extr_df.columns.isin(sources_df.columns)],
+    sources_df = pd.concat(
+        [
+            sources_df,
+            extr_df.loc[:, extr_df.columns.isin(sources_df.columns)]
+        ],
         ignore_index=True
     )
 

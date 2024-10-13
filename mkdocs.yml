@@ -3,6 +3,7 @@ site_description: >-
   VAST Pipeline platform to enable processing of astronomical sources
   extracted from the ASKAP telescope for radio transient detection science
 site_author: VAST Development Team
+site_url: https://vast-survey.org/vast-pipeline/
 copyright: Copyright &copy; 2020 - 2025 Vast Development Team, University of Sydney - all right reserved
 
 repo_url: https://github.com/askap-vast/vast-pipeline
@@ -54,7 +55,8 @@ markdown_extensions:
   - pymdownx.caret
   - pymdownx.details
   - pymdownx.inlinehilite
-  - pymdownx.tabbed
+  - pymdownx.tabbed:
+      alternate_style: true
   - pymdownx.superfences
   - pymdownx.highlight
   - pymdownx.tabbed
@@ -73,19 +75,24 @@ nav:
     - Configuration: gettingstarted/configuration.md
     - Deployment: gettingstarted/deployment.md
   - Using the Pipeline:
+    - Required Data: using/requireddata.md
     - Accessing the Pipeline: using/access.md
     - Initialising a Run: using/initrun.md
     - Run Configuration: using/runconfig.md
     - Processing a Run: using/processrun.md
     - Adding Images to a Run: using/addtorun.md
+    - Restoring a Run: using/restorerun.md
     - Deleting a Run: using/deleterun.md
+    - Generating Arrow Files: using/genarrow.md
     - Exploring the Pipeline Website:
-      - Overview: exploringwebsite/websiteoverview.md
+      - Website Overview: exploringwebsite/websiteoverview.md
       - DataTables: exploringwebsite/datatables.md
       - Pipeline Run Pages: exploringwebsite/runpages.md
-      - Source Pages: exploringwebsite/sourcepages.md
+      - Source Query: exploringwebsite/sourcequery.md
+      - Source η-V Analysis: exploringwebsite/sourceanalysis.md
+      - Source Detail: exploringwebsite/sourcedetail.md
       - Source Tags & Favourites: exploringwebsite/sourcetagsfavs.md
-      - Measurement Pages: exploringwebsite/measurementpages.md
+      - Measurement Detail Page: exploringwebsite/measurementdetail.md
       - Image Pages: exploringwebsite/imagepages.md
     - Pipeline Outputs:
       - Outputs Overview: outputs/outputs.md
@@ -93,6 +100,7 @@ nav:
       - Column Descriptions: outputs/coldesc.md
     - Admin Usage:
       - CLI: adminusage/cli.md
+      - Standalone Image Ingestion: adminusage/ingestimages.md
       - Web App: adminusage/app.md
       - Web App Admin Tools: exploringwebsite/admintools.md
   - Features & Design:
@@ -130,6 +138,8 @@ nav:
             - clearpiperun.py: reference/management/commands/clearpiperun.md
             - createmeasarrow.py: reference/management/commands/createmeasarrow.md
             - debugrun.py: reference/management/commands/debugrun.md
+            - ingestimages.py: reference/management/commands/ingestimages.md
+            - initingest.py: reference/management/commands/initingest.md
             - initpiperun.py: reference/management/commands/initpiperun.md
             - restorepiperun.py: reference/management/commands/restorepiperun.md
             - runpipeline.py: reference/management/commands/runpipeline.md
@@ -144,11 +154,13 @@ nav:
           - main.py: reference/pipeline/main.md
           - model_generator.py: reference/pipeline/model_generator.md
           - new_sources.py: reference/pipeline/new_sources.md
+          - pairs.py: reference/pipeline/pairs.md
           - utils.py: reference/pipeline/utils.md
         - survey:
           - translators.py: reference/survey/translators.md
         - utils:
           - auth.py: reference/utils/auth.md
+          - external_query.py: reference/utils/external_query.md
           - unit_tags.py: reference/utils/unit_tags.md
           - utils.py: reference/utils/utils.md
           - view.py: reference/utils/view.md
@@ -159,15 +171,18 @@ nav:
         - forms.py: reference/forms.md
         - models.py: reference/models.md
         - plots.py: reference/plots.md
-        # - serializers.py: reference/serializers.md
+        - serializers.py: reference/serializers.md
+        - signals.py: reference/signals.md
         - urls.py: reference/urls.md
-        # - views.py: reference/views.md
+        - views.py: reference/views.md
 
 plugins:
   - search
   - git-revision-date-localized:
       fallback_to_build_date: true
       enable_creation_date: true
+      exclude:
+        - index.md
   - gen-files:
       scripts:
       # - docs/gen_credits.py
@@ -201,3 +216,5 @@ extra:
       name: vast-pipeline source on GitHub
     - icon: fontawesome/solid/globe
       link: https://vast-survey.org
+  version:
+    provider: mike

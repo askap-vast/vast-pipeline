@@ -5,8 +5,6 @@ previously completed pipeline run.
 
 import os
 import logging
-import traceback
-import warnings
 
 from argparse import ArgumentParser
 from django.core.management.base import BaseCommand, CommandError
@@ -15,6 +13,7 @@ from vast_pipeline.pipeline.utils import (
     create_measurement_pairs_arrow_file
 )
 from vast_pipeline.models import Run
+from vast_pipeline.utils.utils import timeStamped
 from ..helpers import get_p_run_name
 
 
@@ -67,22 +66,30 @@ class Command(BaseCommand):
         Returns:
             None
         """
-        # configure logging
-        if options['verbosity'] > 1:
-            # set root logger to use the DEBUG level
-            root_logger = logging.getLogger('')
-            root_logger.setLevel(logging.DEBUG)
-            # set the traceback on
-            options['traceback'] = True
-
         piperun = options['piperun']
 
         p_run_name, run_folder = get_p_run_name(
             piperun,
             return_folder=True
         )
+
+        # configure logging
+        root_logger = logging.getLogger('')
+        f_handler = logging.FileHandler(
+            os.path.join(run_folder, timeStamped('gen_arrow_log.txt')),
+            mode='w'
+        )
+        f_handler.setFormatter(root_logger.handlers[0].formatter)
+        root_logger.addHandler(f_handler)
+
+        if options['verbosity'] > 1:
+            # set root logger to use the DEBUG level
+            root_logger.setLevel(logging.DEBUG)
+            # set the traceback on
+            options['traceback'] = True
+
         try:
-            p_run = Run.objects.get(name=p_run_name)
+            p_run: Run = Run.objects.get(name=p_run_name)
         except Run.DoesNotExist:
             raise CommandError(f'Pipeline run {p_run_name} does not exist')
 
@@ -99,6 +106,10 @@ class Command(BaseCommand):
                 logger.info("Removing previous 'measurements.arrow' file.")
                 os.remove(measurements_arrow)
             else:
+                logger.error(
+                    f'Measurements arrow file already exists for {p_run_name}'
+                    ' and `--overwrite` has not been selected.'
+                )
                 raise CommandError(
                     f'Measurements arrow file already exists for {p_run_name}'
                     ' and `--overwrite` has not been selected.'
@@ -111,6 +122,10 @@ class Command(BaseCommand):
                 )
                 os.remove(measurement_pairs_arrow)
             else:
+                logger.error(
+                    'Measurement pairs arrow file already exists for'
+                    f' {p_run_name} and `--overwrite` has not been selected.'
+                )
                 raise CommandError(
                     'Measurement pairs arrow file already exists for'
                     f' {p_run_name} and `--overwrite` has not been selected.'
@@ -120,8 +135,13 @@ class Command(BaseCommand):
 
         create_measurements_arrow_file(p_run)
 
-        logger.info(
-            "Creating measurement pairs arrow file for '%s'.", p_run_name
-        )
+        if p_run.get_config(validate_inputs=False, prev=True)["variability"]["pair_metrics"]:
+            logger.info(
+                "Creating measurement pairs arrow file for '%s'.", p_run_name
+            )
 
-        create_measurement_pairs_arrow_file(p_run)
+            create_measurement_pairs_arrow_file(p_run)
+
+        logger.info(
+            "Arrow files created successfully for '%s'!", p_run_name
+        )

@@ -22,6 +22,7 @@ router.register(r'measurements', views.MeasurementViewSet, 'api_measurements')
 router.register(r'sources', views.SourceViewSet, 'api_sources')
 router.register(r'rawimages', views.RawImageListSet, 'api_rawimages')
 router.register(r'runcfg', views.RunConfigSet, 'api_runcfg')
+router.register(r'runlog', views.RunLogSet, 'api_runlog')
 router.register(r'sourcesfavs', views.SourceFavViewSet, 'api_sources_favs')
 router.register(r'utils', views.UtilitiesSet, 'api_utils')
 router.register(r'plots', views.SourcePlotsSet, 'api_source_plots')
@@ -42,6 +43,8 @@ urlpatterns = [
         name='measurement_detail'
     ),
     path('sources/query/', views.SourceQuery, name='source_query'),
+    path('sources/query/plot/', views.SourceEtaVPlot, name='source_etav_plot'),
+    path('sources/query/plot/update/<int:pk>/', views.SourceEtaVPlotUpdate, name='source_etav_plot_update'),
     path('sources/<int:pk>/', views.SourceDetail, name='source_detail'),
     path('sources/favs/', views.UserSourceFavsList, name='source_favs'),
     path(
@@ -50,8 +53,8 @@ urlpatterns = [
         kwargs={"tag_model": Source.tags.tag_model},
         name="source_tags_autocomplete",
     ),
-    path('cutout/<str:measurement_name>/', views.ImageCutout.as_view(), name='cutout'),
-    path('cutout/<str:measurement_name>/<str:size>/', views.ImageCutout.as_view(), name='cutout'),
+    path('cutout/<int:measurement_id>/', views.ImageCutout.as_view(), name='cutout'),
+    path('cutout/<int:measurement_id>/<str:size>/', views.ImageCutout.as_view(), name='cutout'),
     path(
         'measurements/<int:image_id>/<ra:ra_deg>,<dec:dec_deg>,<angle:radius_deg>/region/',
         views.MeasurementQuery.as_view(),

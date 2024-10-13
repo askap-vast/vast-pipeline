@@ -5,6 +5,10 @@
 
 {% load unit_tags %}
 
+{% block title %}
+<title>VAST Pipeline: Source ID {{ source.id }}</title>
+{% endblock title %}
+
 {% block head %}
 
 <link rel='stylesheet' href='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css' />
@@ -34,15 +38,16 @@
   <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-2 text-gray-800"><strong>Source:</strong> {{ source.name }}</h1>
     <div class="">
-      <span {% if not sourcefav %}data-toggle="modal" {% endif %} data-target="#starSource">
-        <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm" data-toggle="tooltip"
-          title="Add to favourites">
-          <span class="icon text-white-600">
-            <i class="fas fa-star" {% if sourcefav  %}style="color: #ffe271" {% endif %}></i>
-          </span>
+      {% include 'source_fav_button.html' %}
+      <a href="https://das.datacentral.org.au/das?RA={{ source.aladin_ra|floatformat:6 }}&DEC={{ source.aladin_dec|floatformat:6 }}&FOV=2.0&ERR=10.0"
+        class="d-none d-sm-inline-block btn btn-sm btn-info btn-icon-split shadow-sm" target="_blank"
+        title="Data Central cone search with a 10 arcsec radius.">
+        <span class="icon text-white-600">
+          <i class="fas fa-info-circle fa-sm"></i>
+        </span>
+        <span class="text">DAS</span>
         </a>
-      </span>
-      <a href="http://simbad.u-strasbg.fr/simbad/sim-coo?CooEpoch=2000&Coord={{ source.aladin_ra }}d{{ source.aladin_dec }}d&Radius.unit=arcmin&CooEqui=2000&CooFrame=FK5&Radius=2'"
+      <a href="http://simbad.u-strasbg.fr/simbad/sim-coo?CooEpoch=2000&Coord={{ source.aladin_ra|floatformat:6 }}d{{ source.aladin_dec|floatformat:6 }}d&Radius.unit=arcmin&CooEqui=2000&CooFrame=FK5&Radius=2'"
         class="d-none d-sm-inline-block btn btn-sm btn-info btn-icon-split shadow-sm" target="_blank"
         title="SIMBAD cone search with 2 arcmin radius.">
         <span class="icon text-white-600">
@@ -50,7 +55,7 @@
         </span>
         <span class="text">SIMBAD</span>
       </a>
-      <a href="https://ned.ipac.caltech.edu/conesearch?search_type=Near%20Position%20Search&coordinates={{ source.aladin_ra }}d%20{{ source.aladin_dec }}d&radius=2.0&in_csys=Equatorial&in_equinox=J2000.0&out_csys=Equatorial&out_equinox=J2000.0&hconst=67.8&omegam=0.308&omegav=0.692&wmap=4&corr_z=1"
+      <a href="https://ned.ipac.caltech.edu/conesearch?search_type=Near%20Position%20Search&coordinates={{ source.aladin_ra|floatformat:6 }}d%20{{ source.aladin_dec|floatformat:6 }}d&radius=2.0&in_csys=Equatorial&in_equinox=J2000&out_csys=Same%20as%20Input&out_equinox=Same%20as%20Input&obj_sort=Distance%20to%20search%20center&hconst=67.8&omegam=0.308&omegav=0.692&wmap=4&corr_z=1&z_constraint=Unconstrained&z_unit=z&ot_include=ANY"
         class="d-none d-sm-inline-block btn btn-sm btn-info btn-icon-split shadow-sm" target="_blank"
         title="NED cone search with 2 arcmin radius.">
         <span class="icon text-white-600">
@@ -58,6 +63,22 @@
         </span>
         <span class="text">NED</span>
       </a>
+      <a href="https://mars.lco.global/?sort_value=jd&sort_order=desc&cone={{ source.aladin_ra|floatformat:6 }}%2C{{ source.aladin_dec|floatformat:6 }}%2C0.00278"
+        class="d-none d-sm-inline-block btn btn-sm btn-info btn-icon-split shadow-sm" target="_blank"
+        title="ZTF cone search with 10 arcsec radius.">
+        <span class="icon text-white-600">
+          <i class="fas fa-info-circle fa-sm"></i>
+        </span>
+        <span class="text">ZTF</span>
+      </a>
+      <a href="https://fink-portal.org/?query_type=Conesearch&ra={{ source.aladin_ra|floatformat:6 }}&dec={{ source.aladin_dec|floatformat:6 }}&radius=10.0"
+        class="d-none d-sm-inline-block btn btn-sm btn-info btn-icon-split shadow-sm" target="_blank"
+        title="Fink cone search with a 10 arcsec radius.">
+        <span class="icon text-white-600">
+          <i class="fas fa-info-circle fa-sm"></i>
+        </span>
+        <span class="text">Fink</span>
+        </a>
       {% if source_previous_id %}
       <a href="{% url 'vast_pipeline:source_detail' source_previous_id %}" class="d-none d-sm-inline-block btn btn-sm btn-light btn-icon-split shadow-sm">
         <span class="icon text-gray-600">
@@ -137,7 +158,7 @@
           <h6 class="m-0 font-weight-bold text-primary">First Detection Postage Stamp</h6>
         </div>
         <div class="card-body">
-          <div class="JS9" id="JS9_{{ source.n_meas|add:"1" }}" data-width="450px" data-height="360px"></div>
+          <div class="JS9" id="JS9_{{ cutout_measurements|length|add:"1" }}" data-width="450px" data-height="360px"></div>
         </div>
       </div>
     </div>
@@ -244,7 +265,7 @@
           <div class="table-responsive">
             <table class="table table-sm table-bordered table-striped table-hover" id="externalResultsTable"
               width="100%" cellspacing="0" data-server-side="false"
-              data-ajax="{% url 'vast_pipeline:api_utils-simbad-ned-search' %}?coord={{ source.wavg_ra_hms }}{{ source.wavg_dec_dms }}&format=datatables&keep=otype_long,database">
+              data-ajax="{% url 'vast_pipeline:api_utils-external-search' %}?coord={{ source.wavg_ra_hms }}{{ source.wavg_dec_dms }}&format=datatables&keep=otype_long,database">
               <thead>
                 <tr>
                   <th data-data="object_name">ID</th>
@@ -277,6 +298,13 @@
     </h6>
     <div id="collapse-postage-stamps" class="collapse show" aria-labelledby="heading-example">
       <div class="card-body">
+        {% if cutout_measurements|length < datatables.0.dataQuery|length %}
+        <div class="alert alert-warning" role="alert">
+          Number of displayed postage stamp cutouts has been truncated. Displaying the first
+          {{ cutout_measurements|length }} of {{ datatables.0.dataQuery|length }}
+          measurement cutouts.
+        </div>
+        {% endif %}
         <div class="row">
           <button class="btn btn-info mr-1" onclick="focusOnSource(4.0);">Zoom to Source</button>
           <button class="btn btn-info mr-1" onclick="focusOnSource('toFit');">Zoom to Field</button>
@@ -285,9 +313,10 @@
           <div class="JS9Menubar" id="SUPERMENU_" data-displays="*"></div>
         </div>
         <div class="row">
-          {% for measurement in datatables.0.dataQuery %}
+          {% for measurement in cutout_measurements %}
           <div class="card">
             <div class="card-header">
+              <span class="badge badge-pill badge-primary float-right">{{ forloop.counter0 }}</span>
               <p class="mb-0"><a href="{% url 'vast_pipeline:image_detail' measurement.image_id %}"
                   target="_blank">{{ measurement.image_name }}</a></p>
               <p class="mb-0"><a href="{% url 'vast_pipeline:measurement_detail' measurement.id %}"
@@ -375,34 +404,7 @@
 
 {% block modal %}
 
-<!-- Starring source modal-->
-<div class="modal fade" id="starSource" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-  aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Add a comment for this source</h5>
-        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">×</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <form action="{% url 'vast_pipeline:api_sources_favs-list' %}" method="post" id="commentStarForm">
-          {% csrf_token %}
-          <div class="form-group">
-            <textarea class="form-control" name="comment" placeholder="Insert comment here (optional)"
-              form="commentStarForm"></textarea>
-            <input type="text" name="source_id" value="{{ source.id }}" hidden="">
-          </div>
-          <div class="modal-footer">
-            <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
-            <input class="btn btn-primary" type="submit" value="Add to Favourites">
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
+{% include 'source_fav_modal.html' %}
 
 {% endblock modal %}
 
@@ -455,6 +457,7 @@
 <script src="{% static 'js/aladin-script.min.js' %}"></script>
 
 <script src="{% static 'js/clipboard-copy.min.js' %}"></script>
+<script src="{% static 'js/source-fav.min.js' %}" apiSourceFavUrl="{% url 'vast_pipeline:api_sources_favs-list' %}" id="SourceFavScript"></script>
 
 <script type="text/javascript">
   // configure aladin
@@ -478,7 +481,8 @@
     })
 </script>
 
-{{ datatables.0.dataQuery|json_script:"data-js9" }}
+{{ cutout_measurements|json_script:"data-js9" }}
+{{ first_det_meas|json_script:"data-js9-first-detection" }}
 <script type="text/javascript">
   let baseUrl = '{{ base_url }}' || null;
   // function to add base url to an existing url if valid
@@ -488,7 +492,7 @@
     return new Promise(resolve => {
       JS9.Load(
         addBaseUrl('/cutout/' + imageName + '/large'), {
-          id: imageName,
+          id: imageName.toString(),
           scalemin: -0.001,
           scalemax: 0.002,
           color: 'gray',
@@ -528,11 +532,12 @@
   // when JS9 is ready, load the cutout images into the correct display panels
   $(document).on("JS9:ready", async function () {
     var measurementData = JSON.parse(document.getElementById("data-js9").textContent);
-    measurementData.push(measurementData[{{ first_det_meas_index }}]);
+    var firstDetectionMeasurementData = JSON.parse(document.getElementById("data-js9-first-detection").textContent);
+    measurementData.push(firstDetectionMeasurementData);
     // load all images and wait until they're all done
     await Promise.all(measurementData.map((measurement, i) => {
       var displayId = "JS9_" + (i + 1);
-      return loadFitsImage(measurement.name, displayId);
+      return loadFitsImage(measurement.id, displayId);
     }));
     JS9.SyncImages(); // sync panning between images
     focusOnSource(4.0);
@@ -581,6 +586,5 @@
     let fluxType = $('input[name="fluxTypeRadio"]:checked').val();
     getLightcurvePlot(fluxType);
   });
-
 </script>
 {% endblock custom_page_scripts %}

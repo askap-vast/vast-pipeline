@@ -16,16 +16,19 @@ from typing import Optional
 from django.db import transaction
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand, CommandError
+
 from vast_pipeline._version import __version__ as pipeline_version
 from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
 from vast_pipeline.pipeline.main import Pipeline
 from vast_pipeline.pipeline.utils import (
     get_create_p_run, create_measurements_arrow_file,
-    create_measurement_pairs_arrow_file, backup_parquets
+    create_measurement_pairs_arrow_file, backup_parquets,
+    create_temp_config_file
 )
-from vast_pipeline.utils.utils import StopWatch
+from vast_pipeline.utils.utils import StopWatch, timeStamped
 from vast_pipeline.models import Run
 from ..helpers import get_p_run_name
+
 from astropy.utils.exceptions import AstropyWarning
 from vast_pipeline.pipeline.errors import PipelineConfigError
 
@@ -65,8 +68,12 @@ def run_pipe(
             The previous status through the UI. Defaults to 'END'.
 
     Returns:
-        Boolean equal to `True` on a successful completion, or in cases of
-        failures a CommandError is returned.
+        Boolean equal to `True` on a successful completion.
+
+    Raises:
+        CommandError: Raised if error occurs during processing.
+        PipelineConfigError: Raised if an error is found in the pipeline
+            config.
     '''
     path = run_dj_obj.path if run_dj_obj else path_name
     # set up logging for running pipeline from UI
@@ -76,7 +83,7 @@ def run_pipe(
         if debug:
             root_logger.setLevel(logging.DEBUG)
         f_handler = logging.FileHandler(
-            os.path.join(path, 'log.txt'),
+            os.path.join(path, timeStamped('log.txt')),
             mode='w'
         )
         f_handler.setFormatter(root_logger.handlers[0].formatter)
@@ -94,12 +101,16 @@ def run_pipe(
         pipeline.config["run"]["path"],
     )
 
-    # copy across config file at the start
-    logger.debug("Copying temp config file.")
-    shutil.copyfile(
-        os.path.join(p_run.path, 'config.yaml'),
-        os.path.join(p_run.path, 'config_temp.yaml')
-    )
+    # backup the last successful outputs.
+    # if the run is being run again and the last status is END then the
+    # user is highly likely to be attempting to add images. Making the backups
+    # now from a guaranteed successful run is safer in case of problems
+    # with the config file below that causes an error.
+    if flag_exist:
+        if cli and p_run.status == 'END':
+            backup_parquets(p_run.path)
+        elif not cli and prev_ui_status == 'END':
+            backup_parquets(p_run.path)
 
     # validate run configuration
     try:
@@ -123,164 +134,187 @@ def run_pipe(
     # parquets and proceed.
     # C. Additional Run on errored run: Do not backup parquets, just delete
     # current.
+    # D. Running on initialised run that errored and is still the init run.
 
     # Flag on the pipeline object on whether the addition mode is on or off.
     pipeline.add_mode = False
     pipeline.previous_parquets = {}
+    prev_config_exists = False
 
-    if not flag_exist:
-        # check for and remove any present .parquet (and .arrow) files
-        parquets = (
-            glob.glob(os.path.join(p_run.path, "*.parquet"))
-            # TODO Remove arrow when vaex support is dropped.
-            + glob.glob(os.path.join(p_run.path, "*.arrow"))
-            + glob.glob(os.path.join(p_run.path, "*.bak"))
-        )
-        for parquet in parquets:
-            os.remove(parquet)
-    else:
-        # Check if the status is already running or queued. Exit if this is the
-        # case.
-        if p_run.status in ['RUN', 'RES']:
-            logger.error(
-                "The pipeline run requested to process already has a running"
-                " or restoring status! Performing no actions. Exiting."
-            )
-            return True
-
-        # Check for an error status and whether any previous config file
-        # exists - if it doesn't exist it means the run has failed during
-        # the first run. In this case we want to clear anything that has gone
-        # on before so to do that `complete-rerun` mode is activated.
-        if p_run.status == "ERR" and not os.path.isfile(
-            os.path.join(p_run.path, "config_prev.yaml")
-        ):
-            full_rerun = True
-
-        # Backup the previous run config
-        if os.path.isfile(
-            os.path.join(p_run.path, 'config_prev.yaml')
-        ):
-            shutil.copy(
-                os.path.join(p_run.path, 'config_prev.yaml'),
-                os.path.join(p_run.path, 'config.yaml.bak')
-            )
-
-        # Check if the run has only been initialised, if so we don't want to do
-        # any previous run checks or cleaning.
-        if p_run.status == 'INI':
-            initial_run = True
-        # check if coming from UI
-        elif cli is False and prev_ui_status == 'INI':
-            initial_run = True
-        else:
-            initial_run = False
-
-        if initial_run is False:
+    try:
+        if not flag_exist:
+            # check for and remove any present .parquet (and .arrow) files
             parquets = (
                 glob.glob(os.path.join(p_run.path, "*.parquet"))
                 # TODO Remove arrow when arrow files are no longer needed.
                 + glob.glob(os.path.join(p_run.path, "*.arrow"))
+                + glob.glob(os.path.join(p_run.path, "*.bak"))
             )
+            for parquet in parquets:
+                os.remove(parquet)
 
-            if full_rerun:
-                if p_run.status == 'END':
-                    backup_parquets(p_run.path)
-                logger.info(
-                    'Cleaning up pipeline run before re-process data'
+            # copy across config file at the start
+            logger.debug("Copying temp config file.")
+            create_temp_config_file(p_run.path)
+
+        else:
+            # Check if the status is already running or queued. Exit if this is
+            # the case.
+            if p_run.status in ['RUN', 'RES']:
+                logger.error(
+                    "The pipeline run requested to process already has a "
+                    "running or restoring status! Performing no actions. "
+                    "Exiting."
                 )
-                p_run.image_set.clear()
+                return True
 
-                logger.info(
-                    'Cleaning up forced measurements before re-process data'
+            # copy across config file at the start
+            logger.debug("Copying temp config file.")
+            create_temp_config_file(p_run.path)
+
+            # Check if there is a previous run config and back up if so
+            if os.path.isfile(
+                os.path.join(p_run.path, 'config_prev.yaml')
+            ):
+                prev_config_exists = True
+                shutil.copy(
+                    os.path.join(p_run.path, 'config_prev.yaml'),
+                    os.path.join(p_run.path, 'config.yaml.bak')
                 )
-                remove_forced_meas(p_run.path)
+            logger.debug(f'config_prev.yaml exists: {prev_config_exists}')
 
-                for parquet in parquets:
-                    os.remove(parquet)
+            # Check for an error status and whether any previous config file
+            # exists - if it doesn't exist it means the run has failed during
+            # the first run. In this case we want to clear anything that has
+            # gone on before so to do that `complete-rerun` mode is activated.
+            if not prev_config_exists:
+                if cli and p_run.status == "ERR":
+                    full_rerun = True
+                elif not cli and prev_ui_status == "ERR":
+                    full_rerun = True
+            logger.debug(f'Full re-run: {full_rerun}')
 
-                # remove bak files
-                bak_files = glob.glob(os.path.join(p_run.path, "*.bak"))
-                if bak_files:
-                    for bf in bak_files:
-                        os.remove(bf)
-
-                # remove previous config if it exists
-                if os.path.isfile(os.path.join(p_run.path, 'config_prev.yaml')):
-                    os.remove(os.path.join(p_run.path, 'config_prev.yaml'))
-
-                # reset epoch_based flag
-                with transaction.atomic():
-                    p_run.epoch_based = False
-                    p_run.save()
+            # Check if the run has only been initialised, if so we don't want
+            # to do any previous run checks or cleaning.
+            if p_run.status == 'INI':
+                initial_run = True
+            # check if coming from UI
+            elif cli is False and prev_ui_status == 'INI':
+                initial_run = True
             else:
-                # Before parquets are started to be copied and backed up, a
-                # check is run to see if anything has actually changed in
-                # the config
-                config_diff = pipeline.config.check_prev_config_diff()
-                if config_diff:
+                initial_run = False
+
+            if initial_run is False:
+                parquets = (
+                    glob.glob(os.path.join(p_run.path, "*.parquet"))
+                    # TODO Remove arrow when arrow files are no longer needed.
+                    + glob.glob(os.path.join(p_run.path, "*.arrow"))
+                )
+
+                if full_rerun:
                     logger.info(
-                        "The config file has either not changed since the"
-                        " previous run or other settings have changed such"
-                        " that a new or complete re-run should be performed"
-                        " instead. Performing no actions. Exiting."
+                        'Cleaning up pipeline run before re-process data'
                     )
-                    os.remove(os.path.join(p_run.path, 'config_temp.yaml'))
-                    pipeline.set_status(p_run, 'END')
+                    p_run.image_set.clear()
 
-                    return True
-
-                if pipeline.config.epoch_based != p_run.epoch_based:
                     logger.info(
-                        "The 'epoch based' setting has changed since the"
-                        " previous run. A complete re-run is required if"
-                        " changing to epoch based mode or vice versa."
+                        'Cleaning up forced measurements before re-process data'
                     )
-                    os.remove(os.path.join(p_run.path, 'config_temp.yaml'))
-                    pipeline.set_status(p_run, 'END')
-                    return True
+                    remove_forced_meas(p_run.path)
 
-                if cli and p_run.status == 'END':
-                    backup_parquets(p_run.path)
-                elif not cli and prev_ui_status == 'END':
-                    backup_parquets(p_run.path)
+                    for parquet in parquets:
+                        os.remove(parquet)
 
-                pipeline.add_mode = True
-                for i in [
-                    'images', 'associations', 'sources', 'relations',
-                    'measurement_pairs'
-                ]:
-                    pipeline.previous_parquets[i] = os.path.join(
-                        p_run.path, f'{i}.parquet.bak')
+                    # remove bak files
+                    bak_files = glob.glob(os.path.join(p_run.path, "*.bak"))
+                    if bak_files:
+                        for bf in bak_files:
+                            os.remove(bf)
+
+                    # remove previous config if it exists
+                    if prev_config_exists:
+                        os.remove(os.path.join(p_run.path, 'config_prev.yaml'))
+
+                    # reset epoch_based flag
+                    with transaction.atomic():
+                        p_run.epoch_based = False
+                        p_run.save()
+                else:
+                    # Before parquets are started to be copied and backed up, a
+                    # check is run to see if anything has actually changed in
+                    # the config
+                    config_diff = pipeline.config.check_prev_config_diff()
+                    if config_diff:
+                        logger.info(
+                            "The config file has either not changed since the"
+                            " previous run or other settings have changed such"
+                            " that a new or complete re-run should be performed"
+                            " instead. Performing no actions. Exiting."
+                        )
+                        os.remove(os.path.join(p_run.path, 'config_temp.yaml'))
+                        pipeline.set_status(p_run, 'END')
+
+                        return True
+
+                    if pipeline.config.epoch_based != p_run.epoch_based:
+                        logger.info(
+                            "The 'epoch based' setting has changed since the"
+                            " previous run. A complete re-run is required if"
+                            " changing to epoch based mode or vice versa."
+                        )
+                        os.remove(os.path.join(p_run.path, 'config_temp.yaml'))
+                        pipeline.set_status(p_run, 'END')
+                        return True
+
+                    pipeline.add_mode = True
+
+                    for i in [
+                        'images', 'associations', 'sources', 'relations',
+                        'measurement_pairs'
+                    ]:
+                        pipeline.previous_parquets[i] = os.path.join(
+                            p_run.path, f'{i}.parquet.bak')
+    except Exception as e:
+        logger.error('Unexpected error occurred in pre-run steps!')
+        pipeline.set_status(p_run, 'ERR')
+        logger.exception('Processing error:\n%s', e)
+        raise CommandError(f'Processing error:\n{e}')
 
     if pipeline.config["run"]["suppress_astropy_warnings"]:
         warnings.simplefilter("ignore", category=AstropyWarning)
 
     logger.info("VAST Pipeline version: %s", pipeline_version)
-    logger.info("Source finder: %s", pipeline.config["measurements"]["source_finder"])
+    logger.info(
+        "Source finder: %s",
+        pipeline.config["measurements"]["source_finder"]
+    )
     logger.info("Using pipeline run '%s'", pipeline.name)
-    logger.info("Source monitoring: %s", pipeline.config["source_monitoring"]["monitor"])
+    logger.info(
+        "Source monitoring: %s",
+        pipeline.config["source_monitoring"]["monitor"]
+    )
 
     # log the list of input data files for posterity
+    inputs = pipeline.config["inputs"]
     input_image_list = [
         image
-        for image_list in pipeline.config["inputs"]["image"].values()
+        for image_list in inputs["image"].values()
         for image in image_list
     ]
     input_selavy_list = [
         selavy
-        for selavy_list in pipeline.config["inputs"]["selavy"].values()
+        for selavy_list in inputs["selavy"].values()
         for selavy in selavy_list
     ]
     input_noise_list = [
         noise
-        for noise_list in pipeline.config["inputs"]["noise"].values()
+        for noise_list in inputs["noise"].values()
         for noise in noise_list
     ]
-    if "background" in pipeline.config["inputs"].keys():
+    if "background" in inputs.keys():
         input_background_list = [
             background
-            for background_list in pipeline.config["inputs"]["background"].values()
+            for background_list in inputs["background"].values()
             for background in background_list
         ]
     else:
@@ -308,7 +342,8 @@ def run_pipe(
         # Create arrow file after success if selected.
         if pipeline.config["measurements"]["write_arrow_files"]:
             create_measurements_arrow_file(p_run)
-            create_measurement_pairs_arrow_file(p_run)
+            if pipeline.config["variability"]["pair_metrics"]:
+                create_measurement_pairs_arrow_file(p_run)
     except Exception as e:
         # set the pipeline status as error
         pipeline.set_status(p_run, 'ERR')
@@ -385,7 +420,7 @@ class Command(BaseCommand):
         # configure logging
         root_logger = logging.getLogger('')
         f_handler = logging.FileHandler(
-            os.path.join(run_folder, 'log.txt'),
+            os.path.join(run_folder, timeStamped('log.txt')),
             mode='w'
         )
         f_handler.setFormatter(root_logger.handlers[0].formatter)

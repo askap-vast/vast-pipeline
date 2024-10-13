@@ -10,13 +10,13 @@ echo
 
 TMPFILE=`mktemp`
 TMPDIR=`mktemp -d`
-wget "https://cloudstor.aarnet.edu.au/plus/s/xjh0aRr1EGY6Bt3/download" -O ${TMPFILE}
+wget "http://www.physics.usyd.edu.au/~ddob1600/vast-pipeline/pipeline-test-data.zip" -O ${TMPFILE}
 
 echo "Unzipping archive to ${TMPDIR} ..."
 unzip -q -d ${TMPDIR} ${TMPFILE}
 
 echo "Moving data to relevant directory..."
-mv ${TMPDIR}/VAST_PIPELINE_TEST_DATASET/* $(pwd)/.
+mv ${TMPDIR}/pipeline-test-data/* $(pwd)/.
 
 echo "Deleting temporary files..."
 rm -r ${TMPFILE} ${TMPDIR}

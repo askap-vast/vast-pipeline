@@ -11,7 +11,9 @@
   <meta name="description" content="VAST Pipeline WebApp for processing the images from the ASKAP Telescope and detecting transient sources">
   <meta name="author" content="VAST Developement Team">
 
+  {% block title %}
   <title>VAST Pipeline</title>
+  {% endblock title %}
 
   <!-- VAST icon -->
   <link rel="shortcut icon" type="image/png" href="{% static 'img/favicon.png' %}"/>
@@ -75,14 +77,6 @@
         </a>
       </li>
 
-      <!-- Nav Item - Measurements -->
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="{% url 'vast_pipeline:measurement_index' %}">
-          <i class="fas fa-fw fa-bolt"></i>
-          <span>Measurements</span>
-        </a>
-      </li>
-
       <!-- Nav Item - Images -->
       <li class="nav-item">
         <a class="nav-link collapsed" href="{% url 'vast_pipeline:image_index' %}">
@@ -111,7 +105,7 @@
           <span>Raise Issue</span>
         </a>
       </li>
-      
+
       <li class="nav-item">
         <a class="nav-link collapsed" target="_blank" href="https://github.com/askap-vast/vast-pipeline/discussions/new">
           <i class="far fa-comments"></i>
@@ -127,7 +121,7 @@
         <div id="collapseLinks" class="collapse" aria-labelledby="headingDataset" data-parent="#accordionSidebar">
           <div class="bg-white py-2 collapse-inner rounded">
             <a class="collapse-item" target="_blank" href="https://github.com/askap-vast">GitHub</a>
-            <a class="collapse-item" target="_blank" href="https://data.vast-survey.org">JupyterHub</a>
+            <a class="collapse-item" target="_blank" href="https://data.vast-survey.org/hub/">JupyterHub</a>
             <a class="collapse-item" target="_blank" href="https://vast-survey.org">Website</a>
             <a class="collapse-item" target="_blank" href="https://github.com/askap-vast/vast-project/wiki">Wiki</a>
           </div>
@@ -214,63 +208,11 @@
 
         {% endblock content %}
 
-        {% if messages %}
-        <div class="toast-wrapper">
-        {% for message in messages %}
-        {% if message.tags == 'info' %}
-        <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-delay=6000>
-          <div class="toast-header bg-info text-white">
-            <span>
-              <i class="fas fa-info-circle"></i>
-            </span>
-            <strong class="mr-auto">&nbsp;VAST Pipeline</strong>
-            <small>just now</small>
-            <button type="button" class="ml-2 mb-1 close text-white" data-dismiss="toast" aria-label="Close">
-              <span aria-hidden="true">x</span>
-            </button>
-          </div>
-          <div class="toast-body">
-            {{ message }}
-          </div>
-        </div>
-        {% endif %}
-        {% if message.tags == 'success' %}
-        <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-delay=6000>
-          <div class="toast-header bg-success text-white">
-            <span >
-              <i class="fas fa-check-circle"></i>
-            </span>
-            <strong class="mr-auto">&nbsp;VAST Pipeline</strong>
-            <small>just now</small>
-            <button type="button" class="ml-2 mb-1 close text-white" data-dismiss="toast" aria-label="Close">
-              <span aria-hidden="true">x</span>
-            </button>
-          </div>
-          <div class="toast-body">
-            {{ message }}
-          </div>
-        </div>
-        {% endif %}
-        {% if message.tags == 'error' %}
-        <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-delay=6000>
-          <div class="toast-header bg-danger text-white">
-            <span>
-              <i class="fas fa-exclamation-circle"></i>
-            </span>
-            <strong class="mr-auto">&nbsp;VAST Pipeline</strong>
-            <small>just now</small>
-            <button type="button" class="ml-2 mb-1 close text-white" data-dismiss="toast" aria-label="Close">
-              <span aria-hidden="true">x</span>
-            </button>
-          </div>
-          <div class="toast-body">
-            {{ message }}
-          </div>
-        </div>
-        {% endif %}
-        {% endfor %}
-        </div>
-        {% endif %}
+        {% block messages %}
+          <ul class="messages" id="messages-list">
+            {% include 'messages.html' %}
+          </ul>
+        {% endblock messages %}
 
       </div>
       <!-- End of Main Content -->

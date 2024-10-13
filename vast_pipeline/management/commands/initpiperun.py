@@ -8,7 +8,6 @@ import os
 import logging
 from typing import Any, Dict, Optional
 
-from argparse import ArgumentParser
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings as sett
 from django.contrib.auth.models import User
@@ -45,7 +44,7 @@ def initialise_run(
         PipelineInitError: A directory named `run_name` already exists.
 
     Returns:
-        Run: The initialised pipeline Run Django model object.
+        The initialised pipeline Run Django model object.
     """
     # check for duplicated run name
     p_run = Run.objects.filter(name__exact=run_name)

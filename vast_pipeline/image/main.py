@@ -9,6 +9,7 @@ import pandas as pd
 
 from django.conf import settings
 from astropy.io import fits
+from astropy.table import Table
 from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
 from typing import Dict
@@ -16,9 +17,9 @@ from typing import Dict
 from .utils import calc_error_radius
 from .utils import calc_condon_flux_errors
 
-from vast_pipeline.pipeline.config import PipelineConfig
 from vast_pipeline import models
 from vast_pipeline.survey.translators import tr_selavy
+from vast_pipeline.image.utils import open_fits
 
 
 logger = logging.getLogger(__name__)
@@ -33,6 +34,7 @@ class Image(object):
         path (str): The system path to the image.
 
     """
+
     def __init__(self, path: str) -> None:
         """
         Initiliase an image object.
@@ -80,7 +82,7 @@ class FitsImage(Image):
 
     entire_image = True
 
-    def __init__(self, path: str, hdu_index: int=0) -> None:
+    def __init__(self, path: str, hdu_index: int = 0) -> None:
         """
         Initialise a FitsImage object.
 
@@ -107,7 +109,7 @@ class FitsImage(Image):
 
     def __get_header(self, hdu_index: int) -> fits.Header:
         """
-        Retrieves the header from teh FITS image.
+        Retrieves the header from the FITS image.
 
         Args:
             hdu_index:
@@ -116,13 +118,14 @@ class FitsImage(Image):
         Returns:
             The FITS header as an astropy.io.fits.Header object.
         """
+
         try:
-            with fits.open(self.path) as hdulist:
+            with open_fits(self.path) as hdulist:
                 hdu = hdulist[hdu_index]
         except Exception:
             raise IOError((
-                'Could not read this FITS file: '
-                f'{os.path.basename(self.path)}'
+                'Could not read FITS file: '
+                f'{self.path}'
             ))
 
         return hdu.header.copy()
@@ -168,10 +171,20 @@ class FitsImage(Image):
         # get the time as Julian Datetime using Pandas function
         self.jd = self.datetime.to_julian_date()
 
-    def __get_img_coordinates(self, header, fits_naxis1, fits_naxis2):
+    def __get_img_coordinates(
+        self, header: fits.Header, fits_naxis1: str, fits_naxis2: str
+    ) -> None:
         """
-        set the image attributes ra, dec, fov_bmin and fov_bmaj, radius
-        from the image file header
+        Set the image attributes ra, dec, fov_bmin and fov_bmaj, radius
+        from the image file header.
+
+        Args:
+            header: The FITS header object.
+            fits_naxis1: The header keyword of the NAXIS1 to use.
+            fits_naxis2: The header keyword of the NAXIS2 to use.
+
+        Returns:
+            None
         """
         wcs = WCS(header, naxis=2)
         pix_centre = [[header[fits_naxis1] / 2., header[fits_naxis2] / 2.]]
@@ -195,34 +208,51 @@ class FitsImage(Image):
         # TODO: check calcs
         self.radius_pixels = usable_radius_pix
 
-    def __get_radius_pixels(self, header, fits_naxis1, fits_naxis2):
+    def __get_radius_pixels(
+        self, header: fits.Header, fits_naxis1: str, fits_naxis2: str
+    ) -> float:
         """
         Return the radius (pixels) of the full image.
-        If the image is not a square/circle then the shortest radius will be returned.
+
+        If the image is not a square/circle then the shortest radius will be
+        returned.
+
+        Args:
+            header: The FITS header object.
+            fits_naxis1: The header keyword of the NAXIS1 to use.
+            fits_naxis2: The header keyword of the NAXIS2 to use.
+
+        Returns:
+            The radius of the image in pixels.
         """
         if self.entire_image:
-            # a large circle that *should* include the whole image (and then some)
+            # a large circle that *should* include the whole image
+            # (and then some)
             diameter = np.hypot(header[fits_naxis1], header[fits_naxis2])
         else:
             # We simply place the largest circle we can in the centre.
             diameter = min(header[fits_naxis1], header[fits_naxis2])
         return diameter / 2.
 
-    def __get_frequency(self, header):
+    def __get_frequency(self, header: fits.Header) -> None:
         """
         Set some 'shortcut' variables for access to the frequency parameters
         in the FITS file header.
 
-        @param hdulist: hdulist to parse
-        @type hdulist: hdulist
+        Args:
+            header: The FITS header object.
+
+        Returns:
+            None
         """
         self.freq_eff = None
         self.freq_bw = None
         try:
-            if ('ctype3' in header) and (header['ctype3'] in ('FREQ', 'VOPT')):
+            freq_keys = ('FREQ', 'VOPT')
+            if ('ctype3' in header) and (header['ctype3'] in freq_keys):
                 self.freq_eff = header['crval3']
                 self.freq_bw = header['cdelt3'] if 'cdelt3' in header else 0.0
-            elif ('ctype4' in header) and (header['ctype4'] in ('FREQ', 'VOPT')):
+            elif ('ctype4' in header) and (header['ctype4'] in freq_keys):
                 self.freq_eff = header['crval4']
                 self.freq_bw = header['cdelt4'] if 'cdelt4' in header else 0.0
             else:
@@ -244,13 +274,14 @@ class SelavyImage(FitsImage):
             with the image.
         background_path (str): The system path to the background image
             associated with the image.
-        config (PipelineConfig): The pipeline configuration settings.
+        config (Dict): The image configuration settings.
     """
+
     def __init__(
         self,
         path: str,
         paths: Dict[str, Dict[str, str]],
-        config: PipelineConfig,
+        config: Dict,
         hdu_index: int = 0,
     ) -> None:
         """
@@ -261,7 +292,7 @@ class SelavyImage(FitsImage):
             paths: Dictionary containing the system paths to the associated
                 image products and selavy catalogue. The keys are 'selavy',
                 'noise', 'background'.
-            config: Configuration settings for the pipeline.
+            config: Configuration settings for the image ingestion.
             hdu_index: The index number to use to access the header from the
                 hdu object.
 
@@ -272,7 +303,7 @@ class SelavyImage(FitsImage):
         self.selavy_path = paths['selavy'][path]
         self.noise_path = paths['noise'].get(path, '')
         self.background_path = paths['background'].get(path, '')
-        self.config: PipelineConfig = config
+        self.config: Dict = config
         super().__init__(path, hdu_index)
 
     def read_selavy(self, dj_image: models.Image) -> pd.DataFrame:
@@ -288,7 +319,18 @@ class SelavyImage(FitsImage):
             Dataframe containing the cleaned and processed Selavy components.
         """
         # TODO: improve with loading only the cols we need and set datatype
-        df = pd.read_fwf(self.selavy_path, skiprows=[1])
+        if self.selavy_path.endswith(
+                ".xml") or self.selavy_path.endswith(".vot"):
+            df = Table.read(
+                self.selavy_path, format="votable", use_names_over_ids=True
+            ).to_pandas()
+        elif self.selavy_path.endswith(".csv"):
+            # CSVs from CASDA have all lowercase column names
+            df = pd.read_csv(self.selavy_path).rename(
+                columns={"spectral_index_from_tt": "spectral_index_from_TT"}
+            )
+        else:
+            df = pd.read_fwf(self.selavy_path, skiprows=[1])
         # drop first line with unit of measure, select only wanted
         # columns and rename them
         df = df.loc[:, tr_selavy.keys()].rename(
@@ -354,12 +396,12 @@ class SelavyImage(FitsImage):
         # replace 0 local_rms values using user config value
         df.loc[
             df['local_rms'] == 0., 'local_rms'
-        ] = self.config["measurements"]["selavy_local_rms_fill_value"]
+        ] = self.config["selavy_local_rms_fill_value"]
 
         df['snr'] = df['flux_peak'].values / df['local_rms'].values
         df['compactness'] = df['flux_int'].values / df['flux_peak'].values
 
-        if self.config["measurements"]["condon_errors"]:
+        if self.config["condon_errors"]:
             logger.debug("Calculating Condon '97 errors...")
             theta_B = dj_image.beam_bmaj
             theta_b = dj_image.beam_bmin
@@ -391,8 +433,8 @@ class SelavyImage(FitsImage):
 
         logger.debug("Calculating positional errors...")
         # TODO: avoid extra column given that it is a single value
-        df['ew_sys_err'] = self.config["measurements"]["ra_uncertainty"] / 3600.
-        df['ns_sys_err'] = self.config["measurements"]["dec_uncertainty"] / 3600.
+        df['ew_sys_err'] = self.config["ra_uncertainty"] / 3600.
+        df['ns_sys_err'] = self.config["dec_uncertainty"] / 3600.
 
         df['error_radius'] = calc_error_radius(
             df['ra'].values,
@@ -425,12 +467,12 @@ class SelavyImage(FitsImage):
             .agg('sum')
         )
 
-        df['flux_int_isl_ratio'] =  (
+        df['flux_int_isl_ratio'] = (
             df['flux_int'].values
             / island_flux_totals.loc[df['island_id']]['flux_int'].values
         )
 
-        df['flux_peak_isl_ratio'] =  (
+        df['flux_peak_isl_ratio'] = (
             df['flux_peak'].values
             / island_flux_totals.loc[df['island_id']]['flux_peak'].values
         )

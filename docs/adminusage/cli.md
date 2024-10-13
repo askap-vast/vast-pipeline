@@ -19,6 +19,8 @@ Output:
   clearpiperun
   createmeasarrow
   debugrun
+  ingestimages
+  initingest
   initpiperun
   restorepiperun
   runpipeline
@@ -26,7 +28,7 @@ Output:
  ...
 ```
 
-There are 6 commands, described in detail below.
+There are 8 commands, described in detail below.
 
 ### clearpiperun
 
@@ -84,6 +86,9 @@ Example usage:
 ### createmeasarrow
 
 This command allows for the creation of the `measurements.arrow` and `measurement_pairs.arrow` files after a run has been successfully completed. See [Arrow Files](../outputs/outputs.md#arrow-files) for more information.
+
+!!!info
+    The `measurement_pairs.arrow` file will only be created if the run was configured to calculate pair metrics.
 
 ```terminal
 ./manage.py createmeasarrow --help
@@ -179,6 +184,127 @@ Nr of sources: 557
 Nr of association: 3276
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 ```
+
+### ingestimages
+
+This command runs the first part of the pipeline only.
+It ingests/adds a set of images, and their measurements, to the database.
+It requires an image ingestion configuration file as input.
+A template ingest configuration file can be generated with the [`initingest`](#initingest) command (below).
+
+```terminal
+(pipeline_env)$ ./manage.py ingestimages --help
+```
+
+Output:
+
+```terminal
+usage: manage.py ingestimages [-h] [--version] [-v {0,1,2,3}]
+                              [--settings SETTINGS]
+                              [--pythonpath PYTHONPATH] [--traceback]
+                              [--no-color] [--force-color]
+                              [--skip-checks]
+                              image_ingest_config
+
+Ingest/add a set of images to the database
+
+positional arguments:
+  image_ingest_config   Image ingestion configuration filename/path.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --version             show program's version number and exit
+  -v {0,1,2,3}, --verbosity {0,1,2,3}
+                        Verbosity level; 0=minimal output, 1=normal
+                        output, 2=verbose output, 3=very verbose output
+  --settings SETTINGS   The Python path to a settings module, e.g.
+                        "myproject.settings.main". If this isn't
+                        provided, the DJANGO_SETTINGS_MODULE environment
+                        variable will be used.
+  --pythonpath PYTHONPATH
+                        A directory to add to the Python path, e.g.
+                        "/home/djangoprojects/myproject".
+  --traceback           Raise on CommandError exceptions
+  --no-color            Don't colorize the command output.
+  --force-color         Force colorization of the command output.
+  --skip-checks         Skip system checks.
+```
+
+General usage:
+
+```terminal
+(pipeline_env)$ ./manage.py ingestimages ./ingest_config.yml
+```
+
+Output:
+```terminal
+2021-06-25 03:08:44,313 loading INFO Reading image epoch01.fits ...
+2021-06-25 03:08:44,348 utils INFO Adding new frequency band: 888
+2021-06-25 03:08:44,390 utils INFO Created sky region 150.001, -30.001
+2021-06-25 03:08:44,441 loading INFO Processed measurements dataframe of shape: (4, 40)
+2021-06-25 03:08:44,452 loading INFO Bulk created #4 Measurement
+2021-06-25 03:08:44,504 loading INFO Reading image epoch02.fits ...
+...
+2021-06-25 03:08:44,731 loading INFO Reading image epoch04.fits ...
+2021-06-25 03:08:44,771 utils INFO Created sky region 150.021, -30.017
+2021-06-25 03:08:44,805 loading INFO Processed measurements dataframe of shape: (5, 40)
+2021-06-25 03:08:44,810 loading INFO Bulk created #5 Measurement
+2021-06-25 03:08:44,819 loading INFO Total images upload/loading time: 0.97 seconds
+```
+
+### initingest
+
+This command generates a template configuration file for use with the [`ingestimages`](#ingestimages) command.
+
+```terminal
+(pipeline_env)$ ./manage.py initingest --help
+```
+
+Output:
+
+```terminal
+usage: manage.py initingest [-h] [--version] [-v {0,1,2,3}]
+                            [--settings SETTINGS]
+                            [--pythonpath PYTHONPATH] [--traceback]
+                            [--no-color] [--force-color] [--skip-checks]
+                            config_file_name
+
+Create a template image ingestion configuration file
+
+positional arguments:
+  config_file_name      Filename to write template ingest configuration to.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --version             show program's version number and exit
+  -v {0,1,2,3}, --verbosity {0,1,2,3}
+                        Verbosity level; 0=minimal output, 1=normal
+                        output, 2=verbose output, 3=very verbose output
+  --settings SETTINGS   The Python path to a settings module, e.g.
+                        "myproject.settings.main". If this isn't
+                        provided, the DJANGO_SETTINGS_MODULE environment
+                        variable will be used.
+  --pythonpath PYTHONPATH
+                        A directory to add to the Python path, e.g.
+                        "/home/djangoprojects/myproject".
+  --traceback           Raise on CommandError exceptions
+  --no-color            Don't colorize the command output.
+  --force-color         Force colorization of the command output.
+  --skip-checks         Skip system checks.
+```
+
+General usage:
+
+```terminal
+(pipeline_env)$ ./manage.py initingest ingest_config.yml
+```
+
+Output:
+```terminal
+Writing template to:  ingest_config.yml
+```
+
+Then modify `ingest_config.yml` to suit your needs.
 
 ### initpiperun
 
@@ -378,6 +504,14 @@ Would you like to restore the run ? (y/n): y
 
 The pipeline is run using `runpipeline` django command.
 
+The `--full-rerun` option allows for the requested pipeline run to be cleared prior to processing
+so a fresh run is performed.
+
+!!!warning
+    Using `--full-rerun` cannot be undone and all prior results will be deleted, including any source comments
+    associated with the pipeline run.
+    Use with caution.
+
 ```terminal
 (pipeline_env)$ ./manage.py runpipeline --help
 ```
@@ -385,27 +519,27 @@ The pipeline is run using `runpipeline` django command.
 Output:
 
 ```terminal
-usage: manage.py runpipeline [-h] [--version] [-v {0,1,2,3}]
+usage: manage.py runpipeline [-h] [--full-rerun] [--version] [-v {0,1,2,3}]
                              [--settings SETTINGS] [--pythonpath PYTHONPATH]
-                             [--traceback] [--no-color] [--force-color]
-                             [--skip-checks]
+                             [--traceback] [--no-color] [--force-color] [--skip-checks]
                              piperun
 
 Process the pipeline for a list of images and Selavy catalogs
 
 positional arguments:
-  piperun       Path or name of the pipeline run.
+  piperun               Path or name of the pipeline run.
 
 optional arguments:
   -h, --help            show this help message and exit
+  --full-rerun          Flag to signify that a full re-run is requested. Old data is
+                        completely removed and replaced.
   --version             show program's version number and exit
   -v {0,1,2,3}, --verbosity {0,1,2,3}
-                        Verbosity level; 0=minimal output, 1=normal output,
-                        2=verbose output, 3=very verbose output
+                        Verbosity level; 0=minimal output, 1=normal output, 2=verbose
+                        output, 3=very verbose output
   --settings SETTINGS   The Python path to a settings module, e.g.
                         "myproject.settings.main". If this isn't provided, the
-                        DJANGO_SETTINGS_MODULE environment variable will be
-                        used.
+                        DJANGO_SETTINGS_MODULE environment variable will be used.
   --pythonpath PYTHONPATH
                         A directory to add to the Python path, e.g.
                         "/home/djangoprojects/myproject".

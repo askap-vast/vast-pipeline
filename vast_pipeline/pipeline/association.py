@@ -19,9 +19,8 @@ from .utils import (
     add_new_many_to_one_relations,
     reconstruct_associtaion_dfs
 )
-from vast_pipeline.models import Association
 from vast_pipeline.pipeline.config import PipelineConfig
-from vast_pipeline.utils.utils import StopWatch
+from vast_pipeline.utils.utils import StopWatch, calculate_n_partitions
 
 
 logger = logging.getLogger(__name__)
@@ -79,8 +78,9 @@ def calc_de_ruiter(df: pd.DataFrame) -> np.ndarray:
 
 
 def one_to_many_basic(
-    skyc2_srcs: pd.DataFrame, sources_df: pd.DataFrame,
-    id_incr_par_assoc: int=0
+    skyc2_srcs: pd.DataFrame,
+    sources_df: pd.DataFrame,
+    id_incr_par_assoc: int = 0
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Finds and processes the one-to-many associations in the basic
@@ -103,8 +103,10 @@ def one_to_many_basic(
             association
 
     Returns:
-        Tuple containging the updated 'skyc2_srcs' and 'sources_df' with
-        all one_to_many relation information added.
+        Updated 'skyc2_srcs' with all the one_to_many relation information
+            added.
+        Updated 'sources_df' with all the one_to_many relation information
+            added.
     """
     # select duplicated in 'source' field in skyc2_srcs, excluding -1
     duplicated_skyc2 = skyc2_srcs.loc[
@@ -223,7 +225,7 @@ def one_to_many_basic(
         axis=1
     )
 
-    duplicated_skyc2 = original.append(not_original)
+    duplicated_skyc2 = pd.concat([original, not_original])
 
     # duplicated_skyc2
     # +-----+----------+-----------+---------+-----------------+
@@ -303,9 +305,9 @@ def one_to_many_basic(
     # Reset the related column to avoid rogue relations
     sources_to_copy['related'] = None
 
-    # and finally append.
-    sources_df = sources_df.append(
-        sources_to_copy,
+    # and finally concatenate.
+    sources_df = pd.concat(
+        [sources_df, sources_to_copy],
         ignore_index=True
     )
 
@@ -316,7 +318,7 @@ def one_to_many_advanced(
     temp_srcs: pd.DataFrame,
     sources_df: pd.DataFrame,
     method: str,
-    id_incr_par_assoc: int=0
+    id_incr_par_assoc: int = 0
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     '''
     Finds and processes the one-to-many associations in the advanced
@@ -344,29 +346,31 @@ def one_to_many_advanced(
             Mainly useful for add mode with parallel association
 
     Returns:
-        Updated temp_srcs and sources_df with all one_to_many relation
-        information added.
+        Updated `temp_srcs` dataframe with all the one_to_many relation
+            information added.
+        Updated `sources_df` dataframe with all the one_to_many relation
+            information added.
     '''
     # use only these columns for easy debugging of the dataframe
     cols = [
-        'index_old_skyc1', 'id_skyc1', 'source_skyc1', 'd2d_skyc1',
+        'index_old_skyc1', 'id_skyc1', 'source_skyc1',
         'related_skyc1', 'index_old_skyc2', 'id_skyc2', 'source_skyc2',
-        'd2d_skyc2', 'dr'
+        'd2d', 'dr'
     ]
     duplicated_skyc1 = temp_srcs.loc[
         temp_srcs['source_skyc1'].duplicated(keep=False), cols
     ].copy()
 
     # duplicated_skyc1
-    # +-----+-------------------+------------+----------------+-------------+
-    # |     |   index_old_skyc1 |   id_skyc1 |   source_skyc1 |   d2d_skyc1 |
-    # |-----+-------------------+------------+----------------+-------------+
-    # | 117 |               121 |        122 |            122 |           0 |
-    # | 118 |               121 |        122 |            122 |           0 |
-    # | 238 |               253 |        254 |            254 |           0 |
-    # | 239 |               253 |        254 |            254 |           0 |
-    # | 246 |               261 |        262 |            262 |           0 |
-    # +-----+-------------------+------------+----------------+-------------+
+    # +-----+-------------------+------------+----------------+
+    # |     |   index_old_skyc1 |   id_skyc1 |   source_skyc1 |
+    # |-----+-------------------+------------+----------------+
+    # | 117 |               121 |        122 |            122 |
+    # | 118 |               121 |        122 |            122 |
+    # | 238 |               253 |        254 |            254 |
+    # | 239 |               253 |        254 |            254 |
+    # | 246 |               261 |        262 |            262 |
+    # +-----+-------------------+------------+----------------+
     # -----------------+-------------------+------------+----------------+
     #  related_skyc1   |   index_old_skyc2 |   id_skyc2 |   source_skyc2 |
     # -----------------+-------------------+------------+----------------+
@@ -377,7 +381,7 @@ def one_to_many_advanced(
     #                  |               327 |       5869 |             -1 |
     # -----------------+-------------------+------------+----------------+
     # -------------+------+
-    #    d2d_skyc2 |   dr |
+    #          d2d |   dr |
     # -------------+------|
     #      3.07478 |    0 |
     #      6.41973 |    0 |
@@ -399,7 +403,7 @@ def one_to_many_advanced(
     # Get the column to check for the minimum depending on the method
     # set the column names needed for filtering the 'to-many'
     # associations depending on the method (advanced or deruiter)
-    dist_col = 'd2d_skyc2' if method == 'advanced' else 'dr'
+    dist_col = 'd2d' if method == 'advanced' else 'dr'
 
     # go through the doubles and
     # 1. Keep the closest d2d or de ruiter as the primary id
@@ -512,7 +516,7 @@ def one_to_many_advanced(
     )
 
     # Merge them back together
-    duplicated_skyc1 = original.append(not_original)
+    duplicated_skyc1 = pd.concat([original, not_original])
 
     del original, not_original
 
@@ -592,11 +596,8 @@ def one_to_many_advanced(
     # Reset the related column to avoid rogue relations
     sources_to_copy['related'] = None
 
-    # and finally append.
-    sources_df = sources_df.append(
-        sources_to_copy,
-        ignore_index=True
-    )
+    # and finally concatenate.
+    sources_df = pd.concat([sources_df, sources_to_copy], ignore_index=True)
 
     return temp_srcs, sources_df
 
@@ -643,7 +644,7 @@ def many_to_many_advanced(temp_srcs: pd.DataFrame, method: str) -> pd.DataFrame:
         m_to_m.shape[0]
     )
 
-    dist_col = 'd2d_skyc2' if method == 'advanced' else 'dr'
+    dist_col = 'd2d' if method == 'advanced' else 'dr'
     min_col = 'min_' + dist_col
 
     # get the minimum de ruiter value for each extracted source
@@ -667,7 +668,7 @@ def many_to_one_advanced(temp_srcs: pd.DataFrame) -> pd.DataFrame:
 
     Args:
         temp_srcs:
-            The temporary associtation dataframe used through the advanced
+            The temporary association dataframe used through the advanced
             association process.
 
     Returns:
@@ -675,9 +676,9 @@ def many_to_one_advanced(temp_srcs: pd.DataFrame) -> pd.DataFrame:
     '''
     # use only these columns for easy debugging of the dataframe
     cols = [
-        'index_old_skyc1', 'id_skyc1', 'source_skyc1', 'd2d_skyc1',
+        'index_old_skyc1', 'id_skyc1', 'source_skyc1',
         'related_skyc1', 'index_old_skyc2', 'id_skyc2', 'source_skyc2',
-        'd2d_skyc2', 'dr'
+        'd2d', 'dr'
     ]
 
     # select those sources which have been matched to the same measurement
@@ -688,15 +689,15 @@ def many_to_one_advanced(temp_srcs: pd.DataFrame) -> pd.DataFrame:
     ]
 
     # duplicated_skyc2
-    # +-----+-------------------+------------+----------------+-------------
-    # |     |   index_old_skyc1 |   id_skyc1 |   source_skyc1 |   d2d_skyc1
-    # |-----+-------------------+------------+----------------+-------------
-    # | 447 |               477 |        478 |            478 |           0
-    # | 448 |               478 |        479 |            479 |           0
-    # | 477 |               507 |        508 |            508 |           0
-    # | 478 |               508 |        509 |            509 |           0
-    # | 695 |               738 |        739 |            739 |           0
-    # +-----+-------------------+------------+----------------+-------------
+    # +-----+-------------------+------------+----------------+
+    # |     |   index_old_skyc1 |   id_skyc1 |   source_skyc1 |
+    # |-----+-------------------+------------+----------------+
+    # | 447 |               477 |        478 |            478 |
+    # | 448 |               478 |        479 |            479 |
+    # | 477 |               507 |        508 |            508 |
+    # | 478 |               508 |        509 |            509 |
+    # | 695 |               738 |        739 |            739 |
+    # +-----+-------------------+------------+----------------+
     # +-----------------+-------------------+------------+----------------+
     # | related_skyc1   |   index_old_skyc2 |   id_skyc2 |   source_skyc2 |
     # +-----------------+-------------------+------------+----------------+
@@ -707,7 +708,7 @@ def many_to_one_advanced(temp_srcs: pd.DataFrame) -> pd.DataFrame:
     # |                 |               561 |       6103 |             -1 |
     # +-----------------+-------------------+------------+----------------+
     # -------------+------+
-    #    d2d_skyc2 |   dr |
+    #          d2d |   dr |
     # -------------+------|
     #      8.63598 |    0 |
     #      8.63598 |    0 |
@@ -787,9 +788,13 @@ def many_to_one_advanced(temp_srcs: pd.DataFrame) -> pd.DataFrame:
 
 
 def basic_association(
-        sources_df: pd.DataFrame, skyc1_srcs: pd.DataFrame, skyc1: SkyCoord,
-        skyc2_srcs: pd.DataFrame, skyc2: SkyCoord, limit: Angle,
-        id_incr_par_assoc: int=0
+        sources_df: pd.DataFrame,
+        skyc1_srcs: pd.DataFrame,
+        skyc1: SkyCoord,
+        skyc2_srcs: pd.DataFrame,
+        skyc2: SkyCoord,
+        limit: Angle,
+        id_incr_par_assoc: int = 0
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     '''
     The loop for basic source association that uses the astropy
@@ -820,10 +825,10 @@ def basic_association(
             image are being used). Defaults to 0.
 
     Returns:
-        The output sources_df containing all input measurements along with the
-        association and relation information.
-        The output skyc1_srcs with updated with new sources from the
-        association.
+        The output `sources_df` containing all input measurements along with the
+            association and relation information.
+        The output `skyc1_srcs` with updated with new sources from the
+            association.
     '''
     # match the new sources to the base
     # idx gives the index of the closest match in the base for skyc2
@@ -856,16 +861,20 @@ def basic_association(
         )
     )
 
-    # and skyc2 is now ready to be appended to new sources
-    sources_df = sources_df.append(
-        skyc2_srcs, ignore_index=True
+    # and skyc2 is now ready to be concatenated with the new sources
+    sources_df = pd.concat(
+        [sources_df, skyc2_srcs],
+        ignore_index=True
     ).reset_index(drop=True)
 
     # and update skyc1 with the sources that were created from the one
     # to many relations and any new sources.
-    skyc1_srcs = skyc1_srcs.append(
-        skyc2_srcs[
-            ~skyc2_srcs['source'].isin(skyc1_srcs['source'])
+    skyc1_srcs = pd.concat(
+        [
+            skyc1_srcs,
+            skyc2_srcs[
+                ~skyc2_srcs['source'].isin(skyc1_srcs['source'])
+            ]
         ],
         ignore_index=True
     ).reset_index(drop=True)
@@ -874,9 +883,15 @@ def basic_association(
 
 
 def advanced_association(
-        method: str, sources_df: pd.DataFrame, skyc1_srcs: pd.DataFrame,
-        skyc1: SkyCoord, skyc2_srcs: pd.DataFrame, skyc2: SkyCoord,
-        dr_limit: float, bw_max: float, id_incr_par_assoc: int=0
+        method: str,
+        sources_df: pd.DataFrame,
+        skyc1_srcs: pd.DataFrame,
+        skyc1: SkyCoord,
+        skyc2_srcs: pd.DataFrame,
+        skyc2: SkyCoord,
+        dr_limit: float,
+        bw_max: float,
+        id_incr_par_assoc: int = 0
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     '''
     The loop for advanced source association that uses the astropy
@@ -913,10 +928,10 @@ def advanced_association(
             image are being used). Defaults to 0.
 
     Returns:
-        The output sources_df containing all input measurements along with the
-        association and relation information.
-        The output skyc1_srcs with updated with new sources from the
-        association.
+        The output `sources_df` containing all input measurements along with the
+            association and relation information.
+        The output `skyc1_srcs` with updated with new sources from the
+            association.
     '''
     # read the needed sources fields
     # Step 1: get matches within semimajor axis of image.
@@ -942,6 +957,13 @@ def advanced_association(
         left_index=True,
         right_index=True,
         suffixes=('_skyc1', '_skyc2')
+    )
+
+    # drop the double d2d column and keep the d2d_skyc2 as assigned above
+    temp_srcs = (
+        temp_srcs
+        .drop(['d2d_skyc1', 'dr_skyc1', 'dr_skyc2'], axis=1)
+        .rename(columns={'d2d_skyc2': 'd2d'})
     )
 
     del temp_skyc1_srcs, temp_skyc2_srcs
@@ -981,6 +1003,7 @@ def advanced_association(
     ].reset_index(drop=True)
     skyc2_srcs_toappend['source'] = temp_srcs['source_skyc1'].values
     skyc2_srcs_toappend['related'] = temp_srcs['related_skyc1'].values
+    skyc2_srcs_toappend['d2d'] = temp_srcs['d2d'].values
     skyc2_srcs_toappend['dr'] = temp_srcs['dr'].values
 
     # and get the skyc2 sources with no match
@@ -1000,37 +1023,51 @@ def advanced_association(
         start_elem + new_sources.shape[0],
         dtype=int
     )
-    skyc2_srcs_toappend = skyc2_srcs_toappend.append(
-        new_sources, ignore_index=True
+    skyc2_srcs_toappend = pd.concat(
+        [skyc2_srcs_toappend, new_sources],
+        ignore_index=True
     )
 
-    # and skyc2 is now ready to be appended to source_df
-    sources_df = sources_df.append(
-        skyc2_srcs_toappend, ignore_index=True
+    # and skyc2 is now ready to be concatenated with source_df
+    sources_df = pd.concat(
+        [sources_df, skyc2_srcs_toappend],
+        ignore_index=True
     ).reset_index(drop=True)
 
     # update skyc1 and df for next association iteration
     # calculate average angles for skyc1
-    skyc1_srcs = (
-        skyc1_srcs.append(new_sources, ignore_index=True)
-        .reset_index(drop=True)
-    )
+    skyc1_srcs = pd.concat(
+        [skyc1_srcs, new_sources],
+        ignore_index=True
+    ).reset_index(drop=True)
 
     # also need to append any related sources that created a new
     # source, we can use the skyc2_srcs_toappend to get these
-    skyc1_srcs = skyc1_srcs.append(
-        skyc2_srcs_toappend.loc[
-            ~skyc2_srcs_toappend.source.isin(skyc1_srcs.source)
+    skyc1_srcs = pd.concat(
+        [
+            skyc1_srcs,
+            skyc2_srcs_toappend.loc[
+                ~skyc2_srcs_toappend.source.isin(skyc1_srcs.source)
+            ]
         ]
     )
 
     return sources_df, skyc1_srcs
 
 
-def association(images_df: pd.DataFrame, limit: Angle, dr_limit: float,
-    bw_limit: float, duplicate_limit: Angle, config: PipelineConfig, add_mode: bool,
-    previous_parquets: Dict[str, str], done_images_df: pd.DataFrame,
-    id_incr_par_assoc: int=0, parallel: bool=False) -> pd.DataFrame:
+def association(
+    images_df: pd.DataFrame,
+    limit: Angle,
+    dr_limit: float,
+    bw_limit: float,
+    duplicate_limit: Angle,
+    config: PipelineConfig,
+    add_mode: bool,
+    previous_parquets: Dict[str, str],
+    done_images_df: pd.DataFrame,
+    id_incr_par_assoc: int = 0,
+    parallel: bool = False
+) -> pd.DataFrame:
     '''
     The main association function that does the common tasks between basic
     and advanced modes.
@@ -1066,7 +1103,7 @@ def association(images_df: pd.DataFrame, limit: Angle, dr_limit: float,
 
     Returns:
         The output sources_df containing all input measurements along with the
-        association and relation information.
+            association and relation information.
 
     Raises:
         Exception: Raised if association method is not valid.
@@ -1074,6 +1111,11 @@ def association(images_df: pd.DataFrame, limit: Angle, dr_limit: float,
     timer = StopWatch()
 
     if parallel:
+        # Skip empty groups that seems to sometimes happen with the
+        # dask groupby
+        if len(images_df) == 0:
+            return images_df
+
         images_df = (
             images_df.sort_values(by='image_datetime')
             .drop('image_datetime', axis=1)
@@ -1244,7 +1286,7 @@ def association(images_df: pd.DataFrame, limit: Angle, dr_limit: float,
         # account for RA wrapping
         ra_wrap_mask = sources_df.ra <= 0.1
         sources_df['ra_wrap'] = sources_df.ra.values
-        sources_df.at[
+        sources_df.loc[
             ra_wrap_mask, 'ra_wrap'
         ] = sources_df[ra_wrap_mask].ra.values + 360.
 
@@ -1295,7 +1337,7 @@ def association(images_df: pd.DataFrame, limit: Angle, dr_limit: float,
 
         # correct the RA wrapping
         ra_wrap_mask = weighted_df.ra >= 360.
-        weighted_df.at[
+        weighted_df.loc[
             ra_wrap_mask, 'ra'
         ] = weighted_df[ra_wrap_mask].ra.values - 360.
 
@@ -1425,8 +1467,8 @@ def _correct_parallel_source_ids_add_mode(
             The start elem number for the new source ids.
 
     Returns:
-        The input df with corrected source ids and relations, and the new
-        start elem for the next group.
+        The input dataframe with corrected source ids and relations.
+        The new start elem for the next group.
     """
     # When using add_mode the correction becomes easier with the increment
     # as there's a clear difference between old and new.
@@ -1502,7 +1544,7 @@ def parallel_association(
         n_skyregion_groups: The number of sky region groups.
 
     Returns:
-        pd.DataFrame: The combined association results of the parallel
+        The combined association results of the parallel
             association with corrected source ids.
     """
     logger.info(
@@ -1546,10 +1588,12 @@ def parallel_association(
     id_incr_par_assoc = max(done_source_ids) if add_mode else 0
 
     n_cpu = cpu_count() - 1
-
+    logger.debug(f"Running association with {n_cpu} CPUs")
+    n_partitions = calculate_n_partitions(images_df, n_cpu)
+    
     # pass each skyreg_group through the normal association process.
     results = (
-        dd.from_pandas(images_df, n_cpu)
+        dd.from_pandas(images_df.set_index('skyreg_group'), npartitions=n_partitions)
         .groupby('skyreg_group')
         .apply(
             association,

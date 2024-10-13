@@ -119,6 +119,10 @@ Below is an example of a default `config.yaml` file. Note that no images or othe
       dec_uncertainty: 1.0  # arcsec
 
     variability:
+      # For each source, calculate the measurement pair metrics (Vs and m) for each unique
+      # combination of measurements.
+      pair_metrics: True
+
       # Only measurement pairs where the Vs metric exceeds this value are selected for the
       # aggregate pair metrics that are stored in Source objects.
       source_aggregate_pair_metrics_min_abs_vs: 4.3
@@ -141,8 +145,14 @@ Boolean. Astropy warnings are suppressed in the logging output if set to `True`.
 
 ### Input Images and Selavy Files
 
+!!! warning "Warning: Entry Order"
+    The order of the the inputs must be consistent between the different input types.
+    I.e. if `image1.fits` is the first listed image then `image1_selavy.txt` must be the first selavy input listed.
+
 **`inputs.image`**
-Line entries or epoch headed entries. The full paths to the image FITS files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see [Epoch Based Association](../design/association.md#epoch-based-association)) in which case all inputs must also be in dictionary format. The order of the entries must be consistent with the other input types.
+Line entries or epoch headed entries. 
+The full paths to the image FITS files to be processed - these can be regular FITS files, or FITS files that use a [`CompImageHDU`](https://docs.astropy.org/en/stable/io/fits/api/images.html#astropy.io.fits.CompImageHDU). In principle the pipeline also supports [`.fits.fz`](https://heasarc.gsfc.nasa.gov/fitsio/fpack/) files, although this is not officially supported. Epoch mode is activated by including an extra key value with the epoch name, see the example below for a demonstration.
+Refer to [this section](../design/association.md#epoch-based-association) of the documentation for more information on epoch based association.
 
 <!-- markdownlint-disable MD046 -->
 !!! example "config.yaml"
@@ -167,10 +177,27 @@ Line entries or epoch headed entries. The full paths to the image FITS files to 
             epoch02:
             - /full/path/to/image3.fits
         ```
+        Make sure that the epoch names are orderable in the correct order, for example, use:
+        ```
+        epoch01:
+        ...
+        epoch09:
+        epoch10:
+        ``` 
+        and not:
+        ```
+        epoch1:
+        ...
+        epoch9:
+        epoch10:
+        ```
     <!-- markdownlint-enable MD046 -->
 
 **`inputs.selavy`**
-Line entries or epoch headed entries. The full paths to the selavy text files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see [Epoch Based Association](../design/association.md#epoch-based-association)) in which case all inputs must also be in dictionary format. The order of the entries must be consistent with the other input types.
+Line entries or epoch headed entries. 
+The full paths to the selavy text files to be processed. 
+Epoch mode is activated by including an extra key value with the epoch name, see the example below for a demonstration.
+Refer to [this section](../design/association.md#epoch-based-association) of the documentation for more information on epoch based association.
 
 !!! example "config.yaml"
     <!-- markdownlint-disable MD046 -->
@@ -195,10 +222,27 @@ Line entries or epoch headed entries. The full paths to the selavy text files to
             epoch02:
             - /full/path/to/image3_selavy.txt
         ```
+        Make sure that the epoch names are orderable in the correct order, for example, use:
+        ```
+        epoch01:
+        ...
+        epoch09:
+        epoch10:
+        ``` 
+        and not:
+        ```
+        epoch1:
+        ...
+        epoch9:
+        epoch10:
+        ```
     <!-- markdownlint-enable MD046 -->
 
 **`inputs.noise`**
-Line entries or epoch headed entries. The full paths to the image noise (RMS) FITS files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see [Epoch Based Association](../design/association.md#epoch-based-association)) in which case all inputs must also be in dictionary format. The order of the entries must be consistent with the other input types.
+Line entries or epoch headed entries. 
+The full paths to the image noise (RMS) FITS files to be processed. 
+Epoch mode is activated by including an extra key value with the epoch name, see the example below for a demonstration.
+Refer to [this section](../design/association.md#epoch-based-association) of the documentation for more information on epoch based association.
 
 !!! example "config.yaml"
     <!-- markdownlint-disable MD046 -->
@@ -223,10 +267,28 @@ Line entries or epoch headed entries. The full paths to the image noise (RMS) FI
             epoch02:
             - /full/path/to/image3_rms.fits
         ```
+        Make sure that the epoch names are orderable in the correct order, for example, use:
+        ```
+        epoch01:
+        ...
+        epoch09:
+        epoch10:
+        ``` 
+        and not:
+        ```
+        epoch1:
+        ...
+        epoch9:
+        epoch10:
+        ```
     <!-- markdownlint-enable MD046 -->
 
 **`inputs.background`**
-Line entries or epoch headed entries. The full paths to the image background (mean) FITS files to be processed. Also accepts a dictionary format that will activate _epoch mode_ (see [Epoch Based Association](../design/association.md#epoch-based-association)) in which case all inputs must also be in dictionary format. The order of the entries must be consistent with the other input types. Only required to be defined if `source_monitoring.monitor` is set to `True`.
+Line entries or epoch headed entries.
+The full paths to the image background (mean) FITS files to be processed. 
+Epoch mode is activated by including an extra key value with the epoch name, see the example below for a demonstration.
+Refer to [this section](../design/association.md#epoch-based-association) of the documentation for more information on epoch based association.
+The background images are only required to be defined if `source_monitoring.monitor` is set to `True`.
 
 !!! example "config.yaml"
     <!-- markdownlint-disable MD046 -->
@@ -250,6 +312,20 @@ Line entries or epoch headed entries. The full paths to the image background (me
             - /full/path/to/image2_bkg.fits
             epoch02:
             - /full/path/to/image3_bkg.fits
+        ```
+        Make sure that the epoch names are orderable in the correct order, for example, use:
+        ```
+        epoch01:
+        ...
+        epoch09:
+        epoch10:
+        ``` 
+        and not:
+        ```
+        epoch1:
+        ...
+        epoch9:
+        epoch10:
         ```
     <!-- markdownlint-enable MD046 -->
 
@@ -400,12 +476,13 @@ Float. Value to substitute for the `local_rms` parameter in selavy extractions i
 Boolean. When `True` then two `arrow` format files are produced:
 
 * `measurements.arrow` - an arrow file containing all the measurements associated with the run.
-* `measurement_pairs.arrow` -  an arrow file containing the measurement pairs information pre-merged with extra information from the measurements.
+* `measurement_pairs.arrow` -  an arrow file containing the measurement pairs information pre-merged with extra information from the measurements. Only output if `variability.pair_metrics` is also set to `True`.
 
 Producing these files for large runs (200+ images) is recommended for post-processing. Defaults to `False`.
 
 !!! note
-    The arrow files can optionally be produced after the run has completed by an administrator.
+    The arrow files can optionally be produced after the run has completed.
+    See the [Generating Arrow Files page](genarrow.md).
 
 **`measurements.ra_uncertainty`**
 Float. Defines an uncertainty error to the RA that will be added in quadrature to the existing source extraction error. Used to represent a systematic positional error. Unit is arcseconds. Defaults to 1.0.
@@ -414,6 +491,9 @@ Float. Defines an uncertainty error to the RA that will be added in quadrature t
 Float. Defines an uncertainty error to the Dec that will be added in quadrature to the existing source extraction error. Used to represent systematic positional error. Unit is arcseconds. Defaults to 1.0.
 
 ### Variability
+
+**`variability.pair_metrics`**
+Boolean. When `True` then the two-epoch metrics are calculated for each source. It is recommended that users set this to `False` to skip calculating the pair metrics for runs that contain many input images per source. Defaults to `True`.
 
 **`variability.source_aggregate_pair_metrics_min_abs_vs`**
 Float. Defines the minimum $V_s$ two-epoch metric value threshold used to attach the most significant pair value to the source. Defaults to `4.3`.

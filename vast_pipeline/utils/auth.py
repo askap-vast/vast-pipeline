@@ -1,7 +1,7 @@
 import logging
 import requests
 
-from typing import Tuple, Dict
+from typing import Dict
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -31,8 +31,8 @@ def create_admin_user(uid: int, response: Dict, details: Dict, user: User,
             Social auth user model object
 
     Returns:
-        return a dictionary with the Django User object in it or empty if
-        no action are taken
+        A dictionary with the Django User object in it or empty if
+            no action is taken.
     """
     # assume github-org backend, add <if backend.name == 'github-org'>
     # if other backend are implemented
@@ -88,8 +88,8 @@ def load_github_avatar(response: Dict, social: UserSocialAuth, *args,
             Arbitrary keyword arguments.
 
     Returns:
-        return a dictionary with the Social auth user object in it or empty if
-        no action are taken
+        A dictionary with the Social auth user object in it or empty if
+            no action is taken.
     """
     # assume github-org backend, add <if backend.name == 'github-org'>
     # if other backend are implemented

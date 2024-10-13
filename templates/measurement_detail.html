@@ -4,6 +4,10 @@
 
 {% load unit_tags %}
 
+{% block title %}
+<title>VAST Pipeline: Measurement ID {{ measurement.id }}</title>
+{% endblock title %}
+
 {% block head %}
 
 <link rel="stylesheet" href="{% static 'vendor/js9/js9-allinone.css' %}" />
@@ -322,7 +326,7 @@
       addBaseUrl = (url) => baseUrl == null ? url : '/' + baseUrl + url;
       var measurement = JSON.parse(document.getElementById("data-js9").textContent);
       JS9.Load(
-        addBaseUrl('/cutout/' + measurement.name + '/large'), {
+        addBaseUrl('/cutout/' + measurement.id + '/large'), {
           scalemin: -0.001,
           scalemax: 0.004,
           color: 'gray',

@@ -37,7 +37,7 @@ pipeline-runs
 │   ├── forced_measurements_VAST_2118-06A_EPOCH06x_I_cutout_fits.parquet
 │   ├── forced_measurements_VAST_2118-06A_EPOCH12_I_cutout_fits.parquet
 │   ├── images.parquet
-│   ├── log.txt
+│   ├── YYYY-MM-DD-HH-MM-SS_log.txt
 │   ├── measurements.arrow
 │   ├── measurement_pairs.arrow
 │   ├── measurement_pairs.parquet
@@ -58,10 +58,8 @@ The two-epoch measurement pairs are also saved to arrow format due to the same r
 !!! note
     At the time of development `vaex` could not open parquets in an out-of-core context. This will be reviewed in the future if such functionality is added to `vaex`.
 
-!!! tip
-    The arrow files can be generated after a run has successfully completed (must be done by an administrator, refer to the admin command [`createmaeasarrow`](../adminusage/cli.md#createmeasarrow)).
-
 To enable the arrow files to be produced, the option `measurements.write_arrow_files` is required to be set to `True` in the pipeline run config.
+Alternatively, the arrow files can be generated after the completion of the run, see the [Generating Arrow Files page](../../using/genarrow) for full details.
 
 ### Image Data
 
@@ -112,7 +110,7 @@ Here, for each image, the selavy measurements that have been ingested are stored
 | `config_prev.yaml` | The previous pipeline run configuration file used by the [add image](../using/addtorun.md) mode. |
 | `forced_measurements*.parquet` | Multiple files that contain the forced measurements extracted from the respective image denoted in the filename. |
 | `images.parquet` | Contains the information of the images processed in the pipeline run. |
-| `log.txt` | The log file of the pipeline run. |
+| `YYYY-MM-DD-HH-MM-SS_log.txt` | The log file of the pipeline run. It is timestamped with the date and time of the run start. |
 | `measurements.arrow` | An [Apache Arrow](https://arrow.apache.org/overview/){:target="_blank"} format file containing all the measurements associated with the pipeline run (see [Arrow Files](#arrow-files)).|
 | `measurement_pairs.arrow` | An [Apache Arrow](https://arrow.apache.org/overview/){:target="_blank"} format file containing all the measurement pair metrics (see [Arrow Files](#arrow-files)). |
 | `measurement_pairs.parquet` | Contains all the measurement pairs metrics. |

@@ -3,67 +3,88 @@ name: test-suite
 on: [pull_request]
 
 env:
-  db_password: 'postgres'
-  db_port: '5432'
+  db_password: "postgres"
+  db_port: "5432"
 
 jobs:
   test:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
-        python_version: ['3.7.5', '3.8.7', '3.9.1']
+        python_version: ["3.8.12", "3.9.10", "3.10"]
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Create dev database
-      uses: ./.github/actions/create-dev-database
-      with:
-        db_password: ${{ env.db_password }}
-        db_port: ${{ env.db_port }}
+      - name: Create dev database
+        uses: ./.github/actions/create-dev-database
+        with:
+          db_password: ${{ env.db_password }}
+          db_port: ${{ env.db_port }}
 
-    - name: Install dependencies
-      run: sudo apt-get install -y libpq-dev libgraphviz-dev
+      - name: Install dependencies
+        run: sudo apt-get install -y libpq-dev libgraphviz-dev
 
-    - uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python_version }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python_version }}
 
-    - uses: actions/setup-node@v2
-      with:
-        node-version: '12'
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v1
+        with:
+          version: "10.0"
+      
+      - uses: snok/install-poetry@v1
+        with:
+          version: 1.5.1
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+      - name: cache deps
+        id: cache-deps
+        uses: actions/cache@v2
+        with:
+          path: .venv
+          key: pydeps-${{ hashFiles('**/poetry.lock') }}
 
-    - name: Set up frontend assets and install python dependencies
-      run: |
-        npm ci
-        npm start
-        pip install .
+      - run: poetry install --no-interaction --no-root
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+      
+      - run: poetry install --no-interaction
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "12"
 
-    - name: Set DATABASE_URL (using ansible)
-      run: >
-        cp webinterface/.env.template webinterface/.env &&
-        ansible localhost
-        -m lineinfile
-        -a "
-        path=webinterface/.env
-        regex=^DATABASE_URL
-        line='DATABASE_URL=psql://vast:vastpsw@localhost:${{ env.db_port }}/vastdb'
-        "
+      - name: Set up frontend assets
+        run: |
+          npm ci
+          npm start
 
-    - name: Create database user and database name
-      run: >
-        python ./init-tools/init-db.py
-        localhost ${{ env.db_port }}
-        postgres ${{ env.db_password }}
-        vast vastpsw vastdb
+      - name: Set DATABASE_URL (using ansible)
+        run: >
+          cp webinterface/.env.template webinterface/.env &&
+          ansible localhost
+          -m lineinfile
+          -a "
+          path=webinterface/.env
+          regex=^DATABASE_URL
+          line='DATABASE_URL=psql://vast:vastpsw@localhost:${{ env.db_port }}/vastdb'
+          "
 
-    - name: Make relevant directories
-      run: mkdir pipeline-runs
+      - name: Create database user and database name
+        run: >
+          poetry run python ./init-tools/init-db.py
+          localhost ${{ env.db_port }}
+          postgres ${{ env.db_password }}
+          vast vastpsw vastdb
 
-    - name: Download regression test data
-      run: bash -e ./download.sh
-      working-directory: ./vast_pipeline/tests/regression-data
+      - name: Make relevant directories
+        run: mkdir pipeline-runs
 
-    - name: Run tests
-      run: ./manage.py test
+      - name: Download regression test data
+        run: bash -e ./download.sh
+        working-directory: ./vast_pipeline/tests/regression-data
+
+      - name: Run tests
+        run: poetry run python manage.py test

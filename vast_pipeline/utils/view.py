@@ -1,6 +1,5 @@
 """Functions and variables used in pipeline/views.py."""
 
-import logging
 from vast_pipeline.models import SkyRegion
 from typing import List, Dict, Optional, Any
 
@@ -202,7 +201,7 @@ def generate_colsfields(
             be not searchable in the final table.
 
     Returns:
-        colsfields (list): List containing JSON object.
+        List containing the JSON object.
     """
     colsfields = []
 
@@ -277,8 +276,7 @@ def get_skyregions_collection(run_id: Optional[int]=None) -> Dict[str, Any]:
         run_id (int, optional): Run ID to filter on if not None.
 
     Returns:
-        skyregions_collection (dict): Dictionary representing a JSON obejct
-        containing the sky regions.
+        Dictionary representing a JSON object containing the sky regions.
     """
     skyregions = SkyRegion.objects.all()
     if run_id is not None:

@@ -1,23 +1,23 @@
-name: ci docs
+name: ci docs dev
 
-# a merged PR will trigger a push on master so merging to master is
+# a merged PR will trigger a push on dev so merging to dev is
 # included in the event below
 on:
   push:
     branches:
-      - master
+      - dev
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.head.repo.fork == false
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v5
         with:
-          python-version: 3.x
-      - uses: Gr1N/setup-poetry@v4
+          python-version: 3.9
+      - uses: Gr1N/setup-poetry@v9
       - name: Install system dependencies
         run: sudo apt-get update && sudo apt-get install -y build-essential libpq-dev libgraphviz-dev
       - name: Cache Python dependencies
@@ -27,5 +27,9 @@ jobs:
           key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
       - name: Install python dependencies
         run: poetry install
+      - name: Configure Git user
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
       - name: Build and deploy docs
-        run: poetry run mkdocs gh-deploy -m 'github action deployment' --force
+        run: poetry run mike deploy --push dev

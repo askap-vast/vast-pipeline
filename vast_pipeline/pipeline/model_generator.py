@@ -7,7 +7,7 @@ import pandas as pd
 from typing import Iterable, Generator
 from vast_pipeline.utils.utils import deg2hms, deg2dms
 from vast_pipeline.models import (
-    Association, Measurement, MeasurementPair, Source, RelatedSource, Run
+    Association, Measurement, Source, RelatedSource, Run
 )
 
 
@@ -28,7 +28,7 @@ def measurement_models_generator(
 
     Returns:
         An iterable generator object containing the yielded Measurement
-        objects.
+            objects.
     """
     for i, row in meas_df.iterrows():
         one_m = Measurement()
@@ -56,9 +56,11 @@ def source_models_generator(
         An iterable generator object containing the yielded Source objects.
     """
     for i, row in src_df.iterrows():
+        # generate an IAU compliant source name, see
+        # https://cdsweb.u-strasbg.fr/Dic/iau-spec.html
         name = (
-            f"J{deg2hms(row['wavg_ra'], precision=1)}"
-            f"{deg2dms(row['wavg_dec'], precision=0)}"
+            f"J{deg2hms(row['wavg_ra'], precision=1, truncate=True)}"
+            f"{deg2dms(row['wavg_dec'], precision=0, truncate=True)}"
         ).replace(":", "")
         src = Source()
         src.run_id = pipeline_run.id
@@ -85,6 +87,7 @@ def association_models_generator(
     Returns:
         An iterable generator object containing the yielded Association objects.
     """
+    logger.debug(f"Building {len(assoc_df)} association generators")
     for i, row in assoc_df.iterrows():
         yield Association(
             meas_id=row['id'],
@@ -92,6 +95,7 @@ def association_models_generator(
             d2d=row['d2d'],
             dr=row['dr'],
         )
+    logger.debug(f"Built {len(assoc_df)} association generators")
 
 
 def related_models_generator(
@@ -111,30 +115,3 @@ def related_models_generator(
     """
     for i, row in related_df.iterrows():
         yield RelatedSource(**row.to_dict())
-
-
-def measurement_pair_models_generator(
-    measurement_pairs_df: pd.DataFrame,
-) -> Iterable[Generator[MeasurementPair, None, None]]:
-    """
-    Creates a generator of MeasurementPair objects from an input pipeline
-    measurement pair dataframe.
-
-    Args:
-        measurement_pairs_df:
-            The DataFrame of measurement pairs.
-
-    Returns:
-        An iterable of MeasurementPair objects, one for each row of
-        `measurement_pairs_df`.
-    """
-    for i, row in measurement_pairs_df.iterrows():
-        yield MeasurementPair(
-            source_id=row["source_id"],
-            measurement_a_id=row["id_a"],
-            measurement_b_id=row["id_b"],
-            vs_peak=row["vs_peak"],
-            vs_int=row["vs_int"],
-            m_peak=row["m_peak"],
-            m_int=row["m_int"],
-        )

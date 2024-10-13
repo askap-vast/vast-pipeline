@@ -13,37 +13,36 @@ import pyarrow as pa
 import astropy.units as u
 import dask
 import dask.dataframe as dd
+import psutil
 
-from typing import List, Optional, Dict, Tuple
-from astropy.io import fits
+from typing import Any, List, Optional, Dict, Tuple, Union
 from astropy.coordinates import SkyCoord, Angle
-from astropy.io import fits
 from django.conf import settings
 from django.contrib.auth.models import User
 from psutil import cpu_count
-from itertools import chain, combinations
+from itertools import chain
 
+from vast_pipeline.image.main import FitsImage, SelavyImage
+from vast_pipeline.image.utils import open_fits
 from vast_pipeline.utils.utils import (
-    deg2hms, deg2dms, eq_to_cart, StopWatch,
-    optimize_ints, optimize_floats
+    eq_to_cart, StopWatch, optimize_ints, optimize_floats,
+    calculate_n_partitions
 )
 from vast_pipeline.models import (
-    Band, Image, Measurement, Run, Source, SkyRegion
+    Band, Image, Run, SkyRegion
 )
-from vast_pipeline.image.utils import on_sky_sep
 
 
 logger = logging.getLogger(__name__)
 dask.config.set({"multiprocessing.context": "fork"})
 
 
-def get_create_skyreg(p_run: Run, image: Image) -> SkyRegion:
+def get_create_skyreg(image: Image) -> SkyRegion:
     '''
     This creates a Sky Region object in Django ORM given the related
     image object.
 
     Args:
-        p_run: The pipeline run Django ORM object.
         image: The image Django ORM object.
 
     Returns:
@@ -52,39 +51,33 @@ def get_create_skyreg(p_run: Run, image: Image) -> SkyRegion:
     # In the calculations below, it is assumed the image has square
     # pixels (this pipeline has been designed for ASKAP images, so it
     # should always be square). It will likely give wrong results if not
-    skyr = SkyRegion.objects.filter(
+    skyregions = SkyRegion.objects.filter(
         centre_ra=image.ra,
         centre_dec=image.dec,
         xtr_radius=image.fov_bmin
     )
-    if skyr:
-        skyr = skyr.get()
+    if skyregions:
+        skyr = skyregions.get()
         logger.info('Found sky region %s', skyr)
-        if p_run not in skyr.run.all():
-            logger.info('Adding %s to sky region %s', p_run, skyr)
-            skyr.run.add(p_run)
-        return skyr
-
-    x, y, z = eq_to_cart(image.ra, image.dec)
-    skyr = SkyRegion(
-        centre_ra=image.ra,
-        centre_dec=image.dec,
-        width_ra=image.physical_bmin,
-        width_dec=image.physical_bmaj,
-        xtr_radius=image.fov_bmin,
-        x=x,
-        y=y,
-        z=z,
-    )
-    skyr.save()
-    logger.info('Created sky region %s', skyr)
-    skyr.run.add(p_run)
-    logger.info('Adding %s to sky region %s', p_run, skyr)
+    else:
+        x, y, z = eq_to_cart(image.ra, image.dec)
+        skyr = SkyRegion(
+            centre_ra=image.ra,
+            centre_dec=image.dec,
+            width_ra=image.physical_bmin,
+            width_dec=image.physical_bmaj,
+            xtr_radius=image.fov_bmin,
+            x=x,
+            y=y,
+            z=z,
+        )
+        skyr.save()
+        logger.info('Created sky region %s', skyr)
 
     return skyr
 
 
-def get_create_img_band(image: Image) -> Band:
+def get_create_img_band(image: FitsImage) -> Band:
     '''
     Return the existing Band row for the given FitsImage.
     An image is considered to belong to a band if its frequency is within some
@@ -116,79 +109,63 @@ def get_create_img_band(image: Image) -> Band:
     return band
 
 
-def get_create_img(
-    p_run: Run, band_id: int, image: Image
-) -> Tuple[Image, SkyRegion, bool]:
+def get_create_img(band_id: int, image: SelavyImage) -> Tuple[Image, bool]:
     """
-    Function to fetch or create the Image and Sky Region objects for the images
-    in the pipeline run.
+    Function to fetch or create the Image and Sky Region objects for an image.
 
     Args:
-        p_run: The pipeline run Django ORM object.
         band_id: The integer database id value of the frequency band of the
             image.
-        image: The image Django ORM object.
+        image: The image object.
 
     Returns:
-        The resulting image django ORM object, the sky region Django ORM
-        object and a bool value denoting if the image already existed in the
-        database.
+        The resulting image django ORM object.
+        `True` the image already existed in the database, `False` if not.
     """
-    img = Image.objects.filter(name__exact=image.name)
-    if img.exists():
-        img = img.get()
+    images = Image.objects.filter(name__exact=image.name)
+    exists = images.exists()
+    if exists:
+        img: Image = images.get()
         # Add background path if not originally provided
         if image.background_path and not img.background_path:
             img.background_path = image.background_path
             img.save()
-        skyreg = get_create_skyreg(p_run, img)
-        # check and add the many to many if not existent
-        if not Image.objects.filter(
-            id=img.id, run__id=p_run.id
-        ).exists():
-            img.run.add(p_run)
-
-        return (img, skyreg, True)
-
-    # at this stage, measurement parquet file is not created but
-    # assume location
-    img_folder_name = image.name.replace('.', '_')
-    measurements_path = os.path.join(
-        settings.PIPELINE_WORKING_DIR,
-        'images',
-        img_folder_name,
-        'measurements.parquet'
+    else:
+        # at this stage, measurement parquet file is not created but
+        # assume location
+        img_folder_name = image.name.replace('.', '_')
+        measurements_path = os.path.join(
+            settings.PIPELINE_WORKING_DIR,
+            'images',
+            img_folder_name,
+            'measurements.parquet'
         )
-    img = Image(
-        band_id=band_id,
-        measurements_path=measurements_path
-    )
-    # set the attributes and save the image,
-    # by selecting only valid (not hidden) attributes
-    # FYI attributs and/or method starting with _ are hidden
-    # and with __ can't be modified/called
-    for fld in img._meta.get_fields():
-        if getattr(fld, 'attname', None) and (
-            getattr(image, fld.attname, None) is not None
-        ):
-            setattr(img, fld.attname, getattr(image, fld.attname))
+        img = Image(
+            band_id=band_id,
+            measurements_path=measurements_path
+        )
 
-    # get create the sky region and associate with image
-    skyreg = get_create_skyreg(p_run, img)
-    img.skyreg = skyreg
+        # set the attributes and save the image,
+        # by selecting only valid (not hidden) attributes
+        # FYI attributs and/or method starting with _ are hidden
+        # and with __ can't be modified/called
+        for fld in img._meta.get_fields():
+            if getattr(fld, 'attname', None) and (
+                    getattr(image, fld.attname, None) is not None):
+                setattr(img, fld.attname, getattr(image, fld.attname))
 
-    img.rms_median, img.rms_min, img.rms_max = get_rms_noise_image_values(
-        img.noise_path
-    )
+        img.rms_median, img.rms_min, img.rms_max = get_rms_noise_image_values(
+            img.noise_path)
 
-    img.save()
-    img.run.add(p_run)
+        # get create the sky region and associate with image
+        img.skyreg = get_create_skyreg(img)
+        img.save()
 
-    return (img, skyreg, False)
+    return (img, exists)
 
 
 def get_create_p_run(
-    name: str, path: str, description: str=None, user: User=None
+    name: str, path: str, description: str = None, user: User = None
 ) -> Tuple[Run, bool]:
     '''
     Get or create a pipeline run in db, return the run django object and
@@ -202,8 +179,8 @@ def get_create_p_run(
         user: The Django user that launched the pipeline run.
 
     Returns:
-        The pipeline run object and a boolean object representing whether
-        the pipeline run already existed ('True') or not ('False').
+        The pipeline run object.
+        Whether the pipeline run already existed ('True') or not ('False').
     '''
     p_run = Run.objects.filter(name__exact=name)
     if p_run:
@@ -216,6 +193,30 @@ def get_create_p_run(
     p_run.save()
 
     return p_run, False
+
+
+def add_run_to_img(pipeline_run: Run, img: Image) -> None:
+    """
+    Add a pipeline run to an Image (and corresponding SkyRegion) in the db
+
+    Args:
+        pipeline_run:
+            Pipeline run object you want to add.
+        img:
+            Image object you want to add to.
+
+    Returns:
+        None
+    """
+    skyreg = img.skyreg
+    # check and add the many to many if not existent
+    if not Image.objects.filter(id=img.id, run__id=pipeline_run.id).exists():
+        logger.info('Adding %s to image %s', pipeline_run, img.name)
+        img.run.add(pipeline_run)
+
+    if pipeline_run not in skyreg.run.all():
+        logger.info('Adding %s to sky region %s', pipeline_run, skyreg)
+        skyreg.run.add(pipeline_run)
 
 
 def remove_duplicate_measurements(
@@ -252,8 +253,6 @@ def remove_duplicate_measurements(
         'Using duplicate crossmatch radius of %.2f arcsec.', dup_lim.arcsec
     )
 
-    min_source = sources_df['source'].min()
-
     # sort by the distance from the image centre so we know
     # that the first source is always the one to keep
     sources_df = sources_df.sort_values(by='dist_from_centre')
@@ -265,7 +264,7 @@ def remove_duplicate_measurements(
     )
 
     # perform search around sky to get all self matches
-    idxc, idxcatalog, d2d_around, _ = sources_sc.search_around_sky(
+    idxc, idxcatalog, *_ = sources_sc.search_around_sky(
         sources_sc, dup_lim
     )
 
@@ -346,7 +345,7 @@ def _load_measurements(
 
     Returns:
         The measurements of the image with some extra values set ready for
-        association .
+            association.
     """
     image_centre = SkyCoord(
         image.ra,
@@ -406,7 +405,7 @@ def prep_skysrc_df(
 
     Returns:
         The measurements of the image(s) with some extra values set ready for
-        association and duplicates removed if necessary.
+            association and duplicates removed if necessary.
     '''
     cols = [
         'id',
@@ -432,8 +431,13 @@ def prep_skysrc_df(
 
     if len(images) > 1:
         for img in images[1:]:
-            df = df.append(
-                _load_measurements(img, cols, df.source.max(), ini_df=ini_df),
+            df = pd.concat(
+                [
+                    df,
+                    _load_measurements(
+                        img, cols, df.source.max(), ini_df=ini_df
+                    )
+                ],
                 ignore_index=True
             )
 
@@ -485,7 +489,7 @@ def add_new_one_to_many_relations(
 
     Returns:
         The new related field for the source in question, containing the
-        appended ids.
+            appended ids.
     """
     if source_ids is None:
         source_ids = pd.DataFrame()
@@ -499,7 +503,7 @@ def add_new_one_to_many_relations(
             out = row[related_col]
             out.append(row[source_col])
         else:
-            out = [row[source_col],]
+            out = [row[source_col], ]
 
     else:  # the original case to append all the new ids.
         source_ids = source_ids.loc[row[source_col]].iloc[0]
@@ -526,7 +530,7 @@ def add_new_many_to_one_relations(row: pd.Series) -> List[int]:
 
     Returns:
         The new related field for the source in question, containing the
-        appended ids.
+            appended ids.
     """
     out = row['new_relations'].copy()
 
@@ -546,7 +550,6 @@ def cross_join(left: pd.DataFrame, right: pd.DataFrame) -> pd.DataFrame:
 
     Returns:
         The resultant merged DataFrame.
-
     """
     return (
         left.assign(key=1)
@@ -556,7 +559,7 @@ def cross_join(left: pd.DataFrame, right: pd.DataFrame) -> pd.DataFrame:
 
 
 def get_eta_metric(
-    row: Dict[str, float], df: pd.DataFrame, peak: bool=False
+    row: Dict[str, float], df: pd.DataFrame, peak: bool = False
 ) -> float:
     '''
     Calculates the eta variability metric of a source.
@@ -572,7 +575,6 @@ def get_eta_metric(
 
     Returns:
         The calculated eta value.
-
     '''
     if row['n_meas'] == 1:
         return 0.
@@ -580,7 +582,7 @@ def get_eta_metric(
     suffix = 'peak' if peak else 'int'
     weights = 1. / df[f'flux_{suffix}_err'].values**2
     fluxes = df[f'flux_{suffix}'].values
-    eta = (row['n_meas'] / (row['n_meas']-1)) * (
+    eta = (row['n_meas'] / (row['n_meas'] - 1)) * (
         (weights * fluxes**2).mean() - (
             (weights * fluxes).mean()**2 / weights.mean()
         )
@@ -600,7 +602,6 @@ def groupby_funcs(df: pd.DataFrame) -> pd.Series:
 
     Returns:
         Pandas series containing the calculated metrics of the source.
-
     '''
     # calculated average ra, dec, fluxes and metrics
     d = {}
@@ -610,7 +611,7 @@ def groupby_funcs(df: pd.DataFrame) -> pd.Series:
     d['n_meas_sel'] = d['n_meas'] - d['n_meas_forced']
     d['n_sibl'] = df['has_siblings'].sum()
     if d['n_meas_forced'] > 0:
-        non_forced_sel = df['forced'] != True
+        non_forced_sel = ~df['forced']
         d['wavg_ra'] = (
             df.loc[non_forced_sel, 'interim_ew'].sum() /
             df.loc[non_forced_sel, 'weight_ew'].sum()
@@ -707,7 +708,10 @@ def parallel_groupby(df: pd.DataFrame) -> pd.DataFrame:
         'related_list': 'O'
     }
     n_cpu = cpu_count() - 1
-    out = dd.from_pandas(df, n_cpu)
+    logger.debug(f"Running association with {n_cpu} CPUs")
+    n_partitions = calculate_n_partitions(df, n_cpu)
+
+    out = dd.from_pandas(df.set_index('source'), npartitions=n_partitions)
     out = (
         out.groupby('source')
         .apply(
@@ -717,7 +721,8 @@ def parallel_groupby(df: pd.DataFrame) -> pd.DataFrame:
         .compute(num_workers=n_cpu, scheduler='processes')
     )
 
-    out['n_rel'] = out['related_list'].apply(lambda x: 0 if x == -1 else len(x))
+    out['n_rel'] = out['related_list'].apply(
+        lambda x: 0 if x == -1 else len(x))
 
     return out
 
@@ -734,7 +739,7 @@ def calc_ave_coord(grp: pd.DataFrame) -> pd.Series:
 
     Returns:
         A pandas series containing the average coordinate along with the
-        image and epoch lists.
+            image and epoch lists.
     """
     d = {}
     grp = grp.sort_values(by='datetime')
@@ -757,7 +762,7 @@ def parallel_groupby_coord(df: pd.DataFrame) -> pd.DataFrame:
 
     Returns:
         The resulting average coordinate values and unique image and epoch
-        lists for each unique source (group).
+            lists for each unique source (group).
     """
     col_dtype = {
         'img_list': 'O',
@@ -766,7 +771,10 @@ def parallel_groupby_coord(df: pd.DataFrame) -> pd.DataFrame:
         'wavg_dec': 'f',
     }
     n_cpu = cpu_count() - 1
-    out = dd.from_pandas(df, n_cpu)
+    logger.debug(f"Running association with {n_cpu} CPUs")
+    n_partitions = calculate_n_partitions(df, n_cpu)
+
+    out = dd.from_pandas(df.set_index('source'), npartitions=n_partitions)
     out = (
         out.groupby('source')
         .apply(calc_ave_coord, meta=col_dtype)
@@ -786,7 +794,9 @@ def get_rms_noise_image_values(rms_path: str) -> Tuple[float, float, float]:
         rms_path: The system path to the RMS FITS image.
 
     Returns:
-        The median, minimum and maximum values of the RMS image.
+        The median value of the RMS image.
+        The minimum value of the RMS image.
+        The maximum value of the RMS image.
 
     Raises:
         IOError: Raised when the RMS FITS file cannot be found.
@@ -794,21 +804,21 @@ def get_rms_noise_image_values(rms_path: str) -> Tuple[float, float, float]:
     logger.debug('Extracting Image RMS values from Noise file...')
     med_val = min_val = max_val = 0.
     try:
-        with fits.open(rms_path) as f:
+        with open_fits(rms_path) as f:
             data = f[0].data
-            data = data[np.logical_not(np.isnan(data))]
-            data = data[data != 0]
+            data = data[np.isfinite(data) & (data > 0.)]
             med_val = np.median(data) * 1e+3
             min_val = np.min(data) * 1e+3
             max_val = np.max(data) * 1e+3
             del data
     except Exception:
         raise IOError(f'Could not read this RMS FITS file: {rms_path}')
+    logger.debug('Image RMS Min: %.3g Max: %.3g Median: %.3g', min_val, max_val, med_val)
 
     return med_val, min_val, max_val
 
 
-def get_image_list_diff(row: pd.Series) -> List[str]:
+def get_image_list_diff(row: pd.Series) -> Union[List[str], int]:
     """
     Calculate the difference between the ideal coverage image list of a source
     and the actual observed image list. Also checks whether an epoch does in
@@ -819,8 +829,8 @@ def get_image_list_diff(row: pd.Series) -> List[str]:
         row: The row from the sources dataframe that is being iterated over.
 
     Returns:
-        A list of the images missing from the observed image list. Will be
-        returned as '-1' integer value if there are no missing images.
+        A list of the images missing from the observed image list.
+        A '-1' integer value if there are no missing images.
     """
     out = list(
         filter(lambda arg: arg not in row['img_list'], row['skyreg_img_list'])
@@ -845,7 +855,7 @@ def get_image_list_diff(row: pd.Series) -> List[str]:
     ]
 
     if not out:
-        out = -1
+        return -1
 
     return out
 
@@ -861,10 +871,10 @@ def get_names_and_epochs(grp: pd.DataFrame) -> pd.Series:
 
     Returns:
         Pandas series containing the list object that contains the lists of the
-        image names, epochs and datetimes.
+            image names, epochs and datetimes.
     """
     d = {}
-    d['skyreg_img_epoch_list'] = [[[x,], y, z] for x,y,z in zip(
+    d['skyreg_img_epoch_list'] = [[[x, ], y, z] for x, y, z in zip(
         grp['name'].values.tolist(),
         grp['epoch'].values.tolist(),
         grp['datetime'].values.tolist()
@@ -908,44 +918,46 @@ def get_src_skyregion_merged_df(
             sky region objects for the run loaded into a dataframe.
 
     Returns:
-        DataFrame containing missing image information. Output format:
-        +----------+----------------------------------+-----------+------------+
-        |   source | img_list                         |   wavg_ra |   wavg_dec |
-        |----------+----------------------------------+-----------+------------+
-        |      278 | ['VAST_0127-73A.EPOCH01.I.fits'] |  22.2929  |   -71.8717 |
-        |      702 | ['VAST_0127-73A.EPOCH01.I.fits'] |  28.8125  |   -69.3547 |
-        |      844 | ['VAST_0127-73A.EPOCH01.I.fits'] |  17.3152  |   -72.346  |
-        |      934 | ['VAST_0127-73A.EPOCH01.I.fits'] |   9.75754 |   -72.9629 |
-        |     1290 | ['VAST_0127-73A.EPOCH01.I.fits'] |  20.8455  |   -76.8269 |
-        +----------+----------------------------------+-----------+------------+
-        ------------------------------------------------------------------+
-         skyreg_img_list                                                  |
-        ------------------------------------------------------------------+
-         ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
-         ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
-         ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
-         ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
-         ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
-        ------------------------------------------------------------------+
-        ----------------------------------+------------------------------+
-         img_diff                         | primary                      |
-        ----------------------------------+------------------------------+
-         ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
-         ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
-         ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
-         ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
-         ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
-        ----------------------------------+------------------------------+
-        ------------------------------+--------------+
-         detection                    | in_primary   |
-        ------------------------------+--------------|
-         VAST_0127-73A.EPOCH01.I.fits | True         |
-         VAST_0127-73A.EPOCH01.I.fits | True         |
-         VAST_0127-73A.EPOCH01.I.fits | True         |
-         VAST_0127-73A.EPOCH01.I.fits | True         |
-         VAST_0127-73A.EPOCH01.I.fits | True         |
-        ------------------------------+--------------+
+        DataFrame containing missing image information (see source code for
+            dataframe format).
     """
+    # Output format:
+    # +----------+----------------------------------+-----------+------------+
+    # |   source | img_list                         |   wavg_ra |   wavg_dec |
+    # |----------+----------------------------------+-----------+------------+
+    # |      278 | ['VAST_0127-73A.EPOCH01.I.fits'] |  22.2929  |   -71.8717 |
+    # |      702 | ['VAST_0127-73A.EPOCH01.I.fits'] |  28.8125  |   -69.3547 |
+    # |      844 | ['VAST_0127-73A.EPOCH01.I.fits'] |  17.3152  |   -72.346  |
+    # |      934 | ['VAST_0127-73A.EPOCH01.I.fits'] |   9.75754 |   -72.9629 |
+    # |     1290 | ['VAST_0127-73A.EPOCH01.I.fits'] |  20.8455  |   -76.8269 |
+    # +----------+----------------------------------+-----------+------------+
+    # ------------------------------------------------------------------+
+    #  skyreg_img_list                                                  |
+    # ------------------------------------------------------------------+
+    #  ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+    #  ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+    #  ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+    #  ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+    #  ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
+    # ------------------------------------------------------------------+
+    # ----------------------------------+------------------------------+
+    #  img_diff                         | primary                      |
+    # ----------------------------------+------------------------------+
+    #  ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
+    #  ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
+    #  ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
+    #  ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
+    #  ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
+    # ----------------------------------+------------------------------+
+    # ------------------------------+--------------+
+    #  detection                    | in_primary   |
+    # ------------------------------+--------------|
+    #  VAST_0127-73A.EPOCH01.I.fits | True         |
+    #  VAST_0127-73A.EPOCH01.I.fits | True         |
+    #  VAST_0127-73A.EPOCH01.I.fits | True         |
+    #  VAST_0127-73A.EPOCH01.I.fits | True         |
+    #  VAST_0127-73A.EPOCH01.I.fits | True         |
+    # ------------------------------+--------------+
     logger.info("Creating ideal source coverage df...")
 
     merged_timer = StopWatch()
@@ -979,36 +991,37 @@ def get_src_skyregion_merged_df(
 
     del sources_df
 
-    # create dataframe with all skyregions and sources combinations
-    src_skyrg_df = cross_join(
-        srcs_df.drop(['epoch_list', 'img_list'], axis=1).reset_index(),
-        skyreg_df.drop('skyreg_img_epoch_list', axis=1)
+    # crossmatch sources with sky regions up to the max sky region radius
+    skyreg_coords = SkyCoord(
+        ra=skyreg_df.centre_ra, dec=skyreg_df.centre_dec, unit="deg"
     )
-
+    srcs_coords = SkyCoord(
+        ra=srcs_df.wavg_ra,
+        dec=srcs_df.wavg_dec,
+        unit="deg")
+    skyreg_idx, srcs_idx, sep, _ = srcs_coords.search_around_sky(
+        skyreg_coords, skyreg_df.xtr_radius.max() * u.deg
+    )
     skyreg_df = skyreg_df.drop(
-        ['centre_ra', 'centre_dec', 'xtr_radius'],
-        axis=1
-    ).set_index('id')
-
-    src_skyrg_df['sep'] = np.rad2deg(
-        on_sky_sep(
-            np.deg2rad(src_skyrg_df['wavg_ra'].values),
-            np.deg2rad(src_skyrg_df['centre_ra'].values),
-            np.deg2rad(src_skyrg_df['wavg_dec'].values),
-            np.deg2rad(src_skyrg_df['centre_dec'].values),
-        )
-    )
+        columns=[
+            "centre_ra",
+            "centre_dec"]).set_index("id")
 
     # select rows where separation is less than sky region radius
     # drop not more useful columns and groupby source id
     # compute list of images
     src_skyrg_df = (
-        src_skyrg_df.loc[
-            src_skyrg_df.sep < src_skyrg_df.xtr_radius,
-            ['source', 'id', 'sep']
-        ].merge(skyreg_df, left_on='id', right_index=True)
-        .drop('id', axis=1)
-        .explode('skyreg_img_epoch_list')
+        pd.DataFrame(
+            {
+                "source": srcs_df.iloc[srcs_idx].index,
+                "id": skyreg_df.iloc[skyreg_idx].index,
+                "sep": sep.to("deg").value,
+            }
+        )
+        .merge(skyreg_df, left_on="id", right_index=True)
+        .query("sep < xtr_radius")
+        .drop(columns=["id", "xtr_radius"])
+        .explode("skyreg_img_epoch_list")
     )
 
     del skyreg_df
@@ -1036,12 +1049,12 @@ def get_src_skyregion_merged_df(
     # annoyingly epoch needs to be not a list to drop duplicates
     # but then we need to sum the epochs into a list
     src_skyrg_df['skyreg_epoch'] = src_skyrg_df['skyreg_epoch'].apply(
-        lambda x: [x,]
+        lambda x: [x, ]
     )
 
     src_skyrg_df = (
         src_skyrg_df.groupby('source')
-        .agg('sum') # sum because we need to preserve order
+        .sum(numeric_only=False)  # sum because we need to preserve order
     )
 
     # merge into main df and compare the images
@@ -1110,7 +1123,7 @@ def _get_skyregion_relations(
 
     Returns:
         A list of other sky regions (including self) that are within the
-        'xtr_radius' of the sky region in the row.
+            'xtr_radius' of the sky region in the row.
     '''
     target = SkyCoord(
         row['centre_ra'],
@@ -1151,13 +1164,13 @@ def group_skyregions(df: pd.DataFrame) -> pd.DataFrame:
 
     Returns:
         The sky region group of each skyregion id.
-        +----+----------------+
-        |    |   skyreg_group |
-        |----+----------------|
-        |  2 |              1 |
-        |  3 |              1 |
-        |  1 |              2 |
-        +----+----------------+
+            +----+----------------+
+            |    |   skyreg_group |
+            |----+----------------|
+            |  2 |              1 |
+            |  3 |              1 |
+            |  1 |              2 |
+            +----+----------------+
     """
     sr_coords = SkyCoord(
         df['centre_ra'],
@@ -1173,7 +1186,7 @@ def group_skyregions(df: pd.DataFrame) -> pd.DataFrame:
         axis=1
     )
 
-    skyreg_groups = {}
+    skyreg_groups: Dict[int, List[Any]] = {}
 
     master_done = []  # keep track of all checked ids in master done
 
@@ -1223,7 +1236,7 @@ def group_skyregions(df: pd.DataFrame) -> pd.DataFrame:
     skyreg_group_ids = {}
     for i in skyreg_groups:
         for j in skyreg_groups[i]:
-            skyreg_group_ids[j]=i
+            skyreg_group_ids[j] = i
 
     skyreg_group_ids = pd.DataFrame.from_dict(
         skyreg_group_ids, orient='index'
@@ -1252,20 +1265,22 @@ def get_parallel_assoc_image_df(
             +----+----------------+
 
     Returns:
-        Dataframe containing the merged images and skyreg_id and skyreg_group.
-        +----+-------------------------------+-------------+----------------+
-        |    | image                         |   skyreg_id |   skyreg_group |
-        |----+-------------------------------+-------------+----------------|
-        |  0 | VAST_2118+00A.EPOCH01.I.fits  |           2 |              1 |
-        |  1 | VAST_2118-06A.EPOCH01.I.fits  |           3 |              1 |
-        |  2 | VAST_0127-73A.EPOCH01.I.fits  |           1 |              2 |
-        |  3 | VAST_2118-06A.EPOCH03x.I.fits |           3 |              1 |
-        |  4 | VAST_2118-06A.EPOCH02.I.fits  |           3 |              1 |
-        |  5 | VAST_2118-06A.EPOCH05x.I.fits |           3 |              1 |
-        |  6 | VAST_2118-06A.EPOCH06x.I.fits |           3 |              1 |
-        |  7 | VAST_0127-73A.EPOCH08.I.fits  |           1 |              2 |
-        +----+-------------------------------+-------------+----------------+
+        Dataframe containing the merged images and skyreg_id and skyreg_group
+            (see source code for output format).
     """
+    # Output format
+    # +----+-------------------------------+-------------+----------------+
+    # |    | image                         |   skyreg_id |   skyreg_group |
+    # |----+-------------------------------+-------------+----------------|
+    # |  0 | VAST_2118+00A.EPOCH01.I.fits  |           2 |              1 |
+    # |  1 | VAST_2118-06A.EPOCH01.I.fits  |           3 |              1 |
+    # |  2 | VAST_0127-73A.EPOCH01.I.fits  |           1 |              2 |
+    # |  3 | VAST_2118-06A.EPOCH03x.I.fits |           3 |              1 |
+    # |  4 | VAST_2118-06A.EPOCH02.I.fits  |           3 |              1 |
+    # |  5 | VAST_2118-06A.EPOCH05x.I.fits |           3 |              1 |
+    # |  6 | VAST_2118-06A.EPOCH06x.I.fits |           3 |              1 |
+    # |  7 | VAST_0127-73A.EPOCH08.I.fits  |           1 |              2 |
+    # +----+-------------------------------+-------------+----------------+
     skyreg_ids = [i.skyreg_id for i in images]
 
     images_df = pd.DataFrame({
@@ -1343,6 +1358,10 @@ def create_measurements_arrow_file(p_run: Run) -> None:
         .rename(columns={'source_id': 'source'})
     )
 
+    # drop timezone from datetime for vaex compatibility
+    # TODO: Look to keep the timezone if/when vaex is compatible.
+    measurements['time'] = measurements['time'].dt.tz_localize(None)
+
     logger.debug('Optimising dataframes.')
     measurements = optimize_ints(optimize_floats(measurements))
 
@@ -1355,8 +1374,8 @@ def create_measurements_arrow_file(p_run: Run) -> None:
     local = pa.fs.LocalFileSystem()
 
     with local.open_output_stream(outname) as file:
-       with pa.RecordBatchFileWriter(file, measurements.schema) as writer:
-          writer.write_table(measurements)
+        with pa.RecordBatchFileWriter(file, measurements.schema) as writer:
+            writer.write_table(measurements)
 
 
 def create_measurement_pairs_arrow_file(p_run: Run) -> None:
@@ -1392,183 +1411,8 @@ def create_measurement_pairs_arrow_file(p_run: Run) -> None:
     local = pa.fs.LocalFileSystem()
 
     with local.open_output_stream(outname) as file:
-       with pa.RecordBatchFileWriter(file, measurement_pairs_df.schema) as writer:
-          writer.write_table(measurement_pairs_df)
-
-
-def calculate_vs_metric(
-    flux_a: float, flux_b: float, flux_err_a: float, flux_err_b: float
-) -> float:
-    """Calculate the Vs variability metric which is the t-statistic that the provided
-    fluxes are variable. See Section 5 of Mooley et al. (2016) for details,
-    DOI: 10.3847/0004-637X/818/2/105.
-
-    Args:
-        flux_a (float): flux value "A".
-        flux_b (float): flux value "B".
-        flux_err_a (float): error of `flux_a`.
-        flux_err_b (float): error of `flux_b`.
-
-    Returns:
-        float: the Vs metric for flux values "A" and "B".
-    """
-    return (flux_a - flux_b) / np.hypot(flux_err_a, flux_err_b)
-
-
-def calculate_m_metric(flux_a: float, flux_b: float) -> float:
-    """Calculate the m variability metric which is the modulation index between two fluxes.
-    This is proportional to the fractional variability.
-    See Section 5 of Mooley et al. (2016) for details, DOI: 10.3847/0004-637X/818/2/105.
-
-    Args:
-        flux_a (float): flux value "A".
-        flux_b (float): flux value "B".
-
-    Returns:
-        float: the m metric for flux values "A" and "B".
-    """
-    return 2 * ((flux_a - flux_b) / (flux_a + flux_b))
-
-
-def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
-    """Generate a DataFrame of measurement pairs and their 2-epoch variability metrics
-    from a DataFrame of measurements. For more information on the variability metrics, see
-    Section 5 of Mooley et al. (2016), DOI: 10.3847/0004-637X/818/2/105.
-
-    Args:
-        df (pd.DataFrame): Input measurements. Must contain columns: id, source, flux_int,
-            flux_int_err, flux_peak, flux_peak_err, has_siblings.
-
-    Returns:
-        pd.DataFrame: Measurement pairs and 2-epoch metrics. Will contain columns:
-            source - the source ID
-            id_a, id_b - the measurement IDs
-            flux_int_a, flux_int_b - measurement integrated fluxes in mJy
-            flux_int_err_a, flux_int_err_b - measurement integrated flux errors in mJy
-            flux_peak_a, flux_peak_b - measurement peak fluxes in mJy/beam
-            flux_peak_err_a, flux_peak_err_b - measurement peak flux errors in mJy/beam
-            vs_peak, vs_int - variability t-statistic
-            m_peak, m_int - variability modulation index
-    """
-    n_cpu = cpu_count() - 1
-
-    """Create a DataFrame containing all measurement ID combinations per source.
-    Resultant DataFrame will have a MultiIndex(["source", RangeIndex]) where "source" is
-    the source ID and RangeIndex is an unnamed temporary ID for each measurement pair,
-    unique only together with source.
-    DataFrame will have columns [0, 1], each containing a measurement ID. e.g.
-                       0      1
-        source
-        1       0      1   9284
-                1      1  17597
-                2      1  26984
-                3   9284  17597
-                4   9284  26984
-        ...          ...    ...
-        11105   2  11845  19961
-        11124   0   3573  12929
-                1   3573  21994
-                2  12929  21994
-        11128   0   6216  23534
-    """
-    measurement_combinations = (
-        dd.from_pandas(df, n_cpu)
-        .groupby("source")["id"]
-        .apply(
-            lambda x: pd.DataFrame(list(combinations(x, 2))
-        ), meta={0: "i", 1: "i"},)
-        .compute(num_workers=n_cpu, scheduler="processes")
-    )
-
-    """Drop the RangeIndex from the MultiIndex as it isn't required and rename the columns.
-    Example resultant DataFrame:
-               source   id_a   id_b
-        0           1      1   9284
-        1           1      1  17597
-        2           1      1  26984
-        3           1   9284  17597
-        4           1   9284  26984
-        ...       ...    ...    ...
-        33640   11105  11845  19961
-        33641   11124   3573  12929
-        33642   11124   3573  21994
-        33643   11124  12929  21994
-        33644   11128   6216  23534
-    Where source is the source ID, id_a and id_b are measurement IDs.
-    """
-    measurement_combinations = measurement_combinations.reset_index(
-        level=1, drop=True
-    ).rename(columns={0: "id_a", 1: "id_b"}).astype(int).reset_index()
-
-    # Dask has a tendency to swap which order the measurement pairs are
-    # defined in, even if the dataframe is pre-sorted. We want the pairs to be
-    # in date order (a < b) so the code below corrects any that are not.
-    measurement_combinations = measurement_combinations.join(
-        df[['source', 'id', 'datetime']].set_index(['source', 'id']),
-        on=['source', 'id_a'],
-    )
-
-    measurement_combinations = measurement_combinations.join(
-        df[['source', 'id', 'datetime']].set_index(['source', 'id']),
-        on=['source', 'id_b'], lsuffix='_a', rsuffix='_b'
-    )
-
-    to_correct_mask = (
-        measurement_combinations['datetime_a']
-        > measurement_combinations['datetime_b']
-    )
-
-    if np.any(to_correct_mask):
-        logger.debug('Correcting measurement pairs order')
-        (
-            measurement_combinations.loc[to_correct_mask, 'id_a'],
-            measurement_combinations.loc[to_correct_mask, 'id_b']
-        ) = np.array([
-            measurement_combinations.loc[to_correct_mask, 'id_b'].values,
-            measurement_combinations.loc[to_correct_mask, 'id_a'].values
-        ])
-
-    measurement_combinations = measurement_combinations.drop(
-        ['datetime_a', 'datetime_b'], axis=1
-    )
-
-    # add the measurement fluxes and errors
-    association_fluxes = df.set_index(["source", "id"])[
-        ["flux_int", "flux_int_err", "flux_peak", "flux_peak_err", "image"]
-    ].rename(columns={"image": "image_name"})
-    measurement_combinations = measurement_combinations.join(
-        association_fluxes,
-        on=["source", "id_a"],
-    ).join(
-        association_fluxes,
-        on=["source", "id_b"],
-        lsuffix="_a",
-        rsuffix="_b",
-    )
-
-    # calculate 2-epoch metrics
-    measurement_combinations["vs_peak"] = calculate_vs_metric(
-        measurement_combinations.flux_peak_a,
-        measurement_combinations.flux_peak_b,
-        measurement_combinations.flux_peak_err_a,
-        measurement_combinations.flux_peak_err_b,
-    )
-    measurement_combinations["vs_int"] = calculate_vs_metric(
-        measurement_combinations.flux_int_a,
-        measurement_combinations.flux_int_b,
-        measurement_combinations.flux_int_err_a,
-        measurement_combinations.flux_int_err_b,
-    )
-    measurement_combinations["m_peak"] = calculate_m_metric(
-        measurement_combinations.flux_peak_a,
-        measurement_combinations.flux_peak_b,
-    )
-    measurement_combinations["m_int"] = calculate_m_metric(
-        measurement_combinations.flux_int_a,
-        measurement_combinations.flux_int_b,
-    )
-
-    return measurement_combinations
+        with pa.RecordBatchFileWriter(file, measurement_pairs_df.schema) as writer:
+            writer.write_table(measurement_pairs_df)
 
 
 def backup_parquets(p_run_path: str) -> None:
@@ -1596,6 +1440,29 @@ def backup_parquets(p_run_path: str) -> None:
         shutil.copyfile(i, backup_name)
 
 
+def create_temp_config_file(p_run_path: str) -> None:
+    """
+    Creates the temp config file which is saved at the beginning of each run.
+
+    It is to avoid issues created by users changing the config while the run
+    is running.
+
+    Args:
+        p_run_path:
+            The path of the pipeline run of the config to be copied.
+
+    Returns:
+        None
+    """
+    config_name = 'config.yaml'
+    temp_config_name = 'config_temp.yaml'
+
+    shutil.copyfile(
+        os.path.join(p_run_path, config_name),
+        os.path.join(p_run_path, temp_config_name)
+    )
+
+
 def reconstruct_associtaion_dfs(
     images_df_done: pd.DataFrame,
     previous_parquet_paths: Dict[str, str]
@@ -1614,15 +1481,20 @@ def reconstruct_associtaion_dfs(
             and 'measurement_pairs'.
 
     Returns:
-        The reconstructed sources_df and skyc1_srs dataframes.
+        The reconstructed `sources_df` dataframe.
+        The reconstructed `skyc1_srs` dataframes.
     """
     prev_associations = pd.read_parquet(previous_parquet_paths['associations'])
+
+    logger.debug(images_df_done)
+    logger.debug(images_df_done['image_dj'])
 
     # Get the parquet paths from the image objects
     img_meas_paths = (
         images_df_done['image_dj'].apply(lambda x: x.measurements_path)
         .to_list()
     )
+    logger.debug(img_meas_paths)
 
     # Obtain the pipeline run path in order to fetch forced measurements.
     run_path = previous_parquet_paths['sources'].replace(
@@ -1749,7 +1621,7 @@ def reconstruct_associtaion_dfs(
     relation_ids = sources_df[
         sources_df.source.isin(prev_relations.index.values)].drop_duplicates(
             'source', keep='last'
-        ).index.values
+    ).index.values
     # Make sure we attach the correct source id
     source_ids = sources_df.loc[relation_ids].source.values
     sources_df['related'] = np.nan
@@ -1770,7 +1642,7 @@ def reconstruct_associtaion_dfs(
 
     # Create the unique skyc1_srcs dataframe.
     skyc1_srcs = (
-        sources_df[sources_df['forced'] == False]
+        sources_df[~sources_df['forced']]
         .sort_values(by='id')
         .drop('related', axis=1)
         .drop_duplicates('source')
@@ -1780,7 +1652,7 @@ def reconstruct_associtaion_dfs(
     # which does not have the relation information)
     skyc1_srcs = skyc1_srcs.merge(
         prev_relations, how='left', left_on='source', right_index=True
-)
+    )
 
     # Need to break the pointer relationship between the related sources (
     # deep=True copy does not truly copy mutable type objects)
@@ -1811,3 +1683,89 @@ def reconstruct_associtaion_dfs(
     ], axis=1).reset_index(drop=True)
 
     return sources_df, skyc1_srcs
+
+
+def write_parquets(
+    images: List[Image],
+    skyregions: List[SkyRegion],
+    bands: List[Band],
+    run_path: str
+) -> pd.DataFrame:
+    """
+    This function saves images, skyregions and bands to parquet files.
+    It also returns a DataFrame containing containing the information
+    of the sky regions associated with the current run.
+
+    Args:
+        images: list of image Django ORM objects.
+        skyregions: list sky region Django ORM objects.
+        bands: list of band Django ORM objects.
+        run_path: directory to save parquets to.
+
+    Returns:
+        Sky regions as pandas DataFrame.
+    """
+    # write images parquet file under pipeline run folder
+    images_df = pd.DataFrame(map(lambda x: x.__dict__, images))
+    images_df = images_df.drop('_state', axis=1)
+    images_df.to_parquet(
+        os.path.join(run_path, 'images.parquet'),
+        index=False
+    )
+    # write skyregions parquet file under pipeline run folder
+    skyregs_df = pd.DataFrame(map(lambda x: x.__dict__, skyregions))
+    skyregs_df = skyregs_df.drop('_state', axis=1)
+    skyregs_df.to_parquet(
+        os.path.join(run_path, 'skyregions.parquet'),
+        index=False
+    )
+    # write skyregions parquet file under pipeline run folder
+    bands_df = pd.DataFrame(map(lambda x: x.__dict__, bands))
+    bands_df = bands_df.drop('_state', axis=1)
+    bands_df.to_parquet(
+        os.path.join(run_path, 'bands.parquet'),
+        index=False
+    )
+
+    return skyregs_df
+
+
+def get_total_memory_usage():
+    """
+    This function gets the current memory usage and returns a string.
+
+    Returns:
+        A float containing the current resource usage.
+    """
+    mem = psutil.virtual_memory()[3]  # resource usage in bytes
+    mem = mem / 1024**3  # resource usage in GB
+
+    return mem
+
+
+def log_total_memory_usage():
+    """
+    This function gets the current memory usage and logs it.
+
+    Returns:
+        None
+    """
+    mem = get_total_memory_usage()
+
+    logger.debug(f"Current memory usage: {mem:.3f}GB")
+
+
+def get_df_memory_usage(df):
+    """
+    This function calculates the memory usage of a pandas dataframe and
+    logs it.
+
+    Args:
+        df: The pandas dataframe to calculate the memory usage of.
+
+    Returns:
+        The pandas dataframe memory usage in MB
+    """
+    mem = df.memory_usage(deep=True).sum() / 1e6
+
+    return mem

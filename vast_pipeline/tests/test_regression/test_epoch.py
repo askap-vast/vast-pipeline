@@ -1,5 +1,4 @@
 import os
-import types
 import pandas as pd
 import unittest
 import glob

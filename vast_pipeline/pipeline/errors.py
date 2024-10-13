@@ -2,6 +2,8 @@
 Defines errors for the pipeline to return.
 """
 
+from typing import Optional
+
 class PipelineError(Exception):
     """
     Generic pipeline error
@@ -10,7 +12,7 @@ class PipelineError(Exception):
         msg (str): The full error string to return.
     """
 
-    def __init__(self, msg: str=None) -> None:
+    def __init__(self, msg: Optional[str] = None) -> None:
         """
         Initialises the error.
 
@@ -51,7 +53,7 @@ class PipelineConfigError(PipelineError):
     """
     Error for issue in the pipeline configuration
     """
-    def __init__(self, msg=None):
+    def __init__(self, msg: Optional[str] = None):
         """
         Initialises the config error.
 
@@ -65,7 +67,7 @@ class PipelineInitError(PipelineError):
     """
     Error for issue in the pipeline initialisation
     """
-    def __init__(self, msg=None):
+    def __init__(self, msg: Optional[str] = None):
         """
         Initialises the init error.
 

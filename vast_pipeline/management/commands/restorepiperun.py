@@ -6,18 +6,18 @@ import pandas as pd
 
 from argparse import ArgumentParser
 from glob import glob
-from django.conf import settings
 from django.db.models import Q
 from django.db import transaction
 from django.core.management.base import BaseCommand, CommandError
 from typing import Dict
 
 from vast_pipeline.models import (
-    Run, Source, Measurement, Image, Association, MeasurementPair
+    Run, Source, Measurement, Image, Association, RelatedSource
 )
 from vast_pipeline.pipeline.loading import update_sources
 from vast_pipeline.pipeline.config import PipelineConfig
 from vast_pipeline.pipeline.main import Pipeline
+from vast_pipeline.utils.utils import timeStamped
 from ..helpers import get_p_run_name
 
 
@@ -126,8 +126,6 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config: PipelineCon
                     ' Cannot restore pipeline run.'
                 )
 
-            del meas
-
     logger.info("Restoring '%s' from backup parquet files.", p_run.name)
 
     # Delete any new sources
@@ -148,6 +146,33 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config: PipelineCon
                 n_del,
             )
             logger.debug('(type, #deleted): %s', detail_del)
+
+    # Delete newly created relations of sources that still exist after deleting
+    # the new sources
+    bak_relations = pd.read_parquet(bak_files['relations'])
+    db_relations = pd.DataFrame(
+        list(RelatedSource.objects.filter(from_source_id__run=p_run).values())
+    )
+
+    diff = pd.merge(
+        db_relations,
+        bak_relations,
+        on=['from_source_id', 'to_source_id'],
+        how='left',
+        indicator='exist'
+    )
+
+    relations_to_drop = diff[diff['exist'] == 'left_only']['id'].to_numpy()
+    relations_to_drop = RelatedSource.objects.filter(id__in=relations_to_drop)
+
+    with transaction.atomic():
+        n_del, detail_del = relations_to_drop.delete()
+        logger.info(
+            ('Deleting left over relations after dropping new sources'
+             ' Total objects deleted: %i'),
+            n_del,
+        )
+        logger.debug('(type, #deleted): %s', detail_del)
 
     if monitor:
         current_forced_parquets = glob(os.path.join(
@@ -194,15 +219,20 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config: PipelineCon
         with transaction.atomic():
             p_run.image_set.remove(*images_to_remove)
 
-    # load image meas
-    meas = pd.concat(
-        [pd.read_parquet(
-            i, columns=['id']
-        ) for i in prev_images['measurements_path']]
+    # load old associations to remove all new assoc
+    bak_assoc = pd.read_parquet(
+        bak_files['associations'],
+        columns=['source_id', 'meas_id']
     )
 
-    association_criteria_1 = Q(source_id__in=bak_sources['id'].to_numpy())
-    association_criteria_2 = ~Q(meas_id__in=meas['id'].to_numpy())
+    # get unique source and meas id values in the previous run
+    bak_source_ids = bak_assoc['source_id'].unique()
+    bak_meas_ids = bak_assoc['meas_id'].unique()
+
+    # create query to only obtain associations that are not part of the
+    # previous run
+    association_criteria_1 = Q(source_id__in=bak_source_ids)
+    association_criteria_2 = ~Q(meas_id__in=bak_meas_ids)
     associations_to_delete = Association.objects.filter(
         association_criteria_1 and association_criteria_2
     )
@@ -217,30 +247,14 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config: PipelineCon
             )
             logger.debug('(type, #deleted): %s', detail_del)
 
-    pair_criteria_1 = Q(source_id__in=bak_sources['id'].to_numpy())
-    pair_criteria_2 = ~Q(measurement_a__in=meas['id'].to_numpy())
-    pair_criteria_3 = ~Q(measurement_b__in=meas['id'].to_numpy())
-
-    pairs_to_delete = MeasurementPair.objects.filter(
-       pair_criteria_1 and (pair_criteria_2 | pair_criteria_3)
-    )
-
-    if pairs_to_delete.exists():
-        with transaction.atomic():
-            n_del, detail_del = pairs_to_delete.delete()
-            logger.info(
-                ('Deleting measurement pairs to restore run.'
-                 ' Total objects deleted: %i'),
-                n_del,
-            )
-            logger.debug('(type, #deleted): %s', detail_del)
-
     logger.info('Restoring run metrics.')
     p_run.n_images = prev_images.shape[0]
     p_run.n_sources = bak_sources.shape[0]
-    p_run.n_selavy_measurements = meas.shape[0]
     if monitor:
+        p_run.n_selavy_measurements = meas.shape[0]
         p_run.n_forced_measurements = forced_meas.shape[0]
+    else:
+        p_run.n_selavy_measurements = bak_meas_ids.shape[0]
 
     with transaction.atomic():
         p_run.save()
@@ -289,8 +303,7 @@ class Command(BaseCommand):
         """
         # positional arguments (required)
         parser.add_argument(
-            'piperuns',
-            nargs='+',
+            'piperun',
             type=str,
             default=None,
             help='Name or path of pipeline run(s) to restore.'
@@ -318,89 +331,99 @@ class Command(BaseCommand):
         Returns:
             None
         """
+        piperun = options['piperun']
+
+        p_run_name, run_folder = get_p_run_name(piperun, return_folder=True)
+
         # configure logging
+        root_logger = logging.getLogger('')
+        f_handler = logging.FileHandler(
+            os.path.join(run_folder, timeStamped('restore_log.txt')),
+            mode='w'
+        )
+        f_handler.setFormatter(root_logger.handlers[0].formatter)
+        root_logger.addHandler(f_handler)
+
         if options['verbosity'] > 1:
             # set root logger to use the DEBUG level
-            root_logger = logging.getLogger('')
             root_logger.setLevel(logging.DEBUG)
             # set the traceback on
             options['traceback'] = True
 
-        piperuns = options['piperuns']
+        try:
+            p_run = Run.objects.get(name=p_run_name)
+        except Run.DoesNotExist:
+            raise CommandError(f'Pipeline run {p_run_name} does not exist')
 
-        for piperun in piperuns:
-            p_run_name = get_p_run_name(piperun)
-            try:
-                p_run = Run.objects.get(name=p_run_name)
-            except Run.DoesNotExist:
-                raise CommandError(f'Pipeline run {p_run_name} does not exist')
+        if p_run.status not in ['END', 'ERR']:
+            raise CommandError(
+                f"Run {p_run_name} does not have an 'END' or 'ERR' status."
+                " Unable to run restore."
+            )
 
-            if p_run.status not in ['END', 'ERR']:
+        path = p_run.path
+        pipeline = Pipeline(
+            name=p_run_name,
+            config_path=os.path.join(path, 'config.yaml')
+        )
+        try:
+            # update pipeline run status to restoring
+            prev_status = p_run.status
+            pipeline.set_status(p_run, 'RES')
+
+            prev_config_file = os.path.join(p_run.path, 'config.yaml.bak')
+
+            if os.path.isfile(prev_config_file):
+                shutil.copy(
+                    prev_config_file,
+                    prev_config_file.replace('.yaml.bak', '.bak.yaml')
+                )
+                prev_config_file = prev_config_file.replace(
+                    '.yaml.bak', '.bak.yaml'
+                )
+                prev_config = PipelineConfig.from_file(prev_config_file)
+                os.remove(prev_config_file)
+            else:
                 raise CommandError(
-                    f"Run {p_run_name} does not have an 'END' or 'ERR' status."
-                    " Unable to run restore."
+                    'Previous config file does not exist.'
+                    ' Cannot restore pipeline run.'
                 )
 
-            path = p_run.path
-            pipeline = Pipeline(
-                name=p_run_name,
-                config_path=os.path.join(path, 'config.yaml')
-            )
-            try:
-                # update pipeline run status to restoring
-                prev_status = p_run.status
-                pipeline.set_status('RES')
-
-                prev_config_file = os.path.join(p_run.path, 'config.yaml.bak')
-
-                if os.path.isfile(prev_config_file):
-                    shutil.copy(
-                        prev_config_file,
-                        prev_config_file.replace('.yaml.bak', '.bak.yaml')
-                    )
-                    prev_config_file = prev_config_file.replace(
-                        '.yaml.bak', '.bak.yaml'
-                    )
-                    prev_config = PipelineConfig.from_file(prev_config_file)
-                    os.remove(prev_config_file)
+            bak_files = {}
+            for i in [
+                'associations', 'bands', 'images', 'measurement_pairs',
+                'relations', 'skyregions', 'sources', 'config'
+            ]:
+                if i == 'config':
+                    f_name = os.path.join(p_run.path, f'{i}.yaml.bak')
                 else:
+                    f_name = os.path.join(p_run.path, f'{i}.parquet.bak')
+
+                if os.path.isfile(f_name):
+                    bak_files[i] = f_name
+                elif (
+                    i != "measurement_pairs"
+                    or pipeline.config["variability"]["pair_metrics"]
+                ):
                     raise CommandError(
-                        'Previous config file does not exist.'
+                        f'File {f_name} does not exist.'
                         ' Cannot restore pipeline run.'
                     )
 
-                bak_files = {}
-                for i in [
-                    'associations', 'bands', 'images', 'measurement_pairs',
-                    'relations', 'skyregions', 'sources', 'config'
-                ]:
-                    if i == 'config':
-                        f_name = os.path.join(p_run.path, f'{i}.yaml.bak')
-                    else:
-                        f_name = os.path.join(p_run.path, f'{i}.parquet.bak')
+            logger_msg = "Will restore the run to the following config:\n"
+            logger.info(logger_msg + prev_config._yaml.as_yaml())
 
-                    if os.path.isfile(f_name):
-                        bak_files[i] = f_name
-                    else:
-                        raise CommandError(
-                            f'File {f_name} does not exist.'
-                            ' Cannot restore pipeline run.'
-                        )
+            user_continue = True if options['no_confirm'] else yesno("Would you like to restore the run")
 
-                logger_msg = "Will restore the run to the following config:\n"
-                logger.info(logger_msg + prev_config._yaml.as_yaml())
+            if user_continue:
+                restore_pipe(p_run, bak_files, prev_config)
+                pipeline.set_status(p_run, 'END')
+                logger.info('Restore complete.')
+            else:
+                pipeline.set_status(p_run, prev_status)
+                logger.info('No actions performed.')
 
-                user_continue = True if options['no_confirm'] else yesno("Would you like to restore the run")
-
-                if user_continue:
-                    restore_pipe(p_run, bak_files, prev_config)
-                    pipeline.set_status('END')
-                    logger.info('Restore complete.')
-                else:
-                    pipeline.set_status(prev_status)
-                    logger.info('No actions performed.')
-
-            except Exception as e:
-                logger.error('Restoring failed!')
-                logger.error(e)
-                pipeline.set_status('ERR')
+        except Exception as e:
+            logger.error('Restoring failed!')
+            logger.error(e)
+            pipeline.set_status(p_run, prev_status)

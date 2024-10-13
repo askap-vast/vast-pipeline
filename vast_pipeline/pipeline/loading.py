@@ -5,7 +5,7 @@ import pandas as pd
 
 from typing import List, Optional, Dict, Tuple, Generator, Iterable
 from itertools import islice
-from django.db import transaction, connection, models
+from django.db import transaction, connection, models, reset_queries
 
 from vast_pipeline.image.main import SelavyImage
 from vast_pipeline.pipeline.model_generator import (
@@ -13,15 +13,14 @@ from vast_pipeline.pipeline.model_generator import (
     source_models_generator,
     related_models_generator,
     association_models_generator,
-    measurement_pair_models_generator,
 )
 from vast_pipeline.models import (
-    Association, Measurement, Source, RelatedSource,
-    MeasurementPair, Run, Image
+    Association, Band, Measurement, SkyRegion, Source, RelatedSource,
+    Run, Image
 )
-from vast_pipeline.pipeline.config import PipelineConfig
 from vast_pipeline.pipeline.utils import (
-    get_create_img, get_create_img_band
+    get_create_img, get_create_img_band,
+    get_df_memory_usage, log_total_memory_usage
 )
 from vast_pipeline.utils.utils import StopWatch
 
@@ -33,7 +32,8 @@ logger = logging.getLogger(__name__)
 def bulk_upload_model(
     djmodel: models.Model,
     generator: Iterable[Generator[models.Model, None, None]],
-    batch_size: int=10_000, return_ids: bool=False
+    batch_size: int = 10_000,
+    return_ids: bool = False,
 ) -> List[int]:
     '''
     Bulk upload a list of generator objects of django models to db.
@@ -53,6 +53,8 @@ def bulk_upload_model(
         None or a list of the database IDs of the uploaded objects.
 
     '''
+    reset_queries()
+
     bulk_ids = []
     while True:
         items = list(islice(generator, batch_size))
@@ -69,8 +71,8 @@ def bulk_upload_model(
 
 
 def make_upload_images(
-    paths: Dict[str, Dict[str, str]], config: PipelineConfig, pipeline_run: Run
-) -> Tuple[List[Image], pd.DataFrame]:
+    paths: Dict[str, Dict[str, str]], image_config: Dict
+) -> Tuple[List[Image], List[SkyRegion], List[Band]]:
     '''
     Carry the first part of the pipeline, by uploading all the images
     to the image table and populated band and skyregion objects.
@@ -81,14 +83,13 @@ def make_upload_images(
             the images in the pipeline run. The primary keys are `selavy`,
             'noise' and 'background' with the secondary key being the image
             name.
-        config (config):
-            The config object of the pipeline run.
-        pipeline_run:
-            The pipeline run object.
+        image_config:
+            Dictionary of configuration options for the image ingestion.
 
     Returns:
-        A list of image objects that have been uploaded along with a DataFrame
-        containing the information of the sky regions associated with the run.
+        A list of Image objects that have been uploaded.
+        A list of SkyRegion objects that have been uploaded.
+        A list of Band objects that have been uploaded.
     '''
     timer = StopWatch()
     images = []
@@ -100,7 +101,7 @@ def make_upload_images(
         image = SelavyImage(
             path,
             paths,
-            config
+            image_config
         )
         logger.info('Reading image %s ...', image.name)
 
@@ -112,79 +113,43 @@ def make_upload_images(
 
         # 1.2 create image and skyregion entry in DB
         with transaction.atomic():
-            img, skyreg, exists_f = get_create_img(
-                pipeline_run, band.id, image
-            )
+            img, exists_f = get_create_img(band.id, image)
+            skyreg = img.skyreg
 
-        # add image and skyregion to respective lists
-        images.append(img)
-        if skyreg not in skyregions:
-            skyregions.append(skyreg)
-        if exists_f:
+            # add image and skyregion to respective lists
+            images.append(img)
+            if skyreg not in skyregions:
+                skyregions.append(skyreg)
+
+            if exists_f:
+                logger.info("Image %s already processed", img.name)
+                continue
+
+            # 1.3 get the image measurements and save them in DB
+            measurements = image.read_selavy(img)
             logger.info(
-                'Image %s already processed, grab measurements',
-                img.name
+                "Processed measurements dataframe of shape: (%i, %i)",
+                measurements.shape[0],
+                measurements.shape[1],
             )
-            # grab the measurements and skip to process next image
-            measurements = (
-                pd.Series(
-                    Measurement.objects.filter(forced=False, image__id=img.id),
-                    name='meas_dj'
-                )
-                .to_frame()
-            )
-            measurements['id'] = measurements['meas_dj'].apply(lambda x: x.id)
-            continue
 
-        # 1.3 get the image measurements and save them in DB
-        measurements = image.read_selavy(img)
-        logger.info(
-            'Processed measurements dataframe of shape: (%i, %i)',
-            measurements.shape[0], measurements.shape[1]
-        )
+            # upload measurements, a column with the db is added to the df
+            measurements = make_upload_measurements(measurements)
 
-        # upload measurements, a column with the db is added to the df
-        measurements = make_upload_measurements(measurements)
+            # save measurements to parquet file in pipeline run folder
+            base_folder = os.path.dirname(img.measurements_path)
+            if not os.path.exists(base_folder):
+                os.makedirs(base_folder)
 
-        # save measurements to parquet file in pipeline run folder
-        base_folder = os.path.dirname(img.measurements_path)
-        if not os.path.exists(base_folder):
-            os.makedirs(base_folder)
-
-        measurements.to_parquet(
-            img.measurements_path,
-            index=False
-        )
-        del measurements, image, band, img
-
-    # write images parquet file under pipeline run folder
-    images_df = pd.DataFrame(map(lambda x: x.__dict__, images))
-    images_df = images_df.drop('_state', axis=1)
-    images_df.to_parquet(
-        os.path.join(config["run"]["path"], 'images.parquet'),
-        index=False
-    )
-    # write skyregions parquet file under pipeline run folder
-    skyregs_df = pd.DataFrame(map(lambda x: x.__dict__, skyregions))
-    skyregs_df = skyregs_df.drop('_state', axis=1)
-    skyregs_df.to_parquet(
-        os.path.join(config["run"]["path"], 'skyregions.parquet'),
-        index=False
-    )
-    # write skyregions parquet file under pipeline run folder
-    bands_df = pd.DataFrame(map(lambda x: x.__dict__, bands))
-    bands_df = bands_df.drop('_state', axis=1)
-    bands_df.to_parquet(
-        os.path.join(config["run"]["path"], 'bands.parquet'),
-        index=False
-    )
+            measurements.to_parquet(img.measurements_path, index=False)
+            del measurements, image, band, img
 
     logger.info(
         'Total images upload/loading time: %.2f seconds',
         timer.reset_init()
     )
 
-    return images, skyregs_df
+    return images, skyregions, bands
 
 
 def make_upload_sources(
@@ -206,6 +171,12 @@ def make_upload_sources(
     Returns:
         The input dataframe with the 'id' column added.
     '''
+
+    logger.debug("Uploading sources...")
+    mem_usage = get_df_memory_usage(sources_df)
+    logger.debug(f"sources_df memory usage: {mem_usage}MB")
+    log_total_memory_usage()
+
     # create sources in DB
     with transaction.atomic():
         if (add_mode is False and
@@ -245,6 +216,9 @@ def make_upload_related_sources(related_df: pd.DataFrame) -> None:
         None.
     """
     logger.info('Populate "related" field of sources...')
+    mem_usage = get_df_memory_usage(related_df)
+    logger.debug(f"related_df memory usage: {mem_usage}MB")
+    log_total_memory_usage()
     bulk_upload_model(RelatedSource, related_models_generator(related_df))
 
 
@@ -261,9 +235,18 @@ def make_upload_associations(associations_df: pd.DataFrame) -> None:
         None.
     """
     logger.info('Upload associations...')
-    bulk_upload_model(
-        Association, association_models_generator(associations_df)
-    )
+
+    mem_usage = get_df_memory_usage(associations_df)
+    logger.debug(f"associations_df memory usage: {mem_usage}MB")
+    log_total_memory_usage()
+
+    assoc_chunk_size = 100000
+    for i in range(0, len(associations_df), assoc_chunk_size):
+        bulk_upload_model(
+            Association,
+            association_models_generator(
+                associations_df[i:i + assoc_chunk_size])
+        )
 
 
 def make_upload_measurements(measurements_df: pd.DataFrame) -> pd.DataFrame:
@@ -278,6 +261,12 @@ def make_upload_measurements(measurements_df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         Original DataFrame with the database ID attached to each row.
     """
+
+    logger.info("Upload measurements...")
+    mem_usage = get_df_memory_usage(measurements_df)
+    logger.debug(f"measurements_df memory usage: {mem_usage}MB")
+    log_total_memory_usage()
+
     meas_dj_ids = bulk_upload_model(
         Measurement,
         measurement_models_generator(measurements_df),
@@ -287,31 +276,6 @@ def make_upload_measurements(measurements_df: pd.DataFrame) -> pd.DataFrame:
     measurements_df['id'] = meas_dj_ids
 
     return measurements_df
-
-
-def make_upload_measurement_pairs(
-    measurement_pairs_df: pd.DataFrame
-) -> pd.DataFrame:
-    """
-    Uploads the measurement pairs from the supplied measurement pairs
-    DataFrame.
-
-    Args:
-        measurement_pairs_df:
-            DataFrame containing the measurement pairs information from the
-            pipeline.
-
-    Returns:
-        Original DataFrame with the database ID attached to each row.
-    """
-    meas_pair_dj_ids = bulk_upload_model(
-        MeasurementPair,
-        measurement_pair_models_generator(measurement_pairs_df),
-        return_ids=True
-    )
-    measurement_pairs_df["id"] = meas_pair_dj_ids
-
-    return measurement_pairs_df
 
 
 def update_sources(
@@ -347,7 +311,7 @@ def update_sources(
 
     sources_df['id'] = sources_df.index.values
 
-    batches = np.ceil(len(sources_df)/batch_size)
+    batches = np.ceil(len(sources_df) / batch_size)
     dfs = np.array_split(sources_df, batches)
     with connection.cursor() as cursor:
         for df_batch in dfs:
@@ -392,8 +356,8 @@ def SQL_update(
 
     # get names
     table = model._meta.db_table
-    new_columns = ', '.join('new_'+c for c in columns)
-    set_columns = ', '.join(c+'=new_'+c for c in columns)
+    new_columns = ', '.join('new_' + c for c in columns)
+    set_columns = ', '.join(c + '=new_' + c for c in columns)
 
     # get index values and new values
     column_headers = [index]

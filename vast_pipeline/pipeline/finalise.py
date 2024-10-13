@@ -5,18 +5,18 @@ import pandas as pd
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 from vast_pipeline.models import Run
 from vast_pipeline.utils.utils import StopWatch, optimize_floats, optimize_ints
 from vast_pipeline.pipeline.loading import (
     make_upload_associations, make_upload_sources, make_upload_related_sources,
-    make_upload_measurement_pairs, update_sources
+    update_sources
 )
+from vast_pipeline.pipeline.pairs import calculate_measurement_pair_metrics
 from vast_pipeline.pipeline.utils import (
-    parallel_groupby, calculate_measurement_pair_metrics
+    parallel_groupby, get_df_memory_usage, log_total_memory_usage
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -49,21 +49,34 @@ def calculate_measurement_pair_aggregate_metrics(
 
     Returns:
         Measurement pair aggregate metrics indexed by the source ID, `source`.
-        The metric columns are named: `vs_abs_significant_max_{flux_type}` and
-        `m_abs_significant_max_{flux_type}`.
+            The metric columns are named: `vs_abs_significant_max_{flux_type}`
+            and `m_abs_significant_max_{flux_type}`.
     """
-    pair_agg_metrics = measurement_pairs_df.set_index("source").iloc[
-        measurement_pairs_df.query(f"abs(vs_{flux_type}) >= @min_vs")
-        .groupby("source")
-        .agg(m_abs_max_idx=(f"m_{flux_type}", lambda x: x.abs().idxmax()),)
-        .astype(np.int32)["m_abs_max_idx"]  # cast row indices to int and select them
-        .reset_index(drop=True)  # keep only the row indices
-    ][[f"vs_{flux_type}", f"m_{flux_type}"]]
+    check_df = measurement_pairs_df.query(f"abs(vs_{flux_type}) >= @min_vs")
+
+    # This check is performed due to a bug that was occuring after updating the
+    # pandas dependancy (1.4) when performing the tests. The bug was that the
+    # grouby and agg stage below was being performed on an empty series in the
+    # basic association test and causing a failure. Hence this only performs
+    # the groupby if the original query dataframe is not empty.
+    if check_df.empty:
+        pair_agg_metrics = pd.DataFrame(
+            columns=[f"vs_{flux_type}", f"m_{flux_type}", "source"]
+        )
+    else:
+        pair_agg_metrics = measurement_pairs_df.iloc[
+            check_df
+            .groupby("source")
+            .agg(m_abs_max_idx=(f"m_{flux_type}", lambda x: x.abs().idxmax()),)
+            # cast row indices to int and select them
+            .astype(np.int32)["m_abs_max_idx"]
+            .reset_index(drop=True)  # keep only the row indices
+        ][[f"vs_{flux_type}", f"m_{flux_type}", "source"]]
 
     pair_agg_metrics = pair_agg_metrics.abs().rename(columns={
         f"vs_{flux_type}": f"vs_abs_significant_max_{flux_type}",
         f"m_{flux_type}": f"m_abs_significant_max_{flux_type}",
-    })
+    }).set_index('source')
     return pair_agg_metrics
 
 
@@ -71,11 +84,12 @@ def final_operations(
     sources_df: pd.DataFrame,
     p_run: Run,
     new_sources_df: pd.DataFrame,
+    calculate_pairs: bool,
     source_aggregate_pair_metrics_min_abs_vs: float,
     add_mode: bool,
     done_source_ids: List[int],
     previous_parquets: Dict[str, str]
-) -> int:
+) -> Tuple[int, int]:
     """
     Performs the final operations of the pipeline:
     - Calculates the statistics for the final sources.
@@ -94,6 +108,9 @@ def final_operations(
         new_sources_df:
             The new sources dataframe, only contains the
             'new_source_high_sigma' column (source_id is the index).
+        calculate_pairs:
+            Whether to calculate the measurement pairs and their 2-epoch
+            metrics, Vs and m.
         source_aggregate_pair_metrics_min_abs_vs:
             Only measurement pairs where the Vs metric exceeds this value
             are selected for the aggregate pair metrics that are stored in
@@ -105,8 +122,10 @@ def final_operations(
             in the previous run in add mode.
 
     Returns:
-        The number of sources contained in the pipeline (used in the next steps
-        of main.py).
+        The number of sources contained in the pipeline run (used in the next
+            steps of main.py).
+        The number of new sources contained in the pipeline run (used in the
+            next steps of main.py).
     """
     timer = StopWatch()
 
@@ -115,8 +134,14 @@ def final_operations(
         'Calculating statistics for %i sources...',
         sources_df.source.unique().shape[0]
     )
+    log_total_memory_usage()
+
     srcs_df = parallel_groupby(sources_df)
+
+    mem_usage = get_df_memory_usage(srcs_df)
     logger.info('Groupby-apply time: %.2f seconds', timer.reset())
+    logger.debug(f"Initial srcs_df memory: {mem_usage}MB")
+    log_total_memory_usage()
 
     # add new sources
     srcs_df["new"] = srcs_df.index.isin(new_sources_df.index)
@@ -128,6 +153,10 @@ def final_operations(
         how="left",
     )
     srcs_df["new_high_sigma"] = srcs_df["new_high_sigma"].fillna(0.0)
+
+    mem_usage = get_df_memory_usage(srcs_df)
+    logger.debug(f"srcs_df memory after adding new sources: {mem_usage}MB")
+    log_total_memory_usage()
 
     # calculate nearest neighbour
     srcs_skycoord = SkyCoord(
@@ -143,34 +172,59 @@ def final_operations(
     # add the separation distance in degrees
     srcs_df['n_neighbour_dist'] = d2d.deg
 
+    mem_usage = get_df_memory_usage(srcs_df)
+    logger.debug(f"srcs_df memory after nearest-neighbour: {mem_usage}MB")
+    log_total_memory_usage()
+
     # create measurement pairs, aka 2-epoch metrics
-    timer.reset()
-    measurement_pairs_df = calculate_measurement_pair_metrics(sources_df)
-    logger.info('Measurement pair metrics time: %.2f seconds', timer.reset())
+    if calculate_pairs:
+        timer.reset()
+        measurement_pairs_df = calculate_measurement_pair_metrics(sources_df)
+        logger.info(
+            'Measurement pair metrics time: %.2f seconds',
+            timer.reset())
+        mem_usage = get_df_memory_usage(measurement_pairs_df)
+        logger.debug(f"measurment_pairs_df memory: {mem_usage}MB")
+        log_total_memory_usage()
 
-    # calculate measurement pair metric aggregates for sources by finding the row indices
-    # of the aggregate max of the abs(m) metric for each flux type.
-    pair_agg_metrics = pd.merge(
-        calculate_measurement_pair_aggregate_metrics(
-            measurement_pairs_df, source_aggregate_pair_metrics_min_abs_vs, flux_type="peak",
-        ),
-        calculate_measurement_pair_aggregate_metrics(
-            measurement_pairs_df, source_aggregate_pair_metrics_min_abs_vs, flux_type="int",
-        ),
-        how="outer",
-        left_index=True,
-        right_index=True,
-    )
+        # calculate measurement pair metric aggregates for sources by finding
+        # the row indices of the aggregate max of the abs(m) metric for each
+        # flux type.
+        pair_agg_metrics = pd.merge(
+            calculate_measurement_pair_aggregate_metrics(
+                measurement_pairs_df,
+                source_aggregate_pair_metrics_min_abs_vs,
+                flux_type="peak",
+            ),
+            calculate_measurement_pair_aggregate_metrics(
+                measurement_pairs_df,
+                source_aggregate_pair_metrics_min_abs_vs,
+                flux_type="int",
+            ),
+            how="outer",
+            left_index=True,
+            right_index=True,
+        )
 
-    # join with sources and replace agg metrics NaNs with 0 as the DataTables API JSON
-    # serialization doesn't like them
-    srcs_df = srcs_df.join(pair_agg_metrics).fillna(value={
-        "vs_abs_significant_max_peak": 0.0,
-        "m_abs_significant_max_peak": 0.0,
-        "vs_abs_significant_max_int": 0.0,
-        "m_abs_significant_max_int": 0.0,
-    })
-    logger.info("Measurement pair aggregate metrics time: %.2f seconds", timer.reset())
+        # join with sources and replace agg metrics NaNs with 0 as the
+        # DataTables API JSON serialization doesn't like them
+        srcs_df = srcs_df.join(pair_agg_metrics).fillna(value={
+            "vs_abs_significant_max_peak": 0.0,
+            "m_abs_significant_max_peak": 0.0,
+            "vs_abs_significant_max_int": 0.0,
+            "m_abs_significant_max_int": 0.0,
+        })
+        logger.info(
+            "Measurement pair aggregate metrics time: %.2f seconds",
+            timer.reset())
+        mem_usage = get_df_memory_usage(srcs_df)
+        logger.debug(f"srcs_df memory after calculate_pairs: {mem_usage}MB")
+        log_total_memory_usage()
+    else:
+        logger.info(
+            "Skipping measurement pair metric calculation as specified in "
+            "the run configuration."
+        )
 
     # upload sources to DB, column 'id' with DB id is contained in return
     if add_mode:
@@ -179,17 +233,38 @@ def final_operations(
         # upload new ones first (new id's are fetched)
         src_done_mask = srcs_df.index.isin(done_source_ids)
         srcs_df_upload = srcs_df.loc[~src_done_mask].copy()
+
+        mem_usage = get_df_memory_usage(srcs_df_upload)
+        logger.debug(f"srcs_df_upload initial memory: {mem_usage}MB")
+        log_total_memory_usage()
+
         srcs_df_upload = make_upload_sources(srcs_df_upload, p_run, add_mode)
+
+        mem_usage = get_df_memory_usage(srcs_df_upload)
+        logger.debug(f"srcs_df_upload memory after upload: {mem_usage}MB")
+        log_total_memory_usage()
+
         # And now update
         srcs_df_update = srcs_df.loc[src_done_mask].copy()
         logger.info(
             f"Updating {srcs_df_update.shape[0]} sources with new metrics.")
+        mem_usage = get_df_memory_usage(srcs_df_update)
+        logger.debug(f"srcs_df_update memory: {mem_usage}MB")
+        log_total_memory_usage()
+
         srcs_df = update_sources(srcs_df_update, batch_size=1000)
+        mem_usage = get_df_memory_usage(srcs_df_update)
+        logger.debug(f"srcs_df_update memory: {mem_usage}MB")
+        log_total_memory_usage()
         # Add back together
         if not srcs_df_upload.empty:
-            srcs_df = srcs_df.append(srcs_df_upload)
+            srcs_df = pd.concat([srcs_df, srcs_df_upload])
     else:
         srcs_df = make_upload_sources(srcs_df, p_run, add_mode)
+
+    mem_usage = get_df_memory_usage(srcs_df)
+    logger.debug(f"srcs_df memory after uploading sources: {mem_usage}MB")
+    log_total_memory_usage()
 
     # gather the related df, upload to db and save to parquet file
     # the df will look like
@@ -206,13 +281,17 @@ def final_operations(
     related_df = (
         srcs_df.loc[srcs_df["related_list"] != -1, ["id", "related_list"]]
         .explode("related_list")
-        .rename(columns={"id": "from_source_id", "related_list": "to_source_id"})
+        .rename(columns={"id": "from_source_id",
+                         "related_list": "to_source_id"
+                         })
     )
 
     # for the column 'from_source_id', replace relation source ids with db id
-    related_df["to_source_id"] = related_df["to_source_id"].map(srcs_df["id"].to_dict())
+    related_df["to_source_id"] = related_df["to_source_id"].map(
+        srcs_df["id"].to_dict())
     # drop relationships with the same source
-    related_df = related_df[related_df["from_source_id"] != related_df["to_source_id"]]
+    related_df = related_df[related_df["from_source_id"]
+                            != related_df["to_source_id"]]
 
     # write symmetrical relations to parquet
     related_df.to_parquet(
@@ -229,7 +308,7 @@ def final_operations(
         )
 
         related_df = (
-            related_df.append(old_relations, ignore_index=True)
+            pd.concat([related_df, old_relations], ignore_index=True)
             .drop_duplicates(keep=False)
         )
         logger.debug(f'Add mode: #{related_df.shape[0]} relations to upload.')
@@ -241,15 +320,20 @@ def final_operations(
     # write sources to parquet file
     srcs_df = srcs_df.drop(["related_list", "img_list"], axis=1)
     (
-        srcs_df.set_index('id')  # set the index to db ids, dropping the source idx
+        # set the index to db ids, dropping the source idx
+        srcs_df.set_index('id')
         .to_parquet(os.path.join(p_run.path, 'sources.parquet'))
     )
 
-    # update measurments with sources to get associations
+    # update measurements with sources to get associations
     sources_df = (
         sources_df.drop('related', axis=1)
         .merge(srcs_df.rename(columns={'id': 'source_id'}), on='source')
     )
+
+    mem_usage = get_df_memory_usage(sources_df)
+    logger.debug(f"sources_df memory after srcs_df merge: {mem_usage}MB")
+    log_total_memory_usage()
 
     if add_mode:
         # Load old associations so the already uploaded ones can be removed
@@ -257,8 +341,10 @@ def final_operations(
             pd.read_parquet(previous_parquets['associations'])
             .rename(columns={'meas_id': 'id'})
         )
-        sources_df_upload = sources_df.append(
-            old_assoications, ignore_index=True)
+        sources_df_upload = pd.concat(
+            [sources_df, old_assoications],
+            ignore_index=True
+        )
         sources_df_upload = sources_df_upload.drop_duplicates(
             ['source_id', 'id', 'd2d', 'dr'], keep=False
         )
@@ -275,53 +361,30 @@ def final_operations(
         ['source_id', 'meas_id', 'd2d', 'dr']
     ].to_parquet(os.path.join(p_run.path, 'associations.parquet'))
 
-    # get the Source object primary keys for the measurement pairs
-    measurement_pairs_df = measurement_pairs_df.join(
-        srcs_df.id.rename("source_id"), on="source"
-    )
-
-    if add_mode:
-        # Load old associations so the already uploaded ones can be removed
-        old_measurement_pairs = (
-            pd.read_parquet(previous_parquets['measurement_pairs'])
-        ).rename(columns={'meas_id_a': 'id_a', 'meas_id_b': 'id_b'})
-
-        measurement_pairs_df_upload = measurement_pairs_df.append(
-            old_measurement_pairs, ignore_index=True)
-
-        measurement_pairs_df_upload = (
-            measurement_pairs_df_upload.drop_duplicates(
-                ['id_a', 'id_b', 'source_id'], keep=False)
+    if calculate_pairs:
+        # get the Source object primary keys for the measurement pairs
+        measurement_pairs_df = measurement_pairs_df.join(
+            srcs_df.id.rename("source_id"), on="source"
         )
 
-        logger.debug(
-            f'Add mode: #{measurement_pairs_df_upload.shape[0]}'
-            ' measurement pairs to upload.'
-        )
-    else:
-        measurement_pairs_df_upload = measurement_pairs_df
-
-    # create the measurement pair objects and upload to DB
-    measurement_pairs_df = make_upload_measurement_pairs(
-        measurement_pairs_df_upload)
-
-    if add_mode:
-        measurement_pairs_df = old_measurement_pairs.append(
-            measurement_pairs_df)
-
-    # optimize measurement pair DataFrame and save to parquet file
-    measurement_pairs_df = optimize_ints(
-        optimize_floats(
-            measurement_pairs_df.drop(columns=["source"]).rename(
-                columns={"id_a": "meas_id_a", "id_b": "meas_id_b"}
+        # optimize measurement pair DataFrame and save to parquet file
+        measurement_pairs_df = optimize_ints(
+            optimize_floats(
+                measurement_pairs_df.drop(columns=["source"]).rename(
+                    columns={"id_a": "meas_id_a", "id_b": "meas_id_b"}
+                )
             )
         )
-    )
-    measurement_pairs_df.to_parquet(
-        os.path.join(p_run.path, "measurement_pairs.parquet"), index=False
-    )
+        measurement_pairs_df.to_parquet(
+            os.path.join(p_run.path, "measurement_pairs.parquet"), index=False
+        )
 
-    logger.info("Total final operations time: %.2f seconds", timer.reset_init())
+    logger.info(
+        "Total final operations time: %.2f seconds",
+        timer.reset_init())
+
+    nr_sources = srcs_df["id"].count()
+    nr_new_sources = srcs_df['new'].sum()
 
     # calculate and return total number of extracted sources
-    return srcs_df["id"].count()
+    return (nr_sources, nr_new_sources)

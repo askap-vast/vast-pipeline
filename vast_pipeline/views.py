@@ -2,22 +2,21 @@ import io
 import os
 import json
 import logging
+import matplotlib.pyplot as plt
 import traceback
-import dask.dataframe as dd
 import dask.bag as db
 import pandas as pd
 
-from typing import Dict, Any, Tuple, List
+from typing import Dict, Any, Tuple, List, Optional
 from glob import glob
 from itertools import tee
+from pathlib import Path
 
 from astropy.io import fits
-from astropy.coordinates import SkyCoord, Angle, Longitude, Latitude
+from astropy.coordinates import SkyCoord, Angle
 from astropy.nddata import Cutout2D
 from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
-from astroquery.simbad import Simbad
-from astroquery.ned import Ned
 
 from bokeh.embed import json_item
 
@@ -26,13 +25,17 @@ from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.db.models import F, Count, QuerySet
-from django.http import FileResponse, Http404, HttpResponseRedirect
+from django.http import (
+    FileResponse, Http404, HttpResponseRedirect, JsonResponse, HttpResponse
+)
 from django.shortcuts import render, redirect, get_object_or_404
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 
 from django_q.tasks import async_task
 
+import requests
 from rest_framework import status
 import rest_framework.decorators
 from rest_framework.request import Request
@@ -47,7 +50,7 @@ from rest_framework import serializers
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.contrib.auth.decorators import login_required
 
-from vast_pipeline.plots import plot_lightcurve
+from vast_pipeline.plots import plot_lightcurve, plot_eta_v_bokeh
 from vast_pipeline.models import (
     Comment, CommentableModel, Image, Measurement, Run, Source, SourceFav,
 )
@@ -57,32 +60,33 @@ from vast_pipeline.serializers import (
     SourceFavSerializer, SesameResultSerializer, CoordinateValidatorSerializer,
     ExternalSearchSerializer
 )
+from vast_pipeline.utils import external_query
 from vast_pipeline.utils.utils import deg2dms, deg2hms, parse_coord, equ2gal
 from vast_pipeline.utils.view import generate_colsfields, get_skyregions_collection
 from vast_pipeline.management.commands.initpiperun import initialise_run
 from vast_pipeline.forms import PipelineRunForm, CommentForm, TagWithCommentsForm
 from vast_pipeline.pipeline.config import PipelineConfig
-from vast_pipeline.pipeline.main import Pipeline
-from vast_pipeline.pipeline.utils import get_create_p_run
+from vast_pipeline.image.utils import open_fits
 
 
 logger = logging.getLogger(__name__)
 
 
 def _process_comment_form_get_comments(
-    request, instance: CommentableModel
+    request: Request, instance: CommentableModel
 ) -> Tuple[CommentForm, "QuerySet[Comment]"]:
-    """Process the comment form and return the form and comment objects. If the `request`
-    method was POST, create a `Comment` object attached to `instance`.
+    """Process the comment form and return the form and comment objects.
+    If the `request` method was POST, create a `Comment` object attached to
+    `instance`.
 
     Args:
         request: Django HTTP request object.
-        instance (CommentableModel): Django object that is a subclass of `CommentableModel`.
+        instance: Django object that is a subclass of `CommentableModel`.
             This is the object the comment will be attached to.
 
     Returns:
-        Tuple[CommentForm, QuerySet[Comment]]: a new, unbound `CommentForm` instance; and
-            the `QuerySet` of `Comment` objects attached to `instance`.
+        A new, unbound `CommentForm` instance.
+        The `QuerySet` of `Comment` objects attached to `instance`.
     """
     if request.method == "POST":
         comment_form = CommentForm(request.POST)
@@ -112,15 +116,7 @@ def Login(request):
 
 @login_required
 def Home(request):
-    totals = {}
-    totals['nr_pruns'] = Run.objects.count()
-    totals['nr_imgs'] = Image.objects.count()
-    totals['nr_srcs'] = Source.objects.count()
-    totals['nr_meas'] = Measurement.objects.count()
-
     context = {
-        'totals': totals,
-        'd3_celestial_skyregions': get_skyregions_collection(),
         'static_url': settings.STATIC_URL
     }
     return render(request, 'index.html', context)
@@ -248,22 +244,24 @@ class RunViewSet(ModelViewSet):
         return Response(serializer.data)
 
     @rest_framework.decorators.action(detail=True, methods=['post'])
-    def run(self, request, pk=None):
+    def run(
+        self, request: Request, pk: Optional[int] = None
+    ) -> HttpResponseRedirect:
         """
         Launches a pipeline run using a Django Q cluster. Includes a check
         on ownership or admin stataus of the user to make sure processing
         is allowed.
 
         Args:
-            request (Request): Django REST Framework request object.
-            pk (int, optional): Run object primary key. Defaults to None.
+            request: Django REST Framework request object.
+            pk: Run object primary key. Defaults to None.
 
         Raises:
             Http404: if a Source with the given `pk` cannot be found.
 
         Returns:
             Response: Returns to the orignal request page (the pipeline run
-            detail).
+                detail).
         """
         if not pk:
             messages.error(
@@ -280,17 +278,9 @@ class RunViewSet(ModelViewSet):
 
         # make sure that only the run creator or an admin can request the run
         # to be processed.
-        if (
-            p_run.user != request.user.get_username()
-            and not request.user.is_staff
-        ):
-            msg = (
-                'You do not have permission to process this pipeline run!'
-            )
-            messages.error(
-                request,
-                msg
-            )
+        if p_run.user != request.user and not request.user.is_staff:
+            msg = 'You do not have permission to process this pipeline run!'
+            messages.error(request, msg)
             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
         # check that it's not already running or queued
@@ -352,6 +342,262 @@ class RunViewSet(ModelViewSet):
             reverse('vast_pipeline:run_detail', args=[p_run.id])
         )
 
+    @rest_framework.decorators.action(detail=True, methods=['post'])
+    def restore(
+        self, request: Request, pk: Optional[int] = None
+    ) -> HttpResponseRedirect:
+        """
+        Launches a restore pipeline run using a Django Q cluster. Includes a
+        check on ownership or admin status of the user to make sure
+        processing is allowed.
+
+        Args:
+            request: Django REST Framework request object.
+            pk: Run object primary key. Defaults to None.
+
+        Raises:
+            Http404: if a Source with the given `pk` cannot be found.
+
+        Returns:
+            Response: Returns to the orignal request page (the pipeline run
+                detail).
+        """
+        if not pk:
+            messages.error(
+                request,
+                'Error in config write: Run pk parameter null or not passed'
+            )
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        try:
+            p_run = get_object_or_404(self.queryset, pk=pk)
+        except Exception as e:
+            messages.error(request, f'Error in run fetch: {e}')
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        # make sure that only the run creator or an admin can request the run
+        # to be processed.
+        if p_run.user != request.user and not request.user.is_staff:
+            msg = 'You do not have permission to process this pipeline run!'
+            messages.error(request, msg)
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        # check that it's not already running or queued
+        if p_run.status in ["RUN", "QUE", "RES", "INI"]:
+            msg = (
+                f'{p_run.name} is already running, queued, restoring or is '
+                'only initialised. It cannot be restored at this time.'
+            )
+            messages.error(
+                request,
+                msg
+            )
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        if Run.objects.check_max_runs(settings.MAX_PIPELINE_RUNS):
+            msg = (
+                'The maximum number of simultaneous pipeline runs has been'
+                f' reached ({settings.MAX_PIPELINE_RUNS})! Please try again'
+                ' when other jobs have finished.'
+            )
+            messages.error(
+                request,
+                msg
+            )
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        prev_status = p_run.status
+        try:
+            debug_flag = 3 if request.POST.get('restoreDebug', None) else 1
+
+            async_task(
+                'django.core.management.call_command',
+                'restorepiperun',
+                p_run.path,
+                no_confirm=True,
+                verbosity=debug_flag
+            )
+
+            msg = mark_safe(
+                f'Restore <b>{p_run.name}</b> successfully sent to the queue!<br><br>Refresh the'
+                ' page to check the status.'
+            )
+            messages.success(
+                request,
+                msg
+            )
+        except Exception as e:
+            with transaction.atomic():
+                p_run.status = 'ERR'
+                p_run.save()
+            messages.error(request, f'Error in restoring run: {e}')
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        return HttpResponseRedirect(
+            reverse('vast_pipeline:run_detail', args=[p_run.id])
+        )
+
+    @rest_framework.decorators.action(detail=True, methods=['post'])
+    def delete(
+        self, request: Request, pk: Optional[int] = None
+    ) -> HttpResponseRedirect:
+        """
+        Launches the remove pipeline run using a Django Q cluster. Includes a
+        check on ownership or admin status of the user to make sure
+        deletion is allowed.
+
+        Args:
+            request (Request): Django REST Framework request object.
+            pk (int, optional): Run object primary key. Defaults to None.
+
+        Raises:
+            Http404: if a Source with the given `pk` cannot be found.
+
+        Returns:
+            Response: Returns to the run index page (list of pipeline runs).
+        """
+        if not pk:
+            messages.error(
+                request,
+                'Error in config write: Run pk parameter null or not passed'
+            )
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        try:
+            p_run = get_object_or_404(self.queryset, pk=pk)
+        except Exception as e:
+            messages.error(request, f'Error in run fetch: {e}')
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        # make sure that only the run creator or an admin can request the run
+        # to be processed.
+        if p_run.user != request.user and not request.user.is_staff:
+            msg = 'You do not have permission to process this pipeline run!'
+            messages.error(request, msg)
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        # check that it's not already running or queued
+        if p_run.status in ["RUN", "QUE", "RES"]:
+            msg = (
+                f'{p_run.name} is already running, queued or restoring. '
+                'It cannot be deleted at this time.'
+            )
+            messages.error(
+                request,
+                msg
+            )
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        try:
+            async_task(
+                'django.core.management.call_command',
+                'clearpiperun',
+                p_run.path,
+                remove_all=True,
+            )
+
+            msg = mark_safe(
+                f'Delete <b>{p_run.name}</b> successfully requested!<br><br>'
+                ' Refresh the Pipeline Runs page for the deletion to take effect.'
+            )
+            messages.success(
+                request,
+                msg
+            )
+        except Exception as e:
+            with transaction.atomic():
+                p_run.status = 'ERR'
+                p_run.save()
+            messages.error(request, f'Error in deleting run: {e}')
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        return HttpResponseRedirect(
+            reverse('vast_pipeline:run_index')
+        )
+
+    @rest_framework.decorators.action(detail=True, methods=['post'])
+    def genarrow(
+        self, request: Request, pk: Optional[int] = None
+    ) ->HttpResponseRedirect:
+        """
+        Launches the create arrow files process for a pipeline run using
+        a Django Q cluster. Includes a check on ownership or admin status of
+        the user to make sure the creation is allowed.
+
+        Args:
+            request: Django REST Framework request object.
+            pk: Run object primary key. Defaults to None.
+
+        Raises:
+            Http404: if a Source with the given `pk` cannot be found.
+
+        Returns:
+            Response: Returns to the orignal request page (the pipeline run
+                detail).
+        """
+        if not pk:
+            messages.error(
+                request,
+                'Error in config write: Run pk parameter null or not passed'
+            )
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        try:
+            p_run = get_object_or_404(self.queryset, pk=pk)
+        except Exception as e:
+            messages.error(request, f'Error in run fetch: {e}')
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        # make sure that only the run creator or an admin can request the run
+        # to be processed.
+        if p_run.user != request.user and not request.user.is_staff:
+            msg = 'You do not have permission to process this pipeline run!'
+            messages.error(request, msg)
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        # check that it's not already running or queued
+        if p_run.status != "END":
+            msg = (
+                f'{p_run.name} has not completed successfully.'
+                ' The arrow files can only be generated after the run is'
+                ' successful.'
+            )
+            messages.error(
+                request,
+                msg
+            )
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        try:
+            overwrite_flag = True if request.POST.get('arrowOverwrite', None) else False
+
+            async_task(
+                'django.core.management.call_command',
+                'createmeasarrow',
+                p_run.path,
+                overwrite=overwrite_flag,
+                verbosity=3
+            )
+
+            msg = mark_safe(
+                f'Generate the arrow files for <b>{p_run.name}</b> successfully requested!<br><br>'
+                ' Refresh the page and check the generate arrow log output for the status of the process.'
+            )
+            messages.success(
+                request,
+                msg
+            )
+        except Exception as e:
+            with transaction.atomic():
+                p_run.status = 'ERR'
+                p_run.save()
+            messages.error(request, f'Error in deleting run: {e}')
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+        return HttpResponseRedirect(
+            reverse('vast_pipeline:run_detail', args=[p_run.id])
+        )
+
 
 # Run detail
 @login_required
@@ -366,17 +612,11 @@ def RunDetail(request, id):
         p_run['nr_meas'] = p_run['n_selavy_measurements']
         p_run['nr_frcd'] = p_run['n_forced_measurements']
         p_run['nr_srcs'] = p_run['n_sources']
+        p_run['new_srcs'] = p_run['n_new_sources']
     else:
         p_run['nr_meas'] = 'N/A'
         p_run['nr_frcd'] = 'N/A'
         p_run['nr_srcs'] = 'N/A'
-
-    if p_run_model.status == 'Completed':
-        p_run['new_srcs'] = Source.objects.filter(
-            run__id=p_run['id'],
-            new=True,
-        ).count()
-    else:
         p_run['new_srcs'] = 'N/A'
 
     # read run config
@@ -385,11 +625,29 @@ def RunDetail(request, id):
         with open(f_path) as fp:
             p_run['config_txt'] = fp.read()
 
-    # read run log file
-    f_path = os.path.join(p_run['path'], 'log.txt')
+    # read prev run config
+    f_path = os.path.join(p_run['path'], 'config.yaml.bak')
     if os.path.exists(f_path):
         with open(f_path) as fp:
-            p_run['log_txt'] = fp.read()
+            p_run['prev_config_txt'] = fp.read()
+
+    log_files = sorted(glob(os.path.join(p_run['path'], '*[0-9]_log.txt')))
+    log_files = [os.path.basename(i) for i in log_files[::-1]]
+
+    restore_log_files = sorted(
+        glob(os.path.join(p_run['path'], '*[0-9]_restore_log.txt'))
+    )
+    restore_log_files = [os.path.basename(i) for i in restore_log_files[::-1]]
+
+    genarrow_log_files = sorted(
+        glob(os.path.join(p_run['path'], '*[0-9]_gen_arrow_log.txt'))
+    )
+    genarrow_log_files = [os.path.basename(i) for i in genarrow_log_files[::-1]]
+
+    # Detect whether arrow files are present
+    p_run['arrow_files'] = os.path.isfile(
+        os.path.join(p_run['path'], 'measurements.arrow')
+    )
 
     image_fields = [
         'name',
@@ -412,7 +670,7 @@ def RunDetail(request, id):
     )
 
     image_datatable = {
-        'table_id': 'imageTable',
+        'table_id': 'dataTable',
         'api': (
             reverse('vast_pipeline:api_pipe_runs-images', args=[p_run['id']]) +
             '?format=datatables'
@@ -435,68 +693,14 @@ def RunDetail(request, id):
         'order': [1, 'asc']
     }
 
-    meas_fields = [
-        'name',
-        'ra',
-        'ra_err',
-        'uncertainty_ew',
-        'dec',
-        'dec_err',
-        'uncertainty_ns',
-        'flux_peak',
-        'flux_peak_err',
-        'flux_peak_isl_ratio',
-        'flux_int',
-        'flux_int_err',
-        'flux_int_isl_ratio',
-        'frequency',
-        'compactness',
-        'snr',
-        'has_siblings',
-        'forced'
-    ]
-
-    meas_colsfields = generate_colsfields(
-        meas_fields,
-        {'name': reverse('vast_pipeline:measurement_detail', args=[1])[:-2]},
-        not_searchable_col=['frequency']
-    )
-
-    meas_datatable = {
-        'table_id': 'measTable',
-        'api': (
-            reverse('vast_pipeline:api_pipe_runs-measurements', args=[p_run['id']]) +
-            '?format=datatables'
-        ),
-        'colsFields': meas_colsfields,
-        'colsNames': [
-            'Name',
-            'RA (deg)',
-            'RA Error (arcsec)',
-            'Uncertainty EW (arcsec)',
-            'Dec (deg)',
-            'Dec Error (arcsec)',
-            'Uncertainty NS (arcsec)',
-            'Peak Flux (mJy/beam)',
-            'Peak Flux Error (mJy/beam)',
-            'Peak Flux Isl. Ratio',
-            'Int. Flux (mJy)',
-            'Int. Flux Error (mJy)',
-            'Int. Flux Isl. Ratio',
-            'Frequency (MHz)',
-            'Compactness',
-            'SNR',
-            'Has siblings',
-            'Forced Extraction'
-        ],
-        'search': True,
-    }
-
     context = {
         "p_run": p_run,
-        "datatables": [image_datatable, meas_datatable],
+        "datatables": [image_datatable],
         "d3_celestial_skyregions": get_skyregions_collection(run_id=id),
         "static_url": settings.STATIC_URL,
+        "log_files": log_files,
+        "restore_log_files": restore_log_files,
+        "genarrow_log_files": genarrow_log_files
     }
 
     context["comment_form"], context["comments"] = _process_comment_form_get_comments(
@@ -1287,9 +1491,137 @@ def SourceQuery(request):
                     'New High Sigma'
                 ],
                 'search': False,
+                'deferLoading': 0,  # don't fetch results until a query is made
             }
         }
     )
+
+
+# Source query eta V plot
+@login_required
+def SourceEtaVPlot(request: Request) -> Response:
+    """The view for the main eta-V plot page.
+
+    Args:
+        request (Request): Django REST Framework request object.
+
+    Returns:
+        The response for the main eta-V page.
+    """
+    min_sources = 50
+
+    source_query_result_id_list = request.session.get("source_query_result_ids", [])
+
+    sources_query_len = len(source_query_result_id_list)
+
+    if sources_query_len < min_sources:
+        messages.error(
+            request,
+            (
+                f'The query has returned only {sources_query_len} sources.'
+                f' A minimum of {min_sources} sources must be used to produce'
+                ' the plot.'
+            )
+        )
+
+        plot_ok = 0
+
+    else:
+        sources = Source.objects.filter(
+            id__in=source_query_result_id_list,
+            n_meas__gt=1,
+            eta_peak__gt=0,
+            eta_int__gt=0,
+            v_peak__gt=0,
+            v_int__gt=0
+        )
+
+        new_sources_ids_list = list(sources.values_list("id", flat=True))
+
+        new_sources_query_len = len(new_sources_ids_list)
+
+        diff = sources_query_len - new_sources_query_len
+
+        if diff > 0:
+            messages.warning(
+                request,
+                (
+                    f'Removed {diff} sources that either had'
+                    ' only one datapoint, or, an \u03B7 or V value of 0.'
+                    ' Change the query options to avoid these sources.'
+                )
+            )
+
+            request.session["source_query_result_ids"] = new_sources_ids_list
+
+        if new_sources_query_len < min_sources:
+            messages.error(
+                request,
+                (
+                    'After filtering, the query has returned only'
+                    f' {sources_query_len} sources. A minimum of {min_sources}'
+                    ' sources must be used to produce the plot.'
+                )
+            )
+
+            plot_ok = 0
+
+        else:
+            if new_sources_query_len > settings.ETA_V_DATASHADER_THRESHOLD:
+                messages.info(
+                    request,
+                    (
+                        "Sources outside of the selected sigma area"
+                        " are displayed as a non-interactive averaged"
+                        " distribution."
+                    )
+                )
+
+            plot_ok = 1
+
+    context = {
+        'plot_ok': plot_ok,
+    }
+
+    return render(request, 'sources_etav_plot.html', context)
+
+
+@login_required
+def SourceEtaVPlotUpdate(request: Request, pk: int) -> Response:
+    """The view to perform the update on the eta-V plot page.
+
+    Args:
+        request (Request): Django REST Framework request object.
+        pk (int, optional): Source object primary key. Defaults to None.
+
+    Raises:
+        Http404: if a Source with the given `pk` cannot be found.
+
+    Returns:
+        The response for the update page.
+    """
+    try:
+        source = Source.objects.values().get(pk=pk)
+    except Source.DoesNotExist:
+        raise Http404
+
+    source['wavg_ra_hms'] = deg2hms(source['wavg_ra'], hms_format=True)
+    source['wavg_dec_dms'] = deg2dms(source['wavg_dec'], dms_format=True)
+    source['wavg_l'], source['wavg_b'] = equ2gal(source['wavg_ra'], source['wavg_dec'])
+
+    context = {
+        'source': source,
+        'sourcefav': (
+            SourceFav.objects.filter(
+                user__id=request.user.id,
+                source__id=source['id']
+            )
+            .exists()
+        ),
+        'datatables': []
+    }
+
+    return render(request, 'sources_etav_plot_update.html', context)
 
 
 # Source detail
@@ -1327,15 +1659,25 @@ def SourceDetail(request, pk):
         'forced',
         'image_id'
     ]
-    measurements = list(
-        Measurement.objects.filter(source__id=pk).annotate(
-            datetime=F('image__datetime'),
-            image_name=F('image__name'),
-            frequency=F('image__band__frequency'),
-        ).order_by('datetime').values(*tuple(cols))
+    measurements_qs = (
+        Measurement.objects.filter(source__id=pk)
+        .annotate(datetime=F("image__datetime"), image_name=F("image__name"))
+        .order_by("datetime")
     )
 
-    first_det_meas_index = [i['forced'] for i in measurements].index(False)
+    measurements = list(
+        measurements_qs.annotate(
+            frequency=F("image__band__frequency"),
+        ).values(*tuple(cols))
+    )
+    # subset of measurements used for the cutouts
+    measurements_cutouts = list(
+        measurements_qs[: settings.MAX_CUTOUT_IMAGES].values(
+            "id", "ra", "dec", "image_id", "image_name",
+        )
+    )
+    # get the measurement for the first detection - used for the first detection cutout
+    first_det_meas = measurements[[i['forced'] for i in measurements].index(False)]
 
     for one_m in measurements:
         one_m['datetime'] = one_m['datetime'].isoformat()
@@ -1448,8 +1790,9 @@ def SourceDetail(request, pk):
         'source': source,
         'source_next_id': source_next_id,
         'source_previous_id': source_previous_id,
-        'first_det_meas_index': first_det_meas_index,
+        'first_det_meas': first_det_meas,
         'datatables': [measurements, related_datatables],
+        'cutout_measurements': measurements_cutouts,
         # flag to deactivate starring and render yellow star
         'sourcefav': (
             SourceFav.objects.filter(
@@ -1516,9 +1859,16 @@ class ImageCutout(APIView):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, measurement_name, size="normal"):
-        measurement = Measurement.objects.get(name=measurement_name)
-        image_hdu: fits.PrimaryHDU = fits.open(measurement.image.path)[0]
+    def get(self, request, measurement_id: int, size: str = "normal"):
+        img_type = request.query_params.get('img_type', 'fits')
+        if img_type not in ('fits', 'png'):
+            raise Http404(
+                "GET query param img_type must be either 'fits' or 'png'."
+            )
+
+        measurement = Measurement.objects.get(id=measurement_id)
+
+        image_hdu: fits.PrimaryHDU = open_fits(measurement.image.path)[0]
         coord = SkyCoord(ra=measurement.ra, dec=measurement.dec, unit="deg")
         sizes = {
             "xlarge": "40arcmin",
@@ -1527,9 +1877,9 @@ class ImageCutout(APIView):
         }
 
         filenames = {
-            "xlarge": f"{measurement.name}_cutout_xlarge.fits",
-            "large": f"{measurement.name}_cutout_large.fits",
-            "normal": f"{measurement.name}_cutout.fits",
+            "xlarge": f"{measurement.name}_cutout_xlarge.{img_type}",
+            "large": f"{measurement.name}_cutout_large.fits.{img_type}",
+            "normal": f"{measurement.name}_cutout.fits.{img_type}",
         }
 
         try:
@@ -1558,7 +1908,11 @@ class ImageCutout(APIView):
 
         cutout_hdu = fits.PrimaryHDU(data=cutout.data, header=cutout_header)
         cutout_file = io.BytesIO()
-        cutout_hdu.writeto(cutout_file)
+
+        if img_type == "fits":
+            cutout_hdu.writeto(cutout_file)
+        else:
+            plt.imsave(cutout_file, cutout.data, dpi=600)
         cutout_file.seek(0)
         response = FileResponse(
             cutout_file,
@@ -1574,7 +1928,7 @@ class MeasurementQuery(APIView):
 
     def get(
         self,
-        request,
+        request: Request,
         ra_deg: float,
         dec_deg: float,
         image_id: int,
@@ -1717,8 +2071,15 @@ class RawImageListSet(ViewSet):
         ))
         # add home directory user data for user and jupyter-user (user = github name)
         req_user = request.user.username
-        for user in [f'~{req_user}', f'~jupyter-{req_user}']:
-            user_home_data = os.path.join(os.path.expanduser(user), settings.HOME_DATA_DIR)
+        for user in [f'{req_user}', f'jupyter-{req_user}']:
+            if settings.HOME_DATA_ROOT is not None:
+                user_home_data = os.path.join(
+                    settings.HOME_DATA_ROOT, user, settings.HOME_DATA_DIR
+                )
+            else:
+                user_home_data = os.path.join(
+                    os.path.expanduser(f'~{user}'), settings.HOME_DATA_DIR
+                )
             if settings.HOME_DATA_DIR and os.path.exists(user_home_data):
                 img_regex_list.append(os.path.join(user_home_data, '**' + os.sep + '*.fits'))
                 selavy_regex_list.append(os.path.join(user_home_data, '**' + os.sep + '*.txt'))
@@ -1856,6 +2217,84 @@ class RunConfigSet(ViewSet):
         )
 
 
+class RunLogSet(ViewSet):
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
+    queryset = Run.objects.all()
+
+    @rest_framework.decorators.action(detail=True, methods=['get'])
+    def fetch(self, request, pk=None):
+        if not pk:
+            return Response(
+                {
+                    'message': {
+                        'severity': 'danger',
+                        'text': [
+                            'Error in run log fetch request:',
+                            'Run pk parameter null or not passed'
+                        ]
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        logname = self.request.query_params.get('logname', None)
+
+        if not logname:
+            return Response(
+                {
+                    'message': {
+                        'severity': 'danger',
+                        'text': [
+                            'Error in run log fetch request:',
+                            'logname url parameter null or not passed'
+                        ]
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        p_run = get_object_or_404(self.queryset, pk=pk)
+        logpath = Path(p_run.path) / logname
+
+        if not logpath.exists():
+            return Response(
+                {
+                    'message': {
+                        'severity': 'danger',
+                        'text': [
+                            'Error in run log fetch request:',
+                            f'Path {logpath} does not exist'
+                        ]
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            pipeline_log = logpath.read_text()
+        except Exception as e:
+            trace = traceback.format_exc().splitlines()
+            trace = '\n'.join(trace[-4:])
+            msg = {
+                'message': {
+                    'severity': 'danger',
+                    'text': (
+                        'Error in run log fetch request\n'
+                        f'{e}\n\n'
+                        'Debug trace:\n'
+                        f'{trace}'
+                    ).split('\n'),
+                }
+            }
+            return Response(msg, status=status.HTTP_400_BAD_REQUEST)
+
+        logfile = {
+            'log_html_content': "<code>"+ pipeline_log + "</code>"
+        }
+
+        return JsonResponse(logfile, status=status.HTTP_200_OK)
+
+
 class SourceFavViewSet(ModelViewSet):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [IsAuthenticated]
@@ -1878,8 +2317,12 @@ class SourceFavViewSet(ModelViewSet):
         #     return Response(serializer.data, status=status.HTTP_201_CREATED)
         # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         data = request.data.dict()
+        if 'next' in data.keys():
+            data.pop('next')
         data.pop('csrfmiddlewaretoken')
         data['user_id'] = request.user.id
+
+        return_data = {}
         try:
             check = (
                 SourceFav.objects.filter(
@@ -1890,17 +2333,30 @@ class SourceFavViewSet(ModelViewSet):
             )
             if check:
                 messages.error(request, 'Source already added to favourites!')
+                success = False
             else:
                 fav = SourceFav(**data)
                 fav.save()
                 messages.success(request, 'Added to favourites successfully')
+                success = True
         except Exception as e:
             messages.error(
                 request,
                 f'Errors in adding source to favourites: \n{e}'
             )
+            success = False
 
-        return HttpResponseRedirect(reverse('vast_pipeline:source_detail', args=[data['source_id']]))
+        return_data['success'] = success
+        return_data['messages'] = render_to_string(
+            'messages.html',
+            {},
+            request
+        )
+
+        return HttpResponse(
+            json.dumps(return_data, ensure_ascii=False),
+            content_type="application/json"
+        )
 
     def destroy(self, request, pk=None):
         try:
@@ -1962,6 +2418,21 @@ class UtilitiesSet(ViewSet):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [IsAuthenticated]
 
+    @staticmethod
+    def _external_search_error_handler(
+        external_query_func,
+        coord: SkyCoord,
+        radius: Angle,
+        service_name: str,
+        request: Request,
+    ) -> List[Dict[str, Any]]:
+        try:
+            results = external_query_func(coord, radius)
+        except requests.HTTPError:
+            messages.error(request, f"Unable to get {service_name} query results.")
+            results = []
+        return results
+
     @rest_framework.decorators.action(methods=['get'], detail=False)
     def sesame_search(self, request: Request) -> Response:
         """Query the Sesame name resolver service and return a coordinate.
@@ -1973,7 +2444,7 @@ class UtilitiesSet(ViewSet):
                     Defaults to "all".
 
         Returns:
-            Response: a Django REST framework Response. Will return JSON with status code:
+            A Django REST framework Response. Will return JSON with status code:
                 - 400 if the query params fail validation (i.e. if an invalid Sesame service
                     or no object name is provided) or if the name resolution fails. Error
                     messages are returned as an array of strings under the relevant query
@@ -2000,7 +2471,7 @@ class UtilitiesSet(ViewSet):
                 - frame (str): the frame for the given coordinate string e.g. icrs, galactic.
 
         Returns:
-            Response: a Django REST framework Response. Will return JSON with status code:
+            A Django REST framework Response. Will return JSON with status code:
                 - 400 if the query params fail validation, i.e. if a frame unknown to Astropy
                     is given, or the coordinate string fails to parse. Error messages are
                     returned as an array of strings under the relevant query parameter key.
@@ -2015,8 +2486,9 @@ class UtilitiesSet(ViewSet):
         return Response()
 
     @rest_framework.decorators.action(methods=["get"], detail=False)
-    def simbad_ned_search(self, request: Request) -> Response:
-        """Perform a cone search with SIMBAD and NED and return the combined results.
+    def external_search(self, request: Request) -> Response:
+        """Perform a cone search with external providers (e.g. SIMBAD, NED, TNS) and
+        return the combined results.
 
         Args:
             request (Request): Django REST Framework Request object get GET parameters:
@@ -2031,7 +2503,7 @@ class UtilitiesSet(ViewSet):
                 `astropy.coordinates.Angle`, respectively.
 
         Returns:
-            Response: a Django REST framework Response containing result records as a list
+            A Django REST framework Response containing result records as a list
                 under the data object key. Each record contains the properties:
                     - object_name: the name of the astronomical object.
                     - database: the source of the result, e.g. SIMBAD or NED.
@@ -2055,75 +2527,18 @@ class UtilitiesSet(ViewSet):
         except ValueError as e:
             raise serializers.ValidationError({"radius": str(e.args[0])})
 
-        # SIMBAD cone search
-        CustomSimbad = Simbad()
-        CustomSimbad.add_votable_fields(
-            "distance_result", "otype(S)", "otype(V)", "otypes",
+        simbad_results = self._external_search_error_handler(
+            external_query.simbad, coord, radius, "SIMBAD", request
         )
-        simbad_result_table = CustomSimbad.query_region(coord, radius=radius)
-        if simbad_result_table is None:
-            simbad_results_dict_list = []
-        else:
-            simbad_results_df = simbad_result_table[
-                ["MAIN_ID", "DISTANCE_RESULT", "OTYPE_S", "OTYPE_V", "RA", "DEC"]
-            ].to_pandas()
-            simbad_results_df = simbad_results_df.rename(
-                columns={
-                    "MAIN_ID": "object_name",
-                    "DISTANCE_RESULT": "separation_arcsec",
-                    "OTYPE_S": "otype",
-                    "OTYPE_V": "otype_long",
-                    "RA": "ra_hms",
-                    "DEC": "dec_dms",
-                }
-            )
-            simbad_results_df["database"] = "SIMBAD"
-            # convert coordinates to RA (hms) Dec (dms) strings
-            simbad_results_df["ra_hms"] = Longitude(
-                simbad_results_df["ra_hms"], unit="hourangle"
-            ).to_string(unit="hourangle")
-            simbad_results_df["dec_dms"] = Latitude(
-                simbad_results_df["dec_dms"], unit="deg"
-            ).to_string(unit="deg")
-            simbad_results_dict_list = simbad_results_df.to_dict(orient="records")
+        ned_results = self._external_search_error_handler(
+            external_query.ned, coord, radius, "NED", request
+        )
+        tns_results = self._external_search_error_handler(
+            external_query.tns, coord, radius, "TNS", request
+        )
 
-        # NED cone search
-        ned_result_table = Ned.query_region(coord, radius=radius)
-        if ned_result_table is None or len(ned_result_table) == 0:
-            ned_results_dict_list = []
-        else:
-            ned_results_df = ned_result_table[
-                ["Object Name", "Separation", "Type", "RA", "DEC"]
-            ].to_pandas()
-            ned_results_df = ned_results_df.rename(
-                columns={
-                    "Object Name": "object_name",
-                    "Separation": "separation_arcsec",
-                    "Type": "otype",
-                    "RA": "ra_hms",
-                    "DEC": "dec_dms",
-                }
-            )
-            ned_results_df["otype_long"] = ""  # NED does not supply verbose object types
-            # convert NED result separation (arcmin) to arcsec
-            ned_results_df["separation_arcsec"] = (
-                ned_results_df["separation_arcsec"] * 60
-            )
-            # convert coordinates to RA (hms) Dec (dms) strings
-            ned_results_df["ra_hms"] = Longitude(
-                ned_results_df["ra_hms"], unit="deg"
-            ).to_string(unit="hourangle")
-            ned_results_df["dec_dms"] = Latitude(
-                ned_results_df["dec_dms"], unit="deg"
-            ).to_string(unit="deg")
-            ned_results_df["database"] = "NED"
-            # convert dataframe to dict and replace float NaNs with None for JSON encoding
-            ned_results_dict_list = ned_results_df.sort_values(
-                "separation_arcsec"
-            ).to_dict(orient="records")
-
-        results_dict_list = simbad_results_dict_list + ned_results_dict_list
-        serializer = ExternalSearchSerializer(data=results_dict_list, many=True)
+        results = simbad_results + ned_results + tns_results
+        serializer = ExternalSearchSerializer(data=results, many=True)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
 
@@ -2154,4 +2569,33 @@ class SourcePlotsSet(ViewSet):
         # TODO raster plots version for Slack posts
         use_peak_flux = request.query_params.get("peak_flux", "true").lower() == "true"
         plot_document = plot_lightcurve(source, use_peak_flux=use_peak_flux)
+        return Response(json_item(plot_document))
+
+    @rest_framework.decorators.action(methods=['get'], detail=False)
+    def etavplot(self, request: Request) -> Response:
+        """Create the eta-V plot.
+
+        Args:
+            request (Request): Django REST Framework request object.
+
+        Raises:
+            Http404: if no sources are found.
+
+        Returns:
+            Response: Django REST Framework response object containing the Bokeh plot in
+                JSON format to be embedded in the HTML template.
+        """
+        source_query_result_id_list = request.session.get("source_query_result_ids", [])
+        try:
+            source = Source.objects.filter(pk__in=source_query_result_id_list)
+        except Source.DoesNotExist:
+            raise Http404
+        # TODO raster plots version for Slack posts
+        use_peak_flux = request.query_params.get("peak_flux", "true").lower() == "true"
+
+        eta_sigma = float(request.query_params.get("eta_sigma", 3.0))
+        v_sigma = float(request.query_params.get("v_sigma", 3.0))
+
+        plot_document = plot_eta_v_bokeh(
+            source, eta_sigma=eta_sigma, v_sigma=v_sigma, use_peak_flux=use_peak_flux)
         return Response(json_item(plot_document))

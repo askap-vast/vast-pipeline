@@ -110,6 +110,7 @@ class PipelineConfig:
             ),
             "variability": yaml.Map(
                 {
+                    "pair_metrics": yaml.Bool(),
                     "source_aggregate_pair_metrics_min_abs_vs": yaml.Float(),
                 }
             ),
@@ -120,11 +121,14 @@ class PipelineConfig:
         settings.BASE_DIR, "vast_pipeline", "config_template.yaml.j2"
     )
 
-    def __init__(self, config_yaml: yaml.YAML):
+    def __init__(self, config_yaml: yaml.YAML, validate_inputs: bool = True):
         """Initialises PipelineConfig with parsed (but not necessarily validated) YAML.
 
         Args:
             config_yaml (yaml.YAML): Input YAML, usually the output of `strictyaml.load`.
+            validate_inputs (bool, optional): Validate the config input files. Ensures
+                that the inputs match (e.g. each image has a catalogue), and that each
+                path exists. Set to False to skip these checks. Defaults to True.
 
         Raises:
             PipelineConfigError: The input YAML config violates the schema.
@@ -143,12 +147,17 @@ class PipelineConfig:
         # the epochs.
 
         # ensure the inputs are valid in case .from_file(..., validate=False) was used
+        if not validate_inputs:
+            return
+
         try:
             self._validate_inputs()
         except yaml.YAMLValidationError as e:
             raise PipelineConfigError(e)
 
         # detect simple list inputs and convert them to epoch-mode inputs
+        yaml_inputs = self._yaml["inputs"]
+        inputs = yaml_inputs.data
         for input_file_type in self._REQUIRED_INPUT_TYPES:
             # skip missing optional input types, e.g. background
             if (
@@ -157,7 +166,7 @@ class PipelineConfig:
             ):
                 continue
 
-            input_files = self["inputs"][input_file_type]
+            input_files = inputs[input_file_type]
 
             # resolve glob expressions if present
             if isinstance(input_files, dict):
@@ -166,11 +175,9 @@ class PipelineConfig:
                     # resolve the glob expressions
                     self.epoch_based = False
                     file_list = self._resolve_glob_expressions(
-                        self._yaml["inputs"][input_file_type]
+                        yaml_inputs[input_file_type]
                     )
-                    self._yaml["inputs"][input_file_type] = self._create_input_epochs(
-                        file_list
-                    )
+                    inputs[input_file_type] = self._create_input_epochs(file_list)
                 else:
                     # epoch-mode with either a list of files or glob expressions
                     self.epoch_based = True
@@ -178,16 +185,17 @@ class PipelineConfig:
                         if "glob" in input_files[epoch]:
                             # resolve the glob expressions
                             file_list = self._resolve_glob_expressions(
-                                self._yaml["inputs"][input_file_type][epoch]
+                                yaml_inputs[input_file_type][epoch]
                             )
-                            self._yaml["inputs"][input_file_type][epoch] = file_list
+                            inputs[input_file_type][epoch] = file_list
             else:
                 # Epoch-based association not requested and no globs present. Replace
                 # input lists with dicts where each input file has it's own epoch.
                 self.epoch_based = False
-                self._yaml["inputs"][input_file_type] = self._create_input_epochs(
+                inputs[input_file_type] = self._create_input_epochs(
                     input_files
                 )
+        self._yaml["inputs"] = inputs
 
     def __getitem__(self, name: str):
         """Retrieves the requested YAML chunk as a native Python object."""
@@ -212,10 +220,10 @@ class PipelineConfig:
         epochs.
 
         Args:
-            input_files (List[str]): the list of input file paths.
+            input_files: the list of input file paths.
 
         Returns:
-            Dict[str, List[str]]: the input file paths mapped to by unique epoch keys.
+            The input file paths mapped to by unique epoch keys.
         """
         pad_width = len(str(len(input_files)))
         input_files_dict = {
@@ -229,6 +237,7 @@ class PipelineConfig:
         yaml_path: str,
         label: str = "run config",
         validate: bool = True,
+        validate_inputs: bool = True,
         add_defaults: bool = True,
     ) -> "PipelineConfig":
         """Create a PipelineConfig object from a run configuration YAML file.
@@ -242,6 +251,9 @@ class PipelineConfig:
                 will not be performed until PipelineConfig.validate() is
                 explicitly called. The inputs are always validated regardless.
                 Defaults to True.
+            validate_inputs: Validate the config input files. Ensures that the inputs
+                match (e.g. each image has a catalogue), and that each path exists. Set
+                to False to skip these checks. Defaults to True.
             add_defaults: Add missing configuration parameters using configured
                 defaults. The defaults are read from the Django settings file.
                 Defaults to True.
@@ -250,7 +262,7 @@ class PipelineConfig:
             PipelineConfigError: The run config YAML file fails schema validation.
 
         """
-        schema = PipelineConfig.SCHEMA if validate else yaml.Any()
+        schema = cls.SCHEMA if validate else yaml.Any()
         with open(yaml_path) as fh:
             config_str = fh.read()
         try:
@@ -269,7 +281,7 @@ class PipelineConfig:
             # merge configs
             config_dict = dict_merge(config_defaults_dict, config_yaml.data)
             config_yaml = yaml.as_document(config_dict, schema=schema, label=label)
-        return cls(config_yaml)
+        return cls(config_yaml, validate_inputs=validate_inputs)
 
     @staticmethod
     def _resolve_glob_expressions(input_files: yaml.YAML) -> List[str]:
@@ -291,7 +303,7 @@ class PipelineConfig:
                 ---
 
         Returns:
-            List[str]: The resolved file paths in lexicographical order.
+            The resolved file paths in lexicographical order.
         """
         file_list: List[str] = []
         if input_files["glob"].is_sequence():
@@ -348,7 +360,7 @@ class PipelineConfig:
         2. The number of input files does not exceed the configured pipeline maximum.
             This is only enforced if a regular user (not staff/admin) created the run.
         3. There are at least two input images.
-        4. Background input images are required is source monitoring is turned on.
+        4. Background input images are required if source monitoring is turned on.
         5. All input files exist.
 
         Args:
@@ -364,26 +376,25 @@ class PipelineConfig:
         except yaml.YAMLValidationError as e:
             raise PipelineConfigError(e)
 
+        inputs = self["inputs"]
+
         # epochs defined for images only, used as the reference list of epochs
-        epochs_image = self["inputs"]["image"].keys()
+        epochs_image = inputs["image"].keys()
         # map input type to a set of epochs
         epochs_by_input_type = {
-            input_type: set(self["inputs"][input_type].keys())
-            for input_type in self["inputs"].keys()
+            input_type: set(inputs[input_type].keys())
+            for input_type in inputs.keys()
         }
         # map input type to total number of files from all epochs
-        n_files_by_input_type = {}
+        n_files_by_input_type: Dict[str, int] = {}
+        epoch_n_files: Dict[str, Dict[str, int]] = {}
+        n_files = 0
         for input_type, epochs_set in epochs_by_input_type.items():
+            epoch_n_files[input_type] = {}
             n_files_by_input_type[input_type] = 0
             for epoch in epochs_set:
-                n_files_by_input_type[input_type] += len(self["inputs"][input_type][epoch])
-        n_files = 0  # total number of input files
-        # map input type to a mapping of epoch to file count
-        epoch_n_files: Dict[str, Dict[str, int]] = {}
-        for input_type in self["inputs"].keys():
-            epoch_n_files[input_type] = {}
-            for epoch in self["inputs"][input_type].keys():
-                n = len(self["inputs"][input_type][epoch])
+                n = len(inputs[input_type][epoch])
+                n_files_by_input_type[input_type] += n
                 epoch_n_files[input_type][epoch] = n
                 n_files += n
 
@@ -391,7 +402,7 @@ class PipelineConfig:
         # of the user's input format.
         # Ensure all input file types have the same epochs.
         try:
-            for input_type in self["inputs"].keys():
+            for input_type in inputs.keys():
                 self._yaml["inputs"][input_type].revalidate(
                     yaml.Map({epoch: yaml.Seq(yaml.Str()) for epoch in epochs_image})
                 )
@@ -427,7 +438,7 @@ class PipelineConfig:
         # This could be combined with the number of epochs validation above, but we want
         # to give specific feedback to the user on failure.
         try:
-            for input_type in self["inputs"].keys():
+            for input_type in inputs.keys():
                 self._yaml["inputs"][input_type].revalidate(
                     yaml.Map(
                         {
@@ -444,11 +455,11 @@ class PipelineConfig:
         except yaml.YAMLValidationError:
             # map input type to a mapping of epoch to file count
             file_counts_str = ""
-            for input_type in self["inputs"].keys():
+            for input_type in inputs.keys():
                 file_counts_str += f"{input_type}:\n"
-                for epoch in sorted(self["inputs"][input_type].keys()):
+                for epoch in sorted(inputs[input_type].keys()):
                     file_counts_str += (
-                        f"  {epoch}: {len(self['inputs'][input_type][epoch])}\n"
+                        f"  {epoch}: {len(inputs[input_type][epoch])}\n"
                     )
             file_counts_str = file_counts_str[:-1]
             raise PipelineConfigError(
@@ -473,14 +484,19 @@ class PipelineConfig:
                 )
 
         # ensure at least two inputs are provided
-        check = [n_files_by_input_type[input_type] < 2 for input_type in self["inputs"].keys()]
+        check = [n_files_by_input_type[input_type] < 2 for input_type in inputs.keys()]
         if any(check):
             raise PipelineConfigError(
                 "Number of image files must to be larger than 1"
             )
 
         # ensure background files are provided if source monitoring is requested
-        if self["source_monitoring"]["monitor"]:
+        try:
+            monitor = self["source_monitoring"]["monitor"]
+        except KeyError:
+            monitor = False
+
+        if monitor:
             inputs_schema = yaml.Map(
                 {
                     k: yaml.UniqueSeq(yaml.Str())
@@ -496,8 +512,8 @@ class PipelineConfig:
                 )
 
         # ensure the input files all exist
-        for input_type in self["inputs"].keys():
-            for epoch, file_list in self["inputs"][input_type].items():
+        for input_type in inputs.keys():
+            for epoch, file_list in inputs[input_type].items():
                 for file in file_list:
                     if not os.path.exists(file):
                         raise PipelineConfigError(f"{file} does not exist.")
@@ -509,8 +525,8 @@ class PipelineConfig:
         settings are the same (the requirement for add mode). Otherwise False is returned.
 
         Returns:
-            True if images are different but general settings are the same, otherwise
-            False is returned.
+            `True` if images are different but general settings are the same,
+                otherwise `False` is returned.
         """
         prev_config = PipelineConfig.from_file(
             os.path.join(self["run"]["path"], "config_prev.yaml"),
@@ -532,3 +548,54 @@ class PipelineConfig:
         if images_changed and settings_check:
             return False
         return True
+
+    def image_opts(self) -> Dict[str, Any]:
+        """
+        Get the config options required for image ingestion only.
+        Namely:
+            - selavy_local_rms_fill_value
+            - condon_errors
+            - ra_uncertainty
+            - dec_uncertainty
+
+        Returns:
+            The relevant key value pairs
+        """
+        keys = [
+            "selavy_local_rms_fill_value",
+            "condon_errors",
+            "ra_uncertainty",
+            "dec_uncertainty"
+        ]
+        return {key: self["measurements"][key] for key in keys}
+
+
+class ImageIngestConfig(PipelineConfig):
+    """Image ingest configuration derived from PipelineConfig.
+
+    Attributes:
+        SCHEMA: class attribute containing the YAML schema for the image ingest config.
+        TEMPLATE_PATH: class attribute containing the path to the default Jinja2 image ingest
+            config template file.
+
+    Raises:
+        PipelineConfigError: the input YAML config violates the schema.
+    """
+    # path to default image ingest config template
+    TEMPLATE_PATH: str = os.path.join(
+        settings.BASE_DIR, "vast_pipeline", "ingest_config_template.yaml.j2"
+    )
+    _VALID_ASSOC_METHODS = None
+    SCHEMA = yaml.Map(
+        {
+            "inputs": yaml.Map(PipelineConfig._SCHEMA_INPUTS),
+            "measurements": yaml.Map(
+                {
+                    "condon_errors": yaml.Bool(),
+                    "selavy_local_rms_fill_value": yaml.Float(),
+                    "ra_uncertainty": yaml.Float(),
+                    "dec_uncertainty": yaml.Float(),
+                }
+            ),
+        }
+    )

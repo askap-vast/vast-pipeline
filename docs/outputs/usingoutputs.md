@@ -129,8 +129,8 @@ The table below shows what parameters act as keys to link data from the differen
 
 ## vast-tools
 
-[Link to the `vast-tools` repository](https://github.com/askap-vast/vast-tools){:target="_blank"}.
+[Link to the `vast-tools` documentation](https://vast-survey.org/vast-tools/){:target="_blank"}.
 
 VAST has developed a python library called `vast-tools` that makes the exploration of results from the pipeline simple and efficient, in addition to being designed to be used in a [Jupyter Notebook](https://jupyter.org) environment. 
 
-For full details, refer to the repository located on [GitHub](https://github.com/askap-vast/vast-tools){:target="_blank"} and be sure to take a look at the [example notebooks](https://github.com/askap-vast/vast-tools/tree/master/notebook-examples).
+Full details can be found in the documentation linked above, which also includes example notebooks of how to interact with the data.

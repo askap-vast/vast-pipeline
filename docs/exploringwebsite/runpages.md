@@ -10,14 +10,40 @@ Explanation of the table options can be found in the [DataTables section](datata
 
 ![!Pipeline Runs table.](../img/pipeline-runs.png){: loading=lazy }
 
+| **Run Status**   | **Description**                                                                  |
+| ---------------- | -------------------------------------------------------------------------------- | 
+| **Completed**    | The run has successfully finished processing.                                    |
+| **Deleting**     | The pipeline run is currently being deleted.                                     | 
+| **Error**        | The run has encountered an error during processing and has stopped.              | 
+| **Initialised**  | The run has been created but not yet run.                                        | 
+| **Queued**       | The run has been sent to the scheduler for running but has not started yet.      | 
+| **Restoring**    | The pipeline run is currently being restored.                                    | 
+| **Running**      | The run is currently processing.                                                 | 
+
 ## Pipeline Run Detail Page
 
-This page presents all the information about the pipeline run, including options to edit the configuration file and to schedule the run for processing.
-
-!!! note
-    For full details on how to process a run please refer to [this page](../using/processrun.md).
+This page presents all the information about the pipeline run, including options to edit the configuration file and to schedule the run for processing, restore the run, delete the run and generate the arrow measurement files.
 
 ![!Pipeline Run detail page.](../img/run-detail1.png){: loading=lazy }
+
+### Action Buttons
+
+![!Pipeline Run action buttons.](../img/action-buttons.png){: loading=lazy }
+
+For admins and creators of runs there are four action buttons available:
+
+* **Generate Arrow Files**  
+     A process to generate the arrow measurement files.
+     See [Generating Arrow Files](../../using/genarrow).
+* **Delete Run**  
+     Delete the pipeline run.
+     See [Deleting a Run](../../using/deleterun).
+* **Restore Run**  
+     A process to restore the run to the previous successful state.
+     See [Restoring a Run](../../using/restorerun).
+* **Add Images or Re-Process Run/Process Run**  
+     Process the pipeline run.
+     See [Processing a Run](../../using/processrun).
 
 ### Summary Cards
 The cards at the top of the page give a summary of the total numbers of:
@@ -28,7 +54,7 @@ The cards at the top of the page give a summary of the total numbers of:
 * New sources in the pipeline run.
 
 Clicking on the total number of images or measurements will navigate the user to the [Image and Measurements tables](#image-and-measurements-tables) on this page, 
-where as the source cards will take the user to the [Sources Query](sourcepages.md#source-query-page) page.
+where as the source cards will take the user to the [Sources Query](sourcequery.md) page.
 
 !!! warning
     When sent to the source query page, the user should make sure to click submit on the search.
@@ -73,11 +99,31 @@ The feedback may take a moment to appear as the check is performed.
 
 Users are able to read and post comments on a pipeline run using this form.
 
-### Log File
+### Log Files
+
+There are three log files available, which are present depending on the actions performed.
+All logs are timestamped with the run time, and by default the most recent log is shown.
+A dropdown menu of available log files to view is available at the right hand side of the header as shown in the examples below.
+If there are no logs to show for the respective task then the log window will display `No logs to show` and the dropdown menu will appear empty.
+
+#### Run Log File
+
+The full log file of the pipeline run process.
 
 ![!Run log file.](../img/run-detail4.png){: loading=lazy }
 
-The full log file of the pipeline run is able to viewed.
+#### Restore Log File
+
+The log file of the restore run action. 
+
+![!Restore log file.](../img/run-detail8.png){: loading=lazy }
+
+#### Generate Arrow Files Log File
+
+The log file of the generate arrow files action.
+
+![!Generate arrow files log file.](../img/run-detail9.png){: loading=lazy }
+
 
 ### Image and Measurements Tables
 

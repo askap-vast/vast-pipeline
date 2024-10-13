@@ -140,6 +140,22 @@ class CheckRunConfigValidationTest(SimpleTestCase):
             pipeline_config = PipelineConfig(config_yaml)
             pipeline_config.validate()
 
+    def test_selavy_votable(self):
+        self.config_dict["inputs"]["selavy"][0] = (
+            "vast_pipeline/tests/data/epoch01.selavy.components.xml"
+        )
+        config_yaml = yaml.as_document(self.config_dict)
+        pipeline_config = PipelineConfig(config_yaml)
+        pipeline_config.validate()
+
+    def test_selavy_csv(self):
+        self.config_dict["inputs"]["selavy"][0] = (
+            "vast_pipeline/tests/data/epoch01.selavy.components.csv"
+        )
+        config_yaml = yaml.as_document(self.config_dict)
+        pipeline_config = PipelineConfig(config_yaml)
+        pipeline_config.validate()
+
     def test_input_glob(self):
         """Test simple glob expressions, one for each input"""
         config_yaml_original = yaml.as_document(self.config_dict)

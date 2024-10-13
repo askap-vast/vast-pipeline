@@ -7,7 +7,7 @@ from argparse import ArgumentParser
 from django.core.management.base import BaseCommand, CommandError
 
 from vast_pipeline.models import (
-    Run, Measurement, Image, Source, Association
+    Run, Measurement, Source, Association
 )
 from ..helpers import get_p_run_name
 
