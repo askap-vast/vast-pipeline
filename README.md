@@ -12,7 +12,7 @@ This repository holds the code of the VAST Pipeline, a radio transient detection
 
 Please read the [Installation Instructions](https://vast-survey.org/vast-pipeline/v1.0.0/gettingstarted/installation/). If you have any questions or feedback, we welcome you to open an [issue](https://github.com/askap-vast/vast-pipeline/issues). If you are interested in contributing to the code, please read and follow the [Contributing and Developing Guidelines](https://vast-survey.org/vast-pipeline/v1.0.0/developing/intro/).
 
-If using this tool in your research, please cite Murphy, et al. (2021).
+If using this tool in your research, please cite [10.5281/zenodo.13927015](https://doi.org/10.5281/zenodo.13927016).
 
 ## Features
 
