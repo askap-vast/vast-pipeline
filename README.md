@@ -1,5 +1,5 @@
 # VAST Pipeline
-
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13927016.svg)](https://doi.org/10.5281/zenodo.13927016)
 <!-- created with https://shields.io/category/monitoring -->
 [![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/)
 [![Nimbus](https://img.shields.io/website?down_color=red&down_message=offline&label=Nimbus&up_color=green&up_message=online&url=https%3A%2F%2Fdev.pipeline.vast-survey.org)](https://dev.pipeline.vast-survey.org)
