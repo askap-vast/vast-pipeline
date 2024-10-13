@@ -8,11 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
-- Added Zenodo DOI to README [#761](https://github.com/askap-vast/vast-pipeline/pull/761)
+- Added Zenodo DOI to README [#761](https://github.com/askap-vast/vast-pipeline/pull/762)
 
 #### Changed
 
-- Updated preferred citation to Zenodo DOI [#761](https://github.com/askap-vast/vast-pipeline/pull/761)
+- Updated preferred citation to Zenodo DOI [#761](https://github.com/askap-vast/vast-pipeline/pull/762)
 
 #### Fixed
 
@@ -20,7 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
-- [#761](https://github.com/askap-vast/vast-pipeline/pull/761): docs: Add Zenodo DOI
+- [#761](https://github.com/askap-vast/vast-pipeline/pull/762): docs: Add Zenodo DOI
 
 
 ## [1.1.0](https://github.com/askap-vast/vast-pipeline/releases/v1.1.0) (2024-10-14)
