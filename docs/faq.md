@@ -1,5 +1,9 @@
 # Frequently Asked Questions
 
+### How should I acknowledge the VAST pipeline in my work?
+
+Please cite the Zenodo release: [10.5281/zenodo.13927015](https://doi.org/10.5281/zenodo.13927016).
+
 ### Can the VAST Pipeline be used with images from other telescopes?
 
 The base answer to this question is that the pipeline has been designed specifically for ASKAPsoft and ASKAPpipeline products, so compatibility with data from other telescopes is not supported.
