@@ -16,10 +16,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Removed errant <strong> tag from docs header [#766](https://github.com/askap-vast/vast-pipeline/pull/766)
+
 #### Removed
 
 #### List of PRs
 
+- [#766](https://github.com/askap-vast/vast-pipeline/pull/766): docs: Removed errant <strong> tag from docs header
 - [#761](https://github.com/askap-vast/vast-pipeline/pull/762): docs: Add Zenodo DOI
 
 
