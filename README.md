@@ -3,7 +3,9 @@
 [![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/)
 ![Tests](https://github.com/askap-vast/vast-pipeline/workflows/test-suite/badge.svg)
 [![documentation](https://img.shields.io/badge/docs-mkdocs%20material-blue.svg?style=flat)](https://vast-survey.org/vast-pipeline/)
-<!-- created with https://shields.io/category/monitoring -->[![Nimbus](https://img.shields.io/website?down_color=red&down_message=offline&label=Nimbus&up_color=green&up_message=online&url=https%3A%2F%2Fdev.pipeline.vast-survey.org)](https://dev.pipeline.vast-survey.org)
+[![Nimbus](https://img.shields.io/website?down_color=red&down_message=offline&label=Nimbus&up_color=green&up_message=online&url=https%3A%2F%2Fdev.pipeline.vast-survey.org)](https://dev.pipeline.vast-survey.org)
+<!-- created with https://shields.io/category/monitoring -->
+
 
 <!-- TODO: replace above with this below when repo is public -->
 <!-- ![Tests](https://img.shields.io/github/workflow/status/askap-vast/vast-pipeline/test-suite/master?label=Test%20Suite&logo=github) -->
