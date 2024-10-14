@@ -1,10 +1,12 @@
 # VAST Pipeline
-
-<!-- created with https://shields.io/category/monitoring -->
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13927016.svg)](https://doi.org/10.5281/zenodo.13927016)
 [![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/)
-[![Nimbus](https://img.shields.io/website?down_color=red&down_message=offline&label=Nimbus&up_color=green&up_message=online&url=https%3A%2F%2Fdev.pipeline.vast-survey.org)](https://dev.pipeline.vast-survey.org)
 ![Tests](https://github.com/askap-vast/vast-pipeline/workflows/test-suite/badge.svg)
 [![documentation](https://img.shields.io/badge/docs-mkdocs%20material-blue.svg?style=flat)](https://vast-survey.org/vast-pipeline/)
+[![Nimbus](https://img.shields.io/website?down_color=red&down_message=offline&label=Nimbus&up_color=green&up_message=online&url=https%3A%2F%2Fdev.pipeline.vast-survey.org)](https://dev.pipeline.vast-survey.org)
+<!-- created with https://shields.io/category/monitoring -->
+
+
 <!-- TODO: replace above with this below when repo is public -->
 <!-- ![Tests](https://img.shields.io/github/workflow/status/askap-vast/vast-pipeline/test-suite/master?label=Test%20Suite&logo=github) -->
 
@@ -12,7 +14,7 @@ This repository holds the code of the VAST Pipeline, a radio transient detection
 
 Please read the [Installation Instructions](https://vast-survey.org/vast-pipeline/v1.0.0/gettingstarted/installation/). If you have any questions or feedback, we welcome you to open an [issue](https://github.com/askap-vast/vast-pipeline/issues). If you are interested in contributing to the code, please read and follow the [Contributing and Developing Guidelines](https://vast-survey.org/vast-pipeline/v1.0.0/developing/intro/).
 
-If using this tool in your research, please cite Murphy, et al. (2021).
+If using this tool in your research, please cite [10.5281/zenodo.13927015](https://doi.org/10.5281/zenodo.13927016).
 
 ## Features
 
