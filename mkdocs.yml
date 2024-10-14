@@ -4,7 +4,7 @@ site_description: >-
   extracted from the ASKAP telescope for radio transient detection science
 site_author: VAST Development Team
 site_url: https://vast-survey.org/vast-pipeline/
-copyright: Copyright &copy; 2020 - 2025 Vast Development Team, University of Sydney - all right reserved
+copyright: Copyright &copy; 2020 - 2025 Vast Development Team, University of Sydney - all rights reserved. 
 
 repo_url: https://github.com/askap-vast/vast-pipeline
 repo_name: askap-vast/vast-pipeline
@@ -18,6 +18,7 @@ theme:
   name: material
   favicon: img/favicon.png
   logo: img/vast-logo.png
+  font: false
   features:
     - navigation.instant
     - navigation.tabs
@@ -211,6 +212,8 @@ plugins:
 
 extra:
   social:
+    - icon: simple/doi
+      link: https://doi.org/10.5281/zenodo.13927016
     - icon: fontawesome/brands/github
       link: https://github.com/askap-vast/vast-pipeline
       name: vast-pipeline source on GitHub
