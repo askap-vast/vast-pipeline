@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), with an added `List of PRs` section and links to the relevant PRs on the individual updates. This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/v1.1.0...HEAD)
+
+#### Added
+
+
+#### Changed
+
+
+#### Fixed
+
+
+#### Removed
+
+
+#### List of PRs
+
+
 ## [1.1.1](https://github.com/askap-vast/vast-pipeline/releases/v1.1.1) (2024-10-15)
 
 #### Added
