@@ -4,17 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), with an added `List of PRs` section and links to the relevant PRs on the individual updates. This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/v1.1.0...HEAD)
+## [1.1.1](https://github.com/askap-vast/vast-pipeline/releases/v1.1.1) (2024-10-15)
 
 #### Added
 
+- Added Zenodo DOI to README [#761](https://github.com/askap-vast/vast-pipeline/pull/762)
+
 #### Changed
 
+- Refreshed docs text [#766](https://github.com/askap-vast/vast-pipeline/pull/766)
+- Updated preferred citation to Zenodo DOI [#761](https://github.com/askap-vast/vast-pipeline/pull/762)
+
 #### Fixed
+
+- Removed errant <strong> tag from docs header [#766](https://github.com/askap-vast/vast-pipeline/pull/766)
 
 #### Removed
 
 #### List of PRs
+
+- [#766](https://github.com/askap-vast/vast-pipeline/pull/766): docs: Removed errant <strong> tag from docs header and refreshed docs text
+- [#761](https://github.com/askap-vast/vast-pipeline/pull/762): docs: Add Zenodo DOI
+
 
 ## [1.1.0](https://github.com/askap-vast/vast-pipeline/releases/v1.1.0) (2024-10-14)
 
@@ -57,6 +68,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Updated README.md [#758](https://github.com/askap-vast/vast-pipeline/pull/758)
 - Force dask<2022.4.2, numpy<1.23, param<2.0 [#728](https://github.com/askap-vast/vast-pipeline/pull/728)
 - Bumped versions for github actions packages [#728](https://github.com/askap-vast/vast-pipeline/pull/728)
 - Changed pipeline.new_sources.parallel_get_rms_measurements to drop all but one RMS measurmeents [#730](https://github.com/askap-vast/vast-pipeline/pull/730)
@@ -141,6 +153,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#758](https://github.com/askap-vast/vast-pipeline/pull/758): docs: Updated README.md 
 - [#755](https://github.com/askap-vast/vast-pipeline/pull/755): fix: Fixed handling of NaNs and negatives in noise image statistics
 - [#754](https://github.com/askap-vast/vast-pipeline/pull/754): fix: Optimise YAML config parsing
 - [#725](https://github.com/askap-vast/vast-pipeline/pull/725): feat: Added further memory usage and timing debug logging 

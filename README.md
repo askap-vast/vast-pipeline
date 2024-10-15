@@ -1,10 +1,12 @@
 # VAST Pipeline
-
-<!-- created with https://shields.io/category/monitoring -->
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13927016.svg)](https://doi.org/10.5281/zenodo.13927016)
 [![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/)
-[![Nimbus](https://img.shields.io/website?down_color=red&down_message=offline&label=Nimbus&up_color=green&up_message=online&url=https%3A%2F%2Fdev.pipeline.vast-survey.org)](https://dev.pipeline.vast-survey.org)
 ![Tests](https://github.com/askap-vast/vast-pipeline/workflows/test-suite/badge.svg)
 [![documentation](https://img.shields.io/badge/docs-mkdocs%20material-blue.svg?style=flat)](https://vast-survey.org/vast-pipeline/)
+[![Nimbus](https://img.shields.io/website?down_color=red&down_message=offline&label=Nimbus&up_color=green&up_message=online&url=https%3A%2F%2Fdev.pipeline.vast-survey.org)](https://dev.pipeline.vast-survey.org)
+<!-- created with https://shields.io/category/monitoring -->
+
+
 <!-- TODO: replace above with this below when repo is public -->
 <!-- ![Tests](https://img.shields.io/github/workflow/status/askap-vast/vast-pipeline/test-suite/master?label=Test%20Suite&logo=github) -->
 
@@ -12,12 +14,12 @@ This repository holds the code of the VAST Pipeline, a radio transient detection
 
 Please read the [Installation Instructions](https://vast-survey.org/vast-pipeline/v1.0.0/gettingstarted/installation/). If you have any questions or feedback, we welcome you to open an [issue](https://github.com/askap-vast/vast-pipeline/issues). If you are interested in contributing to the code, please read and follow the [Contributing and Developing Guidelines](https://vast-survey.org/vast-pipeline/v1.0.0/developing/intro/).
 
-If using this tool in your research, please cite Murphy, et al. (2021).
+If using this tool in your research, please cite [10.5281/zenodo.13927015](https://doi.org/10.5281/zenodo.13927016).
 
 ## Features
 
 * Code base in `Python 3.8+`
-* Source association/manipulations using `Astropy4+` and `Pandas1+` dataframe
+* Source association/manipulations using `Astropy5+` and `Pandas1+` dataframe
 * Association methods: basic (`Astropy` crossmatch), advanced (search with a fixed distance), De Ruiter
 * Flagging of "New Source" and "Related Source"
 * Forced Extraction (Monitor) backward and forward in time
@@ -33,20 +35,26 @@ If using this tool in your research, please cite Murphy, et al. (2021).
 
 ## Contributors
 
-* Sergio Pintaldi – [Sydney Informatics Hub](https://informatics.sydney.edu.au)
+### Active
+* Dougal Dobie – [Sydney Institute for Astronomy](https://sifa.sydney.edu.au/) and [OzGrav](https://www.ozgrav.org)
+* Tom Mauch – [Sydney Informatics Hub](https://informatics.sydney.edu.au)
 * Adam Stewart – [Sydney Institute for Astronomy](https://sifa.sydney.edu.au/)
+
+### Former
+* Sergio Pintaldi – [Sydney Informatics Hub](https://informatics.sydney.edu.au)
 * Andrew O'Brien – [Department of Physics, University of Wisconsin-Milwaukee](https://uwm.edu/physics/research/astronomy-gravitation-cosmology/)
 * Tara Murphy – [Sydney Institute for Astronomy](https://sifa.sydney.edu.au/)
 * David Kaplan – [Department of Physics, University of Wisconsin-Milwaukee](https://uwm.edu/physics/research/astronomy-gravitation-cosmology/)
-* Shibli Saleheen – [ADACS](https://adacs.org.au/who-we-are/our-team/)
-* David Liptai – [ADACS](https://adacs.org.au/who-we-are/our-team/)
-* Ella Xi Wang – [ADACS](https://adacs.org.au/who-we-are/our-team/)
+* Shibli Saleheen – [ADACS](https://adacs.org.au/)
+* David Liptai – [ADACS](https://adacs.org.au/)
+* Ella Xi Wang – [ADACS](https://adacs.org.au/)
 
 ## Acknowledgements
 
 The VAST Pipeline development was supported by:
 
 * The Australian Research Council through grants FT150100099 and DP190100561.
+* The Australian Research Council Centre of Excellence for Gravitational Wave Discovery (OzGrav), project numbers CE170100004 and CE230100016.
 * The Sydney Informatics Hub (SIH), a core research facility at the University of Sydney.
 * Software support resources awarded under the Astronomy Data and Computing Services (ADACS) Merit Allocation Program. ADACS is funded from the Astronomy National Collaborative Research Infrastructure Strategy (NCRIS) allocation provided by the Australian Government and managed by Astronomy Australia Limited (AAL).
 * NSF grant AST-1816492.
