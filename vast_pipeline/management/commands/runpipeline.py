@@ -295,25 +295,26 @@ def run_pipe(
     )
 
     # log the list of input data files for posterity
+    inputs = pipeline.config["inputs"]
     input_image_list = [
         image
-        for image_list in pipeline.config["inputs"]["image"].values()
+        for image_list in inputs["image"].values()
         for image in image_list
     ]
     input_selavy_list = [
         selavy
-        for selavy_list in pipeline.config["inputs"]["selavy"].values()
+        for selavy_list in inputs["selavy"].values()
         for selavy in selavy_list
     ]
     input_noise_list = [
         noise
-        for noise_list in pipeline.config["inputs"]["noise"].values()
+        for noise_list in inputs["noise"].values()
         for noise in noise_list
     ]
-    if "background" in pipeline.config["inputs"].keys():
+    if "background" in inputs.keys():
         input_background_list = [
             background
-            for background_list in pipeline.config["inputs"]["background"].values()
+            for background_list in inputs["background"].values()
             for background in background_list
         ]
     else:

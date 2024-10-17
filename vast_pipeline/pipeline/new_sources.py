@@ -12,7 +12,9 @@ from astropy.wcs.utils import (
 )
 
 from vast_pipeline.models import Image, Run
+
 from vast_pipeline.utils.utils import StopWatch, calculate_n_partitions
+from vast_pipeline.pipeline.utils import get_df_memory_usage
 from vast_pipeline.image.utils import open_fits
 
 
@@ -81,13 +83,22 @@ def get_image_rms_measurements(
     """
     if len(group) == 0:
         # input dataframe is empty, nothing to do
+        logger.debug(f"No image RMS measurements to get, returning")
         return group
     image = group.iloc[0]['img_diff_rms_path']
+
+    logger.debug(f"{image} - num. meas. to get: {len(group)}")
+    partition_mem = get_df_memory_usage(group)
+    logger.debug(f"{image} - partition memory usage: {partition_mem}MB")
+
+    get_rms_timer = StopWatch()
 
     with open_fits(image) as hdul:
         header = hdul[0].header
         wcs = WCS(header, naxis=2)
         data = hdul[0].data.squeeze()
+
+    logger.debug(f"{image} - Time to load fits: {get_rms_timer.reset()}s")
 
     # Here we mimic the forced fits behaviour,
     # sources within 3 half BMAJ widths of the image
@@ -310,7 +321,8 @@ def new_sources(
                 img_list - list of images, List.
                 wavg_ra - weighted average RA, float.
                 wavg_dec - weighted average Dec, float.
-                skyreg_img_list - list of sky regions of images in img_list, List.
+                skyreg_img_list - list of sky regions of images in img_list,
+                    List.
                 img_diff - The images missing from coverage, List.
                 primary - What should be the first image, str.
                 detection - The first detection image, str.
@@ -320,8 +332,10 @@ def new_sources(
                 img_diff_rms_median - Median rms of diff images, float.
                 img_diff_rms_path - rms path of diff images, str.
                 flux_peak - Flux peak of source (detection), float.
-                diff_sigma - SNR in differnce images (compared to minimum), float.
-                img_diff_true_rms - The true rms value from the diff images, float.
+                diff_sigma - SNR in differnce images (compared to minimum),
+                    float.
+                img_diff_true_rms - The true rms value from the diff images,
+                    float.
                 new_high_sigma - peak flux / true rms value, float.
     """
     # Missing sources df layout
@@ -353,6 +367,7 @@ def new_sources(
     #  ['VAST_0127-73A.EPOCH08.I.fits'] |
     # ----------------------------------+
     timer = StopWatch()
+    debug_timer = StopWatch()
 
     logger.info("Starting new source analysis.")
 
@@ -407,6 +422,10 @@ def new_sources(
         'noise_path': 'img_diff_rms_path'
     })
 
+    logger.debug(f"Time to reset & merge image info into new_sources_df: "
+                 f"{debug_timer.reset()}s"
+                 )
+
     # Select only those images that come before the detection image
     # in time.
     new_sources_df = new_sources_df[
@@ -420,6 +439,10 @@ def new_sources(
         how='left'
     ).drop(columns=['image'])
 
+    logger.debug(f"Time to merge detection fluxes into new_sources_df: "
+                 f"{debug_timer.reset()}s"
+                 )
+
     # calculate the sigma of the source if it was placed in the
     # minimum rms region of the previous images
     new_sources_df['diff_sigma'] = (
@@ -431,6 +454,10 @@ def new_sources(
     new_sources_df = new_sources_df.loc[
         new_sources_df['diff_sigma'] >= min_sigma
     ]
+
+    logger.debug(f"Time to do new_sources_df threshold calcs: "
+                 f"{debug_timer.reset()}s"
+                 )
 
     # Now have list of sources that should have been seen before given
     # previous images minimum rms values.
@@ -452,6 +479,7 @@ def new_sources(
     new_sources_df = parallel_get_new_high_sigma(
         new_sources_df, edge_buffer=edge_buffer
     )
+    logger.debug(f"Time to get rms measurements: {debug_timer.reset()}s")
 
     logger.info(
         'Total new source analysis time: %.2f seconds', timer.reset_init()

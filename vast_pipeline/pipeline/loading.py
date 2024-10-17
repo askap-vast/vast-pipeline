@@ -18,7 +18,10 @@ from vast_pipeline.models import (
     Association, Band, Measurement, SkyRegion, Source, RelatedSource,
     Run, Image
 )
-from vast_pipeline.pipeline.utils import get_create_img, get_create_img_band
+from vast_pipeline.pipeline.utils import (
+    get_create_img, get_create_img_band,
+    get_df_memory_usage, log_total_memory_usage
+)
 from vast_pipeline.utils.utils import StopWatch
 
 
@@ -29,8 +32,8 @@ logger = logging.getLogger(__name__)
 def bulk_upload_model(
     djmodel: models.Model,
     generator: Iterable[Generator[models.Model, None, None]],
-    batch_size: int=10_000,
-    return_ids: bool=False,
+    batch_size: int = 10_000,
+    return_ids: bool = False,
 ) -> List[int]:
     '''
     Bulk upload a list of generator objects of django models to db.
@@ -51,7 +54,7 @@ def bulk_upload_model(
 
     '''
     reset_queries()
-    
+
     bulk_ids = []
     while True:
         items = list(islice(generator, batch_size))
@@ -168,6 +171,12 @@ def make_upload_sources(
     Returns:
         The input dataframe with the 'id' column added.
     '''
+
+    logger.debug("Uploading sources...")
+    mem_usage = get_df_memory_usage(sources_df)
+    logger.debug(f"sources_df memory usage: {mem_usage}MB")
+    log_total_memory_usage()
+
     # create sources in DB
     with transaction.atomic():
         if (add_mode is False and
@@ -207,6 +216,9 @@ def make_upload_related_sources(related_df: pd.DataFrame) -> None:
         None.
     """
     logger.info('Populate "related" field of sources...')
+    mem_usage = get_df_memory_usage(related_df)
+    logger.debug(f"related_df memory usage: {mem_usage}MB")
+    log_total_memory_usage()
     bulk_upload_model(RelatedSource, related_models_generator(related_df))
 
 
@@ -223,11 +235,17 @@ def make_upload_associations(associations_df: pd.DataFrame) -> None:
         None.
     """
     logger.info('Upload associations...')
+
+    mem_usage = get_df_memory_usage(associations_df)
+    logger.debug(f"associations_df memory usage: {mem_usage}MB")
+    log_total_memory_usage()
+
     assoc_chunk_size = 100000
-    for i in range(0,len(associations_df),assoc_chunk_size):
+    for i in range(0, len(associations_df), assoc_chunk_size):
         bulk_upload_model(
             Association,
-            association_models_generator(associations_df[i:i+assoc_chunk_size])
+            association_models_generator(
+                associations_df[i:i + assoc_chunk_size])
         )
 
 
@@ -243,6 +261,12 @@ def make_upload_measurements(measurements_df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         Original DataFrame with the database ID attached to each row.
     """
+
+    logger.info("Upload measurements...")
+    mem_usage = get_df_memory_usage(measurements_df)
+    logger.debug(f"measurements_df memory usage: {mem_usage}MB")
+    log_total_memory_usage()
+
     meas_dj_ids = bulk_upload_model(
         Measurement,
         measurement_models_generator(measurements_df),
@@ -287,7 +311,7 @@ def update_sources(
 
     sources_df['id'] = sources_df.index.values
 
-    batches = np.ceil(len(sources_df)/batch_size)
+    batches = np.ceil(len(sources_df) / batch_size)
     dfs = np.array_split(sources_df, batches)
     with connection.cursor() as cursor:
         for df_batch in dfs:
@@ -332,8 +356,8 @@ def SQL_update(
 
     # get names
     table = model._meta.db_table
-    new_columns = ', '.join('new_'+c for c in columns)
-    set_columns = ', '.join(c+'=new_'+c for c in columns)
+    new_columns = ', '.join('new_' + c for c in columns)
+    set_columns = ', '.join(c + '=new_' + c for c in columns)
 
     # get index values and new values
     column_headers = [index]
