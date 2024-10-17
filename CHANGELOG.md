@@ -11,15 +11,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Updated changelog release instructions to remove each release having an empty "Unreleased" section at the start [#772](https://github.com/askap-vast/vast-pipeline/pull/772)
 
 #### Fixed
 
+- Fixed errant `<strong>` tag inside changelog and added verbatim formatting to other variables throughout [#772](https://github.com/askap-vast/vast-pipeline/pull/772)
 
 #### Removed
 
 
 #### List of PRs
 
+- [#772](https://github.com/askap-vast/vast-pipeline/pull/772): fix, docs: Fixed changelog formatting and updated changelog release instructions
 
 ## [1.1.1](https://github.com/askap-vast/vast-pipeline/releases/v1.1.1) (2024-10-15)
 
