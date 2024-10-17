@@ -11,15 +11,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Reorganise new_high_sigma calculation into dedicated function [#714](https://github.com/askap-vast/vast-pipeline/pull/714)
 
 #### Fixed
 
+- Fix incorrect calculation of the new_high_sigma parameter [#714](https://github.com/askap-vast/vast-pipeline/pull/714)
 
 #### Removed
 
 
 #### List of PRs
 
+- Correctly calculate new_high_sigma parameter [#714](https://github.com/askap-vast/vast-pipeline/pull/714)
 
 ## [1.1.1](https://github.com/askap-vast/vast-pipeline/releases/v1.1.1) (2024-10-15)
 
