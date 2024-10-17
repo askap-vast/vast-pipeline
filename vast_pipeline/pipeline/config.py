@@ -156,6 +156,8 @@ class PipelineConfig:
             raise PipelineConfigError(e)
 
         # detect simple list inputs and convert them to epoch-mode inputs
+        yaml_inputs = self._yaml["inputs"]
+        inputs = yaml_inputs.data
         for input_file_type in self._REQUIRED_INPUT_TYPES:
             # skip missing optional input types, e.g. background
             if (
@@ -164,7 +166,7 @@ class PipelineConfig:
             ):
                 continue
 
-            input_files = self["inputs"][input_file_type]
+            input_files = inputs[input_file_type]
 
             # resolve glob expressions if present
             if isinstance(input_files, dict):
@@ -173,11 +175,9 @@ class PipelineConfig:
                     # resolve the glob expressions
                     self.epoch_based = False
                     file_list = self._resolve_glob_expressions(
-                        self._yaml["inputs"][input_file_type]
+                        yaml_inputs[input_file_type]
                     )
-                    self._yaml["inputs"][input_file_type] = self._create_input_epochs(
-                        file_list
-                    )
+                    inputs[input_file_type] = self._create_input_epochs(file_list)
                 else:
                     # epoch-mode with either a list of files or glob expressions
                     self.epoch_based = True
@@ -185,16 +185,17 @@ class PipelineConfig:
                         if "glob" in input_files[epoch]:
                             # resolve the glob expressions
                             file_list = self._resolve_glob_expressions(
-                                self._yaml["inputs"][input_file_type][epoch]
+                                yaml_inputs[input_file_type][epoch]
                             )
-                            self._yaml["inputs"][input_file_type][epoch] = file_list
+                            inputs[input_file_type][epoch] = file_list
             else:
                 # Epoch-based association not requested and no globs present. Replace
                 # input lists with dicts where each input file has it's own epoch.
                 self.epoch_based = False
-                self._yaml["inputs"][input_file_type] = self._create_input_epochs(
+                inputs[input_file_type] = self._create_input_epochs(
                     input_files
                 )
+        self._yaml["inputs"] = inputs
 
     def __getitem__(self, name: str):
         """Retrieves the requested YAML chunk as a native Python object."""
@@ -375,26 +376,25 @@ class PipelineConfig:
         except yaml.YAMLValidationError as e:
             raise PipelineConfigError(e)
 
+        inputs = self["inputs"]
+
         # epochs defined for images only, used as the reference list of epochs
-        epochs_image = self["inputs"]["image"].keys()
+        epochs_image = inputs["image"].keys()
         # map input type to a set of epochs
         epochs_by_input_type = {
-            input_type: set(self["inputs"][input_type].keys())
-            for input_type in self["inputs"].keys()
+            input_type: set(inputs[input_type].keys())
+            for input_type in inputs.keys()
         }
         # map input type to total number of files from all epochs
-        n_files_by_input_type = {}
+        n_files_by_input_type: Dict[str, int] = {}
+        epoch_n_files: Dict[str, Dict[str, int]] = {}
+        n_files = 0
         for input_type, epochs_set in epochs_by_input_type.items():
+            epoch_n_files[input_type] = {}
             n_files_by_input_type[input_type] = 0
             for epoch in epochs_set:
-                n_files_by_input_type[input_type] += len(self["inputs"][input_type][epoch])
-        n_files = 0  # total number of input files
-        # map input type to a mapping of epoch to file count
-        epoch_n_files: Dict[str, Dict[str, int]] = {}
-        for input_type in self["inputs"].keys():
-            epoch_n_files[input_type] = {}
-            for epoch in self["inputs"][input_type].keys():
-                n = len(self["inputs"][input_type][epoch])
+                n = len(inputs[input_type][epoch])
+                n_files_by_input_type[input_type] += n
                 epoch_n_files[input_type][epoch] = n
                 n_files += n
 
@@ -402,7 +402,7 @@ class PipelineConfig:
         # of the user's input format.
         # Ensure all input file types have the same epochs.
         try:
-            for input_type in self["inputs"].keys():
+            for input_type in inputs.keys():
                 self._yaml["inputs"][input_type].revalidate(
                     yaml.Map({epoch: yaml.Seq(yaml.Str()) for epoch in epochs_image})
                 )
@@ -438,7 +438,7 @@ class PipelineConfig:
         # This could be combined with the number of epochs validation above, but we want
         # to give specific feedback to the user on failure.
         try:
-            for input_type in self["inputs"].keys():
+            for input_type in inputs.keys():
                 self._yaml["inputs"][input_type].revalidate(
                     yaml.Map(
                         {
@@ -455,11 +455,11 @@ class PipelineConfig:
         except yaml.YAMLValidationError:
             # map input type to a mapping of epoch to file count
             file_counts_str = ""
-            for input_type in self["inputs"].keys():
+            for input_type in inputs.keys():
                 file_counts_str += f"{input_type}:\n"
-                for epoch in sorted(self["inputs"][input_type].keys()):
+                for epoch in sorted(inputs[input_type].keys()):
                     file_counts_str += (
-                        f"  {epoch}: {len(self['inputs'][input_type][epoch])}\n"
+                        f"  {epoch}: {len(inputs[input_type][epoch])}\n"
                     )
             file_counts_str = file_counts_str[:-1]
             raise PipelineConfigError(
@@ -484,7 +484,7 @@ class PipelineConfig:
                 )
 
         # ensure at least two inputs are provided
-        check = [n_files_by_input_type[input_type] < 2 for input_type in self["inputs"].keys()]
+        check = [n_files_by_input_type[input_type] < 2 for input_type in inputs.keys()]
         if any(check):
             raise PipelineConfigError(
                 "Number of image files must to be larger than 1"
@@ -512,8 +512,8 @@ class PipelineConfig:
                 )
 
         # ensure the input files all exist
-        for input_type in self["inputs"].keys():
-            for epoch, file_list in self["inputs"][input_type].items():
+        for input_type in inputs.keys():
+            for epoch, file_list in inputs[input_type].items():
                 for file in file_list:
                     if not os.path.exists(file):
                         raise PipelineConfigError(f"{file} does not exist.")

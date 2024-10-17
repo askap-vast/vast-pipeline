@@ -28,7 +28,9 @@ from .utils import (
     get_src_skyregion_merged_df,
     group_skyregions,
     get_parallel_assoc_image_df,
-    write_parquets
+    write_parquets,
+    get_df_memory_usage,
+    log_total_memory_usage
 )
 
 from .errors import MaxPipelineRunsError
@@ -38,29 +40,33 @@ logger = logging.getLogger(__name__)
 
 
 class Pipeline():
-    """Instance of a pipeline. All the methods runs the pipeline opearations, such as
-    association.
+    """Instance of a pipeline. All the methods runs the pipeline opearations,
+    such as association.
 
     Attributes:
         name (str): The name of the pipeline run.
         config (PipelineConfig): The pipeline run configuration.
-        img_paths: A dict mapping input image paths to their selavy/noise/background
-            counterpart path. e.g. `img_paths["selavy"][<image_path>]` contains the
-            selavy catalogue file path for `<image_path>`.
+        img_paths: A dict mapping input image paths to their
+            selavy/noise/background counterpart path. e.g.
+            `img_paths["selavy"][<image_path>]` contains the selavy catalogue
+            file path for `<image_path>`.
         img_epochs: A dict mapping input image names to their provided epoch.
-        add_mode: A boolean indicating if this run is adding new images to a previously
-            executed pipeline run.
-        previous_parquets: A dict mapping that provides the paths to parquet files for
-            previous executions of this pipeline run.
+        add_mode: A boolean indicating if this run is adding new images to a
+            previously executed pipeline run.
+        previous_parquets: A dict mapping that provides the paths to parquet
+            files for previous executions of this pipeline run.
     """
-    def __init__(self, name: str, config_path: str, validate_config: bool = True):
-        """Initialise an instance of Pipeline with a name and configuration file path.
+
+    def __init__(self, name: str, config_path: str,
+                 validate_config: bool = True):
+        """Initialise an instance of Pipeline with a name and configuration
+        file path.
 
         Args:
             name (str): The name of the pipeline run.
             config_path (str): The path to a YAML run configuration file.
-            validate_config (bool, optional): Validate the run configuration immediately.
-                Defaults to True.
+            validate_config (bool, optional): Validate the run configuration
+                immediately. Defaults to True.
         """
         self.name: str = name
         self.config: PipelineConfig = PipelineConfig.from_file(
@@ -70,8 +76,11 @@ class Pipeline():
             'selavy': {},
             'noise': {},
             'background': {},
-        }  # maps input image paths to their selavy/noise/background counterpart path
-        self.img_epochs: Dict[str, str] = {}  # maps image names to their provided epoch
+        }
+        # maps input image paths to their selavy/noise/background
+        # counterpart path
+        # maps image names to their provided epoch
+        self.img_epochs: Dict[str, str] = {}
         self.add_mode: bool = False
         self.previous_parquets: Dict[str, str]
 
@@ -83,21 +92,23 @@ class Pipeline():
         Returns:
             None
         """
-        for key in sorted(self.config["inputs"]["image"].keys()):
+        inputs = self.config["inputs"]
+        for key in sorted(inputs["image"].keys()):
             for x, y in zip(
-                self.config["inputs"]["image"][key],
-                self.config["inputs"]["selavy"][key],
+                inputs["image"][key],
+                inputs["selavy"][key],
             ):
                 self.img_paths["selavy"][x] = y
                 self.img_epochs[os.path.basename(x)] = key
             for x, y in zip(
-                self.config["inputs"]["image"][key], self.config["inputs"]["noise"][key]
+                inputs["image"][key],
+                inputs["noise"][key]
             ):
                 self.img_paths["noise"][x] = y
             if "background" in self.config["inputs"]:
                 for x, y in zip(
-                    self.config["inputs"]["image"][key],
-                    self.config["inputs"]["background"][key],
+                    inputs["image"][key],
+                    inputs["background"][key],
                 ):
                     self.img_paths["background"][x] = y
 
@@ -140,7 +151,8 @@ class Pipeline():
                 add_run_to_img(p_run, img)
 
         # write parquet files and retrieve skyregions as a dataframe
-        skyregs_df = write_parquets(images, skyregions, bands, self.config["run"]["path"])
+        skyregs_df = write_parquets(
+            images, skyregions, bands, self.config["run"]["path"])
 
         # STEP #2: measurements association
         # order images by time
@@ -233,6 +245,10 @@ class Pipeline():
                 done_images_df
             )
 
+        mem_usage = get_df_memory_usage(sources_df)
+        logger.debug(f"Step 2: sources_df memory usage: {mem_usage}MB")
+        log_total_memory_usage()
+
         # Obtain the number of selavy measurements for the run
         # n_selavy_measurements = sources_df.
         nr_selavy_measurements = sources_df['id'].unique().shape[0]
@@ -285,8 +301,13 @@ class Pipeline():
                 done_images_df,
                 done_source_ids
             )
+            mem_usage = get_df_memory_usage(sources_df)
+            logger.debug(f"Step 5: sources_df memory usage: {mem_usage}MB")
+            log_total_memory_usage()
 
         del missing_sources_df
+
+        log_total_memory_usage()
 
         # STEP #6: finalise the df getting unique sources, calculating
         # metrics and upload data to database
@@ -300,6 +321,8 @@ class Pipeline():
             done_source_ids,
             self.previous_parquets
         )
+
+        log_total_memory_usage()
 
         # calculate number processed images
         nr_img_processed = len(images)
@@ -334,7 +357,7 @@ class Pipeline():
             raise MaxPipelineRunsError
 
     @staticmethod
-    def set_status(pipe_run: Run, status: str=None) -> None:
+    def set_status(pipe_run: Run, status: str = None) -> None:
         """
         Function to change the status of a pipeline run model object and save
         to the database.
@@ -346,7 +369,7 @@ class Pipeline():
         Returns:
             None
         """
-        #TODO: This function gives no feedback if the status is not accepted?
+        # TODO: This function gives no feedback if the status is not accepted?
         choices = [x[0] for x in Run._meta.get_field('status').choices]
         if status and status in choices and pipe_run.status != status:
             with transaction.atomic():

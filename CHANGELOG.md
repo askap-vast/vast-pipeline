@@ -4,10 +4,52 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), with an added `List of PRs` section and links to the relevant PRs on the individual updates. This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/v1.0.0...HEAD)
+## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/v1.1.0...HEAD)
 
 #### Added
 
+
+#### Changed
+
+
+#### Fixed
+
+
+#### Removed
+
+
+#### List of PRs
+
+
+## [1.1.1](https://github.com/askap-vast/vast-pipeline/releases/v1.1.1) (2024-10-15)
+
+#### Added
+
+- Added Zenodo DOI to README [#761](https://github.com/askap-vast/vast-pipeline/pull/762)
+
+#### Changed
+
+- Refreshed docs text [#766](https://github.com/askap-vast/vast-pipeline/pull/766)
+- Updated preferred citation to Zenodo DOI [#761](https://github.com/askap-vast/vast-pipeline/pull/762)
+
+#### Fixed
+
+- Removed errant <strong> tag from docs header [#766](https://github.com/askap-vast/vast-pipeline/pull/766)
+
+#### Removed
+
+#### List of PRs
+
+- [#766](https://github.com/askap-vast/vast-pipeline/pull/766): docs: Removed errant <strong> tag from docs header and refreshed docs text
+- [#761](https://github.com/askap-vast/vast-pipeline/pull/762): docs: Add Zenodo DOI
+
+
+## [1.1.0](https://github.com/askap-vast/vast-pipeline/releases/v1.1.0) (2024-10-14)
+
+#### Added
+
+- Added further memory usage and timing debug logging [#725](https://github.com/askap-vast/vast-pipeline/pull/725)
+- Add support for python 3.10 [#740](https://github.com/askap-vast/vast-pipeline/pull/740)
 - Added support calculate_n_partitions for sensible dask dataframe partitioning [#724](https://github.com/askap-vast/vast-pipeline/pull/724)
 - Added support for compressed FITS files [#694](https://github.com/askap-vast/vast-pipeline/pull/694)
 - Added links to Data Central DAS and the Fink Broker to the source page [#697](https://github.com/askap-vast/vast-pipeline/pull/697/)
@@ -43,6 +85,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Updated README.md [#758](https://github.com/askap-vast/vast-pipeline/pull/758)
+- Force dask<2022.4.2, numpy<1.23, param<2.0 [#728](https://github.com/askap-vast/vast-pipeline/pull/728)
+- Bumped versions for github actions packages [#728](https://github.com/askap-vast/vast-pipeline/pull/728)
 - Changed pipeline.new_sources.parallel_get_rms_measurements to drop all but one RMS measurmeents [#730](https://github.com/askap-vast/vast-pipeline/pull/730)
 - Use chunks for associations upload [#726](https://github.com/askap-vast/vast-pipeline/pull/726)
 - Updated all FITS loading to use a wrapper that can handle compressed FITS files [#694](https://github.com/askap-vast/vast-pipeline/pull/694)
@@ -79,6 +124,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed handling of NaNs and negatives in noise image statistics [#755](https://github.com/askap-vast/vast-pipeline/pull/755)
+- Optimise YAML config parsing [#754](https://github.com/askap-vast/vast-pipeline/pull/754)
+- Fixed mkdocs serving issues [#728](https://github.com/askap-vast/vast-pipeline/pull/728)
+- Fixed python 3.9 testing failing on github actions [#728](https://github.com/askap-vast/vast-pipeline/pull/728)
+- Updated github action syntax to correctly call docker compose [#736](https://github.com/askap-vast/vast-pipeline/pull/736)
 - Fix memory leak in new_sources merge [#730](https://github.com/askap-vast/vast-pipeline/pull/730)
 - Fix memory leak in model upload [#726](https://github.com/askap-vast/vast-pipeline/pull/726)
 - Implemented sensible dask dataframe partitioning [#724](https://github.com/askap-vast/vast-pipeline/pull/724)
@@ -120,6 +170,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#758](https://github.com/askap-vast/vast-pipeline/pull/758): docs: Updated README.md 
+- [#755](https://github.com/askap-vast/vast-pipeline/pull/755): fix: Fixed handling of NaNs and negatives in noise image statistics
+- [#754](https://github.com/askap-vast/vast-pipeline/pull/754): fix: Optimise YAML config parsing
+- [#725](https://github.com/askap-vast/vast-pipeline/pull/725): feat: Added further memory usage and timing debug logging 
+- [#740](https://github.com/askap-vast/vast-pipeline/pull/740): feat: Add support for python 3.10
+- [#728](https://github.com/askap-vast/vast-pipeline/pull/728): fix: Adjust package versions and fix mkdocs serve issues
+- [#728](https://github.com/askap-vast/vast-pipeline/pull/728): fix: Adjust package versions and fix python 3.9 tests breaking on github actions
+- [#736](https://github.com/askap-vast/vast-pipeline/pull/736): fix: Updated github action syntax to correctly call docker compose 
 - [#730](https://github.com/askap-vast/vast-pipeline/pull/730): fix: Fix memory leak in new_sources merge
 - [#726](https://github.com/askap-vast/vast-pipeline/pull/726): fix: Fix memory leak in model upload and use chunks for associations upload
 - [#724](https://github.com/askap-vast/vast-pipeline/pull/724): fix, feat: Implemented sensible dask dataframe partitioning
