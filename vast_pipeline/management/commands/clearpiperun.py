@@ -11,6 +11,7 @@ from django.db import transaction
 
 from vast_pipeline.models import Run
 from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
+from vast_pipeline.utils.utils import StopWatch
 from ..helpers import get_p_run_name
 
 from ...utils.delete_run import delete_pipeline_run_raw_sql
@@ -83,76 +84,45 @@ class Command(BaseCommand):
             None
         """
         process = psutil.Process(os.getpid())  # Get the current process
-        start_time = time.time()  # Record the start time
-        start_memory = process.memory_info().rss  # Record the start memory usage
+        timer = Stopwatch()  # Record the start time
 
-        segment_times = {}  # Dictionary to store segment times
-        segment_memory = {}  # Dictionary to store segment memory usage
-
-        #def record_segment(name):
-        #    """ Helper function to record time and memory usage for segments. """
-        #    current_time = time.time()
-        #    current_memory = process.memory_info().rss
-        #    segment_times[name] = current_time - segment_start
-        #    segment_memory[name] = current_memory - segment_memory_start
-        #    return current_time, current_memory
-
-        # configure logging
-        segment_start = time.time()
-        segment_memory_start = process.memory_info().rss
         if options['verbosity'] > 1:
             # set root logger to use the DEBUG level
             root_logger = logging.getLogger('')
             root_logger.setLevel(logging.DEBUG)
             # set the traceback on
             options['traceback'] = True
-        #record_segment('configure_logging')
 
-        segment_start = time.time()
-        segment_memory_start = process.memory_info().rss
         if options['keep_parquet'] and options['remove_all']:
             raise CommandError(
                 '"--keep-parquets" flag is incompatible with "--remove-all" flag'
             )
-        #record_segment('flag_check')
 
         piperuns = options['piperuns']
         flag_all_runs = True if 'clearall' in piperuns else False
 
-        segment_start = time.time()
-        segment_memory_start = process.memory_info().rss
         if flag_all_runs:
             logger.info('clearing all pipeline run in the database')
             piperuns = list(Run.objects.values_list('name', flat=True))
-        #record_segment('run_list')
-
+        
         for piperun in piperuns:
-            segment_start = time.time()
-            segment_memory_start = process.memory_info().rss
             p_run_name = get_p_run_name(piperun)
             try:
                 p_run = Run.objects.get(name=p_run_name)
             except Run.DoesNotExist:
                 raise CommandError(f'Pipeline run {p_run_name} does not exist')
-            #record_segment('get_run')
-
-            segment_start = time.time()
-            segment_memory_start = process.memory_info().rss
+            
             logger.info("Deleting pipeline '%s' from database", p_run_name)
             with transaction.atomic():
                 p_run.status = 'DEL'
                 p_run.save()
+            timer.reset()
             delete_pipeline_run_raw_sql(p_run)
-            #record_segment('delete_db')
-
-            segment_start = time.time()
-            segment_memory_start = process.memory_info().rss
+            logger.info("Time to delete run from database: %.2f sec", timer.reset())
             # remove forced measurements in db if presents
             forced_parquets = remove_forced_meas(p_run.path)
-            #record_segment('remove_forced')
+            logger.info("Time to delete forced measurements: %.2f sec", timer.reset())
 
-            segment_start = time.time()
-            segment_memory_start = process.memory_info().rss
             # Delete parquet or folder eventually
             if not options['keep_parquet'] and not options['remove_all']:
                 logger.info('Deleting pipeline "%s" parquets', p_run_name)
@@ -168,10 +138,8 @@ class Command(BaseCommand):
                             f'Parquet file "{os.path.basename(parquet)}" not existent'
                         ))
                         pass
-            #record_segment('delete_files')
+            logger.info("Time to delete parquet files: %.2f sec", timer.reset())
 
-            segment_start = time.time()
-            segment_memory_start = process.memory_info().rss
             if options['remove_all']:
                 logger.info('Deleting pipeline folder')
                 try:
@@ -181,21 +149,3 @@ class Command(BaseCommand):
                         f'Issues in removing run folder: {e}'
                     ))
                     pass
-            #record_segment('remove_folder')
-
-        end_time = time.time()  # Record the end time
-        end_memory = process.memory_info().rss  # Record the end memory usage
-        elapsed_time = end_time - start_time  # Calculate the elapsed time
-        memory_used = end_memory - start_memory  # Calculate the memory used
-        logger.info(f"Time taken to execute the command: {elapsed_time:.2f} seconds")
-        logger.info(f"Memory used to execute the command: {memory_used / (1024 * 1024):.2f} MB")
-
-        # Log the time taken for each segment
-        for segment, duration in segment_times.items():
-            logger.info(f"Time taken for {segment}: {duration:.2f} seconds")
-            print(f"Time taken for {segment}: {duration:.2f} seconds")
-
-        # Log the memory used for each segment
-        for segment, memory in segment_memory.items():
-            logger.info(f"Memory used for {segment}: {memory / (1024 * 1024):.2f} MB")
-            print(f"Memory used for {segment}: {memory / (1024 * 1024):.2f} MB")
