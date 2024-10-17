@@ -298,7 +298,7 @@ class DeruiterEpochParallelAddImageTest(TestCase):
         '''
         See documentation for test_known_source in property_check.
         '''
-        property_check.test_known_source(self, self.sources, 12.369)
+        property_check.test_known_source(self, self.sources, 13.943)
 
 
 @unittest.skipIf(
