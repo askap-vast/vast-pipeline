@@ -82,7 +82,7 @@ class Command(BaseCommand):
         Returns:
             None
         """
-        timer = Stopwatch()
+        timer = StopWatch()
 
         if options['verbosity'] > 1:
             # set root logger to use the DEBUG level
