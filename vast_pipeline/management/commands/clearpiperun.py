@@ -1,7 +1,6 @@
 import os
 import logging
 import shutil
-import time
 import psutil  # Import the psutil module
 
 from argparse import ArgumentParser
@@ -83,8 +82,7 @@ class Command(BaseCommand):
         Returns:
             None
         """
-        process = psutil.Process(os.getpid())  # Get the current process
-        timer = Stopwatch()  # Record the start time
+        timer = Stopwatch()
 
         if options['verbosity'] > 1:
             # set root logger to use the DEBUG level
@@ -116,9 +114,11 @@ class Command(BaseCommand):
             with transaction.atomic():
                 p_run.status = 'DEL'
                 p_run.save()
+
             timer.reset()
             delete_pipeline_run_raw_sql(p_run)
             logger.info("Time to delete run from database: %.2f sec", timer.reset())
+
             # remove forced measurements in db if presents
             forced_parquets = remove_forced_meas(p_run.path)
             logger.info("Time to delete forced measurements: %.2f sec", timer.reset())
