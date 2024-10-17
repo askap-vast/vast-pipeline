@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Shortened forced fits measurement names to ensure they fit within the character limits - remove image prefix and limited to 1000 forced fits per source [#734](https://github.com/askap-vast/vast-pipeline/pull/734)
 
 #### Fixed
 
@@ -20,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#734](https://github.com/askap-vast/vast-pipeline/pull/734): Shortened forced fits measurement names
 
 ## [1.1.1](https://github.com/askap-vast/vast-pipeline/releases/v1.1.1) (2024-10-15)
 
