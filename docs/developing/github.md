@@ -71,7 +71,7 @@ In to order to make a release, please follow these steps:
 4. Bump the version number of the Python package using Poetry, i.e. `poetry version X.Y.Z`. This will update the version number in `pyproject.toml`.
 5. Update the version in `package.json` and `vast_pipeline/_version.py` to match the new version number, then run `npm install` to update the `package-lock.json` file.
 6. Update the "announcement bar" in the documentation to refer to the new release. This can be found in `docs/theme/main.html` at line 37.
-7. Update the [`CHANGELOG.md`](https://github.com/askap-vast/vast-pipeline/blob/master/CHANGELOG.md){:target="_blank"} by making a copy of the "Unreleased" heading at the top, and renaming the second one to the new version. Include a link to the release - it won't exist yet, so just follow the format of the others. After this there should be an "Unreleased" heading at the top, immediately followed by another heading with the new version number, which is followed by all the existing changes.
+7. Update the [`CHANGELOG.md`](https://github.com/askap-vast/vast-pipeline/blob/master/CHANGELOG.md){:target="_blank"} by renaming the "Unreleased" heading to the new version. Include a link to the release - it won't exist yet, so just follow the format of the others. Also remove any empty sub-headings under the new release heading.
 8. Commit all the changes made above to the new branch and push it to GitHub.
 9. Open a PR to merge the new branch into `master`. Note that the default target branch is `dev` so you will need to change this to `master` when creating the PR.
 10. Once the PR has been reviewed and approved, merge the branch into `master`. This can only be done by administrators of the repository.
@@ -82,5 +82,5 @@ In to order to make a release, please follow these steps:
 
 12. Push the tag to GitHub, i.e. `git push origin vX.Y.Z`.
 13. Merge the release branch into `dev`, resolving any conflicts.
-14. Append "dev" to the version numbers in `pyproject.toml`, `package.json` and `vast_pipeline/_version.py`, then run `npm install` to update `package-lock.json`, and commit the changes to `dev`.  This can either be done as a new commit, or while resolving merge conflicts in the previous step, if appropriate.
+14. Append "dev" to the version numbers in `pyproject.toml`, `package.json` and `vast_pipeline/_version.py`, then run `npm install` to update `package-lock.json`. Add a new "Unreleased" heading to the `CHANGELOG.md` with all standard subheadings ("Added", "Changed", "Fixed", "Removed" and "List of PRs"). Commit all changes to `dev` either as a new commit, or while resolving merge conflicts in the previous step.
 15. Create a [new release](https://github.com/askap-vast/vast-pipeline/releases/new) on GitHub that points to the tagged commit on master.
