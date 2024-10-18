@@ -11,15 +11,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Updated changelog release instructions to remove each release having an empty "Unreleased" section at the start [#772](https://github.com/askap-vast/vast-pipeline/pull/772)
 
 #### Fixed
 
+- Fixed errant `<strong>` tag inside changelog and added verbatim formatting to other variables throughout [#772](https://github.com/askap-vast/vast-pipeline/pull/772)
 
 #### Removed
 
 
 #### List of PRs
 
+- [#772](https://github.com/askap-vast/vast-pipeline/pull/772): fix, docs: Fixed changelog formatting and updated changelog release instructions
 
 ## [1.1.1](https://github.com/askap-vast/vast-pipeline/releases/v1.1.1) (2024-10-15)
 
@@ -34,13 +37,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
-- Removed errant <strong> tag from docs header [#766](https://github.com/askap-vast/vast-pipeline/pull/766)
-
-#### Removed
+- Removed errant `<strong>` tag from docs header [#766](https://github.com/askap-vast/vast-pipeline/pull/766)
 
 #### List of PRs
 
-- [#766](https://github.com/askap-vast/vast-pipeline/pull/766): docs: Removed errant <strong> tag from docs header and refreshed docs text
+- [#766](https://github.com/askap-vast/vast-pipeline/pull/766): docs: Removed errant `<strong>` tag from docs header and refreshed docs text
 - [#761](https://github.com/askap-vast/vast-pipeline/pull/762): docs: Add Zenodo DOI
 
 
@@ -50,7 +51,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - Added further memory usage and timing debug logging [#725](https://github.com/askap-vast/vast-pipeline/pull/725)
 - Add support for python 3.10 [#740](https://github.com/askap-vast/vast-pipeline/pull/740)
-- Added support calculate_n_partitions for sensible dask dataframe partitioning [#724](https://github.com/askap-vast/vast-pipeline/pull/724)
+- Added support `calculate_n_partitions` for sensible dask dataframe partitioning [#724](https://github.com/askap-vast/vast-pipeline/pull/724)
 - Added support for compressed FITS files [#694](https://github.com/askap-vast/vast-pipeline/pull/694)
 - Added links to Data Central DAS and the Fink Broker to the source page [#697](https://github.com/askap-vast/vast-pipeline/pull/697/)
 - Added `n_new_sources` column to run model to store the number of new sources in a pipeline run [#676](https://github.com/askap-vast/vast-pipeline/pull/676).
@@ -85,7 +86,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
-- Updated README.md [#758](https://github.com/askap-vast/vast-pipeline/pull/758)
+- Updated `README.md` [#758](https://github.com/askap-vast/vast-pipeline/pull/758)
 - Force dask<2022.4.2, numpy<1.23, param<2.0 [#728](https://github.com/askap-vast/vast-pipeline/pull/728)
 - Bumped versions for github actions packages [#728](https://github.com/askap-vast/vast-pipeline/pull/728)
 - Changed pipeline.new_sources.parallel_get_rms_measurements to drop all but one RMS measurmeents [#730](https://github.com/askap-vast/vast-pipeline/pull/730)
@@ -170,7 +171,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
-- [#758](https://github.com/askap-vast/vast-pipeline/pull/758): docs: Updated README.md 
+- [#758](https://github.com/askap-vast/vast-pipeline/pull/758): docs: Updated `README.md` 
 - [#755](https://github.com/askap-vast/vast-pipeline/pull/755): fix: Fixed handling of NaNs and negatives in noise image statistics
 - [#754](https://github.com/askap-vast/vast-pipeline/pull/754): fix: Optimise YAML config parsing
 - [#725](https://github.com/askap-vast/vast-pipeline/pull/725): feat: Added further memory usage and timing debug logging 
@@ -189,7 +190,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [#685](https://github.com/askap-vast/vast-pipeline/pull/685): docs: Updated `runpipeline` section on CLI docs.
 - [#676](https://github.com/askap-vast/vast-pipeline/pull/676): Removed home counts and new source count.
 - [#665](https://github.com/askap-vast/vast-pipeline/pull/665): Update Gr1N/setup-poetry to v7.
-- [#658](https://github.com/askap-vast/vast-pipeline/pull/658): feat: Add MAX_CUTOUT_IMAGES setting.
+- [#658](https://github.com/askap-vast/vast-pipeline/pull/658): feat: Add `MAX_CUTOUT_IMAGES` setting.
 - [#655](https://github.com/askap-vast/vast-pipeline/pull/655): feat: Add run config option to disable measurement pairs.
 - [#648](https://github.com/askap-vast/vast-pipeline/pull/648): fix: make Image and Measurement creation atomic together.
 - [#653](https://github.com/askap-vast/vast-pipeline/pull/653): fix: Allow forced fitting on images with empty catalogues.
