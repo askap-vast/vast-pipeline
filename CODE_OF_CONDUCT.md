@@ -35,7 +35,7 @@ We abide by the principles of openness, respect, and consideration of others of 
 
 ## Acknowledgements
 
-If you use this software in your work please acknowledge it by citing the DOI: [10.5281/zenodo.13927015](https://doi.org/10.5281/zenodo.13927016).
+If you use this software in your work please acknowledge it by citing the DOI: [10.5281/zenodo.13927015](https://doi.org/10.5281/zenodo.13927015).
 
 All refereed publications using ASKAP data should carry the standard [CSIRO acknowledgement](https://www.atnf.csiro.au/research/publications/Acknowledgements.html):
 > _The Australian SKA Pathfinder is part of the Australia Telescope National Facility which is managed by CSIRO. Operation of ASKAP is funded by the Australian Government with support from the National Collaborative Research Infrastructure Strategy. ASKAP uses the resources of the Pawsey Supercomputing Centre. Establishment of ASKAP, the Murchison Radio-astronomy Observatory and the Pawsey Supercomputing Centre are initiatives of the Australian Government, with support from the Government of Western Australia and the Science and Industry Endowment Fund. We acknowledge the Wajarri Yamatji people as the traditional owners of the Observatory site._
