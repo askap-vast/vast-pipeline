@@ -13,7 +13,6 @@ from vast_pipeline.utils.utils import StopWatch
 from ..helpers import get_p_run_name
 
 from ...utils.delete_run import delete_pipeline_run_raw_sql
-#from memory_profiler import profile
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +68,6 @@ class Command(BaseCommand):
             help='Flag to remove all the content of the pipeline run(s) folder.'
         )
 
-    #@profile
     def handle(self, *args, **options) -> None:
         """
         Handle function of the command.
