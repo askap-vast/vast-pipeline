@@ -13,6 +13,7 @@ import pyarrow as pa
 import astropy.units as u
 import dask
 import dask.dataframe as dd
+import psutil
 
 from typing import Any, List, Optional, Dict, Tuple, Union
 from astropy.coordinates import SkyCoord, Angle
@@ -24,7 +25,8 @@ from itertools import chain
 from vast_pipeline.image.main import FitsImage, SelavyImage
 from vast_pipeline.image.utils import open_fits
 from vast_pipeline.utils.utils import (
-    eq_to_cart, StopWatch, optimize_ints, optimize_floats
+    eq_to_cart, StopWatch, optimize_ints, optimize_floats,
+    calculate_n_partitions
 )
 from vast_pipeline.models import (
     Band, Image, Run, SkyRegion
@@ -137,7 +139,7 @@ def get_create_img(band_id: int, image: SelavyImage) -> Tuple[Image, bool]:
             'images',
             img_folder_name,
             'measurements.parquet'
-            )
+        )
         img = Image(
             band_id=band_id,
             measurements_path=measurements_path
@@ -148,10 +150,12 @@ def get_create_img(band_id: int, image: SelavyImage) -> Tuple[Image, bool]:
         # FYI attributs and/or method starting with _ are hidden
         # and with __ can't be modified/called
         for fld in img._meta.get_fields():
-            if getattr(fld, 'attname', None) and (getattr(image, fld.attname, None) is not None):
+            if getattr(fld, 'attname', None) and (
+                    getattr(image, fld.attname, None) is not None):
                 setattr(img, fld.attname, getattr(image, fld.attname))
 
-        img.rms_median, img.rms_min, img.rms_max = get_rms_noise_image_values(img.noise_path)
+        img.rms_median, img.rms_min, img.rms_max = get_rms_noise_image_values(
+            img.noise_path)
 
         # get create the sky region and associate with image
         img.skyreg = get_create_skyreg(img)
@@ -578,7 +582,7 @@ def get_eta_metric(
     suffix = 'peak' if peak else 'int'
     weights = 1. / df[f'flux_{suffix}_err'].values**2
     fluxes = df[f'flux_{suffix}'].values
-    eta = (row['n_meas'] / (row['n_meas']-1)) * (
+    eta = (row['n_meas'] / (row['n_meas'] - 1)) * (
         (weights * fluxes**2).mean() - (
             (weights * fluxes).mean()**2 / weights.mean()
         )
@@ -704,7 +708,10 @@ def parallel_groupby(df: pd.DataFrame) -> pd.DataFrame:
         'related_list': 'O'
     }
     n_cpu = cpu_count() - 1
-    out = dd.from_pandas(df, n_cpu)
+    logger.debug(f"Running association with {n_cpu} CPUs")
+    n_partitions = calculate_n_partitions(df, n_cpu)
+
+    out = dd.from_pandas(df.set_index('source'), npartitions=n_partitions)
     out = (
         out.groupby('source')
         .apply(
@@ -714,7 +721,8 @@ def parallel_groupby(df: pd.DataFrame) -> pd.DataFrame:
         .compute(num_workers=n_cpu, scheduler='processes')
     )
 
-    out['n_rel'] = out['related_list'].apply(lambda x: 0 if x == -1 else len(x))
+    out['n_rel'] = out['related_list'].apply(
+        lambda x: 0 if x == -1 else len(x))
 
     return out
 
@@ -763,7 +771,10 @@ def parallel_groupby_coord(df: pd.DataFrame) -> pd.DataFrame:
         'wavg_dec': 'f',
     }
     n_cpu = cpu_count() - 1
-    out = dd.from_pandas(df, n_cpu)
+    logger.debug(f"Running association with {n_cpu} CPUs")
+    n_partitions = calculate_n_partitions(df, n_cpu)
+
+    out = dd.from_pandas(df.set_index('source'), npartitions=n_partitions)
     out = (
         out.groupby('source')
         .apply(calc_ave_coord, meta=col_dtype)
@@ -795,14 +806,14 @@ def get_rms_noise_image_values(rms_path: str) -> Tuple[float, float, float]:
     try:
         with open_fits(rms_path) as f:
             data = f[0].data
-            data = data[np.logical_not(np.isnan(data))]
-            data = data[data != 0]
+            data = data[np.isfinite(data) & (data > 0.)]
             med_val = np.median(data) * 1e+3
             min_val = np.min(data) * 1e+3
             max_val = np.max(data) * 1e+3
             del data
     except Exception:
         raise IOError(f'Could not read this RMS FITS file: {rms_path}')
+    logger.debug('Image RMS Min: %.3g Max: %.3g Median: %.3g', min_val, max_val, med_val)
 
     return med_val, min_val, max_val
 
@@ -984,11 +995,17 @@ def get_src_skyregion_merged_df(
     skyreg_coords = SkyCoord(
         ra=skyreg_df.centre_ra, dec=skyreg_df.centre_dec, unit="deg"
     )
-    srcs_coords = SkyCoord(ra=srcs_df.wavg_ra, dec=srcs_df.wavg_dec, unit="deg")
+    srcs_coords = SkyCoord(
+        ra=srcs_df.wavg_ra,
+        dec=srcs_df.wavg_dec,
+        unit="deg")
     skyreg_idx, srcs_idx, sep, _ = srcs_coords.search_around_sky(
         skyreg_coords, skyreg_df.xtr_radius.max() * u.deg
     )
-    skyreg_df = skyreg_df.drop(columns=["centre_ra", "centre_dec"]).set_index("id")
+    skyreg_df = skyreg_df.drop(
+        columns=[
+            "centre_ra",
+            "centre_dec"]).set_index("id")
 
     # select rows where separation is less than sky region radius
     # drop not more useful columns and groupby source id
@@ -1469,11 +1486,15 @@ def reconstruct_associtaion_dfs(
     """
     prev_associations = pd.read_parquet(previous_parquet_paths['associations'])
 
+    logger.debug(images_df_done)
+    logger.debug(images_df_done['image_dj'])
+
     # Get the parquet paths from the image objects
     img_meas_paths = (
         images_df_done['image_dj'].apply(lambda x: x.measurements_path)
         .to_list()
     )
+    logger.debug(img_meas_paths)
 
     # Obtain the pipeline run path in order to fetch forced measurements.
     run_path = previous_parquet_paths['sources'].replace(
@@ -1600,7 +1621,7 @@ def reconstruct_associtaion_dfs(
     relation_ids = sources_df[
         sources_df.source.isin(prev_relations.index.values)].drop_duplicates(
             'source', keep='last'
-        ).index.values
+    ).index.values
     # Make sure we attach the correct source id
     source_ids = sources_df.loc[relation_ids].source.values
     sources_df['related'] = np.nan
@@ -1707,3 +1728,44 @@ def write_parquets(
     )
 
     return skyregs_df
+
+
+def get_total_memory_usage():
+    """
+    This function gets the current memory usage and returns a string.
+
+    Returns:
+        A float containing the current resource usage.
+    """
+    mem = psutil.virtual_memory()[3]  # resource usage in bytes
+    mem = mem / 1024**3  # resource usage in GB
+
+    return mem
+
+
+def log_total_memory_usage():
+    """
+    This function gets the current memory usage and logs it.
+
+    Returns:
+        None
+    """
+    mem = get_total_memory_usage()
+
+    logger.debug(f"Current memory usage: {mem:.3f}GB")
+
+
+def get_df_memory_usage(df):
+    """
+    This function calculates the memory usage of a pandas dataframe and
+    logs it.
+
+    Args:
+        df: The pandas dataframe to calculate the memory usage of.
+
+    Returns:
+        The pandas dataframe memory usage in MB
+    """
+    mem = df.memory_usage(deep=True).sum() / 1e6
+
+    return mem
