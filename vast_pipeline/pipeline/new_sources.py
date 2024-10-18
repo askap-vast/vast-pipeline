@@ -203,7 +203,7 @@ def parallel_get_new_high_sigma(
     Wrapper function to use 'get_image_rms_measurements' in parallel with Dask
     and calculate the new high sigma. nbeam is not an option here as that
     parameter is fixed in forced extraction and so is made sure to be fixed
-    here to. This may change in the future.
+    here too. This may change in the future.
 
     Args:
         df:
