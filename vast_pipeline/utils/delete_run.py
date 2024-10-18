@@ -88,8 +88,24 @@ def delete_pipeline_run_raw_sql(p_run):
         n_image_ids = len(image_ids)
         logger.info(f"Iterating over {n_image_ids} images to delete measurements and images")
         timer.reset()
+
         for image_id_tuple in image_ids:
             image_id = image_id_tuple[0]
+            
+            # Check if the Image is associated with more than one run
+            sql_cmd = f"SELECT COUNT(*) FROM vast_pipeline_image_run WHERE image_id={image_id};"
+            _run_raw_sql(sql_cmd, cursor)
+            num_occurences = cursor.fetchone()[0]
+            
+            # Delete the link between the run and the image
+            sql_cmd = f"DELETE FROM vast_pipeline_image_run WHERE image_id = {image_id} AND run_id = {p_run_id};"
+            _run_raw_sql(sql_cmd, cursor, log=True)
+            
+            # If the image is associated with more than one run, do not delete the image.
+            if num_occurences > 1:
+                logger.debug("image_id %d is referenced by {num_occurences} other pipeline runs, not deleting", image_id)
+                continue
+
             try:
                 sql_cmd = f"DELETE FROM vast_pipeline_measurement WHERE image_id = {image_id};"
                 _run_raw_sql(sql_cmd, cursor, log=True)
@@ -98,8 +114,7 @@ def delete_pipeline_run_raw_sql(p_run):
                 print(e, image_id)
                 print("++++++++++++++++++++++++++++++++")
                 pass
-            sql_cmd = f"DELETE FROM vast_pipeline_image_run WHERE image_id = {image_id} AND run_id = {p_run_id};"
-            _run_raw_sql(sql_cmd, cursor, log=True)
+
             try:
                 sql_cmd = f"DELETE FROM vast_pipeline_image WHERE id = {image_id};"
                 _run_raw_sql(sql_cmd, cursor, log=True)
@@ -121,8 +136,20 @@ def delete_pipeline_run_raw_sql(p_run):
         timer.reset()
         for sky_id_tuple in sky_ids:
             sky_id = sky_id_tuple[0]
+            
+            # Check if the Image is associated with more than one run
+            sql_cmd = f"SELECT COUNT(*) FROM vast_pipeline_skyregion_run WHERE skyregion_id={sky_id};"
+            _run_raw_sql(sql_cmd, cursor)
+            num_occurences = cursor.fetchone()[0]
+            
             sql_cmd = f"DELETE FROM vast_pipeline_skyregion_run WHERE skyregion_id = {sky_id} AND run_id = {p_run_id};"
             _run_raw_sql(sql_cmd, cursor, log=True)
+            
+            # If the skyregion is associated with more than one run, do not delete the skyregion.
+            if num_occurences > 1:
+                logger.debug("skyregion_id %d is referenced by {num_occurences} other pipeline runs, not deleting", image_id)
+                continue
+            
             try:
                 sql_cmd = f"DELETE FROM vast_pipeline_skyregion WHERE id = {sky_id};"
                 _run_raw_sql(sql_cmd, cursor, log=True)
