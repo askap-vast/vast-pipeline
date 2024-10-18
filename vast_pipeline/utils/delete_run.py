@@ -19,7 +19,7 @@ def _run_raw_sql(command, cursor, debug=False, log=True):
 def delete_pipeline_run_raw_sql(p_run):
     p_run_id = p_run.pk
 
-    with connection.cursor() as cursor:        
+    with connection.cursor() as cursor:
         # Disable triggers
         #sql_cmd = "ALTER TABLE vast_pipeline_source DISABLE TRIGGER ALL;"
         #_run_raw_sql(sql_cmd, cursor)
