@@ -99,14 +99,14 @@ class Command(BaseCommand):
         if flag_all_runs:
             logger.info('Clearing all pipeline run in the database')
             piperuns = list(Run.objects.values_list('name', flat=True))
-        
+
         for piperun in piperuns:
             p_run_name = get_p_run_name(piperun)
             try:
                 p_run = Run.objects.get(name=p_run_name)
             except Run.DoesNotExist:
                 raise CommandError("Pipeline run '%s' does not exist", p_run_name)
-            
+
             logger.info("Deleting pipeline run '%s' from database", p_run_name)
             with transaction.atomic():
                 p_run.status = 'DEL'
