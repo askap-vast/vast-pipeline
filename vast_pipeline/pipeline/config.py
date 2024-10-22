@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 def make_config_template(template_path: str, **kwargs) -> str:
-    """Generate the contents of a run configuration file from on a Jinja2 template.
+    """Generate the contents of a run configuration file from a Jinja2 template.
 
     Args:
         template_path: Path to a Jinja2 template.
@@ -114,6 +114,13 @@ class PipelineConfig:
                     "source_aggregate_pair_metrics_min_abs_vs": yaml.Float(),
                 }
             ),
+            "processing": yaml.Map(
+                {
+                    "num_workers": yaml.Int(),
+                    "num_workers_io": yaml.Int(),
+                    "max_partition_mb": yaml.Float(),
+                }
+            )
         }
     )
     # path to default run config template
