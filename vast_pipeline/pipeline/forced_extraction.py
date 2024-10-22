@@ -413,11 +413,10 @@ def parallel_extraction(
     ))
 
     # compute the rest of the columns
-    intermediate_df = (
-        db.from_sequence(intermediate_df)
-        .map(lambda x: finalise_forced_dfs(**x))
-        .compute()
-    )
+    intermediate_df = list(map(
+        lambda x: finalise_forced_dfs(**x),
+        intermediate_df
+        ))
     df_out = (
         pd.concat(intermediate_df, axis=0, sort=False)
         .rename(
