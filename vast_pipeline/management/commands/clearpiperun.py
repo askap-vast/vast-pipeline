@@ -137,7 +137,8 @@ class Command(BaseCommand):
                             f'Parquet file "{os.path.basename(parquet)}" not existent'
                         ))
                         pass
-            logger.info("Time to delete parquet files: %.2f sec", timer.reset())
+            t = timer.reset()
+            logger.info("Time to delete parquet files: %.2f sec", t)
 
             if options['remove_all']:
                 logger.info('Deleting pipeline folder')
