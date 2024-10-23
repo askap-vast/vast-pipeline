@@ -481,8 +481,8 @@ def write_forced_parquet(
     dfs = map(lambda x: (df[df['image'] == x], get_fname(x)), images)
 
     # Write parquets
-    for df, fname in dfs:
-        write_group_to_parquet(df, fname, add_mode)
+    for this_df, fname in dfs:
+        write_group_to_parquet(this_df, fname, add_mode)
     pass
 
 
