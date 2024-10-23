@@ -85,7 +85,7 @@ def delete_pipeline_run_raw_sql(p_run):
 
         # Iterate over each image ID and delete related information
         n_image_ids = len(image_ids)
-        logger.info(f"Iterating over {n_image_ids} images to delete measurements and images")
+        logger.info("Iterating over %d images to delete measurements and images", n_image_ids)
         timer.reset()
 
         for image_id_tuple in image_ids:
