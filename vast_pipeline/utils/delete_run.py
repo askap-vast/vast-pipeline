@@ -7,11 +7,10 @@ logger = logging.getLogger(__name__)
 
 def _run_raw_sql(command, cursor, debug=False, log=True):
     if log:
-        log_str = f"Running {command}"
         if debug:
-            logger.debug(log_str)
+            logger.debug("Running %s", command)
         else:
-            logger.info(log_str)
+            logger.info("Running %s", command)
     cursor.execute(command)
     
     return
