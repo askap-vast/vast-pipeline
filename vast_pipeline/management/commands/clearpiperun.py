@@ -105,7 +105,7 @@ class Command(BaseCommand):
             try:
                 p_run = Run.objects.get(name=p_run_name)
             except Run.DoesNotExist:
-                raise CommandError("Pipeline run '%s' does not exist", p_run_name)
+                raise CommandError(f'Pipeline run {p_run_name} does not exist')
 
             logger.info("Deleting pipeline run '%s' from database", p_run_name)
             with transaction.atomic():
