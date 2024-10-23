@@ -114,7 +114,8 @@ class Command(BaseCommand):
 
             timer.reset()
             delete_pipeline_run_raw_sql(p_run)
-            logger.info("Time to delete run from database: %.2f sec", timer.reset())
+            t = timer.reset()
+            logger.info("Time to delete run from database: %.2f sec", t)
 
             # remove forced measurements in db if presents
             forced_parquets = remove_forced_meas(p_run.path)
