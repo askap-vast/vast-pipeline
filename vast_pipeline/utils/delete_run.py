@@ -30,7 +30,7 @@ def delete_pipeline_run_raw_sql(p_run):
 
         # Iterate over each source ID and delete related information
         n_source_ids = len(source_ids)
-        logger.info(f"Iterating over {n_source_ids} sources to delete tags and relations")
+        logger.info("Iterating over %d sources to delete tags and relations", n_source_ids)
         timer = StopWatch()
         for i, source_id_tuple in enumerate(source_ids):
             source_id = source_id_tuple[0]
