@@ -157,7 +157,8 @@ def delete_pipeline_run_raw_sql(p_run):
                 print(e, sky_id)
                 print("++++++++++++++++++++++++++++++++")
                 pass
-        logger.info(f"Time to iterate over {n_sky_ids} sky ids: {timer.reset()} seconds")
+        t = timer.reset()
+        logger.info("Time to iterate over %d sky ids: %f seconds", n_sky_ids, t)
 
         # Finally delete the pipeline run
         sql_cmd = f"DELETE FROM vast_pipeline_run WHERE id = {p_run_id};"
