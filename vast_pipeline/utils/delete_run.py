@@ -63,8 +63,9 @@ def delete_pipeline_run_raw_sql(p_run):
             _run_raw_sql(sql_cmd, cursor, log=False)
             
             if i % 1000 == 0:
-                logger.info(f"Finished source id {source_id} ({i} of {n_source_ids})")
-        logger.info(f"Time to iterate over {n_source_ids} source ids: {timer.reset()} seconds")
+                logger.info("Finished source id %d (%d of %d)", source_id, i, n_source_ids)
+        t = timer.reset()
+        logger.info(f"Time to iterate over %d source ids: %f seconds", n_source_ids, t)
 
         # Delete source
         sql_cmd = f"DELETE FROM vast_pipeline_source WHERE run_id = {p_run_id};"
