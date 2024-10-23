@@ -413,11 +413,10 @@ def parallel_extraction(
     ))
 
     # compute the rest of the columns
-    intermediate_df = (
-        db.from_sequence(intermediate_df)
-        .map(lambda x: finalise_forced_dfs(**x))
-        .compute()
-    )
+    intermediate_df = list(map(
+        lambda x: finalise_forced_dfs(**x),
+        intermediate_df
+        ))
     df_out = (
         pd.concat(intermediate_df, axis=0, sort=False)
         .rename(
@@ -457,10 +456,10 @@ def write_group_to_parquet(
     pass
 
 
-def parallel_write_parquet(
+def write_forced_parquet(
         df: pd.DataFrame, run_path: str, add_mode: bool = False) -> None:
     '''
-    Parallelize writing parquet files for forced measurements.
+    Write parquet files for forced measurements.
 
     Args:
         df:
@@ -479,15 +478,11 @@ def parallel_write_parquet(
         run_path,
         'forced_measurements_' + n.replace('.', '_') + '.parquet'
     )
-    dfs = list(map(lambda x: (df[df['image'] == x], get_fname(x)), images))
-    n_cpu = cpu_count() - 1
+    dfs = map(lambda x: (df[df['image'] == x], get_fname(x)), images)
 
-    # writing parquets using Dask bag
-    bags = db.from_sequence(dfs)
-    bags = bags.starmap(
-        lambda df, fname: write_group_to_parquet(df, fname, add_mode))
-    bags.compute(num_workers=n_cpu)
-
+    # Write parquets
+    for this_df, fname in dfs:
+        write_group_to_parquet(this_df, fname, add_mode)
     pass
 
 
@@ -689,7 +684,7 @@ def forced_extraction(
     logger.info(
         'Saving forced measurements to specific parquet file...'
     )
-    parallel_write_parquet(extr_df, p_run.path, add_mode)
+    write_forced_parquet(extr_df, p_run.path, add_mode)
 
     # Required to rename this column for the image add mode.
     extr_df = extr_df.rename(columns={'time': 'datetime'})
