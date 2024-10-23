@@ -119,7 +119,8 @@ class Command(BaseCommand):
 
             # remove forced measurements in db if presents
             forced_parquets = remove_forced_meas(p_run.path)
-            logger.info("Time to delete forced measurements: %.2f sec", timer.reset())
+            t = timer.reset()
+            logger.info("Time to delete forced measurements: %.2f sec", t)
 
             # Delete parquet or folder eventually
             if not options['keep_parquet'] and not options['remove_all']:
