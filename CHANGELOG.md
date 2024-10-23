@@ -8,9 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added vast_pipeline.utils.delete_run.py to enable deletion of pipeline runs using raw SQL [#775](https://github.com/askap-vast/vast-pipeline/pull/775)
 
 #### Changed
 
+- Updated clearpiperun to delete runs using raw SQL rather than via django [#775](https://github.com/askap-vast/vast-pipeline/pull/775)
 - Shortened forced fits measurement names to ensure they fit within the character limits - remove image prefix and limited to 1000 forced fits per source [#734](https://github.com/askap-vast/vast-pipeline/pull/734)
 - Cleaned up Code of Conduct including adding Zenodo DOI [#773](https://github.com/askap-vast/vast-pipeline/pull/773)
 - Updated changelog release instructions to remove each release having an empty "Unreleased" section at the start [#772](https://github.com/askap-vast/vast-pipeline/pull/772)
@@ -24,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#775](https://github.com/askap-vast/vast-pipeline/pull/775): fix, feat: Enabled deletion of pipeline runs directly using SQL rather than via django
 - [#734](https://github.com/askap-vast/vast-pipeline/pull/734): Shortened forced fits measurement names
 - [#773](https://github.com/askap-vast/vast-pipeline/pull/773): docs: Cleaned up Code of Conduct including adding Zenodo DOI
 - [#772](https://github.com/askap-vast/vast-pipeline/pull/772): fix, docs: Fixed changelog formatting and updated changelog release instructions
