@@ -99,7 +99,7 @@ def delete_pipeline_run_raw_sql(p_run):
             
             # Delete the link between the run and the image
             sql_cmd = f"DELETE FROM vast_pipeline_image_run WHERE image_id = {image_id} AND run_id = {p_run_id};"
-            _run_raw_sql(sql_cmd, cursor, log=True)
+            _run_raw_sql(sql_cmd, cursor)
             
             # If the image is associated with more than one run, do not delete the image.
             if num_occurences > 1:
@@ -108,14 +108,14 @@ def delete_pipeline_run_raw_sql(p_run):
 
             try:
                 sql_cmd = f"DELETE FROM vast_pipeline_measurement WHERE image_id = {image_id};"
-                _run_raw_sql(sql_cmd, cursor, log=True)
+                _run_raw_sql(sql_cmd, cursor)
             except Exception as e:
                 logger.error("%s %d", e, image_id)
                 pass
 
             try:
                 sql_cmd = f"DELETE FROM vast_pipeline_image WHERE id = {image_id};"
-                _run_raw_sql(sql_cmd, cursor, log=True)
+                _run_raw_sql(sql_cmd, cursor)
             except Exception as e:
                 logger.error("%s %d", e, image_id)
                 pass
@@ -140,7 +140,7 @@ def delete_pipeline_run_raw_sql(p_run):
             num_occurences = cursor.fetchone()[0]
             
             sql_cmd = f"DELETE FROM vast_pipeline_skyregion_run WHERE skyregion_id = {sky_id} AND run_id = {p_run_id};"
-            _run_raw_sql(sql_cmd, cursor, log=True)
+            _run_raw_sql(sql_cmd, cursor)
             
             # If the skyregion is associated with more than one run, do not delete the skyregion.
             if num_occurences > 1:
@@ -149,7 +149,7 @@ def delete_pipeline_run_raw_sql(p_run):
             
             try:
                 sql_cmd = f"DELETE FROM vast_pipeline_skyregion WHERE id = {sky_id};"
-                _run_raw_sql(sql_cmd, cursor, log=True)
+                _run_raw_sql(sql_cmd, cursor)
             except Exception as e:
                 logger.error("%s %d", e, sky_id)
                 pass
