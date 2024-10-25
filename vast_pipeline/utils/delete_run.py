@@ -121,7 +121,8 @@ def delete_pipeline_run_raw_sql(p_run):
                 print(e, image_id)
                 print("++++++++++++++++++++++++++++++++")
                 pass
-        logger.info(f"Time to iterate over {n_image_ids} image ids: {timer.reset()} seconds")
+        t = timer.reset()
+        logger.info("Time to iterate over %d image ids: %f seconds", n_image_ids, t)
 
         # Fetch skyregion IDs associated with the pipeline run
         sql_cmd = f"SELECT skyregion_id FROM vast_pipeline_skyregion_run WHERE run_id = {p_run_id};"
