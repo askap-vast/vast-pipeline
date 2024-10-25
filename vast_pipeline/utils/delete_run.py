@@ -145,7 +145,7 @@ def delete_pipeline_run_raw_sql(p_run):
             
             # If the skyregion is associated with more than one run, do not delete the skyregion.
             if num_occurences > 1:
-                logger.debug("skyregion_id %d is referenced by {num_occurences} other pipeline runs, not deleting", image_id)
+                logger.debug("skyregion_id %d is referenced by %d other pipeline runs, not deleting", image_id, num_occurences)
                 continue
             
             try:
