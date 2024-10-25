@@ -130,7 +130,7 @@ def delete_pipeline_run_raw_sql(p_run):
 
         # Iterate over each skyregion ID and delete related information
         n_sky_ids = len(sky_ids)
-        logger.info(f"Iterating over {n_sky_ids} skyregion IDs to delete skyregions")
+        logger.info("Iterating over %d skyregion IDs to delete skyregions", n_sky_ids)
         timer.reset()
         for sky_id_tuple in sky_ids:
             sky_id = sky_id_tuple[0]
