@@ -152,9 +152,7 @@ def delete_pipeline_run_raw_sql(p_run):
                 sql_cmd = f"DELETE FROM vast_pipeline_skyregion WHERE id = {sky_id};"
                 _run_raw_sql(sql_cmd, cursor, log=True)
             except Exception as e:
-                print("++++++++++++++++++++++++++++++++")
-                print(e, sky_id)
-                print("++++++++++++++++++++++++++++++++")
+                logger.error("%s %d", e, sky_id)
                 pass
         t = timer.reset()
         logger.info("Time to iterate over %d sky ids: %f seconds", n_sky_ids, t)
