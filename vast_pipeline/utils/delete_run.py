@@ -110,9 +110,7 @@ def delete_pipeline_run_raw_sql(p_run):
                 sql_cmd = f"DELETE FROM vast_pipeline_measurement WHERE image_id = {image_id};"
                 _run_raw_sql(sql_cmd, cursor, log=True)
             except Exception as e:
-                print("++++++++++++++++++++++++++++++++")
-                print(e, image_id)
-                print("++++++++++++++++++++++++++++++++")
+                logger.error("%s %d", e, image_id)
                 pass
 
             try:
