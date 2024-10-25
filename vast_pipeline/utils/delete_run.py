@@ -117,9 +117,7 @@ def delete_pipeline_run_raw_sql(p_run):
                 sql_cmd = f"DELETE FROM vast_pipeline_image WHERE id = {image_id};"
                 _run_raw_sql(sql_cmd, cursor, log=True)
             except Exception as e:
-                print("++++++++++++++++++++++++++++++++")
-                print(e, image_id)
-                print("++++++++++++++++++++++++++++++++")
+                logger.error("%s %d", e, image_id)
                 pass
         t = timer.reset()
         logger.info("Time to iterate over %d image ids: %f seconds", n_image_ids, t)
