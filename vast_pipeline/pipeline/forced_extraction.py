@@ -413,6 +413,11 @@ def parallel_extraction(
     ))
 
     # compute the rest of the columns
+    # NOTE: Avoid using dask bags to parallelise the mapping
+    # over DataFrames, since these tend to get very large in memory and
+    # dask bags make a copy of the output before collecting the results.
+    # There is also a minimal speed penalty for doing this step without
+    # parallelism.
     intermediate_df = list(map(
         lambda x: finalise_forced_dfs(**x),
         intermediate_df
@@ -478,6 +483,8 @@ def write_forced_parquet(
         run_path,
         'forced_measurements_' + n.replace('.', '_') + '.parquet'
     )
+    # Avoid saving the maping to a list since this copies the the entire
+    # DataFrame which can already be very large in memory at this point.
     dfs = map(lambda x: (df[df['image'] == x], get_fname(x)), images)
 
     # Write parquets
