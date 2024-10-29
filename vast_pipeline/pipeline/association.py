@@ -1586,10 +1586,11 @@ def parallel_association(
     # Add an increment to any new source values when using add_mode to avoid
     # getting duplicates in the result laater
     id_incr_par_assoc = max(done_source_ids) if add_mode else 0
-
-    n_cpu = cpu_count() - 1
+    n_cpu = config['processing']['num_workers']
     logger.debug(f"Running association with {n_cpu} CPUs")
-    n_partitions = calculate_n_partitions(images_df, n_cpu)
+    n_partitions = calculate_n_partitions(images_df,
+                                          n_cpu,
+                                          partition_size_mb=config['processing']['max_partition_mb'])
     
     # pass each skyreg_group through the normal association process.
     results = (
