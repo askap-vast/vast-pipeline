@@ -402,10 +402,12 @@ class PipelineConfig:
         # of the user's input format.
         # Ensure all input file types have the same epochs.
         try:
+            schema = yaml.Map({epoch: yaml.Seq(yaml.Str()) for epoch in epochs_image})
             for input_type in inputs.keys():
-                self._yaml["inputs"][input_type].revalidate(
-                    yaml.Map({epoch: yaml.Seq(yaml.Str()) for epoch in epochs_image})
-                )
+                # Generate a new YAML object on-the-fly per input to avoid saving
+                # a validation schema per file in the PipelineConfig object 
+                # (These can consume a lot of RAM for long lists of input files).
+                yaml.load(self._yaml["inputs"][input_type].as_yaml(), schema=schema)
         except yaml.YAMLValidationError:
             # number of epochs could be different or the name of the epochs may not match
             # find out which by counting the number of unique epochs per input type
@@ -438,20 +440,11 @@ class PipelineConfig:
         # This could be combined with the number of epochs validation above, but we want
         # to give specific feedback to the user on failure.
         try:
+            schema = yaml.Map(
+                {epoch: yaml.FixedSeq([yaml.Str()] * epoch_n_files["image"][epoch])
+                for epoch in epochs_image})
             for input_type in inputs.keys():
-                self._yaml["inputs"][input_type].revalidate(
-                    yaml.Map(
-                        {
-                            epoch: yaml.FixedSeq(
-                                [
-                                    yaml.Str()
-                                    for _ in range(epoch_n_files["image"][epoch])
-                                ]
-                            )
-                            for epoch in epochs_image
-                        }
-                    )
-                )
+                yaml.load(self._yaml["inputs"][input_type].as_yaml(), schema=schema)
         except yaml.YAMLValidationError:
             # map input type to a mapping of epoch to file count
             file_counts_str = ""
