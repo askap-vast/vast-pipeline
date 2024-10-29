@@ -114,7 +114,10 @@ class PipelineConfig:
                     "source_aggregate_pair_metrics_min_abs_vs": yaml.Float(),
                 }
             ),
-            "processing": yaml.Map(
+            yaml.Optional("processing", default=
+                          {setting: settings.PIPE_RUN_CONFIG_DEFAULTS[setting]
+                           for setting in ['num_workers', 'num_workers_io', 'max_partition_mb']}
+                           ): yaml.Map(
                 {
                     "num_workers": yaml.Int(),
                     "num_workers_io": yaml.Int(),
