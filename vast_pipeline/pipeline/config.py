@@ -405,7 +405,7 @@ class PipelineConfig:
             schema = yaml.Map({epoch: yaml.Seq(yaml.Str()) for epoch in epochs_image})
             for input_type in inputs.keys():
                 # Generate a new YAML object on-the-fly per input to avoid saving
-                # a validation schema per file in the PipelineConfig object 
+                # a validation schema per file in the PipelineConfig object
                 # (These can consume a lot of RAM for long lists of input files).
                 yaml.load(self._yaml["inputs"][input_type].as_yaml(), schema=schema)
         except yaml.YAMLValidationError:
