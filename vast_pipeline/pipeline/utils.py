@@ -26,7 +26,7 @@ from vast_pipeline.image.main import FitsImage, SelavyImage
 from vast_pipeline.image.utils import open_fits
 from vast_pipeline.utils.utils import (
     eq_to_cart, StopWatch, optimize_ints, optimize_floats,
-    calculate_n_partitions
+    calculate_workers_and_partitions
 )
 from vast_pipeline.models import (
     Band, Image, Run, SkyRegion
@@ -669,13 +669,15 @@ def groupby_funcs(df: pd.DataFrame) -> pd.Series:
     return pd.Series(d).fillna(value={"v_int": 0.0, "v_peak": 0.0})
 
 
-def parallel_groupby(df: pd.DataFrame) -> pd.DataFrame:
+def parallel_groupby(df: pd.DataFrame, n_cpu: int = 0, max_partitions: int = 15) -> pd.DataFrame:
     """
     Performs the parallel source dataframe operations to calculate the source
     metrics using Dask and returns the resulting dataframe.
 
     Args:
         df: The sources dataframe produced by the previous pipeline stages.
+        n_cpu: The desired number of workers for Dask
+        max_partitions: The desired maximum size (in MB) of the partitions for Dask.
 
     Returns:
         The source dataframe with the calculated metric columns.
@@ -707,10 +709,8 @@ def parallel_groupby(df: pd.DataFrame) -> pd.DataFrame:
         'eta_peak': 'f',
         'related_list': 'O'
     }
-    n_cpu = cpu_count() - 1
-    logger.debug(f"Running association with {n_cpu} CPUs")
-    n_partitions = calculate_n_partitions(df, n_cpu)
-
+    n_workers, n_partitions = calculate_workers_and_partitions(df, n_cpu, max_partitions)
+    logger.debug(f"Running association with {n_workers} CPUs")
     out = dd.from_pandas(df.set_index('source'), npartitions=n_partitions)
     out = (
         out.groupby('source')
@@ -718,7 +718,7 @@ def parallel_groupby(df: pd.DataFrame) -> pd.DataFrame:
             groupby_funcs,
             meta=col_dtype
         )
-        .compute(num_workers=n_cpu, scheduler='processes')
+        .compute(num_workers=n_workers, scheduler='processes')
     )
 
     out['n_rel'] = out['related_list'].apply(
@@ -751,7 +751,7 @@ def calc_ave_coord(grp: pd.DataFrame) -> pd.Series:
     return pd.Series(d)
 
 
-def parallel_groupby_coord(df: pd.DataFrame) -> pd.DataFrame:
+def parallel_groupby_coord(df: pd.DataFrame, n_cpu: int = 0, max_partitions: int = 15) -> pd.DataFrame:
     """
     This function uses Dask to perform the average coordinate and unique image
     and epoch lists calculation. The result from the Dask compute is returned
@@ -759,6 +759,8 @@ def parallel_groupby_coord(df: pd.DataFrame) -> pd.DataFrame:
 
     Args:
         df: The sources dataframe produced by the pipeline.
+        n_cpu: The desired number of workers for Dask
+        max_partitions: The desired maximum size (in MB) of the partitions for Dask.
 
     Returns:
         The resulting average coordinate values and unique image and epoch
@@ -770,15 +772,14 @@ def parallel_groupby_coord(df: pd.DataFrame) -> pd.DataFrame:
         'wavg_ra': 'f',
         'wavg_dec': 'f',
     }
-    n_cpu = cpu_count() - 1
-    logger.debug(f"Running association with {n_cpu} CPUs")
-    n_partitions = calculate_n_partitions(df, n_cpu)
+    n_workers, n_partitions = calculate_workers_and_partitions(df, n_cpu, max_partitions)
+    logger.debug(f"Running association with {n_workers} CPUs")
 
     out = dd.from_pandas(df.set_index('source'), npartitions=n_partitions)
     out = (
         out.groupby('source')
         .apply(calc_ave_coord, meta=col_dtype)
-        .compute(num_workers=n_cpu, scheduler='processes')
+        .compute(num_workers=n_workers, scheduler='processes')
     )
 
     return out

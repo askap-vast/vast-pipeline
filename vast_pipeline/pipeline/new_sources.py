@@ -13,7 +13,7 @@ from astropy.wcs.utils import (
 
 from vast_pipeline.models import Image, Run
 
-from vast_pipeline.utils.utils import StopWatch, calculate_n_partitions
+from vast_pipeline.utils.utils import StopWatch, calculate_workers_and_partitions
 from vast_pipeline.pipeline.utils import get_df_memory_usage
 from vast_pipeline.image.utils import open_fits
 
@@ -197,7 +197,8 @@ def get_image_rms_measurements(
 
 
 def parallel_get_rms_measurements(
-    df: pd.DataFrame, edge_buffer: float = 1.0
+    df: pd.DataFrame, edge_buffer: float = 1.0,
+    n_cpu: int = 0, max_partitions: int = 15
 ) -> pd.DataFrame:
     """
     Wrapper function to use 'get_image_rms_measurements'
@@ -211,6 +212,11 @@ def parallel_get_rms_measurements(
         edge_buffer:
             Multiplicative factor to be passed to the
             'get_image_rms_measurements' function.
+        n_cpu:
+            The desired number of workers for Dask
+        max_partitions:
+            The desired maximum size (in MB) of the partitions for Dask.
+
 
     Returns:
         The original input dataframe with the 'img_diff_true_rms' column
@@ -230,10 +236,11 @@ def parallel_get_rms_measurements(
         'img_diff_true_rms': 'f',
     }
 
-    n_cpu = cpu_count() - 1
-    logger.debug(f"Running association with {n_cpu} CPUs")
-    n_partitions = calculate_n_partitions(out, n_cpu)
-
+    n_workers, n_partitions = calculate_workers_and_partitions(
+        df, n_cpu, max_partitions
+    )
+    logger.debug(f"Running association with {n_workers} CPUs")
+    
     out = (
         dd.from_pandas(out, npartitions=n_partitions)
         .groupby('img_diff_rms_path')
@@ -241,7 +248,7 @@ def parallel_get_rms_measurements(
             get_image_rms_measurements,
             edge_buffer=edge_buffer,
             meta=col_dtype
-        ).compute(num_workers=n_cpu, scheduler='processes')
+        ).compute(num_workers=n_workers, scheduler='processes')
     )
 
     # We don't need all of the RMS measurements, just the lowest. Keeping all

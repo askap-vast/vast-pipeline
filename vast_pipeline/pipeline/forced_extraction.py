@@ -259,7 +259,8 @@ def finalise_forced_dfs(
 def parallel_extraction(
     df: pd.DataFrame, df_images: pd.DataFrame, df_sources: pd.DataFrame,
     min_sigma: float, edge_buffer: float, cluster_threshold: float,
-    allow_nan: bool, add_mode: bool, p_run_path: str
+    allow_nan: bool, add_mode: bool, p_run_path: str,
+    n_cpu: int = 0, max_partitions: int = 15
 ) -> pd.DataFrame:
     """
     Parallelize forced extraction with Dask
@@ -289,6 +290,10 @@ def parallel_extraction(
             True when the pipeline is running in add image mode.
         p_run_path:
             The system path of the pipeline run output.
+        n_cpu:
+            The desired number of workers for Dask
+        max_partitions:
+            The desired maximum size (in MB) of the partitions for Dask.
 
     Returns:
         Dataframe with forced extracted measurements data, columns are
