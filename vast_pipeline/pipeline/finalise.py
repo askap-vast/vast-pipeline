@@ -357,9 +357,9 @@ def final_operations(
     make_upload_associations(sources_df_upload)
 
     # write associations to parquet file
-    sources_df.rename(columns={'id': 'meas_id'})[
-        ['source_id', 'meas_id', 'd2d', 'dr']
-    ].to_parquet(os.path.join(p_run.path, 'associations.parquet'))
+    sources_df[['source_id', 'id', 'd2d', 'dr']]. \
+        rename(columns={'id': 'meas_id'}). \
+            to_parquet(os.path.join(p_run.path, 'associations.parquet'))
 
     if calculate_pairs:
         # get the Source object primary keys for the measurement pairs
