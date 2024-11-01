@@ -1586,10 +1586,12 @@ def parallel_association(
     # Add an increment to any new source values when using add_mode to avoid
     # getting duplicates in the result laater
     id_incr_par_assoc = max(done_source_ids) if add_mode else 0
-    n_cpu, n_partitions = calculate_workers_and_partitions(images_df,
-                                                           config['processing']['num_workers'],
-                                                           config['processing']['max_partition_mb'])
-    logger.debug(f"Running association with {n_cpu} CPUs")
+    n_workers, n_partitions = calculate_workers_and_partitions(
+        images_df,
+        n_cpu=config['processing']['num_workers'],
+        max_partition_mb=config['processing']['max_partition_mb']
+        )
+    logger.debug(f"Running association with {n_workers} CPUs")
     # pass each skyreg_group through the normal association process.
     results = (
         dd.from_pandas(images_df.set_index('skyreg_group'), npartitions=n_partitions)
@@ -1607,7 +1609,7 @@ def parallel_association(
             id_incr_par_assoc=id_incr_par_assoc,
             parallel=True,
             meta=meta
-        ).compute(n_workers=n_cpu, scheduler='processes')
+        ).compute(n_workers=n_workers, scheduler='processes')
     )
 
     # results are the normal dataframe of results with the columns:

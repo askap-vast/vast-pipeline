@@ -669,7 +669,7 @@ def groupby_funcs(df: pd.DataFrame) -> pd.Series:
     return pd.Series(d).fillna(value={"v_int": 0.0, "v_peak": 0.0})
 
 
-def parallel_groupby(df: pd.DataFrame, n_cpu: int = 0, max_partitions: int = 15) -> pd.DataFrame:
+def parallel_groupby(df: pd.DataFrame, n_cpu: int = 0, max_partition_mb: int = 15) -> pd.DataFrame:
     """
     Performs the parallel source dataframe operations to calculate the source
     metrics using Dask and returns the resulting dataframe.
@@ -677,7 +677,7 @@ def parallel_groupby(df: pd.DataFrame, n_cpu: int = 0, max_partitions: int = 15)
     Args:
         df: The sources dataframe produced by the previous pipeline stages.
         n_cpu: The desired number of workers for Dask
-        max_partitions: The desired maximum size (in MB) of the partitions for Dask.
+        max_partition_mb: The desired maximum size (in MB) of the partitions for Dask.
 
     Returns:
         The source dataframe with the calculated metric columns.
@@ -709,7 +709,10 @@ def parallel_groupby(df: pd.DataFrame, n_cpu: int = 0, max_partitions: int = 15)
         'eta_peak': 'f',
         'related_list': 'O'
     }
-    n_workers, n_partitions = calculate_workers_and_partitions(df, n_cpu, max_partitions)
+    n_workers, n_partitions = calculate_workers_and_partitions(
+        df,
+        n_cpu=n_cpu,
+        max_partition_mb=max_partition_mb)
     logger.debug(f"Running association with {n_workers} CPUs")
     out = dd.from_pandas(df.set_index('source'), npartitions=n_partitions)
     out = (
@@ -751,7 +754,7 @@ def calc_ave_coord(grp: pd.DataFrame) -> pd.Series:
     return pd.Series(d)
 
 
-def parallel_groupby_coord(df: pd.DataFrame, n_cpu: int = 0, max_partitions: int = 15) -> pd.DataFrame:
+def parallel_groupby_coord(df: pd.DataFrame, n_cpu: int = 0, max_partition_mb: int = 15) -> pd.DataFrame:
     """
     This function uses Dask to perform the average coordinate and unique image
     and epoch lists calculation. The result from the Dask compute is returned
@@ -760,7 +763,7 @@ def parallel_groupby_coord(df: pd.DataFrame, n_cpu: int = 0, max_partitions: int
     Args:
         df: The sources dataframe produced by the pipeline.
         n_cpu: The desired number of workers for Dask
-        max_partitions: The desired maximum size (in MB) of the partitions for Dask.
+        max_partition_mb: The desired maximum size (in MB) of the partitions for Dask.
 
     Returns:
         The resulting average coordinate values and unique image and epoch
@@ -772,7 +775,10 @@ def parallel_groupby_coord(df: pd.DataFrame, n_cpu: int = 0, max_partitions: int
         'wavg_ra': 'f',
         'wavg_dec': 'f',
     }
-    n_workers, n_partitions = calculate_workers_and_partitions(df, n_cpu, max_partitions)
+    n_workers, n_partitions = calculate_workers_and_partitions(
+        df,
+        n_cpu=n_cpu,
+        max_partition_mb=max_partition_mb)
     logger.debug(f"Running association with {n_workers} CPUs")
 
     out = dd.from_pandas(df.set_index('source'), npartitions=n_partitions)
@@ -900,7 +906,8 @@ def check_primary_image(row: pd.Series) -> bool:
 
 
 def get_src_skyregion_merged_df(
-    sources_df: pd.DataFrame, images_df: pd.DataFrame, skyreg_df: pd.DataFrame
+    sources_df: pd.DataFrame, images_df: pd.DataFrame, skyreg_df: pd.DataFrame,
+    n_cpu: int = 0, max_partition_mb: int = 15
 ) -> pd.DataFrame:
     """
     Analyses the current sources_df to determine what the 'ideal coverage'
@@ -917,6 +924,10 @@ def get_src_skyregion_merged_df(
         skyreg_df:
             Contains the sky regions of the pipeline run. I.e. all
             sky region objects for the run loaded into a dataframe.
+        n_cpu:
+            The desired number of workers for Dask
+        max_partition_mb:
+            The desired maximum size (in MB) of the partitions for Dask.
 
     Returns:
         DataFrame containing missing image information (see source code for
@@ -987,7 +998,9 @@ def get_src_skyregion_merged_df(
     # calculate some metrics on sources
     # compute only some necessary metrics in the groupby
     timer = StopWatch()
-    srcs_df = parallel_groupby_coord(sources_df)
+    srcs_df = parallel_groupby_coord(sources_df,
+                                     n_cpu=n_cpu,
+                                     max_partition_mb=max_partition_mb)
     logger.debug('Groupby-apply time: %.2f seconds', timer.reset())
 
     del sources_df

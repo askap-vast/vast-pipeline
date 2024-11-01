@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from psutil import cpu_count
 
-from vast_pipeline.utils.utils import calculate_n_partitions
+from vast_pipeline.utils.utils import calculate_workers_and_partitions
 
 
 logger = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ def calculate_m_metric(flux_a: float, flux_b: float) -> float:
 
 
 def calculate_measurement_pair_metrics(
-        df: pd.DataFrame, n_cpu: int = 0, max_partitions: int = 15) -> pd.DataFrame:
+        df: pd.DataFrame, n_cpu: int = 0, max_partition_mb: int = 15) -> pd.DataFrame:
     """Generate a DataFrame of measurement pairs and their 2-epoch variability metrics
     from a DataFrame of measurements. For more information on the variability metrics, see
     Section 5 of Mooley et al. (2016), DOI: 10.3847/0004-637X/818/2/105.
@@ -57,7 +57,7 @@ def calculate_measurement_pair_metrics(
             flux_int_err, flux_peak, flux_peak_err, has_siblings.
         n_cpu:
             The desired number of workers for Dask
-        max_partitions:
+        max_partition_mb:
             The desired maximum size (in MB) of the partitions for Dask.
 
     Returns:
@@ -73,7 +73,9 @@ def calculate_measurement_pair_metrics(
     """
     
     n_workers, n_partitions = calculate_workers_and_partitions(
-        df, n_cpu, max_partitions
+        df,
+        n_cpu=n_cpu,
+        max_partition_mb=max_partition_mb
     )
     logger.debug(f"Running association with {n_workers} CPUs")
     

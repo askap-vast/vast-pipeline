@@ -198,7 +198,7 @@ def get_image_rms_measurements(
 
 def parallel_get_rms_measurements(
     df: pd.DataFrame, edge_buffer: float = 1.0,
-    n_cpu: int = 0, max_partitions: int = 15
+    n_cpu: int = 0, max_partition_mb: int = 15
 ) -> pd.DataFrame:
     """
     Wrapper function to use 'get_image_rms_measurements'
@@ -214,7 +214,7 @@ def parallel_get_rms_measurements(
             'get_image_rms_measurements' function.
         n_cpu:
             The desired number of workers for Dask
-        max_partitions:
+        max_partition_mb:
             The desired maximum size (in MB) of the partitions for Dask.
 
 
@@ -237,9 +237,11 @@ def parallel_get_rms_measurements(
     }
 
     n_workers, n_partitions = calculate_workers_and_partitions(
-        df, n_cpu, max_partitions
+        df,
+        n_cpu=n_cpu,
+        max_partition_mb=max_partition_mb
     )
-    logger.debug(f"Running association with {n_workers} CPUs")
+    logger.debug(f"Running get_image_rms_measurements with {n_workers} CPUs")
     
     out = (
         dd.from_pandas(out, npartitions=n_partitions)
@@ -279,7 +281,8 @@ def parallel_get_rms_measurements(
 
 def new_sources(
     sources_df: pd.DataFrame, missing_sources_df: pd.DataFrame,
-    min_sigma: float, edge_buffer: float, p_run: Run
+    min_sigma: float, edge_buffer: float, p_run: Run, n_cpu: int = 5,
+    max_partition_mb: int = 15
 ) -> pd.DataFrame:
     """
     Processes the new sources detected to check that they are valid new
@@ -301,6 +304,10 @@ def new_sources(
             'get_image_rms_measurements' function.
         p_run:
             The pipeline run.
+        n_cpu:
+            The desired number of workers for Dask
+        max_partition_mb:
+            The desired maximum size (in MB) of the partitions for Dask.
 
     Returns:
         The original input dataframe with the 'img_diff_true_rms' column
@@ -473,7 +480,8 @@ def new_sources(
     logger.debug("Getting rms measurements...")
 
     new_sources_df = parallel_get_rms_measurements(
-        new_sources_df, edge_buffer=edge_buffer
+        new_sources_df, edge_buffer=edge_buffer,
+        n_cpu=n_cpu, max_partition_mb=max_partition_mb
     )
     logger.debug(f"Time to get rms measurements: {debug_timer.reset()}s")
 
