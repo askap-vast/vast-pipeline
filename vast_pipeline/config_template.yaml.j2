@@ -168,7 +168,7 @@ processing:
   # Options to control use of Dask parallelism
   # NOTE: These are advanced options and you should only change them if you know what you are doing.
 
-  # The total number of workers available to Dask (0 means use all CPUs-1)
+  # The total number of workers available to Dask (0 means use one less than all cores)
   num_workers: {{ num_workers }}
 
   # The number of workers to use for disk IO operations (e.g. when reading images for forced extraction)
