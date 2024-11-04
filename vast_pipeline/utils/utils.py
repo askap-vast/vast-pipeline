@@ -392,7 +392,7 @@ def timeStamped(fname, fmt="%Y-%m-%d-%H-%M-%S_{fname}"):
     return datetime.now().strftime(fmt).format(fname=fname)
 
 
-def calculate_n_partitions(df, n_cpu, partition_size_mb=100):
+def calculate_n_partitions(df, n_cpu, partition_size_mb=15):
     """
     This function will calculate how many partitions a dataframe should be
     split into.
@@ -401,6 +401,14 @@ def calculate_n_partitions(df, n_cpu, partition_size_mb=100):
         df: The pandas dataframe to be partitionined.
         n_cpu: The number of available CPUs.
         partition_size: The optimal partition size in MB.
+            NOTE: The default partition size of 15MB is chosen because
+                many of the parallelised operations on partitioned
+                DataFrames can consume a much larger amount of memory
+                than the size of the partition. 15MB avoids consuming
+                too much memory for significant amounts of parallelism
+                (e.g. n_cpu > 10) without significant cost to processing
+                speed.
+
     Returns:
         The optimal number of partitions.
     """
