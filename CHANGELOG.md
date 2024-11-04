@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added configuration options to specify number of workers and maximum partition size for parallel operations. [#777](https://github.com/askap-vast/vast-pipeline/pull/777)
 - Added vast_pipeline.utils.delete_run.py to enable deletion of pipeline runs using raw SQL [#775](https://github.com/askap-vast/vast-pipeline/pull/775)
 
 #### Changed
@@ -27,6 +28,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#777](https://github.com/askap-vast/vast-pipeline/pull/777): feat: Allow user to specify number of cores and memory size of partitions via configuration.
 - [#776](https://github.com/askap-vast/vast-pipeline/pull/776): fix: Minor memory optimisations
 - [#775](https://github.com/askap-vast/vast-pipeline/pull/775): fix, feat: Enabled deletion of pipeline runs directly using SQL rather than via django
 - [#734](https://github.com/askap-vast/vast-pipeline/pull/734): Shortened forced fits measurement names
