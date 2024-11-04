@@ -19,7 +19,6 @@ from typing import Any, List, Optional, Dict, Tuple, Union
 from astropy.coordinates import SkyCoord, Angle
 from django.conf import settings
 from django.contrib.auth.models import User
-from psutil import cpu_count
 from itertools import chain
 
 from vast_pipeline.image.main import FitsImage, SelavyImage

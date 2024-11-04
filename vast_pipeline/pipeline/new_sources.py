@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import dask.dataframe as dd
 
-from psutil import cpu_count
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.wcs import WCS

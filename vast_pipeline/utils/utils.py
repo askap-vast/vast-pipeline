@@ -435,7 +435,7 @@ def calculate_workers_and_partitions(df, n_cpu=0, max_partition_mb=15):
             Don't calculate partitions if df is None
         num_cpu_max: The maximum number of workers to allocate.
                      The default of 0 means use one less than all available cores
-        max_partition_mb: The maximum partition size in MB. 
+        max_partition_mb: The maximum partition size in MB.
 
     Returns:
         (num_workers, n_partitions): Calculated workers and partitions.
@@ -448,7 +448,7 @@ def calculate_workers_and_partitions(df, n_cpu=0, max_partition_mb=15):
         num_workers = num_cpu
     n_partitions = 0
     if df is not None:
-        n_partitions = calculate_n_partitions(df, num_workers, 
+        n_partitions = calculate_n_partitions(df, num_workers,
                                               partition_size_mb=max_partition_mb)
 
     return num_workers, n_partitions

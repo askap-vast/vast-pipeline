@@ -4,7 +4,6 @@ import logging
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
-from psutil import cpu_count
 
 from vast_pipeline.utils.utils import calculate_workers_and_partitions
 

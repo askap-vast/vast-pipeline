@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import dask.dataframe as dd
 import dask.bag as db
-from psutil import cpu_count
 from glob import glob
 
 from astropy import units as u
