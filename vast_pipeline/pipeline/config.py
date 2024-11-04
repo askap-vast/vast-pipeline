@@ -114,14 +114,20 @@ class PipelineConfig:
                     "source_aggregate_pair_metrics_min_abs_vs": yaml.Float(),
                 }
             ),
-            yaml.Optional("processing", default=
-                          {setting: settings.PIPE_RUN_CONFIG_DEFAULTS[setting]
-                           for setting in ['num_workers', 'num_workers_io', 'max_partition_mb']}
-                           ): yaml.Map(
+            yaml.Optional("processing"): yaml.Map(
                 {
-                    "num_workers": yaml.Int(),
-                    "num_workers_io": yaml.Int(),
-                    "max_partition_mb": yaml.Float(),
+                    yaml.Optional(
+                        "num_workers",
+                        default=settings.PIPE_RUN_CONFIG_DEFAULTS['num_workers']):
+                        yaml.NullNone() | yaml.Int() | yaml.Str(),
+                    yaml.Optional(
+                        "num_workers_io",
+                        default=settings.PIPE_RUN_CONFIG_DEFAULTS['num_workers_io']):
+                        yaml.Int(),
+                    yaml.Optional(
+                        "max_partition_mb",
+                        default=settings.PIPE_RUN_CONFIG_DEFAULTS['max_partition_mb']):
+                        yaml.Int()
                 }
             )
         }
@@ -289,6 +295,7 @@ class PipelineConfig:
             config_defaults_dict: Dict[str, Any] = yaml.load(config_defaults_str).data
 
             # merge configs
+            print(config_yaml.data)
             config_dict = dict_merge(config_defaults_dict, config_yaml.data)
             config_yaml = yaml.as_document(config_dict, schema=schema, label=label)
         return cls(config_yaml, validate_inputs=validate_inputs)
