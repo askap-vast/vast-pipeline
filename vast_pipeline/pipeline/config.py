@@ -123,7 +123,7 @@ class PipelineConfig:
                     yaml.Optional(
                         "num_workers_io",
                         default=settings.PIPE_RUN_CONFIG_DEFAULTS['num_workers_io']):
-                        yaml.Int(),
+                        yaml.NullNone() | yaml.Int() | yaml.Str(),
                     yaml.Optional(
                         "max_partition_mb",
                         default=settings.PIPE_RUN_CONFIG_DEFAULTS['max_partition_mb']):
@@ -295,7 +295,6 @@ class PipelineConfig:
             config_defaults_dict: Dict[str, Any] = yaml.load(config_defaults_str).data
 
             # merge configs
-            print(config_yaml.data)
             config_dict = dict_merge(config_defaults_dict, config_yaml.data)
             config_yaml = yaml.as_document(config_dict, schema=schema, label=label)
         return cls(config_yaml, validate_inputs=validate_inputs)
@@ -527,6 +526,13 @@ class PipelineConfig:
                 for file in file_list:
                     if not os.path.exists(file):
                         raise PipelineConfigError(f"{file} does not exist.")
+
+        # ensure num_workers and num_workers_io are
+        # either None (from null in config yaml) or an integer
+        for param_name in ('num_workers', 'num_workers_io'):
+            param_value = self['processing'][param_name]
+            if (param_value is not None) and (type(param_value) is not int):
+                raise PipelineConfigError(f"{param_name} can only be an integer or 'null'")
 
     def check_prev_config_diff(self) -> bool:
         """
