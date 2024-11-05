@@ -127,6 +127,21 @@ Below is an example of a default `config.yaml` file. Note that no images or othe
       # aggregate pair metrics that are stored in Source objects.
       source_aggregate_pair_metrics_min_abs_vs: 4.3
 
+    processing:
+      # Options to control use of Dask parallelism
+      # NOTE: These are advanced options and you should only change them if you know what you are doing.
+
+      # The total number of workers available to Dask ('null' means use one less than all cores)
+      num_workers: null
+
+      # The number of workers to use for disk IO operations (e.g. when reading images for forced extraction)
+      num_workers_io: null
+
+      # The default maximum size (in MB) to allow per partition of Dask DataFrames
+      # Increasing this will create fewer partitions and will potentially increase the memory footprint
+      # of parallel tasks.
+      max_partition_mb: 15
+
     ```
 
 !!! note
