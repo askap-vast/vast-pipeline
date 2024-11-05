@@ -135,7 +135,7 @@ Below is an example of a default `config.yaml` file. Note that no images or othe
       num_workers: null
 
       # The number of workers to use for disk IO operations (e.g. when reading images for forced extraction)
-      num_workers_io: null
+      num_workers_io: 5
 
       # The default maximum size (in MB) to allow per partition of Dask DataFrames
       # Increasing this will create fewer partitions and will potentially increase the memory footprint
