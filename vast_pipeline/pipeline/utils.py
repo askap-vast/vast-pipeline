@@ -19,14 +19,13 @@ from typing import Any, List, Optional, Dict, Tuple, Union
 from astropy.coordinates import SkyCoord, Angle
 from django.conf import settings
 from django.contrib.auth.models import User
-from psutil import cpu_count
 from itertools import chain
 
 from vast_pipeline.image.main import FitsImage, SelavyImage
 from vast_pipeline.image.utils import open_fits
 from vast_pipeline.utils.utils import (
     eq_to_cart, StopWatch, optimize_ints, optimize_floats,
-    calculate_n_partitions
+    calculate_workers_and_partitions
 )
 from vast_pipeline.models import (
     Band, Image, Run, SkyRegion
@@ -669,13 +668,15 @@ def groupby_funcs(df: pd.DataFrame) -> pd.Series:
     return pd.Series(d).fillna(value={"v_int": 0.0, "v_peak": 0.0})
 
 
-def parallel_groupby(df: pd.DataFrame) -> pd.DataFrame:
+def parallel_groupby(df: pd.DataFrame, n_cpu: int = 0, max_partition_mb: int = 15) -> pd.DataFrame:
     """
     Performs the parallel source dataframe operations to calculate the source
     metrics using Dask and returns the resulting dataframe.
 
     Args:
         df: The sources dataframe produced by the previous pipeline stages.
+        n_cpu: The desired number of workers for Dask
+        max_partition_mb: The desired maximum size (in MB) of the partitions for Dask.
 
     Returns:
         The source dataframe with the calculated metric columns.
@@ -707,10 +708,11 @@ def parallel_groupby(df: pd.DataFrame) -> pd.DataFrame:
         'eta_peak': 'f',
         'related_list': 'O'
     }
-    n_cpu = cpu_count() - 1
-    logger.debug(f"Running association with {n_cpu} CPUs")
-    n_partitions = calculate_n_partitions(df, n_cpu)
-
+    n_workers, n_partitions = calculate_workers_and_partitions(
+        df,
+        n_cpu=n_cpu,
+        max_partition_mb=max_partition_mb)
+    logger.debug(f"Running association with {n_workers} CPUs")
     out = dd.from_pandas(df.set_index('source'), npartitions=n_partitions)
     out = (
         out.groupby('source')
@@ -718,7 +720,7 @@ def parallel_groupby(df: pd.DataFrame) -> pd.DataFrame:
             groupby_funcs,
             meta=col_dtype
         )
-        .compute(num_workers=n_cpu, scheduler='processes')
+        .compute(num_workers=n_workers, scheduler='processes')
     )
 
     out['n_rel'] = out['related_list'].apply(
@@ -751,7 +753,7 @@ def calc_ave_coord(grp: pd.DataFrame) -> pd.Series:
     return pd.Series(d)
 
 
-def parallel_groupby_coord(df: pd.DataFrame) -> pd.DataFrame:
+def parallel_groupby_coord(df: pd.DataFrame, n_cpu: int = 0, max_partition_mb: int = 15) -> pd.DataFrame:
     """
     This function uses Dask to perform the average coordinate and unique image
     and epoch lists calculation. The result from the Dask compute is returned
@@ -759,6 +761,8 @@ def parallel_groupby_coord(df: pd.DataFrame) -> pd.DataFrame:
 
     Args:
         df: The sources dataframe produced by the pipeline.
+        n_cpu: The desired number of workers for Dask
+        max_partition_mb: The desired maximum size (in MB) of the partitions for Dask.
 
     Returns:
         The resulting average coordinate values and unique image and epoch
@@ -770,15 +774,17 @@ def parallel_groupby_coord(df: pd.DataFrame) -> pd.DataFrame:
         'wavg_ra': 'f',
         'wavg_dec': 'f',
     }
-    n_cpu = cpu_count() - 1
-    logger.debug(f"Running association with {n_cpu} CPUs")
-    n_partitions = calculate_n_partitions(df, n_cpu)
+    n_workers, n_partitions = calculate_workers_and_partitions(
+        df,
+        n_cpu=n_cpu,
+        max_partition_mb=max_partition_mb)
+    logger.debug(f"Running association with {n_workers} CPUs")
 
     out = dd.from_pandas(df.set_index('source'), npartitions=n_partitions)
     out = (
         out.groupby('source')
         .apply(calc_ave_coord, meta=col_dtype)
-        .compute(num_workers=n_cpu, scheduler='processes')
+        .compute(num_workers=n_workers, scheduler='processes')
     )
 
     return out
@@ -899,7 +905,8 @@ def check_primary_image(row: pd.Series) -> bool:
 
 
 def get_src_skyregion_merged_df(
-    sources_df: pd.DataFrame, images_df: pd.DataFrame, skyreg_df: pd.DataFrame
+    sources_df: pd.DataFrame, images_df: pd.DataFrame, skyreg_df: pd.DataFrame,
+    n_cpu: int = 0, max_partition_mb: int = 15
 ) -> pd.DataFrame:
     """
     Analyses the current sources_df to determine what the 'ideal coverage'
@@ -916,6 +923,10 @@ def get_src_skyregion_merged_df(
         skyreg_df:
             Contains the sky regions of the pipeline run. I.e. all
             sky region objects for the run loaded into a dataframe.
+        n_cpu:
+            The desired number of workers for Dask
+        max_partition_mb:
+            The desired maximum size (in MB) of the partitions for Dask.
 
     Returns:
         DataFrame containing missing image information (see source code for
@@ -986,7 +997,9 @@ def get_src_skyregion_merged_df(
     # calculate some metrics on sources
     # compute only some necessary metrics in the groupby
     timer = StopWatch()
-    srcs_df = parallel_groupby_coord(sources_df)
+    srcs_df = parallel_groupby_coord(sources_df,
+                                     n_cpu=n_cpu,
+                                     max_partition_mb=max_partition_mb)
     logger.debug('Groupby-apply time: %.2f seconds', timer.reset())
 
     del sources_df

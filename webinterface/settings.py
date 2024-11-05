@@ -336,6 +336,9 @@ PIPE_RUN_CONFIG_DEFAULTS = {
     'suppress_astropy_warnings': True,
     'pair_metrics': True,
     'source_aggregate_pair_metrics_min_abs_vs': 4.3,
+    'num_workers': 'null',
+    'num_workers_io': 5,
+    'max_partition_mb': 15
 }
 
 # default max concurrent pipeline runs

@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 def make_config_template(template_path: str, **kwargs) -> str:
-    """Generate the contents of a run configuration file from on a Jinja2 template.
+    """Generate the contents of a run configuration file from a Jinja2 template.
 
     Args:
         template_path: Path to a Jinja2 template.
@@ -114,6 +114,22 @@ class PipelineConfig:
                     "source_aggregate_pair_metrics_min_abs_vs": yaml.Float(),
                 }
             ),
+            yaml.Optional("processing"): yaml.Map(
+                {
+                    yaml.Optional(
+                        "num_workers",
+                        default=settings.PIPE_RUN_CONFIG_DEFAULTS['num_workers']):
+                        yaml.NullNone() | yaml.Int() | yaml.Str(),
+                    yaml.Optional(
+                        "num_workers_io",
+                        default=settings.PIPE_RUN_CONFIG_DEFAULTS['num_workers_io']):
+                        yaml.NullNone() | yaml.Int() | yaml.Str(),
+                    yaml.Optional(
+                        "max_partition_mb",
+                        default=settings.PIPE_RUN_CONFIG_DEFAULTS['max_partition_mb']):
+                        yaml.Int()
+                }
+            )
         }
     )
     # path to default run config template
@@ -510,6 +526,13 @@ class PipelineConfig:
                 for file in file_list:
                     if not os.path.exists(file):
                         raise PipelineConfigError(f"{file} does not exist.")
+
+        # ensure num_workers and num_workers_io are
+        # either None (from null in config yaml) or an integer
+        for param_name in ('num_workers', 'num_workers_io'):
+            param_value = self['processing'][param_name]
+            if (param_value is not None) and (type(param_value) is not int):
+                raise PipelineConfigError(f"{param_name} can only be an integer or 'null'")
 
     def check_prev_config_diff(self) -> bool:
         """

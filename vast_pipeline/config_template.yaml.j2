@@ -163,3 +163,18 @@ variability:
   # Only measurement pairs where the Vs metric exceeds this value are selected for the
   # aggregate pair metrics that are stored in Source objects.
   source_aggregate_pair_metrics_min_abs_vs: {{ source_aggregate_pair_metrics_min_abs_vs }}
+
+processing:
+  # Options to control use of Dask parallelism
+  # NOTE: These are advanced options and you should only change them if you know what you are doing.
+
+  # The total number of workers available to Dask ('null' means use one less than all cores)
+  num_workers: {{ num_workers }}
+
+  # The number of workers to use for disk IO operations (e.g. when reading images for forced extraction)
+  num_workers_io: {{ num_workers_io }}
+
+  # The default maximum size (in MB) to allow per partition of Dask DataFrames
+  # Increasing this will create fewer partitions and will potentially increase the memory footprint
+  # of parallel tasks.
+  max_partition_mb: {{ max_partition_mb }}

@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import dask.dataframe as dd
 import dask.bag as db
-from psutil import cpu_count
 from glob import glob
 
 from astropy import units as u
@@ -19,7 +18,7 @@ from vast_pipeline.models import Image, Measurement, Run
 from vast_pipeline.pipeline.loading import make_upload_measurements
 
 from forced_phot import ForcedPhot
-from ..utils.utils import StopWatch
+from ..utils.utils import StopWatch, calculate_workers_and_partitions
 from vast_pipeline.image.utils import open_fits
 
 
@@ -259,7 +258,7 @@ def finalise_forced_dfs(
 def parallel_extraction(
     df: pd.DataFrame, df_images: pd.DataFrame, df_sources: pd.DataFrame,
     min_sigma: float, edge_buffer: float, cluster_threshold: float,
-    allow_nan: bool, add_mode: bool, p_run_path: str
+    allow_nan: bool, add_mode: bool, p_run_path: str, n_workers: int = 5
 ) -> pd.DataFrame:
     """
     Parallelize forced extraction with Dask
@@ -289,6 +288,8 @@ def parallel_extraction(
             True when the pipeline is running in add image mode.
         p_run_path:
             The system path of the pipeline run output.
+        n_workers:
+            The desired number of workers for Dask
 
     Returns:
         Dataframe with forced extracted measurements data, columns are
@@ -374,7 +375,7 @@ def parallel_extraction(
             npartitions=len(list_meas_parquets)
         )
         .map(get_data_from_parquet, p_run_path, add_mode)
-        .compute()
+        .compute(num_workers=n_workers, scheduler="processes")
     )
     mapping = pd.DataFrame(mapping)
     # remove not used columns from images_df and merge into mapping
@@ -393,7 +394,6 @@ def parallel_extraction(
     )
     del col_to_drop
 
-    n_cpu = cpu_count() - 1
     bags = db.from_sequence(list_to_map, npartitions=len(list_to_map))
     forced_dfs = (
         bags.map(lambda x: extract_from_image(
@@ -402,7 +402,7 @@ def parallel_extraction(
             allow_nan=allow_nan,
             **x
         ))
-        .compute()
+        .compute(num_workers=n_workers, scheduler='processes')
     )
     del bags
     # create intermediates dfs combining the mapping data and the forced
@@ -497,7 +497,8 @@ def forced_extraction(
     sources_df: pd.DataFrame, cfg_err_ra: float, cfg_err_dec: float,
     p_run: Run, extr_df: pd.DataFrame, min_sigma: float, edge_buffer: float,
     cluster_threshold: float, allow_nan: bool, add_mode: bool,
-    done_images_df: pd.DataFrame, done_source_ids: List[int]
+    done_images_df: pd.DataFrame, done_source_ids: List[int],
+    n_cpu: int = 5
 ) -> Tuple[pd.DataFrame, int]:
     """
     Check and extract expected measurements, and associated them with the
@@ -533,6 +534,8 @@ def forced_extraction(
         done_source_ids:
             List of the source ids that were already present in the previous
             run (used in add image mode).
+        n_cpu:
+            The desired number of workers for Dask.
 
     Returns:
         The `sources_df` with the extracted sources added.
@@ -604,11 +607,14 @@ def forced_extraction(
             f" (from {total_to_extract} total)"
         )
 
+    # Don't care about n_partitions in this step
+    n_workers, _ = calculate_workers_and_partitions(None, n_cpu)
+
     timer.reset()
     extr_df = parallel_extraction(
         extr_df, images_df, sources_df[['source', 'image', 'flux_peak']],
         min_sigma, edge_buffer, cluster_threshold, allow_nan, add_mode,
-        p_run.path
+        p_run.path, n_workers=n_workers
     )
     logger.info(
         'Force extraction step time: %.2f seconds', timer.reset()
@@ -712,7 +718,7 @@ def forced_extraction(
         n_forced = (
             dd.read_parquet(forced_parquets, columns=['id'])
             .count()
-            .compute()
+            .compute(num_workers=n_workers, scheduler='processes')
             .values[0]
         )
     else:

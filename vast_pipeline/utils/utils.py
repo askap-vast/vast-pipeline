@@ -13,6 +13,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord, Longitude, Latitude
 import numpy as np
 import pandas as pd
+from psutil import cpu_count
 
 
 logger = logging.getLogger(__name__)
@@ -421,6 +422,33 @@ def calculate_n_partitions(df, n_cpu, partition_size_mb=15):
 
     partition_size_mb = int(np.ceil(mem_usage_mb / n_partitions))
 
-    logger.debug(f"Using {n_partitions} partions of {partition_size_mb}MB")
+    logger.debug("Using %d partions of %dMB", n_partitions, partition_size_mb)
 
     return n_partitions
+
+def calculate_workers_and_partitions(df, n_cpu=None, max_partition_mb=15):
+    """
+    Return number of workers and the number of partitions for Dask
+
+    Args:
+        df: The pandas dataframe to be partitionined.
+            Don't calculate partitions if df is None
+        num_cpu_max: The maximum number of workers to allocate.
+                     The default of None means use one less than all available cores
+        max_partition_mb: The maximum partition size in MB.
+
+    Returns:
+        (num_workers, n_partitions): Calculated workers and partitions.
+    """
+    num_cpu = cpu_count() - 1
+    num_workers = num_cpu if n_cpu is None else n_cpu
+    if num_workers > num_cpu:
+        logger.debug("%d desired workers is greater than available cores. Limiting to %s.",
+                     num_workers, num_cpu)
+        num_workers = num_cpu
+    n_partitions = 0
+    if df is not None:
+        n_partitions = calculate_n_partitions(df, num_workers,
+                                              partition_size_mb=max_partition_mb)
+
+    return num_workers, n_partitions
