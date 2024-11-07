@@ -88,7 +88,9 @@ def final_operations(
     source_aggregate_pair_metrics_min_abs_vs: float,
     add_mode: bool,
     done_source_ids: List[int],
-    previous_parquets: Dict[str, str]
+    previous_parquets: Dict[str, str],
+    n_cpu: int = 0,
+    max_partition_mb: int = 15
 ) -> Tuple[int, int]:
     """
     Performs the final operations of the pipeline:
@@ -136,7 +138,9 @@ def final_operations(
     )
     log_total_memory_usage()
 
-    srcs_df = parallel_groupby(sources_df)
+    srcs_df = parallel_groupby(sources_df,
+                               n_cpu=n_cpu,
+                               max_partition_mb=max_partition_mb)
 
     mem_usage = get_df_memory_usage(srcs_df)
     logger.info('Groupby-apply time: %.2f seconds', timer.reset())
@@ -179,7 +183,10 @@ def final_operations(
     # create measurement pairs, aka 2-epoch metrics
     if calculate_pairs:
         timer.reset()
-        measurement_pairs_df = calculate_measurement_pair_metrics(sources_df)
+        measurement_pairs_df = calculate_measurement_pair_metrics(
+            sources_df,
+            n_cpu=n_cpu,
+            max_partition_mb=max_partition_mb)
         logger.info(
             'Measurement pair metrics time: %.2f seconds',
             timer.reset())
@@ -357,9 +364,9 @@ def final_operations(
     make_upload_associations(sources_df_upload)
 
     # write associations to parquet file
-    sources_df.rename(columns={'id': 'meas_id'})[
-        ['source_id', 'meas_id', 'd2d', 'dr']
-    ].to_parquet(os.path.join(p_run.path, 'associations.parquet'))
+    sources_df[['source_id', 'id', 'd2d', 'dr']]. \
+        rename(columns={'id': 'meas_id'}). \
+            to_parquet(os.path.join(p_run.path, 'associations.parquet'))
 
     if calculate_pairs:
         # get the Source object primary keys for the measurement pairs

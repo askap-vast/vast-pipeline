@@ -4,9 +4,8 @@ import logging
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
-from psutil import cpu_count
 
-from vast_pipeline.utils.utils import calculate_n_partitions
+from vast_pipeline.utils.utils import calculate_workers_and_partitions
 
 
 logger = logging.getLogger(__name__)
@@ -46,7 +45,8 @@ def calculate_m_metric(flux_a: float, flux_b: float) -> float:
     return 2 * ((flux_a - flux_b) / (flux_a + flux_b))
 
 
-def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
+def calculate_measurement_pair_metrics(
+        df: pd.DataFrame, n_cpu: int = 0, max_partition_mb: int = 15) -> pd.DataFrame:
     """Generate a DataFrame of measurement pairs and their 2-epoch variability metrics
     from a DataFrame of measurements. For more information on the variability metrics, see
     Section 5 of Mooley et al. (2016), DOI: 10.3847/0004-637X/818/2/105.
@@ -54,6 +54,10 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
     Args:
         df (pd.DataFrame): Input measurements. Must contain columns: id, source, flux_int,
             flux_int_err, flux_peak, flux_peak_err, has_siblings.
+        n_cpu:
+            The desired number of workers for Dask
+        max_partition_mb:
+            The desired maximum size (in MB) of the partitions for Dask.
 
     Returns:
         Measurement pairs and 2-epoch metrics. Will contain columns:
@@ -66,10 +70,14 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
             vs_peak, vs_int - variability t-statistic
             m_peak, m_int - variability modulation index
     """
-    n_cpu = cpu_count() - 1
-    logger.debug(f"Running association with {n_cpu} CPUs")
-    n_partitions = calculate_n_partitions(df.set_index('source'), n_cpu)
-
+    
+    n_workers, n_partitions = calculate_workers_and_partitions(
+        df,
+        n_cpu=n_cpu,
+        max_partition_mb=max_partition_mb
+    )
+    logger.debug(f"Running association with {n_workers} CPUs")
+    
     """Create a DataFrame containing all measurement ID combinations per source.
     Resultant DataFrame will have a MultiIndex(["source", RangeIndex]) where "source" is
     the source ID and RangeIndex is an unnamed temporary ID for each measurement pair,
@@ -94,7 +102,7 @@ def calculate_measurement_pair_metrics(df: pd.DataFrame) -> pd.DataFrame:
         .groupby("source")["id"]
         .apply(
             lambda x: pd.DataFrame(list(combinations(x, 2))), meta={0: "i", 1: "i"},)
-        .compute(num_workers=n_cpu, scheduler="processes")
+        .compute(num_workers=n_workers, scheduler="processes")
     )
 
     """Drop the RangeIndex from the MultiIndex as it isn't required and rename the columns.

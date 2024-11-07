@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import dask.dataframe as dd
 import dask.bag as db
-from psutil import cpu_count
 from glob import glob
 
 from astropy import units as u
@@ -19,7 +18,7 @@ from vast_pipeline.models import Image, Measurement, Run
 from vast_pipeline.pipeline.loading import make_upload_measurements
 
 from forced_phot import ForcedPhot
-from ..utils.utils import StopWatch
+from ..utils.utils import StopWatch, calculate_workers_and_partitions
 from vast_pipeline.image.utils import open_fits
 
 
@@ -242,8 +241,7 @@ def finalise_forced_dfs(
     df['component_id'] = df['island_id'].str.replace(
         'island', 'component'
     ) + 'a'
-    img_prefix = image.split('.')[0] + '_'
-    df['name'] = img_prefix + df['component_id']
+    df['name'] = df['component_id']
     # assign all the other columns
     # convert fluxes to mJy
     # store source bmaj and bmin in arcsec
@@ -260,7 +258,7 @@ def finalise_forced_dfs(
 def parallel_extraction(
     df: pd.DataFrame, df_images: pd.DataFrame, df_sources: pd.DataFrame,
     min_sigma: float, edge_buffer: float, cluster_threshold: float,
-    allow_nan: bool, add_mode: bool, p_run_path: str
+    allow_nan: bool, add_mode: bool, p_run_path: str, n_workers: int = 5
 ) -> pd.DataFrame:
     """
     Parallelize forced extraction with Dask
@@ -290,6 +288,8 @@ def parallel_extraction(
             True when the pipeline is running in add image mode.
         p_run_path:
             The system path of the pipeline run output.
+        n_workers:
+            The desired number of workers for Dask
 
     Returns:
         Dataframe with forced extracted measurements data, columns are
@@ -375,7 +375,7 @@ def parallel_extraction(
             npartitions=len(list_meas_parquets)
         )
         .map(get_data_from_parquet, p_run_path, add_mode)
-        .compute()
+        .compute(num_workers=n_workers, scheduler="processes")
     )
     mapping = pd.DataFrame(mapping)
     # remove not used columns from images_df and merge into mapping
@@ -394,7 +394,6 @@ def parallel_extraction(
     )
     del col_to_drop
 
-    n_cpu = cpu_count() - 1
     bags = db.from_sequence(list_to_map, npartitions=len(list_to_map))
     forced_dfs = (
         bags.map(lambda x: extract_from_image(
@@ -403,7 +402,7 @@ def parallel_extraction(
             allow_nan=allow_nan,
             **x
         ))
-        .compute()
+        .compute(num_workers=n_workers, scheduler='processes')
     )
     del bags
     # create intermediates dfs combining the mapping data and the forced
@@ -414,11 +413,15 @@ def parallel_extraction(
     ))
 
     # compute the rest of the columns
-    intermediate_df = (
-        db.from_sequence(intermediate_df)
-        .map(lambda x: finalise_forced_dfs(**x))
-        .compute()
-    )
+    # NOTE: Avoid using dask bags to parallelise the mapping
+    # over DataFrames, since these tend to get very large in memory and
+    # dask bags make a copy of the output before collecting the results.
+    # There is also a minimal speed penalty for doing this step without
+    # parallelism.
+    intermediate_df = list(map(
+        lambda x: finalise_forced_dfs(**x),
+        intermediate_df
+        ))
     df_out = (
         pd.concat(intermediate_df, axis=0, sort=False)
         .rename(
@@ -458,10 +461,10 @@ def write_group_to_parquet(
     pass
 
 
-def parallel_write_parquet(
+def write_forced_parquet(
         df: pd.DataFrame, run_path: str, add_mode: bool = False) -> None:
     '''
-    Parallelize writing parquet files for forced measurements.
+    Write parquet files for forced measurements.
 
     Args:
         df:
@@ -480,15 +483,13 @@ def parallel_write_parquet(
         run_path,
         'forced_measurements_' + n.replace('.', '_') + '.parquet'
     )
-    dfs = list(map(lambda x: (df[df['image'] == x], get_fname(x)), images))
-    n_cpu = cpu_count() - 1
+    # Avoid saving the maping to a list since this copies the the entire
+    # DataFrame which can already be very large in memory at this point.
+    dfs = map(lambda x: (df[df['image'] == x], get_fname(x)), images)
 
-    # writing parquets using Dask bag
-    bags = db.from_sequence(dfs)
-    bags = bags.starmap(
-        lambda df, fname: write_group_to_parquet(df, fname, add_mode))
-    bags.compute(num_workers=n_cpu)
-
+    # Write parquets
+    for this_df, fname in dfs:
+        write_group_to_parquet(this_df, fname, add_mode)
     pass
 
 
@@ -496,7 +497,8 @@ def forced_extraction(
     sources_df: pd.DataFrame, cfg_err_ra: float, cfg_err_dec: float,
     p_run: Run, extr_df: pd.DataFrame, min_sigma: float, edge_buffer: float,
     cluster_threshold: float, allow_nan: bool, add_mode: bool,
-    done_images_df: pd.DataFrame, done_source_ids: List[int]
+    done_images_df: pd.DataFrame, done_source_ids: List[int],
+    n_cpu: int = 5
 ) -> Tuple[pd.DataFrame, int]:
     """
     Check and extract expected measurements, and associated them with the
@@ -532,6 +534,8 @@ def forced_extraction(
         done_source_ids:
             List of the source ids that were already present in the previous
             run (used in add image mode).
+        n_cpu:
+            The desired number of workers for Dask.
 
     Returns:
         The `sources_df` with the extracted sources added.
@@ -603,18 +607,21 @@ def forced_extraction(
             f" (from {total_to_extract} total)"
         )
 
+    # Don't care about n_partitions in this step
+    n_workers, _ = calculate_workers_and_partitions(None, n_cpu)
+
     timer.reset()
     extr_df = parallel_extraction(
         extr_df, images_df, sources_df[['source', 'image', 'flux_peak']],
         min_sigma, edge_buffer, cluster_threshold, allow_nan, add_mode,
-        p_run.path
+        p_run.path, n_workers=n_workers
     )
     logger.info(
         'Force extraction step time: %.2f seconds', timer.reset()
     )
 
     # make measurement names unique for db constraint
-    extr_df['name'] = extr_df['name'] + f'_f_run{p_run.id:06d}'
+    extr_df['name'] = extr_df['name'] + f'_f_run{p_run.id:03d}'
 
     # select sensible flux values and set the columns with fix values
     values = {
@@ -690,7 +697,7 @@ def forced_extraction(
     logger.info(
         'Saving forced measurements to specific parquet file...'
     )
-    parallel_write_parquet(extr_df, p_run.path, add_mode)
+    write_forced_parquet(extr_df, p_run.path, add_mode)
 
     # Required to rename this column for the image add mode.
     extr_df = extr_df.rename(columns={'time': 'datetime'})
@@ -711,7 +718,7 @@ def forced_extraction(
         n_forced = (
             dd.read_parquet(forced_parquets, columns=['id'])
             .count()
-            .compute()
+            .compute(num_workers=n_workers, scheduler='processes')
             .values[0]
         )
     else:

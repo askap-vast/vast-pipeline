@@ -30,11 +30,11 @@ def measurement_models_generator(
         An iterable generator object containing the yielded Measurement
             objects.
     """
-    for i, row in meas_df.iterrows():
+    for row in meas_df.itertuples():
         one_m = Measurement()
         for fld in one_m._meta.get_fields():
-            if getattr(fld, 'attname', None) and fld.attname in row.index:
-                setattr(one_m, fld.attname, row[fld.attname])
+            if getattr(fld, 'attname', None) and hasattr(row, fld.attname):
+                setattr(one_m, fld.attname, getattr(row, fld.attname))
         yield one_m
 
 
@@ -55,19 +55,19 @@ def source_models_generator(
     Returns:
         An iterable generator object containing the yielded Source objects.
     """
-    for i, row in src_df.iterrows():
+    for row in src_df.itertuples():
         # generate an IAU compliant source name, see
         # https://cdsweb.u-strasbg.fr/Dic/iau-spec.html
         name = (
-            f"J{deg2hms(row['wavg_ra'], precision=1, truncate=True)}"
-            f"{deg2dms(row['wavg_dec'], precision=0, truncate=True)}"
+            f"J{deg2hms(row.wavg_ra, precision=1, truncate=True)}"
+            f"{deg2dms(row.wavg_dec, precision=0, truncate=True)}"
         ).replace(":", "")
         src = Source()
         src.run_id = pipeline_run.id
         src.name = name
         for fld in src._meta.get_fields():
-            if getattr(fld, 'attname', None) and fld.attname in row.index:
-                setattr(src, fld.attname, row[fld.attname])
+            if getattr(fld, 'attname', None) and hasattr(row, fld.attname):
+                setattr(src, fld.attname, getattr(row, fld.attname))
 
         yield src
 
@@ -88,12 +88,12 @@ def association_models_generator(
         An iterable generator object containing the yielded Association objects.
     """
     logger.debug(f"Building {len(assoc_df)} association generators")
-    for i, row in assoc_df.iterrows():
+    for row in assoc_df.itertuples():
         yield Association(
-            meas_id=row['id'],
-            source_id=row['source_id'],
-            d2d=row['d2d'],
-            dr=row['dr'],
+            meas_id=row.id,
+            source_id=row.source_id,
+            d2d=row.d2d,
+            dr=row.dr,
         )
     logger.debug(f"Built {len(assoc_df)} association generators")
 
@@ -113,5 +113,5 @@ def related_models_generator(
     Returns:
         An iterable generator object containing the yielded Association objects.
     """
-    for i, row in related_df.iterrows():
-        yield RelatedSource(**row.to_dict())
+    for row in related_df.itertuples(index=False):
+        yield RelatedSource(**row._asdict())
