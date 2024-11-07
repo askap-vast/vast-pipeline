@@ -8,6 +8,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+#### Changed
+
+#### Fixed
+
+#### Removed
+
+#### List of PRs
+
+
+## [1.2.0](https://github.com/askap-vast/vast-pipeline/releases/v1.2.0) (2024-11-07)
+
+#### Added
+
 - Added configuration options to specify number of workers and maximum partition size for parallel operations. [#777](https://github.com/askap-vast/vast-pipeline/pull/777)
 - Added vast_pipeline.utils.delete_run.py to enable deletion of pipeline runs using raw SQL [#775](https://github.com/askap-vast/vast-pipeline/pull/775)
 
