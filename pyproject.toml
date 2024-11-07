@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "vast-pipeline"
-version = "v1.1.1-dev"
+version = "v1.2.0"
 description = "Vast Pipeline code base for processing and analysing telescope images from the Square Kilometre Pathfinder"
 authors = ["The VAST Development Team"]
 license = "MIT"
