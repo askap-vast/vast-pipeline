@@ -2,7 +2,7 @@
 
 ### How should I acknowledge the VAST pipeline in my work?
 
-Please cite the Zenodo release: [10.5281/zenodo.13927015](https://doi.org/10.5281/zenodo.13927016).
+Please cite the Zenodo release: [10.5281/zenodo.13927015](https://doi.org/10.5281/zenodo.13927015).
 
 ### Can the VAST Pipeline be used with images from other telescopes?
 
