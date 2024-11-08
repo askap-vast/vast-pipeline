@@ -1,5 +1,5 @@
 # VAST Pipeline
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13927016.svg)](https://doi.org/10.5281/zenodo.13927016)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13927015.svg)](https://doi.org/10.5281/zenodo.13927015)
 [![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/)
 ![Tests](https://github.com/askap-vast/vast-pipeline/workflows/test-suite/badge.svg)
 [![documentation](https://img.shields.io/badge/docs-mkdocs%20material-blue.svg?style=flat)](https://vast-survey.org/vast-pipeline/)
