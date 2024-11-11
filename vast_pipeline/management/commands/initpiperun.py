@@ -64,6 +64,9 @@ def initialise_run(
 
     # copy default config into the pipeline run folder
     logger.info('copying default config in pipeline run folder')
+    if config:
+        if config['num_workers'] is None:
+            config['num_workers'] = 'null'
     template_kwargs = config if config else sett.PIPE_RUN_CONFIG_DEFAULTS
     template_str = make_config_template(
         PipelineConfig.TEMPLATE_PATH, run_path=run_path, **template_kwargs
