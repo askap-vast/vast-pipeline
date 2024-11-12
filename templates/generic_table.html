@@ -270,6 +270,32 @@
                 <input id="sourceAggPairMetricsMinVsInput" type="number" class="form-control bg-light border-0" value="{{ runconfig.source_aggregate_pair_metrics_min_abs_vs }}" min="0" step="0.01" aria-label="sourceAggPairMetricsMinVsInput" aria-describedby="basic-addon2" name="source_aggregate_pair_metrics_min_abs_vs">
               </div>
             </div>
+            <h6 class="font-weight-bold text-primary" style="margin-top: 1rem; margin-bottom: 1rem;">Processing Options</h6>
+            <p class="text-danger"><b>Warning! These are advanced options and you should only change them if you know what you are doing!</b></p>
+            <div class="row">
+              <div class="col">
+                <label class="col-form-label font-weight-bold text-gray-800" for="NumWorkers">Number of Dask Workers</label>
+                <a href="#" data-html="true" data-toggle="tooltip" data-placement="top" title=
+                    "The total number of workers available to Dask ('null' means use one less than all cores)."
+                ><i class="fas fa-info-circle"></i></a>
+                <input id="NumWorkers" type="number" class="form-control bg-light border-0" value="{{ runconfig.num_workers }}" min="0" step="1" aria-label="NumWorkers" aria-describedby="basic-addon2" name="num_workers">
+              </div>
+              <div class="col">
+                <label class="col-form-label font-weight-bold text-gray-800" for="NumWorkersIO">Number of IO Workers</label>
+                <a href="#" data-html="true" data-toggle="tooltip" data-placement="top" title=
+                    "The number of workers to use for disk IO operations (e.g. when reading images for forced extraction)"
+                ><i class="fas fa-info-circle"></i></a>
+                <input id="NumWorkersIO" type="number" class="form-control bg-light border-0" value="{{ runconfig.num_workers_io }}" min="0" step="1" aria-label="NumWorkersIO" aria-describedby="basic-addon2" name="num_workers_io">
+              </div>
+              <div class="col">
+                <label class="col-form-label font-weight-bold text-gray-800" for="MaxPartitionMB">Maximum Dask Partition Size (MB)</label>
+                <a href="#" data-toggle="tooltip" data-placement="top" title=
+                    "The default maximum size (in MB) to allow per partition of Dask DataFrames.
+                    Increasing this will create fewer partitions and will potentially increase the memory footprint of parallel tasks."
+                ><i class="fas fa-info-circle"></i></a>
+                <input id="MaxPartitionMB" type="number" class="form-control bg-light border-0" value="{{ runconfig.max_partition_mb }}" min="0" step="5" aria-label="MaxPartitionMB" aria-describedby="basic-addon2" name="max_partition_mb">
+              </div>
+            </div>
             <div class="row align-items-center" style="margin-top: 1rem;">
               <div class="col">
                 <div class="custom-control custom-switch">

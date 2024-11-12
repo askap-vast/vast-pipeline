@@ -12,12 +12,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fix processing config parameters not displaying in web interface [#782](https://github.com/askap-vast/vast-pipeline/pull/782)
 - Fix incorrect zenodo links [#780](https://github.com/askap-vast/vast-pipeline/pull/780)
 
 #### Removed
 
 #### List of PRs
 
+- [#782](https://github.com/askap-vast/vast-pipeline/pull/782): fix: Fix processing config parameters not displaying in web interface
 - [#780](https://github.com/askap-vast/vast-pipeline/pull/780): docs: Fix incorrect zenodo links
 
 ## [1.2.0](https://github.com/askap-vast/vast-pipeline/releases/v1.2.0) (2024-11-07)
