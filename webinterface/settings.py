@@ -1,4 +1,4 @@
-import os
+from Pathlib import Path
 import environ
 
 # Load the Django congig from the .env file
@@ -6,8 +6,7 @@ env = environ.Env()
 environ.Env.read_env()
 
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = Pathlib(__file__).resolve().parent[1]
 
 
 # Quick-start development settings - unsuitable for production
@@ -215,8 +214,8 @@ BASE_URL = env('BASE_URL', cast=str, default=None)
 STATIC_URL = env('STATIC_URL', cast=str, default='/static/')
 if BASE_URL:
     STATIC_URL = '/' + BASE_URL.strip('/') + '/' + STATIC_URL.strip('/') + '/'
-STATICFILES_DIRS = env('STATICFILES_DIRS', cast=list, default=[os.path.join(BASE_DIR, 'static')])
-STATIC_ROOT = env('STATIC_ROOT', cast=str, default=os.path.join(BASE_DIR, 'staticfiles'))
+STATICFILES_DIRS = env('STATICFILES_DIRS', cast=list, default=[BASE_DIR/'static'])
+STATIC_ROOT = env('STATIC_ROOT', cast=str, default=BASE_DIR/'staticfiles'))
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Logging
@@ -278,14 +277,14 @@ if not DEBUG:
 
 # PIPELINE settings
 # project default folder
-PIPELINE_WORKING_DIR = env('PIPELINE_WORKING_DIR', cast=str, default=os.path.join(BASE_DIR, 'pipeline-runs'))
+PIPELINE_WORKING_DIR = env('PIPELINE_WORKING_DIR', cast=str, default=BASE_DIR/'pipeline-runs')
 if '/' not in PIPELINE_WORKING_DIR:
-    PIPELINE_WORKING_DIR = os.path.join(BASE_DIR, PIPELINE_WORKING_DIR)
+    PIPELINE_WORKING_DIR = BASE_DIR/PIPELINE_WORKING_DIR
 
 # raw image data folder (containing FITS files, selavy, etc)
-RAW_IMAGE_DIR = env('RAW_IMAGE_DIR', cast=str, default=os.path.join(BASE_DIR, 'raw-images'))
+RAW_IMAGE_DIR = env('RAW_IMAGE_DIR', cast=str, default=BASE_DIR/'raw-images')
 if '/' not in RAW_IMAGE_DIR:
-    RAW_IMAGE_DIR = os.path.join(BASE_DIR, RAW_IMAGE_DIR)
+    RAW_IMAGE_DIR = BASE_DIR/RAW_IMAGE_DIR
 
 # extra user-supplied data folder
 # HOME_DATA_DIR is relative to HOME_DATA_ROOT if HOME_DATA_ROOT is not None
