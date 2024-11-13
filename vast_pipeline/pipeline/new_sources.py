@@ -236,7 +236,7 @@ def parallel_get_rms_measurements(
     }
 
     n_workers, n_partitions = calculate_workers_and_partitions(
-        df,
+        out,
         n_cpu=n_cpu,
         max_partition_mb=max_partition_mb
     )
