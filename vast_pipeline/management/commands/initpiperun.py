@@ -4,7 +4,7 @@ Initialises a pipeline run and creates the relevant directories.
 Usage: ./manage.py initpiperun pipeline_run_name
 """
 
-import os
+from Pathlib import Path
 import logging
 from typing import Any, Dict, Optional
 
@@ -53,14 +53,14 @@ def initialise_run(
         raise PipelineInitError(msg)
 
     # create the pipeline run folder
-    run_path = os.path.join(sett.PIPELINE_WORKING_DIR, run_name)
+    run_path = Path(PIPELINE_WORKING_DIR)/run_name
 
-    if os.path.exists(run_path):
+    if run_path.exists():
         msg = 'pipeline run path already present!'
         raise PipelineInitError(msg)
     else:
         logger.info('creating pipeline run folder')
-        os.mkdir(run_path)
+        run_path.mkdir()
 
     # copy default config into the pipeline run folder
     logger.info('copying default config in pipeline run folder')
@@ -71,7 +71,7 @@ def initialise_run(
     template_str = make_config_template(
         PipelineConfig.TEMPLATE_PATH, run_path=run_path, **template_kwargs
     )
-    with open(os.path.join(run_path, 'config.yaml'), 'w') as fp:
+    with open(run_path/'config.yaml', 'w') as fp:
         fp.write(template_str)
 
     # create entry in db
