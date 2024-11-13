@@ -1,5 +1,6 @@
-from Pathlib import Path
 import environ
+
+from Pathlib import Path
 
 # Load the Django congig from the .env file
 env = environ.Env()
