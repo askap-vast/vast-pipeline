@@ -422,7 +422,7 @@ def calculate_n_partitions(df, n_cpu, partition_size_mb=15):
 
     partition_size_mb = int(np.ceil(mem_usage_mb / n_partitions))
 
-    logger.debug("Using %d partions of %dMB", n_partitions, partition_size_mb)
+    logger.debug("Using %d partitions of %dMB", n_partitions, partition_size_mb)
 
     return n_partitions
 
