@@ -174,6 +174,8 @@ def extract_from_image(
         df['wavg_dec'].values,
         unit=(u.deg, u.deg)
     )
+    num_sources = len(df)
+    logger.debug(f"Will fit {num_sources} sources for {image}...")
     # load the image, background and noisemaps into memory
     # a dedicated function may seem unneccesary, but will be useful if we
     # split the load to a separate thread.
@@ -190,6 +192,13 @@ def extract_from_image(
         allow_nan=allow_nan,
         edge_buffer=edge_buffer
     )
+    
+    num_fits = np.sum(flux>0.0)
+    
+    logger.debug(f"{image}: Obtained {num_fits} measurements "
+                 f"({num_sources-num_fits} sources outside of image range)."
+                 )
+    
     df['flux_int'] = flux * 1.e3
     df['flux_int_err'] = flux_err * 1.e3
     df['chi_squared_fit'] = chisq
