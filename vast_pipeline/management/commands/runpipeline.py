@@ -4,15 +4,16 @@ The main command to launch the processing of a pipeline run.
 Usage: ./manage.py runpipeline pipeline_run_name
 """
 
-import os
 import glob
 import shutil
 import logging
 import traceback
 import warnings
 
+from Pathlib import Path
+
 from argparse import ArgumentParser
-from typing import Optional
+from typing import Optional, Union
 from django.db import transaction
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand, CommandError
@@ -37,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 
 def run_pipe(
-    name: str, path_name: Optional[str] = None,
+    name: str, run_path: Optional[Union[str,Path]] = None,
     run_dj_obj: Optional[Run] = None, cli: bool = True,
     debug: bool = False, user: Optional[User] = None, full_rerun: bool = False,
     prev_ui_status: str = 'END'
@@ -48,7 +49,7 @@ def run_pipe(
     Args:
         name:
             The name of the pipeline run (p_run.name).
-        path_name:
+        run_path:
             The path of the directory of the pipeline run (p_run.path),
             defaults to None.
         run_dj_obj:
@@ -75,7 +76,10 @@ def run_pipe(
         PipelineConfigError: Raised if an error is found in the pipeline
             config.
     '''
-    path = run_dj_obj.path if run_dj_obj else path_name
+    path = run_dj_obj.path if run_dj_obj else run_path
+    if type(path) is not Path:
+        path = Path(path)
+
     # set up logging for running pipeline from UI
     if not cli:
         # set up the logger for the UI job
@@ -83,7 +87,7 @@ def run_pipe(
         if debug:
             root_logger.setLevel(logging.DEBUG)
         f_handler = logging.FileHandler(
-            os.path.join(path, timeStamped('log.txt')),
+            path/timeStamped('log.txt'),
             mode='w'
         )
         f_handler.setFormatter(root_logger.handlers[0].formatter)
@@ -91,7 +95,7 @@ def run_pipe(
 
     pipeline = Pipeline(
         name=run_dj_obj.name if run_dj_obj else name,
-        config_path=os.path.join(path, 'config.yaml'),
+        config_path=path/'config.yaml',
         validate_config=False,  # delay validation
     )
 
@@ -100,6 +104,8 @@ def run_pipe(
         pipeline.name,
         pipeline.config["run"]["path"],
     )
+    
+    p_run_path = Path(p_run.path)
 
     # backup the last successful outputs.
     # if the run is being run again and the last status is END then the
@@ -108,9 +114,9 @@ def run_pipe(
     # with the config file below that causes an error.
     if flag_exist:
         if cli and p_run.status == 'END':
-            backup_parquets(p_run.path)
+            backup_parquets(p_run_path)
         elif not cli and prev_ui_status == 'END':
-            backup_parquets(p_run.path)
+            backup_parquets(p_run_path)
 
     # validate run configuration
     try:
@@ -145,17 +151,17 @@ def run_pipe(
         if not flag_exist:
             # check for and remove any present .parquet (and .arrow) files
             parquets = (
-                glob.glob(os.path.join(p_run.path, "*.parquet"))
+                p_run_path.glob("*.parquet")
                 # TODO Remove arrow when arrow files are no longer needed.
-                + glob.glob(os.path.join(p_run.path, "*.arrow"))
-                + glob.glob(os.path.join(p_run.path, "*.bak"))
+                + p_run_path.glob("*.arrow")
+                + p_run_path.glob("*.bak")
             )
             for parquet in parquets:
-                os.remove(parquet)
+                parquet.rm()
 
             # copy across config file at the start
             logger.debug("Copying temp config file.")
-            create_temp_config_file(p_run.path)
+            create_temp_config_file(p_run_path)
 
         else:
             # Check if the status is already running or queued. Exit if this is
@@ -170,16 +176,14 @@ def run_pipe(
 
             # copy across config file at the start
             logger.debug("Copying temp config file.")
-            create_temp_config_file(p_run.path)
+            create_temp_config_file(p_run_path)
 
             # Check if there is a previous run config and back up if so
-            if os.path.isfile(
-                os.path.join(p_run.path, 'config_prev.yaml')
-            ):
+            if (p_run_path / 'config_prev.yaml').is_file():
                 prev_config_exists = True
                 shutil.copy(
-                    os.path.join(p_run.path, 'config_prev.yaml'),
-                    os.path.join(p_run.path, 'config.yaml.bak')
+                    p_run_path/'config_prev.yaml'),
+                    p_run_path/'config.yaml.bak'
                 )
             logger.debug(f'config_prev.yaml exists: {prev_config_exists}')
 
@@ -206,9 +210,8 @@ def run_pipe(
 
             if initial_run is False:
                 parquets = (
-                    glob.glob(os.path.join(p_run.path, "*.parquet"))
-                    # TODO Remove arrow when arrow files are no longer needed.
-                    + glob.glob(os.path.join(p_run.path, "*.arrow"))
+                    p_run_path.glob("*.parquet")
+                    + p_run_path.glob("*.arrow")
                 )
 
                 if full_rerun:
@@ -220,20 +223,20 @@ def run_pipe(
                     logger.info(
                         'Cleaning up forced measurements before re-process data'
                     )
-                    remove_forced_meas(p_run.path)
+                    remove_forced_meas(p_run_path)
 
                     for parquet in parquets:
-                        os.remove(parquet)
+                        parquet.rm()
 
                     # remove bak files
-                    bak_files = glob.glob(os.path.join(p_run.path, "*.bak"))
+                    bak_files = p_run_path.glob("*.bak")
                     if bak_files:
                         for bf in bak_files:
-                            os.remove(bf)
+                            bf.rm()
 
                     # remove previous config if it exists
                     if prev_config_exists:
-                        os.remove(os.path.join(p_run.path, 'config_prev.yaml'))
+                        (p_run_path/'config_prev.yaml').rm()
 
                     # reset epoch_based flag
                     with transaction.atomic():
@@ -251,7 +254,7 @@ def run_pipe(
                             " that a new or complete re-run should be performed"
                             " instead. Performing no actions. Exiting."
                         )
-                        os.remove(os.path.join(p_run.path, 'config_temp.yaml'))
+                        (p_run_path/'config_temp.yaml').rm()
                         pipeline.set_status(p_run, 'END')
 
                         return True
@@ -262,7 +265,7 @@ def run_pipe(
                             " previous run. A complete re-run is required if"
                             " changing to epoch based mode or vice versa."
                         )
-                        os.remove(os.path.join(p_run.path, 'config_temp.yaml'))
+                        (p_run_path/'config_temp.yaml').rm()
                         pipeline.set_status(p_run, 'END')
                         return True
 
@@ -272,8 +275,7 @@ def run_pipe(
                         'images', 'associations', 'sources', 'relations',
                         'measurement_pairs'
                     ]:
-                        pipeline.previous_parquets[i] = os.path.join(
-                            p_run.path, f'{i}.parquet.bak')
+                        pipeline.previous_parquets[i] = p_run_path/f'{i}.parquet.bak'
     except Exception as e:
         logger.error('Unexpected error occurred in pre-run steps!')
         pipeline.set_status(p_run, 'ERR')
@@ -353,9 +355,9 @@ def run_pipe(
     # copy across config file now that it is successful
     logger.debug("Copying and cleaning temp config file.")
     shutil.copyfile(
-        os.path.join(p_run.path, 'config_temp.yaml'),
-        os.path.join(p_run.path, 'config_prev.yaml'))
-    os.remove(os.path.join(p_run.path, 'config_temp.yaml'))
+        p_run_path/'config_temp.yaml',
+        p_run_path/'config_prev.yaml'))
+    (p_run_path/'config_temp.yaml').rm()
 
     # set the pipeline status as completed
     pipeline.set_status(p_run, 'END')
@@ -420,7 +422,7 @@ class Command(BaseCommand):
         # configure logging
         root_logger = logging.getLogger('')
         f_handler = logging.FileHandler(
-            os.path.join(run_folder, timeStamped('log.txt')),
+            run_folder/timeStamped('log.txt')),
             mode='w'
         )
         f_handler.setFormatter(root_logger.handlers[0].formatter)
@@ -432,18 +434,14 @@ class Command(BaseCommand):
             # set the traceback on
             options['traceback'] = True
 
-        # p_run_name = p_run_path
-        # remove ending / if present
-        if p_run_name[-1] == '/':
-            p_run_name = p_run_name[:-1]
         # grab only the name from the path
-        p_run_name = p_run_name.split(os.path.sep)[-1]
+        p_run_name = p_run_name.name
 
         debug_flag = True if options['verbosity'] > 1 else False
 
         _ = run_pipe(
             p_run_name,
-            path_name=run_folder,
+            run_path=run_folder,
             debug=debug_flag,
             full_rerun=options["full_rerun"],
         )

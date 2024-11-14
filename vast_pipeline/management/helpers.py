@@ -2,17 +2,17 @@
 Helper functions for the commands.
 """
 
-import os
 import logging
 
 from typing import Tuple
 from django.conf import settings as sett
+from pathlib import Path
 
 
 logger = logging.getLogger(__name__)
 
 
-def get_p_run_name(name: str, return_folder: bool = False) -> Tuple[str, str]:
+def get_p_run_name(name: str, return_folder: bool = False) -> Tuple[str, Path]:
     """
     Determines the name of the pipeline run. Can also return the output folder
     if selected.
@@ -26,10 +26,11 @@ def get_p_run_name(name: str, return_folder: bool = False) -> Tuple[str, str]:
         The run directory (if `return_folder` is set to `True`).
     """
     if '/' in name:
-        folder = os.path.realpath(name)
-        run_name = os.path.basename(folder)
+        folder = Path(name).resolve()
+        run_name = folder.parent[0]
         return (run_name, folder) if return_folder else run_name
 
-    folder = os.path.join(os.path.realpath(sett.PIPELINE_WORKING_DIR), name)
+    working_dir = Path(sett.PIPELINE_WORKING_DIR).resolve()
+    folder = working_dir/name
 
     return (name, folder) if return_folder else name
