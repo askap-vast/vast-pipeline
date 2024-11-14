@@ -12,7 +12,7 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 
-def get_p_run_name(name: str, return_folder: bool = False) -> Tuple[str, str]:
+def get_p_run_name(name: str, return_folder: bool = False) -> Tuple[str, Path]:
     """
     Determines the name of the pipeline run. Can also return the output folder
     if selected.
