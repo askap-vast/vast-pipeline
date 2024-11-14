@@ -1,8 +1,8 @@
-import os
 import logging
 import shutil
 
 from argparse import ArgumentParser
+from pathlib import Path
 from glob import glob
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
@@ -107,6 +107,7 @@ class Command(BaseCommand):
             except Run.DoesNotExist:
                 raise CommandError(f'Pipeline run {p_run_name} does not exist')
 
+            p_run_path = Path(p_run.path)
             logger.info("Deleting pipeline run '%s' from database", p_run_name)
             with transaction.atomic():
                 p_run.status = 'DEL'
@@ -118,7 +119,7 @@ class Command(BaseCommand):
             logger.info("Time to delete run from database: %.2f sec", t)
 
             # remove forced measurements in db if presents
-            forced_parquets = remove_forced_meas(p_run.path)
+            forced_parquets = remove_forced_meas(p_run_path)
             t = timer.reset()
             logger.info("Time to delete forced measurements: %.2f sec", t)
 
@@ -126,8 +127,8 @@ class Command(BaseCommand):
             if not options['keep_parquet'] and not options['remove_all']:
                 logger.info('Deleting pipeline "%s" parquets', p_run_name)
                 parquets = (
-                    glob(os.path.join(p_run.path, '*.parquet'))
-                    + glob(os.path.join(p_run.path, '*.arrow'))
+                    p_run_path.glob('*.parquet')
+                    + p_run_path.glob('*.arrow')
                 )
                 for parquet in parquets:
                     try:
@@ -143,7 +144,7 @@ class Command(BaseCommand):
             if options['remove_all']:
                 logger.info('Deleting pipeline folder')
                 try:
-                    shutil.rmtree(p_run.path)
+                    shutil.rmtree(p_run_path)
                 except Exception as e:
                     self.stdout.write(self.style.WARNING(
                         f'Issues in removing run folder: {e}'
