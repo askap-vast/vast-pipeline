@@ -20,6 +20,7 @@ from vast_pipeline.pipeline.loading import make_upload_measurements
 from forced_phot import ForcedPhot
 from ..utils.utils import StopWatch, calculate_workers_and_partitions
 from vast_pipeline.image.utils import open_fits
+from vast_pipeline.pipeline.utils import log_total_memory_usage
 
 
 logger = logging.getLogger(__name__)
@@ -184,14 +185,17 @@ def extract_from_image(
                                            noise,
                                            memmap=False
                                            )
-    FP = ForcedPhot(*forcedphot_input)
-
+    FP_timer = StopWatch()
+    FP = ForcedPhot(*forcedphot_input, use_numba=True)
+    logger.debug(f"{image} - Time to init FP: {FP_timer.reset()} s")
     flux, flux_err, chisq, DOF, cluster_id = FP.measure(
         P_islands,
         cluster_threshold=cluster_threshold,
         allow_nan=allow_nan,
-        edge_buffer=edge_buffer
+        edge_buffer=edge_buffer,
+        use_clusters=False,
     )
+    logger.debug(f"{image} - Time to measure FP: {FP_timer.reset()} s")
     
     num_fits = np.sum(flux>0.0)
     
@@ -203,7 +207,7 @@ def extract_from_image(
     df['flux_int_err'] = flux_err * 1.e3
     df['chi_squared_fit'] = chisq
 
-    logger.debug(f"Time to measure FP for {image}: {timer.reset()}s")
+    logger.debug(f"Time to extract forced fits for {image}: {timer.reset()}s")
 
     return {'df': df, 'image': df['image_name'].iloc[0]}
 
@@ -403,6 +407,8 @@ def parallel_extraction(
     )
     del col_to_drop
 
+    logger.debug("Starting image extraction...")
+    extract_timer = StopWatch()
     bags = db.from_sequence(list_to_map, npartitions=len(list_to_map))
     forced_dfs = (
         bags.map(lambda x: extract_from_image(
@@ -413,13 +419,23 @@ def parallel_extraction(
         ))
         .compute(num_workers=n_workers, scheduler='processes')
     )
+    logger.debug(f"Completed image extraction in {extract_timer.reset()} s")
+    
     del bags
+    log_total_memory_usage()
+    
     # create intermediates dfs combining the mapping data and the forced
     # extracted data from the images
     intermediate_df = list(map(
         lambda x: {**(mapping.loc[x['image'], :].to_dict()), **x},
         forced_dfs
     ))
+    
+    logger.debug(f"Created {len(intermediate_df)} intermediate dfs")
+    log_total_memory_usage()
+    
+    #temp write to file for testing purposes
+    #intermediate_df[0].to_parquet('example_intermediate_df.parquet')
 
     # compute the rest of the columns
     # NOTE: Avoid using dask bags to parallelise the mapping
@@ -427,10 +443,16 @@ def parallel_extraction(
     # dask bags make a copy of the output before collecting the results.
     # There is also a minimal speed penalty for doing this step without
     # parallelism.
+    extract_timer.reset()
     intermediate_df = list(map(
         lambda x: finalise_forced_dfs(**x),
         intermediate_df
         ))
+    logger.debug(f"Populated intermediate df in {extract_timer.reset()} s")
+    log_total_memory_usage()
+    
+    intermediate_df[0].to_parquet('example_intermediate_df_populated.parquet')
+    
     df_out = (
         pd.concat(intermediate_df, axis=0, sort=False)
         .rename(
@@ -439,6 +461,9 @@ def parallel_extraction(
             }
         )
     )
+
+    logger.debug(f"Successfully concatenated intermediate dfs")
+    log_total_memory_usage()
 
     return df_out
 
