@@ -376,7 +376,7 @@ def final_operations(
         logger.debug(
             f'Add mode: #{associations_df_upload.shape[0]} associations to upload.')
     else:
-        associations_df_upload = associations_df_df
+        associations_df_upload = associations_df
 
     # upload associations into DB
     make_upload_associations(associations_df_upload)
