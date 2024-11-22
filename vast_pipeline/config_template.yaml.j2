@@ -90,8 +90,8 @@ source_monitoring:
   # image edge
   edge_buffer_scale: {{ monitor_edge_buffer_scale }}
 
-  # Passed to forced-phot as `cluster_threshold`. See docs for details. If unsure, leave
-  # as default.
+  # Passed to forced-phot as `cluster_threshold`. To turn off clustering set to 0.
+  # See docs for details. If unsure, leave as default.
   cluster_threshold: {{ monitor_cluster_threshold }}
 
   # Attempt forced-phot fit even if there are NaN's present in the rms or background maps.
