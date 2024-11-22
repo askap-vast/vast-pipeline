@@ -8,8 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added option to disable forced photometry clustering [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
+- Added additional logging to forced extraction step [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
+
 #### Changed
 
+- Upgrade forced_phot dependency to v0.2 and force `use_numba=True` [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
+- Remove bad forced photometry fits immediately after calculation, rather than after they've all been compiled into a single dataframe [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
 #### Fixed
 
 - Fix processing config parameters not displaying in web interface [#782](https://github.com/askap-vast/vast-pipeline/pull/782)
