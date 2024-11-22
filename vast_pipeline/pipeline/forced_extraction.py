@@ -22,6 +22,12 @@ from ..utils.utils import StopWatch, calculate_workers_and_partitions
 from vast_pipeline.image.utils import open_fits
 from vast_pipeline.pipeline.utils import log_total_memory_usage
 
+try:
+    import numba
+    use_numba=True
+except:
+    use_numba=False
+
 
 logger = logging.getLogger(__name__)
 
@@ -188,7 +194,7 @@ def extract_from_image(
                                            memmap=False
                                            )
     FP_timer = StopWatch()
-    FP = ForcedPhot(*forcedphot_input)
+    FP = ForcedPhot(*forcedphot_input, use_numba=use_numba)
     logger.debug(f"{image} - Time to init FP: {FP_timer.reset()} s")
 
     # This should ultimately be removed in v2, but for now I am keeping the
