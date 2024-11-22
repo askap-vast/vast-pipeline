@@ -10,8 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Optimise associations upload by dropping unnecessary columns prior to a large dataframe merge [#787](https://github.com/askap-vast/vast-pipeline/pull/787)
+
 #### Fixed
 
+- Renamed variable in pipeline.finalise to better reflect what the dataframe represents (sources_df -> associations_df) [#787](https://github.com/askap-vast/vast-pipeline/pull/787)
+- Fixed typo in variable name ("assoications") [#787](https://github.com/askap-vast/vast-pipeline/pull/787)
 - Fix processing config parameters not displaying in web interface [#782](https://github.com/askap-vast/vast-pipeline/pull/782)
 - Fix incorrect zenodo links [#780](https://github.com/askap-vast/vast-pipeline/pull/780)
 
@@ -19,6 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#787](https://github.com/askap-vast/vast-pipeline/pull/787): fix: Optimise associations merge and minor variable name updates
 - [#782](https://github.com/askap-vast/vast-pipeline/pull/782): fix: Fix processing config parameters not displaying in web interface
 - [#780](https://github.com/askap-vast/vast-pipeline/pull/780): docs: Fix incorrect zenodo links
 
