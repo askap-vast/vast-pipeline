@@ -332,46 +332,64 @@ def final_operations(
         .to_parquet(os.path.join(p_run.path, 'sources.parquet'))
     )
 
-    # update measurements with sources to get associations
-    sources_df = (
-        sources_df.drop('related', axis=1)
-        .merge(srcs_df.rename(columns={'id': 'source_id'}), on='source')
-    )
+    nr_sources = srcs_df["id"].count()
+    nr_new_sources = srcs_df['new'].sum()
 
     mem_usage = get_df_memory_usage(sources_df)
-    logger.debug(f"sources_df memory after srcs_df merge: {mem_usage}MB")
+    logger.debug(f"sources_df memory usage pre-drop: {mem_usage}MB")
+    mem_usage = get_df_memory_usage(srcs_df)
+    logger.debug(f"srcs_df memory usage pre-drop: {mem_usage}MB")
+    log_total_memory_usage()
+
+    sources_df = sources_df[['id', 'source', 'd2d', 'dr']]
+    srcs_df = srcs_df[['id']].rename(columns={'id': 'source_id'})
+
+    mem_usage = get_df_memory_usage(sources_df)
+    logger.debug(f"sources_df memory usage post-drop: {mem_usage}MB")
+    mem_usage = get_df_memory_usage(srcs_df)
+    logger.debug(f"srcs_df memory usage post-drop: {mem_usage}MB")
+    log_total_memory_usage()
+
+    # update measurements with sources to get associations
+    associations_df = (
+        sources_df
+        .merge(srcs_df, on='source')
+    )
+
+    mem_usage = get_df_memory_usage(associations_df)
+    logger.debug(f"associations_df memory after merge: {mem_usage}MB")
     log_total_memory_usage()
 
     if add_mode:
         # Load old associations so the already uploaded ones can be removed
-        old_assoications = (
+        old_associations = (
             pd.read_parquet(previous_parquets['associations'])
             .rename(columns={'meas_id': 'id'})
         )
-        sources_df_upload = pd.concat(
-            [sources_df, old_assoications],
+        associations_df_upload = pd.concat(
+            [associations_df, old_associations],
             ignore_index=True
         )
-        sources_df_upload = sources_df_upload.drop_duplicates(
+        associations_df_upload = associations_df_upload.drop_duplicates(
             ['source_id', 'id', 'd2d', 'dr'], keep=False
         )
         logger.debug(
-            f'Add mode: #{sources_df_upload.shape[0]} associations to upload.')
+            f'Add mode: #{associations_df_upload.shape[0]} associations to upload.')
     else:
-        sources_df_upload = sources_df
+        associations_df_upload = associations_df
 
     # upload associations into DB
-    make_upload_associations(sources_df_upload)
+    make_upload_associations(associations_df_upload)
 
     # write associations to parquet file
-    sources_df[['source_id', 'id', 'd2d', 'dr']]. \
+    associations_df[['source_id', 'id', 'd2d', 'dr']]. \
         rename(columns={'id': 'meas_id'}). \
             to_parquet(os.path.join(p_run.path, 'associations.parquet'))
 
     if calculate_pairs:
         # get the Source object primary keys for the measurement pairs
         measurement_pairs_df = measurement_pairs_df.join(
-            srcs_df.id.rename("source_id"), on="source"
+            srcs_df.source_id, on="source"
         )
 
         # optimize measurement pair DataFrame and save to parquet file
@@ -389,9 +407,6 @@ def final_operations(
     logger.info(
         "Total final operations time: %.2f seconds",
         timer.reset_init())
-
-    nr_sources = srcs_df["id"].count()
-    nr_new_sources = srcs_df['new'].sum()
 
     # calculate and return total number of extracted sources
     return (nr_sources, nr_new_sources)
