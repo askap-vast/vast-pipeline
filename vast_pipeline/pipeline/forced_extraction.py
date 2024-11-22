@@ -22,6 +22,7 @@ from ..utils.utils import StopWatch, calculate_workers_and_partitions
 from vast_pipeline.image.utils import open_fits
 from vast_pipeline.pipeline.utils import log_total_memory_usage
 
+# This conditional dependency nonsense can be scrapped in v2 when we dump python 3.8 support
 try:
     import numba
     use_numba=True
