@@ -431,7 +431,7 @@ where $f_{peak}$ is the initial detection peak flux measurement of the source in
 Float. Monitor forced extractions are not performed when the location is within 3 beamwidths of the image edge. This parameter scales this distance by the value set, which can help avoid errors when the 3 beamwidth limit is insufficient to avoid extraction failures. Defaults to 1.2.
 
 **`source_monitoring.cluster_threshold`**
-Float. A argument directly passed to the [forced photometry package](https://github.com/askap-vast/forced_phot/) used by the pipeline. It defines the multiple of `major_axes` to use for identifying clusters. Defaults to 3.0.
+Float. A argument directly passed to the [forced photometry package](https://github.com/askap-vast/forced_phot/) used by the pipeline. It defines the multiple of `major_axes` to use for identifying clusters. Defaults to 3.0. To turn off clustering, set it to 0.
 
 **`source_monitoring.allow_nan`**
 Boolean. A argument directly passed to the [forced photometry package](https://github.com/askap-vast/forced_phot/) used by the pipeline. It defines whether `NaN` values are allowed to be present in the extraction area in the rms or background maps. `True` would mean that `NaN` values are allowed. Defaults to False.
