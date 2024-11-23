@@ -1,4 +1,4 @@
-<!doctype html><html lang=en class=no-js> <head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="VAST Pipeline platform to enable processing of astronomical sources extracted from the ASKAP telescope for radio transient detection science"><meta name=author content="VAST Development Team"><link href=https://vast-survey.org/vast-pipeline/dev/reference/pipeline/forced_extraction/ rel=canonical><link href=../finalise/ rel=prev><link href=../loading/ rel=next><link rel=icon href=../../../img/favicon.png><meta name=generator content="mkdocs-1.6.1, mkdocs-material-9.5.43"><title>forced_extraction.py - VAST Pipeline</title><link rel=stylesheet href=../../../assets/stylesheets/main.0253249f.min.css><link rel=stylesheet href=../../../assets/stylesheets/palette.06af60db.min.css><link rel=stylesheet href=../../../css/lightgallery.min.css><script src=../../../js/lightgallery.min.js></script><script src=../../../js/lg-zoom.js></script><link rel=stylesheet href=../../../assets/_mkdocstrings.css><link rel=stylesheet href=../../../theme/css/extra.css><script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script><meta property=og:type content=website><meta property=og:title content="VAST Pipeline - forced_extraction.py"><meta property=og:description content="VAST Pipeline platform to enable processing of astronomical sources extracted from the ASKAP telescope for radio transient detection science"><meta content=https://vast-survey.org/vast-pipeline/dev/reference/pipeline/forced_extraction/ property=og:url></head> <body dir=ltr data-md-color-scheme=default data-md-color-primary=indigo data-md-color-accent=indigo> <input class=md-toggle data-md-toggle=drawer type=checkbox id=__drawer autocomplete=off> <input class=md-toggle data-md-toggle=search type=checkbox id=__search autocomplete=off> <label class=md-overlay for=__drawer></label> <div data-md-component=skip> <a href=#vast_pipeline.pipeline.forced_extraction class=md-skip> Skip to content </a> </div> <div data-md-component=announce> <aside class=md-banner> <div class="md-banner__inner md-grid md-typeset"> <style>
+<!doctype html><html lang=en class=no-js> <head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="VAST Pipeline platform to enable processing of astronomical sources extracted from the ASKAP telescope for radio transient detection science"><meta name=author content="VAST Development Team"><link href=https://vast-survey.org/vast-pipeline/dev/reference/pipeline/forced_extraction/ rel=canonical><link href=../finalise/ rel=prev><link href=../loading/ rel=next><link rel=icon href=../../../img/favicon.png><meta name=generator content="mkdocs-1.6.1, mkdocs-material-9.5.45"><title>forced_extraction.py - VAST Pipeline</title><link rel=stylesheet href=../../../assets/stylesheets/main.0253249f.min.css><link rel=stylesheet href=../../../assets/stylesheets/palette.06af60db.min.css><link rel=stylesheet href=../../../css/lightgallery.min.css><script src=../../../js/lightgallery.min.js></script><script src=../../../js/lg-zoom.js></script><link rel=stylesheet href=../../../assets/_mkdocstrings.css><link rel=stylesheet href=../../../theme/css/extra.css><script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script><meta property=og:type content=website><meta property=og:title content="VAST Pipeline - forced_extraction.py"><meta property=og:description content="VAST Pipeline platform to enable processing of astronomical sources extracted from the ASKAP telescope for radio transient detection science"><meta content=https://vast-survey.org/vast-pipeline/dev/reference/pipeline/forced_extraction/ property=og:url></head> <body dir=ltr data-md-color-scheme=default data-md-color-primary=indigo data-md-color-accent=indigo> <input class=md-toggle data-md-toggle=drawer type=checkbox id=__drawer autocomplete=off> <input class=md-toggle data-md-toggle=search type=checkbox id=__search autocomplete=off> <label class=md-overlay for=__drawer></label> <div data-md-component=skip> <a href=#vast_pipeline.pipeline.forced_extraction class=md-skip> Skip to content </a> </div> <div data-md-component=announce> <aside class=md-banner> <div class="md-banner__inner md-grid md-typeset"> <style>
       .md-banner a,
       .md-banner a:focus,
       .md-banner a:hover{color:currentColor}.md-banner
@@ -70,7 +70,41 @@
 <span class=normal>196</span>
 <span class=normal>197</span>
 <span class=normal>198</span>
-<span class=normal>199</span></pre></div></td><td class=code><div><pre><span></span><code><span class=k>def</span> <span class=nf>extract_from_image</span><span class=p>(</span>
+<span class=normal>199</span>
+<span class=normal>200</span>
+<span class=normal>201</span>
+<span class=normal>202</span>
+<span class=normal>203</span>
+<span class=normal>204</span>
+<span class=normal>205</span>
+<span class=normal>206</span>
+<span class=normal>207</span>
+<span class=normal>208</span>
+<span class=normal>209</span>
+<span class=normal>210</span>
+<span class=normal>211</span>
+<span class=normal>212</span>
+<span class=normal>213</span>
+<span class=normal>214</span>
+<span class=normal>215</span>
+<span class=normal>216</span>
+<span class=normal>217</span>
+<span class=normal>218</span>
+<span class=normal>219</span>
+<span class=normal>220</span>
+<span class=normal>221</span>
+<span class=normal>222</span>
+<span class=normal>223</span>
+<span class=normal>224</span>
+<span class=normal>225</span>
+<span class=normal>226</span>
+<span class=normal>227</span>
+<span class=normal>228</span>
+<span class=normal>229</span>
+<span class=normal>230</span>
+<span class=normal>231</span>
+<span class=normal>232</span>
+<span class=normal>233</span></pre></div></td><td class=code><div><pre><span></span><code><span class=k>def</span> <span class=nf>extract_from_image</span><span class=p>(</span>
     <span class=n>df</span><span class=p>:</span> <span class=n>pd</span><span class=o>.</span><span class=n>DataFrame</span><span class=p>,</span>
     <span class=n>image</span><span class=p>:</span> <span class=nb>str</span><span class=p>,</span>
     <span class=n>background</span><span class=p>:</span> <span class=nb>str</span><span class=p>,</span>
@@ -115,6 +149,10 @@
         <span class=n>df</span><span class=p>[</span><span class=s1>&#39;wavg_dec&#39;</span><span class=p>]</span><span class=o>.</span><span class=n>values</span><span class=p>,</span>
         <span class=n>unit</span><span class=o>=</span><span class=p>(</span><span class=n>u</span><span class=o>.</span><span class=n>deg</span><span class=p>,</span> <span class=n>u</span><span class=o>.</span><span class=n>deg</span><span class=p>)</span>
     <span class=p>)</span>
+
+    <span class=n>num_sources</span> <span class=o>=</span> <span class=nb>len</span><span class=p>(</span><span class=n>df</span><span class=p>)</span>
+    <span class=n>logger</span><span class=o>.</span><span class=n>debug</span><span class=p>(</span><span class=sa>f</span><span class=s2>&quot;Will fit </span><span class=si>{</span><span class=n>num_sources</span><span class=si>}</span><span class=s2> sources for </span><span class=si>{</span><span class=n>image</span><span class=si>}</span><span class=s2>...&quot;</span><span class=p>)</span>
+
     <span class=c1># load the image, background and noisemaps into memory</span>
     <span class=c1># a dedicated function may seem unneccesary, but will be useful if we</span>
     <span class=c1># split the load to a separate thread.</span>
@@ -123,56 +161,52 @@
                                            <span class=n>noise</span><span class=p>,</span>
                                            <span class=n>memmap</span><span class=o>=</span><span class=kc>False</span>
                                            <span class=p>)</span>
-    <span class=n>FP</span> <span class=o>=</span> <span class=n>ForcedPhot</span><span class=p>(</span><span class=o>*</span><span class=n>forcedphot_input</span><span class=p>)</span>
+    <span class=n>FP_timer</span> <span class=o>=</span> <span class=n>StopWatch</span><span class=p>()</span>
+    <span class=n>FP</span> <span class=o>=</span> <span class=n>ForcedPhot</span><span class=p>(</span><span class=o>*</span><span class=n>forcedphot_input</span><span class=p>,</span> <span class=n>use_numba</span><span class=o>=</span><span class=kc>True</span><span class=p>)</span>
+    <span class=n>logger</span><span class=o>.</span><span class=n>debug</span><span class=p>(</span><span class=sa>f</span><span class=s2>&quot;</span><span class=si>{</span><span class=n>image</span><span class=si>}</span><span class=s2> - Time to init FP: </span><span class=si>{</span><span class=n>FP_timer</span><span class=o>.</span><span class=n>reset</span><span class=p>()</span><span class=si>}</span><span class=s2> s&quot;</span><span class=p>)</span>
+
+    <span class=c1># This should ultimately be removed in v2, but for now I am keeping the</span>
+    <span class=c1># option to use clustering in order to keep things backward-compatible.</span>
+    <span class=n>use_clusters</span><span class=o>=</span><span class=kc>True</span>
+    <span class=k>if</span> <span class=n>cluster_threshold</span> <span class=o>==</span> <span class=mi>0</span><span class=p>:</span>
+        <span class=n>use_clusters</span><span class=o>=</span><span class=kc>False</span>
 
     <span class=n>flux</span><span class=p>,</span> <span class=n>flux_err</span><span class=p>,</span> <span class=n>chisq</span><span class=p>,</span> <span class=n>DOF</span><span class=p>,</span> <span class=n>cluster_id</span> <span class=o>=</span> <span class=n>FP</span><span class=o>.</span><span class=n>measure</span><span class=p>(</span>
         <span class=n>P_islands</span><span class=p>,</span>
         <span class=n>cluster_threshold</span><span class=o>=</span><span class=n>cluster_threshold</span><span class=p>,</span>
         <span class=n>allow_nan</span><span class=o>=</span><span class=n>allow_nan</span><span class=p>,</span>
-        <span class=n>edge_buffer</span><span class=o>=</span><span class=n>edge_buffer</span>
+        <span class=n>edge_buffer</span><span class=o>=</span><span class=n>edge_buffer</span><span class=p>,</span>
+        <span class=n>use_clusters</span><span class=o>=</span><span class=n>use_clusters</span>
     <span class=p>)</span>
+    <span class=n>logger</span><span class=o>.</span><span class=n>debug</span><span class=p>(</span><span class=sa>f</span><span class=s2>&quot;</span><span class=si>{</span><span class=n>image</span><span class=si>}</span><span class=s2> - Time to measure FP: </span><span class=si>{</span><span class=n>timer</span><span class=o>.</span><span class=n>reset</span><span class=p>()</span><span class=si>}</span><span class=s2>s&quot;</span><span class=p>)</span>
+
+    <span class=n>num_fits</span> <span class=o>=</span> <span class=n>np</span><span class=o>.</span><span class=n>sum</span><span class=p>(</span><span class=n>flux</span><span class=o>&gt;</span><span class=mf>0.0</span><span class=p>)</span>
+
+    <span class=n>logger</span><span class=o>.</span><span class=n>debug</span><span class=p>(</span><span class=sa>f</span><span class=s2>&quot;</span><span class=si>{</span><span class=n>image</span><span class=si>}</span><span class=s2>: Obtained </span><span class=si>{</span><span class=n>num_fits</span><span class=si>}</span><span class=s2> measurements &quot;</span>
+                 <span class=sa>f</span><span class=s2>&quot;(</span><span class=si>{</span><span class=n>num_sources</span><span class=o>-</span><span class=n>num_fits</span><span class=si>}</span><span class=s2> sources outside of image range).&quot;</span>
+                 <span class=p>)</span>
+
     <span class=n>df</span><span class=p>[</span><span class=s1>&#39;flux_int&#39;</span><span class=p>]</span> <span class=o>=</span> <span class=n>flux</span> <span class=o>*</span> <span class=mf>1.e3</span>
     <span class=n>df</span><span class=p>[</span><span class=s1>&#39;flux_int_err&#39;</span><span class=p>]</span> <span class=o>=</span> <span class=n>flux_err</span> <span class=o>*</span> <span class=mf>1.e3</span>
     <span class=n>df</span><span class=p>[</span><span class=s1>&#39;chi_squared_fit&#39;</span><span class=p>]</span> <span class=o>=</span> <span class=n>chisq</span>
 
-    <span class=n>logger</span><span class=o>.</span><span class=n>debug</span><span class=p>(</span><span class=sa>f</span><span class=s2>&quot;Time to measure FP for </span><span class=si>{</span><span class=n>image</span><span class=si>}</span><span class=s2>: </span><span class=si>{</span><span class=n>timer</span><span class=o>.</span><span class=n>reset</span><span class=p>()</span><span class=si>}</span><span class=s2>s&quot;</span><span class=p>)</span>
+    <span class=n>values</span> <span class=o>=</span> <span class=p>{</span>
+        <span class=s1>&#39;flux_int&#39;</span><span class=p>:</span> <span class=mi>0</span><span class=p>,</span>
+        <span class=s1>&#39;flux_int_err&#39;</span><span class=p>:</span> <span class=mi>0</span>
+    <span class=p>}</span>
+    <span class=n>df</span> <span class=o>=</span> <span class=n>df</span><span class=o>.</span><span class=n>fillna</span><span class=p>(</span><span class=n>value</span><span class=o>=</span><span class=n>values</span><span class=p>)</span>
+
+    <span class=n>df</span> <span class=o>=</span> <span class=n>df</span><span class=p>[</span>
+        <span class=p>(</span><span class=n>df</span><span class=p>[</span><span class=s1>&#39;flux_int&#39;</span><span class=p>]</span> <span class=o>!=</span> <span class=mi>0</span><span class=p>)</span>
+        <span class=o>&amp;</span> <span class=p>(</span><span class=n>df</span><span class=p>[</span><span class=s1>&#39;flux_int_err&#39;</span><span class=p>]</span> <span class=o>!=</span> <span class=mi>0</span><span class=p>)</span>
+        <span class=o>&amp;</span> <span class=p>(</span><span class=n>df</span><span class=p>[</span><span class=s1>&#39;chi_squared_fit&#39;</span><span class=p>]</span> <span class=o>!=</span> <span class=n>np</span><span class=o>.</span><span class=n>inf</span><span class=p>)</span>
+        <span class=o>&amp;</span> <span class=p>(</span><span class=n>df</span><span class=p>[</span><span class=s1>&#39;chi_squared_fit&#39;</span><span class=p>]</span> <span class=o>!=</span> <span class=n>np</span><span class=o>.</span><span class=n>nan</span><span class=p>)</span>
+    <span class=p>]</span>
+
+    <span class=n>logger</span><span class=o>.</span><span class=n>debug</span><span class=p>(</span><span class=sa>f</span><span class=s2>&quot;</span><span class=si>{</span><span class=n>image</span><span class=si>}</span><span class=s2> - Total extraction time: </span><span class=si>{</span><span class=n>timer</span><span class=o>.</span><span class=n>reset</span><span class=p>()</span><span class=si>}</span><span class=s2>s&quot;</span><span class=p>)</span>
 
     <span class=k>return</span> <span class=p>{</span><span class=s1>&#39;df&#39;</span><span class=p>:</span> <span class=n>df</span><span class=p>,</span> <span class=s1>&#39;image&#39;</span><span class=p>:</span> <span class=n>df</span><span class=p>[</span><span class=s1>&#39;image_name&#39;</span><span class=p>]</span><span class=o>.</span><span class=n>iloc</span><span class=p>[</span><span class=mi>0</span><span class=p>]}</span>
-</code></pre></div></td></tr></table></div> </details> </div> </div> <div class="doc doc-object doc-function"> <h2 id=vast_pipeline.pipeline.forced_extraction.finalise_forced_dfs class="doc doc-heading"> <code class="highlight language-python"><span class=n>finalise_forced_dfs</span><span class=p>(</span><span class=n>df</span><span class=p>,</span> <span class=n>prefix</span><span class=p>,</span> <span class=n>max_id</span><span class=p>,</span> <span class=n>beam_bmaj</span><span class=p>,</span> <span class=n>beam_bmin</span><span class=p>,</span> <span class=n>beam_bpa</span><span class=p>,</span> <span class=nb>id</span><span class=p>,</span> <span class=n>datetime</span><span class=p>,</span> <span class=n>image</span><span class=p>)</span></code> <a href=#vast_pipeline.pipeline.forced_extraction.finalise_forced_dfs class=headerlink title="Permanent link">&para;</a></h2> <div class="doc doc-contents "> <p>Compute populate leftover columns for the dataframe with forced photometry data given the input parameters</p> <p><span class=doc-section-title>Parameters:</span></p> <table> <thead> <tr> <th>Name</th> <th>Type</th> <th>Description</th> <th>Default</th> </tr> </thead> <tbody> <tr class=doc-section-item> <td><code>df</code></td> <td> <code><span title="pandas.DataFrame">DataFrame</span></code> </td> <td> <div class=doc-md-description> <p>input dataframe with columns [source_tmp_id, wavg_ra, wavg_dec, image_name, flux_peak, flux_int, flux_int_err, chi_squared_fit]</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>prefix</code></td> <td> <code>str</code> </td> <td> <div class=doc-md-description> <p>string to use to generate the 'island_id' column</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>max_id</code></td> <td> <code>int</code> </td> <td> <div class=doc-md-description> <p>integer to use to generate the 'island_id' column</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>beam_bmaj</code></td> <td> <code>float</code> </td> <td> <div class=doc-md-description> <p>image beam major axis</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>beam_bmin</code></td> <td> <code>float</code> </td> <td> <div class=doc-md-description> <p>image beam minor axis</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>beam_bpa</code></td> <td> <code>float</code> </td> <td> <div class=doc-md-description> <p>image beam position angle</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>id</code></td> <td> <code>int</code> </td> <td> <div class=doc-md-description> <p>image id in database</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>datetime</code></td> <td> <code><span title="datetime.datetime">datetime</span></code> </td> <td> <div class=doc-md-description> <p>timestamp of the image file (from header)</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>image</code></td> <td> <code>str</code> </td> <td> <div class=doc-md-description> <p>string with the image name</p> </div> </td> <td> <em>required</em> </td> </tr> </tbody> </table> <p><span class=doc-section-title>Returns:</span></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr class=doc-section-item> <td> <code><span title="pandas.DataFrame">DataFrame</span></code> </td> <td> <div class=doc-md-description> <p>Input dataframe with added columns island_id, component_id, name, bmaj, bmin, pa, image_id, time.</p> </div> </td> </tr> </tbody> </table> <details class=quote> <summary>Source code in <code>vast_pipeline/pipeline/forced_extraction.py</code></summary> <div class=highlight><table class=highlighttable><tr><td class=linenos><div class=linenodiv><pre><span></span><span class=normal>202</span>
-<span class=normal>203</span>
-<span class=normal>204</span>
-<span class=normal>205</span>
-<span class=normal>206</span>
-<span class=normal>207</span>
-<span class=normal>208</span>
-<span class=normal>209</span>
-<span class=normal>210</span>
-<span class=normal>211</span>
-<span class=normal>212</span>
-<span class=normal>213</span>
-<span class=normal>214</span>
-<span class=normal>215</span>
-<span class=normal>216</span>
-<span class=normal>217</span>
-<span class=normal>218</span>
-<span class=normal>219</span>
-<span class=normal>220</span>
-<span class=normal>221</span>
-<span class=normal>222</span>
-<span class=normal>223</span>
-<span class=normal>224</span>
-<span class=normal>225</span>
-<span class=normal>226</span>
-<span class=normal>227</span>
-<span class=normal>228</span>
-<span class=normal>229</span>
-<span class=normal>230</span>
-<span class=normal>231</span>
-<span class=normal>232</span>
-<span class=normal>233</span>
-<span class=normal>234</span>
-<span class=normal>235</span>
-<span class=normal>236</span>
+</code></pre></div></td></tr></table></div> </details> </div> </div> <div class="doc doc-object doc-function"> <h2 id=vast_pipeline.pipeline.forced_extraction.finalise_forced_dfs class="doc doc-heading"> <code class="highlight language-python"><span class=n>finalise_forced_dfs</span><span class=p>(</span><span class=n>df</span><span class=p>,</span> <span class=n>prefix</span><span class=p>,</span> <span class=n>max_id</span><span class=p>,</span> <span class=n>beam_bmaj</span><span class=p>,</span> <span class=n>beam_bmin</span><span class=p>,</span> <span class=n>beam_bpa</span><span class=p>,</span> <span class=nb>id</span><span class=p>,</span> <span class=n>datetime</span><span class=p>,</span> <span class=n>image</span><span class=p>)</span></code> <a href=#vast_pipeline.pipeline.forced_extraction.finalise_forced_dfs class=headerlink title="Permanent link">&para;</a></h2> <div class="doc doc-contents "> <p>Compute populate leftover columns for the dataframe with forced photometry data given the input parameters</p> <p><span class=doc-section-title>Parameters:</span></p> <table> <thead> <tr> <th>Name</th> <th>Type</th> <th>Description</th> <th>Default</th> </tr> </thead> <tbody> <tr class=doc-section-item> <td><code>df</code></td> <td> <code><span title="pandas.DataFrame">DataFrame</span></code> </td> <td> <div class=doc-md-description> <p>input dataframe with columns [source_tmp_id, wavg_ra, wavg_dec, image_name, flux_peak, flux_int, flux_int_err, chi_squared_fit]</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>prefix</code></td> <td> <code>str</code> </td> <td> <div class=doc-md-description> <p>string to use to generate the 'island_id' column</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>max_id</code></td> <td> <code>int</code> </td> <td> <div class=doc-md-description> <p>integer to use to generate the 'island_id' column</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>beam_bmaj</code></td> <td> <code>float</code> </td> <td> <div class=doc-md-description> <p>image beam major axis</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>beam_bmin</code></td> <td> <code>float</code> </td> <td> <div class=doc-md-description> <p>image beam minor axis</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>beam_bpa</code></td> <td> <code>float</code> </td> <td> <div class=doc-md-description> <p>image beam position angle</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>id</code></td> <td> <code>int</code> </td> <td> <div class=doc-md-description> <p>image id in database</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>datetime</code></td> <td> <code><span title="datetime.datetime">datetime</span></code> </td> <td> <div class=doc-md-description> <p>timestamp of the image file (from header)</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>image</code></td> <td> <code>str</code> </td> <td> <div class=doc-md-description> <p>string with the image name</p> </div> </td> <td> <em>required</em> </td> </tr> </tbody> </table> <p><span class=doc-section-title>Returns:</span></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr class=doc-section-item> <td> <code><span title="pandas.DataFrame">DataFrame</span></code> </td> <td> <div class=doc-md-description> <p>Input dataframe with added columns island_id, component_id, name, bmaj, bmin, pa, image_id, time.</p> </div> </td> </tr> </tbody> </table> <details class=quote> <summary>Source code in <code>vast_pipeline/pipeline/forced_extraction.py</code></summary> <div class=highlight><table class=highlighttable><tr><td class=linenos><div class=linenodiv><pre><span></span><span class=normal>236</span>
 <span class=normal>237</span>
 <span class=normal>238</span>
 <span class=normal>239</span>
@@ -191,7 +225,41 @@
 <span class=normal>252</span>
 <span class=normal>253</span>
 <span class=normal>254</span>
-<span class=normal>255</span></pre></div></td><td class=code><div><pre><span></span><code><span class=k>def</span> <span class=nf>finalise_forced_dfs</span><span class=p>(</span>
+<span class=normal>255</span>
+<span class=normal>256</span>
+<span class=normal>257</span>
+<span class=normal>258</span>
+<span class=normal>259</span>
+<span class=normal>260</span>
+<span class=normal>261</span>
+<span class=normal>262</span>
+<span class=normal>263</span>
+<span class=normal>264</span>
+<span class=normal>265</span>
+<span class=normal>266</span>
+<span class=normal>267</span>
+<span class=normal>268</span>
+<span class=normal>269</span>
+<span class=normal>270</span>
+<span class=normal>271</span>
+<span class=normal>272</span>
+<span class=normal>273</span>
+<span class=normal>274</span>
+<span class=normal>275</span>
+<span class=normal>276</span>
+<span class=normal>277</span>
+<span class=normal>278</span>
+<span class=normal>279</span>
+<span class=normal>280</span>
+<span class=normal>281</span>
+<span class=normal>282</span>
+<span class=normal>283</span>
+<span class=normal>284</span>
+<span class=normal>285</span>
+<span class=normal>286</span>
+<span class=normal>287</span>
+<span class=normal>288</span>
+<span class=normal>289</span></pre></div></td><td class=code><div><pre><span></span><code><span class=k>def</span> <span class=nf>finalise_forced_dfs</span><span class=p>(</span>
     <span class=n>df</span><span class=p>:</span> <span class=n>pd</span><span class=o>.</span><span class=n>DataFrame</span><span class=p>,</span> <span class=n>prefix</span><span class=p>:</span> <span class=nb>str</span><span class=p>,</span> <span class=n>max_id</span><span class=p>:</span> <span class=nb>int</span><span class=p>,</span> <span class=n>beam_bmaj</span><span class=p>:</span> <span class=nb>float</span><span class=p>,</span>
     <span class=n>beam_bmin</span><span class=p>:</span> <span class=nb>float</span><span class=p>,</span> <span class=n>beam_bpa</span><span class=p>:</span> <span class=nb>float</span><span class=p>,</span> <span class=nb>id</span><span class=p>:</span> <span class=nb>int</span><span class=p>,</span> <span class=n>datetime</span><span class=p>:</span> <span class=n>datetime</span><span class=o>.</span><span class=n>datetime</span><span class=p>,</span>
     <span class=n>image</span><span class=p>:</span> <span class=nb>str</span>
@@ -245,55 +313,7 @@
     <span class=n>df</span><span class=p>[</span><span class=s1>&#39;time&#39;</span><span class=p>]</span> <span class=o>=</span> <span class=n>datetime</span>
 
     <span class=k>return</span> <span class=n>df</span>
-</code></pre></div></td></tr></table></div> </details> </div> </div> <div class="doc doc-object doc-function"> <h2 id=vast_pipeline.pipeline.forced_extraction.forced_extraction class="doc doc-heading"> <code class="highlight language-python"><span class=n>forced_extraction</span><span class=p>(</span><span class=n>sources_df</span><span class=p>,</span> <span class=n>cfg_err_ra</span><span class=p>,</span> <span class=n>cfg_err_dec</span><span class=p>,</span> <span class=n>p_run</span><span class=p>,</span> <span class=n>extr_df</span><span class=p>,</span> <span class=n>min_sigma</span><span class=p>,</span> <span class=n>edge_buffer</span><span class=p>,</span> <span class=n>cluster_threshold</span><span class=p>,</span> <span class=n>allow_nan</span><span class=p>,</span> <span class=n>add_mode</span><span class=p>,</span> <span class=n>done_images_df</span><span class=p>,</span> <span class=n>done_source_ids</span><span class=p>,</span> <span class=n>n_cpu</span><span class=o>=</span><span class=mi>5</span><span class=p>)</span></code> <a href=#vast_pipeline.pipeline.forced_extraction.forced_extraction class=headerlink title="Permanent link">&para;</a></h2> <div class="doc doc-contents "> <p>Check and extract expected measurements, and associated them with the related source(s).</p> <p><span class=doc-section-title>Parameters:</span></p> <table> <thead> <tr> <th>Name</th> <th>Type</th> <th>Description</th> <th>Default</th> </tr> </thead> <tbody> <tr class=doc-section-item> <td><code>sources_df</code></td> <td> <code><span title="pandas.DataFrame">DataFrame</span></code> </td> <td> <div class=doc-md-description> <p>Dataframe containing all the extracted measurements and associations (product from association step).</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>cfg_err_ra</code></td> <td> <code>float</code> </td> <td> <div class=doc-md-description> <p>The minimum RA error from the config file (in degrees).</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>cfg_err_dec</code></td> <td> <code>float</code> </td> <td> <div class=doc-md-description> <p>The minimum declination error from the config file (in degrees).</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>p_run</code></td> <td> <code><a class="autorefs autorefs-internal" title="vast_pipeline.models.Run" href="../../models/#vast_pipeline.models.Run">Run</a></code> </td> <td> <div class=doc-md-description> <p>The pipeline run object.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>extr_df</code></td> <td> <code><span title="pandas.DataFrame">DataFrame</span></code> </td> <td> <div class=doc-md-description> <p>The dataframe containing the information on what sources are missing from which images (output from get_src_skyregion_merged_df in main.py).</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>min_sigma</code></td> <td> <code>float</code> </td> <td> <div class=doc-md-description> <p>Minimum sigma value to drop forced extracted measurements.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>edge_buffer</code></td> <td> <code>float</code> </td> <td> <div class=doc-md-description> <p>Flag to pass to ForcedPhot.measure method.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>cluster_threshold</code></td> <td> <code>float</code> </td> <td> <div class=doc-md-description> <p>Flag to pass to ForcedPhot.measure method.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>allow_nan</code></td> <td> <code>bool</code> </td> <td> <div class=doc-md-description> <p>Flag to pass to ForcedPhot.measure method.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>add_mode</code></td> <td> <code>bool</code> </td> <td> <div class=doc-md-description> <p>True when the pipeline is running in add image mode.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>done_images_df</code></td> <td> <code><span title="pandas.DataFrame">DataFrame</span></code> </td> <td> <div class=doc-md-description> <p>Dataframe containing the images that thave already been processed in a previous run (used in add image mode).</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>done_source_ids</code></td> <td> <code><span title="typing.List">List</span>[int]</code> </td> <td> <div class=doc-md-description> <p>List of the source ids that were already present in the previous run (used in add image mode).</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>n_cpu</code></td> <td> <code>int</code> </td> <td> <div class=doc-md-description> <p>The desired number of workers for Dask.</p> </div> </td> <td> <code>5</code> </td> </tr> </tbody> </table> <p><span class=doc-section-title>Returns:</span></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr class=doc-section-item> <td> <code><span title="pandas.DataFrame">DataFrame</span></code> </td> <td> <div class=doc-md-description> <p>The <code>sources_df</code> with the extracted sources added.</p> </div> </td> </tr> <tr class=doc-section-item> <td> <code>int</code> </td> <td> <div class=doc-md-description> <p>The total number of forced measurements present in the run.</p> </div> </td> </tr> </tbody> </table> <details class=quote> <summary>Source code in <code>vast_pipeline/pipeline/forced_extraction.py</code></summary> <div class=highlight><table class=highlighttable><tr><td class=linenos><div class=linenodiv><pre><span></span><span class=normal>496</span>
-<span class=normal>497</span>
-<span class=normal>498</span>
-<span class=normal>499</span>
-<span class=normal>500</span>
-<span class=normal>501</span>
-<span class=normal>502</span>
-<span class=normal>503</span>
-<span class=normal>504</span>
-<span class=normal>505</span>
-<span class=normal>506</span>
-<span class=normal>507</span>
-<span class=normal>508</span>
-<span class=normal>509</span>
-<span class=normal>510</span>
-<span class=normal>511</span>
-<span class=normal>512</span>
-<span class=normal>513</span>
-<span class=normal>514</span>
-<span class=normal>515</span>
-<span class=normal>516</span>
-<span class=normal>517</span>
-<span class=normal>518</span>
-<span class=normal>519</span>
-<span class=normal>520</span>
-<span class=normal>521</span>
-<span class=normal>522</span>
-<span class=normal>523</span>
-<span class=normal>524</span>
-<span class=normal>525</span>
-<span class=normal>526</span>
-<span class=normal>527</span>
-<span class=normal>528</span>
-<span class=normal>529</span>
-<span class=normal>530</span>
-<span class=normal>531</span>
-<span class=normal>532</span>
-<span class=normal>533</span>
-<span class=normal>534</span>
-<span class=normal>535</span>
-<span class=normal>536</span>
-<span class=normal>537</span>
-<span class=normal>538</span>
-<span class=normal>539</span>
-<span class=normal>540</span>
-<span class=normal>541</span>
-<span class=normal>542</span>
-<span class=normal>543</span>
-<span class=normal>544</span>
+</code></pre></div></td></tr></table></div> </details> </div> </div> <div class="doc doc-object doc-function"> <h2 id=vast_pipeline.pipeline.forced_extraction.forced_extraction class="doc doc-heading"> <code class="highlight language-python"><span class=n>forced_extraction</span><span class=p>(</span><span class=n>sources_df</span><span class=p>,</span> <span class=n>cfg_err_ra</span><span class=p>,</span> <span class=n>cfg_err_dec</span><span class=p>,</span> <span class=n>p_run</span><span class=p>,</span> <span class=n>extr_df</span><span class=p>,</span> <span class=n>min_sigma</span><span class=p>,</span> <span class=n>edge_buffer</span><span class=p>,</span> <span class=n>cluster_threshold</span><span class=p>,</span> <span class=n>allow_nan</span><span class=p>,</span> <span class=n>add_mode</span><span class=p>,</span> <span class=n>done_images_df</span><span class=p>,</span> <span class=n>done_source_ids</span><span class=p>,</span> <span class=n>n_cpu</span><span class=o>=</span><span class=mi>5</span><span class=p>)</span></code> <a href=#vast_pipeline.pipeline.forced_extraction.forced_extraction class=headerlink title="Permanent link">&para;</a></h2> <div class="doc doc-contents "> <p>Check and extract expected measurements, and associated them with the related source(s).</p> <p><span class=doc-section-title>Parameters:</span></p> <table> <thead> <tr> <th>Name</th> <th>Type</th> <th>Description</th> <th>Default</th> </tr> </thead> <tbody> <tr class=doc-section-item> <td><code>sources_df</code></td> <td> <code><span title="pandas.DataFrame">DataFrame</span></code> </td> <td> <div class=doc-md-description> <p>Dataframe containing all the extracted measurements and associations (product from association step).</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>cfg_err_ra</code></td> <td> <code>float</code> </td> <td> <div class=doc-md-description> <p>The minimum RA error from the config file (in degrees).</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>cfg_err_dec</code></td> <td> <code>float</code> </td> <td> <div class=doc-md-description> <p>The minimum declination error from the config file (in degrees).</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>p_run</code></td> <td> <code><a class="autorefs autorefs-internal" title="vast_pipeline.models.Run" href="../../models/#vast_pipeline.models.Run">Run</a></code> </td> <td> <div class=doc-md-description> <p>The pipeline run object.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>extr_df</code></td> <td> <code><span title="pandas.DataFrame">DataFrame</span></code> </td> <td> <div class=doc-md-description> <p>The dataframe containing the information on what sources are missing from which images (output from get_src_skyregion_merged_df in main.py).</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>min_sigma</code></td> <td> <code>float</code> </td> <td> <div class=doc-md-description> <p>Minimum sigma value to drop forced extracted measurements.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>edge_buffer</code></td> <td> <code>float</code> </td> <td> <div class=doc-md-description> <p>Flag to pass to ForcedPhot.measure method.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>cluster_threshold</code></td> <td> <code>float</code> </td> <td> <div class=doc-md-description> <p>Flag to pass to ForcedPhot.measure method.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>allow_nan</code></td> <td> <code>bool</code> </td> <td> <div class=doc-md-description> <p>Flag to pass to ForcedPhot.measure method.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>add_mode</code></td> <td> <code>bool</code> </td> <td> <div class=doc-md-description> <p>True when the pipeline is running in add image mode.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>done_images_df</code></td> <td> <code><span title="pandas.DataFrame">DataFrame</span></code> </td> <td> <div class=doc-md-description> <p>Dataframe containing the images that thave already been processed in a previous run (used in add image mode).</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>done_source_ids</code></td> <td> <code><span title="typing.List">List</span>[int]</code> </td> <td> <div class=doc-md-description> <p>List of the source ids that were already present in the previous run (used in add image mode).</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>n_cpu</code></td> <td> <code>int</code> </td> <td> <div class=doc-md-description> <p>The desired number of workers for Dask.</p> </div> </td> <td> <code>5</code> </td> </tr> </tbody> </table> <p><span class=doc-section-title>Returns:</span></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr class=doc-section-item> <td> <code><span title="pandas.DataFrame">DataFrame</span></code> </td> <td> <div class=doc-md-description> <p>The <code>sources_df</code> with the extracted sources added.</p> </div> </td> </tr> <tr class=doc-section-item> <td> <code>int</code> </td> <td> <div class=doc-md-description> <p>The total number of forced measurements present in the run.</p> </div> </td> </tr> </tbody> </table> <details class=quote> <summary>Source code in <code>vast_pipeline/pipeline/forced_extraction.py</code></summary> <div class=highlight><table class=highlighttable><tr><td class=linenos><div class=linenodiv><pre><span></span><span class=normal>544</span>
 <span class=normal>545</span>
 <span class=normal>546</span>
 <span class=normal>547</span>
@@ -479,7 +499,41 @@
 <span class=normal>727</span>
 <span class=normal>728</span>
 <span class=normal>729</span>
-<span class=normal>730</span></pre></div></td><td class=code><div><pre><span></span><code><span class=k>def</span> <span class=nf>forced_extraction</span><span class=p>(</span>
+<span class=normal>730</span>
+<span class=normal>731</span>
+<span class=normal>732</span>
+<span class=normal>733</span>
+<span class=normal>734</span>
+<span class=normal>735</span>
+<span class=normal>736</span>
+<span class=normal>737</span>
+<span class=normal>738</span>
+<span class=normal>739</span>
+<span class=normal>740</span>
+<span class=normal>741</span>
+<span class=normal>742</span>
+<span class=normal>743</span>
+<span class=normal>744</span>
+<span class=normal>745</span>
+<span class=normal>746</span>
+<span class=normal>747</span>
+<span class=normal>748</span>
+<span class=normal>749</span>
+<span class=normal>750</span>
+<span class=normal>751</span>
+<span class=normal>752</span>
+<span class=normal>753</span>
+<span class=normal>754</span>
+<span class=normal>755</span>
+<span class=normal>756</span>
+<span class=normal>757</span>
+<span class=normal>758</span>
+<span class=normal>759</span>
+<span class=normal>760</span>
+<span class=normal>761</span>
+<span class=normal>762</span>
+<span class=normal>763</span>
+<span class=normal>764</span></pre></div></td><td class=code><div><pre><span></span><code><span class=k>def</span> <span class=nf>forced_extraction</span><span class=p>(</span>
     <span class=n>sources_df</span><span class=p>:</span> <span class=n>pd</span><span class=o>.</span><span class=n>DataFrame</span><span class=p>,</span> <span class=n>cfg_err_ra</span><span class=p>:</span> <span class=nb>float</span><span class=p>,</span> <span class=n>cfg_err_dec</span><span class=p>:</span> <span class=nb>float</span><span class=p>,</span>
     <span class=n>p_run</span><span class=p>:</span> <span class=n>Run</span><span class=p>,</span> <span class=n>extr_df</span><span class=p>:</span> <span class=n>pd</span><span class=o>.</span><span class=n>DataFrame</span><span class=p>,</span> <span class=n>min_sigma</span><span class=p>:</span> <span class=nb>float</span><span class=p>,</span> <span class=n>edge_buffer</span><span class=p>:</span> <span class=nb>float</span><span class=p>,</span>
     <span class=n>cluster_threshold</span><span class=p>:</span> <span class=nb>float</span><span class=p>,</span> <span class=n>allow_nan</span><span class=p>:</span> <span class=nb>bool</span><span class=p>,</span> <span class=n>add_mode</span><span class=p>:</span> <span class=nb>bool</span><span class=p>,</span>
@@ -608,20 +662,6 @@
 
     <span class=c1># make measurement names unique for db constraint</span>
     <span class=n>extr_df</span><span class=p>[</span><span class=s1>&#39;name&#39;</span><span class=p>]</span> <span class=o>=</span> <span class=n>extr_df</span><span class=p>[</span><span class=s1>&#39;name&#39;</span><span class=p>]</span> <span class=o>+</span> <span class=sa>f</span><span class=s1>&#39;_f_run</span><span class=si>{</span><span class=n>p_run</span><span class=o>.</span><span class=n>id</span><span class=si>:</span><span class=s1>03d</span><span class=si>}</span><span class=s1>&#39;</span>
-
-    <span class=c1># select sensible flux values and set the columns with fix values</span>
-    <span class=n>values</span> <span class=o>=</span> <span class=p>{</span>
-        <span class=s1>&#39;flux_int&#39;</span><span class=p>:</span> <span class=mi>0</span><span class=p>,</span>
-        <span class=s1>&#39;flux_int_err&#39;</span><span class=p>:</span> <span class=mi>0</span>
-    <span class=p>}</span>
-    <span class=n>extr_df</span> <span class=o>=</span> <span class=n>extr_df</span><span class=o>.</span><span class=n>fillna</span><span class=p>(</span><span class=n>value</span><span class=o>=</span><span class=n>values</span><span class=p>)</span>
-
-    <span class=n>extr_df</span> <span class=o>=</span> <span class=n>extr_df</span><span class=p>[</span>
-        <span class=p>(</span><span class=n>extr_df</span><span class=p>[</span><span class=s1>&#39;flux_int&#39;</span><span class=p>]</span> <span class=o>!=</span> <span class=mi>0</span><span class=p>)</span>
-        <span class=o>&amp;</span> <span class=p>(</span><span class=n>extr_df</span><span class=p>[</span><span class=s1>&#39;flux_int_err&#39;</span><span class=p>]</span> <span class=o>!=</span> <span class=mi>0</span><span class=p>)</span>
-        <span class=o>&amp;</span> <span class=p>(</span><span class=n>extr_df</span><span class=p>[</span><span class=s1>&#39;chi_squared_fit&#39;</span><span class=p>]</span> <span class=o>!=</span> <span class=n>np</span><span class=o>.</span><span class=n>inf</span><span class=p>)</span>
-        <span class=o>&amp;</span> <span class=p>(</span><span class=n>extr_df</span><span class=p>[</span><span class=s1>&#39;chi_squared_fit&#39;</span><span class=p>]</span> <span class=o>!=</span> <span class=n>np</span><span class=o>.</span><span class=n>nan</span><span class=p>)</span>
-    <span class=p>]</span>
 
     <span class=n>default_pos_err</span> <span class=o>=</span> <span class=n>settings</span><span class=o>.</span><span class=n>POS_DEFAULT_MIN_ERROR</span> <span class=o>/</span> <span class=mf>3600.</span>
     <span class=n>extr_df</span><span class=p>[</span><span class=s1>&#39;ra_err&#39;</span><span class=p>]</span> <span class=o>=</span> <span class=n>default_pos_err</span>
@@ -799,41 +839,7 @@
         <span class=n>prefix</span> <span class=o>=</span> <span class=s2>&quot;island_&quot;</span>
         <span class=n>max_id</span> <span class=o>=</span> <span class=mi>1</span>
     <span class=k>return</span> <span class=p>{</span><span class=s1>&#39;prefix&#39;</span><span class=p>:</span> <span class=n>prefix</span><span class=p>,</span> <span class=s1>&#39;max_id&#39;</span><span class=p>:</span> <span class=n>max_id</span><span class=p>,</span> <span class=s1>&#39;id&#39;</span><span class=p>:</span> <span class=n>image_id</span><span class=p>}</span>
-</code></pre></div></td></tr></table></div> </details> </div> </div> <div class="doc doc-object doc-function"> <h2 id=vast_pipeline.pipeline.forced_extraction.parallel_extraction class="doc doc-heading"> <code class="highlight language-python"><span class=n>parallel_extraction</span><span class=p>(</span><span class=n>df</span><span class=p>,</span> <span class=n>df_images</span><span class=p>,</span> <span class=n>df_sources</span><span class=p>,</span> <span class=n>min_sigma</span><span class=p>,</span> <span class=n>edge_buffer</span><span class=p>,</span> <span class=n>cluster_threshold</span><span class=p>,</span> <span class=n>allow_nan</span><span class=p>,</span> <span class=n>add_mode</span><span class=p>,</span> <span class=n>p_run_path</span><span class=p>,</span> <span class=n>n_workers</span><span class=o>=</span><span class=mi>5</span><span class=p>)</span></code> <a href=#vast_pipeline.pipeline.forced_extraction.parallel_extraction class=headerlink title="Permanent link">&para;</a></h2> <div class="doc doc-contents "> <p>Parallelize forced extraction with Dask</p> <p><span class=doc-section-title>Parameters:</span></p> <table> <thead> <tr> <th>Name</th> <th>Type</th> <th>Description</th> <th>Default</th> </tr> </thead> <tbody> <tr class=doc-section-item> <td><code>df</code></td> <td> <code><span title="pandas.DataFrame">DataFrame</span></code> </td> <td> <div class=doc-md-description> <p>dataframe with columns 'wavg_ra', 'wavg_dec', 'img_diff', 'detection'</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>df_images</code></td> <td> <code><span title="pandas.DataFrame">DataFrame</span></code> </td> <td> <div class=doc-md-description> <p>dataframe with the images data and columns 'id', 'measurements_path', 'path', 'noise_path', 'beam_bmaj', 'beam_bmin', 'beam_bpa', 'background_path', 'rms_min', 'datetime', 'skyreg__centre_ra', 'skyreg__centre_dec', 'skyreg__xtr_radius' and 'name' as the index.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>df_sources</code></td> <td> <code><span title="pandas.DataFrame">DataFrame</span></code> </td> <td> <div class=doc-md-description> <p>dataframe derived from the measurement data with columns 'source', 'image', 'flux_peak'.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>min_sigma</code></td> <td> <code>float</code> </td> <td> <div class=doc-md-description> <p>minimum sigma value to drop forced extracted measurements.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>edge_buffer</code></td> <td> <code>float</code> </td> <td> <div class=doc-md-description> <p>flag to pass to ForcedPhot.measure method.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>cluster_threshold</code></td> <td> <code>float</code> </td> <td> <div class=doc-md-description> <p>flag to pass to ForcedPhot.measure method.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>allow_nan</code></td> <td> <code>bool</code> </td> <td> <div class=doc-md-description> <p>flag to pass to ForcedPhot.measure method.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>add_mode</code></td> <td> <code>bool</code> </td> <td> <div class=doc-md-description> <p>True when the pipeline is running in add image mode.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>p_run_path</code></td> <td> <code>str</code> </td> <td> <div class=doc-md-description> <p>The system path of the pipeline run output.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>n_workers</code></td> <td> <code>int</code> </td> <td> <div class=doc-md-description> <p>The desired number of workers for Dask</p> </div> </td> <td> <code>5</code> </td> </tr> </tbody> </table> <p><span class=doc-section-title>Returns:</span></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr class=doc-section-item> <td> <code><span title="pandas.DataFrame">DataFrame</span></code> </td> <td> <div class=doc-md-description> <p>Dataframe with forced extracted measurements data, columns are 'source_tmp_id', 'ra', 'dec', 'image', 'flux_peak', 'island_id', 'component_id', 'name', 'flux_int', 'flux_int_err'</p> </div> </td> </tr> </tbody> </table> <details class=quote> <summary>Source code in <code>vast_pipeline/pipeline/forced_extraction.py</code></summary> <div class=highlight><table class=highlighttable><tr><td class=linenos><div class=linenodiv><pre><span></span><span class=normal>258</span>
-<span class=normal>259</span>
-<span class=normal>260</span>
-<span class=normal>261</span>
-<span class=normal>262</span>
-<span class=normal>263</span>
-<span class=normal>264</span>
-<span class=normal>265</span>
-<span class=normal>266</span>
-<span class=normal>267</span>
-<span class=normal>268</span>
-<span class=normal>269</span>
-<span class=normal>270</span>
-<span class=normal>271</span>
-<span class=normal>272</span>
-<span class=normal>273</span>
-<span class=normal>274</span>
-<span class=normal>275</span>
-<span class=normal>276</span>
-<span class=normal>277</span>
-<span class=normal>278</span>
-<span class=normal>279</span>
-<span class=normal>280</span>
-<span class=normal>281</span>
-<span class=normal>282</span>
-<span class=normal>283</span>
-<span class=normal>284</span>
-<span class=normal>285</span>
-<span class=normal>286</span>
-<span class=normal>287</span>
-<span class=normal>288</span>
-<span class=normal>289</span>
-<span class=normal>290</span>
-<span class=normal>291</span>
-<span class=normal>292</span>
+</code></pre></div></td></tr></table></div> </details> </div> </div> <div class="doc doc-object doc-function"> <h2 id=vast_pipeline.pipeline.forced_extraction.parallel_extraction class="doc doc-heading"> <code class="highlight language-python"><span class=n>parallel_extraction</span><span class=p>(</span><span class=n>df</span><span class=p>,</span> <span class=n>df_images</span><span class=p>,</span> <span class=n>df_sources</span><span class=p>,</span> <span class=n>min_sigma</span><span class=p>,</span> <span class=n>edge_buffer</span><span class=p>,</span> <span class=n>cluster_threshold</span><span class=p>,</span> <span class=n>allow_nan</span><span class=p>,</span> <span class=n>add_mode</span><span class=p>,</span> <span class=n>p_run_path</span><span class=p>,</span> <span class=n>n_workers</span><span class=o>=</span><span class=mi>5</span><span class=p>)</span></code> <a href=#vast_pipeline.pipeline.forced_extraction.parallel_extraction class=headerlink title="Permanent link">&para;</a></h2> <div class="doc doc-contents "> <p>Parallelize forced extraction with Dask</p> <p><span class=doc-section-title>Parameters:</span></p> <table> <thead> <tr> <th>Name</th> <th>Type</th> <th>Description</th> <th>Default</th> </tr> </thead> <tbody> <tr class=doc-section-item> <td><code>df</code></td> <td> <code><span title="pandas.DataFrame">DataFrame</span></code> </td> <td> <div class=doc-md-description> <p>dataframe with columns 'wavg_ra', 'wavg_dec', 'img_diff', 'detection'</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>df_images</code></td> <td> <code><span title="pandas.DataFrame">DataFrame</span></code> </td> <td> <div class=doc-md-description> <p>dataframe with the images data and columns 'id', 'measurements_path', 'path', 'noise_path', 'beam_bmaj', 'beam_bmin', 'beam_bpa', 'background_path', 'rms_min', 'datetime', 'skyreg__centre_ra', 'skyreg__centre_dec', 'skyreg__xtr_radius' and 'name' as the index.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>df_sources</code></td> <td> <code><span title="pandas.DataFrame">DataFrame</span></code> </td> <td> <div class=doc-md-description> <p>dataframe derived from the measurement data with columns 'source', 'image', 'flux_peak'.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>min_sigma</code></td> <td> <code>float</code> </td> <td> <div class=doc-md-description> <p>minimum sigma value to drop forced extracted measurements.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>edge_buffer</code></td> <td> <code>float</code> </td> <td> <div class=doc-md-description> <p>flag to pass to ForcedPhot.measure method.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>cluster_threshold</code></td> <td> <code>float</code> </td> <td> <div class=doc-md-description> <p>flag to pass to ForcedPhot.measure method.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>allow_nan</code></td> <td> <code>bool</code> </td> <td> <div class=doc-md-description> <p>flag to pass to ForcedPhot.measure method.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>add_mode</code></td> <td> <code>bool</code> </td> <td> <div class=doc-md-description> <p>True when the pipeline is running in add image mode.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>p_run_path</code></td> <td> <code>str</code> </td> <td> <div class=doc-md-description> <p>The system path of the pipeline run output.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>n_workers</code></td> <td> <code>int</code> </td> <td> <div class=doc-md-description> <p>The desired number of workers for Dask</p> </div> </td> <td> <code>5</code> </td> </tr> </tbody> </table> <p><span class=doc-section-title>Returns:</span></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr class=doc-section-item> <td> <code><span title="pandas.DataFrame">DataFrame</span></code> </td> <td> <div class=doc-md-description> <p>Dataframe with forced extracted measurements data, columns are 'source_tmp_id', 'ra', 'dec', 'image', 'flux_peak', 'island_id', 'component_id', 'name', 'flux_int', 'flux_int_err'</p> </div> </td> </tr> </tbody> </table> <details class=quote> <summary>Source code in <code>vast_pipeline/pipeline/forced_extraction.py</code></summary> <div class=highlight><table class=highlighttable><tr><td class=linenos><div class=linenodiv><pre><span></span><span class=normal>292</span>
 <span class=normal>293</span>
 <span class=normal>294</span>
 <span class=normal>295</span>
@@ -975,7 +981,55 @@
 <span class=normal>431</span>
 <span class=normal>432</span>
 <span class=normal>433</span>
-<span class=normal>434</span></pre></div></td><td class=code><div><pre><span></span><code><span class=k>def</span> <span class=nf>parallel_extraction</span><span class=p>(</span>
+<span class=normal>434</span>
+<span class=normal>435</span>
+<span class=normal>436</span>
+<span class=normal>437</span>
+<span class=normal>438</span>
+<span class=normal>439</span>
+<span class=normal>440</span>
+<span class=normal>441</span>
+<span class=normal>442</span>
+<span class=normal>443</span>
+<span class=normal>444</span>
+<span class=normal>445</span>
+<span class=normal>446</span>
+<span class=normal>447</span>
+<span class=normal>448</span>
+<span class=normal>449</span>
+<span class=normal>450</span>
+<span class=normal>451</span>
+<span class=normal>452</span>
+<span class=normal>453</span>
+<span class=normal>454</span>
+<span class=normal>455</span>
+<span class=normal>456</span>
+<span class=normal>457</span>
+<span class=normal>458</span>
+<span class=normal>459</span>
+<span class=normal>460</span>
+<span class=normal>461</span>
+<span class=normal>462</span>
+<span class=normal>463</span>
+<span class=normal>464</span>
+<span class=normal>465</span>
+<span class=normal>466</span>
+<span class=normal>467</span>
+<span class=normal>468</span>
+<span class=normal>469</span>
+<span class=normal>470</span>
+<span class=normal>471</span>
+<span class=normal>472</span>
+<span class=normal>473</span>
+<span class=normal>474</span>
+<span class=normal>475</span>
+<span class=normal>476</span>
+<span class=normal>477</span>
+<span class=normal>478</span>
+<span class=normal>479</span>
+<span class=normal>480</span>
+<span class=normal>481</span>
+<span class=normal>482</span></pre></div></td><td class=code><div><pre><span></span><code><span class=k>def</span> <span class=nf>parallel_extraction</span><span class=p>(</span>
     <span class=n>df</span><span class=p>:</span> <span class=n>pd</span><span class=o>.</span><span class=n>DataFrame</span><span class=p>,</span> <span class=n>df_images</span><span class=p>:</span> <span class=n>pd</span><span class=o>.</span><span class=n>DataFrame</span><span class=p>,</span> <span class=n>df_sources</span><span class=p>:</span> <span class=n>pd</span><span class=o>.</span><span class=n>DataFrame</span><span class=p>,</span>
     <span class=n>min_sigma</span><span class=p>:</span> <span class=nb>float</span><span class=p>,</span> <span class=n>edge_buffer</span><span class=p>:</span> <span class=nb>float</span><span class=p>,</span> <span class=n>cluster_threshold</span><span class=p>:</span> <span class=nb>float</span><span class=p>,</span>
     <span class=n>allow_nan</span><span class=p>:</span> <span class=nb>bool</span><span class=p>,</span> <span class=n>add_mode</span><span class=p>:</span> <span class=nb>bool</span><span class=p>,</span> <span class=n>p_run_path</span><span class=p>:</span> <span class=nb>str</span><span class=p>,</span> <span class=n>n_workers</span><span class=p>:</span> <span class=nb>int</span> <span class=o>=</span> <span class=mi>5</span>
@@ -1114,6 +1168,8 @@
     <span class=p>)</span>
     <span class=k>del</span> <span class=n>col_to_drop</span>
 
+    <span class=n>logger</span><span class=o>.</span><span class=n>debug</span><span class=p>(</span><span class=s2>&quot;Starting image extraction....&quot;</span><span class=p>)</span>
+    <span class=n>extract_timer</span> <span class=o>=</span> <span class=n>StopWatch</span><span class=p>()</span>
     <span class=n>bags</span> <span class=o>=</span> <span class=n>db</span><span class=o>.</span><span class=n>from_sequence</span><span class=p>(</span><span class=n>list_to_map</span><span class=p>,</span> <span class=n>npartitions</span><span class=o>=</span><span class=nb>len</span><span class=p>(</span><span class=n>list_to_map</span><span class=p>))</span>
     <span class=n>forced_dfs</span> <span class=o>=</span> <span class=p>(</span>
         <span class=n>bags</span><span class=o>.</span><span class=n>map</span><span class=p>(</span><span class=k>lambda</span> <span class=n>x</span><span class=p>:</span> <span class=n>extract_from_image</span><span class=p>(</span>
@@ -1124,13 +1180,19 @@
         <span class=p>))</span>
         <span class=o>.</span><span class=n>compute</span><span class=p>(</span><span class=n>num_workers</span><span class=o>=</span><span class=n>n_workers</span><span class=p>,</span> <span class=n>scheduler</span><span class=o>=</span><span class=s1>&#39;processes&#39;</span><span class=p>)</span>
     <span class=p>)</span>
+    <span class=n>logger</span><span class=o>.</span><span class=n>debug</span><span class=p>(</span><span class=sa>f</span><span class=s2>&quot;Completed image extraction in </span><span class=si>{</span><span class=n>extract_timer</span><span class=o>.</span><span class=n>reset</span><span class=p>()</span><span class=si>}</span><span class=s2> s&quot;</span><span class=p>)</span>
+
     <span class=k>del</span> <span class=n>bags</span>
+    <span class=n>log_total_memory_usage</span><span class=p>()</span>
+
     <span class=c1># create intermediates dfs combining the mapping data and the forced</span>
     <span class=c1># extracted data from the images</span>
     <span class=n>intermediate_df</span> <span class=o>=</span> <span class=nb>list</span><span class=p>(</span><span class=nb>map</span><span class=p>(</span>
         <span class=k>lambda</span> <span class=n>x</span><span class=p>:</span> <span class=p>{</span><span class=o>**</span><span class=p>(</span><span class=n>mapping</span><span class=o>.</span><span class=n>loc</span><span class=p>[</span><span class=n>x</span><span class=p>[</span><span class=s1>&#39;image&#39;</span><span class=p>],</span> <span class=p>:]</span><span class=o>.</span><span class=n>to_dict</span><span class=p>()),</span> <span class=o>**</span><span class=n>x</span><span class=p>},</span>
         <span class=n>forced_dfs</span>
     <span class=p>))</span>
+    <span class=n>logger</span><span class=o>.</span><span class=n>debug</span><span class=p>(</span><span class=sa>f</span><span class=s2>&quot;Created </span><span class=si>{</span><span class=nb>len</span><span class=p>(</span><span class=n>intermediate_df</span><span class=p>)</span><span class=si>}</span><span class=s2> intermediate dfs&quot;</span><span class=p>)</span>
+    <span class=n>log_total_memory_usage</span><span class=p>()</span>
 
     <span class=c1># compute the rest of the columns</span>
     <span class=c1># NOTE: Avoid using dask bags to parallelise the mapping</span>
@@ -1138,10 +1200,14 @@
     <span class=c1># dask bags make a copy of the output before collecting the results.</span>
     <span class=c1># There is also a minimal speed penalty for doing this step without</span>
     <span class=c1># parallelism.</span>
+    <span class=n>extract_timer</span><span class=o>.</span><span class=n>reset</span><span class=p>()</span>
     <span class=n>intermediate_df</span> <span class=o>=</span> <span class=nb>list</span><span class=p>(</span><span class=nb>map</span><span class=p>(</span>
         <span class=k>lambda</span> <span class=n>x</span><span class=p>:</span> <span class=n>finalise_forced_dfs</span><span class=p>(</span><span class=o>**</span><span class=n>x</span><span class=p>),</span>
         <span class=n>intermediate_df</span>
         <span class=p>))</span>
+    <span class=n>logger</span><span class=o>.</span><span class=n>debug</span><span class=p>(</span><span class=sa>f</span><span class=s2>&quot;Populated intermediate df in </span><span class=si>{</span><span class=n>extract_timer</span><span class=o>.</span><span class=n>reset</span><span class=p>()</span><span class=si>}</span><span class=s2> s&quot;</span><span class=p>)</span>
+    <span class=n>log_total_memory_usage</span><span class=p>()</span>
+
     <span class=n>df_out</span> <span class=o>=</span> <span class=p>(</span>
         <span class=n>pd</span><span class=o>.</span><span class=n>concat</span><span class=p>(</span><span class=n>intermediate_df</span><span class=p>,</span> <span class=n>axis</span><span class=o>=</span><span class=mi>0</span><span class=p>,</span> <span class=n>sort</span><span class=o>=</span><span class=kc>False</span><span class=p>)</span>
         <span class=o>.</span><span class=n>rename</span><span class=p>(</span>
@@ -1150,6 +1216,8 @@
             <span class=p>}</span>
         <span class=p>)</span>
     <span class=p>)</span>
+    <span class=n>logger</span><span class=o>.</span><span class=n>debug</span><span class=p>(</span><span class=sa>f</span><span class=s2>&quot;Successfully concatenated intermediate dfs&quot;</span><span class=p>)</span>
+    <span class=n>log_total_memory_usage</span><span class=p>()</span>
 
     <span class=k>return</span> <span class=n>df_out</span>
 </code></pre></div></td></tr></table></div> </details> </div> </div> <div class="doc doc-object doc-function"> <h2 id=vast_pipeline.pipeline.forced_extraction.remove_forced_meas class="doc doc-heading"> <code class="highlight language-python"><span class=n>remove_forced_meas</span><span class=p>(</span><span class=n>run_path</span><span class=p>)</span></code> <a href=#vast_pipeline.pipeline.forced_extraction.remove_forced_meas class=headerlink title="Permanent link">&para;</a></h2> <div class="doc doc-contents "> <p>Remove forced measurements from the database if forced parquet files are found.</p> <p><span class=doc-section-title>Parameters:</span></p> <table> <thead> <tr> <th>Name</th> <th>Type</th> <th>Description</th> <th>Default</th> </tr> </thead> <tbody> <tr class=doc-section-item> <td><code>run_path</code></td> <td> <code>str</code> </td> <td> <div class=doc-md-description> <p>The run path of the pipeline run.</p> </div> </td> <td> <em>required</em> </td> </tr> </tbody> </table> <p><span class=doc-section-title>Returns:</span></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr class=doc-section-item> <td> <code>None</code> </td> <td> <div class=doc-md-description> <p>None</p> </div> </td> </tr> </tbody> </table> <details class=quote> <summary>Source code in <code>vast_pipeline/pipeline/forced_extraction.py</code></summary> <div class=highlight><table class=highlighttable><tr><td class=linenos><div class=linenodiv><pre><span></span><span class=normal>28</span>
@@ -1217,36 +1285,36 @@
                     <span class=n>n_del</span><span class=p>,</span>
                 <span class=p>)</span>
                 <span class=n>logger</span><span class=o>.</span><span class=n>debug</span><span class=p>(</span><span class=s1>&#39;(type, #deleted): </span><span class=si>%s</span><span class=s1>&#39;</span><span class=p>,</span> <span class=n>detail_del</span><span class=p>)</span>
-</code></pre></div></td></tr></table></div> </details> </div> </div> <div class="doc doc-object doc-function"> <h2 id=vast_pipeline.pipeline.forced_extraction.write_forced_parquet class="doc doc-heading"> <code class="highlight language-python"><span class=n>write_forced_parquet</span><span class=p>(</span><span class=n>df</span><span class=p>,</span> <span class=n>run_path</span><span class=p>,</span> <span class=n>add_mode</span><span class=o>=</span><span class=kc>False</span><span class=p>)</span></code> <a href=#vast_pipeline.pipeline.forced_extraction.write_forced_parquet class=headerlink title="Permanent link">&para;</a></h2> <div class="doc doc-contents "> <p>Write parquet files for forced measurements.</p> <p><span class=doc-section-title>Parameters:</span></p> <table> <thead> <tr> <th>Name</th> <th>Type</th> <th>Description</th> <th>Default</th> </tr> </thead> <tbody> <tr class=doc-section-item> <td><code>df</code></td> <td> <code><span title="pandas.DataFrame">DataFrame</span></code> </td> <td> <div class=doc-md-description> <p>Dataframe containing all the extracted measurements.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>run_path</code></td> <td> <code>str</code> </td> <td> <div class=doc-md-description> <p>The run path of the pipeline run.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>add_mode</code></td> <td> <code>bool</code> </td> <td> <div class=doc-md-description> <p>True when the pipeline is running in add image mode.</p> </div> </td> <td> <code>False</code> </td> </tr> </tbody> </table> <p><span class=doc-section-title>Returns:</span></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr class=doc-section-item> <td> <code>None</code> </td> <td> <div class=doc-md-description> <p>None</p> </div> </td> </tr> </tbody> </table> <details class=quote> <summary>Source code in <code>vast_pipeline/pipeline/forced_extraction.py</code></summary> <div class=highlight><table class=highlighttable><tr><td class=linenos><div class=linenodiv><pre><span></span><span class=normal>464</span>
-<span class=normal>465</span>
-<span class=normal>466</span>
-<span class=normal>467</span>
-<span class=normal>468</span>
-<span class=normal>469</span>
-<span class=normal>470</span>
-<span class=normal>471</span>
-<span class=normal>472</span>
-<span class=normal>473</span>
-<span class=normal>474</span>
-<span class=normal>475</span>
-<span class=normal>476</span>
-<span class=normal>477</span>
-<span class=normal>478</span>
-<span class=normal>479</span>
-<span class=normal>480</span>
-<span class=normal>481</span>
-<span class=normal>482</span>
-<span class=normal>483</span>
-<span class=normal>484</span>
-<span class=normal>485</span>
-<span class=normal>486</span>
-<span class=normal>487</span>
-<span class=normal>488</span>
-<span class=normal>489</span>
-<span class=normal>490</span>
-<span class=normal>491</span>
-<span class=normal>492</span>
-<span class=normal>493</span></pre></div></td><td class=code><div><pre><span></span><code><span class=k>def</span> <span class=nf>write_forced_parquet</span><span class=p>(</span>
+</code></pre></div></td></tr></table></div> </details> </div> </div> <div class="doc doc-object doc-function"> <h2 id=vast_pipeline.pipeline.forced_extraction.write_forced_parquet class="doc doc-heading"> <code class="highlight language-python"><span class=n>write_forced_parquet</span><span class=p>(</span><span class=n>df</span><span class=p>,</span> <span class=n>run_path</span><span class=p>,</span> <span class=n>add_mode</span><span class=o>=</span><span class=kc>False</span><span class=p>)</span></code> <a href=#vast_pipeline.pipeline.forced_extraction.write_forced_parquet class=headerlink title="Permanent link">&para;</a></h2> <div class="doc doc-contents "> <p>Write parquet files for forced measurements.</p> <p><span class=doc-section-title>Parameters:</span></p> <table> <thead> <tr> <th>Name</th> <th>Type</th> <th>Description</th> <th>Default</th> </tr> </thead> <tbody> <tr class=doc-section-item> <td><code>df</code></td> <td> <code><span title="pandas.DataFrame">DataFrame</span></code> </td> <td> <div class=doc-md-description> <p>Dataframe containing all the extracted measurements.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>run_path</code></td> <td> <code>str</code> </td> <td> <div class=doc-md-description> <p>The run path of the pipeline run.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>add_mode</code></td> <td> <code>bool</code> </td> <td> <div class=doc-md-description> <p>True when the pipeline is running in add image mode.</p> </div> </td> <td> <code>False</code> </td> </tr> </tbody> </table> <p><span class=doc-section-title>Returns:</span></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr class=doc-section-item> <td> <code>None</code> </td> <td> <div class=doc-md-description> <p>None</p> </div> </td> </tr> </tbody> </table> <details class=quote> <summary>Source code in <code>vast_pipeline/pipeline/forced_extraction.py</code></summary> <div class=highlight><table class=highlighttable><tr><td class=linenos><div class=linenodiv><pre><span></span><span class=normal>512</span>
+<span class=normal>513</span>
+<span class=normal>514</span>
+<span class=normal>515</span>
+<span class=normal>516</span>
+<span class=normal>517</span>
+<span class=normal>518</span>
+<span class=normal>519</span>
+<span class=normal>520</span>
+<span class=normal>521</span>
+<span class=normal>522</span>
+<span class=normal>523</span>
+<span class=normal>524</span>
+<span class=normal>525</span>
+<span class=normal>526</span>
+<span class=normal>527</span>
+<span class=normal>528</span>
+<span class=normal>529</span>
+<span class=normal>530</span>
+<span class=normal>531</span>
+<span class=normal>532</span>
+<span class=normal>533</span>
+<span class=normal>534</span>
+<span class=normal>535</span>
+<span class=normal>536</span>
+<span class=normal>537</span>
+<span class=normal>538</span>
+<span class=normal>539</span>
+<span class=normal>540</span>
+<span class=normal>541</span></pre></div></td><td class=code><div><pre><span></span><code><span class=k>def</span> <span class=nf>write_forced_parquet</span><span class=p>(</span>
         <span class=n>df</span><span class=p>:</span> <span class=n>pd</span><span class=o>.</span><span class=n>DataFrame</span><span class=p>,</span> <span class=n>run_path</span><span class=p>:</span> <span class=nb>str</span><span class=p>,</span> <span class=n>add_mode</span><span class=p>:</span> <span class=nb>bool</span> <span class=o>=</span> <span class=kc>False</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=kc>None</span><span class=p>:</span>
 <span class=w>    </span><span class=sd>&#39;&#39;&#39;</span>
 <span class=sd>    Write parquet files for forced measurements.</span>
@@ -1276,31 +1344,31 @@
     <span class=k>for</span> <span class=n>this_df</span><span class=p>,</span> <span class=n>fname</span> <span class=ow>in</span> <span class=n>dfs</span><span class=p>:</span>
         <span class=n>write_group_to_parquet</span><span class=p>(</span><span class=n>this_df</span><span class=p>,</span> <span class=n>fname</span><span class=p>,</span> <span class=n>add_mode</span><span class=p>)</span>
     <span class=k>pass</span>
-</code></pre></div></td></tr></table></div> </details> </div> </div> <div class="doc doc-object doc-function"> <h2 id=vast_pipeline.pipeline.forced_extraction.write_group_to_parquet class="doc doc-heading"> <code class="highlight language-python"><span class=n>write_group_to_parquet</span><span class=p>(</span><span class=n>df</span><span class=p>,</span> <span class=n>fname</span><span class=p>,</span> <span class=n>add_mode</span><span class=p>)</span></code> <a href=#vast_pipeline.pipeline.forced_extraction.write_group_to_parquet class=headerlink title="Permanent link">&para;</a></h2> <div class="doc doc-contents "> <p>Write a dataframe correpondent to a single group/image to a parquet file.</p> <p><span class=doc-section-title>Parameters:</span></p> <table> <thead> <tr> <th>Name</th> <th>Type</th> <th>Description</th> <th>Default</th> </tr> </thead> <tbody> <tr class=doc-section-item> <td><code>df</code></td> <td> <code><span title="pandas.DataFrame">DataFrame</span></code> </td> <td> <div class=doc-md-description> <p>Dataframe containing all the extracted measurements.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>fname</code></td> <td> <code>str</code> </td> <td> <div class=doc-md-description> <p>The file name of the output parquet.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>add_mode</code></td> <td> <code>bool</code> </td> <td> <div class=doc-md-description> <p>True when the pipeline is running in add image mode.</p> </div> </td> <td> <em>required</em> </td> </tr> </tbody> </table> <p><span class=doc-section-title>Returns:</span></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr class=doc-section-item> <td> <code>None</code> </td> <td> <div class=doc-md-description> <p>None</p> </div> </td> </tr> </tbody> </table> <details class=quote> <summary>Source code in <code>vast_pipeline/pipeline/forced_extraction.py</code></summary> <div class=highlight><table class=highlighttable><tr><td class=linenos><div class=linenodiv><pre><span></span><span class=normal>437</span>
-<span class=normal>438</span>
-<span class=normal>439</span>
-<span class=normal>440</span>
-<span class=normal>441</span>
-<span class=normal>442</span>
-<span class=normal>443</span>
-<span class=normal>444</span>
-<span class=normal>445</span>
-<span class=normal>446</span>
-<span class=normal>447</span>
-<span class=normal>448</span>
-<span class=normal>449</span>
-<span class=normal>450</span>
-<span class=normal>451</span>
-<span class=normal>452</span>
-<span class=normal>453</span>
-<span class=normal>454</span>
-<span class=normal>455</span>
-<span class=normal>456</span>
-<span class=normal>457</span>
-<span class=normal>458</span>
-<span class=normal>459</span>
-<span class=normal>460</span>
-<span class=normal>461</span></pre></div></td><td class=code><div><pre><span></span><code><span class=k>def</span> <span class=nf>write_group_to_parquet</span><span class=p>(</span>
+</code></pre></div></td></tr></table></div> </details> </div> </div> <div class="doc doc-object doc-function"> <h2 id=vast_pipeline.pipeline.forced_extraction.write_group_to_parquet class="doc doc-heading"> <code class="highlight language-python"><span class=n>write_group_to_parquet</span><span class=p>(</span><span class=n>df</span><span class=p>,</span> <span class=n>fname</span><span class=p>,</span> <span class=n>add_mode</span><span class=p>)</span></code> <a href=#vast_pipeline.pipeline.forced_extraction.write_group_to_parquet class=headerlink title="Permanent link">&para;</a></h2> <div class="doc doc-contents "> <p>Write a dataframe correpondent to a single group/image to a parquet file.</p> <p><span class=doc-section-title>Parameters:</span></p> <table> <thead> <tr> <th>Name</th> <th>Type</th> <th>Description</th> <th>Default</th> </tr> </thead> <tbody> <tr class=doc-section-item> <td><code>df</code></td> <td> <code><span title="pandas.DataFrame">DataFrame</span></code> </td> <td> <div class=doc-md-description> <p>Dataframe containing all the extracted measurements.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>fname</code></td> <td> <code>str</code> </td> <td> <div class=doc-md-description> <p>The file name of the output parquet.</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>add_mode</code></td> <td> <code>bool</code> </td> <td> <div class=doc-md-description> <p>True when the pipeline is running in add image mode.</p> </div> </td> <td> <em>required</em> </td> </tr> </tbody> </table> <p><span class=doc-section-title>Returns:</span></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr class=doc-section-item> <td> <code>None</code> </td> <td> <div class=doc-md-description> <p>None</p> </div> </td> </tr> </tbody> </table> <details class=quote> <summary>Source code in <code>vast_pipeline/pipeline/forced_extraction.py</code></summary> <div class=highlight><table class=highlighttable><tr><td class=linenos><div class=linenodiv><pre><span></span><span class=normal>485</span>
+<span class=normal>486</span>
+<span class=normal>487</span>
+<span class=normal>488</span>
+<span class=normal>489</span>
+<span class=normal>490</span>
+<span class=normal>491</span>
+<span class=normal>492</span>
+<span class=normal>493</span>
+<span class=normal>494</span>
+<span class=normal>495</span>
+<span class=normal>496</span>
+<span class=normal>497</span>
+<span class=normal>498</span>
+<span class=normal>499</span>
+<span class=normal>500</span>
+<span class=normal>501</span>
+<span class=normal>502</span>
+<span class=normal>503</span>
+<span class=normal>504</span>
+<span class=normal>505</span>
+<span class=normal>506</span>
+<span class=normal>507</span>
+<span class=normal>508</span>
+<span class=normal>509</span></pre></div></td><td class=code><div><pre><span></span><code><span class=k>def</span> <span class=nf>write_group_to_parquet</span><span class=p>(</span>
         <span class=n>df</span><span class=p>:</span> <span class=n>pd</span><span class=o>.</span><span class=n>DataFrame</span><span class=p>,</span> <span class=n>fname</span><span class=p>:</span> <span class=nb>str</span><span class=p>,</span> <span class=n>add_mode</span><span class=p>:</span> <span class=nb>bool</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=kc>None</span><span class=p>:</span>
 <span class=w>    </span><span class=sd>&#39;&#39;&#39;</span>
 <span class=sd>    Write a dataframe correpondent to a single group/image</span>
@@ -1325,4 +1393,4 @@
     <span class=n>out_df</span><span class=o>.</span><span class=n>to_parquet</span><span class=p>(</span><span class=n>fname</span><span class=p>,</span> <span class=n>index</span><span class=o>=</span><span class=kc>False</span><span class=p>)</span>
 
     <span class=k>pass</span>
-</code></pre></div></td></tr></table></div> </details> </div> </div> </div> </div> </div> <aside class=md-source-file> <span class=md-source-file__fact> <span class=md-icon title="Last update"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg> </span> <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 22, 2024</span> </span> <span class=md-source-file__fact> <span class=md-icon title=Created> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg> </span> <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 22, 2024</span> </span> </aside> </article> </div> <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script> </div> </main> <footer class=md-footer> <div class="md-footer-meta md-typeset"> <div class="md-footer-meta__inner md-grid"> <div class=md-copyright> <div class=md-copyright__highlight> Copyright &copy; 2020 - 2025 VAST Pipeline Development Team, University of Sydney - all rights reserved. </div> Made with <a href=https://squidfunk.github.io/mkdocs-material/ target=_blank rel=noopener> Material for MkDocs </a> </div> <div class=md-social> <a href=https://doi.org/10.5281/zenodo.13927015 target=_blank rel=noopener title=doi.org class=md-social__link> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M24 12c0 6.633-5.367 12-12 12S0 18.633 0 12 5.367 0 12 0s12 5.367 12 12M7.588 6.097v4.471c-.663-.925-1.403-1.373-2.406-1.373-2.046 0-3.244 1.441-3.244 3.847 0 2.357 1.325 3.848 3.166 3.848 1.12 0 1.88-.4 2.445-1.325l-.039 1.042h2.045V6.097Zm-1.763 8.942c-1.12 0-1.802-.76-1.802-2.045 0-1.325.682-2.085 1.802-2.085 1.081 0 1.802.76 1.802 2.085 0 1.285-.672 2.045-1.802 2.045m12.253-1.948c0-2.172-1.578-3.789-3.906-3.789s-3.945 1.695-3.945 3.789c0 2.133 1.578 3.789 3.945 3.789 2.289 0 3.906-1.656 3.906-3.789m-2.094-.01c0 1.14-.711 1.89-1.851 1.89-1.139 0-1.851-.75-1.851-1.89s.712-1.89 1.851-1.89c1.149 0 1.861.751 1.851 1.89m2.6-5.795c0 .633.517 1.227 1.189 1.227.633 0 1.188-.555 1.188-1.227a1.17 1.17 0 0 0-1.188-1.189c-.672 0-1.179.556-1.189 1.189m.166 9.341h2.055V9.604H18.75Z"/></svg> </a> <a href=https://github.com/askap-vast/vast-pipeline target=_blank rel=noopener title="vast-pipeline source on GitHub" class=md-social__link> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 496 512"><!-- Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg> </a> <a href=https://vast-survey.org target=_blank rel=noopener title=vast-survey.org class=md-social__link> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 512 512"><!-- Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M352 256c0 22.2-1.2 43.6-3.3 64H163.4c-2.2-20.4-3.3-41.8-3.3-64s1.2-43.6 3.3-64h185.3c2.2 20.4 3.3 41.8 3.3 64m28.8-64h123.1c5.3 20.5 8.1 41.9 8.1 64s-2.8 43.5-8.1 64H380.8c2.1-20.6 3.2-42 3.2-64s-1.1-43.4-3.2-64m112.6-32H376.7c-10-63.9-29.8-117.4-55.3-151.6 78.3 20.7 142 77.5 171.9 151.6zm-149.1 0H167.7c6.1-36.4 15.5-68.6 27-94.7 10.5-23.6 22.2-40.7 33.5-51.5C239.4 3.2 248.7 0 256 0s16.6 3.2 27.8 13.8c11.3 10.8 23 27.9 33.5 51.5 11.6 26 20.9 58.2 27 94.7m-209 0H18.6c30-74.1 93.6-130.9 172-151.6-25.5 34.2-45.3 87.7-55.3 151.6M8.1 192h123.1c-2.1 20.6-3.2 42-3.2 64s1.1 43.4 3.2 64H8.1C2.8 299.5 0 278.1 0 256s2.8-43.5 8.1-64m186.6 254.6c-11.6-26-20.9-58.2-27-94.6h176.6c-6.1 36.4-15.5 68.6-27 94.6-10.5 23.6-22.2 40.7-33.5 51.5-11.2 10.7-20.5 13.9-27.8 13.9s-16.6-3.2-27.8-13.8c-11.3-10.8-23-27.9-33.5-51.5zM135.3 352c10 63.9 29.8 117.4 55.3 151.6-78.4-20.7-142-77.5-172-151.6zm358.1 0c-30 74.1-93.6 130.9-171.9 151.6 25.5-34.2 45.2-87.7 55.3-151.6h116.7z"/></svg> </a> </div> </div> </div> </footer> </div> <div class=md-dialog data-md-component=dialog> <div class="md-dialog__inner md-typeset"></div> </div> <script id=__config type=application/json>{"base": "../../..", "features": ["navigation.instant", "navigation.tabs", "navigation.sections"], "search": "../../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script> <script src=../../../assets/javascripts/bundle.83f73b43.min.js></script> <script src=../../../theme/js/extra.min.js></script> <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script> <script src=https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js></script> </body> </html>
+</code></pre></div></td></tr></table></div> </details> </div> </div> </div> </div> </div> <aside class=md-source-file> <span class=md-source-file__fact> <span class=md-icon title="Last update"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg> </span> <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 23, 2024</span> </span> <span class=md-source-file__fact> <span class=md-icon title=Created> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg> </span> <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 23, 2024</span> </span> </aside> </article> </div> <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script> </div> </main> <footer class=md-footer> <div class="md-footer-meta md-typeset"> <div class="md-footer-meta__inner md-grid"> <div class=md-copyright> <div class=md-copyright__highlight> Copyright &copy; 2020 - 2025 VAST Pipeline Development Team, University of Sydney - all rights reserved. </div> Made with <a href=https://squidfunk.github.io/mkdocs-material/ target=_blank rel=noopener> Material for MkDocs </a> </div> <div class=md-social> <a href=https://doi.org/10.5281/zenodo.13927015 target=_blank rel=noopener title=doi.org class=md-social__link> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M24 12c0 6.633-5.367 12-12 12S0 18.633 0 12 5.367 0 12 0s12 5.367 12 12M7.588 6.097v4.471c-.663-.925-1.403-1.373-2.406-1.373-2.046 0-3.244 1.441-3.244 3.847 0 2.357 1.325 3.848 3.166 3.848 1.12 0 1.88-.4 2.445-1.325l-.039 1.042h2.045V6.097Zm-1.763 8.942c-1.12 0-1.802-.76-1.802-2.045 0-1.325.682-2.085 1.802-2.085 1.081 0 1.802.76 1.802 2.085 0 1.285-.672 2.045-1.802 2.045m12.253-1.948c0-2.172-1.578-3.789-3.906-3.789s-3.945 1.695-3.945 3.789c0 2.133 1.578 3.789 3.945 3.789 2.289 0 3.906-1.656 3.906-3.789m-2.094-.01c0 1.14-.711 1.89-1.851 1.89-1.139 0-1.851-.75-1.851-1.89s.712-1.89 1.851-1.89c1.149 0 1.861.751 1.851 1.89m2.6-5.795c0 .633.517 1.227 1.189 1.227.633 0 1.188-.555 1.188-1.227a1.17 1.17 0 0 0-1.188-1.189c-.672 0-1.179.556-1.189 1.189m.166 9.341h2.055V9.604H18.75Z"/></svg> </a> <a href=https://github.com/askap-vast/vast-pipeline target=_blank rel=noopener title="vast-pipeline source on GitHub" class=md-social__link> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 496 512"><!-- Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg> </a> <a href=https://vast-survey.org target=_blank rel=noopener title=vast-survey.org class=md-social__link> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 512 512"><!-- Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M352 256c0 22.2-1.2 43.6-3.3 64H163.4c-2.2-20.4-3.3-41.8-3.3-64s1.2-43.6 3.3-64h185.3c2.2 20.4 3.3 41.8 3.3 64m28.8-64h123.1c5.3 20.5 8.1 41.9 8.1 64s-2.8 43.5-8.1 64H380.8c2.1-20.6 3.2-42 3.2-64s-1.1-43.4-3.2-64m112.6-32H376.7c-10-63.9-29.8-117.4-55.3-151.6 78.3 20.7 142 77.5 171.9 151.6zm-149.1 0H167.7c6.1-36.4 15.5-68.6 27-94.7 10.5-23.6 22.2-40.7 33.5-51.5C239.4 3.2 248.7 0 256 0s16.6 3.2 27.8 13.8c11.3 10.8 23 27.9 33.5 51.5 11.6 26 20.9 58.2 27 94.7m-209 0H18.6c30-74.1 93.6-130.9 172-151.6-25.5 34.2-45.3 87.7-55.3 151.6M8.1 192h123.1c-2.1 20.6-3.2 42-3.2 64s1.1 43.4 3.2 64H8.1C2.8 299.5 0 278.1 0 256s2.8-43.5 8.1-64m186.6 254.6c-11.6-26-20.9-58.2-27-94.6h176.6c-6.1 36.4-15.5 68.6-27 94.6-10.5 23.6-22.2 40.7-33.5 51.5-11.2 10.7-20.5 13.9-27.8 13.9s-16.6-3.2-27.8-13.8c-11.3-10.8-23-27.9-33.5-51.5zM135.3 352c10 63.9 29.8 117.4 55.3 151.6-78.4-20.7-142-77.5-172-151.6zm358.1 0c-30 74.1-93.6 130.9-171.9 151.6 25.5-34.2 45.2-87.7 55.3-151.6h116.7z"/></svg> </a> </div> </div> </div> </footer> </div> <div class=md-dialog data-md-component=dialog> <div class="md-dialog__inner md-typeset"></div> </div> <script id=__config type=application/json>{"base": "../../..", "features": ["navigation.instant", "navigation.tabs", "navigation.sections"], "search": "../../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script> <script src=../../../assets/javascripts/bundle.83f73b43.min.js></script> <script src=../../../theme/js/extra.min.js></script> <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script> <script src=https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js></script> </body> </html>
