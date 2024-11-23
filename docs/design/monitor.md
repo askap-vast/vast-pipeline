@@ -48,7 +48,7 @@ The following options are present in the pipeline run configuration file to user
 * `source_monitoring.monitor` turns forced measurements on (`true`) or off (`false`).
 * `source_monitoring.min_sigma` controls the the minimum sigma check threshold as explained in [Minimum Sigma Filter](#minimum-sigma-filter).
 * `source_monitoring.edge_buffer_scale` controls the size of the buffer from the image edge where forced measurements are not performed (`source_monitoring.edge_buffer_scale` $\times 3\theta_{beam}$). An error can sometimes occur that increasing this value can solve.
-* `source_monitoring.cluster_threshold` is directly passed to the [forced photometry package](#software-forced_phot) used by the pipeline. It defines the multiple of `major_axes` to use for identifying clusters.
+* `source_monitoring.cluster_threshold` is directly passed to the [forced photometry package](#software-forced_phot) used by the pipeline. It defines the multiple of `major_axes` to use for identifying clusters. To turn off clustering, set it to 0 - a proper flag will be added for this in v2.
 * `source_monitoring.allow_nan` is directly passed to the [forced photometry package](#software-forced_phot) used by the pipeline. It defines whether `NaN` values are allowed to be present in the extraction area in the rms or background maps, i.e. `true` would mean that `NaN` values are allowed.
 
 ## Software - forced_phot
