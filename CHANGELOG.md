@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed incorrect error ellipse calculation [#792](https://github.com/askap-vast/vast-pipeline/pull/792)
 - Renamed variable in pipeline.finalise to better reflect what the dataframe represents (sources_df -> associations_df) [#787](https://github.com/askap-vast/vast-pipeline/pull/787)
 - Fixed typo in variable name ("assoications") [#787](https://github.com/askap-vast/vast-pipeline/pull/787)
 - Fix processing config parameters not displaying in web interface [#782](https://github.com/askap-vast/vast-pipeline/pull/782)
@@ -28,6 +29,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#792](https://github.com/askap-vast/vast-pipeline/pull/792): fix: Simplify and correct error ellipse calculation.
 - [#788](https://github.com/askap-vast/vast-pipeline/pull/788): feat, fix: Speed up forced fitting code by using numba-fied forced_phot code and reordering some calculations
 - [#787](https://github.com/askap-vast/vast-pipeline/pull/787): fix: Optimise associations merge and minor variable name updates
 - [#782](https://github.com/askap-vast/vast-pipeline/pull/782): fix: Fix processing config parameters not displaying in web interface

@@ -14,7 +14,6 @@ from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
 from typing import Dict
 
-from .utils import calc_error_radius
 from .utils import calc_condon_flux_errors
 
 from vast_pipeline import models
@@ -436,11 +435,14 @@ class SelavyImage(FitsImage):
         df['ew_sys_err'] = self.config["ra_uncertainty"] / 3600.
         df['ns_sys_err'] = self.config["dec_uncertainty"] / 3600.
 
-        df['error_radius'] = calc_error_radius(
-            df['ra'].values,
-            df['ra_err'].values,
-            df['dec'].values,
-            df['dec_err'].values,
+        # NOTE: The simplified error_radius calculation
+        # computed here is a replacement for the erroneous
+        # implementation in the calc_error_radius function
+        # in utils.py. It should mimic the intended functionality
+        # of that function as well as the implementation
+        # in TraP.
+        df['error_radius'] = np.hypot(
+            df['ra_err'].values, df['dec_err'].values
         )
 
         df['uncertainty_ew'] = np.hypot(
