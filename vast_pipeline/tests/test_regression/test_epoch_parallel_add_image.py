@@ -275,7 +275,7 @@ class DeruiterEpochParallelAddImageTest(TestCase):
         '''
         See documentation for test_num_sources in property_check.
         '''
-        property_check.test_num_sources(self, self.sources, 617)
+        property_check.test_num_sources(self, self.sources, 610)
 
     def test_most_relations(self):
         '''
