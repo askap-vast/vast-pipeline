@@ -203,7 +203,7 @@ def extract_from_image(
         edge_buffer=edge_buffer,
         use_clusters=use_clusters
     )
-    logger.debug(f"{image} - Time to measure FP: {timer.reset()}s")
+    logger.debug(f"{image} - Time to measure FP: {FP_timer.reset()}s")
     
     num_fits = np.sum(flux>0.0)
 
