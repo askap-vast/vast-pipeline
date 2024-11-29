@@ -36,27 +36,38 @@ logger = logging.getLogger(__name__)
 dask.config.set({"multiprocessing.context": "fork"})
 
 
-def get_create_skyreg(image: Image) -> SkyRegion:
+def get_create_skyreg(image: Image, radius: float = 10.) -> SkyRegion:
     '''
-    This creates a Sky Region object in Django ORM given the related
-    image object.
+    This creates a SkyRegion object in Django ORM given the related
+    image object. If a SkyRegion already exists and has an image radius
+    within `radius` arcsec of the input image then use that SkyRegion.
 
     Args:
         image: The image Django ORM object.
+        radius: Search radius (in arcsec) for matching to existing SkyRegion
 
     Returns:
         The sky region Django ORM object.
     '''
-    # In the calculations below, it is assumed the image has square
+    # NOTE: In the calculations below, it is assumed the image has square
     # pixels (this pipeline has been designed for ASKAP images, so it
     # should always be square). It will likely give wrong results if not
-    skyregions = SkyRegion.objects.filter(
-        centre_ra=image.ra,
-        centre_dec=image.dec,
-        xtr_radius=image.fov_bmin
+
+    # Get SkyRegions and image radii areas within `radius` arcsec
+    radius_deg = radius/3600.
+    skyregions = SkyRegion.objects.cone_search(
+        ra=float(image.ra),
+        dec=float(image.dec),
+        radius_deg=float(radius_deg)
+    ).filter(
+        xtr_radius__range=(
+            image.fov_bmin - radius_deg/2.,
+            image.fov_bmin + radius_deg/2.
+        )
     )
     if skyregions:
-        skyr = skyregions.get()
+        # Get the closest in case of multiple matches.
+        skyr = skyregions[0]
         logger.info('Found sky region %s', skyr)
     else:
         x, y, z = eq_to_cart(image.ra, image.dec)
