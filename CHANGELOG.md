@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed outdated jupyterhub link on pipeline website [#795](https://github.com/askap-vast/vast-pipeline/pull/795)
 - Renamed variable in pipeline.finalise to better reflect what the dataframe represents (sources_df -> associations_df) [#787](https://github.com/askap-vast/vast-pipeline/pull/787)
 - Fixed typo in variable name ("assoications") [#787](https://github.com/askap-vast/vast-pipeline/pull/787)
 - Fix partition calculation from wrong DataFrame object [#783](https://github.com/askap-vast/vast-pipeline/pull/783)
@@ -29,6 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#795](https://github.com/askap-vast/vast-pipeline/pull/795): fix: Fixed outdated jupyterhub link on pipeline website
 - [#788](https://github.com/askap-vast/vast-pipeline/pull/788): feat, fix: Speed up forced fitting code by using numba-fied forced_phot code and reordering some calculations
 - [#787](https://github.com/askap-vast/vast-pipeline/pull/787): fix: Optimise associations merge and minor variable name updates
 - [#783](https://github.com/askap-vast/vast-pipeline/pull/783): fix: Fix partition calculation from wrong DataFrame object
