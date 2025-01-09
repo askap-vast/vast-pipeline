@@ -24,7 +24,7 @@ from itertools import chain
 from vast_pipeline.image.main import FitsImage, SelavyImage
 from vast_pipeline.image.utils import open_fits
 from vast_pipeline.utils.utils import (
-    eq_to_cart, StopWatch, optimize_ints, optimize_floats,
+    eq_to_cart, StopWatch, optimise_numeric,
     calculate_workers_and_partitions
 )
 from vast_pipeline.models import (
@@ -1376,7 +1376,7 @@ def create_measurements_arrow_file(p_run: Run) -> None:
     measurements['time'] = measurements['time'].dt.tz_localize(None)
 
     logger.debug('Optimising dataframes.')
-    measurements = optimize_ints(optimize_floats(measurements))
+    measurements = optimise_numeric(measurements)
 
     logger.debug("Loading to pyarrow table.")
     measurements = pa.Table.from_pandas(measurements)
@@ -1413,7 +1413,7 @@ def create_measurement_pairs_arrow_file(p_run: Run) -> None:
     )
 
     logger.debug('Optimising dataframe.')
-    measurement_pairs_df = optimize_ints(optimize_floats(measurement_pairs_df))
+    measurement_pairs_df = optimise_numeric(measurement_pairs_df)
 
     logger.debug("Loading to pyarrow table.")
     measurement_pairs_df = pa.Table.from_pandas(measurement_pairs_df)
