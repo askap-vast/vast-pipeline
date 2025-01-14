@@ -24,7 +24,7 @@ from astropy.coordinates import SkyCoord, Angle
 from django.conf import settings
 from django.contrib.auth.models import User
 from itertools import chain
-from tqdm.contrib.concurrent import process_map
+from multiprocessing import Pool
 
 from vast_pipeline.image.main import FitsImage, SelavyImage
 from vast_pipeline.image.utils import open_fits
@@ -1433,14 +1433,16 @@ def create_measurements_arrow_file(p_run: Run, max_workers: Optional[int] =10) -
     
     logger.debug("Processing %d partitions with %d workers", len(m_files), max_workers)
 
-    result = process_map(_process_measurements_file,
-                     m_files,
-                     range(len(m_files)),
-                     [processed_temp.name]*len(m_files),
-                     itertools.repeat(associations),
-                     max_workers=max_workers,
-                     chunksize=1
-                    )
+    
+    with Pool(max_workers) as pool:
+        iterable_arg = zip(
+            m_files,
+            range(len(m_files)),
+            itertools.repeat(processed_temp.name),
+            itertools.repeat(associations),
+        )
+        pool.starmap(_process_measurements_file, iterable_arg)
+    
     logger.debug("Repartitioning dataframe")
     _repartition_measurements(processed_temp.name, repartitioned_temp.name)
 
