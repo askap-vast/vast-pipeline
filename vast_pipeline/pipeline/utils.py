@@ -1637,7 +1637,7 @@ def reconstruct_associtaion_dfs(
     ).index.values
     # Make sure we attach the correct source id
     source_ids = sources_df.loc[relation_ids].source.values
-    sources_df['related'] = np.nan
+    sources_df['related'] = pd.NA
     relations_to_update = prev_relations.loc[source_ids].to_numpy().copy()
     relations_to_update = np.reshape(
         relations_to_update, relations_to_update.shape[0])
@@ -1671,7 +1671,8 @@ def reconstruct_associtaion_dfs(
     # deep=True copy does not truly copy mutable type objects)
     relation_mask = skyc1_srcs.related.notna()
     relation_vals = skyc1_srcs.loc[relation_mask, 'related'].to_list()
-    new_relation_vals = [x.copy() for x in relation_vals]
+    new_relation_vals = np.array([x.copy() for x in relation_vals], dtype='object')
+    #new_relation_vals = [x.copy() for x in relation_vals]
     skyc1_srcs.loc[relation_mask, 'related'] = new_relation_vals
 
     # Reorder so we don't mess up the dask metas.

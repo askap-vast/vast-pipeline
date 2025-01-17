@@ -134,30 +134,30 @@ test = ["hypothesis", "pytest", "pytest-remotedata"]
 
 [[package]]
 name = "astroquery"
-version = "0.4.8"
+version = "0.4.7"
 description = "Functions and classes to access online astronomical data resources"
 optional = false
-python-versions = ">=3.9"
+python-versions = ">=3.7"
 groups = ["main"]
 markers = "python_version == \"3.11\" or python_version >= \"3.12\""
 files = [
-    {file = "astroquery-0.4.8-py3-none-any.whl", hash = "sha256:8e0090693b3f005fc8130f2cbcde40b507ee12afcf51110cf76de9fcd3bb14b8"},
-    {file = "astroquery-0.4.8.tar.gz", hash = "sha256:5c11088897d9d590007d1833ca4d76314d7658bd98433c87597799db453aecb5"},
+    {file = "astroquery-0.4.7-py3-none-any.whl", hash = "sha256:dfa8ca46ca0a983f66e9547c774601b331770242f9f6245df5e603f795d75540"},
+    {file = "astroquery-0.4.7.tar.gz", hash = "sha256:047fbacb0a4faec4cdb62675e919c244c1c35e661044fcbb6c9a933331747ec9"},
 ]
 
 [package.dependencies]
-astropy = ">=5.0"
+astropy = ">=4.2.1"
 beautifulsoup4 = ">=4.8"
 html5lib = ">=0.999"
 keyring = ">=15.0"
-numpy = ">=1.20"
-pyvo = ">=1.5"
+numpy = ">=1.18"
+pyvo = ">=1.1"
 requests = ">=2.19"
 
 [package.extras]
-all = ["astropy-healpix", "boto3", "mocpy (>=0.9)", "regions (>=0.5)"]
-docs = ["fsspec[http]", "matplotlib", "scipy", "sphinx-astropy (>=1.5)", "sphinx-automodapi (<0.18)"]
-test = ["fsspec[http]", "matplotlib", "moto[s3]", "pytest-astropy", "pytest-dependency", "pytest-rerunfailures"]
+all = ["astropy-healpix", "boto3", "mocpy (>=0.9)", "regions"]
+docs = ["fsspec[http]", "matplotlib", "scipy", "sphinx-astropy (>=1.5)"]
+test = ["matplotlib", "pytest-astropy", "pytest-dependency", "pytest-rerunfailures"]
 
 [[package]]
 name = "asttokens"
@@ -5127,4 +5127,4 @@ prod = ["gevent", "gunicorn"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11.0,<4"
-content-hash = "eda6784b40d36702a8be05ab72ea9fe581d6d7c0d638e3a1cc19b694ebe39485"
+content-hash = "48f221f8e33f6eec3b7b8f1d560ce339f607c61cf2dd9ac2a4cb1b6b47c4dd79"
