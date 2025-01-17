@@ -13,7 +13,7 @@ bokeh = "3.6.1" # must align with @bokeh/bokehjs version in package.json
 channels = "^3.0.4"
 cloudpickle = "^3.1"
 colorcet = "^2.0.6"
-datashader = "^0.14"
+datashader = "^0.16"
 dask = {extras = ["complete"], version = "^2024.12.1"}
 dask-expr = "^1.1"
 dill = "^0"
