@@ -1447,18 +1447,9 @@ def create_measurements_arrow_file(p_run: Run, max_workers: Optional[int] =10) -
     _repartition_measurements(processed_temp.name, repartitioned_temp.name)
 
     logger.debug("Opening and exporting in vaex")
-    
-    import pyarrow.parquet as pq
-    import pyarrow.feather as pf
-    table = pq.read_table(repartitioned_temp.name)
-    pf.write_feather(table, arrow_file)
-    
-    #table = pa.parquet.ParquetDataset(repartitioned_temp.name).read()
-    #pa.feather.write_feather(table, arrow_file)
-    
-    
-    #vaex_df = vaex.open(repartitioned_temp.name)
-    #vaex_df.export(arrow_file)
+
+    vaex_df = vaex.open(repartitioned_temp.name)
+    vaex_df.export(arrow_file)
 
     logger.debug("Cleaning up temporary data")
     repartitioned_temp.cleanup()
