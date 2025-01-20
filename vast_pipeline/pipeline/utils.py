@@ -1349,8 +1349,7 @@ def _process_measurements_file(m_file: str,
         measurements['id'].isin(associations_merge.index)
     ]
     
-    # drop timezone from datetime for vaex compatibility
-    # TODO: Look to keep the timezone if/when vaex is compatible.
+    # drop timezone from datetime for vaex compatibility. V2 NOTE - remove
     measurements['time'] = measurements['time'].dt.tz_localize(None)
     
     measurements = optimise_numeric(measurements)
@@ -1398,6 +1397,8 @@ def create_measurements_arrow_file(p_run: Run, max_workers: Optional[int] =10) -
     arrow_file = os.path.join(p_run_path, 'measurements.arrow')
     logger.info("Will write to final arrow file to %s.", arrow_file)
     
+    # V2 NOTE - the repartitioned data will be the final data product.
+    # Need to scrap arrow_file and change the repartitioned file to measurements.parquet
     processed_temp = tempfile.TemporaryDirectory()
     repartitioned_temp = tempfile.TemporaryDirectory()
     logger.debug("But in the meantime, writing temporary data to %s and %s",
@@ -1448,6 +1449,7 @@ def create_measurements_arrow_file(p_run: Run, max_workers: Optional[int] =10) -
 
     logger.debug("Opening and exporting in vaex")
 
+    # V2 NOTE - remove in V2
     vaex_df = vaex.open(repartitioned_temp.name)
     vaex_df.export(arrow_file)
 
