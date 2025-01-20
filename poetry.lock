@@ -5127,4 +5127,4 @@ prod = ["gevent", "gunicorn"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11.0,<4"
-content-hash = "48f221f8e33f6eec3b7b8f1d560ce339f607c61cf2dd9ac2a4cb1b6b47c4dd79"
+content-hash = "fe8ae24e5563ba9c072b20093ccd6f9fd74721afcbe3e9990f59d5f770a30687"
