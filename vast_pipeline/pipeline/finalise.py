@@ -8,7 +8,7 @@ from astropy.coordinates import SkyCoord
 from typing import List, Dict, Tuple
 
 from vast_pipeline.models import Run
-from vast_pipeline.utils.utils import StopWatch, optimize_floats, optimize_ints
+from vast_pipeline.utils.utils import StopWatch, optimise_numeric
 from vast_pipeline.pipeline.loading import (
     make_upload_associations, make_upload_sources, make_upload_related_sources,
     update_sources
@@ -393,11 +393,9 @@ def final_operations(
         )
 
         # optimize measurement pair DataFrame and save to parquet file
-        measurement_pairs_df = optimize_ints(
-            optimize_floats(
-                measurement_pairs_df.drop(columns=["source"]).rename(
-                    columns={"id_a": "meas_id_a", "id_b": "meas_id_b"}
-                )
+        measurement_pairs_df = optimise_numeric(
+            measurement_pairs_df.drop(columns=["source"]).rename(
+                columns={"id_a": "meas_id_a", "id_b": "meas_id_b"}
             )
         )
         measurement_pairs_df.to_parquet(
