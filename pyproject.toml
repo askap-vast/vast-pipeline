@@ -6,7 +6,7 @@ authors = ["The VAST Development Team"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = ">=3.11.0,<4"
+python = ">=3.11.0,<3.13"
 astropy = "^7.0"
 astroquery = "==0.4.7"
 bokeh = "3.6.2" # must align with @bokeh/bokehjs version in package.json
