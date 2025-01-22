@@ -16,7 +16,6 @@ import dask.dataframe as dd
 import dask.config as dc
 import psutil
 import tempfile
-import vaex
 import itertools
 
 from typing import Any, List, Optional, Dict, Tuple, Union

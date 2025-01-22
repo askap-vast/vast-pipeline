@@ -42,7 +42,6 @@ holoviews = "^1.14.7"
 datashader = "^0.14"
 channels = "^3.0.4"
 param = "<2.0.0"
-vaex-core = "^4.17.1"
 
 [tool.poetry.dev-dependencies]
 mkdocs-material = "^9.4"
