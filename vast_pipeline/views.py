@@ -516,11 +516,11 @@ class RunViewSet(ModelViewSet):
         )
 
     @rest_framework.decorators.action(detail=True, methods=['post'])
-    def genarrow(
+    def genparquet(
         self, request: Request, pk: Optional[int] = None
     ) ->HttpResponseRedirect:
         """
-        Launches the create arrow files process for a pipeline run using
+        Launches the create parquet files process for a pipeline run using
         a Django Q cluster. Includes a check on ownership or admin status of
         the user to make sure the creation is allowed.
 
@@ -559,7 +559,7 @@ class RunViewSet(ModelViewSet):
         if p_run.status != "END":
             msg = (
                 f'{p_run.name} has not completed successfully.'
-                ' The arrow files can only be generated after the run is'
+                ' The parquet files can only be generated after the run is'
                 ' successful.'
             )
             messages.error(
@@ -569,19 +569,19 @@ class RunViewSet(ModelViewSet):
             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
         try:
-            overwrite_flag = True if request.POST.get('arrowOverwrite', None) else False
+            overwrite_flag = True if request.POST.get('parquetOverwrite', None) else False
 
             async_task(
                 'django.core.management.call_command',
-                'createmeasarrow',
+                'createmeasparquet',
                 p_run.path,
                 overwrite=overwrite_flag,
                 verbosity=3
             )
 
             msg = mark_safe(
-                f'Generate the arrow files for <b>{p_run.name}</b> successfully requested!<br><br>'
-                ' Refresh the page and check the generate arrow log output for the status of the process.'
+                f'Generate the parquet files for <b>{p_run.name}</b> successfully requested!<br><br>'
+                ' Refresh the page and check the generate parquet log output for the status of the process.'
             )
             messages.success(
                 request,
@@ -639,14 +639,14 @@ def RunDetail(request, id):
     )
     restore_log_files = [os.path.basename(i) for i in restore_log_files[::-1]]
 
-    genarrow_log_files = sorted(
-        glob(os.path.join(p_run['path'], '*[0-9]_gen_arrow_log.txt'))
+    genparquet_log_files = sorted(
+        glob(os.path.join(p_run['path'], '*[0-9]_gen_parquet_log.txt'))
     )
-    genarrow_log_files = [os.path.basename(i) for i in genarrow_log_files[::-1]]
+    genparquet_log_files = [os.path.basename(i) for i in genparquet_log_files[::-1]]
 
-    # Detect whether arrow files are present
-    p_run['arrow_files'] = os.path.isfile(
-        os.path.join(p_run['path'], 'measurements.arrow')
+    # Detect whether parquet files are present
+    p_run['parquet_files'] = os.path.isfile(
+        os.path.join(p_run['path'], 'measurements.parquet')
     )
 
     image_fields = [
@@ -700,7 +700,7 @@ def RunDetail(request, id):
         "static_url": settings.STATIC_URL,
         "log_files": log_files,
         "restore_log_files": restore_log_files,
-        "genarrow_log_files": genarrow_log_files
+        "genparquet_log_files": genparquet_log_files
     }
 
     context["comment_form"], context["comments"] = _process_comment_form_get_comments(
