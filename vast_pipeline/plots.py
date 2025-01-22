@@ -25,7 +25,7 @@ from bokeh.models import (
     ColorBar
 )
 from bokeh.models.formatters import DatetimeTickFormatter
-from bokeh.layouts import row, Row, gridplot, Spacer, column
+from bokeh.layouts import row, Row, gridplot, column
 from bokeh.plotting import figure
 from bokeh.transform import factor_cmap, linear_cmap
 from datetime import timedelta
