@@ -21,8 +21,8 @@ from vast_pipeline._version import __version__ as pipeline_version
 from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
 from vast_pipeline.pipeline.main import Pipeline
 from vast_pipeline.pipeline.utils import (
-    get_create_p_run, create_measurements_arrow_file,
-    create_measurement_pairs_arrow_file, backup_parquets,
+    get_create_p_run, create_measurements_parquet_file,
+    create_measurement_pairs_parquet_file, backup_parquets,
     create_temp_config_file
 )
 from vast_pipeline.utils.utils import StopWatch, timeStamped
@@ -143,11 +143,9 @@ def run_pipe(
 
     try:
         if not flag_exist:
-            # check for and remove any present .parquet (and .arrow) files
+            # check for and remove any present .parquet files
             parquets = (
                 glob.glob(os.path.join(p_run.path, "*.parquet"))
-                # TODO Remove arrow when arrow files are no longer needed.
-                + glob.glob(os.path.join(p_run.path, "*.arrow"))
                 + glob.glob(os.path.join(p_run.path, "*.bak"))
             )
             for parquet in parquets:
@@ -207,8 +205,6 @@ def run_pipe(
             if initial_run is False:
                 parquets = (
                     glob.glob(os.path.join(p_run.path, "*.parquet"))
-                    # TODO Remove arrow when arrow files are no longer needed.
-                    + glob.glob(os.path.join(p_run.path, "*.arrow"))
                 )
 
                 if full_rerun:
@@ -339,11 +335,11 @@ def run_pipe(
         # run the pipeline
         pipeline.set_status(p_run, 'RUN')
         pipeline.process_pipeline(p_run)
-        # Create arrow file after success if selected.
-        if pipeline.config["measurements"]["write_arrow_files"]:
-            create_measurements_arrow_file(p_run)
+        # Create parquet file after success if selected.
+        if pipeline.config["measurements"]["write_parquet_files"]:
+            create_measurements_parquet_file(p_run)
             if pipeline.config["variability"]["pair_metrics"]:
-                create_measurement_pairs_arrow_file(p_run)
+                create_measurement_pairs_parquet_file(p_run)
     except Exception as e:
         # set the pipeline status as error
         pipeline.set_status(p_run, 'ERR')
