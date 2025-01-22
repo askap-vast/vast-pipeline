@@ -51,7 +51,7 @@
             <span class="icon text-white-600">
               <i class="fas fa-angle-double-right"></i>
             </span>
-            <span class="text">Generate Arrow Files</span>
+            <span class="text">Generate Parquet Files</span>
           </a>
           <a id="deletePipeRunButton" class="btn btn-sm btn-danger
             btn-icon-split shadow-sm
@@ -180,13 +180,13 @@
           <p><strong>Epoch based: </strong>{{ p_run.epoch_based }}</p>
           <p><strong>Run Status: </strong>{{ p_run.status }}</p>
           <p><strong>Path: </strong>{{ p_run.path }}</p>
-          <p><strong>Arrow Files Available: </strong>{% if p_run.parquet_files == True %}Yes{% else %}No{% endif %}</p>
+          <p><strong>Parquet Files Available: </strong>{% if p_run.parquet_files == True %}Yes{% else %}No{% endif %}</p>
           <p><strong>Description: </strong>{{ p_run.description }}</p>
           <p>
             <a href="#configFile"><strong>Config File</strong></a><br>
             <a href="#logFile"><strong>Run Log File</strong></a><br>
             <a href="#restorelogFile"><strong>Restore Log File</strong></a><br>
-            <a href="#parquetlogFile"><strong>Generate Arrow Files Log File</strong></a>
+            <a href="#parquetlogFile"><strong>Generate Parquet Files Log File</strong></a>
           </p>
         </div>
       </div>
@@ -304,9 +304,9 @@
       <!-- log file card -->
       <div class="card shadow mb-4">
         <h6 class="card-header m-0 font-weight-bold text-primary" id="parquetlogFile">
-          <a data-toggle="collapse" href="#collapseArrowLogCard" aria-expanded="true" aria-controls="collapseArrowLogCard" id="parquetlogHeader" class="d-block float-left">
+          <a data-toggle="collapse" href="#collapseParquetLogCard" aria-expanded="true" aria-controls="collapseParquetLogCard" id="parquetlogHeader" class="d-block float-left">
             <i class="fa fa-chevron-down pull-right"></i>
-            Generate Arrow Files Log File
+            Generate Parquet Files Log File
           </a>
           <div class="float-right" id="genparquetLogfileSelector">
             <select name="genparquetlogs" id="genparquetlogs">
@@ -316,7 +316,7 @@
             </select>
           </div>
         </h6>
-        <div class="collapse show" id="collapseArrowLogCard">
+        <div class="collapse show" id="collapseParquetLogCard">
           <div class="card-body">
             <pre class="pre-scrollable" id="genparquetlogtext"><code>No logs to show.</code></pre>
           </div>
@@ -554,12 +554,12 @@
   </div>
 </div>
 
-<!-- Arrow pipeline modal-->
+<!-- Parquet pipeline modal-->
 <div class="modal fade" id="parquetPipeModal" tabindex="-1" role="dialog" aria-labelledby="parquetPipeModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h4 class="modal-title font-weight-bold" id="parquetPipeModalLabel">Generate Arrow Files for {{ p_run.name }}</h4>
+        <h4 class="modal-title font-weight-bold" id="parquetPipeModalLabel">Generate Parquet Files for {{ p_run.name }}</h4>
         <button class="close" type="button" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">×</span>
         </button>
@@ -596,7 +596,7 @@
             <span class="icon">
               <i class="fas fa-angle-double-right fa-sm"></i>
             </span>
-            <span class="text">Generate Arrow Files</span>
+            <span class="text">Generate Parquet Files</span>
             </button>
           </div>
         </form>
