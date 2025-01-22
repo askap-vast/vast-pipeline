@@ -7,12 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/v1.1.0...HEAD)
 
 #### Added
-
 - Added option to disable forced photometry clustering [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
 - Added additional logging to forced extraction step [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
 
 #### Changed
 
+- V2: Update dependencies to fix dependabot warnings and prepare for Dask distributed implementation.
 - Upgrade forced_phot dependency to v0.2 and force `use_numba=True` [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
 - Remove bad forced photometry fits immediately after calculation, rather than after they've all been compiled into a single dataframe [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
 - Optimise associations upload by dropping unnecessary columns prior to a large dataframe merge [#787](https://github.com/askap-vast/vast-pipeline/pull/787)
@@ -30,6 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#798](https://github.com/askap-vast/vast-pipeline/pull/798): dep: V2: Update dependencies to deal with dependabot reccomendations and to prepare for V2 upgrades. 
 - [#795](https://github.com/askap-vast/vast-pipeline/pull/795): fix: Fixed outdated jupyterhub link on pipeline website
 - [#788](https://github.com/askap-vast/vast-pipeline/pull/788): feat, fix: Speed up forced fitting code by using numba-fied forced_phot code and reordering some calculations
 - [#787](https://github.com/askap-vast/vast-pipeline/pull/787): fix: Optimise associations merge and minor variable name updates
