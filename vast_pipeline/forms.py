@@ -37,7 +37,7 @@ class PipelineRunForm(forms.Form):
     max_partition_mb = forms.IntegerField()
     pair_metrics = forms.BooleanField(required=False)
     use_condon_errors = forms.BooleanField(required=False)
-    create_measurements_arrow_files = forms.BooleanField(required=False)
+    create_measurements_parquet_files = forms.BooleanField(required=False)
     suppress_astropy_warnings = forms.BooleanField(required=False)
 
 
