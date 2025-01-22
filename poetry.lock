@@ -1527,7 +1527,7 @@ description = "Lightweight in-process concurrent programming"
 optional = false
 python-versions = ">=3.7"
 groups = ["main"]
-markers = "python_version == \"3.11\" and extra == \"prod\" and platform_python_implementation == \"CPython\" or python_version == \"3.11\" and (platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\") or python_version >= \"3.12\" and extra == \"prod\" and platform_python_implementation == \"CPython\" or python_version >= \"3.12\" and python_version < \"3.14\" and (platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\")"
+markers = "python_version == \"3.11\" and extra == \"prod\" and platform_python_implementation == \"CPython\" or python_version == \"3.11\" and (platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\") or python_version >= \"3.12\" and extra == \"prod\" and platform_python_implementation == \"CPython\" or python_version >= \"3.12\" and (platform_machine == \"aarch64\" or platform_machine == \"ppc64le\" or platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"win32\" or platform_machine == \"WIN32\")"
 files = [
     {file = "greenlet-3.1.1-cp310-cp310-macosx_11_0_universal2.whl", hash = "sha256:0bbae94a29c9e5c7e4a2b7f0aae5c17e8e90acbfd3bf6270eeba60c39fce3563"},
     {file = "greenlet-3.1.1-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:0fde093fb93f35ca72a556cf72c92ea3ebfda3d79fc35bb19fbe685853869a83"},
@@ -5046,5 +5046,5 @@ prod = ["gevent", "gunicorn"]
 
 [metadata]
 lock-version = "2.1"
-python-versions = ">=3.11.0,<4"
-content-hash = "ca2515f9c87e12fa796eb75e7cba675247ab1f37bc1131b3d78ab034032ca94c"
+python-versions = ">=3.11.0,<3.13"
+content-hash = "071d3241eeff31c2cd2f0ed0b13bc1f6c0693aaf8d1d693c9006111236a2b717"
