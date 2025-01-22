@@ -9,7 +9,7 @@ license = "MIT"
 python = ">=3.11.0,<4"
 astropy = "^7.0"
 astroquery = "==0.4.7"
-bokeh = "3.6.1" # must align with @bokeh/bokehjs version in package.json
+bokeh = "3.6.2" # must align with @bokeh/bokehjs version in package.json
 channels = "^3.0.5"
 cloudpickle = "^3.1"
 colorcet = "^2.0.6"

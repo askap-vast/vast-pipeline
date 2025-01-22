@@ -313,15 +313,15 @@ css = ["tinycss2 (>=1.1.0,<1.5)"]
 
 [[package]]
 name = "bokeh"
-version = "3.6.1"
+version = "3.6.2"
 description = "Interactive plots and applications in the browser from Python"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 markers = "python_version == \"3.11\" or python_version >= \"3.12\""
 files = [
-    {file = "bokeh-3.6.1-py3-none-any.whl", hash = "sha256:6a97271bd4cc5b32c5bc7aa9c1c0dbe0beb0a8da2a22193e57c73f0c88d2075a"},
-    {file = "bokeh-3.6.1.tar.gz", hash = "sha256:04d3fb5fac871423f38e4535838164cd90c3d32e707bcb74c8bf991ed28878fc"},
+    {file = "bokeh-3.6.2-py3-none-any.whl", hash = "sha256:fddc4b91f8b40178c0e3e83dfcc33886d7803a3a1f041a840834255e435a18c2"},
+    {file = "bokeh-3.6.2.tar.gz", hash = "sha256:2f3043d9ecb3d5dc2e8c0ebf8ad55727617188d4e534f3e7208b36357e352396"},
 ]
 
 [package.dependencies]
@@ -5047,4 +5047,4 @@ prod = ["gevent", "gunicorn"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11.0,<4"
-content-hash = "c65660f55075470a42a81ae6f9260b30e47d47c80798256d589d537355a22250"
+content-hash = "ca2515f9c87e12fa796eb75e7cba675247ab1f37bc1131b3d78ab034032ca94c"
