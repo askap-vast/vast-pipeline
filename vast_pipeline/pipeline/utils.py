@@ -1372,9 +1372,9 @@ def _repartition_measurements(in_file: str, out_file: str) -> None:
         dask_df = dask_df.repartition(partition_size="100MB")
         dask_df.to_parquet(out_file)
 
-def create_measurements_arrow_file(p_run: Run, max_workers: Optional[int] =10) -> None:
+def create_measurements_parquet_file(p_run: Run, max_workers: Optional[int] =10) -> None:
     """
-    Creates a measurements.arrow file using the parquet outputs
+    Creates a measurements.parquet file using the parquet outputs
     of a pipeline run.
 
     Args:
@@ -1387,11 +1387,11 @@ def create_measurements_arrow_file(p_run: Run, max_workers: Optional[int] =10) -
     Returns:
         None
     """
-    logger.info('Creating measurements.arrow for run %s.', p_run.name)
+    logger.info('Creating measurements.parquet for run %s.', p_run.name)
     
     p_run_path = p_run.path
     parquet_file = os.path.join(p_run_path, 'measurements.parquet')
-    logger.info("Will write to final arrow file to %s.", arrow_file)
+    logger.info("Will write to final parquet file to %s.", parquet_file)
     
     processed_temp = tempfile.TemporaryDirectory()
     logger.debug("Writing temporary data to %s", processed_temp.name)
@@ -1442,9 +1442,9 @@ def create_measurements_arrow_file(p_run: Run, max_workers: Optional[int] =10) -
     logger.debug("Done.")
 
 
-def create_measurement_pairs_arrow_file(p_run: Run) -> None:
+def create_measurement_pairs_parquet_file(p_run: Run) -> None:
     """
-    Creates a measurement_pairs.arrow file using the parquet outputs
+    Creates a measurement_pairs.parquet file using the parquet outputs
     of a pipeline run.
 
     Args:
@@ -1454,7 +1454,7 @@ def create_measurement_pairs_arrow_file(p_run: Run) -> None:
     Returns:
         None
     """
-    logger.info('Creating measurement_pairs.arrow for run %s.', p_run.name)
+    logger.info('Creating measurement_pairs.parquet for run %s.', p_run.name)
 
     measurement_pairs_df = pd.read_parquet(
         os.path.join(
@@ -1466,11 +1466,11 @@ def create_measurement_pairs_arrow_file(p_run: Run) -> None:
     logger.debug('Optimising dataframe.')
     measurement_pairs_df = optimise_numeric(measurement_pairs_df)
 
-    logger.debug("Loading to pyarrow table.")
+    logger.debug("Loading to pyparquet table.")
     measurement_pairs_df = pa.Table.from_pandas(measurement_pairs_df)
 
-    logger.debug("Exporting to arrow file.")
-    outname = os.path.join(p_run.path, 'measurement_pairs.arrow')
+    logger.debug("Exporting to parquet file.")
+    outname = os.path.join(p_run.path, 'measurement_pairs.parquet')
 
     local = pa.fs.LocalFileSystem()
 
