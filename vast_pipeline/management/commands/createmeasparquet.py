@@ -1,6 +1,6 @@
 """
-This module defines the command for creating an arrow output file for a
-previously completed pipeline run.
+This module defines the command for creating a measurements output parquet file
+for a previously completed pipeline run.
 """
 
 import os
@@ -9,8 +9,8 @@ import logging
 from argparse import ArgumentParser
 from django.core.management.base import BaseCommand, CommandError
 from vast_pipeline.pipeline.utils import (
-    create_measurements_arrow_file,
-    create_measurement_pairs_arrow_file
+    create_measurements_parquet_file,
+    create_measurement_pairs_parquet_file
 )
 from vast_pipeline.models import Run
 from vast_pipeline.utils.utils import timeStamped
@@ -22,11 +22,11 @@ logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     """
-    This command creates measurements and measurement_pairs arrow files for a
+    This command creates measurements and measurement_pairs parquet files for a
     completed pipeline run.
     """
     help = (
-        'Create `measurements.arrow` and `measurement_pairs.arrow` files for a'
+        'Create `measurements.parquet` and `measurement_pairs.parquet` files for a'
         ' completed pipeline run.'
     )
 
@@ -52,7 +52,7 @@ class Command(BaseCommand):
             action='store_true',
             required=False,
             default=False,
-            help="Overwrite previous 'measurements.arrow' file.",
+            help="Overwrite previous 'measurements.parquet' file.",
         )
 
     def handle(self, *args, **options) -> None:
@@ -76,7 +76,7 @@ class Command(BaseCommand):
         # configure logging
         root_logger = logging.getLogger('')
         f_handler = logging.FileHandler(
-            os.path.join(run_folder, timeStamped('gen_arrow_log.txt')),
+            os.path.join(run_folder, timeStamped('gen_parquet_log.txt')),
             mode='w'
         )
         f_handler.setFormatter(root_logger.handlers[0].formatter)
@@ -96,52 +96,52 @@ class Command(BaseCommand):
         if p_run.status != 'END':
             raise CommandError(f'Pipeline run {p_run_name} has not completed.')
 
-        measurements_arrow = os.path.join(run_folder, 'measurements.arrow')
-        measurement_pairs_arrow = os.path.join(
-            run_folder, 'measurement_pairs.arrow'
+        measurements_parquet = os.path.join(run_folder, 'measurements.parquet')
+        measurement_pairs_parquet = os.path.join(
+            run_folder, 'measurement_pairs.parquet'
         )
 
-        if os.path.isfile(measurements_arrow):
+        if os.path.isfile(measurements_parquet):
             if options['overwrite']:
-                logger.info("Removing previous 'measurements.arrow' file.")
-                os.remove(measurements_arrow)
+                logger.info("Removing previous 'measurements.parquet' file.")
+                os.remove(measurements_parquet)
             else:
                 logger.error(
-                    f'Measurements arrow file already exists for {p_run_name}'
+                    f'Measurements parquet file already exists for {p_run_name}'
                     ' and `--overwrite` has not been selected.'
                 )
                 raise CommandError(
-                    f'Measurements arrow file already exists for {p_run_name}'
+                    f'Measurements parquet file already exists for {p_run_name}'
                     ' and `--overwrite` has not been selected.'
                 )
 
-        if os.path.isfile(measurement_pairs_arrow):
+        if os.path.isfile(measurement_pairs_parquet):
             if options['overwrite']:
                 logger.info(
-                    "Removing previous 'measurement_pairs.arrow' file."
+                    "Removing previous 'measurement_pairs.parquet' file."
                 )
-                os.remove(measurement_pairs_arrow)
+                os.remove(measurement_pairs_parquet)
             else:
                 logger.error(
-                    'Measurement pairs arrow file already exists for'
+                    'Measurement pairs parquet file already exists for'
                     f' {p_run_name} and `--overwrite` has not been selected.'
                 )
                 raise CommandError(
-                    'Measurement pairs arrow file already exists for'
+                    'Measurement pairs parquet file already exists for'
                     f' {p_run_name} and `--overwrite` has not been selected.'
                 )
 
-        logger.info("Creating measurements arrow file for '%s'.", p_run_name)
+        logger.info("Creating measurements parquet file for '%s'.", p_run_name)
 
-        create_measurements_arrow_file(p_run)
+        create_measurements_parquet_file(p_run)
 
         if p_run.get_config(validate_inputs=False, prev=True)["variability"]["pair_metrics"]:
             logger.info(
-                "Creating measurement pairs arrow file for '%s'.", p_run_name
+                "Creating measurement pairs parquet file for '%s'.", p_run_name
             )
 
-            create_measurement_pairs_arrow_file(p_run)
+            create_measurement_pairs_parquet_file(p_run)
 
         logger.info(
-            "Arrow files created successfully for '%s'!", p_run_name
+            "Parquet files created successfully for '%s'!", p_run_name
         )
