@@ -1394,17 +1394,11 @@ def create_measurements_arrow_file(p_run: Run, max_workers: Optional[int] =10) -
     logger.info('Creating measurements.arrow for run %s.', p_run.name)
     
     p_run_path = p_run.path
-    arrow_file = os.path.join(p_run_path, 'measurements.arrow')
+    parquet_file = os.path.join(p_run_path, 'measurements.parquet')
     logger.info("Will write to final arrow file to %s.", arrow_file)
     
-    # V2 NOTE - the repartitioned data will be the final data product.
-    # Need to scrap arrow_file and change the repartitioned file to measurements.parquet
     processed_temp = tempfile.TemporaryDirectory()
-    repartitioned_temp = tempfile.TemporaryDirectory()
-    logger.debug("But in the meantime, writing temporary data to %s and %s",
-                 processed_temp.name,
-                 repartitioned_temp.name
-                 )
+    logger.debug("Writing temporary data to %s", processed_temp.name)
 
     images = pd.read_parquet(
         os.path.join(
@@ -1444,19 +1438,11 @@ def create_measurements_arrow_file(p_run: Run, max_workers: Optional[int] =10) -
         )
         pool.starmap(_process_measurements_file, iterable_arg)
     
-    logger.debug("Repartitioning dataframe")
-    _repartition_measurements(processed_temp.name, repartitioned_temp.name)
-
-    logger.debug("Opening and exporting in vaex")
-
-    # V2 NOTE - remove in V2
-    vaex_df = vaex.open(repartitioned_temp.name)
-    vaex_df.export(arrow_file)
+    logger.debug("Repartitioning dataframe and saving")
+    _repartition_measurements(processed_temp.name, parquet_file)
 
     logger.debug("Cleaning up temporary data")
     repartitioned_temp.cleanup()
-    processed_temp.cleanup()
-
     logger.debug("Done.")
 
 
