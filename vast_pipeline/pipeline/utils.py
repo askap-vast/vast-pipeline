@@ -1349,9 +1349,6 @@ def _process_measurements_file(m_file: str,
         measurements['id'].isin(associations_merge.index)
     ]
     
-    # drop timezone from datetime for vaex compatibility. V2 NOTE - remove
-    measurements['time'] = measurements['time'].dt.tz_localize(None)
-    
     measurements = optimise_numeric(measurements)
     measurements = measurements.merge(associations_merge, right_index=True, left_on='id', how="inner").rename(columns={'source_id': 'source'})
     
