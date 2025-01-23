@@ -5,6 +5,7 @@ for a previously completed pipeline run.
 
 import os
 import logging
+import shutil
 
 from argparse import ArgumentParser
 from django.core.management.base import BaseCommand, CommandError
@@ -104,7 +105,7 @@ class Command(BaseCommand):
         if os.path.exists(measurements_parquet):
             if options['overwrite']:
                 logger.info("Removing previous 'measurements.parquet' file.")
-                os.remove(measurements_parquet)
+                shutil.rmtree(measurements_parquet)
             else:
                 logger.error(
                     f'Measurements parquet file already exists for {p_run_name}'
@@ -120,7 +121,7 @@ class Command(BaseCommand):
                 logger.info(
                     "Removing previous 'measurement_pairs.parquet' file."
                 )
-                os.remove(measurement_pairs_parquet)
+                shutil.rmtree(measurement_pairs_parquet)
             else:
                 logger.error(
                     'Measurement pairs parquet file already exists for'
