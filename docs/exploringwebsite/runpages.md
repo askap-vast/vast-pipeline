@@ -22,7 +22,7 @@ Explanation of the table options can be found in the [DataTables section](datata
 
 ## Pipeline Run Detail Page
 
-This page presents all the information about the pipeline run, including options to edit the configuration file and to schedule the run for processing, restore the run, delete the run and generate the arrow measurement files.
+This page presents all the information about the pipeline run, including options to edit the configuration file and to schedule the run for processing, restore the run, delete the run and generate the parquet measurement files.
 
 ![!Pipeline Run detail page.](../img/run-detail1.png){: loading=lazy }
 
@@ -32,9 +32,9 @@ This page presents all the information about the pipeline run, including options
 
 For admins and creators of runs there are four action buttons available:
 
-* **Generate Arrow Files**  
-     A process to generate the arrow measurement files.
-     See [Generating Arrow Files](../../using/genarrow).
+* **Generate Parquet Files**  
+     A process to generate the parquet measurement files.
+     See [Generating Parquet Files](../../using/genparquet).
 * **Delete Run**  
      Delete the pipeline run.
      See [Deleting a Run](../../using/deleterun).
@@ -118,11 +118,11 @@ The log file of the restore run action.
 
 ![!Restore log file.](../img/run-detail8.png){: loading=lazy }
 
-#### Generate Arrow Files Log File
+#### Generate Parquet Files Log File
 
-The log file of the generate arrow files action.
+The log file of the generate parquet files action.
 
-![!Generate arrow files log file.](../img/run-detail9.png){: loading=lazy }
+![!Generate parquet files log file.](../img/run-detail9.png){: loading=lazy }
 
 
 ### Image and Measurements Tables
