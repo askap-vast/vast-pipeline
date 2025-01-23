@@ -108,9 +108,9 @@ Below is an example of a default `config.yaml` file. Note that no images or othe
       # Choose a value to use for the local rms in these cases in mJy/beam.
       selavy_local_rms_fill_value: 0.2
 
-      # Create 'measurements.arrow' and 'measurement_pairs.arrow' files at the end of 
+      # Create 'measurements.parquet' and 'measurement_pairs.parquet' files at the end of 
       # a successful run.
-      write_arrow_files: False
+      write_parquet_files: False
 
       # The positional uncertainty of a measurement is in reality the fitting errors and the
       # astrometric uncertainty of the image/survey/instrument combined in quadrature.
@@ -487,17 +487,17 @@ Boolean. Calculate the Condon errors of the extractions when read in from the so
 **`measurements.selavy_local_rms_fill_value`**
 Float. Value to substitute for the `local_rms` parameter in selavy extractions if a `0.0` value is found. Unit is mJy. Defaults to `0.2`.
 
-**`measurements.write_arrow_files`**
-Boolean. When `True` then two `arrow` format files are produced:
+**`measurements.write_parquet_files`**
+Boolean. When `True` then two `parquet` format files are produced:
 
-* `measurements.arrow` - an arrow file containing all the measurements associated with the run.
-* `measurement_pairs.arrow` -  an arrow file containing the measurement pairs information pre-merged with extra information from the measurements. Only output if `variability.pair_metrics` is also set to `True`.
+* `measurements.parquet` - an parquet file containing all the measurements associated with the run.
+* `measurement_pairs.parquet` -  an parquet file containing the measurement pairs information pre-merged with extra information from the measurements. Only output if `variability.pair_metrics` is also set to `True`.
 
 Producing these files for large runs (200+ images) is recommended for post-processing. Defaults to `False`.
 
 !!! note
-    The arrow files can optionally be produced after the run has completed.
-    See the [Generating Arrow Files page](genarrow.md).
+    The parquet files can optionally be produced after the run has completed.
+    See the [Generating Parquet Files page](genparquet.md).
 
 **`measurements.ra_uncertainty`**
 Float. Defines an uncertainty error to the RA that will be added in quadrature to the existing source extraction error. Used to represent a systematic positional error. Unit is arcseconds. Defaults to 1.0.
