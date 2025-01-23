@@ -25,7 +25,7 @@ from bokeh.models import (
     ColorBar
 )
 from bokeh.models.formatters import DatetimeTickFormatter
-from bokeh.layouts import row, Row, gridplot, Spacer, column
+from bokeh.layouts import row, Row, gridplot, column
 from bokeh.plotting import figure
 from bokeh.transform import factor_cmap, linear_cmap
 from datetime import timedelta
@@ -102,8 +102,8 @@ def plot_lightcurve(
     max_y = lightcurve.flux_err_upper.max()
     y_padding = (max_y - min_y) * 0.1
     fig_lc = figure(
-        plot_width=PLOT_WIDTH,
-        plot_height=PLOT_HEIGHT,
+        width=PLOT_WIDTH,
+        height=PLOT_HEIGHT,
         sizing_mode="stretch_width",
         x_axis_type="datetime",
         x_range=DataRange1d(default_span=timedelta(days=1)),
@@ -151,8 +151,8 @@ def plot_lightcurve(
     # TODO add vs and m metrics to graph edges
     # create plot
     fig_graph = figure(
-        plot_width=PLOT_HEIGHT,
-        plot_height=PLOT_HEIGHT,
+        width=PLOT_HEIGHT,
+        height=PLOT_HEIGHT,
         x_range=Range1d(-1.1, 1.1),
         y_range=Range1d(-1.1, 1.1),
         x_axis_type=None,
@@ -467,7 +467,6 @@ def plot_eta_v_bokeh(
 
         fig.xaxis.axis_label = x_axis_label
         fig.yaxis.axis_label = y_axis_label
-        fig.aspect_scale = 1
         fig.sizing_mode = 'stretch_width'
         fig.output_backend = "webgl"
         # update the y axis default range
@@ -480,9 +479,8 @@ def plot_eta_v_bokeh(
 
         fig = figure(
             output_backend="webgl",
-            plot_width=PLOT_WIDTH,
-            plot_height=PLOT_HEIGHT,
-            aspect_scale=1,
+            width=PLOT_WIDTH,
+            height=PLOT_HEIGHT,
             x_axis_label=x_axis_label,
             y_axis_label=y_axis_label,
             sizing_mode="stretch_width",
@@ -526,14 +524,17 @@ def plot_eta_v_bokeh(
 
     # axis histograms
     # filter out any forced-phot points for these
+
     x_hist = figure(
-        plot_width=PLOT_WIDTH,
-        plot_height=100,
+        width=PLOT_WIDTH,
+        height=100,
+        height_policy='fixed',
+        width_policy='fit',
+        aspect_ratio='auto',
         x_range=fig.x_range,
         y_axis_type=None,
         x_axis_type="linear",
         x_axis_location="above",
-        sizing_mode="stretch_width",
         title="VAST eta-V {}".format(title),
         tools="",
         output_backend="webgl",
@@ -558,13 +559,15 @@ def plot_eta_v_bokeh(
     fig.add_layout(x_hist_sigma_span)
 
     y_hist = figure(
-        plot_height=PLOT_HEIGHT,
-        plot_width=100,
+        height=PLOT_HEIGHT,
+        width=100,
+        height_policy='fit',
+        width_policy='fixed',
+        aspect_ratio='auto',
         y_range=fig.y_range,
         x_axis_type=None,
         y_axis_type="linear",
         y_axis_location="right",
-        sizing_mode="stretch_height",
         tools="",
         output_backend="webgl",
     )
@@ -647,7 +650,7 @@ def plot_eta_v_bokeh(
 
     grid = gridplot(
         [
-            [x_hist, Spacer(width=100, height=100)],
+            [x_hist,None],
             [fig, y_hist],
         ]
     )

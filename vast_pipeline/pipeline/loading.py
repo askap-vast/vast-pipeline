@@ -312,9 +312,10 @@ def update_sources(
     sources_df['id'] = sources_df.index.values
 
     batches = np.ceil(len(sources_df) / batch_size)
-    dfs = np.array_split(sources_df, batches)
+
     with connection.cursor() as cursor:
-        for df_batch in dfs:
+        for chunk_idx in np.array_split(sources_df.index, batches):
+            df_batch = sources_df.loc[chunk_idx]
             SQL_comm = SQL_update(
                 df_batch, Source, index='id', columns=columns
             )

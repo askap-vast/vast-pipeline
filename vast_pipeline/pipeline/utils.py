@@ -37,30 +37,42 @@ from vast_pipeline.models import (
 
 
 logger = logging.getLogger(__name__)
-dask.config.set({"multiprocessing.context": "fork"})
+dask.config.set({"multiprocessing.context": "fork",
+                 "dataframe.convert-string": False})
 
 
-def get_create_skyreg(image: Image) -> SkyRegion:
+def get_create_skyreg(image: Image, radius: float = 10.) -> SkyRegion:
     '''
-    This creates a Sky Region object in Django ORM given the related
-    image object.
+    This creates a SkyRegion object in Django ORM given the related
+    image object. If a SkyRegion already exists and has an image radius
+    within `radius` arcsec of the input image then use that SkyRegion.
 
     Args:
         image: The image Django ORM object.
+        radius: Search radius (in arcsec) for matching to existing SkyRegion
 
     Returns:
         The sky region Django ORM object.
     '''
-    # In the calculations below, it is assumed the image has square
+    # NOTE: In the calculations below, it is assumed the image has square
     # pixels (this pipeline has been designed for ASKAP images, so it
     # should always be square). It will likely give wrong results if not
-    skyregions = SkyRegion.objects.filter(
-        centre_ra=image.ra,
-        centre_dec=image.dec,
-        xtr_radius=image.fov_bmin
+
+    # Get SkyRegions and image radii areas within `radius` arcsec
+    radius_deg = radius/3600.
+    skyregions = SkyRegion.objects.cone_search(
+        ra=float(image.ra),
+        dec=float(image.dec),
+        radius_deg=float(radius_deg)
+    ).filter(
+        xtr_radius__range=(
+            image.fov_bmin - radius_deg/2.,
+            image.fov_bmin + radius_deg/2.
+        )
     )
     if skyregions:
-        skyr = skyregions.get()
+        # Get the closest in case of multiple matches.
+        skyr = skyregions[0]
         logger.info('Found sky region %s', skyr)
     else:
         x, y, z = eq_to_cart(image.ra, image.dec)
@@ -1123,7 +1135,7 @@ def get_src_skyregion_merged_df(
 def _get_skyregion_relations(
     row: pd.Series,
     coords: SkyCoord,
-    ids: pd.core.indexes.numeric.Int64Index
+    ids: pd.Index
 ) -> List[int]:
     '''
     For each sky region row a list is returned that
@@ -1207,7 +1219,7 @@ def group_skyregions(df: pd.DataFrame) -> pd.DataFrame:
 
     master_done = []  # keep track of all checked ids in master done
 
-    for skyreg_id, neighbours in results.iteritems():
+    for skyreg_id, neighbours in results.items():
 
         if skyreg_id not in master_done:
             local_done = []   # a local done list for the sky region group.
@@ -1688,7 +1700,7 @@ def reconstruct_associtaion_dfs(
     ).index.values
     # Make sure we attach the correct source id
     source_ids = sources_df.loc[relation_ids].source.values
-    sources_df['related'] = np.nan
+    sources_df['related'] = pd.NA
     relations_to_update = prev_relations.loc[source_ids].to_numpy().copy()
     relations_to_update = np.reshape(
         relations_to_update, relations_to_update.shape[0])
@@ -1722,7 +1734,8 @@ def reconstruct_associtaion_dfs(
     # deep=True copy does not truly copy mutable type objects)
     relation_mask = skyc1_srcs.related.notna()
     relation_vals = skyc1_srcs.loc[relation_mask, 'related'].to_list()
-    new_relation_vals = [x.copy() for x in relation_vals]
+    new_relation_vals = np.array([x.copy() for x in relation_vals], dtype='object')
+    #new_relation_vals = [x.copy() for x in relation_vals]
     skyc1_srcs.loc[relation_mask, 'related'] = new_relation_vals
 
     # Reorder so we don't mess up the dask metas.

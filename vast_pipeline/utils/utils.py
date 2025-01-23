@@ -239,8 +239,8 @@ def equ2gal(ra: float, dec: float) -> Tuple[float, float]:
         Galactic latitude in degrees.
     """
     c = SkyCoord(
-        np.float(ra),
-        np.float(dec),
+        float(ra),
+        float(dec),
         unit=(
             u.deg,
             u.deg),
@@ -264,8 +264,8 @@ def gal2equ(l: float, b: float) -> Tuple[float, float]:
         Declination in degrees.
     """
     c = SkyCoord(
-        l=np.float(l) * u.deg,
-        b=np.float(b) * u.deg,
+        l=float(l) * u.deg,
+        b=float(b) * u.deg,
         frame="galactic")
     ra = c.icrs.ra.deg
     dec = c.icrs.dec.deg
