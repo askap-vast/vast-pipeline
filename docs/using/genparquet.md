@@ -27,8 +27,6 @@ This can be slow or completely impossible using libraries such as pandas, due to
 Instead, if the measurements are saved in the [Parquet](https://docs.dask.org/en/latest/dataframe-parquet.html){:target="_blank"} format, libraries such as [`dask`](https://www.dask.org/){:target="_blank"} are able to open `.parquet` files in an out-of-core context so the memory footprint is hugely reduced along with the reading of the file being very fast.
 The two-epoch measurement pairs are also saved to parquet format due to the same reasons.
 
-See [Reading with vaex](../../outputs/usingoutputs#reading-with-vaex) for further details on using `vaex`.
-
 ## Step-by-step Guide
 
 ### 1. Navigate to the Run Detail Page
