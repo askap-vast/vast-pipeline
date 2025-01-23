@@ -1438,7 +1438,7 @@ def create_measurements_parquet_file(p_run: Run, max_workers: Optional[int] =10)
     _repartition_measurements(processed_temp.name, parquet_file)
 
     logger.debug("Cleaning up temporary data")
-    repartitioned_temp.cleanup()
+    processed_temp.cleanup()
     logger.debug("Done.")
 
 
