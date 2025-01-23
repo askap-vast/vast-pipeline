@@ -115,7 +115,7 @@ class Command(BaseCommand):
                     ' and `--overwrite` has not been selected.'
                 )
 
-        if os.path.isfile(measurement_pairs_parquet):
+        if os.path.exists(measurement_pairs_parquet):
             if options['overwrite']:
                 logger.info(
                     "Removing previous 'measurement_pairs.parquet' file."
