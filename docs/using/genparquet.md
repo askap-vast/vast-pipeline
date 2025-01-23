@@ -17,7 +17,7 @@ Two files are produced by the method:
     
 
 !!! tip "Admin Tip"
-    The parquet files can be generated using the command line using the command [`createmaeasparquet`](../adminusage/cli.md#createmeasparquet)).
+    The parquet files can be generated using the command line using the command [`createmeasparquet`](../adminusage/cli.md#createmeasparquet)).
 
 ## Why Create Parquet Files?
 
