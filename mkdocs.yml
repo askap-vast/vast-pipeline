@@ -62,12 +62,11 @@ markdown_extensions:
   - pymdownx.highlight
   - pymdownx.tabbed
   - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - toc:
       toc_depth: 4
       permalink: true
-  - lightgallery
 
 nav:
   - Home: index.md
@@ -161,6 +160,7 @@ nav:
           - translators.py: reference/survey/translators.md
         - utils:
           - auth.py: reference/utils/auth.md
+          - delete_run.py: reference/utils/delete_run.md
           - external_query.py: reference/utils/external_query.md
           - unit_tags.py: reference/utils/unit_tags.md
           - utils.py: reference/utils/utils.md
