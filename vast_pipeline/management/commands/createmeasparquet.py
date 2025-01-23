@@ -101,7 +101,7 @@ class Command(BaseCommand):
             run_folder, 'measurement_pairs.parquet'
         )
 
-        if os.path.isfile(measurements_parquet):
+        if os.path.exists(measurements_parquet):
             if options['overwrite']:
                 logger.info("Removing previous 'measurements.parquet' file.")
                 os.remove(measurements_parquet)
