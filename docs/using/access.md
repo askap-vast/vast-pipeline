@@ -5,7 +5,7 @@ Access to the pipeline website is done using GitHub as the authentification meth
 !!! note
     If you are attempting to access an instance of the VAST pipeline not hosted by the VAST group, confirm with the administrator what GitHub organisation membership is required.
     
-    Adminstrators can refer to [Pipeline Login](../gettingstarted/configuration.md#pipeline-login) for information on how to configure the login system.
+    Adminstrators can refer to [Authentication](../gettingstarted/configuration.md#authentication) for information on how to configure the login system.
 
 ## Logging In
 1. Navigate to the [VAST Pipeline](https://data.vast-survey.org/pipeline/) (or other hosted instance) and the following page will appear.
