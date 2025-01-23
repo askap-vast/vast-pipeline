@@ -8,8 +8,8 @@ Two files are produced by the method:
 
 | File<img width=380/>  | Description |
 | ---- | ----------- |
-| `measurements.arrow` | An [Apache Arrow](https://arrow.apache.org/overview/){:target="_blank"} format file containing all the measurements associated with the pipeline run (see [Arrow Files](#arrow-files)). Extra processing is performed in the creation of this file such that source ids are already in place for the measurements. |
-| `measurement_pairs.arrow` | An [Apache Arrow](https://arrow.apache.org/overview/){:target="_blank"} format file containing all the measurement pair metrics (see [Arrow Files](#arrow-files)). |
+| `measurements.arrow` | An [Apache Arrow](https://arrow.apache.org/overview/){:target="_blank"} format file containing all the measurements associated with the pipeline run (see [Arrow Files](../../outputs/outputs/#arrow-files)). Extra processing is performed in the creation of this file such that source ids are already in place for the measurements. |
+| `measurement_pairs.arrow` | An [Apache Arrow](https://arrow.apache.org/overview/){:target="_blank"} format file containing all the measurement pair metrics (see [Arrow Files](../../outputs/outputs/#arrow-files)). |
 
 !!! tip "Arrow Files Available"
     Users can see if arrow files are present for the run of interest by checking the respective run detail page.
