@@ -59,7 +59,7 @@ The two-epoch measurement pairs are also saved to arrow format due to the same r
     At the time of development `vaex` could not open parquets in an out-of-core context. This will be reviewed in the future if such functionality is added to `vaex`.
 
 To enable the arrow files to be produced, the option `measurements.write_arrow_files` is required to be set to `True` in the pipeline run config.
-Alternatively, the arrow files can be generated after the completion of the run, see the [Generating Arrow Files page](../../using/genarrow.md) for full details.
+Alternatively, the arrow files can be generated after the completion of the run, see the [Generating Arrow Files page](../../using/genarrow) for full details.
 
 ### Image Data
 
