@@ -339,8 +339,8 @@ def final_operations(
     # update measurements with sources to get associations
     sources_df = sources_df.drop("related", axis=1)
 
-    mem_usage = get_df_memory_usage(associations_df)
-    logger.debug(f"associations_df memory after merge: {mem_usage}MB")
+    mem_usage = get_df_memory_usage(sources_df)
+    logger.debug(f"sources_df memory after merge: {mem_usage}MB")
     log_total_memory_usage()
 
     if add_mode:
@@ -357,10 +357,10 @@ def final_operations(
         )
         logger.debug(f"Add mode: #{sources_df_upload.shape[0]} associations to upload.")
     else:
-        associations_df_upload = associations_df
+        associations_df_upload = sources_df
 
     # upload associations into DB
-    copy_upload_associations(sources_df_upload.loc[:, ["id", "source", "d2d", "dr"]])
+    copy_upload_associations(associations_df_upload.loc[:, ["id", "source", "d2d", "dr"]])
 
     # write associations to parquet file
     sources_df.rename(columns={"id": "meas_id", "source": "source_id"})[
