@@ -1384,7 +1384,7 @@ def _repartition_measurements(in_file: str, out_file: str) -> None:
         dask_df = dask_df.repartition(partition_size="100MB")
         dask_df.to_parquet(out_file)
 
-def create_measurements_parquet_file(p_run: Run, max_workers: Optional[int] =10) -> None:
+def create_measurements_parquet_file(p_run: Run, max_workers: Optional[int] = 10) -> None:
     """
     Creates a measurements.parquet file using the parquet outputs
     of a pipeline run.
@@ -1445,7 +1445,7 @@ def create_measurements_parquet_file(p_run: Run, max_workers: Optional[int] =10)
             itertools.repeat(associations),
         )
         pool.starmap(_process_measurements_file, iterable_arg)
-    
+
     logger.debug("Repartitioning dataframe and saving")
     _repartition_measurements(processed_temp.name, parquet_file)
 
