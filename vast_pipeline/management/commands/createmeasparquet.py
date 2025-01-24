@@ -105,7 +105,10 @@ class Command(BaseCommand):
         if os.path.exists(measurements_parquet):
             if options['overwrite']:
                 logger.info("Removing previous 'measurements.parquet' file.")
-                shutil.rmtree(measurements_parquet)
+                if os.path.isfile(measurements_parquet):
+                    os.remove(measurements_parquet)
+                else:
+                    shutil.rmtree(measurements_parquet)
             else:
                 logger.error(
                     f'Measurements parquet file already exists for {p_run_name}'
@@ -121,7 +124,10 @@ class Command(BaseCommand):
                 logger.info(
                     "Removing previous 'measurement_pairs.parquet' file."
                 )
-                shutil.rmtree(measurement_pairs_parquet)
+                if os.path.isfile(measurement_pairs_parquet):
+                    os.remove(measurement_pairs_parquet)
+                else:
+                    shutil.rmtree(measurement_pairs_parquet)
             else:
                 logger.error(
                     'Measurement pairs parquet file already exists for'
