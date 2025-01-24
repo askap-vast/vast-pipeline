@@ -405,7 +405,7 @@ def calculate_n_partitions(
     Args:
         df: The pandas dataframe to be partitionined.
         n_cpu: The number of available CPUs.
-        partition_size: The optimal partition size in MB.
+        partition_size_mb: The optimal partition size in MB.
             NOTE: The default partition size of 15MB is chosen because
                 many of the parallelised operations on partitioned
                 DataFrames can consume a much larger amount of memory
