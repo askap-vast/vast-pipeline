@@ -431,9 +431,8 @@ def parallel_extraction(
             cluster_threshold=cluster_threshold,
             allow_nan=allow_nan,
             **x
-        )
-        .compute(num_workers=n_workers, scheduler='processes')
-    )
+            )
+        ).compute(num_workers=n_workers, scheduler='processes')
     logger.debug(f"Completed image extraction in {extract_timer.reset()} s")
 
     del bags

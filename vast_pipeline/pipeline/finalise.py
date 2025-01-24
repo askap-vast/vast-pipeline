@@ -352,10 +352,10 @@ def final_operations(
             [sources_df, old_associations],
             ignore_index=True
         )
-        sources_df_upload = sources_df_upload.drop_duplicates(
+        associations_df_upload = sources_df_upload.drop_duplicates(
             ["source", "id", "d2d", "dr"], keep=False
         )
-        logger.debug(f"Add mode: #{sources_df_upload.shape[0]} associations to upload.")
+        logger.debug(f"Add mode: #{associations_df_upload.shape[0]} associations to upload.")
     else:
         associations_df_upload = sources_df
 
