@@ -46,7 +46,7 @@ social-auth-app-django = "^5.4.2"
 social-auth-core = "^4.5.4"
 sqlalchemy = "^2.0.17"
 strictyaml = "^1.7"
-vaex-core = "^4.17.1"
+#vaex-core = "^4.17.1"
 whitenoise = "^5.3"
 
 [tool.poetry.group.dev.dependencies]
