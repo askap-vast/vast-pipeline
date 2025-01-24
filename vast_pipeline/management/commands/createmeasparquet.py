@@ -9,10 +9,7 @@ import shutil
 
 from argparse import ArgumentParser
 from django.core.management.base import BaseCommand, CommandError
-from vast_pipeline.pipeline.utils import (
-    create_measurements_parquet_file,
-    create_measurement_pairs_parquet_file
-)
+from vast_pipeline.pipeline.utils import create_measurements_parquet_file
 from vast_pipeline.models import Run
 from vast_pipeline.utils.utils import timeStamped
 from ..helpers import get_p_run_name
@@ -23,12 +20,11 @@ logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     """
-    This command creates measurements and measurement_pairs parquet files for a
+    This command creates measurements parquet file for a
     completed pipeline run.
     """
     help = (
-        'Create `measurements.parquet` and `measurement_pairs.parquet` files for a'
-        ' completed pipeline run.'
+        'Create `measurements.parquet` files for a completed pipeline run.'
     )
 
     def add_arguments(self, parser: ArgumentParser) -> None:
@@ -98,9 +94,6 @@ class Command(BaseCommand):
             raise CommandError(f'Pipeline run {p_run_name} has not completed.')
 
         measurements_parquet = os.path.join(run_folder, 'measurements.parquet')
-        measurement_pairs_parquet = os.path.join(
-            run_folder, 'measurement_pairs.parquet'
-        )
 
         if os.path.exists(measurements_parquet):
             if options['overwrite']:
@@ -120,37 +113,11 @@ class Command(BaseCommand):
                     ' and `--overwrite` has not been selected.'
                 )
 
-        if os.path.exists(measurement_pairs_parquet):
-            if options['overwrite']:
-                logger.info(
-                    "Removing previous 'measurement_pairs.parquet' file."
-                )
-                # NOTE - similar to previous note, but definitely still need it until we figure out v2 pairs handling
-                if os.path.isfile(measurement_pairs_parquet):
-                    os.remove(measurement_pairs_parquet)
-                else:
-                    shutil.rmtree(measurement_pairs_parquet)
-            else:
-                logger.error(
-                    'Measurement pairs parquet file already exists for'
-                    f' {p_run_name} and `--overwrite` has not been selected.'
-                )
-                raise CommandError(
-                    'Measurement pairs parquet file already exists for'
-                    f' {p_run_name} and `--overwrite` has not been selected.'
-                )
-
         logger.info("Creating measurements parquet file for '%s'.", p_run_name)
 
         create_measurements_parquet_file(p_run)
 
-        if p_run.get_config(validate_inputs=False, prev=True)["variability"]["pair_metrics"]:
-            logger.info(
-                "Creating measurement pairs parquet file for '%s'.", p_run_name
-            )
-
-            create_measurement_pairs_parquet_file(p_run)
-
         logger.info(
-            "Parquet files created successfully for '%s'!", p_run_name
+            "Meausrements parquet file created successfully for '%s'!",
+            p_run_name
         )

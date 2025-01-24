@@ -1454,43 +1454,6 @@ def create_measurements_parquet_file(p_run: Run, max_workers: Optional[int] = 10
     logger.debug("Done.")
 
 
-def create_measurement_pairs_parquet_file(p_run: Run) -> None:
-    """
-    Creates a measurement_pairs.parquet file using the parquet outputs
-    of a pipeline run.
-
-    Args:
-        p_run:
-            Pipeline model instance.
-
-    Returns:
-        None
-    """
-    logger.info('Creating measurement_pairs.parquet for run %s.', p_run.name)
-
-    measurement_pairs_df = pd.read_parquet(
-        os.path.join(
-            p_run.path,
-            'measurement_pairs.parquet'
-        )
-    )
-
-    logger.debug('Optimising dataframe.')
-    measurement_pairs_df = optimise_numeric(measurement_pairs_df)
-
-    logger.debug("Loading to pyparquet table.")
-    measurement_pairs_df = pa.Table.from_pandas(measurement_pairs_df)
-
-    logger.debug("Exporting to parquet file.")
-    outname = os.path.join(p_run.path, 'measurement_pairs.parquet')
-
-    local = pa.fs.LocalFileSystem()
-
-    with local.open_output_stream(outname) as file:
-        with pa.RecordBatchFileWriter(file, measurement_pairs_df.schema) as writer:
-            writer.write_table(measurement_pairs_df)
-
-
 def backup_parquets(p_run_path: str) -> None:
     """
     Backups up all the existing parquet files in a pipeline run directory.
