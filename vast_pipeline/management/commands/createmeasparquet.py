@@ -105,6 +105,7 @@ class Command(BaseCommand):
         if os.path.exists(measurements_parquet):
             if options['overwrite']:
                 logger.info("Removing previous 'measurements.parquet' file.")
+                # NOTE - this can probably be scrapped, but it's in there just to be safe
                 if os.path.isfile(measurements_parquet):
                     os.remove(measurements_parquet)
                 else:
@@ -124,6 +125,7 @@ class Command(BaseCommand):
                 logger.info(
                     "Removing previous 'measurement_pairs.parquet' file."
                 )
+                # NOTE - similar to previous note, but definitely still need it until we figure out v2 pairs handling
                 if os.path.isfile(measurement_pairs_parquet):
                     os.remove(measurement_pairs_parquet)
                 else:
