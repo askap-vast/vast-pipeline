@@ -393,7 +393,11 @@ def timeStamped(fname, fmt="%Y-%m-%d-%H-%M-%S_{fname}"):
     return datetime.now().strftime(fmt).format(fname=fname)
 
 
-def calculate_n_partitions(df, n_cpu, partition_size_mb=15):
+def calculate_n_partitions(
+    df: pd.DataFrame,
+    n_cpu: int,
+    partition_size_mb: Optional[int] = 15
+) -> int:
     """
     This function will calculate how many partitions a dataframe should be
     split into.
@@ -422,19 +426,27 @@ def calculate_n_partitions(df, n_cpu, partition_size_mb=15):
 
     partition_size_mb = int(np.ceil(mem_usage_mb / n_partitions))
 
-    logger.debug("Using %d partitions of %dMB", n_partitions, partition_size_mb)
+    logger.debug(
+        "Using %d partitions of %dMB",
+        n_partitions,
+        partition_size_mb)
 
     return n_partitions
 
-def calculate_workers_and_partitions(df, n_cpu=None, max_partition_mb=15):
+
+def calculate_workers_and_partitions(
+    df: pd.DataFrame,
+    n_cpu: Optional[int] = None,
+    max_partition_mb: Optional[int] = 15
+) -> Tuple[int, int]:
     """
     Return number of workers and the number of partitions for Dask
 
     Args:
         df: The pandas dataframe to be partitionined.
             Don't calculate partitions if df is None
-        num_cpu_max: The maximum number of workers to allocate.
-                     The default of None means use one less than all available cores
+        n_cpu: The maximum number of workers to allocate.
+            The default of None means use one less than all available cores.
         max_partition_mb: The maximum partition size in MB.
 
     Returns:
@@ -448,7 +460,8 @@ def calculate_workers_and_partitions(df, n_cpu=None, max_partition_mb=15):
         num_workers = num_cpu
     n_partitions = 0
     if df is not None:
-        n_partitions = calculate_n_partitions(df, num_workers,
-                                              partition_size_mb=max_partition_mb)
+        n_partitions = calculate_n_partitions(
+            df, num_workers, partition_size_mb=max_partition_mb
+        )
 
     return num_workers, n_partitions
