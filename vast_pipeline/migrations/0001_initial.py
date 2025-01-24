@@ -275,4 +275,7 @@ class Migration(migrations.Migration):
             model_name='relatedsource',
             constraint=models.UniqueConstraint(fields=('from_source', 'to_source'), name='vast_pipeline_relatedsource_unique_pair'),
         ),
+        migrations.RunSQL(
+            ["CREATE EXTENSION IF NOT EXISTS q3c;"]
+        ),
     ]

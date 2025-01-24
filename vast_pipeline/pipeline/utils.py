@@ -17,7 +17,7 @@ import dask.dataframe as dd
 import dask.config as dc
 import psutil
 import tempfile
-import vaex
+#import vaex
 import itertools
 
 from typing import Any, List, Optional, Dict, Tuple, Union
@@ -1362,8 +1362,8 @@ def create_measurements_arrow_file(p_run: Run, max_workers: Optional[int] =10) -
     logger.debug("Opening and exporting in vaex")
 
     # V2 NOTE - remove in V2
-    vaex_df = vaex.open(repartitioned_temp.name)
-    vaex_df.export(arrow_file)
+    #vaex_df = vaex.open(repartitioned_temp.name)
+    #vaex_df.export(arrow_file)
 
     logger.debug("Cleaning up temporary data")
     repartitioned_temp.cleanup()
