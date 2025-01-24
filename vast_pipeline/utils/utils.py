@@ -431,3 +431,19 @@ def calculate_workers_and_partitions(df, n_cpu=None, max_partition_mb=15):
                                               partition_size_mb=max_partition_mb)
 
     return num_workers, n_partitions
+
+
+def model_uuid_copy_check() -> str:
+    """
+    An SQL snippet to convert a string to a UUID.
+
+    It is used in the copy method as part of django-postgres-copy in the models.
+
+    Returns:
+        A SQL snippet to make sure UUID fields are converted correctly from strings.
+    """
+    return """
+            CASE
+                WHEN "%(name)s" ~* '^[a-f0-9]{8}-([a-f0-9]{4}-){3}[a-f0-9]{12}$' THEN "%(name)s"::UUID
+            END
+            """

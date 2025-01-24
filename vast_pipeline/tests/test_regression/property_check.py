@@ -139,8 +139,9 @@ def test_known_in_forced(testcase: TestCase, forced: dict, sources: pd.DataFrame
         The expected force extraction files for PSR J2129-04.
     '''
     sources = sources.reset_index()
+    sources
     id_match = known_source(sources)
-    source_id = sources.loc[id_match, 'id']
+    source_id = sources.loc[id_match, 'source']
     meas_id = associations[
         associations['source_id'] == source_id
     ]['meas_id'].values

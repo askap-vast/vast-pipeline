@@ -149,7 +149,7 @@
 
   function update_card(id) {
     $('#cardsUpdate').html('').load(
-      "{% url 'vast_pipeline:source_etav_plot_update' 0 %}".replace('0', id),
+      "{% url 'vast_pipeline:source_etav_plot_update' 'e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813' %}".replace('e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813', id),
       function() {
         // redraw the external results table, function is defined in datatables-pipeline.js
         drawExternalResultsTable('#externalResultsTable');

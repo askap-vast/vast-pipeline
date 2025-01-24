@@ -4,6 +4,7 @@ This module contains the relevant classes for the image ingestion.
 
 import os
 import logging
+import uuid
 import numpy as np
 import pandas as pd
 
@@ -123,35 +124,32 @@ class FitsImage(Image):
             with open_fits(self.path) as hdulist:
                 hdu = hdulist[hdu_index]
         except Exception:
-            raise IOError((
-                'Could not read FITS file: '
-                f'{self.path}'
-            ))
+            raise IOError(
+                ("Could not read this FITS file: " f"{os.path.basename(self.path)}")
+            )
 
         return hdu.header.copy()
 
     def __set_img_attr_for_telescope(self, header):
-        '''
+        """
         Set the image attributes depending on the telescope type
-        '''
-        self.polarisation = header.get('STOKES', 'I')
-        self.duration = float(header.get('DURATION', 0.))
-        self.beam_bmaj = 0.
-        self.beam_bmin = 0.
-        self.beam_bpa = 0.
+        """
+        self.polarisation = header.get("STOKES", "I")
+        self.duration = float(header.get("DURATION", 0.0))
+        self.beam_bmaj = 0.0
+        self.beam_bmin = 0.0
+        self.beam_bpa = 0.0
         self.ra = None
         self.dec = None
         self.fov_bmaj = None
         self.fov_bmin = None
 
-        if header.get('TELESCOP', None) == 'ASKAP':
+        if header.get("TELESCOP", None) == "ASKAP":
             try:
-                self.datetime = pd.Timestamp(
-                    header['DATE-OBS'], tz=header['TIMESYS']
-                )
-                self.beam_bmaj = header['BMAJ']
-                self.beam_bmin = header['BMIN']
-                self.beam_bpa = header['BPA']
+                self.datetime = pd.Timestamp(header["DATE-OBS"], tz=header["TIMESYS"])
+                self.beam_bmaj = header["BMAJ"]
+                self.beam_bmin = header["BMIN"]
+                self.beam_bpa = header["BPA"]
             except KeyError as e:
                 logger.exception(
                     "Image %s does not contain expected FITS header keywords.",
@@ -160,9 +158,9 @@ class FitsImage(Image):
                 raise e
 
             params = {
-                'header': header,
-                'fits_naxis1': 'NAXIS1',
-                'fits_naxis2': 'NAXIS2',
+                "header": header,
+                "fits_naxis1": "NAXIS1",
+                "fits_naxis2": "NAXIS2",
             }
 
             # set the coordinate attributes
@@ -187,17 +185,17 @@ class FitsImage(Image):
             None
         """
         wcs = WCS(header, naxis=2)
-        pix_centre = [[header[fits_naxis1] / 2., header[fits_naxis2] / 2.]]
+        pix_centre = [[header[fits_naxis1] / 2.0, header[fits_naxis2] / 2.0]]
         self.ra, self.dec = wcs.wcs_pix2world(pix_centre, 1)[0]
 
         # The field-of-view (in pixels) is assumed to be a circle in the centre
         # of the image. This may be an ellipse on the sky, eg MOST images.
         # We leave a pixel margin at the edge that we don't use.
         # TODO: move unused pixel as argument
-        unusedpix = 0.
-        usable_radius_pix = self.__get_radius_pixels(
-            header, fits_naxis1, fits_naxis2
-        ) - unusedpix
+        unusedpix = 0.0
+        usable_radius_pix = (
+            self.__get_radius_pixels(header, fits_naxis1, fits_naxis2) - unusedpix
+        )
         cdelt1, cdelt2 = proj_plane_pixel_scales(WCS(header).celestial)
         self.fov_bmin = usable_radius_pix * abs(cdelt1)
         self.fov_bmaj = usable_radius_pix * abs(cdelt2)
@@ -232,7 +230,7 @@ class FitsImage(Image):
         else:
             # We simply place the largest circle we can in the centre.
             diameter = min(header[fits_naxis1], header[fits_naxis2])
-        return diameter / 2.
+        return diameter / 2.0
 
     def __get_frequency(self, header: fits.Header) -> None:
         """
@@ -248,16 +246,16 @@ class FitsImage(Image):
         self.freq_eff = None
         self.freq_bw = None
         try:
-            freq_keys = ('FREQ', 'VOPT')
-            if ('ctype3' in header) and (header['ctype3'] in freq_keys):
-                self.freq_eff = header['crval3']
-                self.freq_bw = header['cdelt3'] if 'cdelt3' in header else 0.0
-            elif ('ctype4' in header) and (header['ctype4'] in freq_keys):
-                self.freq_eff = header['crval4']
-                self.freq_bw = header['cdelt4'] if 'cdelt4' in header else 0.0
+            freq_keys = ("FREQ", "VOPT")
+            if ("ctype3" in header) and (header["ctype3"] in freq_keys):
+                self.freq_eff = header["crval3"]
+                self.freq_bw = header["cdelt3"] if "cdelt3" in header else 0.0
+            elif ("ctype4" in header) and (header["ctype4"] in freq_keys):
+                self.freq_eff = header["crval4"]
+                self.freq_bw = header["cdelt4"] if "cdelt4" in header else 0.0
             else:
-                self.freq_eff = header['restfreq']
-                self.freq_bw = header['restbw'] if 'restbw' in header else 0.0
+                self.freq_eff = header["restfreq"]
+                self.freq_bw = header["restbw"] if "restbw" in header else 0.0
         except Exception:
             msg = f"Frequency not specified in headers for {self.name}"
             logger.error(msg)
@@ -300,9 +298,9 @@ class SelavyImage(FitsImage):
             None.
         """
         # inherit from parent
-        self.selavy_path = paths['selavy'][path]
-        self.noise_path = paths['noise'].get(path, '')
-        self.background_path = paths['background'].get(path, '')
+        self.selavy_path = paths["selavy"][path]
+        self.noise_path = paths["noise"].get(path, "")
+        self.background_path = paths["background"].get(path, "")
         self.config: Dict = config
         super().__init__(path, hdu_index)
 
@@ -340,20 +338,23 @@ class SelavyImage(FitsImage):
         # fix dtype of columns
         for ky in tr_selavy:
             key = tr_selavy[ky]
-            if df[key['name']].dtype != key['dtype']:
-                df[key['name']] = df[key['name']].astype(key['dtype'])
+            if df[key["name"]].dtype != key["dtype"]:
+                df[key["name"]] = df[key["name"]].astype(key["dtype"])
+
+        # Add id column
+        df["id"] = df.apply(lambda _: str(uuid.uuid4()), axis=1)
 
         # do checks and fill in missing field for uploading sources
         # in DB (see fields in models.py -> Source model)
-        if df['component_id'].duplicated().any():
-            raise Exception('Found duplicated names in sources')
+        if df["component_id"].duplicated().any():
+            raise Exception("Found duplicated names in sources")
 
         # drop unrealistic sources
         cols_to_check = [
-            'bmaj',
-            'bmin',
-            'flux_peak',
-            'flux_int',
+            "bmaj",
+            "bmin",
+            "flux_peak",
+            "flux_int",
         ]
 
         bad_sources = df[(df[cols_to_check] == 0).any(axis=1)]
@@ -364,117 +365,117 @@ class SelavyImage(FitsImage):
         # dropping tiny sources
         nr_sources_old = df.shape[0]
         df = df.loc[
-            (df['bmaj'] > dj_image.beam_bmaj * 500) &
-            (df['bmin'] > dj_image.beam_bmin * 500)
+            (df["bmaj"] > dj_image.beam_bmaj * 500)
+            & (df["bmin"] > dj_image.beam_bmin * 500)
         ]
         if df.shape[0] != nr_sources_old:
-            logger.info(
-                'Dropped %i tiny sources.', nr_sources_old - df.shape[0]
-            )
+            logger.info("Dropped %i tiny sources.", nr_sources_old - df.shape[0])
 
         # add fields from image and fix name column
-        df['image_id'] = dj_image.id
-        df['time'] = dj_image.datetime
+        df["image_id"] = str(dj_image.id)
+        df["time"] = dj_image.datetime
 
         # append img prefix to source name
-        img_prefix = dj_image.name.split('.i.', 1)[-1].split('.', 1)[0] + '_'
-        df['name'] = img_prefix + df['component_id']
+        img_prefix = dj_image.name.split(".i.", 1)[-1].split(".", 1)[0] + "_"
+        df["name"] = img_prefix + df["component_id"]
 
         # # fix error fluxes
-        for col in ['flux_int_err', 'flux_peak_err']:
+        for col in ["flux_int_err", "flux_peak_err"]:
             sel = df[col] < settings.FLUX_DEFAULT_MIN_ERROR
             if sel.any():
                 df.loc[sel, col] = settings.FLUX_DEFAULT_MIN_ERROR
 
         # # fix error ra dec
-        for col in ['ra_err', 'dec_err']:
+        for col in ["ra_err", "dec_err"]:
             sel = df[col] < settings.POS_DEFAULT_MIN_ERROR
             if sel.any():
                 df.loc[sel, col] = settings.POS_DEFAULT_MIN_ERROR
-            df[col] = df[col] / 3600.
+            df[col] = df[col] / 3600.0
 
         # replace 0 local_rms values using user config value
-        df.loc[
-            df['local_rms'] == 0., 'local_rms'
-        ] = self.config["selavy_local_rms_fill_value"]
+        df.loc[df["local_rms"] == 0.0, "local_rms"] = self.config[
+            "selavy_local_rms_fill_value"
+        ]
 
-        df['snr'] = df['flux_peak'].values / df['local_rms'].values
-        df['compactness'] = df['flux_int'].values / df['flux_peak'].values
+        df["snr"] = df["flux_peak"].values / df["local_rms"].values
+        df["compactness"] = df["flux_int"].values / df["flux_peak"].values
 
         if self.config["condon_errors"]:
             logger.debug("Calculating Condon '97 errors...")
             theta_B = dj_image.beam_bmaj
             theta_b = dj_image.beam_bmin
 
-            df[[
-                'flux_peak_err',
-                'flux_int_err',
-                'err_bmaj',
-                'err_bmin',
-                'err_pa',
-                'ra_err',
-                'dec_err',
-            ]] = df[[
-                'flux_peak',
-                'flux_int',
-                'bmaj',
-                'bmin',
-                'pa',
-                'snr',
-                'local_rms',
-            ]].apply(
+            df[
+                [
+                    "flux_peak_err",
+                    "flux_int_err",
+                    "err_bmaj",
+                    "err_bmin",
+                    "err_pa",
+                    "ra_err",
+                    "dec_err",
+                ]
+            ] = df[
+                [
+                    "flux_peak",
+                    "flux_int",
+                    "bmaj",
+                    "bmin",
+                    "pa",
+                    "snr",
+                    "local_rms",
+                ]
+            ].apply(
                 calc_condon_flux_errors,
                 args=(theta_B, theta_b),
                 axis=1,
-                result_type='expand'
+                result_type="expand",
             )
 
             logger.debug("Condon errors done.")
 
         logger.debug("Calculating positional errors...")
         # TODO: avoid extra column given that it is a single value
-        df['ew_sys_err'] = self.config["ra_uncertainty"] / 3600.
-        df['ns_sys_err'] = self.config["dec_uncertainty"] / 3600.
+        df["ew_sys_err"] = self.config["ra_uncertainty"] / 3600.0
+        df["ns_sys_err"] = self.config["dec_uncertainty"] / 3600.0
 
-        df['error_radius'] = calc_error_radius(
-            df['ra'].values,
-            df['ra_err'].values,
-            df['dec'].values,
-            df['dec_err'].values,
+        df["error_radius"] = calc_error_radius(
+            df["ra"].values,
+            df["ra_err"].values,
+            df["dec"].values,
+            df["dec_err"].values,
         )
 
-        df['uncertainty_ew'] = np.hypot(
-            df['ew_sys_err'].values, df['error_radius'].values
+        df["uncertainty_ew"] = np.hypot(
+            df["ew_sys_err"].values, df["error_radius"].values
         )
 
-        df['uncertainty_ns'] = np.hypot(
-            df['ns_sys_err'].values, df['error_radius'].values
+        df["uncertainty_ns"] = np.hypot(
+            df["ns_sys_err"].values, df["error_radius"].values
         )
 
         # weight calculations to use later
-        df['weight_ew'] = 1. / df['uncertainty_ew'].values**2
-        df['weight_ns'] = 1. / df['uncertainty_ns'].values**2
+        df["weight_ew"] = 1.0 / df["uncertainty_ew"].values ** 2
+        df["weight_ns"] = 1.0 / df["uncertainty_ns"].values ** 2
 
-        logger.debug('Positional errors done.')
+        logger.debug("Positional errors done.")
 
         # Initialise the forced column as False
-        df['forced'] = False
+        df["forced"] = False
 
         # Calculate island flux fractions
         island_flux_totals = (
-            df[['island_id', 'flux_int', 'flux_peak']]
-            .groupby('island_id')
-            .agg('sum')
+            df[["island_id", "flux_int", "flux_peak"]].groupby("island_id").agg("sum")
         )
 
-        df['flux_int_isl_ratio'] = (
-            df['flux_int'].values
-            / island_flux_totals.loc[df['island_id']]['flux_int'].values
+        df["flux_int_isl_ratio"] = (
+            df["flux_int"].values
+            / island_flux_totals.loc[df["island_id"]]["flux_int"].values
         )
 
-        df['flux_peak_isl_ratio'] = (
-            df['flux_peak'].values
-            / island_flux_totals.loc[df['island_id']]['flux_peak'].values
+        df["flux_peak_isl_ratio"] = (
+            df["flux_peak"].values
+            / island_flux_totals.loc[df["island_id"]]["flux_peak"].values
         )
 
         return df
