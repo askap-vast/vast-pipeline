@@ -49,7 +49,7 @@ strictyaml = "^1.7"
 whitenoise = "^5.3"
 
 [tool.poetry.group.dev.dependencies]
-mkdocs-material = "^9.5"
+mkdocs-material = "^9.5.20"
 mkdocstrings = {extras = ["python"], version = "^0.27.0"}
 mkdocs-minify-plugin = "^0"
 mkdocs-material-extensions = "^1.3.1"
@@ -67,7 +67,7 @@ django-extensions = "^3.1.1"
 rope = "^0.18.0"
 django-stubs = "^1.9.0"
 lightgallery = "^0"
-mkdocs-git-revision-date-localized-plugin = "^0"
+mkdocs-git-revision-date-localized-plugin = "^1.2.5"
 mike = "^1.1.2"
 markdown = "^3.6"
 
