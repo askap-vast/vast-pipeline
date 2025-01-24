@@ -8,8 +8,8 @@ Two files are produced by the method:
 
 | File<img width=380/>  | Description |
 | ---- | ----------- |
-| `measurements.parquet` | A [Parquet](https://docs.dask.org/en/latest/dataframe-parquet.html){:target="_blank"} format file containing all the measurements associated with the pipeline run (see [Parquet Files](#parquet-files)). Extra processing is performed in the creation of this file such that source ids are already in place for the measurements and the parquet file is partitioned sensibly. |
-| `measurement_pairs.parquet` | An [Parquet](https://docs.dask.org/en/latest/dataframe-parquet.html){:target="_blank"} format file containing all the measurement pair metrics (see [Parquet Files](#parquet-files)). |
+| `measurements.parquet` | An [Apache Parquet](https://parquet.apache.org/){:target="_blank"} format file containing all the measurements associated with the pipeline run (see [Parquet Files](#parquet-files)). Extra processing is performed in the creation of this file such that source ids are already in place for the measurements and the parquet file is partitioned sensibly. |
+| `measurement_pairs.parquet` | An [Apache Parquet](https://parquet.apache.org/){:target="_blank"} format file containing all the measurement pair metrics (see [Parquet Files](#parquet-files)). |
 
 !!! tip "Parquet Files Available"
     Users can see if parquet files are present for the run of interest by checking the respective run detail page.
@@ -24,7 +24,7 @@ Two files are produced by the method:
 Large pipeline runs (thousands of images) mean that to read the measurements, thousands of parquet files need to be read in, and can contain tens millions of rows.
 This can be slow or completely impossible using libraries such as pandas, due to the large amount of memory required.
 
-Instead, if the measurements are saved in the [Parquet](https://docs.dask.org/en/latest/dataframe-parquet.html){:target="_blank"} format, libraries such as [`dask`](https://www.dask.org/){:target="_blank"} are able to open `.parquet` files in an out-of-core context so the memory footprint is hugely reduced along with the reading of the file being very fast.
+Instead, if the measurements are saved in the [Apache Parquet](https://parquet.apache.org/){:target="_blank"} format, libraries such as [`dask`](https://www.dask.org/){:target="_blank"} are able to open `.parquet` files in an out-of-core context so the memory footprint is hugely reduced along with the reading of the file being very fast.
 The two-epoch measurement pairs are also saved to parquet format due to the same reasons.
 
 ## Step-by-step Guide

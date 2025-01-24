@@ -490,8 +490,8 @@ Float. Value to substitute for the `local_rms` parameter in selavy extractions i
 **`measurements.write_parquet_files`**
 Boolean. When `True` then two `parquet` format files are produced:
 
-* `measurements.parquet` - an parquet file containing all the measurements associated with the run.
-* `measurement_pairs.parquet` -  an parquet file containing the measurement pairs information pre-merged with extra information from the measurements. Only output if `variability.pair_metrics` is also set to `True`.
+* `measurements.parquet` - an [Apache Parquet](https://parquet.apache.org/) file containing all the measurements associated with the run.
+* `measurement_pairs.parquet` -  an [Apache Parquet](https://parquet.apache.org/) file containing the measurement pairs information pre-merged with extra information from the measurements. Only output if `variability.pair_metrics` is also set to `True`.
 
 Producing these files for large runs (200+ images) is recommended for post-processing. Defaults to `False`.
 
