@@ -253,7 +253,9 @@ def calc_condon_flux_errors(
         return 0., 0., 0., 0., 0., 0., 0.
 
 
-def open_fits(fits_path: Union[str, Path], memmap: Optional[bool] = True):
+def open_fits(
+    fits_path: Union[str, Path], memmap: Optional[bool] = True
+) -> fits.HDUList:
     """
     This function opens both compressed and uncompressed fits files.
 

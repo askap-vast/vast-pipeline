@@ -55,7 +55,7 @@ class Command(BaseCommand):
             help="Overwrite previous 'measurements.arrow' file.",
         )
 
-    def handle(self, *args, **options) -> None:
+    def handle(self, *args: str, **options: str) -> None:
         """
         Handle function of the command.
 

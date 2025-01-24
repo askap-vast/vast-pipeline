@@ -402,7 +402,7 @@ class Command(BaseCommand):
                 ' Old data is completely removed and replaced.')
         )
 
-    def handle(self, *args, **options) -> None:
+    def handle(self, *args: str, **options: str) -> None:
         """
         Handle function of the command.
 

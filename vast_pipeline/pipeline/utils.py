@@ -1756,7 +1756,7 @@ def write_parquets(
     return skyregs_df
 
 
-def get_total_memory_usage():
+def get_total_memory_usage() -> float:
     """
     This function gets the current memory usage and returns a string.
 
@@ -1769,7 +1769,7 @@ def get_total_memory_usage():
     return mem
 
 
-def log_total_memory_usage():
+def log_total_memory_usage() -> float:
     """
     This function gets the current memory usage and logs it.
 
@@ -1781,7 +1781,7 @@ def log_total_memory_usage():
     logger.debug(f"Current memory usage: {mem:.3f}GB")
 
 
-def get_df_memory_usage(df):
+def get_df_memory_usage(df: pd.DataFrame) -> float:
     """
     This function calculates the memory usage of a pandas dataframe and
     logs it.

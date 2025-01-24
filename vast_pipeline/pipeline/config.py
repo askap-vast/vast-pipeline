@@ -15,7 +15,7 @@ from vast_pipeline.pipeline.errors import PipelineConfigError
 logger = logging.getLogger(__name__)
 
 
-def make_config_template(template_path: str, **kwargs) -> str:
+def make_config_template(template_path: str, **kwargs: str) -> str:
     """Generate the contents of a run configuration file from a Jinja2 template.
 
     Args:
