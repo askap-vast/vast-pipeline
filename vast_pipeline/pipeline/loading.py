@@ -72,6 +72,7 @@ def copy_upload_model(
         batch_size: The batch size such that in memory csvs don't get crazy big.
             Defaults to 10_000.
     """
+    mem_csv = None
     total_rows = len(df)
     start_index = 0
 
