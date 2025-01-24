@@ -13,6 +13,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### Changed
 
 - V2: Update dependencies to fix dependabot warnings and prepare for Dask distributed implementation.
+- Upgrade measurements file generation to use dask in order to handle larger runs [#789](https://github.com/askap-vast/vast-pipeline/pull/797)
+- Replaced optimise_ints and optimise_floats with single function - optimise_numeric [#789](https://github.com/askap-vast/vast-pipeline/pull/797)
 - Upgrade forced_phot dependency to v0.2 and force `use_numba=True` [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
 - Remove bad forced photometry fits immediately after calculation, rather than after they've all been compiled into a single dataframe [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
 - Optimise associations upload by dropping unnecessary columns prior to a large dataframe merge [#787](https://github.com/askap-vast/vast-pipeline/pull/787)
@@ -31,6 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### List of PRs
 
 - [#798](https://github.com/askap-vast/vast-pipeline/pull/798): dep: V2: Update dependencies to deal with dependabot reccomendations and to prepare for V2 upgrades. 
+- [#789](https://github.com/askap-vast/vast-pipeline/pull/797): feat: Convert measurements.arrow generation to use dask, and combine optimise_ints/floats to optimise_numeric
 - [#795](https://github.com/askap-vast/vast-pipeline/pull/795): fix: Fixed outdated jupyterhub link on pipeline website
 - [#788](https://github.com/askap-vast/vast-pipeline/pull/788): feat, fix: Speed up forced fitting code by using numba-fied forced_phot code and reordering some calculations
 - [#787](https://github.com/askap-vast/vast-pipeline/pull/787): fix: Optimise associations merge and minor variable name updates
