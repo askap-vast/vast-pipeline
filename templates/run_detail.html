@@ -51,7 +51,7 @@
             <span class="icon text-white-600">
               <i class="fas fa-angle-double-right"></i>
             </span>
-            <span class="text">Generate Parquet Files</span>
+            <span class="text">Generate Measurements Parquet</span>
           </a>
           <a id="deletePipeRunButton" class="btn btn-sm btn-danger
             btn-icon-split shadow-sm
@@ -180,13 +180,13 @@
           <p><strong>Epoch based: </strong>{{ p_run.epoch_based }}</p>
           <p><strong>Run Status: </strong>{{ p_run.status }}</p>
           <p><strong>Path: </strong>{{ p_run.path }}</p>
-          <p><strong>Parquet Files Available: </strong>{% if p_run.parquet_files == True %}Yes{% else %}No{% endif %}</p>
+          <p><strong>Measurements Parquet Available: </strong>{% if p_run.measurements_parquet == True %}Yes{% else %}No{% endif %}</p>
           <p><strong>Description: </strong>{{ p_run.description }}</p>
           <p>
             <a href="#configFile"><strong>Config File</strong></a><br>
             <a href="#logFile"><strong>Run Log File</strong></a><br>
             <a href="#restorelogFile"><strong>Restore Log File</strong></a><br>
-            <a href="#parquetlogFile"><strong>Generate Parquet Files Log File</strong></a>
+            <a href="#parquetlogFile"><strong>Generate Parquet File Log File</strong></a>
           </p>
         </div>
       </div>
