@@ -120,7 +120,7 @@ The log file of the restore run action.
 
 #### Generate Measurements Parquet Log File
 
-The log file of the generate parquet files action.
+The log file of the generate measurements parquet file action.
 
 ![!Generate measurements parquet log file.](../img/generate-measurements-parquet-log.png){: loading=lazy }
 
