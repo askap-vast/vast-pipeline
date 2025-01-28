@@ -122,7 +122,7 @@ The log file of the restore run action.
 
 The log file of the generate parquet files action.
 
-![!Generate measurements parquet log file.](../img/run-detail9.png){: loading=lazy }
+![!Generate measurements parquet log file.](../img/generate-measurements-parquet-log.png){: loading=lazy }
 
 
 ### Image and Measurements Tables
