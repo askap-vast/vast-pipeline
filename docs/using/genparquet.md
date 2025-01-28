@@ -6,7 +6,7 @@ The measurements file is an [Apache Parquet](https://parquet.apache.org/){:targe
 
 !!! tip "Measurements Parquet  Available"
     Users can see if the measurements parquet file is present for the run of interest by checking the respective run detail page.
-    ![!Parquet files available.](../img/parquet-files-available.png){: loading=lazy }
+    ![!Parquet files available.](../img/measurements-parquet-available.png){: loading=lazy }
     
 
 !!! tip "Admin Tip"
@@ -53,4 +53,4 @@ The log will not be refreshed automatically and instead the page needs to be man
 
 Once completed the measurements parquet will be available for use.
 
-![!Generate parquet files log file.](../img/generate-parquet-files-log.png){: loading=lazy }
+![!Generate parquet files log file.](../img/generate-measurements-parquet-log.png){: loading=lazy }
