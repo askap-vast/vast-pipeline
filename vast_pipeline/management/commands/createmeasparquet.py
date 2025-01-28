@@ -118,6 +118,6 @@ class Command(BaseCommand):
         create_measurements_parquet_file(p_run)
 
         logger.info(
-            "Meausrements parquet file created successfully for '%s'!",
+            "Measurements parquet file created successfully for '%s'!",
             p_run_name
         )
