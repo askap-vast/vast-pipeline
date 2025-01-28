@@ -645,7 +645,7 @@ def RunDetail(request, id):
     genparquet_log_files = [os.path.basename(i) for i in genparquet_log_files[::-1]]
 
     # Detect whether parquet files are present
-    p_run['measurements_parquet'] = os.path.isfile(
+    p_run['measurements_parquet'] = os.path.exists(
         os.path.join(p_run['path'], 'measurements.parquet')
     )
 
