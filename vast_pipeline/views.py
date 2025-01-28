@@ -559,7 +559,7 @@ class RunViewSet(ModelViewSet):
         if p_run.status != "END":
             msg = (
                 f'{p_run.name} has not completed successfully.'
-                ' The parquet files can only be generated after the run is'
+                ' The measurements parquet can only be generated after the run is'
                 ' successful.'
             )
             messages.error(
@@ -580,7 +580,7 @@ class RunViewSet(ModelViewSet):
             )
 
             msg = mark_safe(
-                f'Generate the parquet files for <b>{p_run.name}</b> successfully requested!<br><br>'
+                f'Generate the measurements parquet for <b>{p_run.name}</b> successfully requested!<br><br>'
                 ' Refresh the page and check the generate parquet log output for the status of the process.'
             )
             messages.success(
@@ -645,7 +645,7 @@ def RunDetail(request, id):
     genparquet_log_files = [os.path.basename(i) for i in genparquet_log_files[::-1]]
 
     # Detect whether parquet files are present
-    p_run['parquet_files'] = os.path.isfile(
+    p_run['measurements_parquet'] = os.path.isfile(
         os.path.join(p_run['path'], 'measurements.parquet')
     )
 

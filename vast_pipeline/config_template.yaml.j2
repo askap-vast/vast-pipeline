@@ -135,9 +135,8 @@ measurements:
   # 0.05 = 5% error, 0 = no minimum error.
   flux_fractional_error: {{ flux_perc_error }}
 
-  # Create 'measurements.parquet' and 'measurement_pairs.parquet' files at the end of
-  # a successful run.
-  write_parquet_files: {{ create_measurements_parquet_files }}
+  # Create the 'measurements.parquet' file at the end of a successful run.
+  write_measurements_parquet: {{ create_measurements_parquet }}
 
   # Replace the selavy errors with Condon (1997) errors.
   # Only applied to NEW images that are not already present in the database.
