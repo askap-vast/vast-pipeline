@@ -2,7 +2,7 @@
 This module contains the urls used by the Django web server.
 """
 
-from django.urls import include, path, register_converter
+from django.urls import include, path, re_path, register_converter
 from rest_framework.routers import DefaultRouter
 import tagulous.views
 
@@ -31,14 +31,14 @@ urlpatterns = [
     path("piperuns/", views.RunIndex, name="run_index"),
     path("piperuns/<uuid:id>/", views.RunDetail, name="run_detail"),
     path("images/", views.ImageIndex, name="image_index"),
-    path(
-        "images/<uuid:id>/",
+    re_path(
+        r"^images/(?P<id>[\w-]{36})(?:/(?P<action>[\w]+))?/$",
         views.ImageDetail,
         name="image_detail",
     ),
     path("measurements/", views.MeasurementIndex, name="measurement_index"),
-    path(
-        "measurements/<uuid:id>/",
+    re_path(
+        r"^measurements/(?P<id>[\w-]{36})(?:/(?P<action>[\w]+))?/$",
         views.MeasurementDetail,
         name="measurement_detail",
     ),
