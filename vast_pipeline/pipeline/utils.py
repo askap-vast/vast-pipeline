@@ -9,7 +9,6 @@ import glob
 import shutil
 import numpy as np
 import pandas as pd
-import pyarrow as pa
 import astropy.units as u
 import dask
 import dask.dataframe as dd
