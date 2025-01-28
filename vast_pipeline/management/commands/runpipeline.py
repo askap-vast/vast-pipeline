@@ -22,8 +22,7 @@ from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
 from vast_pipeline.pipeline.main import Pipeline
 from vast_pipeline.pipeline.utils import (
     get_create_p_run, create_measurements_parquet_file,
-    create_measurement_pairs_parquet_file, backup_parquets,
-    create_temp_config_file
+    backup_parquets, create_temp_config_file
 )
 from vast_pipeline.utils.utils import StopWatch, timeStamped
 from vast_pipeline.models import Run
@@ -149,7 +148,10 @@ def run_pipe(
                 + glob.glob(os.path.join(p_run.path, "*.bak"))
             )
             for parquet in parquets:
-                os.remove(parquet)
+                if os.path.isfile(parquet):
+                    os.remove(parquet)
+                else:
+                    shutil.rmtree(parquet)
 
             # copy across config file at the start
             logger.debug("Copying temp config file.")
@@ -219,7 +221,10 @@ def run_pipe(
                     remove_forced_meas(p_run.path)
 
                     for parquet in parquets:
-                        os.remove(parquet)
+                        if os.path.isfile(parquet):
+                            os.remove(parquet)
+                        else:
+                            shutil.rmtree(parquet)
 
                     # remove bak files
                     bak_files = glob.glob(os.path.join(p_run.path, "*.bak"))
@@ -336,10 +341,8 @@ def run_pipe(
         pipeline.set_status(p_run, 'RUN')
         pipeline.process_pipeline(p_run)
         # Create parquet file after success if selected.
-        if pipeline.config["measurements"]["write_parquet_files"]:
+        if pipeline.config["measurements"]["write_measurements_parquet"]:
             create_measurements_parquet_file(p_run)
-            if pipeline.config["variability"]["pair_metrics"]:
-                create_measurement_pairs_parquet_file(p_run)
     except Exception as e:
         # set the pipeline status as error
         pipeline.set_status(p_run, 'ERR')
