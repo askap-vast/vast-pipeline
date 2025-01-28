@@ -306,7 +306,7 @@
         <h6 class="card-header m-0 font-weight-bold text-primary" id="parquetlogFile">
           <a data-toggle="collapse" href="#collapseParquetLogCard" aria-expanded="true" aria-controls="collapseParquetLogCard" id="parquetlogHeader" class="d-block float-left">
             <i class="fa fa-chevron-down pull-right"></i>
-            Generate Parquet Files Log File
+            Generate Measurements Parquet Log File
           </a>
           <div class="float-right" id="genparquetLogfileSelector">
             <select name="genparquetlogs" id="genparquetlogs">
@@ -559,7 +559,7 @@
   <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h4 class="modal-title font-weight-bold" id="parquetPipeModalLabel">Generate Parquet Files for {{ p_run.name }}</h4>
+        <h4 class="modal-title font-weight-bold" id="parquetPipeModalLabel">Generate Measurements Parquet for {{ p_run.name }}</h4>
         <button class="close" type="button" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">×</span>
         </button>
@@ -568,8 +568,8 @@
         <form id="parquetPipeForm" action="{% url 'vast_pipeline:api_pipe_runs-genparquet' p_run.id %}" method="post" novalidate>
           {% csrf_token %}
           <p>
-            Generate the parquet files containing the measurements and the measurement pairs.
-            If the parquet files are already present it is possible to overwrite these and generate new files.
+            Generate the measurements parquet file.
+            If the file already exists it is possible to overwrite these and a generate new file.
             The process can only be used for runs which have completed successfully.
           </p>
           <h5>What and Why?</h5>
@@ -578,7 +578,7 @@
             <!--NOTE: need to update this text at some point-->
               <a target="_blank" href="https://parquet.apache.org/">Apache Parquet</a> is an open source, column-oriented data file format designed for efficient data storage and retrieval.
               For large pipeline runs it is much more efficient to interact with the measurements data using the parquet format rather than the default parquet format.
-              If the parquet files are available then VAST Tools will automatically switch to using them.
+              If the measurements parquet is available then VAST Tools will automatically switch to using it.
             </p>
           </div>
           <div class="modal-footer">
@@ -596,7 +596,7 @@
             <span class="icon">
               <i class="fas fa-angle-double-right fa-sm"></i>
             </span>
-            <span class="text">Generate Parquet Files</span>
+            <span class="text">Generate Measurements Parquet</span>
             </button>
           </div>
         </form>
