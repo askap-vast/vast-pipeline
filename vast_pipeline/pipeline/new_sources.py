@@ -273,7 +273,7 @@ def parallel_get_new_high_sigma(
         new_sources_df['img_diff_true_rms'].fillna(0.)
     )
     new_sources_df = new_sources_df[
-        new_sources_df['img_diff_true_rms'] != 0
+        new_sources_df['img_diff_true_rms'] > 0
     ]
 
     # calculate the true sigma
