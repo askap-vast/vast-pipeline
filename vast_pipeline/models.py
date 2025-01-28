@@ -41,7 +41,7 @@ class Comment(models.Model):
     datetime = models.DateTimeField(auto_now_add=True)
     comment = models.TextField()
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
+    object_id = models.UUIDField(default=uuid.uuid4, editable=False)
     content_object = GenericForeignKey("content_type", "object_id")
 
     def get_avatar_url(self) -> str:
