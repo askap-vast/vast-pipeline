@@ -7,7 +7,6 @@ import numpy as np
 import pandas as pd
 from typing import Tuple, Dict, List
 import dask.dataframe as dd
-from psutil import cpu_count
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -20,7 +19,7 @@ from .utils import (
     reconstruct_associtaion_dfs
 )
 from vast_pipeline.pipeline.config import PipelineConfig
-from vast_pipeline.utils.utils import StopWatch, calculate_n_partitions
+from vast_pipeline.utils.utils import StopWatch, calculate_workers_and_partitions
 
 
 logger = logging.getLogger(__name__)
@@ -1586,11 +1585,12 @@ def parallel_association(
     # Add an increment to any new source values when using add_mode to avoid
     # getting duplicates in the result laater
     id_incr_par_assoc = max(done_source_ids) if add_mode else 0
-
-    n_cpu = cpu_count() - 1
-    logger.debug(f"Running association with {n_cpu} CPUs")
-    n_partitions = calculate_n_partitions(images_df, n_cpu)
-    
+    n_workers, n_partitions = calculate_workers_and_partitions(
+        images_df,
+        n_cpu=config['processing']['num_workers'],
+        max_partition_mb=config['processing']['max_partition_mb']
+        )
+    logger.debug(f"Running association with {n_workers} CPUs")
     # pass each skyreg_group through the normal association process.
     results = (
         dd.from_pandas(images_df.set_index('skyreg_group'), npartitions=n_partitions)
@@ -1608,7 +1608,7 @@ def parallel_association(
             id_incr_par_assoc=id_incr_par_assoc,
             parallel=True,
             meta=meta
-        ).compute(n_workers=n_cpu, scheduler='processes')
+        ).compute(n_workers=n_workers, scheduler='processes')
     )
 
     # results are the normal dataframe of results with the columns:

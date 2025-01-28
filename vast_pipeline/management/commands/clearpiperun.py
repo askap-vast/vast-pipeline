@@ -1,7 +1,3 @@
-"""
-This module defines the command for clearing a run from the database.
-"""
-
 import os
 import logging
 import shutil
@@ -13,11 +9,12 @@ from django.db import transaction
 
 from vast_pipeline.models import Run
 from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
+from vast_pipeline.utils.utils import StopWatch
 from ..helpers import get_p_run_name
 
+from ...utils.delete_run import delete_pipeline_run_raw_sql
 
 logger = logging.getLogger(__name__)
-
 
 class Command(BaseCommand):
     """
@@ -82,7 +79,8 @@ class Command(BaseCommand):
         Returns:
             None
         """
-        # configure logging
+        timer = StopWatch()
+
         if options['verbosity'] > 1:
             # set root logger to use the DEBUG level
             root_logger = logging.getLogger('')
@@ -97,8 +95,9 @@ class Command(BaseCommand):
 
         piperuns = options['piperuns']
         flag_all_runs = True if 'clearall' in piperuns else False
+
         if flag_all_runs:
-            logger.info('clearing all pipeline run in the database')
+            logger.info('Clearing all pipeline run in the database')
             piperuns = list(Run.objects.values_list('name', flat=True))
 
         for piperun in piperuns:
@@ -108,14 +107,20 @@ class Command(BaseCommand):
             except Run.DoesNotExist:
                 raise CommandError(f'Pipeline run {p_run_name} does not exist')
 
-            logger.info("Deleting pipeline '%s' from database", p_run_name)
+            logger.info("Deleting pipeline run '%s' from database", p_run_name)
             with transaction.atomic():
                 p_run.status = 'DEL'
                 p_run.save()
-            p_run.delete()
+
+            timer.reset()
+            delete_pipeline_run_raw_sql(p_run)
+            t = timer.reset()
+            logger.info("Time to delete run from database: %.2f sec", t)
 
             # remove forced measurements in db if presents
             forced_parquets = remove_forced_meas(p_run.path)
+            t = timer.reset()
+            logger.info("Time to delete forced measurements: %.2f sec", t)
 
             # Delete parquet or folder eventually
             if not options['keep_parquet'] and not options['remove_all']:
@@ -132,6 +137,8 @@ class Command(BaseCommand):
                             f'Parquet file "{os.path.basename(parquet)}" not existent'
                         ))
                         pass
+            t = timer.reset()
+            logger.info("Time to delete parquet files: %.2f sec", t)
 
             if options['remove_all']:
                 logger.info('Deleting pipeline folder')

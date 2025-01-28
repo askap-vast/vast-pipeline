@@ -13,6 +13,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord, Longitude, Latitude
 import numpy as np
 import pandas as pd
+from psutil import cpu_count
 
 
 logger = logging.getLogger(__name__)
@@ -238,8 +239,8 @@ def equ2gal(ra: float, dec: float) -> Tuple[float, float]:
         Galactic latitude in degrees.
     """
     c = SkyCoord(
-        np.float(ra),
-        np.float(dec),
+        float(ra),
+        float(dec),
         unit=(
             u.deg,
             u.deg),
@@ -263,8 +264,8 @@ def gal2equ(l: float, b: float) -> Tuple[float, float]:
         Declination in degrees.
     """
     c = SkyCoord(
-        l=np.float(l) * u.deg,
-        b=np.float(b) * u.deg,
+        l=float(l) * u.deg,
+        b=float(b) * u.deg,
         frame="galactic")
     ra = c.icrs.ra.deg
     dec = c.icrs.dec.deg
@@ -307,43 +308,22 @@ def parse_coord(coord_string: str, coord_frame: str = "icrs") -> SkyCoord:
     return coord
 
 
-def optimize_floats(df: pd.DataFrame) -> pd.DataFrame:
+def optimise_numeric(df):
     """
-    Downcast float columns in a pd.DataFrame to the smallest
+    Downcast integer and float columns in a pd.DataFrame to the smallest
     data type without losing any information.
-
-    Credit to Robbert van der Gugten.
-
-    Args:
-        df:
-            input dataframe, no specific columns.
-
-    Returns:
-        The input dataframe with the `float64` type columns downcasted.
-    """
-    floats = df.select_dtypes(include=["float64"]).columns.tolist()
-    df[floats] = df[floats].apply(pd.to_numeric, downcast="float")
-
-    return df
-
-
-def optimize_ints(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Downcast integer columns in a pd.DataFrame to the smallest
-    data type without losing any information.
-
-    Credit to Robbert van der Gugten.
 
     Args:
         df:
             Input dataframe, no specific columns.
 
     Returns:
-        The input dataframe with the `int64` type columns downcasted.
+        The input dataframe with the `int64` and `float64` columns downcasted.
     """
-    ints = df.select_dtypes(include=["int64"]).columns.tolist()
-    df[ints] = df[ints].apply(pd.to_numeric, downcast="integer")
-
+    for col in df.select_dtypes(include=["float64"]).columns:
+        df[col] = df[col].apply(pd.to_numeric, downcast="float")
+    for col in df.select_dtypes(include=["int64"]).columns:
+        df[col] = df[col].apply(pd.to_numeric, downcast="integer")
     return df
 
 
@@ -392,7 +372,7 @@ def timeStamped(fname, fmt="%Y-%m-%d-%H-%M-%S_{fname}"):
     return datetime.now().strftime(fmt).format(fname=fname)
 
 
-def calculate_n_partitions(df, n_cpu, partition_size_mb=100):
+def calculate_n_partitions(df, n_cpu, partition_size_mb=15):
     """
     This function will calculate how many partitions a dataframe should be
     split into.
@@ -401,6 +381,14 @@ def calculate_n_partitions(df, n_cpu, partition_size_mb=100):
         df: The pandas dataframe to be partitionined.
         n_cpu: The number of available CPUs.
         partition_size: The optimal partition size in MB.
+            NOTE: The default partition size of 15MB is chosen because
+                many of the parallelised operations on partitioned
+                DataFrames can consume a much larger amount of memory
+                than the size of the partition. 15MB avoids consuming
+                too much memory for significant amounts of parallelism
+                (e.g. n_cpu > 10) without significant cost to processing
+                speed.
+
     Returns:
         The optimal number of partitions.
     """
@@ -413,6 +401,33 @@ def calculate_n_partitions(df, n_cpu, partition_size_mb=100):
 
     partition_size_mb = int(np.ceil(mem_usage_mb / n_partitions))
 
-    logger.debug(f"Using {n_partitions} partions of {partition_size_mb}MB")
+    logger.debug("Using %d partitions of %dMB", n_partitions, partition_size_mb)
 
     return n_partitions
+
+def calculate_workers_and_partitions(df, n_cpu=None, max_partition_mb=15):
+    """
+    Return number of workers and the number of partitions for Dask
+
+    Args:
+        df: The pandas dataframe to be partitionined.
+            Don't calculate partitions if df is None
+        num_cpu_max: The maximum number of workers to allocate.
+                     The default of None means use one less than all available cores
+        max_partition_mb: The maximum partition size in MB.
+
+    Returns:
+        (num_workers, n_partitions): Calculated workers and partitions.
+    """
+    num_cpu = cpu_count() - 1
+    num_workers = num_cpu if n_cpu is None else n_cpu
+    if num_workers > num_cpu:
+        logger.debug("%d desired workers is greater than available cores. Limiting to %s.",
+                     num_workers, num_cpu)
+        num_workers = num_cpu
+    n_partitions = 0
+    if df is not None:
+        n_partitions = calculate_n_partitions(df, num_workers,
+                                              partition_size_mb=max_partition_mb)
+
+    return num_workers, n_partitions

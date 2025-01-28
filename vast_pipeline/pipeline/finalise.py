@@ -8,7 +8,7 @@ from astropy.coordinates import SkyCoord
 from typing import List, Dict, Tuple
 
 from vast_pipeline.models import Run
-from vast_pipeline.utils.utils import StopWatch, optimize_floats, optimize_ints
+from vast_pipeline.utils.utils import StopWatch, optimise_numeric
 from vast_pipeline.pipeline.loading import (
     make_upload_associations, make_upload_sources, make_upload_related_sources,
     update_sources
@@ -88,7 +88,9 @@ def final_operations(
     source_aggregate_pair_metrics_min_abs_vs: float,
     add_mode: bool,
     done_source_ids: List[int],
-    previous_parquets: Dict[str, str]
+    previous_parquets: Dict[str, str],
+    n_cpu: int = 0,
+    max_partition_mb: int = 15
 ) -> Tuple[int, int]:
     """
     Performs the final operations of the pipeline:
@@ -136,7 +138,9 @@ def final_operations(
     )
     log_total_memory_usage()
 
-    srcs_df = parallel_groupby(sources_df)
+    srcs_df = parallel_groupby(sources_df,
+                               n_cpu=n_cpu,
+                               max_partition_mb=max_partition_mb)
 
     mem_usage = get_df_memory_usage(srcs_df)
     logger.info('Groupby-apply time: %.2f seconds', timer.reset())
@@ -179,7 +183,10 @@ def final_operations(
     # create measurement pairs, aka 2-epoch metrics
     if calculate_pairs:
         timer.reset()
-        measurement_pairs_df = calculate_measurement_pair_metrics(sources_df)
+        measurement_pairs_df = calculate_measurement_pair_metrics(
+            sources_df,
+            n_cpu=n_cpu,
+            max_partition_mb=max_partition_mb)
         logger.info(
             'Measurement pair metrics time: %.2f seconds',
             timer.reset())
@@ -325,54 +332,70 @@ def final_operations(
         .to_parquet(os.path.join(p_run.path, 'sources.parquet'))
     )
 
-    # update measurements with sources to get associations
-    sources_df = (
-        sources_df.drop('related', axis=1)
-        .merge(srcs_df.rename(columns={'id': 'source_id'}), on='source')
-    )
+    nr_sources = srcs_df["id"].count()
+    nr_new_sources = srcs_df['new'].sum()
 
     mem_usage = get_df_memory_usage(sources_df)
-    logger.debug(f"sources_df memory after srcs_df merge: {mem_usage}MB")
+    logger.debug(f"sources_df memory usage pre-drop: {mem_usage}MB")
+    mem_usage = get_df_memory_usage(srcs_df)
+    logger.debug(f"srcs_df memory usage pre-drop: {mem_usage}MB")
+    log_total_memory_usage()
+
+    sources_df = sources_df[['id', 'source', 'd2d', 'dr']]
+    srcs_df = srcs_df[['id']].rename(columns={'id': 'source_id'})
+
+    mem_usage = get_df_memory_usage(sources_df)
+    logger.debug(f"sources_df memory usage post-drop: {mem_usage}MB")
+    mem_usage = get_df_memory_usage(srcs_df)
+    logger.debug(f"srcs_df memory usage post-drop: {mem_usage}MB")
+    log_total_memory_usage()
+
+    # update measurements with sources to get associations
+    associations_df = (
+        sources_df
+        .merge(srcs_df, on='source')
+    )
+
+    mem_usage = get_df_memory_usage(associations_df)
+    logger.debug(f"associations_df memory after merge: {mem_usage}MB")
     log_total_memory_usage()
 
     if add_mode:
         # Load old associations so the already uploaded ones can be removed
-        old_assoications = (
+        old_associations = (
             pd.read_parquet(previous_parquets['associations'])
             .rename(columns={'meas_id': 'id'})
         )
-        sources_df_upload = pd.concat(
-            [sources_df, old_assoications],
+        associations_df_upload = pd.concat(
+            [associations_df, old_associations],
             ignore_index=True
         )
-        sources_df_upload = sources_df_upload.drop_duplicates(
+        associations_df_upload = associations_df_upload.drop_duplicates(
             ['source_id', 'id', 'd2d', 'dr'], keep=False
         )
         logger.debug(
-            f'Add mode: #{sources_df_upload.shape[0]} associations to upload.')
+            f'Add mode: #{associations_df_upload.shape[0]} associations to upload.')
     else:
-        sources_df_upload = sources_df
+        associations_df_upload = associations_df
 
     # upload associations into DB
-    make_upload_associations(sources_df_upload)
+    make_upload_associations(associations_df_upload)
 
     # write associations to parquet file
-    sources_df.rename(columns={'id': 'meas_id'})[
-        ['source_id', 'meas_id', 'd2d', 'dr']
-    ].to_parquet(os.path.join(p_run.path, 'associations.parquet'))
+    associations_df[['source_id', 'id', 'd2d', 'dr']]. \
+        rename(columns={'id': 'meas_id'}). \
+            to_parquet(os.path.join(p_run.path, 'associations.parquet'))
 
     if calculate_pairs:
         # get the Source object primary keys for the measurement pairs
         measurement_pairs_df = measurement_pairs_df.join(
-            srcs_df.id.rename("source_id"), on="source"
+            srcs_df.source_id, on="source"
         )
 
         # optimize measurement pair DataFrame and save to parquet file
-        measurement_pairs_df = optimize_ints(
-            optimize_floats(
-                measurement_pairs_df.drop(columns=["source"]).rename(
-                    columns={"id_a": "meas_id_a", "id_b": "meas_id_b"}
-                )
+        measurement_pairs_df = optimise_numeric(
+            measurement_pairs_df.drop(columns=["source"]).rename(
+                columns={"id_a": "meas_id_a", "id_b": "meas_id_b"}
             )
         )
         measurement_pairs_df.to_parquet(
@@ -382,9 +405,6 @@ def final_operations(
     logger.info(
         "Total final operations time: %.2f seconds",
         timer.reset_init())
-
-    nr_sources = srcs_df["id"].count()
-    nr_new_sources = srcs_df['new'].sum()
 
     # calculate and return total number of extracted sources
     return (nr_sources, nr_new_sources)

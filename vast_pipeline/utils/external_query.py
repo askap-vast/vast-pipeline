@@ -222,7 +222,7 @@ def tns(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
         data={"api_key": settings.TNS_API_KEY, "data": json.dumps(search_dict)},
         headers=headers,
     )
-    tns_results_dict_list: List[Dict[str, Any]]
+    tns_results_dict_list: List[Dict[str, Any]] = []
     if r.ok:
         tns_results_dict_list = r.json()["data"]["reply"]
         # Get details for each object result. TNS API doesn't support doing this in one

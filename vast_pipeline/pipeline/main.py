@@ -266,6 +266,8 @@ class Pipeline():
             sources_df.loc[sources_df['forced'] == False, missing_source_cols],
             images_df,
             skyregs_df,
+            n_cpu=self.config['processing']['num_workers'],
+            max_partition_mb=self.config['processing']['max_partition_mb']
         )
 
         # STEP #4 New source analysis
@@ -274,7 +276,9 @@ class Pipeline():
             missing_sources_df,
             self.config["new_sources"]["min_sigma"],
             self.config["source_monitoring"]["edge_buffer_scale"],
-            p_run
+            p_run,
+            n_cpu=self.config['processing']['num_workers_io'],
+            max_partition_mb=self.config['processing']['max_partition_mb']
         )
 
         # Drop column no longer required in missing_sources_df.
@@ -299,7 +303,8 @@ class Pipeline():
                 self.config["source_monitoring"]["allow_nan"],
                 self.add_mode,
                 done_images_df,
-                done_source_ids
+                done_source_ids,
+                n_cpu=self.config['processing']['num_workers_io']
             )
             mem_usage = get_df_memory_usage(sources_df)
             logger.debug(f"Step 5: sources_df memory usage: {mem_usage}MB")
@@ -319,7 +324,9 @@ class Pipeline():
             self.config["variability"]["source_aggregate_pair_metrics_min_abs_vs"],
             self.add_mode,
             done_source_ids,
-            self.previous_parquets
+            self.previous_parquets,
+            n_cpu=self.config['processing']['num_workers'],
+            max_partition_mb=self.config['processing']['max_partition_mb']
         )
 
         log_total_memory_usage()

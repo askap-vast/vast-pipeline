@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'rest_framework_datatables',
     'social_django',
     'crispy_forms',
+    'crispy_bootstrap4',
     'django_q',
     'tagulous',
     # pipeline app and others
@@ -141,6 +142,7 @@ SOCIAL_AUTH_GITHUB_ORG_NAME = env('SOCIAL_AUTH_GITHUB_ORG_NAME', cast=str, defau
 SOCIAL_AUTH_GITHUB_ADMIN_TEAM = env('SOCIAL_AUTH_GITHUB_ADMIN_TEAM', cast=str, default='')
 SOCIAL_AUTH_GITHUB_ORG_SCOPE = ['read:org', 'user:email']
 
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
 TNS_API_KEY = env('TNS_API_KEY', default=None)
@@ -193,6 +195,14 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework_datatables.pagination.DatatablesPageNumberPagination',
     'PAGE_SIZE': 100,
+}
+
+# Tagulous settings
+SERIALIZATION_MODULES = {
+    'xml':    'tagulous.serializers.xml_serializer',
+    'json':   'tagulous.serializers.json',
+    'python': 'tagulous.serializers.python',
+    'yaml':   'tagulous.serializers.pyyaml',
 }
 
 # Internationalization
@@ -336,6 +346,9 @@ PIPE_RUN_CONFIG_DEFAULTS = {
     'suppress_astropy_warnings': True,
     'pair_metrics': True,
     'source_aggregate_pair_metrics_min_abs_vs': 4.3,
+    'num_workers': 'null',
+    'num_workers_io': 5,
+    'max_partition_mb': 15
 }
 
 # default max concurrent pipeline runs

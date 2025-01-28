@@ -1,6 +1,6 @@
 {
   "name": "vast-pipeline",
-  "version": "1.1.1-dev",
+  "version": "2.0.0-dev",
   "description": "Vast Pipeline code base for processing and analysing telescope images from the Square Kilometre Pathfinder",
   "main": "gulpfile.js",
   "scripts": {
@@ -36,7 +36,7 @@
   },
   "homepage": "https://github.com/askap-vast/vast-pipeline#readme",
   "dependencies": {
-    "@bokeh/bokehjs": "2.4.2",
+    "@bokeh/bokehjs": "3.6.2",
     "@fortawesome/fontawesome-free": "5.12.0",
     "bootstrap-select": "^1.13.18",
     "bootstrap4-toggle": "3.6.1",
@@ -46,10 +46,10 @@
     "dotenv": "^8.6.0",
     "jquery": "^3.6.0",
     "jquery.easing": "^1.4.1",
-    "js9": "^3.4.0",
-    "jszip": "3.7.0",
+    "js9": "^3.9.0",
+    "jszip": "3.8.0",
     "particles.js": "^2.0.0",
-    "prismjs": "^1.25.0",
+    "prismjs": "^1.27.0",
     "startbootstrap-sb-admin-2": "^4.1.4"
   },
   "devDependencies": {
