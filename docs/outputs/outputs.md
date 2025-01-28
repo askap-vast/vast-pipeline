@@ -13,7 +13,7 @@ A sub-directory will exist for each pipeline run that contains the output produc
 
 The pipeline uses the [Apache Parquet](https://parquet.apache.org){:target="_blank"} file format to write results to disk. Details on how to read these files can be found below in [Reading the Outputs](#reading-the-outputs).
 
-Below is the output structure for a pipeline run named `new-test-data` when the pipeline run option `measurements.write_parquet_files` has been set to `True` and the working directory is named `pipeline-runs` (see [File Details](#file-details) for descriptions):
+Below is the output structure for a pipeline run named `new-test-data` when the pipeline run option `measurements.write_measurements_parquet` has been set to `True` and the working directory is named `pipeline-runs` (see [File Details](#file-details) for descriptions):
 
 ```bash
 pipeline-runs

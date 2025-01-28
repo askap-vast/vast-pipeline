@@ -476,7 +476,7 @@ measurements:
   flux_fractional_error: 0.0
   condon_errors: yes
   selavy_local_rms_fill_value: 0.2
-  write_parquet_files: no
+  write_measurements_parquet: no
   ra_uncertainty: 1.0
   dec_uncertainty: 1.0
 variability:
