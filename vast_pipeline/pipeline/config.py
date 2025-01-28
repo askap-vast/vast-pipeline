@@ -103,7 +103,7 @@ class PipelineConfig:
                     "flux_fractional_error": yaml.Float(),
                     "condon_errors": yaml.Bool(),
                     "selavy_local_rms_fill_value": yaml.Float(),
-                    "write_parquet_files": yaml.Bool(),
+                    "write_measurements_parquet": yaml.Bool(),
                     "ra_uncertainty": yaml.Float(),
                     "dec_uncertainty": yaml.Float(),
                 }
