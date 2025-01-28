@@ -85,10 +85,7 @@ Example usage:
 
 ### createmeasparquet
 
-This command allows for the creation of the `measurements.parquet` and `measurement_pairs.parquet` files after a run has been successfully completed. See [Arrow Files](../outputs/outputs.md#parquet-files) for more information.
-
-!!!info
-    The `measurement_pairs.parquet` file will only be created if the run was configured to calculate pair metrics.
+This command allows for the creation of the `measurements.parquet` file after a run has been successfully completed. See [Parquet Files](../outputs/outputs.md#parquet-files) for more information.
 
 ```terminal
 ./manage.py createmeasparquet --help
@@ -98,8 +95,7 @@ usage: manage.py createmeasparquet [-h] [--overwrite] [--version] [-v {0,1,2,3}]
                                  [--no-color] [--force-color] [--skip-checks]
                                  piperun
 
-Create `measurements.parquet` and `measurement_pairs.parquet` files for a
-completed pipeline run.
+Create `measurements.parquet` files for a completed pipeline run.
 
 positional arguments:
   piperun               Path or name of the pipeline run.
@@ -129,8 +125,6 @@ Example usage:
 ./manage.py createmeasparquet docs_example_run
 2021-03-30 10:48:40,952 createmeasparquet INFO Creating measurements parquet file for 'docs_example_run'.
 2021-03-30 10:48:40,952 utils INFO Creating measurements.parquet for run docs_example_run.
-2021-03-30 10:48:41,829 createmeasparquet INFO Creating measurement pairs parquet file for 'docs_example_run'.
-2021-03-30 10:48:41,829 utils INFO Creating measurement_pairs.parquet for run docs_example_run.
 ```
 
 ### debugrun

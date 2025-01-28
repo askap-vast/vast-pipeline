@@ -487,17 +487,13 @@ Boolean. Calculate the Condon errors of the extractions when read in from the so
 **`measurements.selavy_local_rms_fill_value`**
 Float. Value to substitute for the `local_rms` parameter in selavy extractions if a `0.0` value is found. Unit is mJy. Defaults to `0.2`.
 
-**`measurements.write_parquet_files`**
-Boolean. When `True` then two `parquet` format files are produced:
+**`measurements.write_measurements_parquet`**
+Boolean. When `True` the measurements `parquet` file, containing all the measurements associated with the run, is produced.
 
-* `measurements.parquet` - an [Apache Parquet](https://parquet.apache.org/) file containing all the measurements associated with the run.
-* `measurement_pairs.parquet` -  an [Apache Parquet](https://parquet.apache.org/) file containing the measurement pairs information pre-merged with extra information from the measurements. Only output if `variability.pair_metrics` is also set to `True`.
-
-Producing these files for large runs (200+ images) is recommended for post-processing. Defaults to `False`.
+Producing these files for medium sized runs (hundreds of images) and is functionally required for large runs (thousands of images), for post-processing. Defaults to `False`.
 
 !!! note
-    The parquet files can optionally be produced after the run has completed.
-    See the [Generating Parquet Files page](genparquet.md).
+    The measurements parquet can optionally be produced after the run has completed - this is the recommended method to ensure that the entire run doesn't fail if something breaks in this final step. See the [Generating Measurements Parquet page](genparquet.md) for details.
 
 **`measurements.ra_uncertainty`**
 Float. Defines an uncertainty error to the RA that will be added in quadrature to the existing source extraction error. Used to represent a systematic positional error. Unit is arcseconds. Defaults to 1.0.
