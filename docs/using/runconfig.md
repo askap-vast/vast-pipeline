@@ -490,7 +490,7 @@ Float. Value to substitute for the `local_rms` parameter in selavy extractions i
 **`measurements.write_measurements_parquet`**
 Boolean. When `True` the measurements `parquet` file, containing all the measurements associated with the run, is produced.
 
-Producing these files for medium sized runs (hundreds of images) and is functionally required for large runs (thousands of images), for post-processing. Defaults to `False`.
+Producing these files for medium sized runs (hundreds of images) is recommended and is functionally required for large runs (thousands of images), for post-processing. Defaults to `False`.
 
 !!! note
     The measurements parquet can optionally be produced after the run has completed - this is the recommended method to ensure that the entire run doesn't fail if something breaks in this final step. See the [Generating Measurements Parquet page](genparquet.md) for details.
