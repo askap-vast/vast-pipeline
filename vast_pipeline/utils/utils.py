@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 
 from datetime import datetime
-from typing import Any, Dict, Tuple, Union
+from typing import Any, Dict, Tuple, Union, Optional
 from pathlib import Path
 from psutil import cpu_count
 
