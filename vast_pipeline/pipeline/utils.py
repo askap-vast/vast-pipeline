@@ -1377,7 +1377,7 @@ def _repartition_measurements(in_file: str, out_file: str) -> None:
     """
 
     # Using large datasets, so need to do the shuffling on disk
-    with dc.set(shuffle='disk'):
+    with dc.set({'dataframe.shuffle.method': 'disk'}):
         dask_df = dd.read_parquet(in_file).repartition(partition_size="100MB")
         dask_df = dask_df.set_index('source', drop=True)
         dask_df = dask_df.repartition(partition_size="100MB")
