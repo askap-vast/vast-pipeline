@@ -88,6 +88,20 @@ class Command(BaseCommand):
         except PipelineConfigError as e:
             raise CommandError(e)
 
+        if image_config.image_opts()['condon_errors']:
+            logger.warning(
+                "You have selected condon_errors=True. "
+                "Using the Condon uncertainties will overwrite those provide "
+                "by the input catalogue and should not be used if you have "
+                "applied any corrections to the input catalogues, or if you "
+                "trust their uncertainties."
+                )
+            logger.warning(
+                "The Condon uncertainties only account for the statistical "
+                "component of the uncertainty - any systematic uncertainty"
+                "should be taken into account using the ra_uncertainty and "
+                "dec_uncertainty parameters in the config file."
+                )
         # Create a dummy Pipeline instance using the given image ingestion configuration options
         d = _DummyPipeline(image_config)
 

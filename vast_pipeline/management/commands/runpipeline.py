@@ -293,6 +293,21 @@ def run_pipe(
         "Source monitoring: %s",
         pipeline.config["source_monitoring"]["monitor"]
     )
+    
+    if pipeline.config["condon_errors"]:
+        logger.warning(
+            "You have selected condon_errors=True. "
+            "Using the Condon uncertainties will overwrite those provide "
+            "by the input catalogue and should not be used if you have "
+            "applied any corrections to the input catalogues, or if you "
+            "trust their uncertainties."
+            )
+        logger.warning(
+            "The Condon uncertainties only account for the statistical "
+            "component of the uncertainty - any systematic uncertainty"
+            "should be taken into account using the ra_uncertainty and "
+            "dec_uncertainty parameters in the config file."
+            )
 
     # log the list of input data files for posterity
     inputs = pipeline.config["inputs"]
