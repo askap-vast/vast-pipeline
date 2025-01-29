@@ -294,7 +294,7 @@ def run_pipe(
         pipeline.config["source_monitoring"]["monitor"]
     )
     
-    if pipeline.config["condon_errors"]:
+    if pipeline.config["measurements"]["condon_errors"]:
         logger.warning(
             "You have selected condon_errors=True. "
             "Using the Condon uncertainties will overwrite those provide "
