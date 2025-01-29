@@ -17,7 +17,7 @@ Output:
 
 [vast_pipeline]
   clearpiperun
-  createmeasarrow
+  createmeasparquet
   debugrun
   ingestimages
   initingest
@@ -52,7 +52,7 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   --keep-parquet        Flag to keep the pipeline run(s) parquet files. Will
-                        also apply to arrow files if present.
+                        also apply to parquet files if present.
   --remove-all          Flag to remove all the content of the pipeline run(s)
                         folder.
   --version             show program's version number and exit
@@ -83,30 +83,26 @@ Example usage:
 !!!tip
     Further information on clearing a specific run, or resetting the database, can be found in the [Contributing and Developing](../developing/localdevenv.md#removingclearing-data) section.
 
-### createmeasarrow
+### createmeasparquet
 
-This command allows for the creation of the `measurements.arrow` and `measurement_pairs.arrow` files after a run has been successfully completed. See [Arrow Files](../outputs/outputs.md#arrow-files) for more information.
-
-!!!info
-    The `measurement_pairs.arrow` file will only be created if the run was configured to calculate pair metrics.
+This command allows for the creation of the `measurements.parquet` file after a run has been successfully completed. See [Parquet Files](../outputs/outputs.md#parquet-files) for more information.
 
 ```terminal
-./manage.py createmeasarrow --help
-usage: manage.py createmeasarrow [-h] [--overwrite] [--version] [-v {0,1,2,3}]
+./manage.py createmeasparquet --help
+usage: manage.py createmeasparquet [-h] [--overwrite] [--version] [-v {0,1,2,3}]
                                  [--settings SETTINGS]
                                  [--pythonpath PYTHONPATH] [--traceback]
                                  [--no-color] [--force-color] [--skip-checks]
                                  piperun
 
-Create `measurements.arrow` and `measurement_pairs.arrow` files for a
-completed pipeline run.
+Create `measurements.parquet` files for a completed pipeline run.
 
 positional arguments:
   piperun               Path or name of the pipeline run.
 
 optional arguments:
   -h, --help            show this help message and exit
-  --overwrite           Overwrite previous 'measurements.arrow' file.
+  --overwrite           Overwrite previous 'measurements.parquet' file.
   --version             show program's version number and exit
   -v {0,1,2,3}, --verbosity {0,1,2,3}
                         Verbosity level; 0=minimal output, 1=normal output,
@@ -126,11 +122,9 @@ optional arguments:
 Example usage:
 
 ```terminal
-./manage.py createmeasarrow docs_example_run
-2021-03-30 10:48:40,952 createmeasarrow INFO Creating measurements arrow file for 'docs_example_run'.
-2021-03-30 10:48:40,952 utils INFO Creating measurements.arrow for run docs_example_run.
-2021-03-30 10:48:41,829 createmeasarrow INFO Creating measurement pairs arrow file for 'docs_example_run'.
-2021-03-30 10:48:41,829 utils INFO Creating measurement_pairs.arrow for run docs_example_run.
+./manage.py createmeasparquet docs_example_run
+2021-03-30 10:48:40,952 createmeasparquet INFO Creating measurements parquet file for 'docs_example_run'.
+2021-03-30 10:48:40,952 utils INFO Creating measurements.parquet for run docs_example_run.
 ```
 
 ### debugrun
@@ -482,7 +476,7 @@ measurements:
   flux_fractional_error: 0.0
   condon_errors: yes
   selavy_local_rms_fill_value: 0.2
-  write_arrow_files: no
+  write_measurements_parquet: no
   ra_uncertainty: 1.0
   dec_uncertainty: 1.0
 variability:
