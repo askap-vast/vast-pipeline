@@ -85,7 +85,7 @@ Example usage:
 
 ### createmeasparquet
 
-This command allows for the creation of the `measurements.parquet` file after a run has been successfully completed. See [Parquet Files](../outputs/outputs.md#parquet-files) for more information.
+This command allows for the creation of the `measurements.parquet` file after a run has been successfully completed.
 
 ```terminal
 ./manage.py createmeasparquet --help

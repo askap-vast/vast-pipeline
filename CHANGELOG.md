@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- V2: Updated docs dependencies and fixed outdated information and various warnings [#801](https://github.com/askap-vast/vast-pipeline/pull/801)
 - V2: Reorganise new_high_sigma calculation into dedicated function [#714](https://github.com/askap-vast/vast-pipeline/pull/714)
 - V2: Update dependencies to fix dependabot warnings and prepare for Dask distributed implementation.
 - Upgrade measurements file generation to use dask in order to handle larger runs [#797](https://github.com/askap-vast/vast-pipeline/pull/797)
@@ -35,6 +36,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#801](https://github.com/askap-vast/vast-pipeline/pull/801): docs, dep: v2: Updated docs dependencies and fixed outdated information and various warnings
 - [#714](https://github.com/askap-vast/vast-pipeline/pull/714): fix: V2: Correctly calculate new_high_sigma parameter 
 - [#798](https://github.com/askap-vast/vast-pipeline/pull/798): dep: V2: Update dependencies to deal with dependabot reccomendations and to prepare for V2 upgrades. 
 - [#789](https://github.com/askap-vast/vast-pipeline/pull/797): feat: Convert measurements.arrow generation to use dask, and combine optimise_ints/floats to optimise_numeric

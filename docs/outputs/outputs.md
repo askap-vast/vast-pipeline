@@ -11,7 +11,7 @@ A sub-directory will exist for each pipeline run that contains the output produc
 !!! note
     If you do not administrate your system or do not have access to a `vast-tools` notebook interface, please contact your system admin to confirm the working directory and how to best access the files.
 
-The pipeline uses the [Apache Parquet](https://parquet.apache.org){:target="_blank"} file format to write results to disk. Details on how to read these files can be found below in [Reading the Outputs](#reading-the-outputs).
+The pipeline uses the [Apache Parquet](https://parquet.apache.org){:target="_blank"} file format to write results to disk. Details on how to read these files can be found below in [Using the Outputs](usingoutputs.md).
 
 Below is the output structure for a pipeline run named `new-test-data` when the pipeline run option `measurements.write_measurements_parquet` has been set to `True` and the working directory is named `pipeline-runs` (see [File Details](#file-details) for descriptions):
 
@@ -96,8 +96,8 @@ Here, for each image, the selavy measurements that have been ingested are stored
 | `forced_measurements*.parquet` | Multiple files that contain the forced measurements extracted from the respective image denoted in the filename. |
 | `images.parquet` | Contains the information of the images processed in the pipeline run. |
 | `YYYY-MM-DD-HH-MM-SS_log.txt` | The log file of the pipeline run. It is timestamped with the date and time of the run start. |
-| `measurements.parquet` | An [Apache Parquet](https://parquet.apache.org/){:target="_blank"} format file containing all the measurements associated with the pipeline run (see [Arrow Files](#parquet-files)).|
-| `measurement_pairs.parquet` | An [Apache Parquet](https://parquet.apache.org/){:target="_blank"} format file containing all the measurement pair metrics (see [Arrow Files](#parquet-files)). |
+| `measurements.parquet` | An [Apache Parquet](https://parquet.apache.org/){:target="_blank"} format file containing all the measurements associated with the pipeline run.|
+| `measurement_pairs.parquet` | An [Apache Parquet](https://parquet.apache.org/){:target="_blank"} format file containing all the measurement pair metrics. |
 | `measurement_pairs.parquet` | Contains all the measurement pairs metrics. |
 | `relations.parquet` | Contains the relation information between sources. |
 | `skyregions.parquet` | Contains the sky region information of the pipeline run. |

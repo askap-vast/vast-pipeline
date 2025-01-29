@@ -68,7 +68,7 @@ class Command(BaseCommand):
             help='Flag to remove all the content of the pipeline run(s) folder.'
         )
 
-    def handle(self, *args, **options) -> None:
+    def handle(self, *args: str, **options: str) -> None:
         """
         Handle function of the command.
 

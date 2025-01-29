@@ -72,8 +72,12 @@ def debug(strategy, backend, uid, response, details, user, social, *args,
     return {}
 
 
-def load_github_avatar(response: Dict, social: UserSocialAuth, *args,
-    **kwargs) -> Dict:
+def load_github_avatar(
+    response: Dict,
+    social: UserSocialAuth,
+    *args: str,
+    **kwargs: str
+) -> Dict:
     """
     Add GitHub avatar url to the extra data stored by social_django app
 

@@ -58,7 +58,7 @@ class Command(BaseCommand):
             help=('Image ingestion configuration filename/path.')
         )
 
-    def handle(self, *args, **options) -> None:
+    def handle(self, *args: str, **options: str) -> None:
         """
         Handle function of the command.
 

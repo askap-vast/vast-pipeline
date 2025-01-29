@@ -2,7 +2,7 @@
 
 This page describes how to generate the measurements parquet file for a pipeline run if the option in the configuration file to create it was turned off. This can only be run by the creator or an administrator.
 
-The measurements file is an [Apache Parquet](https://parquet.apache.org/){:target="_blank"} format file containing all the measurements associated with the pipeline run (see [Parquet Files](#parquet-files)). Extra processing is performed in the creation of this file such that source ids are already in place for the measurements and the parquet file is partitioned sensibly. 
+The measurements file is an [Apache Parquet](https://parquet.apache.org/){:target="_blank"} format file containing all the measurements associated with the pipeline run. Extra processing is performed in the creation of this file such that source ids are already in place for the measurements and the parquet file is partitioned sensibly. 
 
 !!! tip "Measurements Parquet Available"
     Users can see if the measurements parquet file is present for the run of interest by checking the respective run detail page.

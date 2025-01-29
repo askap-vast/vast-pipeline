@@ -52,7 +52,7 @@ The following instructions, will get you started in setting up the database and 
     Done!
     ```
 
-2. Copy the setting configuration file template and modify it with your desired settings. Please refer to the [.env File](#.env-file) section on this page for further details about the settings that are set in this file along with their defaults.
+2. Copy the setting configuration file template and modify it with your desired settings. Please refer to the [.env File](#env-file) section on this page for further details about the settings that are set in this file along with their defaults.
 
     ```console
     cp webinterface/.env.template webinterface/.env
@@ -245,7 +245,7 @@ The pipeline supports two authentication methods: GitHub Organizations, intended
 ### GitHub Organizations
 
 Please refer to the [Python Social Auth documentation](https://python-social-auth.readthedocs.io/en/latest/backends/github.html){:target="_blank"} for a complete description on this authentication method and how to set up the GitHub app used for authentication.
-All settings are entered into the `.env` file as detailed in the [above section](#.env-file).
+All settings are entered into the `.env` file as detailed in the [above section](#env-file).
 
 ### Django superuser
 
