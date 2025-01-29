@@ -312,7 +312,7 @@ def parse_coord(coord_string: str, coord_frame: str = "icrs") -> SkyCoord:
     return coord
 
 
-def optimise_numeric(df: pd.DataFrame):
+def optimise_numeric(df: pd.DataFrame) -> pd.DataFrame:
     """
     Downcast integer and float columns in a pd.DataFrame to the smallest
     data type without losing any information.
