@@ -14,15 +14,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### Changed
 
 - V2: Updated docs dependencies and fixed outdated information and various warnings [#801](https://github.com/askap-vast/vast-pipeline/pull/801)
+- V2: Reorganise new_high_sigma calculation into dedicated function [#714](https://github.com/askap-vast/vast-pipeline/pull/714)
 - V2: Update dependencies to fix dependabot warnings and prepare for Dask distributed implementation.
-- Upgrade measurements file generation to use dask in order to handle larger runs [#789](https://github.com/askap-vast/vast-pipeline/pull/797)
-- Replaced optimise_ints and optimise_floats with single function - optimise_numeric [#789](https://github.com/askap-vast/vast-pipeline/pull/797)
+- Upgrade measurements file generation to use dask in order to handle larger runs [#797](https://github.com/askap-vast/vast-pipeline/pull/797)
+- Replaced optimise_ints and optimise_floats with single function - optimise_numeric [#797](https://github.com/askap-vast/vast-pipeline/pull/797)
 - Upgrade forced_phot dependency to v0.2 and force `use_numba=True` [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
 - Remove bad forced photometry fits immediately after calculation, rather than after they've all been compiled into a single dataframe [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
 - Optimise associations upload by dropping unnecessary columns prior to a large dataframe merge [#787](https://github.com/askap-vast/vast-pipeline/pull/787)
 
 #### Fixed
 
+- V2: Fix incorrect calculation of the new_high_sigma parameter [#714](https://github.com/askap-vast/vast-pipeline/pull/714)
 - Fixed outdated jupyterhub link on pipeline website [#795](https://github.com/askap-vast/vast-pipeline/pull/795)
 - Renamed variable in pipeline.finalise to better reflect what the dataframe represents (sources_df -> associations_df) [#787](https://github.com/askap-vast/vast-pipeline/pull/787)
 - Fixed typo in variable name ("assoications") [#787](https://github.com/askap-vast/vast-pipeline/pull/787)
@@ -35,6 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### List of PRs
 
 - [#801](https://github.com/askap-vast/vast-pipeline/pull/801): docs, dep: v2: Updated docs dependencies and fixed outdated information and various warnings
+- [#714](https://github.com/askap-vast/vast-pipeline/pull/714): fix: V2: Correctly calculate new_high_sigma parameter 
 - [#798](https://github.com/askap-vast/vast-pipeline/pull/798): dep: V2: Update dependencies to deal with dependabot reccomendations and to prepare for V2 upgrades. 
 - [#789](https://github.com/askap-vast/vast-pipeline/pull/797): feat: Convert measurements.arrow generation to use dask, and combine optimise_ints/floats to optimise_numeric
 - [#795](https://github.com/askap-vast/vast-pipeline/pull/795): fix: Fixed outdated jupyterhub link on pipeline website
