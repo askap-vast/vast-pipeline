@@ -39,6 +39,12 @@ The portion of a pipeline log file below shows the messages for the ingestion of
 
 See [Ingest Steps Details](#ingest-steps-details) for further details on the steps.
 
+!!! Warning
+    Recalculating the uncertainties using the Condon method will overwrite the
+    uncertainties provided by the input catalogue.
+    Hence, this option should not be used if you have applied any sort of corrections
+    to the input catalogue prior to ingest, or if you trust the existing uncertainties.
+
 ## Uniqueness
 
 The image uniqueness is defined by the filename. If you wish to upload a different version of the same image, e.g. a version where different Selavy settings were used in the source extraction, then you would have to make sure the image filename was different to the previously ingested image.

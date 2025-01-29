@@ -403,6 +403,7 @@ class SelavyImage(FitsImage):
 
         if self.config["condon_errors"]:
             logger.debug("Calculating Condon '97 errors...")
+
             theta_B = dj_image.beam_bmaj
             theta_b = dj_image.beam_bmin
 
