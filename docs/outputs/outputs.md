@@ -96,8 +96,8 @@ Here, for each image, the selavy measurements that have been ingested are stored
 | `forced_measurements*.parquet` | Multiple files that contain the forced measurements extracted from the respective image denoted in the filename. |
 | `images.parquet` | Contains the information of the images processed in the pipeline run. |
 | `YYYY-MM-DD-HH-MM-SS_log.txt` | The log file of the pipeline run. It is timestamped with the date and time of the run start. |
-| `measurements.parquet` | An [Apache Parquet](https://parquet.apache.org/){:target="_blank"} format file containing all the measurements associated with the pipeline run (see [Arrow Files](#parquet-files)).|
-| `measurement_pairs.parquet` | An [Apache Parquet](https://parquet.apache.org/){:target="_blank"} format file containing all the measurement pair metrics (see [Arrow Files](#parquet-files)). |
+| `measurements.parquet` | An [Apache Parquet](https://parquet.apache.org/){:target="_blank"} format file containing all the measurements associated with the pipeline run.|
+| `measurement_pairs.parquet` | An [Apache Parquet](https://parquet.apache.org/){:target="_blank"} format file containing all the measurement pair metrics. |
 | `measurement_pairs.parquet` | Contains all the measurement pairs metrics. |
 | `relations.parquet` | Contains the relation information between sources. |
 | `skyregions.parquet` | Contains the sky region information of the pipeline run. |
