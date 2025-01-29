@@ -491,7 +491,7 @@ def new_sources(
 
     logger.debug("Getting new_high_sigma measurements...")
     new_sources_df = parallel_get_new_high_sigma(
-        new_sources_df, edge_buffer=edge_buffer
+        new_sources_df, edge_buffer=edge_buffer,
         n_cpu=n_cpu, max_partition_mb=max_partition_mb
     )
     logger.debug(f"Time to get rms measurements: {debug_timer.reset()}s")
