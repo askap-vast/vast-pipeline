@@ -140,6 +140,10 @@ measurements:
 
   # Replace the selavy errors with Condon (1997) errors.
   # Only applied to NEW images that are not already present in the database.
+  # Warning: this will overwrite the uncertainties provided and should not be used if 
+  # you trust the uncertainties in your catalogues (either intrinsically, or because 
+  # you have corrected them). It also only accounts for the statistical component of
+  # the uncertainty, which is likely much smaller than the true uncertainty.
   condon_errors: {{ use_condon_errors }}
 
   # Sometimes the local rms for a source is reported as 0 by selavy.

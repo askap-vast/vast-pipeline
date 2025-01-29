@@ -26,6 +26,12 @@ Full details: [Image & Selavy Catalogue Ingest](imageingest.md).
 
 The first stage of the pipeline is to read and ingest to the database the input data that has been provided in the configuration file. This includes determing statistics about the image footprint and properties, and also importing and cleaning the associated measurements from the selavy file. The errors on the measurements can also be recalculated at this stage based upon the [Condon (1997)](https://doi.org/10.1086/133871){:target="_blank"} method.
 
+!!! Warning
+    Recalculating the uncertainties using the Condon method will overwrite the
+    uncertainties provided by the input catalogue.
+    Hence, this option should not be used if you have applied any sort of corrections
+    to the input catalogue prior to ingest, or if you trust the existing uncertainties.
+
 Image uniqueness is determined by the filename, and once the image is ingested, it is available for other pipeline runs to use without having to re-ingest.
 
 ### 2. Source Association

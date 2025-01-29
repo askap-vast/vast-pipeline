@@ -484,6 +484,11 @@ Define a fractional flux error that will be added in quadrature to the extracted
 **`measurements.condon_errors`**
 Boolean. Calculate the Condon errors of the extractions when read in from the source extraction file. If `False` then the errors directly from the source finder output are used. Recommended to set to `True` for selavy extractions. Defaults to `True`.
 
+!!! Warning
+    This will completely overwrite the uncertainties provided by the input catalogue.
+    Hence, this option should not be used if you have applied any sort of corrections
+    to the input catalogue prior to ingest, or if you trust the existing uncertainties.
+
 **`measurements.selavy_local_rms_fill_value`**
 Float. Value to substitute for the `local_rms` parameter in selavy extractions if a `0.0` value is found. Unit is mJy. Defaults to `0.2`.
 
@@ -508,3 +513,14 @@ Boolean. When `True` then the two-epoch metrics are calculated for each source. 
 
 **`variability.source_aggregate_pair_metrics_min_abs_vs`**
 Float. Defines the minimum $V_s$ two-epoch metric value threshold used to attach the most significant pair value to the source. Defaults to `4.3`.
+
+### Processing
+
+**`processing.num_workers`**
+Integer or `null`. The total number of workers available to Dask when running the pipeline. `null` means use one less than all available cores. Defaults to `null`.
+
+**`processing.num_workers_io`**
+Integer. The total number of workers to use for disk IO operations (e.g. when reading images for forced extraction). Defaults to 5.
+
+**`processing.max_partition_mb`**
+Integer. The default maximum size (in MB) to allow per partition of Dask DataFrames. Increasing this will create fewer partitions and will potentially increase the memory footprint of parallelised tasks. Defaults to 15.
