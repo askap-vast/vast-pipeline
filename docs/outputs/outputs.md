@@ -13,7 +13,7 @@ A sub-directory will exist for each pipeline run that contains the output produc
 
 The pipeline uses the [Apache Parquet](https://parquet.apache.org){:target="_blank"} file format to write results to disk. Details on how to read these files can be found below in [Using the Outputs](usingoutputs.md).
 
-Below is the output structure for a pipeline run named `new-test-data` when the pipeline run option `measurements.write_arrow_files` has been set to `True` and the working directory is named `pipeline-runs` (see [File Details](#file-details) for descriptions):
+Below is the output structure for a pipeline run named `new-test-data` when the pipeline run option `measurements.write_measurements_parquet` has been set to `True` and the working directory is named `pipeline-runs` (see [File Details](#file-details) for descriptions):
 
 ```bash
 pipeline-runs
@@ -38,28 +38,13 @@ pipeline-runs
 │   ├── forced_measurements_VAST_2118-06A_EPOCH12_I_cutout_fits.parquet
 │   ├── images.parquet
 │   ├── YYYY-MM-DD-HH-MM-SS_log.txt
-│   ├── measurements.arrow
-│   ├── measurement_pairs.arrow
+│   ├── measurements.parquet
+│   ├── measurement_pairs.parquet
 │   ├── measurement_pairs.parquet
 │   ├── relations.parquet
 │   ├── skyregions.parquet
 │   └── sources.parquet
 ```
-
-### Arrow Files
-
-Large pipeline runs (hundreds of images) mean that to read the measurements, hundreds of parquet files need to be read in, and can contain millions of rows.
-This can be slow using libraries such as pandas, and also consumes a lot of system memory.
-A solution to this is to save all the measurements associated with the pipeline run into one single file in the [Apache Arrow](https://arrow.apache.org/overview/){:target="_blank"} format.
-
-The library `vaex` is able to open `.arrow` files in an out-of-core context so the memory footprint is hugely reduced along with the reading of the file being very fast.
-The two-epoch measurement pairs are also saved to arrow format due to the same reasons. See [Reading with vaex](usingoutputs.md#reading-with-vaex) for further details on using `vaex`.
-
-!!! note
-    At the time of development `vaex` could not open parquets in an out-of-core context. This will be reviewed in the future if such functionality is added to `vaex`.
-
-To enable the arrow files to be produced, the option `measurements.write_arrow_files` is required to be set to `True` in the pipeline run config.
-Alternatively, the arrow files can be generated after the completion of the run, see the [Generating Arrow Files page](../../using/genarrow) for full details.
 
 ### Image Data
 
@@ -111,8 +96,8 @@ Here, for each image, the selavy measurements that have been ingested are stored
 | `forced_measurements*.parquet` | Multiple files that contain the forced measurements extracted from the respective image denoted in the filename. |
 | `images.parquet` | Contains the information of the images processed in the pipeline run. |
 | `YYYY-MM-DD-HH-MM-SS_log.txt` | The log file of the pipeline run. It is timestamped with the date and time of the run start. |
-| `measurements.arrow` | An [Apache Arrow](https://arrow.apache.org/overview/){:target="_blank"} format file containing all the measurements associated with the pipeline run (see [Arrow Files](#arrow-files)).|
-| `measurement_pairs.arrow` | An [Apache Arrow](https://arrow.apache.org/overview/){:target="_blank"} format file containing all the measurement pair metrics (see [Arrow Files](#arrow-files)). |
+| `measurements.parquet` | An [Apache Parquet](https://parquet.apache.org/){:target="_blank"} format file containing all the measurements associated with the pipeline run (see [Arrow Files](#parquet-files)).|
+| `measurement_pairs.parquet` | An [Apache Parquet](https://parquet.apache.org/){:target="_blank"} format file containing all the measurement pair metrics (see [Arrow Files](#parquet-files)). |
 | `measurement_pairs.parquet` | Contains all the measurement pairs metrics. |
 | `relations.parquet` | Contains the relation information between sources. |
 | `skyregions.parquet` | Contains the sky region information of the pipeline run. |

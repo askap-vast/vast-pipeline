@@ -3,17 +3,21 @@ This module contains general pipeline utility functions.
 """
 
 import collections
-from datetime import datetime
 import os
 import logging
+import shutil
+
 import math as m
-from typing import Any, Dict, Tuple
+import numpy as np
+import pandas as pd
+
+from datetime import datetime
+from typing import Any, Dict, Tuple, Union
+from pathlib import Path
+from psutil import cpu_count
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Longitude, Latitude
-import numpy as np
-import pandas as pd
-from psutil import cpu_count
 
 
 logger = logging.getLogger(__name__)
@@ -444,3 +448,41 @@ def calculate_workers_and_partitions(
         )
 
     return num_workers, n_partitions
+
+def delete_file_or_dir(path: Union[str, Path]) -> None:
+    """
+    Delete a file or directory.
+    Args:
+        path: The path to the file or directory to delete.
+    Returns:
+        None
+    """
+    if type(path) is str:
+        path = Path(path)
+    if path.is_file():
+        path.unlink()
+    elif path.is_dir():
+        shutil.rmtree(path)
+    else:
+        raise ValueError(f"Path {path} is not a file or directory.")
+
+def copy_file_or_dir(src: Union[str, Path], dst: Union[str, Path]) -> None:
+    """
+    Copy a file or directory.
+    Args:
+        src: The path to the file or directory to copy.
+        dst: The path to the destination file or directory.
+    Returns:
+        None
+    """
+    if type(src) is str:
+        src = Path(src)
+    if type(dst) is str:
+        dst = Path(dst)
+
+    if src.is_file():
+        shutil.copy(src, dst)
+    elif src.is_dir():
+        shutil.copytree(src, dst)
+    else:
+        raise ValueError(f"Path {src} is not a file or directory.")

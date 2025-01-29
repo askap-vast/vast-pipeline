@@ -2,11 +2,7 @@
 
 This page gives details on how to open and use the pipeline output files.
 
-It is recommended to use `pandas` or `vaex` to read the pipeline results from the parquet files. See the sections below for more information on using each library.
-
-!!! note
-    It is also possible to use [`Dask`](https://docs.dask.org/en/latest/){:target="_blank"} to read the parquets in an out-of-core context but the general performance can sometimes be poor with many parquet files. 
-    `vaex` is the preferred out-of-core method.
+It is recommended to use `pandas` or `dask` to read the pipeline results from the parquet files. In general, even for runs with thousands of images, pandas is sufficient for reading most of the VAST pipeline outputs. However, loading a large set of measurements (e.g. `measurements.parquet` or a large subset of the individual parquet files) usually requires `dask` due to memory constraints. See the sections below for more information on using each library.
     
 !!! tip
     Be sure to look at [`vast-tools`](#vast-tools), a ready-made library for exploring pipeline results!
@@ -55,23 +51,16 @@ measurements = pd.concat(data, ignore_index=True)
     sources = pd.read_parquet('pipeline-runs/new-test-data/sources.parquet', columns=['id', 'n_meas'])
     ```
 
-### Reading with vaex
+### Reading with dask
 
-[vaex documentation](https://vaex.io/docs/index.html){:target="_blank"}.
+[dask documentation](https://docs.dask.org/en/stable/dataframe.html){:target="_blank"}.
 
-!!! warning
-    vaex is a young project so bugs may be expected along with frequent updates. It has currently been tested with version `3.0.0`. 
-    Version `4.0.0` promises opening parquet files in an out-of-core context.
-
-!!! warning
-    Some pipeline `parquet` format files do not open with vaex 3.0.0. `arrow` format files should open successfully.
-
-A parquet, or arrow file, can be opened using the `open()` method:
+A parquet can be opened using the `read_parquet()` method:
 
 ```python
-import vaex
+import dask.dataframe as dd
 
-measurements = vaex.open('pipeline-runs/new-test-data/measurements.arrow')
+measurements = dd.read_parquet('pipeline-runs/new-test-data/measurements.parquet')
 
 measurements.head()
   #    source  island_id         component_id            local_rms       ra       ra_err       dec      dec_err    flux_peak    flux_peak_err    flux_int    flux_int_err    bmaj     err_bmaj    bmin     err_bmin      pa      err_pa    psf_bmaj    psf_bmin    psf_pa  flag_c4      chi_squared_fit    spectral_index  spectral_index_from_TT    has_siblings      image_id  time                           name                                    snr    compactness    ew_sys_err    ns_sys_err    error_radius    uncertainty_ew    uncertainty_ns    weight_ew    weight_ns  forced      flux_int_isl_ratio    flux_peak_isl_ratio    id
@@ -87,23 +76,13 @@ measurements.head()
   9       730  SB00013_island_1  SB00013_component_1a     0.437279  321.901  3.14407e-06  -4.20052  2.36161e-06      294.141         0.451346     340.92         0.864347   18.38  7.55055e-06   12.12  5.36009e-06  106.18  0.00262701        6.01        4        51.55  False                2368.93               -99  True                      True                    12  2020-01-12 05:36:03.834000000  VAST_2118-06A_SB00013_component_1a  672.663       1.15903    0.000277778   0.000277778     4.00455e-06       0.000277807       0.000277807  1.29573e+07  1.29573e+07  False                 0.640807               0.72508   1740
 ```
 
-Multiple parquet files can be opened at once using the `open_many()` method:
-
-```python
-import glob
-import vaex
-
-files = glob.glob("pipeline-runs/images/*/measurements.parquet")
-measurements = vaex.open_many(files)
-```
-
 !!! tip
-    You can convert a vaex dataframe to pandas by using the `to_pandas_df()` method:
+    You can convert a dask dataframe to pandas by using the `compute()` method:
     ```python
-    import vaex
+    import dask.dataframe as dd
 
-    sources = vaex.open('pipeline-runs/new-test-data/sources.parquet')
-    sources = sources.to_pandas_df()
+    sources = dd.read_parquet('pipeline-runs/new-test-data/sources.parquet')
+    sources = sources.compute()
     ```
 
 ### Linking the Results
@@ -111,7 +90,7 @@ measurements = vaex.open_many(files)
 The table below shows what parameters act as keys to link data from the different results tables.
 
 !!! tip
-    If loading the measurements via the `.arrow` file, then the measurements already have the `source` column in-place.
+    If loading the measurements via the `.parquet` file, then the measurements already have the `source` column in-place.
 
 !!! tip
     The `images.parquet` file contains the column `measurements_path` which can be used to get the filepaths for all the selavy `parquet` files.
