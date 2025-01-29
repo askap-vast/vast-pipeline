@@ -226,7 +226,7 @@ def run_pipe(
                     bak_files = glob.glob(os.path.join(p_run.path, "*.bak"))
                     if bak_files:
                         for bf in bak_files:
-                            os.remove(bf)
+                            delete_file_or_dir(bf)
 
                     # remove previous config if it exists
                     if prev_config_exists:
