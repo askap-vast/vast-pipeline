@@ -1068,7 +1068,8 @@
 <span class=normal>477</span>
 <span class=normal>478</span>
 <span class=normal>479</span>
-<span class=normal>480</span></pre></div></td><td class=code><div><pre><span></span><code><span class=k>class</span><span class=w> </span><span class=nc>SelavyImage</span><span class=p>(</span><span class=n>FitsImage</span><span class=p>):</span>
+<span class=normal>480</span>
+<span class=normal>481</span></pre></div></td><td class=code><div><pre><span></span><code><span class=k>class</span><span class=w> </span><span class=nc>SelavyImage</span><span class=p>(</span><span class=n>FitsImage</span><span class=p>):</span>
 <span class=w>    </span><span class=sd>&quot;&quot;&quot;</span>
 <span class=sd>    Fits images that have a selavy catalogue.</span>
 
@@ -1207,6 +1208,7 @@
 
         <span class=k>if</span> <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=p>[</span><span class=s2>&quot;condon_errors&quot;</span><span class=p>]:</span>
             <span class=n>logger</span><span class=o>.</span><span class=n>debug</span><span class=p>(</span><span class=s2>&quot;Calculating Condon &#39;97 errors...&quot;</span><span class=p>)</span>
+
             <span class=n>theta_B</span> <span class=o>=</span> <span class=n>dj_image</span><span class=o>.</span><span class=n>beam_bmaj</span>
             <span class=n>theta_b</span> <span class=o>=</span> <span class=n>dj_image</span><span class=o>.</span><span class=n>beam_bmin</span>
 
@@ -1508,7 +1510,8 @@
 <span class=normal>477</span>
 <span class=normal>478</span>
 <span class=normal>479</span>
-<span class=normal>480</span></pre></div></td><td class=code><div><pre><span></span><code><span class=k>def</span><span class=w> </span><span class=nf>read_selavy</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>dj_image</span><span class=p>:</span> <span class=n>models</span><span class=o>.</span><span class=n>Image</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>pd</span><span class=o>.</span><span class=n>DataFrame</span><span class=p>:</span>
+<span class=normal>480</span>
+<span class=normal>481</span></pre></div></td><td class=code><div><pre><span></span><code><span class=k>def</span><span class=w> </span><span class=nf>read_selavy</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>dj_image</span><span class=p>:</span> <span class=n>models</span><span class=o>.</span><span class=n>Image</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>pd</span><span class=o>.</span><span class=n>DataFrame</span><span class=p>:</span>
 <span class=w>    </span><span class=sd>&quot;&quot;&quot;</span>
 <span class=sd>    Read the sources from the selavy catalogue, select wanted columns</span>
 <span class=sd>    and remap them to correct names, followed by filtering and Condon</span>
@@ -1605,6 +1608,7 @@
 
     <span class=k>if</span> <span class=bp>self</span><span class=o>.</span><span class=n>config</span><span class=p>[</span><span class=s2>&quot;condon_errors&quot;</span><span class=p>]:</span>
         <span class=n>logger</span><span class=o>.</span><span class=n>debug</span><span class=p>(</span><span class=s2>&quot;Calculating Condon &#39;97 errors...&quot;</span><span class=p>)</span>
+
         <span class=n>theta_B</span> <span class=o>=</span> <span class=n>dj_image</span><span class=o>.</span><span class=n>beam_bmaj</span>
         <span class=n>theta_b</span> <span class=o>=</span> <span class=n>dj_image</span><span class=o>.</span><span class=n>beam_bmin</span>
 
