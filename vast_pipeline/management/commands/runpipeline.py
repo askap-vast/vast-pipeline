@@ -24,7 +24,9 @@ from vast_pipeline.pipeline.utils import (
     get_create_p_run, create_measurements_parquet_file,
     backup_parquets, create_temp_config_file
 )
-from vast_pipeline.utils.utils import StopWatch, timeStamped
+from vast_pipeline.utils.utils import (
+    StopWatch, timeStamped, delete_file_or_dir
+)
 from vast_pipeline.models import Run
 from ..helpers import get_p_run_name
 
@@ -148,10 +150,7 @@ def run_pipe(
                 + glob.glob(os.path.join(p_run.path, "*.bak"))
             )
             for parquet in parquets:
-                if os.path.isfile(parquet):
-                    os.remove(parquet)
-                else:
-                    shutil.rmtree(parquet)
+                delete_file_or_dir(parquet)
 
             # copy across config file at the start
             logger.debug("Copying temp config file.")
@@ -221,10 +220,7 @@ def run_pipe(
                     remove_forced_meas(p_run.path)
 
                     for parquet in parquets:
-                        if os.path.isfile(parquet):
-                            os.remove(parquet)
-                        else:
-                            shutil.rmtree(parquet)
+                        delete_file_or_dir(parquet)
 
                     # remove bak files
                     bak_files = glob.glob(os.path.join(p_run.path, "*.bak"))

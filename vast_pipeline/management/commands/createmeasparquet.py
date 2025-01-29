@@ -11,7 +11,7 @@ from argparse import ArgumentParser
 from django.core.management.base import BaseCommand, CommandError
 from vast_pipeline.pipeline.utils import create_measurements_parquet_file
 from vast_pipeline.models import Run
-from vast_pipeline.utils.utils import timeStamped
+from vast_pipeline.utils.utils import timeStamped, delete_file_or_dir
 from ..helpers import get_p_run_name
 
 
@@ -98,11 +98,7 @@ class Command(BaseCommand):
         if os.path.exists(measurements_parquet):
             if options['overwrite']:
                 logger.info("Removing previous 'measurements.parquet' file.")
-                # NOTE - this can probably be scrapped, but it's in there just to be safe
-                if os.path.isfile(measurements_parquet):
-                    os.remove(measurements_parquet)
-                else:
-                    shutil.rmtree(measurements_parquet)
+                delete_file_or_dir(measurements_parquet)
             else:
                 logger.error(
                     f'Measurements parquet file already exists for {p_run_name}'
