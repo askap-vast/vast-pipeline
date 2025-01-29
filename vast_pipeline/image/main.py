@@ -402,7 +402,19 @@ class SelavyImage(FitsImage):
         df['compactness'] = df['flux_int'].values / df['flux_peak'].values
 
         if self.config["condon_errors"]:
-            logger.debug("Calculating Condon '97 errors...")
+            logger.warning("Calculating Condon '97 errors...")
+            logger.warning(
+                "Using the Condon uncertainties will overwrite those provide "
+                "by the input catalogue and should not be used if you have "
+                "applied any corrections to the input catalogues, or if you "
+                "trust their uncertainties."
+                )
+            logger.warning(
+                "The Condon uncertainties only account for the statistical "
+                "component of the uncertainty - any systematic uncertainty"
+                "should be taken into account using the ra_uncertainty and "
+                "dec_uncertainty parameters in the config file."
+                )
             theta_B = dj_image.beam_bmaj
             theta_b = dj_image.beam_bmin
 
