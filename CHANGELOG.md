@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added more detailed warnings about the use of Condon Errors throughout the docs and code [#806](https://github.com/askap-vast/vast-pipeline/pull/806)
 - Added option to disable forced photometry clustering [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
 - Added additional logging to forced extraction step [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
 
@@ -33,6 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#806](https://github.com/askap-vast/vast-pipeline/pull/806): feat, docs: Added more detailed warnings about the use of Condon Errors throughout the docs and code
 - [#802](https://github.com/askap-vast/vast-pipeline/pull/802): fix: Fix broken links on pipeline website
 - [#789](https://github.com/askap-vast/vast-pipeline/pull/797): feat: Convert measurements.arrow generation to use dask, and combine optimise_ints/floats to optimise_numeric
 - [#795](https://github.com/askap-vast/vast-pipeline/pull/795): fix: Fixed outdated jupyterhub link on pipeline website
