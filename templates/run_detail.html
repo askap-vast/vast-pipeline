@@ -43,15 +43,15 @@
       </div>
       <div>
         {% if user.get_username == p_run.user or user.is_staff %}
-          <a id="arrowPipeRunButton" class="btn btn-sm btn-success
+          <a id="parquetPipeRunButton" class="btn btn-sm btn-success
             btn-icon-split shadow-sm
             {% if p_run.status == 'Completed' %}{% else %}
               disabled
-            {% endif %}" href="#" data-toggle="modal" data-target="#arrowPipeModal">
+            {% endif %}" href="#" data-toggle="modal" data-target="#parquetPipeModal">
             <span class="icon text-white-600">
               <i class="fas fa-angle-double-right"></i>
             </span>
-            <span class="text">Generate Arrow Files</span>
+            <span class="text">Generate Measurements Parquet</span>
           </a>
           <a id="deletePipeRunButton" class="btn btn-sm btn-danger
             btn-icon-split shadow-sm
@@ -180,13 +180,13 @@
           <p><strong>Epoch based: </strong>{{ p_run.epoch_based }}</p>
           <p><strong>Run Status: </strong>{{ p_run.status }}</p>
           <p><strong>Path: </strong>{{ p_run.path }}</p>
-          <p><strong>Arrow Files Available: </strong>{% if p_run.arrow_files == True %}Yes{% else %}No{% endif %}</p>
+          <p><strong>Measurements Parquet Available: </strong>{% if p_run.measurements_parquet == True %}Yes{% else %}No{% endif %}</p>
           <p><strong>Description: </strong>{{ p_run.description }}</p>
           <p>
             <a href="#configFile"><strong>Config File</strong></a><br>
             <a href="#logFile"><strong>Run Log File</strong></a><br>
             <a href="#restorelogFile"><strong>Restore Log File</strong></a><br>
-            <a href="#arrowlogFile"><strong>Generate Arrow Files Log File</strong></a>
+            <a href="#parquetlogFile"><strong>Generate Measurements Parquet Log File</strong></a>
           </p>
         </div>
       </div>
@@ -303,22 +303,22 @@
     <div class="col-lg-12">
       <!-- log file card -->
       <div class="card shadow mb-4">
-        <h6 class="card-header m-0 font-weight-bold text-primary" id="arrowlogFile">
-          <a data-toggle="collapse" href="#collapseArrowLogCard" aria-expanded="true" aria-controls="collapseArrowLogCard" id="arrowlogHeader" class="d-block float-left">
+        <h6 class="card-header m-0 font-weight-bold text-primary" id="parquetlogFile">
+          <a data-toggle="collapse" href="#collapseParquetLogCard" aria-expanded="true" aria-controls="collapseParquetLogCard" id="parquetlogHeader" class="d-block float-left">
             <i class="fa fa-chevron-down pull-right"></i>
-            Generate Arrow Files Log File
+            Generate Measurements Parquet Log File
           </a>
-          <div class="float-right" id="genarrowLogfileSelector">
-            <select name="genarrowlogs" id="genarrowlogs">
-              {% for log in genarrow_log_files %}
+          <div class="float-right" id="genparquetLogfileSelector">
+            <select name="genparquetlogs" id="genparquetlogs">
+              {% for log in genparquet_log_files %}
                 <option value="{{ log }}">{{ log }}</option>
               {% endfor %}
             </select>
           </div>
         </h6>
-        <div class="collapse show" id="collapseArrowLogCard">
+        <div class="collapse show" id="collapseParquetLogCard">
           <div class="card-body">
-            <pre class="pre-scrollable" id="genarrowlogtext"><code>No logs to show.</code></pre>
+            <pre class="pre-scrollable" id="genparquetlogtext"><code>No logs to show.</code></pre>
           </div>
         </div>
       </div>
@@ -554,36 +554,37 @@
   </div>
 </div>
 
-<!-- Arrow pipeline modal-->
-<div class="modal fade" id="arrowPipeModal" tabindex="-1" role="dialog" aria-labelledby="arrowPipeModalLabel" aria-hidden="true">
+<!-- Parquet pipeline modal-->
+<div class="modal fade" id="parquetPipeModal" tabindex="-1" role="dialog" aria-labelledby="parquetPipeModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h4 class="modal-title font-weight-bold" id="arrowPipeModalLabel">Generate Arrow Files for {{ p_run.name }}</h4>
+        <h4 class="modal-title font-weight-bold" id="parquetPipeModalLabel">Generate Measurements Parquet for {{ p_run.name }}</h4>
         <button class="close" type="button" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">×</span>
         </button>
       </div>
       <div class="modal-body">
-        <form id="arrowPipeForm" action="{% url 'vast_pipeline:api_pipe_runs-genarrow' p_run.id %}" method="post" novalidate>
+        <form id="parquetPipeForm" action="{% url 'vast_pipeline:api_pipe_runs-genparquet' p_run.id %}" method="post" novalidate>
           {% csrf_token %}
           <p>
-            Generate the arrow files containing the measurements and the measurement pairs.
-            If the arrow files are already present it is possible to overwrite these and generate new files.
+            Generate the measurements parquet file.
+            If the file already exists it is possible to overwrite these and a generate new file.
             The process can only be used for runs which have completed successfully.
           </p>
           <h5>What and Why?</h5>
           <div>
             <p>
-              <a target="_blank" href="https://arrow.apache.org/">Apache Arrow</a> is a column-based data storage format that is designed to be 'memory-mapped' which offers very fast data access.
-              For large pipeline runs it can be much more efficient to interact with the measurements data using the arrow format rather than the default parquet format.
-              If the arrow files are available then VAST Tools will automatically switch to using them.
+            <!--NOTE: need to update this text at some point-->
+              <a target="_blank" href="https://parquet.apache.org/">Apache Parquet</a> is an open source, column-oriented data file format designed for efficient data storage and retrieval.
+              For large pipeline runs it is much more efficient to interact with the measurements data using the parquet format rather than the default parquet format.
+              If the measurements parquet is available then VAST Tools will automatically switch to using it.
             </p>
           </div>
           <div class="modal-footer">
             Overwrite Current Files:
             <div class="btn-group btn-group-toggle mr-auto" data-toggle="buttons">
-              <input type="checkbox" name="arrowOverwrite" id="arrowOverwriteToggle" data-toggle="toggle" data-size="sm">
+              <input type="checkbox" name="parquetOverwrite" id="parquetOverwriteToggle" data-toggle="toggle" data-size="sm">
             </div>
             <button class="btn btn-secondary btn-icon-split" type="button" data-dismiss="modal">
               <span class="icon">
@@ -591,11 +592,11 @@
               </span>
               <span class="text">Cancel</span>
             </button>
-            <button id="arrowPipeRun" class="btn btn-success btn-icon-split" type="submit">
+            <button id="parquetPipeRun" class="btn btn-success btn-icon-split" type="submit">
             <span class="icon">
               <i class="fas fa-angle-double-right fa-sm"></i>
             </span>
-            <span class="text">Generate Arrow Files</span>
+            <span class="text">Generate Measurements Parquet</span>
             </button>
           </div>
         </form>

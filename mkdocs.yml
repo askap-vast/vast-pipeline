@@ -62,12 +62,11 @@ markdown_extensions:
   - pymdownx.highlight
   - pymdownx.tabbed
   - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - toc:
       toc_depth: 4
       permalink: true
-  - lightgallery
 
 nav:
   - Home: index.md
@@ -84,7 +83,7 @@ nav:
     - Adding Images to a Run: using/addtorun.md
     - Restoring a Run: using/restorerun.md
     - Deleting a Run: using/deleterun.md
-    - Generating Arrow Files: using/genarrow.md
+    - Generating Measurements Parquet: using/genparquet.md
     - Exploring the Pipeline Website:
       - Website Overview: exploringwebsite/websiteoverview.md
       - DataTables: exploringwebsite/datatables.md
@@ -137,7 +136,7 @@ nav:
         - management:
           - commands:
             - clearpiperun.py: reference/management/commands/clearpiperun.md
-            - createmeasarrow.py: reference/management/commands/createmeasarrow.md
+            - createmeasparquet.py: reference/management/commands/createmeasparquet.md
             - debugrun.py: reference/management/commands/debugrun.md
             - ingestimages.py: reference/management/commands/ingestimages.md
             - initingest.py: reference/management/commands/initingest.md
@@ -161,6 +160,7 @@ nav:
           - translators.py: reference/survey/translators.md
         - utils:
           - auth.py: reference/utils/auth.md
+          - delete_run.py: reference/utils/delete_run.md
           - external_query.py: reference/utils/external_query.md
           - unit_tags.py: reference/utils/unit_tags.md
           - utils.py: reference/utils/utils.md
@@ -207,8 +207,8 @@ plugins:
             - "os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'webinterface.settings')"
             - "os.environ.setdefault('DATABASE_URL', '')"
             - "django.setup()"
-      watch:
-        - vast_pipeline
+watch:
+    - vast_pipeline
 
 extra:
   social:

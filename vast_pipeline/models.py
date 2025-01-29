@@ -226,6 +226,38 @@ class Band(models.Model):
         return self.name
 
 
+class SkyRegionQuerySet(models.QuerySet):
+
+    def cone_search(
+        self, ra: float, dec: float, radius_deg: float
+    ) -> models.QuerySet:
+        """
+        Return all the Sources withing radius_deg of (ra,dec).
+        Returns a QuerySet of Sources, ordered by distance from
+        (ra,dec) ascending.
+
+        Args:
+            ra: The right ascension value of the cone search central
+                coordinate.
+            dec: The declination value of the cone search central coordinate.
+            radius_deg: The radius over which to perform the cone search.
+
+        Returns:
+            Sources found withing the cone search area.
+        """
+        return (
+            self.extra(
+                select={
+                    "distance": "q3c_dist(centre_ra, centre_dec, %s, %s) * 3600"
+                },
+                select_params=[ra, dec],
+                where=["q3c_radial_query(centre_ra, centre_dec, %s, %s, %s)"],
+                params=[ra, dec, radius_deg],
+            )
+            .order_by("distance")
+        )
+
+
 class SkyRegion(models.Model):
     run = models.ManyToManyField(Run)
 
@@ -237,6 +269,8 @@ class SkyRegion(models.Model):
     x = models.FloatField()
     y = models.FloatField()
     z = models.FloatField()
+
+    objects = SkyRegionQuerySet.as_manager()
 
     def __str__(self):
         return f'{round(self.centre_ra, 3)}, {round(self.centre_dec, 3)}'

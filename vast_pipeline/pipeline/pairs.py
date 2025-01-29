@@ -72,7 +72,7 @@ def calculate_measurement_pair_metrics(
     """
     
     n_workers, n_partitions = calculate_workers_and_partitions(
-        df,
+        df.set_index('source'),
         n_cpu=n_cpu,
         max_partition_mb=max_partition_mb
     )

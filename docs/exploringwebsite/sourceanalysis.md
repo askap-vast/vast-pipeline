@@ -61,7 +61,7 @@ When querying large pipeline runs it is possible that a query will return tens o
 Plotting such a high number of sources is very intensive and would take a significant amount of time to render.
 To solve this, when a high number of sources are requested to be plotted, all the sources outside of the threshold transient area are plotted as a static image that represents the distribution of the sources.
 These sources are not interactive. 
-By default the threshold is set to 20,000 datapoints and is [configurable by the administrator](../gettingstarted/configuration.md#.env-file).
+By default the threshold is set to 20,000 datapoints and is [configurable by the administrator](../gettingstarted/configuration.md#env-file).
 
 Any sources that fall within the transient threshold region are plotted as normal and are interactive as with the standard plot.
 

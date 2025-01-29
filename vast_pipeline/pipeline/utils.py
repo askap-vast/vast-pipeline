@@ -9,23 +9,26 @@ import glob
 import shutil
 import numpy as np
 import pandas as pd
-import pyarrow as pa
 import astropy.units as u
 import dask
 import dask.dataframe as dd
+import dask.config as dc
 import psutil
+import tempfile
+import itertools
 
 from typing import Any, List, Optional, Dict, Tuple, Union
 from astropy.coordinates import SkyCoord, Angle
 from django.conf import settings
 from django.contrib.auth.models import User
 from itertools import chain
+from multiprocessing import Pool
 
 from vast_pipeline.image.main import FitsImage, SelavyImage
 from vast_pipeline.image.utils import open_fits
 from vast_pipeline.utils.utils import (
-    eq_to_cart, StopWatch, optimize_ints, optimize_floats,
-    calculate_workers_and_partitions
+    eq_to_cart, StopWatch, optimise_numeric,
+    calculate_workers_and_partitions, copy_file_or_dir, delete_file_or_dir
 )
 from vast_pipeline.models import (
     Band, Image, Run, SkyRegion
@@ -33,30 +36,42 @@ from vast_pipeline.models import (
 
 
 logger = logging.getLogger(__name__)
-dask.config.set({"multiprocessing.context": "fork"})
+dask.config.set({"multiprocessing.context": "fork",
+                 "dataframe.convert-string": False})
 
 
-def get_create_skyreg(image: Image) -> SkyRegion:
+def get_create_skyreg(image: Image, radius: float = 10.) -> SkyRegion:
     '''
-    This creates a Sky Region object in Django ORM given the related
-    image object.
+    This creates a SkyRegion object in Django ORM given the related
+    image object. If a SkyRegion already exists and has an image radius
+    within `radius` arcsec of the input image then use that SkyRegion.
 
     Args:
         image: The image Django ORM object.
+        radius: Search radius (in arcsec) for matching to existing SkyRegion
 
     Returns:
         The sky region Django ORM object.
     '''
-    # In the calculations below, it is assumed the image has square
+    # NOTE: In the calculations below, it is assumed the image has square
     # pixels (this pipeline has been designed for ASKAP images, so it
     # should always be square). It will likely give wrong results if not
-    skyregions = SkyRegion.objects.filter(
-        centre_ra=image.ra,
-        centre_dec=image.dec,
-        xtr_radius=image.fov_bmin
+
+    # Get SkyRegions and image radii areas within `radius` arcsec
+    radius_deg = radius/3600.
+    skyregions = SkyRegion.objects.cone_search(
+        ra=float(image.ra),
+        dec=float(image.dec),
+        radius_deg=float(radius_deg)
+    ).filter(
+        xtr_radius__range=(
+            image.fov_bmin - radius_deg/2.,
+            image.fov_bmin + radius_deg/2.
+        )
     )
     if skyregions:
-        skyr = skyregions.get()
+        # Get the closest in case of multiple matches.
+        skyr = skyregions[0]
         logger.info('Found sky region %s', skyr)
     else:
         x, y, z = eq_to_cart(image.ra, image.dec)
@@ -1119,7 +1134,7 @@ def get_src_skyregion_merged_df(
 def _get_skyregion_relations(
     row: pd.Series,
     coords: SkyCoord,
-    ids: pd.core.indexes.numeric.Int64Index
+    ids: pd.Index
 ) -> List[int]:
     '''
     For each sky region row a list is returned that
@@ -1203,7 +1218,7 @@ def group_skyregions(df: pd.DataFrame) -> pd.DataFrame:
 
     master_done = []  # keep track of all checked ids in master done
 
-    for skyreg_id, neighbours in results.iteritems():
+    for skyreg_id, neighbours in results.items():
 
         if skyreg_id not in master_done:
             local_done = []   # a local done list for the sky region group.
@@ -1318,114 +1333,124 @@ def get_parallel_assoc_image_df(
 
     return images_df
 
-
-def create_measurements_arrow_file(p_run: Run) -> None:
+def _process_measurements_file(m_file: str,
+                               i: int,
+                               out_dir: str,
+                               associations: pd.DataFrame
+                               ) -> None:
     """
-    Creates a measurements.arrow file using the parquet outputs
+    Process an individual measurements file and output as a single partition
+    
+    Args:
+        m_file: Path to measurements file.
+        i: Measurements file index.
+        out_dir: Path to directory containing parquet partitions
+        associations: Associations dataframe
+    
+    Returns:
+        None
+    """
+    measurements = pd.read_parquet(m_file, engine='pyarrow')
+    
+    # Memory blows up and everything is slow if we try and do a full merge.
+    # Instead, pull out the indices that are in both dfs and then merge those.
+    associations_merge = associations[associations.index.isin(measurements['id'])]
+    measurements = measurements.loc[
+        measurements['id'].isin(associations_merge.index)
+    ]
+    
+    measurements = optimise_numeric(measurements)
+    measurements = measurements.merge(associations_merge, right_index=True, left_on='id', how="inner").rename(columns={'source_id': 'source'})
+    
+    partition_file = os.path.join(out_dir, f'part.{i}.parquet')
+    measurements.to_parquet(partition_file, index=False)
+
+def _repartition_measurements(in_file: str, out_file: str) -> None:
+    """"
+    Repartition the combined measurements file to be indexed by source id
+    
+    Args:
+        in_file: path to parquet file to be repartitioned.
+        out_file: path to parquet file to be written.
+    Returns:
+        None
+    """
+
+    # Using large datasets, so need to do the shuffling on disk
+    with dc.set({'dataframe.shuffle.method': 'disk'}):
+        dask_df = dd.read_parquet(in_file).repartition(partition_size="100MB")
+        dask_df = dask_df.set_index('source', drop=True)
+        dask_df = dask_df.repartition(partition_size="100MB")
+        dask_df.to_parquet(out_file)
+
+def create_measurements_parquet_file(p_run: Run, max_workers: Optional[int] = 10) -> None:
+    """
+    Creates a measurements.parquet file using the parquet outputs
     of a pipeline run.
 
     Args:
         p_run:
             Pipeline model instance.
+        max_workers:
+            Maximum number of workers to use when processing
+            individual partitions. Defaults to 10.
 
     Returns:
         None
     """
-    logger.info('Creating measurements.arrow for run %s.', p_run.name)
+    logger.info('Creating measurements.parquet for run %s.', p_run.name)
+    
+    p_run_path = p_run.path
+    parquet_file = os.path.join(p_run_path, 'measurements.parquet')
+    logger.info("Will write to final parquet file to %s.", parquet_file)
+    
+    processed_temp = tempfile.TemporaryDirectory()
+    logger.debug("Writing temporary data to %s", processed_temp.name)
 
-    associations = pd.read_parquet(
-        os.path.join(
-            p_run.path,
-            'associations.parquet'
-        )
-    )
     images = pd.read_parquet(
         os.path.join(
-            p_run.path,
+            p_run_path,
             'images.parquet'
-        )
+        ),
+        columns=['measurements_path']
     )
-
     m_files = images['measurements_path'].tolist()
+    del images
 
     m_files += glob.glob(os.path.join(
-        p_run.path,
+        p_run_path,
         'forced*.parquet'
     ))
 
-    logger.debug('Loading %i files...', len(m_files))
-    measurements = dd.read_parquet(m_files, engine='pyarrow').compute()
+    logger.debug("Will create measurements from %i files...", len(m_files))
 
-    measurements = measurements.loc[
-        measurements['id'].isin(associations['meas_id'].values)
-    ]
-
-    measurements = (
-        associations.loc[:, ['meas_id', 'source_id']]
-        .set_index('meas_id')
-        .merge(
-            measurements,
-            left_index=True,
-            right_on='id'
-        )
-        .rename(columns={'source_id': 'source'})
-    )
-
-    # drop timezone from datetime for vaex compatibility
-    # TODO: Look to keep the timezone if/when vaex is compatible.
-    measurements['time'] = measurements['time'].dt.tz_localize(None)
-
-    logger.debug('Optimising dataframes.')
-    measurements = optimize_ints(optimize_floats(measurements))
-
-    logger.debug("Loading to pyarrow table.")
-    measurements = pa.Table.from_pandas(measurements)
-
-    logger.debug("Exporting to arrow file.")
-    outname = os.path.join(p_run.path, 'measurements.arrow')
-
-    local = pa.fs.LocalFileSystem()
-
-    with local.open_output_stream(outname) as file:
-        with pa.RecordBatchFileWriter(file, measurements.schema) as writer:
-            writer.write_table(measurements)
-
-
-def create_measurement_pairs_arrow_file(p_run: Run) -> None:
-    """
-    Creates a measurement_pairs.arrow file using the parquet outputs
-    of a pipeline run.
-
-    Args:
-        p_run:
-            Pipeline model instance.
-
-    Returns:
-        None
-    """
-    logger.info('Creating measurement_pairs.arrow for run %s.', p_run.name)
-
-    measurement_pairs_df = pd.read_parquet(
+    associations = dd.read_parquet(
         os.path.join(
-            p_run.path,
-            'measurement_pairs.parquet'
+            p_run_path,
+            'associations.parquet'
+        ),
+        columns=['source_id'],
+        index='meas_id'
+    ).compute()
+    
+    logger.debug("Processing %d partitions with %d workers", len(m_files), max_workers)
+
+    
+    with Pool(max_workers) as pool:
+        iterable_arg = zip(
+            m_files,
+            range(len(m_files)),
+            itertools.repeat(processed_temp.name),
+            itertools.repeat(associations),
         )
-    )
+        pool.starmap(_process_measurements_file, iterable_arg)
 
-    logger.debug('Optimising dataframe.')
-    measurement_pairs_df = optimize_ints(optimize_floats(measurement_pairs_df))
+    logger.debug("Repartitioning dataframe and saving")
+    _repartition_measurements(processed_temp.name, parquet_file)
 
-    logger.debug("Loading to pyarrow table.")
-    measurement_pairs_df = pa.Table.from_pandas(measurement_pairs_df)
-
-    logger.debug("Exporting to arrow file.")
-    outname = os.path.join(p_run.path, 'measurement_pairs.arrow')
-
-    local = pa.fs.LocalFileSystem()
-
-    with local.open_output_stream(outname) as file:
-        with pa.RecordBatchFileWriter(file, measurement_pairs_df.schema) as writer:
-            writer.write_table(measurement_pairs_df)
+    logger.debug("Cleaning up temporary data")
+    processed_temp.cleanup()
+    logger.debug("Done.")
 
 
 def backup_parquets(p_run_path: str) -> None:
@@ -1440,17 +1465,13 @@ def backup_parquets(p_run_path: str) -> None:
     Returns:
         None
     """
-    parquets = (
-        glob.glob(os.path.join(p_run_path, "*.parquet"))
-        # TODO Remove arrow when arrow files are no longer required.
-        + glob.glob(os.path.join(p_run_path, "*.arrow")))
+    parquets = glob.glob(os.path.join(p_run_path, "*.parquet"))
 
-    for i in parquets:
-        backup_name = i + '.bak'
-        if os.path.isfile(backup_name):
-            logger.debug(f'Removing old backup file: {backup_name}.')
-            os.remove(backup_name)
-        shutil.copyfile(i, backup_name)
+    for parquet in parquets:
+        backup_name = parquet + '.bak'
+        if os.path.exists(backup_name):
+            delete_file_or_dir(backup_name)
+        copy_file_or_dir(parquet, backup_name)
 
 
 def create_temp_config_file(p_run_path: str) -> None:
@@ -1637,7 +1658,7 @@ def reconstruct_associtaion_dfs(
     ).index.values
     # Make sure we attach the correct source id
     source_ids = sources_df.loc[relation_ids].source.values
-    sources_df['related'] = np.nan
+    sources_df['related'] = pd.NA
     relations_to_update = prev_relations.loc[source_ids].to_numpy().copy()
     relations_to_update = np.reshape(
         relations_to_update, relations_to_update.shape[0])
@@ -1671,7 +1692,8 @@ def reconstruct_associtaion_dfs(
     # deep=True copy does not truly copy mutable type objects)
     relation_mask = skyc1_srcs.related.notna()
     relation_vals = skyc1_srcs.loc[relation_mask, 'related'].to_list()
-    new_relation_vals = [x.copy() for x in relation_vals]
+    new_relation_vals = np.array([x.copy() for x in relation_vals], dtype='object')
+    #new_relation_vals = [x.copy() for x in relation_vals]
     skyc1_srcs.loc[relation_mask, 'related'] = new_relation_vals
 
     # Reorder so we don't mess up the dask metas.
@@ -1743,7 +1765,7 @@ def write_parquets(
     return skyregs_df
 
 
-def get_total_memory_usage():
+def get_total_memory_usage() -> float:
     """
     This function gets the current memory usage and returns a string.
 
@@ -1756,7 +1778,7 @@ def get_total_memory_usage():
     return mem
 
 
-def log_total_memory_usage():
+def log_total_memory_usage() -> float:
     """
     This function gets the current memory usage and logs it.
 
@@ -1768,7 +1790,7 @@ def log_total_memory_usage():
     logger.debug(f"Current memory usage: {mem:.3f}GB")
 
 
-def get_df_memory_usage(df):
+def get_df_memory_usage(df: pd.DataFrame) -> float:
     """
     This function calculates the memory usage of a pandas dataframe and
     logs it.
