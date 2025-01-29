@@ -7,11 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/v1.1.0...HEAD)
 
 #### Added
+
 - Added option to disable forced photometry clustering [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
 - Added additional logging to forced extraction step [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
 
 #### Changed
 
+- V2: Updated docs dependencies and fixed outdated information and various warnings [#801](https://github.com/askap-vast/vast-pipeline/pull/801)
 - V2: Update dependencies to fix dependabot warnings and prepare for Dask distributed implementation.
 - Upgrade measurements file generation to use dask in order to handle larger runs [#789](https://github.com/askap-vast/vast-pipeline/pull/797)
 - Replaced optimise_ints and optimise_floats with single function - optimise_numeric [#789](https://github.com/askap-vast/vast-pipeline/pull/797)
@@ -32,6 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#801](https://github.com/askap-vast/vast-pipeline/pull/801): docs, dep: v2: Updated docs dependencies and fixed outdated information and various warnings
 - [#798](https://github.com/askap-vast/vast-pipeline/pull/798): dep: V2: Update dependencies to deal with dependabot reccomendations and to prepare for V2 upgrades. 
 - [#789](https://github.com/askap-vast/vast-pipeline/pull/797): feat: Convert measurements.arrow generation to use dask, and combine optimise_ints/floats to optimise_numeric
 - [#795](https://github.com/askap-vast/vast-pipeline/pull/795): fix: Fixed outdated jupyterhub link on pipeline website
