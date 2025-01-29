@@ -1467,11 +1467,11 @@ def backup_parquets(p_run_path: str) -> None:
     """
     parquets = glob.glob(os.path.join(p_run_path, "*.parquet"))
 
-    for i in parquets:
-        backup_name = i + '.bak'
+    for parquet in parquets:
+        backup_name = parquet + '.bak'
         if os.path.exists(backup_name):
             delete_file_or_dir(backup_name)
-        copy_file_or_dir(i, backup_name)
+        copy_file_or_dir(parquet, backup_name)
 
 
 def create_temp_config_file(p_run_path: str) -> None:
