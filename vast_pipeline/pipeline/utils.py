@@ -28,7 +28,7 @@ from vast_pipeline.image.main import FitsImage, SelavyImage
 from vast_pipeline.image.utils import open_fits
 from vast_pipeline.utils.utils import (
     eq_to_cart, StopWatch, optimise_numeric,
-    calculate_workers_and_partitions
+    calculate_workers_and_partitions, copy_file_or_dir
 )
 from vast_pipeline.models import (
     Band, Image, Run, SkyRegion
@@ -1469,10 +1469,9 @@ def backup_parquets(p_run_path: str) -> None:
 
     for i in parquets:
         backup_name = i + '.bak'
-        if os.path.isfile(backup_name):
-            logger.debug(f'Removing old backup file: {backup_name}.')
-            os.remove(backup_name)
-        shutil.copyfile(i, backup_name)
+        if os.path.exists(backup_name):
+            delete_file_or_dir(backup_name)
+        copy_file_or_dir(i, backup_name)
 
 
 def create_temp_config_file(p_run_path: str) -> None:
