@@ -312,14 +312,13 @@ def parse_coord(coord_string: str, coord_frame: str = "icrs") -> SkyCoord:
     return coord
 
 
-def optimise_numeric(df):
+def optimise_numeric(df: pd.DataFrame):
     """
     Downcast integer and float columns in a pd.DataFrame to the smallest
     data type without losing any information.
 
     Args:
-        df:
-            Input dataframe, no specific columns.
+        df (pd.DataFrame): Input dataframe, no specific columns.
 
     Returns:
         The input dataframe with the `int64` and `float64` columns downcasted.
