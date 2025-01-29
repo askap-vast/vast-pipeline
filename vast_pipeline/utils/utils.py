@@ -3,17 +3,20 @@ This module contains general pipeline utility functions.
 """
 
 import collections
-from datetime import datetime
 import os
 import logging
+
 import math as m
+import numpy as np
+import pandas as pd
+
+from datetime import datetime
 from typing import Any, Dict, Tuple
+from pathlib import Path
+from psutil import cpu_count
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Longitude, Latitude
-import numpy as np
-import pandas as pd
-from psutil import cpu_count
 
 
 logger = logging.getLogger(__name__)
@@ -431,3 +434,20 @@ def calculate_workers_and_partitions(df, n_cpu=None, max_partition_mb=15):
                                               partition_size_mb=max_partition_mb)
 
     return num_workers, n_partitions
+
+def delete_file_or_dir(path: Union[str, Path]) -> None:
+    """
+    Delete a file or directory.
+    Args:
+        path: The path to the file or directory to delete.
+    Returns:
+        None
+    """
+    if type(path) is str:
+        path = Path(path)
+    if path.is_file():
+        path.unlink()
+    elif path.is_dir():
+        shutil.rmtree(path)
+    else:
+        raise ValueError(f"Path {path} is not a file or directory.")
