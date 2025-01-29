@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed incorrect error ellipse calculation [#792](https://github.com/askap-vast/vast-pipeline/pull/792)
 - V2: Fix incorrect calculation of the new_high_sigma parameter [#714](https://github.com/askap-vast/vast-pipeline/pull/714)
 - Fixed broken links on pipeline websites [#802](https://github.com/askap-vast/vast-pipeline/pull/802)
 - Fixed outdated jupyterhub link on pipeline website [#795](https://github.com/askap-vast/vast-pipeline/pull/795)
@@ -39,6 +40,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#792](https://github.com/askap-vast/vast-pipeline/pull/792): fix: Simplify and correct error ellipse calculation.
 - [#801](https://github.com/askap-vast/vast-pipeline/pull/801): docs, dep: v2: Updated docs dependencies and fixed outdated information and various warnings
 - [#714](https://github.com/askap-vast/vast-pipeline/pull/714): fix: V2: Correctly calculate new_high_sigma parameter 
 - [#798](https://github.com/askap-vast/vast-pipeline/pull/798): dep: V2: Update dependencies to deal with dependabot reccomendations and to prepare for V2 upgrades.

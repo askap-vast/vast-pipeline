@@ -225,7 +225,7 @@ class DeruiterRegressionTest(TestCase):
         '''
         See documentation for test_num_sources in property_check.
         '''
-        property_check.test_num_sources(self, self.sources, 618)
+        property_check.test_num_sources(self, self.sources, 611)
 
     def test_most_relations(self):
         '''
