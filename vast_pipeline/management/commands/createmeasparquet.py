@@ -5,7 +5,6 @@ for a previously completed pipeline run.
 
 import os
 import logging
-import shutil
 
 from argparse import ArgumentParser
 from django.core.management.base import BaseCommand, CommandError
