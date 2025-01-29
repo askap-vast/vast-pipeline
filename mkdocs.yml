@@ -83,7 +83,7 @@ nav:
     - Adding Images to a Run: using/addtorun.md
     - Restoring a Run: using/restorerun.md
     - Deleting a Run: using/deleterun.md
-    - Generating Arrow Files: using/genarrow.md
+    - Generating Measurements Parquet: using/genparquet.md
     - Exploring the Pipeline Website:
       - Website Overview: exploringwebsite/websiteoverview.md
       - DataTables: exploringwebsite/datatables.md
@@ -136,7 +136,7 @@ nav:
         - management:
           - commands:
             - clearpiperun.py: reference/management/commands/clearpiperun.md
-            - createmeasarrow.py: reference/management/commands/createmeasarrow.md
+            - createmeasparquet.py: reference/management/commands/createmeasparquet.md
             - debugrun.py: reference/management/commands/debugrun.md
             - ingestimages.py: reference/management/commands/ingestimages.md
             - initingest.py: reference/management/commands/initingest.md
