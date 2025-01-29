@@ -451,3 +451,24 @@ def delete_file_or_dir(path: Union[str, Path]) -> None:
         shutil.rmtree(path)
     else:
         raise ValueError(f"Path {path} is not a file or directory.")
+
+def copy_file_or_dir(src: Union[str, Path], dst: Union[str, Path]) -> None:
+    """
+    Copy a file or directory.
+    Args:
+        src: The path to the file or directory to copy.
+        dst: The path to the destination file or directory.
+    Returns:
+        None
+    """
+    if type(src) is str:
+        src = Path(src)
+    if type(dst) is str:
+        dst = Path(dst)
+
+    if src.is_file():
+        shutil.copy(src, dst)
+    elif src.is_dir():
+        shutil.copytree(src, dst)
+    else:
+        raise ValueError(f"Path {src} is not a file or directory.")
