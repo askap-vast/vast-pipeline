@@ -516,7 +516,7 @@ Float. Defines the minimum $V_s$ two-epoch metric value threshold used to attach
 ### Processing
 
 **`processing.num_workers`**
-Integer or null. The total number of workers available to Dask when running the pipeline. `null` means use one less than all available cores. Defaults to `null`.
+Integer or `null`. The total number of workers available to Dask when running the pipeline. `null` means use one less than all available cores. Defaults to `null`.
 
 **`processing.num_workers_io`**
 Integer. The total number of workers to use for disk IO operations (e.g. when reading images for forced extraction). Defaults to 5.
