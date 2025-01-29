@@ -5,6 +5,7 @@ This module contains general pipeline utility functions.
 import collections
 import os
 import logging
+import shutil
 
 import math as m
 import numpy as np
