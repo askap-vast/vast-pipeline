@@ -1465,10 +1465,7 @@ def backup_parquets(p_run_path: str) -> None:
     Returns:
         None
     """
-    parquets = (
-        glob.glob(os.path.join(p_run_path, "*.parquet"))
-        # TODO Remove arrow when arrow files are no longer required.
-        + glob.glob(os.path.join(p_run_path, "*.arrow")))
+    parquets = glob.glob(os.path.join(p_run_path, "*.parquet"))
 
     for i in parquets:
         backup_name = i + '.bak'
