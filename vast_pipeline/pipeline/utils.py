@@ -10,14 +10,12 @@ import shutil
 import uuid
 import numpy as np
 import pandas as pd
-import pyarrow as pa
 import astropy.units as u
 import dask
 import dask.dataframe as dd
 import dask.config as dc
 import psutil
 import tempfile
-#import vaex
 import itertools
 
 from typing import Any, List, Optional, Dict, Tuple, Union
@@ -31,7 +29,7 @@ from vast_pipeline.image.main import FitsImage, SelavyImage
 from vast_pipeline.image.utils import open_fits
 from vast_pipeline.utils.utils import (
     eq_to_cart, StopWatch, optimise_numeric,
-    calculate_workers_and_partitions
+    calculate_workers_and_partitions, copy_file_or_dir, delete_file_or_dir
 )
 from vast_pipeline.models import (
     Band, Image, Run, SkyRegion
@@ -1261,9 +1259,6 @@ def _process_measurements_file(m_file: str,
         measurements['id'].isin(associations_merge.index)
     ]
     
-    # drop timezone from datetime for vaex compatibility. V2 NOTE - remove
-    measurements['time'] = measurements['time'].dt.tz_localize(None)
-    
     measurements = optimise_numeric(measurements)
     measurements = measurements.merge(associations_merge, right_index=True, left_on='id', how="inner").rename(columns={'source_id': 'source'})
     
@@ -1282,15 +1277,15 @@ def _repartition_measurements(in_file: str, out_file: str) -> None:
     """
 
     # Using large datasets, so need to do the shuffling on disk
-    with dc.set(shuffle='disk'):
+    with dc.set({'dataframe.shuffle.method': 'disk'}):
         dask_df = dd.read_parquet(in_file).repartition(partition_size="100MB")
         dask_df = dask_df.set_index('source', drop=True)
         dask_df = dask_df.repartition(partition_size="100MB")
         dask_df.to_parquet(out_file)
 
-def create_measurements_arrow_file(p_run: Run, max_workers: Optional[int] =10) -> None:
+def create_measurements_parquet_file(p_run: Run, max_workers: Optional[int] = 10) -> None:
     """
-    Creates a measurements.arrow file using the parquet outputs
+    Creates a measurements.parquet file using the parquet outputs
     of a pipeline run.
 
     Args:
@@ -1303,20 +1298,14 @@ def create_measurements_arrow_file(p_run: Run, max_workers: Optional[int] =10) -
     Returns:
         None
     """
-    logger.info('Creating measurements.arrow for run %s.', p_run.name)
+    logger.info('Creating measurements.parquet for run %s.', p_run.name)
     
     p_run_path = p_run.path
-    arrow_file = os.path.join(p_run_path, 'measurements.arrow')
-    logger.info("Will write to final arrow file to %s.", arrow_file)
+    parquet_file = os.path.join(p_run_path, 'measurements.parquet')
+    logger.info("Will write to final parquet file to %s.", parquet_file)
     
-    # V2 NOTE - the repartitioned data will be the final data product.
-    # Need to scrap arrow_file and change the repartitioned file to measurements.parquet
     processed_temp = tempfile.TemporaryDirectory()
-    repartitioned_temp = tempfile.TemporaryDirectory()
-    logger.debug("But in the meantime, writing temporary data to %s and %s",
-                 processed_temp.name,
-                 repartitioned_temp.name
-                 )
+    logger.debug("Writing temporary data to %s", processed_temp.name)
 
     images = pd.read_parquet(
         os.path.join(
@@ -1355,55 +1344,13 @@ def create_measurements_arrow_file(p_run: Run, max_workers: Optional[int] =10) -
             itertools.repeat(associations),
         )
         pool.starmap(_process_measurements_file, iterable_arg)
-    
-    logger.debug("Repartitioning dataframe")
-    _repartition_measurements(processed_temp.name, repartitioned_temp.name)
 
-    logger.debug("Opening and exporting in vaex")
-
-    # V2 NOTE - remove in V2
-    #vaex_df = vaex.open(repartitioned_temp.name)
-    #vaex_df.export(arrow_file)
+    logger.debug("Repartitioning dataframe and saving")
+    _repartition_measurements(processed_temp.name, parquet_file)
 
     logger.debug("Cleaning up temporary data")
-    repartitioned_temp.cleanup()
     processed_temp.cleanup()
-
     logger.debug("Done.")
-
-
-def create_measurement_pairs_arrow_file(p_run: Run) -> None:
-    """
-    Creates a measurement_pairs.arrow file using the parquet outputs
-    of a pipeline run.
-
-    Args:
-        p_run:
-            Pipeline model instance.
-
-    Returns:
-        None
-    """
-    logger.info("Creating measurement_pairs.arrow for run %s.", p_run.name)
-
-    measurement_pairs_df = pd.read_parquet(
-        os.path.join(p_run.path, "measurement_pairs.parquet")
-    )
-
-    logger.debug('Optimising dataframe.')
-    measurement_pairs_df = optimise_numeric(measurement_pairs_df)
-
-    logger.debug("Loading to pyarrow table.")
-    measurement_pairs_df = pa.Table.from_pandas(measurement_pairs_df)
-
-    logger.debug("Exporting to arrow file.")
-    outname = os.path.join(p_run.path, "measurement_pairs.arrow")
-
-    local = pa.fs.LocalFileSystem()
-
-    with local.open_output_stream(outname) as file:
-        with pa.RecordBatchFileWriter(file, measurement_pairs_df.schema) as writer:
-            writer.write_table(measurement_pairs_df)
 
 
 def backup_parquets(p_run_path: str) -> None:
@@ -1418,18 +1365,13 @@ def backup_parquets(p_run_path: str) -> None:
     Returns:
         None
     """
-    parquets = (
-        glob.glob(os.path.join(p_run_path, "*.parquet"))
-        # TODO Remove arrow when arrow files are no longer required.
-        + glob.glob(os.path.join(p_run_path, "*.arrow"))
-    )
+    parquets = glob.glob(os.path.join(p_run_path, "*.parquet"))
 
-    for i in parquets:
-        backup_name = i + ".bak"
-        if os.path.isfile(backup_name):
-            logger.debug(f"Removing old backup file: {backup_name}.")
-            os.remove(backup_name)
-        shutil.copyfile(i, backup_name)
+    for parquet in parquets:
+        backup_name = parquet + '.bak'
+        if os.path.exists(backup_name):
+            delete_file_or_dir(backup_name)
+        copy_file_or_dir(parquet, backup_name)
 
 
 def create_temp_config_file(p_run_path: str) -> None:
@@ -1763,7 +1705,7 @@ def write_parquets(
     return skyregs_df
 
 
-def get_total_memory_usage():
+def get_total_memory_usage() -> float:
     """
     This function gets the current memory usage and returns a string.
 
@@ -1776,7 +1718,7 @@ def get_total_memory_usage():
     return mem
 
 
-def log_total_memory_usage():
+def log_total_memory_usage() -> float:
     """
     This function gets the current memory usage and logs it.
 
@@ -1788,7 +1730,7 @@ def log_total_memory_usage():
     logger.debug(f"Current memory usage: {mem:.3f}GB")
 
 
-def get_df_memory_usage(df):
+def get_df_memory_usage(df: pd.DataFrame) -> float:
     """
     This function calculates the memory usage of a pandas dataframe and
     logs it.

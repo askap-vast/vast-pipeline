@@ -108,9 +108,9 @@ Below is an example of a default `config.yaml` file. Note that no images or othe
       # Choose a value to use for the local rms in these cases in mJy/beam.
       selavy_local_rms_fill_value: 0.2
 
-      # Create 'measurements.arrow' and 'measurement_pairs.arrow' files at the end of 
+      # Create 'measurements.parquet' and 'measurement_pairs.parquet' files at the end of 
       # a successful run.
-      write_arrow_files: False
+      write_parquet_files: False
 
       # The positional uncertainty of a measurement is in reality the fitting errors and the
       # astrometric uncertainty of the image/survey/instrument combined in quadrature.
@@ -484,20 +484,21 @@ Define a fractional flux error that will be added in quadrature to the extracted
 **`measurements.condon_errors`**
 Boolean. Calculate the Condon errors of the extractions when read in from the source extraction file. If `False` then the errors directly from the source finder output are used. Recommended to set to `True` for selavy extractions. Defaults to `True`.
 
+!!! Warning
+    This will completely overwrite the uncertainties provided by the input catalogue.
+    Hence, this option should not be used if you have applied any sort of corrections
+    to the input catalogue prior to ingest, or if you trust the existing uncertainties.
+
 **`measurements.selavy_local_rms_fill_value`**
 Float. Value to substitute for the `local_rms` parameter in selavy extractions if a `0.0` value is found. Unit is mJy. Defaults to `0.2`.
 
-**`measurements.write_arrow_files`**
-Boolean. When `True` then two `arrow` format files are produced:
+**`measurements.write_measurements_parquet`**
+Boolean. When `True` the measurements `parquet` file, containing all the measurements associated with the run, is produced.
 
-* `measurements.arrow` - an arrow file containing all the measurements associated with the run.
-* `measurement_pairs.arrow` -  an arrow file containing the measurement pairs information pre-merged with extra information from the measurements. Only output if `variability.pair_metrics` is also set to `True`.
-
-Producing these files for large runs (200+ images) is recommended for post-processing. Defaults to `False`.
+Producing these files for medium sized runs (hundreds of images) is recommended and is functionally required for large runs (thousands of images), for post-processing. Defaults to `False`.
 
 !!! note
-    The arrow files can optionally be produced after the run has completed.
-    See the [Generating Arrow Files page](genarrow.md).
+    The measurements parquet can optionally be produced after the run has completed - this is the recommended method to ensure that the entire run doesn't fail if something breaks in this final step. See the [Generating Measurements Parquet page](genparquet.md) for details.
 
 **`measurements.ra_uncertainty`**
 Float. Defines an uncertainty error to the RA that will be added in quadrature to the existing source extraction error. Used to represent a systematic positional error. Unit is arcseconds. Defaults to 1.0.
@@ -512,3 +513,14 @@ Boolean. When `True` then the two-epoch metrics are calculated for each source. 
 
 **`variability.source_aggregate_pair_metrics_min_abs_vs`**
 Float. Defines the minimum $V_s$ two-epoch metric value threshold used to attach the most significant pair value to the source. Defaults to `4.3`.
+
+### Processing
+
+**`processing.num_workers`**
+Integer or `null`. The total number of workers available to Dask when running the pipeline. `null` means use one less than all available cores. Defaults to `null`.
+
+**`processing.num_workers_io`**
+Integer. The total number of workers to use for disk IO operations (e.g. when reading images for forced extraction). Defaults to 5.
+
+**`processing.max_partition_mb`**
+Integer. The default maximum size (in MB) to allow per partition of Dask DataFrames. Increasing this will create fewer partitions and will potentially increase the memory footprint of parallelised tasks. Defaults to 15.

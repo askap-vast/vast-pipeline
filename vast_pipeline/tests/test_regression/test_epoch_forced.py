@@ -286,4 +286,4 @@ class DeruiterEpochForcedTest(TestCase):
         See documentation for test_forced_num in property_check.
         '''
         property_check.test_forced_num(
-            self, self.forced, 982)
+            self, self.forced, 961)

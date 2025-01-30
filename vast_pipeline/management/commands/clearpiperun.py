@@ -57,7 +57,7 @@ class Command(BaseCommand):
             action='store_true',
             help=(
                 'Flag to keep the pipeline run(s) parquet files. '
-                'Will also apply to arrow files if present.'
+                'Will also apply to parquet files if present.'
             )
         )
         parser.add_argument(
@@ -68,7 +68,7 @@ class Command(BaseCommand):
             help='Flag to remove all the content of the pipeline run(s) folder.'
         )
 
-    def handle(self, *args, **options) -> None:
+    def handle(self, *args: str, **options: str) -> None:
         """
         Handle function of the command.
 
@@ -127,7 +127,6 @@ class Command(BaseCommand):
                 logger.info('Deleting pipeline "%s" parquets', p_run_name)
                 parquets = (
                     glob(os.path.join(p_run.path, '*.parquet'))
-                    + glob(os.path.join(p_run.path, '*.arrow'))
                 )
                 for parquet in parquets:
                     try:

@@ -21,11 +21,12 @@ from vast_pipeline._version import __version__ as pipeline_version
 from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
 from vast_pipeline.pipeline.main import Pipeline
 from vast_pipeline.pipeline.utils import (
-    get_create_p_run, create_measurements_arrow_file,
-    create_measurement_pairs_arrow_file, backup_parquets,
-    create_temp_config_file
+    get_create_p_run, create_measurements_parquet_file,
+    backup_parquets, create_temp_config_file
 )
-from vast_pipeline.utils.utils import StopWatch, timeStamped
+from vast_pipeline.utils.utils import (
+    StopWatch, timeStamped, delete_file_or_dir
+)
 from vast_pipeline.models import Run
 from ..helpers import get_p_run_name
 
@@ -143,15 +144,13 @@ def run_pipe(
 
     try:
         if not flag_exist:
-            # check for and remove any present .parquet (and .arrow) files
+            # check for and remove any present .parquet files
             parquets = (
                 glob.glob(os.path.join(p_run.path, "*.parquet"))
-                # TODO Remove arrow when arrow files are no longer needed.
-                + glob.glob(os.path.join(p_run.path, "*.arrow"))
                 + glob.glob(os.path.join(p_run.path, "*.bak"))
             )
             for parquet in parquets:
-                os.remove(parquet)
+                delete_file_or_dir(parquet)
 
             # copy across config file at the start
             logger.debug("Copying temp config file.")
@@ -207,8 +206,6 @@ def run_pipe(
             if initial_run is False:
                 parquets = (
                     glob.glob(os.path.join(p_run.path, "*.parquet"))
-                    # TODO Remove arrow when arrow files are no longer needed.
-                    + glob.glob(os.path.join(p_run.path, "*.arrow"))
                 )
 
                 if full_rerun:
@@ -223,13 +220,13 @@ def run_pipe(
                     remove_forced_meas(p_run.path)
 
                     for parquet in parquets:
-                        os.remove(parquet)
+                        delete_file_or_dir(parquet)
 
                     # remove bak files
                     bak_files = glob.glob(os.path.join(p_run.path, "*.bak"))
                     if bak_files:
                         for bf in bak_files:
-                            os.remove(bf)
+                            delete_file_or_dir(bf)
 
                     # remove previous config if it exists
                     if prev_config_exists:
@@ -293,6 +290,21 @@ def run_pipe(
         "Source monitoring: %s",
         pipeline.config["source_monitoring"]["monitor"]
     )
+    
+    if pipeline.config["measurements"]["condon_errors"]:
+        logger.warning(
+            "You have selected condon_errors=True. "
+            "Using the Condon uncertainties will overwrite those provide "
+            "by the input catalogue and should not be used if you have "
+            "applied any corrections to the input catalogues, or if you "
+            "trust their uncertainties."
+            )
+        logger.warning(
+            "The Condon uncertainties only account for the statistical "
+            "component of the uncertainty - any systematic uncertainty"
+            "should be taken into account using the ra_uncertainty and "
+            "dec_uncertainty parameters in the config file."
+            )
 
     # log the list of input data files for posterity
     inputs = pipeline.config["inputs"]
@@ -339,11 +351,9 @@ def run_pipe(
         # run the pipeline
         pipeline.set_status(p_run, 'RUN')
         pipeline.process_pipeline(p_run)
-        # Create arrow file after success if selected.
-        if pipeline.config["measurements"]["write_arrow_files"]:
-            create_measurements_arrow_file(p_run)
-            if pipeline.config["variability"]["pair_metrics"]:
-                create_measurement_pairs_arrow_file(p_run)
+        # Create parquet file after success if selected.
+        if pipeline.config["measurements"]["write_measurements_parquet"]:
+            create_measurements_parquet_file(p_run)
     except Exception as e:
         # set the pipeline status as error
         pipeline.set_status(p_run, 'ERR')
@@ -402,7 +412,7 @@ class Command(BaseCommand):
                 ' Old data is completely removed and replaced.')
         )
 
-    def handle(self, *args, **options) -> None:
+    def handle(self, *args: str, **options: str) -> None:
         """
         Handle function of the command.
 

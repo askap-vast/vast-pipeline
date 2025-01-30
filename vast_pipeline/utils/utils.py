@@ -3,17 +3,21 @@ This module contains general pipeline utility functions.
 """
 
 import collections
-from datetime import datetime
 import os
 import logging
+import shutil
+
 import math as m
-from typing import Any, Dict, Tuple
+import numpy as np
+import pandas as pd
+
+from datetime import datetime
+from typing import Any, Dict, Tuple, Union, Optional
+from pathlib import Path
+from psutil import cpu_count
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Longitude, Latitude
-import numpy as np
-import pandas as pd
-from psutil import cpu_count
 
 
 logger = logging.getLogger(__name__)
@@ -308,14 +312,13 @@ def parse_coord(coord_string: str, coord_frame: str = "icrs") -> SkyCoord:
     return coord
 
 
-def optimise_numeric(df):
+def optimise_numeric(df: pd.DataFrame) -> pd.DataFrame:
     """
     Downcast integer and float columns in a pd.DataFrame to the smallest
     data type without losing any information.
 
     Args:
-        df:
-            Input dataframe, no specific columns.
+        df (pd.DataFrame): Input dataframe, no specific columns.
 
     Returns:
         The input dataframe with the `int64` and `float64` columns downcasted.
@@ -372,7 +375,11 @@ def timeStamped(fname, fmt="%Y-%m-%d-%H-%M-%S_{fname}"):
     return datetime.now().strftime(fmt).format(fname=fname)
 
 
-def calculate_n_partitions(df, n_cpu, partition_size_mb=15):
+def calculate_n_partitions(
+    df: pd.DataFrame,
+    n_cpu: int,
+    partition_size_mb: Optional[int] = 15
+) -> int:
     """
     This function will calculate how many partitions a dataframe should be
     split into.
@@ -380,7 +387,7 @@ def calculate_n_partitions(df, n_cpu, partition_size_mb=15):
     Args:
         df: The pandas dataframe to be partitionined.
         n_cpu: The number of available CPUs.
-        partition_size: The optimal partition size in MB.
+        partition_size_mb: The optimal partition size in MB.
             NOTE: The default partition size of 15MB is chosen because
                 many of the parallelised operations on partitioned
                 DataFrames can consume a much larger amount of memory
@@ -401,19 +408,27 @@ def calculate_n_partitions(df, n_cpu, partition_size_mb=15):
 
     partition_size_mb = int(np.ceil(mem_usage_mb / n_partitions))
 
-    logger.debug("Using %d partitions of %dMB", n_partitions, partition_size_mb)
+    logger.debug(
+        "Using %d partitions of %dMB",
+        n_partitions,
+        partition_size_mb)
 
     return n_partitions
 
-def calculate_workers_and_partitions(df, n_cpu=None, max_partition_mb=15):
+
+def calculate_workers_and_partitions(
+    df: pd.DataFrame,
+    n_cpu: Optional[int] = None,
+    max_partition_mb: Optional[int] = 15
+) -> Tuple[int, int]:
     """
     Return number of workers and the number of partitions for Dask
 
     Args:
         df: The pandas dataframe to be partitionined.
             Don't calculate partitions if df is None
-        num_cpu_max: The maximum number of workers to allocate.
-                     The default of None means use one less than all available cores
+        n_cpu: The maximum number of workers to allocate.
+            The default of None means use one less than all available cores.
         max_partition_mb: The maximum partition size in MB.
 
     Returns:
@@ -427,8 +442,9 @@ def calculate_workers_and_partitions(df, n_cpu=None, max_partition_mb=15):
         num_workers = num_cpu
     n_partitions = 0
     if df is not None:
-        n_partitions = calculate_n_partitions(df, num_workers,
-                                              partition_size_mb=max_partition_mb)
+        n_partitions = calculate_n_partitions(
+            df, num_workers, partition_size_mb=max_partition_mb
+        )
 
     return num_workers, n_partitions
 
@@ -447,3 +463,41 @@ def model_uuid_copy_check() -> str:
                 WHEN "%(name)s" ~* '^[a-f0-9]{8}-([a-f0-9]{4}-){3}[a-f0-9]{12}$' THEN "%(name)s"::UUID
             END
             """
+
+def delete_file_or_dir(path: Union[str, Path]) -> None:
+    """
+    Delete a file or directory.
+    Args:
+        path: The path to the file or directory to delete.
+    Returns:
+        None
+    """
+    if type(path) is str:
+        path = Path(path)
+    if path.is_file():
+        path.unlink()
+    elif path.is_dir():
+        shutil.rmtree(path)
+    else:
+        raise ValueError(f"Path {path} is not a file or directory.")
+
+def copy_file_or_dir(src: Union[str, Path], dst: Union[str, Path]) -> None:
+    """
+    Copy a file or directory.
+    Args:
+        src: The path to the file or directory to copy.
+        dst: The path to the destination file or directory.
+    Returns:
+        None
+    """
+    if type(src) is str:
+        src = Path(src)
+    if type(dst) is str:
+        dst = Path(dst)
+
+    if src.is_file():
+        shutil.copy(src, dst)
+    elif src.is_dir():
+        shutil.copytree(src, dst)
+    else:
+        raise ValueError(f"Path {src} is not a file or directory.")

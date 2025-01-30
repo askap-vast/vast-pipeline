@@ -15,7 +15,7 @@ from vast_pipeline.pipeline.errors import PipelineConfigError
 logger = logging.getLogger(__name__)
 
 
-def make_config_template(template_path: str, **kwargs) -> str:
+def make_config_template(template_path: str, **kwargs: str) -> str:
     """Generate the contents of a run configuration file from a Jinja2 template.
 
     Args:
@@ -103,7 +103,7 @@ class PipelineConfig:
                     "flux_fractional_error": yaml.Float(),
                     "condon_errors": yaml.Bool(),
                     "selavy_local_rms_fill_value": yaml.Float(),
-                    "write_arrow_files": yaml.Bool(),
+                    "write_measurements_parquet": yaml.Bool(),
                     "ra_uncertainty": yaml.Float(),
                     "dec_uncertainty": yaml.Float(),
                 }

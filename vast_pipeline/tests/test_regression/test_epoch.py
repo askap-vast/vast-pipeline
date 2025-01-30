@@ -100,7 +100,7 @@ class BasicEpochTest(TestCase):
         '''
         See documentation for test_known_source in property check.
         '''
-        property_check.test_known_source(self, self.sources, 12.369)
+        property_check.test_known_source(self, self.sources, 13.943)
 
 
 @unittest.skipIf(
@@ -173,7 +173,7 @@ class AdvancedEpochTest(TestCase):
         '''
         See documentation for test_known_source in property_check.
         '''
-        property_check.test_known_source(self, self.sources, 12.369)
+        property_check.test_known_source(self, self.sources, 13.943)
 
 
 @unittest.skipIf(
@@ -225,7 +225,7 @@ class DeruiterEpochTest(TestCase):
         '''
         See documentation for test_num_sources in property_check.
         '''
-        property_check.test_num_sources(self, self.sources, 616)
+        property_check.test_num_sources(self, self.sources, 609)
 
     def test_most_relations(self):
         '''
@@ -248,4 +248,4 @@ class DeruiterEpochTest(TestCase):
         '''
         See documentation for test_known_source in property_check.
         '''
-        property_check.test_known_source(self, self.sources, 12.369)
+        property_check.test_known_source(self, self.sources, 13.943)

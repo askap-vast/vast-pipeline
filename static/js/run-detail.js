@@ -51,9 +51,9 @@ $(document).ready(function() {
     loadlog(logfile, 'restorelog');
   }
 
-  var logfile = document.getElementById('genarrowlogs').value;
+  var logfile = document.getElementById('genparquetlogs').value;
   if (!!logfile) {
-    loadlog(logfile, 'genarrowlog');
+    loadlog(logfile, 'genparquetlog');
   }
 
   // load logs on selection change
@@ -67,9 +67,9 @@ $(document).ready(function() {
     loadlog(logfile, 'restorelog');
   });
 
-  $('#genarrowlogs').on('change', function () {
-    let logfile = document.getElementById('genarrowlogs').value;
-    loadlog(logfile, 'genarrowlog');
+  $('#genparquetlogs').on('change', function () {
+    let logfile = document.getElementById('genparquetlogs').value;
+    loadlog(logfile, 'genparquetlog');
   });
 });
 
@@ -86,8 +86,8 @@ function loadlog(logfile, type) {
         $("#logtext").html(data.log_html_content);
       } else if (type == 'restorelog') {
         $("#restorelogtext").html(data.log_html_content);
-      } else if (type == 'genarrowlog') {
-        $("#genarrowlogtext").html(data.log_html_content);
+      } else if (type == 'genparquetlog') {
+        $("#genparquetlogtext").html(data.log_html_content);
       }
     }
   });

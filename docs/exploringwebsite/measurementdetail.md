@@ -42,7 +42,7 @@ Users are able to read and post comments on a measurement using this form.
 ## Sources Table
 
 The sources table shows all the sources, from all pipeline runs, that the measurement is associated to.
-Explanation of the table options can be found on the overview page [here](websiteoverview.md#data-tables).
+Explanation of the table options can be found on the overview page [here](datatables.md).
 
 ![!Measurement detail page: source and siblings tables.](../img/measurement-detail3.png){: loading=lazy }
 
