@@ -182,7 +182,6 @@ def make_upload_images(
 
         # upload measurements, a column with the db is added to the df
         copy_upload_measurements(measurements)
-        # make_upload_measurements(measurements)
 
         # save measurements to parquet file in pipeline run folder
         base_folder = os.path.dirname(img.measurements_path)
