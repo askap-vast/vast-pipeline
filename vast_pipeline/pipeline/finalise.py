@@ -337,9 +337,9 @@ def final_operations(
     )
 
     # update measurements with sources to get associations
-    sources_df = sources_df.drop("related", axis=1)
+    associations_df = sources_df.drop("related", axis=1)
 
-    mem_usage = get_df_memory_usage(sources_df)
+    mem_usage = get_df_memory_usage(associations_df)
     logger.debug(f"sources_df memory after merge: {mem_usage}MB")
     log_total_memory_usage()
 
@@ -348,22 +348,22 @@ def final_operations(
         old_associations = pd.read_parquet(previous_parquets["associations"]).rename(
             columns={"meas_id": "id", "source_id": "source"}
         )
-        sources_df_upload = pd.concat(
-            [sources_df, old_associations],
+        associations_df_upload = pd.concat(
+            [associations_df, old_associations],
             ignore_index=True
         )
-        associations_df_upload = sources_df_upload.drop_duplicates(
+        associations_df_upload = associations_df_upload.drop_duplicates(
             ["source", "id", "d2d", "dr"], keep=False
         )
         logger.debug(f"Add mode: #{associations_df_upload.shape[0]} associations to upload.")
     else:
-        associations_df_upload = sources_df
+        associations_df_upload = associations_df
 
     # upload associations into DB
     copy_upload_associations(associations_df_upload.loc[:, ["id", "source", "d2d", "dr"]])
 
     # write associations to parquet file
-    sources_df.rename(columns={"id": "meas_id", "source": "source_id"})[
+    associations_df.rename(columns={"id": "meas_id", "source": "source_id"})[
         ["source_id", "meas_id", "d2d", "dr"]
     ].to_parquet(os.path.join(p_run.path, "associations.parquet"))
 
