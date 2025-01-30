@@ -44,14 +44,19 @@ def delete_pipeline_run_raw_sql(p_run):
             _run_raw_sql(sql_cmd, cursor, log=False)
             tagulous_source_tags_ids = cursor.fetchall()
 
-            for tagulous_source_tags_id_tuple in tagulous_source_tags_ids:
-                tagulous_source_tags_id = tagulous_source_tags_id_tuple[0]
-                sql_cmd = f"DELETE FROM vast_pipeline_tagulous_source_tags WHERE id = '{tagulous_source_tags_id}';"
-                _run_raw_sql(sql_cmd, cursor, log=False)
-
             # Delete from vast_pipeline_source_tags for the source_id
             sql_cmd = f"DELETE FROM vast_pipeline_source_tags WHERE source_id = '{source_id}';"
             _run_raw_sql(sql_cmd, cursor, log=False)
+
+            for tagulous_source_tags_id_tuple in tagulous_source_tags_ids:
+                tagulous_id = tagulous_source_tags_id_tuple[0]
+                # Only delete tag if it is no longer referenced by a source.
+                sql_cmd = f"SELECT COUNT(*) FROM vast_pipeline_source_tags where tagulous_source_tags_id = {tagulous_id};"
+                _run_raw_sql(sql_cmd, cursor, log=False)
+                tag_count = cursor.fetchone()[0]
+                if tag_count == 0:
+                    sql_cmd = f"DELETE FROM vast_pipeline_tagulous_source_tags WHERE id = {tagulous_id};"
+                    _run_raw_sql(sql_cmd, cursor, log=False)
 
             # Delete from related source
             sql_cmd = f"DELETE FROM vast_pipeline_relatedsource WHERE from_source_id = '{source_id}';"
