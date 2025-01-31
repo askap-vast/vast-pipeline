@@ -1370,20 +1370,20 @@ def parallel_association(
     # each skyreg_group along with the source_ids. This needs to be collapsed.
 
     # Index example:
-    #                        id (now UUIDs)
+    #                        id (UUIDs)
     # skyreg_group
-    # --------------------------
-    # 2            0      15640
-    #              1      15641
-    #              2      15642
-    #              3      15643
-    #              4      15644
-    # ...                   ...
-    # 1            46975  53992
-    #              46976  54062
-    #              46977  54150
-    #              46978  54161
-    #              46979  54164
+    # ---------------------------------------------------
+    # 1        0     d02d4a67-e950-48ff-a4e3-f5a69c7dbf63
+    #          1     07471f39-2353-4d4f-af90-76afec47c44b
+    #          2     256ac842-739d-4731-97e9-b0743ad4343e
+    #          3     a16595d1-3082-48ea-b0ee-c174ee577388
+    #          4     f8cf5850-dc4a-4c5b-b8f4-19912072e740
+    # ...
+    # 30       3709  a1c92307-3d49-4047-80a4-8f70284bf1c9
+    #          3710  c65d6315-f72a-4dc6-8496-bf1d0e627c79
+    #          3711  509179c5-dace-47c7-b2a9-40f97b96745d
+    #          3712  a7cd2d8a-0bfa-4181-b22c-da4c815c4153
+    #          3713  285f659a-0b63-42fa-b73d-07bde3c8ea9c
 
     # reset the indeex of the final corrected and collapsed result
     results = results.reset_index(drop=True)
