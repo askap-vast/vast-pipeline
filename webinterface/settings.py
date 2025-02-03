@@ -270,6 +270,12 @@ LOGGING = {
             "level": "ERROR",
             "propagate": True,
         },
+        # Minimise django-postgres-copy logging.
+        'postgres_copy': {
+            "level": "ERROR",
+            "propogate": True,
+            "handlers": ["console"]
+        },
         # root logger
         "": {
             "handlers": ["console"],
