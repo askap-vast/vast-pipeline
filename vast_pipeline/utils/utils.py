@@ -6,6 +6,7 @@ import collections
 import os
 import logging
 import shutil
+import shortuuid
 
 import math as m
 import numpy as np
@@ -22,6 +23,10 @@ from astropy.coordinates import SkyCoord, Longitude, Latitude
 
 logger = logging.getLogger(__name__)
 
+# Hardcode alphabet used for UUID strings
+# NOTE: This is currently the output of `shortuuid.get_alphabet()`
+UUID_ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+shortuuid.set_alphabet(UUID_ALPHABET)
 
 class StopWatch:
     """
@@ -448,22 +453,6 @@ def calculate_workers_and_partitions(
 
     return num_workers, n_partitions
 
-
-def model_uuid_copy_check() -> str:
-    """
-    An SQL snippet to convert a string to a UUID.
-
-    It is used in the copy method as part of django-postgres-copy in the models.
-
-    Returns:
-        A SQL snippet to make sure UUID fields are converted correctly from strings.
-    """
-    return """
-            CASE
-                WHEN "%(name)s" ~* '^[a-f0-9]{8}-([a-f0-9]{4}-){3}[a-f0-9]{12}$' THEN "%(name)s"::UUID
-            END
-            """
-
 def delete_file_or_dir(path: Union[str, Path]) -> None:
     """
     Delete a file or directory.
@@ -501,3 +490,7 @@ def copy_file_or_dir(src: Union[str, Path], dst: Union[str, Path]) -> None:
         shutil.copytree(src, dst)
     else:
         raise ValueError(f"Path {src} is not a file or directory.")
+
+def generate_shortuuid(length: int = 15) -> 'str':
+    """Generate a shortuuid of given length."""
+    return shortuuid.random(length)
