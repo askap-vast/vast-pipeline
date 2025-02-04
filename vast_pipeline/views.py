@@ -41,8 +41,9 @@ from django.utils.safestring import mark_safe
 from django_q.tasks import async_task
 
 import requests
-from rest_framework import status
 import rest_framework.decorators
+from rest_framework import status
+from rest_framework_datatables.pagination import DatatablesPageNumberPagination
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -226,24 +227,26 @@ class RunViewSet(ModelViewSet):
 
     @rest_framework.decorators.action(detail=True, methods=["get"])
     def images(self, request, pk=None):
+        paginator = DatatablesPageNumberPagination()
         qs = Image.objects.filter(run__id=pk).order_by("id")
         qs = self.filter_queryset(qs)
-        page = self.paginate_queryset(qs)
+        page = paginator.paginate_queryset(qs, request)
         if page is not None:
             serializer = ImageSerializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
+            return paginator.get_paginated_response(serializer.data)
 
         serializer = ImageSerializer(qs, many=True)
         return Response(serializer.data)
 
     @rest_framework.decorators.action(detail=True, methods=["get"])
     def measurements(self, request, pk=None):
+        paginator = DatatablesPageNumberPagination()
         qs = Measurement.objects.filter(image__run__in=[pk]).order_by("id")
         qs = self.filter_queryset(qs)
-        page = self.paginate_queryset(qs)
+        page = paginator.paginate_queryset(qs, request)
         if page is not None:
             serializer = MeasurementSerializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
+            return paginator.get_paginated_response(serializer.data)
 
         serializer = MeasurementSerializer(qs, many=True)
         return Response(serializer.data)
@@ -759,25 +762,27 @@ class ImageViewSet(ModelViewSet):
 
     @rest_framework.decorators.action(detail=True, methods=["get"])
     def measurements(self, request, pk=None):
+        paginator = DatatablesPageNumberPagination()
         qs = Measurement.objects.filter(image__in=[pk], forced=False).order_by("id")
         qs = self.filter_queryset(qs)
-        page = self.paginate_queryset(qs)
+        page = paginator.paginate_queryset(qs, request)
         if page is not None:
             serializer = MeasurementSerializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
+            return paginator.get_paginated_response(serializer.data)
 
         serializer = MeasurementSerializer(qs, many=True)
         return Response(serializer.data)
 
     @rest_framework.decorators.action(detail=True, methods=["get"])
     def runs(self, request, pk=None):
+        paginator = DatatablesPageNumberPagination()
         image = self.queryset.get(pk=pk)
         qs = image.run.all().order_by("id")
         qs = self.filter_queryset(qs)
-        page = self.paginate_queryset(qs)
+        page = paginator.paginate_queryset(qs, request)
         if page is not None:
             serializer = RunSerializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
+            return paginator.get_paginated_response(serializer.data)
 
         serializer = RunSerializer(qs, many=True)
         return Response(serializer.data)
