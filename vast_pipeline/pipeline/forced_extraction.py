@@ -687,7 +687,7 @@ def forced_extraction(
     logger.info("Force extraction step time: %.2f seconds", timer.reset())
 
     # make measurement names unique for db constraint
-    extr_df["name"] = extr_df["name"] + f"_f_{str(p_run.id).split('-')[0]}"
+    extr_df["name"] = extr_df["name"] + f"_f_{sp_run.id}"
 
     default_pos_err = settings.POS_DEFAULT_MIN_ERROR / 3600.0
     extr_df["ra_err"] = default_pos_err
