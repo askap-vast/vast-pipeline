@@ -2,7 +2,6 @@
 This module contains all the functions required to perform source association.
 """
 import logging
-import uuid
 import numpy as np
 import pandas as pd
 from typing import Tuple, Dict, List
@@ -19,7 +18,11 @@ from .utils import (
     reconstruct_associtaion_dfs,
 )
 from vast_pipeline.pipeline.config import PipelineConfig
-from vast_pipeline.utils.utils import StopWatch, calculate_workers_and_partitions
+from vast_pipeline.utils.utils import (
+    StopWatch,
+    calculate_workers_and_partitions,
+    generate_shortuuid,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -141,7 +144,7 @@ def one_to_many_basic(
     # Create a new `new_source_id` column to store the 'correct' IDs
     duplicated_skyc2["new_source_id"] = duplicated_skyc2["source"]
 
-    new_source_ids = [str(uuid.uuid4()) for _ in range(idx_to_change.shape[0])]
+    new_source_ids = [generate_shortuuid(15) for _ in range(idx_to_change.shape[0])]
 
     # Assign the new IDs
     duplicated_skyc2.loc[idx_to_change, "new_source_id"] = new_source_ids
@@ -387,7 +390,7 @@ def one_to_many_advanced(
     # +-----------------+
 
     # Create an arange to use to change the ones that need to be changed.
-    new_source_ids = [str(uuid.uuid4()) for _ in range(idx_to_change.shape[0])]
+    new_source_ids = [generate_shortuuid(15) for _ in range(idx_to_change.shape[0])]
 
     # Assign the new IDs to those that need to be changed.
     duplicated_skyc1.loc[idx_to_change, "new_source_id"] = new_source_ids
@@ -754,7 +757,7 @@ def basic_association(
     # update the src numbers for those sources in skyc2 with no match
     nan_sel = (skyc2_srcs["source"].isnull()).to_numpy()
     skyc2_srcs.loc[nan_sel, "source"] = [
-        str(uuid.uuid4()) for _ in range(nan_sel.sum())
+        generate_shortuuid(15) for _ in range(nan_sel.sum())
     ]
 
     logger.info("Updating sources catalogue with new sources...")
@@ -762,7 +765,7 @@ def basic_association(
     # using the max current src as the start and incrementing by one
     nan_sel = (skyc2_srcs["source"].isnull()).to_numpy()
     skyc2_srcs.loc[nan_sel, "source"] = [
-        str(uuid.uuid4()) for _ in range(nan_sel.sum())
+        generate_shortuuid(15) for _ in range(nan_sel.sum())
     ]
 
     # and skyc2 is now ready to be concatenated with the new sources
@@ -898,7 +901,7 @@ def advanced_association(
     ].reset_index(drop=True)
     # update the src numbers for those sources in skyc2 with no match
     # using the max current src as the start and incrementing by one
-    new_sources["source"] = new_sources.apply(lambda _: str(uuid.uuid4()), axis=1)
+    new_sources["source"] = new_sources.apply(lambda _: generate_shortuuid(15), axis=1)
     skyc2_srcs_toappend = pd.concat(
         [skyc2_srcs_toappend, new_sources], ignore_index=True
     )

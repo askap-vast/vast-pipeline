@@ -1,7 +1,6 @@
 import os
 import logging
 import datetime
-import uuid
 import numpy as np
 import pandas as pd
 import dask.dataframe as dd
@@ -19,7 +18,11 @@ from vast_pipeline.models import Image, Measurement, Run
 from vast_pipeline.pipeline.loading import copy_upload_measurements
 
 from forced_phot import ForcedPhot
-from ..utils.utils import StopWatch, calculate_workers_and_partitions
+from ..utils.utils import (
+    StopWatch,
+    calculate_workers_and_partitions,
+    generate_shortuuid,
+)
 from vast_pipeline.image.utils import open_fits
 from vast_pipeline.pipeline.utils import log_total_memory_usage
 
@@ -472,7 +475,7 @@ def parallel_extraction(
     logger.debug(f"Successfully concatenated intermediate dfs")
     log_total_memory_usage()
 
-    df_out["id"] = df_out.apply(lambda _: str(uuid.uuid4()), axis=1)
+    df_out["id"] = df_out.apply(lambda _: generate_shortuuid(15), axis=1)
 
     return df_out
 

@@ -1,4 +1,3 @@
-import uuid
 
 from dataclasses import dataclass
 from itertools import combinations
@@ -12,12 +11,14 @@ from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelatio
 from django.contrib.contenttypes.models import ContentType
 from django.templatetags.static import static
 from postgres_copy import CopyManager
+from shortuuid.django_fields import ShortUUIDField
+
 from social_django.models import UserSocialAuth
 from tagulous.models import TagField
 from vast_pipeline.pipeline.config import PipelineConfig
 
-from .utils.utils import model_uuid_copy_check
 from vast_pipeline.pipeline.pairs import calculate_vs_metric, calculate_m_metric
+from vast_pipeline.utils.utils import UUID_ALPHABET
 
 
 @dataclass
@@ -36,12 +37,12 @@ class Comment(models.Model):
     The model object for a comment.
     """
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = ShortUUIDField(primary_key=True, editable=False, length=15, alphabet=UUID_ALPHABET)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     datetime = models.DateTimeField(auto_now_add=True)
     comment = models.TextField()
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.UUIDField(default=uuid.uuid4, editable=False)
+    object_id = ShortUUIDField(editable=False, length=15, alphabet=UUID_ALPHABET)
     content_object = GenericForeignKey("content_type", "object_id")
 
     def get_avatar_url(self) -> str:
@@ -98,7 +99,7 @@ class Run(CommentableModel):
     images
     """
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = ShortUUIDField(primary_key=True, editable=False, length=15, alphabet=UUID_ALPHABET)
     user = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True, to_field="id"
     )
@@ -205,7 +206,7 @@ class Band(models.Model):
     associated with one band.
     """
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = ShortUUIDField(primary_key=True, editable=False, length=15, alphabet=UUID_ALPHABET)
     name = models.CharField(max_length=12, unique=True)
     frequency = models.FloatField(help_text="central frequency of band (integer MHz)")
     bandwidth = models.FloatField(help_text="bandwidth (MHz)")
@@ -250,7 +251,8 @@ class SkyRegionQuerySet(models.QuerySet):
 
 
 class SkyRegion(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    id = ShortUUIDField(primary_key=True, editable=False, length=15, alphabet=UUID_ALPHABET)
     run = models.ManyToManyField(Run)
 
     centre_ra = models.FloatField()
@@ -295,7 +297,7 @@ class SourceQuerySet(models.QuerySet):
 class Image(CommentableModel):
     """An image is a 2D radio image from a cube"""
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = ShortUUIDField(primary_key=True, editable=False, length=15, alphabet=UUID_ALPHABET)
     band = models.ForeignKey(Band, on_delete=models.CASCADE, to_field="id")
     run = models.ManyToManyField(Run)
     skyreg = models.ForeignKey(SkyRegion, on_delete=models.CASCADE, to_field="id")
@@ -407,7 +409,7 @@ class Measurement(CommentableModel):
     Essentially a source single measurement in time.
     """
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = ShortUUIDField(primary_key=True, editable=False, length=15, alphabet=UUID_ALPHABET)
     image = models.ForeignKey(
         Image, null=True, on_delete=models.CASCADE, to_field="id"
     )  # first image seen in
@@ -521,9 +523,6 @@ class Measurement(CommentableModel):
 
     copies = CopyManager()
 
-    def copy_id_template(self):
-      return model_uuid_copy_check()
-
     class Meta:
         ordering = ["ra"]
 
@@ -532,7 +531,8 @@ class Measurement(CommentableModel):
 
 
 class Source(CommentableModel):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    id = ShortUUIDField(primary_key=True, editable=False, length=15, alphabet=UUID_ALPHABET)
     run = models.ForeignKey(Run, on_delete=models.CASCADE, null=True, to_field="id")
     related = models.ManyToManyField(
         "self",
@@ -647,9 +647,6 @@ class Source(CommentableModel):
 
     copies = CopyManager()
 
-    def copy_id_template(self):
-      return model_uuid_copy_check()
-
     def __str__(self):
         return self.name
 
@@ -708,7 +705,7 @@ class Association(models.Model):
     some parameters
     """
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = ShortUUIDField(primary_key=True, editable=False, length=15, alphabet=UUID_ALPHABET)
     source = models.ForeignKey(Source, on_delete=models.CASCADE, to_field="id")
     meas = models.ForeignKey(Measurement, on_delete=models.CASCADE, to_field="id")
 
@@ -723,9 +720,6 @@ class Association(models.Model):
 
     copies = CopyManager()
 
-    def copy_id_template(self):
-      return model_uuid_copy_check()
-
     def __str__(self):
         return (
             f"distance: {self.d2d:.2f}" if self.dr == 0 else f"distance: {self.dr:.2f}"
@@ -739,7 +733,7 @@ class RelatedSource(models.Model):
     https://docs.djangoproject.com/en/3.1/ref/models/fields/#django.db.models.ManyToManyField.through
     """
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = ShortUUIDField(primary_key=True, editable=False, length=15, alphabet=UUID_ALPHABET)
     from_source = models.ForeignKey(Source, on_delete=models.CASCADE, to_field="id")
     to_source = models.ForeignKey(
         Source, on_delete=models.CASCADE, related_name="related_sources", to_field="id"
@@ -748,9 +742,6 @@ class RelatedSource(models.Model):
     objects = models.Manager()
 
     copies = CopyManager()
-
-    def copy_id_template(self):
-      return model_uuid_copy_check()
 
     class Meta:
         constraints = [
@@ -762,7 +753,7 @@ class RelatedSource(models.Model):
 
 
 class SourceFav(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = ShortUUIDField(primary_key=True, editable=False, length=15, alphabet=UUID_ALPHABET)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     source = models.ForeignKey(Source, on_delete=models.CASCADE, to_field="id")
 

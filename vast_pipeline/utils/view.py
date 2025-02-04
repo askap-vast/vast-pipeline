@@ -1,6 +1,4 @@
 """Functions and variables used in pipeline/views.py."""
-from uuid import UUID
-
 from vast_pipeline.models import SkyRegion
 from typing import List, Dict, Optional, Any
 
@@ -257,7 +255,7 @@ def generate_colsfields(
     return colsfields
 
 
-def get_skyregions_collection(run_id: Optional[UUID] = None) -> Dict[str, Any]:
+def get_skyregions_collection(run_id: Optional[str] = None) -> Dict[str, Any]:
     """
     Produce Sky region geometry shapes JSON object for d3-celestial.
 

@@ -7,7 +7,6 @@ import os
 import logging
 import glob
 import shutil
-import uuid
 import numpy as np
 import pandas as pd
 import astropy.units as u
@@ -29,7 +28,8 @@ from vast_pipeline.image.main import FitsImage, SelavyImage
 from vast_pipeline.image.utils import open_fits
 from vast_pipeline.utils.utils import (
     eq_to_cart, StopWatch, optimise_numeric,
-    calculate_workers_and_partitions, copy_file_or_dir, delete_file_or_dir
+    calculate_workers_and_partitions, copy_file_or_dir,
+    delete_file_or_dir, generate_shortuuid
 )
 from vast_pipeline.models import (
     Band, Image, Run, SkyRegion
@@ -340,7 +340,7 @@ def _load_measurements(
     df["image"] = image.name
     df["datetime"] = image.datetime
     # these are the first 'sources' if ini_df is True.
-    df["source"] = df["id"].apply(lambda _: str(uuid.uuid4())) if ini_df else None
+    df["source"] = df["id"].apply(lambda _: generate_shortuuid(15)) if ini_df else None
     df["ra_source"] = df["ra"]
     df["dec_source"] = df["dec"]
     df["d2d"] = 0.0
@@ -1654,18 +1654,6 @@ def reconstruct_associtaion_dfs(
     return sources_df, skyc1_srcs
 
 
-def _convert_uuid_col_to_str(series: pd.Series) -> pd.Series:
-    """Converts a UUID column to a string column.
-
-    Args:
-        series: A pandas series containing UUIDs.
-
-    Returns:
-        A pandas series containing strings.
-    """
-    return series.astype(str)
-
-
 def write_parquets(
     images: List[Image], skyregions: List[SkyRegion], bands: List[Band], run_path: str
 ) -> pd.DataFrame:
@@ -1686,20 +1674,16 @@ def write_parquets(
     # write images parquet file under pipeline run folder
     images_df = pd.DataFrame(map(lambda x: x.__dict__, images))
     images_df = images_df.drop("_state", axis=1)
-    for col in ["id", "skyreg_id", "band_id"]:
-        images_df[col] = _convert_uuid_col_to_str(images_df[col])
     images_df.to_parquet(os.path.join(run_path, "images.parquet"), index=False)
 
     # write skyregions parquet file under pipeline run folder
     skyregs_df = pd.DataFrame(map(lambda x: x.__dict__, skyregions))
     skyregs_df = skyregs_df.drop("_state", axis=1)
-    skyregs_df["id"] = _convert_uuid_col_to_str(skyregs_df["id"])
     skyregs_df.to_parquet(os.path.join(run_path, "skyregions.parquet"), index=False)
 
     # write skyregions parquet file under pipeline run folder
     bands_df = pd.DataFrame(map(lambda x: x.__dict__, bands))
     bands_df = bands_df.drop("_state", axis=1)
-    bands_df["id"] = _convert_uuid_col_to_str(bands_df["id"])
     bands_df.to_parquet(os.path.join(run_path, "bands.parquet"), index=False)
 
     return skyregs_df

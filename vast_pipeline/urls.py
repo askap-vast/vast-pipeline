@@ -29,27 +29,27 @@ router.register(r"plots", views.SourcePlotsSet, "api_source_plots")
 
 urlpatterns = [
     path("piperuns/", views.RunIndex, name="run_index"),
-    path("piperuns/<uuid:id>/", views.RunDetail, name="run_detail"),
+    path("piperuns/<str:id>/", views.RunDetail, name="run_detail"),
     path("images/", views.ImageIndex, name="image_index"),
     re_path(
-        r"^images/(?P<id>[\w-]{36})(?:/(?P<action>[\w]+))?/$",
+        r"^images/(?P<id>[\w]{15})(?:/(?P<action>[\w]+))?/$",
         views.ImageDetail,
         name="image_detail",
     ),
     path("measurements/", views.MeasurementIndex, name="measurement_index"),
     re_path(
-        r"^measurements/(?P<id>[\w-]{36})(?:/(?P<action>[\w]+))?/$",
+        r"^measurements/(?P<id>[\w]{15})(?:/(?P<action>[\w]+))?/$",
         views.MeasurementDetail,
         name="measurement_detail",
     ),
     path("sources/query/", views.SourceQuery, name="source_query"),
     path("sources/query/plot/", views.SourceEtaVPlot, name="source_etav_plot"),
     path(
-        "sources/query/plot/update/<uuid:pk>/",
+        "sources/query/plot/update/<str:pk>/",
         views.SourceEtaVPlotUpdate,
         name="source_etav_plot_update",
     ),
-    path("sources/<uuid:pk>/", views.SourceDetail, name="source_detail"),
+    path("sources/<str:pk>/", views.SourceDetail, name="source_detail"),
     path("sources/favs/", views.UserSourceFavsList, name="source_favs"),
     path(
         "sources/tags/autocomplete/",
@@ -57,14 +57,14 @@ urlpatterns = [
         kwargs={"tag_model": Source.tags.tag_model},
         name="source_tags_autocomplete",
     ),
-    path("cutout/<uuid:measurement_id>/", views.ImageCutout.as_view(), name="cutout"),
+    path("cutout/<str:measurement_id>/", views.ImageCutout.as_view(), name="cutout"),
     path(
-        "cutout/<uuid:measurement_id>/<str:size>/",
+        "cutout/<str:measurement_id>/<str:size>/",
         views.ImageCutout.as_view(),
         name="cutout",
     ),
     path(
-        "measurements/<uuid:image_id>/<ra:ra_deg>,<dec:dec_deg>,<angle:radius_deg>/region/",
+        "measurements/<str:image_id>/<ra:ra_deg>,<dec:dec_deg>,<angle:radius_deg>/region/",
         views.MeasurementQuery.as_view(),
         name="measurements_region",
     ),

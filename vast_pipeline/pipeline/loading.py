@@ -8,7 +8,6 @@ from io import StringIO
 from itertools import islice
 from django.db import transaction, connection, models
 from contextlib import closing
-from uuid import uuid4
 
 from vast_pipeline.image.main import SelavyImage
 from vast_pipeline.pipeline.model_generator import (
@@ -31,7 +30,12 @@ from vast_pipeline.pipeline.utils import (
     get_create_img, get_create_img_band,
     get_df_memory_usage, log_total_memory_usage
 )
-from vast_pipeline.utils.utils import StopWatch, deg2hms, deg2dms
+from vast_pipeline.utils.utils import (
+    StopWatch,
+    deg2hms,
+    deg2dms,
+    generate_shortuuid,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -370,7 +374,7 @@ def copy_upload_related_sources(
         if getattr(fld, "attname", None) and fld.attname in related_df.columns:
             columns_to_upload.append(fld.attname)
 
-    related_df["id"] = [str(uuid4()) for _ in range(len(related_df))]
+    related_df["id"] = [generate_shortuuid(15) for _ in range(len(related_df))]
 
     copy_upload_model(related_df[columns_to_upload], RelatedSource, batch_size=batch_size)
 
@@ -417,7 +421,7 @@ def copy_upload_associations(associations_df: pd.DataFrame, batch_size: int = 10
         "dr": "dr"
     }
 
-    associations_df["db_id"] = [str(uuid4()) for _ in range(len(associations_df))]
+    associations_df["db_id"] = [generate_shortuuid(15) for _ in range(len(associations_df))]
 
     copy_upload_model(
         associations_df[columns_to_upload],

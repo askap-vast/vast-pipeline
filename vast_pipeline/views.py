@@ -3,6 +3,7 @@ import os
 import json
 import logging
 import matplotlib.pyplot as plt
+import shortuuid
 import traceback
 import dask.bag as db
 import pandas as pd
@@ -11,7 +12,6 @@ from typing import Dict, Any, Tuple, List, Optional
 from glob import glob
 from itertools import tee
 from pathlib import Path
-from uuid import UUID, uuid4
 
 from astropy.io import fits
 from astropy.coordinates import SkyCoord, Angle
@@ -183,8 +183,8 @@ def RunIndex(request):
         {
             "name": reverse(
                 "vast_pipeline:run_detail",
-                args=["e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813"],
-            )[:-37]
+                args=["222NfqjAtZQH6Zm"],
+            )[:-16]
         },
     )
 
@@ -642,8 +642,8 @@ def RunDetail(request, id):
         {
             "name": reverse(
                 "vast_pipeline:image_detail",
-                args=["e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813"],
-            )[:-37]
+                args=["222NfqjAtZQH6Zm"],
+            )[:-16]
         },
         not_searchable_col=["frequency"],
     )
@@ -711,8 +711,8 @@ def ImageIndex(request):
         {
             "name": reverse(
                 "vast_pipeline:image_detail",
-                args=["e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813"],
-            )[:-37]
+                args=["222NfqjAtZQH6Zm"],
+            )[:-16]
         },
         not_searchable_col=["frequency"],
     )
@@ -886,8 +886,8 @@ def ImageDetail(request, id, action=None):
         {
             "name": reverse(
                 "vast_pipeline:measurement_detail",
-                args=["e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813"],
-            )[:-37]
+                args=["222NfqjAtZQH6Zm"],
+            )[:-16]
         },
         not_searchable_col=["frequency"],
     )
@@ -929,8 +929,8 @@ def ImageDetail(request, id, action=None):
         {
             "name": reverse(
                 "vast_pipeline:run_detail",
-                args=["e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813"],
-            )[:-37]
+                args=["222NfqjAtZQH6Zm"],
+            )[:-16]
         },
     )
 
@@ -988,8 +988,8 @@ def MeasurementIndex(request):
         {
             "name": reverse(
                 "vast_pipeline:measurement_detail",
-                args=["e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813"],
-            )[:-37]
+                args=["222NfqjAtZQH6Zm"],
+            )[:-16]
         },
         not_searchable_col=["frequency"],
     )
@@ -1170,8 +1170,8 @@ def MeasurementDetail(request, id, action=None):
         {
             "name": reverse(
                 "vast_pipeline:measurement_detail",
-                args=["e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813"],
-            )[:-37]
+                args=["222NfqjAtZQH6Zm"],
+            )[:-16]
         },
     )
 
@@ -1229,11 +1229,11 @@ def MeasurementDetail(request, id, action=None):
 
     api_col_dict = {
         "name": reverse(
-            "vast_pipeline:source_detail", args=["e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813"]
-        )[:-37],
+            "vast_pipeline:source_detail", args=["222NfqjAtZQH6Zm"]
+        )[:-16],
         "run.name": reverse(
-            "vast_pipeline:run_detail", args=["e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813"]
-        )[:-37],
+            "vast_pipeline:run_detail", args=["222NfqjAtZQH6Zm"]
+        )[:-16],
     }
 
     source_colsfields = generate_colsfields(source_fields, api_col_dict)
@@ -1368,12 +1368,11 @@ class SourceViewSet(ModelViewSet):
                 qry_dict["name__in"] = selection
             else:
                 try:
-                    selection = [UUID(i) for i in selection]
                     qry_dict["id__in"] = selection
                 except:
                     # this avoids an error on the check if the user has
                     # accidentally entered names with a 'id' selection type.
-                    qry_dict["id"] = uuid4()
+                    qry_dict["id"] = shortuuid.uuid()
 
         if "newsrc" in self.request.query_params:
             qry_dict["new"] = True
@@ -1469,11 +1468,11 @@ def SourceQuery(request):
 
     api_col_dict = {
         "name": reverse(
-            "vast_pipeline:source_detail", args=["e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813"]
-        )[:-37],
+            "vast_pipeline:source_detail", args=["222NfqjAtZQH6Zm"]
+        )[:-16],
         "run.name": reverse(
-            "vast_pipeline:run_detail", args=["e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813"]
-        )[:-37],
+            "vast_pipeline:run_detail", args=["222NfqjAtZQH6Zm"]
+        )[:-16],
     }
 
     colsfields = generate_colsfields(fields, api_col_dict)
@@ -1546,7 +1545,7 @@ def SourceEtaVPlot(request: Request) -> Response:
     min_sources = 50
 
     source_query_result_id_list = request.session.get("source_query_result_ids", [])
-    source_query_result_id_list = [UUID(i) for i in source_query_result_id_list]
+    #source_query_result_id_list = [i for i in source_query_result_id_list]
 
     sources_query_len = len(source_query_result_id_list)
 
@@ -1625,7 +1624,7 @@ def SourceEtaVPlot(request: Request) -> Response:
 
 
 @login_required
-def SourceEtaVPlotUpdate(request: Request, pk: UUID) -> Response:
+def SourceEtaVPlotUpdate(request: Request, pk: str) -> Response:
     """The view to perform the update on the eta-V plot page.
 
     Args:
@@ -1786,8 +1785,8 @@ def SourceDetail(request, pk):
         {
             "name": reverse(
                 "vast_pipeline:source_detail",
-                args=["e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813"],
-            )[:-37]
+                args=["222NfqjAtZQH6Zm"],
+            )[:-16]
         },
     )
     related_datatables = {
@@ -2430,11 +2429,11 @@ def UserSourceFavsList(request):
 
     api_col_dict = {
         "source.name": reverse(
-            "vast_pipeline:source_detail", args=["e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813"]
-        )[:-37],
+            "vast_pipeline:source_detail", args=["222NfqjAtZQH6Zm"]
+        )[:-16],
         "source.run.name": reverse(
-            "vast_pipeline:run_detail", args=["e1f6bf88-4b07-4f28-bf9b-3ccf9d2ca813"]
-        )[:-37],
+            "vast_pipeline:run_detail", args=["222NfqjAtZQH6Zm"]
+        )[:-16],
     }
     colsfields = generate_colsfields(fields, api_col_dict, ["deletefield"])
 
@@ -2598,7 +2597,7 @@ class SourcePlotsSet(ViewSet):
     permission_classes = [IsAuthenticated]
 
     @rest_framework.decorators.action(methods=["get"], detail=True)
-    def lightcurve(self, request: Request, pk: UUID = None) -> Response:
+    def lightcurve(self, request: Request, pk: str = None) -> Response:
         """Create lightcurve and 2-epoch metric graph plots for a source.
 
         Args:
@@ -2637,7 +2636,6 @@ class SourcePlotsSet(ViewSet):
                 JSON format to be embedded in the HTML template.
         """
         source_query_result_id_list = request.session.get("source_query_result_ids", [])
-        source_query_result_id_list = [UUID(x) for x in source_query_result_id_list]
         try:
             source = Source.objects.filter(pk__in=source_query_result_id_list)
         except Source.DoesNotExist:

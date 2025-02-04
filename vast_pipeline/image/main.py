@@ -4,7 +4,6 @@ This module contains the relevant classes for the image ingestion.
 
 import os
 import logging
-import uuid
 import numpy as np
 import pandas as pd
 
@@ -15,11 +14,11 @@ from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
 from typing import Dict
 
-from .utils import calc_condon_flux_errors
+from .utils import calc_condon_flux_errors, open_fits
 
 from vast_pipeline import models
 from vast_pipeline.survey.translators import tr_selavy
-from vast_pipeline.image.utils import open_fits
+from vast_pipeline.utils.utils import generate_shortuuid
 
 
 logger = logging.getLogger(__name__)
@@ -341,7 +340,7 @@ class SelavyImage(FitsImage):
                 df[key["name"]] = df[key["name"]].astype(key["dtype"])
 
         # Add id column
-        df["id"] = df.apply(lambda _: str(uuid.uuid4()), axis=1)
+        df["id"] = df.apply(lambda _: generate_shortuuid(15), axis=1)
 
         # do checks and fill in missing field for uploading sources
         # in DB (see fields in models.py -> Source model)

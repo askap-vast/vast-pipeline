@@ -36,7 +36,6 @@ from scipy.stats import norm
 from typing import Tuple
 
 from vast_pipeline.models import Measurement, Source
-from vast_pipeline.pipeline.utils import _convert_uuid_col_to_str
 
 
 def plot_lightcurve(
@@ -85,7 +84,6 @@ def plot_lightcurve(
 
     # lightcurve required cols: taustart_ts, flux, flux_err_upper, flux_err_lower, forced
     lightcurve = pd.DataFrame(measurements_qs)
-    lightcurve["id"] = _convert_uuid_col_to_str(lightcurve["id"])
 
     # remap method values to labels to make a better legend
     lightcurve["method"] = lightcurve.forced.map({True: "Forced", False: "Selavy"})
@@ -168,15 +166,6 @@ def plot_lightcurve(
                 f"m_{metric_suffix}.abs() >= {m_abs_min} and vs_{metric_suffix}.abs() >= {vs_abs_min}"
             )
             .reset_index()
-        )
-        candidate_measurement_pairs_df["measurement_a_id"] = _convert_uuid_col_to_str(
-            candidate_measurement_pairs_df["measurement_a_id"]
-        )
-        candidate_measurement_pairs_df["measurement_b_id"] = _convert_uuid_col_to_str(
-            candidate_measurement_pairs_df["measurement_b_id"]
-        )
-        candidate_measurement_pairs_df["source_id"] = _convert_uuid_col_to_str(
-            candidate_measurement_pairs_df["source_id"]
         )
         g = nx.Graph()
         for _row in candidate_measurement_pairs_df.itertuples(index=False):
@@ -395,8 +384,6 @@ def plot_eta_v_bokeh(
             "id", "name", "eta_peak", "eta_int", "v_peak", "v_int", "n_meas_sel"
         )
     )
-
-    df["id"] = _convert_uuid_col_to_str(df["id"])
 
     (eta_fit_mean, eta_fit_sigma, v_fit_mean, v_fit_sigma) = fit_eta_v(
         df, use_peak_flux=use_peak_flux
