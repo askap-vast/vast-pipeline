@@ -11,7 +11,7 @@ from vast_pipeline.models import Image, Measurement, Run, Source, SourceFav
 
 
 class RunSerializer(serializers.ModelSerializer):
-    id = serializers.UUIDField(read_only=True)
+    id = serializers.CharField(read_only=True)
     path = serializers.SerializerMethodField()
     n_sources = serializers.IntegerField(read_only=True)
     n_images = serializers.IntegerField(read_only=True)
@@ -30,7 +30,7 @@ class RunSerializer(serializers.ModelSerializer):
 
 
 class ImageSerializer(serializers.ModelSerializer):
-    id = serializers.UUIDField(read_only=True)
+    id = serializers.CharField(read_only=True)
     frequency = serializers.SerializerMethodField(read_only=True)
 
     def get_frequency(self, obj):
@@ -56,7 +56,7 @@ class ImageSerializer(serializers.ModelSerializer):
 
 
 class MeasurementSerializer(serializers.ModelSerializer):
-    id = serializers.UUIDField(read_only=True)
+    id = serializers.CharField(read_only=True)
     frequency = serializers.SerializerMethodField(read_only=True)
 
     def get_frequency(self, obj):
@@ -96,7 +96,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class RunNameSerializer(serializers.ModelSerializer):
-    id = serializers.UUIDField(read_only=True)
+    id = serializers.CharField(read_only=True)
 
     class Meta:
         model = Run
@@ -105,7 +105,7 @@ class RunNameSerializer(serializers.ModelSerializer):
 
 
 class SourceNameSerializer(serializers.ModelSerializer):
-    id = serializers.UUIDField(read_only=True)
+    id = serializers.CharField(read_only=True)
     run = RunNameSerializer()
 
     class Meta:
@@ -115,7 +115,7 @@ class SourceNameSerializer(serializers.ModelSerializer):
 
 
 class SourceSerializer(serializers.ModelSerializer):
-    id = serializers.UUIDField(read_only=True)
+    id = serializers.CharField(read_only=True)
     run = RunNameSerializer()
     wavg_ra = serializers.SerializerMethodField()
     wavg_dec = serializers.SerializerMethodField()
@@ -133,7 +133,7 @@ class SourceSerializer(serializers.ModelSerializer):
 
 
 class SourceFavSerializer(serializers.ModelSerializer):
-    id = serializers.UUIDField(read_only=True)
+    id = serializers.CharField(read_only=True)
     user = UserSerializer(read_only=True)
     source = SourceNameSerializer(read_only=True)
     deletefield = serializers.SerializerMethodField()
