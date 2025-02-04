@@ -1,3 +1,4 @@
+import numpy as np
 
 from dataclasses import dataclass
 from itertools import combinations
@@ -11,6 +12,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelatio
 from django.contrib.contenttypes.models import ContentType
 from django.templatetags.static import static
 from postgres_copy import CopyManager
+from psycopg2.extensions import register_adapter, AsIs
 from shortuuid.django_fields import ShortUUIDField
 
 from social_django.models import UserSocialAuth
@@ -20,6 +22,8 @@ from vast_pipeline.pipeline.config import PipelineConfig
 from vast_pipeline.pipeline.pairs import calculate_vs_metric, calculate_m_metric
 from vast_pipeline.utils.utils import UUID_ALPHABET
 
+# Allow q3c extension to accept numpy types
+register_adapter(np.float64, AsIs)
 
 @dataclass
 class MeasurementPair:
