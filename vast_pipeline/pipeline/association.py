@@ -1367,8 +1367,6 @@ def parallel_association(
             meta=meta
         ).compute(n_workers=n_workers, scheduler='processes')
     )
-    logger.info('results_L1364')
-    logger.info(results)
     # results are the normal dataframe of results with the columns:
     # 'id', 'uncertainty_ew', 'weight_ew', 'uncertainty_ns', 'weight_ns',
     # 'flux_int', 'flux_int_err', 'flux_peak', 'flux_peak_err', 'forced',
