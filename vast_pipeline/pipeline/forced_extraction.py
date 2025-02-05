@@ -22,6 +22,7 @@ from ..utils.utils import (
     StopWatch,
     calculate_workers_and_partitions,
     generate_shortuuid,
+    UUID_LEN_MEAS
 )
 from vast_pipeline.image.utils import open_fits
 from vast_pipeline.pipeline.utils import log_total_memory_usage
@@ -475,7 +476,7 @@ def parallel_extraction(
     logger.debug(f"Successfully concatenated intermediate dfs")
     log_total_memory_usage()
 
-    df_out["id"] = df_out.apply(lambda _: generate_shortuuid(15), axis=1)
+    df_out["id"] = df_out.apply(lambda _: generate_shortuuid(UUID_LEN_MEAS), axis=1)
 
     return df_out
 
@@ -687,7 +688,7 @@ def forced_extraction(
     logger.info("Force extraction step time: %.2f seconds", timer.reset())
 
     # make measurement names unique for db constraint
-    extr_df["name"] = extr_df["name"] + f"_f_{sp_run.id}"
+    extr_df["name"] = extr_df["name"] + f"_f_{p_run.id}"
 
     default_pos_err = settings.POS_DEFAULT_MIN_ERROR / 3600.0
     extr_df["ra_err"] = default_pos_err

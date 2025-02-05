@@ -24,9 +24,21 @@ from astropy.coordinates import SkyCoord, Longitude, Latitude
 logger = logging.getLogger(__name__)
 
 # Hardcode alphabet used for UUID strings
-# NOTE: This is currently the output of `shortuuid.get_alphabet()`
+# NOTE: This is the output of `shortuuid.get_alphabet()`
 UUID_ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 shortuuid.set_alphabet(UUID_ALPHABET)
+
+# Length of short ID strings.
+# Used for Run, SkyRegion, Band, Image, Comment IDs
+UUID_LEN_SHORT = 8
+
+# Length of Source ID strings.
+# Used for Source, RelatedSource IDs
+UUID_LEN_SOURCE = 12
+
+# Length of Measurement ID Strings.
+# Used for Measurement, Assocation IDs.
+UUID_LEN_MEAS = 14
 
 class StopWatch:
     """
@@ -491,6 +503,6 @@ def copy_file_or_dir(src: Union[str, Path], dst: Union[str, Path]) -> None:
     else:
         raise ValueError(f"Path {src} is not a file or directory.")
 
-def generate_shortuuid(length: int = 15) -> 'str':
+def generate_shortuuid(length: int) -> 'str':
     """Generate a shortuuid of given length."""
     return shortuuid.random(length)

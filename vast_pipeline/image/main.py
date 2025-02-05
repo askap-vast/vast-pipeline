@@ -18,7 +18,9 @@ from .utils import calc_condon_flux_errors, open_fits
 
 from vast_pipeline import models
 from vast_pipeline.survey.translators import tr_selavy
-from vast_pipeline.utils.utils import generate_shortuuid
+from vast_pipeline.utils.utils import (
+    generate_shortuuid, UUID_LEN_MEAS,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -340,7 +342,7 @@ class SelavyImage(FitsImage):
                 df[key["name"]] = df[key["name"]].astype(key["dtype"])
 
         # Add id column
-        df["id"] = df.apply(lambda _: generate_shortuuid(15), axis=1)
+        df["id"] = df.apply(lambda _: generate_shortuuid(UUID_LEN_MEAS), axis=1)
 
         # do checks and fill in missing field for uploading sources
         # in DB (see fields in models.py -> Source model)

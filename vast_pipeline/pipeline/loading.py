@@ -35,6 +35,8 @@ from vast_pipeline.utils.utils import (
     deg2hms,
     deg2dms,
     generate_shortuuid,
+    UUID_LEN_MEAS,
+    UUID_LEN_SOURCE
 )
 
 
@@ -374,7 +376,7 @@ def copy_upload_related_sources(
         if getattr(fld, "attname", None) and fld.attname in related_df.columns:
             columns_to_upload.append(fld.attname)
 
-    related_df["id"] = [generate_shortuuid(15) for _ in range(len(related_df))]
+    related_df["id"] = [generate_shortuuid(UUID_LEN_SOURCE) for _ in range(len(related_df))]
 
     copy_upload_model(related_df[columns_to_upload], RelatedSource, batch_size=batch_size)
 
@@ -421,7 +423,7 @@ def copy_upload_associations(associations_df: pd.DataFrame, batch_size: int = 10
         "dr": "dr"
     }
 
-    associations_df["db_id"] = [generate_shortuuid(15) for _ in range(len(associations_df))]
+    associations_df["db_id"] = [generate_shortuuid(UUID_LEN_MEAS) for _ in range(len(associations_df))]
 
     copy_upload_model(
         associations_df[columns_to_upload],

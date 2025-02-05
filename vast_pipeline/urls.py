@@ -8,6 +8,7 @@ import tagulous.views
 
 from vast_pipeline import views, converters
 from vast_pipeline.models import Source
+from vast_pipeline.utils.utils import UUID_LEN_SHORT, UUID_LEN_MEAS
 
 
 app_name = "vast_pipeline"
@@ -32,13 +33,13 @@ urlpatterns = [
     path("piperuns/<str:id>/", views.RunDetail, name="run_detail"),
     path("images/", views.ImageIndex, name="image_index"),
     re_path(
-        r"^images/(?P<id>[\w]{15})(?:/(?P<action>[\w]+))?/$",
+        fr"^images/(?P<id>[\w]{{{UUID_LEN_SHORT}}})(?:/(?P<action>[\w]+))?/$",
         views.ImageDetail,
         name="image_detail",
     ),
     path("measurements/", views.MeasurementIndex, name="measurement_index"),
     re_path(
-        r"^measurements/(?P<id>[\w]{15})(?:/(?P<action>[\w]+))?/$",
+        fr"^measurements/(?P<id>[\w]{{{UUID_LEN_MEAS}}})(?:/(?P<action>[\w]+))?/$",
         views.MeasurementDetail,
         name="measurement_detail",
     ),

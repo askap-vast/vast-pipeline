@@ -76,7 +76,10 @@ from vast_pipeline.serializers import (
     ExternalSearchSerializer,
 )
 from vast_pipeline.utils import external_query
-from vast_pipeline.utils.utils import deg2dms, deg2hms, parse_coord, equ2gal
+from vast_pipeline.utils.utils import (
+    deg2dms, deg2hms, parse_coord, equ2gal, generate_shortuuid,
+    UUID_LEN_SHORT, UUID_LEN_SOURCE, UUID_LEN_MEAS
+)
 from vast_pipeline.utils.view import generate_colsfields, get_skyregions_collection
 from vast_pipeline.management.commands.initpiperun import initialise_run
 from vast_pipeline.forms import PipelineRunForm, CommentForm, TagWithCommentsForm
@@ -184,8 +187,8 @@ def RunIndex(request):
         {
             "name": reverse(
                 "vast_pipeline:run_detail",
-                args=["222NfqjAtZQH6Zm"],
-            )[:-16]
+                args=[generate_shortuuid(UUID_LEN_SHORT)],
+            )[:-(UUID_LEN_SHORT + 1)]
         },
     )
 
@@ -645,8 +648,8 @@ def RunDetail(request, id):
         {
             "name": reverse(
                 "vast_pipeline:image_detail",
-                args=["222NfqjAtZQH6Zm"],
-            )[:-16]
+                args=[generate_shortuuid(UUID_LEN_SHORT)],
+            )[:-(UUID_LEN_SHORT + 1)]
         },
         not_searchable_col=["frequency"],
     )
@@ -714,8 +717,8 @@ def ImageIndex(request):
         {
             "name": reverse(
                 "vast_pipeline:image_detail",
-                args=["222NfqjAtZQH6Zm"],
-            )[:-16]
+                args=[generate_shortuuid(UUID_LEN_SHORT)],
+            )[:-(UUID_LEN_SHORT + 1)]
         },
         not_searchable_col=["frequency"],
     )
@@ -891,8 +894,8 @@ def ImageDetail(request, id, action=None):
         {
             "name": reverse(
                 "vast_pipeline:measurement_detail",
-                args=["222NfqjAtZQH6Zm"],
-            )[:-16]
+                args=[generate_shortuuid(UUID_LEN_MEAS)],
+            )[:-(UUID_LEN_MEAS + 1)]
         },
         not_searchable_col=["frequency"],
     )
@@ -934,8 +937,8 @@ def ImageDetail(request, id, action=None):
         {
             "name": reverse(
                 "vast_pipeline:run_detail",
-                args=["222NfqjAtZQH6Zm"],
-            )[:-16]
+                args=[generate_shortuuid(UUID_LEN_SHORT)],
+            )[:-(UUID_LEN_SHORT + 1)]
         },
     )
 
@@ -993,8 +996,8 @@ def MeasurementIndex(request):
         {
             "name": reverse(
                 "vast_pipeline:measurement_detail",
-                args=["222NfqjAtZQH6Zm"],
-            )[:-16]
+                args=[generate_shortuuid(UUID_LEN_MEAS)],
+            )[:-(UUID_LEN_MEAS + 1)]
         },
         not_searchable_col=["frequency"],
     )
@@ -1050,6 +1053,7 @@ class MeasurementViewSet(ModelViewSet):
 
     @rest_framework.decorators.action(detail=True, methods=["get"])
     def siblings(self, request, pk=None):
+        paginator = DatatablesPageNumberPagination()
         measurement = self.queryset.get(pk=pk)
         image_id = measurement.image_id
         island_id = measurement.island_id
@@ -1057,23 +1061,24 @@ class MeasurementViewSet(ModelViewSet):
             pk=pk
         )
         qs = self.filter_queryset(qs)
-        page = self.paginate_queryset(qs)
+        page = paginator.paginate_queryset(qs, request)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
+            return paginator.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(qs, many=True)
         return Response(serializer.data)
 
     @rest_framework.decorators.action(detail=True, methods=["get"])
     def sources(self, request, pk=None):
+        paginator = DatatablesPageNumberPagination()
         measurement = self.queryset.get(pk=pk)
         qs = measurement.source.all()
         qs = self.filter_queryset(qs)
-        page = self.paginate_queryset(qs)
+        page = paginator.paginate_queryset(qs, request)
         if page is not None:
             serializer = SourceSerializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
+            return paginator.get_paginated_response(serializer.data)
 
         serializer = SourceSerializer(qs, many=True)
         return Response(SourceSerializer.data)
@@ -1175,8 +1180,8 @@ def MeasurementDetail(request, id, action=None):
         {
             "name": reverse(
                 "vast_pipeline:measurement_detail",
-                args=["222NfqjAtZQH6Zm"],
-            )[:-16]
+                args=[generate_shortuuid(UUID_LEN_MEAS)],
+            )[:-(UUID_LEN_MEAS + 1)]
         },
     )
 
@@ -1234,11 +1239,11 @@ def MeasurementDetail(request, id, action=None):
 
     api_col_dict = {
         "name": reverse(
-            "vast_pipeline:source_detail", args=["222NfqjAtZQH6Zm"]
-        )[:-16],
+            "vast_pipeline:source_detail", args=[generate_shortuuid(UUID_LEN_SOURCE)]
+        )[:-(UUID_LEN_SOURCE + 1)],
         "run.name": reverse(
-            "vast_pipeline:run_detail", args=["222NfqjAtZQH6Zm"]
-        )[:-16],
+            "vast_pipeline:run_detail", args=[generate_shortuuid(UUID_LEN_SHORT)]
+        )[:-(UUID_LEN_SHORT + 1)],
     }
 
     source_colsfields = generate_colsfields(source_fields, api_col_dict)
@@ -1473,11 +1478,11 @@ def SourceQuery(request):
 
     api_col_dict = {
         "name": reverse(
-            "vast_pipeline:source_detail", args=["222NfqjAtZQH6Zm"]
-        )[:-16],
+            "vast_pipeline:source_detail", args=[generate_shortuuid(UUID_LEN_SOURCE)]
+        )[:-(UUID_LEN_SOURCE + 1)],
         "run.name": reverse(
-            "vast_pipeline:run_detail", args=["222NfqjAtZQH6Zm"]
-        )[:-16],
+            "vast_pipeline:run_detail", args=[generate_shortuuid(UUID_LEN_SHORT)]
+        )[:-(UUID_LEN_SHORT + 1)],
     }
 
     colsfields = generate_colsfields(fields, api_col_dict)
@@ -1790,8 +1795,8 @@ def SourceDetail(request, pk):
         {
             "name": reverse(
                 "vast_pipeline:source_detail",
-                args=["222NfqjAtZQH6Zm"],
-            )[:-16]
+                args=[generate_shortuuid(UUID_LEN_SOURCE)],
+            )[:-(UUID_LEN_SOURCE + 1)]
         },
     )
     related_datatables = {
@@ -2434,11 +2439,11 @@ def UserSourceFavsList(request):
 
     api_col_dict = {
         "source.name": reverse(
-            "vast_pipeline:source_detail", args=["222NfqjAtZQH6Zm"]
-        )[:-16],
+            "vast_pipeline:source_detail", args=[generate_shortuuid(UUID_LEN_SOURCE)]
+        )[:-(UUID_LEN_SOURCE + 1)],
         "source.run.name": reverse(
-            "vast_pipeline:run_detail", args=["222NfqjAtZQH6Zm"]
-        )[:-16],
+            "vast_pipeline:run_detail", args=[generate_shortuuid(UUID_LEN_SHORT)]
+        )[:-(UUID_LEN_SHORT + 1)],
     }
     colsfields = generate_colsfields(fields, api_col_dict, ["deletefield"])
 
@@ -2654,4 +2659,5 @@ class SourcePlotsSet(ViewSet):
         plot_document = plot_eta_v_bokeh(
             source, eta_sigma=eta_sigma, v_sigma=v_sigma, use_peak_flux=use_peak_flux
         )
+
         return Response(json_item(plot_document))
