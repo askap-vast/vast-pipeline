@@ -1096,23 +1096,23 @@ def group_skyregions(df: pd.DataFrame) -> pd.DataFrame:
             A dataframe containing all the sky regions of the run. Only the
             'id', 'centre_ra', 'centre_dec' and 'xtr_radius' columns are
             required.
-            +------+-------------+--------------+--------------+
-            |   id |   centre_ra |   centre_dec |   xtr_radius |
-            |------+-------------+--------------+--------------|
-            |    2 |    319.652  |    0.0030765 |      6.72488 |
-            |    3 |    319.652  |   -6.2989    |      6.7401  |
-            |    1 |     21.8361 |  -73.121     |      7.24662 |
-            +------+-------------+--------------+--------------+
+            +-----------+-------------+--------------+--------------+
+            |   id      |   centre_ra |   centre_dec |   xtr_radius |
+            |-----------+-------------+--------------+--------------|
+            |  ntEvPoTZ |    319.652  |    0.0030765 |      6.72488 |
+            |  py5dA25B |    319.652  |   -6.2989    |      6.7401  |
+            |  kbr4Tmyw |     21.8361 |  -73.121     |      7.24662 |
+            +-----------+-------------+--------------+--------------+
 
     Returns:
         The sky region group of each skyregion id.
-            +----+----------------+
-            |    |   skyreg_group |
-            |----+----------------|
-            |  2 |              1 |
-            |  3 |              1 |
-            |  1 |              2 |
-            +----+----------------+
+            +-----------+----------------+
+            |           | skyreg_group |
+            |-----------+--------------|
+            |  py5dA25B |            1 |
+            |  kbr4Tmyw |            1 |
+            |  ntEvPoTZ |            2 |
+            +-----------+--------------+
     """
     sr_coords = SkyCoord(df["centre_ra"], df["centre_dec"], unit=(u.deg, u.deg))
 
@@ -1189,13 +1189,13 @@ def get_parallel_assoc_image_df(
             A list of the Image objects.
         skyregion_groups:
             The sky region group of each skyregion id.
-            +----+----------------+
-            |    |   skyreg_group |
-            |----+----------------|
-            |  2 |              1 |
-            |  3 |              1 |
-            |  1 |              2 |
-            +----+----------------+
+            +-----------+----------------+
+            |           |   skyreg_group |
+            |-----------+----------------|
+            |  py5dA25B |              1 |
+            |  kbr4Tmyw |              1 |
+            |  ntEvPoTZ |              2 |
+            +-----------+----------------+
 
     Returns:
         Dataframe containing the merged images and skyreg_id and skyreg_group
@@ -1205,14 +1205,14 @@ def get_parallel_assoc_image_df(
     # +----+-------------------------------+-------------+----------------+
     # |    | image                         |   skyreg_id |   skyreg_group |
     # |----+-------------------------------+-------------+----------------|
-    # |  0 | VAST_2118+00A.EPOCH01.I.fits  |           2 |              1 |
-    # |  1 | VAST_2118-06A.EPOCH01.I.fits  |           3 |              1 |
-    # |  2 | VAST_0127-73A.EPOCH01.I.fits  |           1 |              2 |
-    # |  3 | VAST_2118-06A.EPOCH03x.I.fits |           3 |              1 |
-    # |  4 | VAST_2118-06A.EPOCH02.I.fits  |           3 |              1 |
-    # |  5 | VAST_2118-06A.EPOCH05x.I.fits |           3 |              1 |
-    # |  6 | VAST_2118-06A.EPOCH06x.I.fits |           3 |              1 |
-    # |  7 | VAST_0127-73A.EPOCH08.I.fits  |           1 |              2 |
+    # |  0 | VAST_2118+00A.EPOCH01.I.fits  |    py5dA25B |              1 |
+    # |  1 | VAST_2118-06A.EPOCH01.I.fits  |    kbr4Tmyw |              1 |
+    # |  2 | VAST_0127-73A.EPOCH01.I.fits  |    ntEvPoTZ |              2 |
+    # |  3 | VAST_2118-06A.EPOCH03x.I.fits |    kbr4Tmyw |              1 |
+    # |  4 | VAST_2118-06A.EPOCH02.I.fits  |    kbr4Tmyw |              1 |
+    # |  5 | VAST_2118-06A.EPOCH05x.I.fits |    kbr4Tmyw |              1 |
+    # |  6 | VAST_2118-06A.EPOCH06x.I.fits |    kbr4Tmyw |              1 |
+    # |  7 | VAST_0127-73A.EPOCH08.I.fits  |    ntEvPoTZ |              2 |
     # +----+-------------------------------+-------------+----------------+
     skyreg_ids = [str(i.skyreg_id) for i in images]
 
