@@ -113,6 +113,8 @@ def one_to_many_basic(
     ]
 
     # duplicated_skyc2
+    # NOTE: Source ids are shown as integrs for clarity, they
+    # are UUID strings in the actual dataframe.
     # +-----+----------+-----------+---------+
     # |     |   source | related   |     d2d |
     # |-----+----------+-----------+---------|
@@ -320,6 +322,8 @@ def one_to_many_advanced(
     ].copy()
 
     # duplicated_skyc1
+    # NOTE: Source ids are shown as integrs for clarity, they
+    # are UUID strings in the actual dataframe.
     # +-----+-------------------+------------+----------------+
     # |     |   index_old_skyc1 |   id_skyc1 |   source_skyc1 |
     # |-----+-------------------+------------+----------------+
@@ -615,6 +619,8 @@ def many_to_one_advanced(temp_srcs: pd.DataFrame) -> pd.DataFrame:
     ]
 
     # duplicated_skyc2
+    # NOTE: Source ids are shown as integrs for clarity, they
+    # are UUID strings in the actual dataframe.
     # +-----+-------------------+------------+----------------+
     # |     |   index_old_skyc1 |   id_skyc1 |   source_skyc1 |
     # |-----+-------------------+------------+----------------+
@@ -1361,7 +1367,8 @@ def parallel_association(
             meta=meta
         ).compute(n_workers=n_workers, scheduler='processes')
     )
-
+    logger.info('results_L1364')
+    logger.info(results)
     # results are the normal dataframe of results with the columns:
     # 'id', 'uncertainty_ew', 'weight_ew', 'uncertainty_ns', 'weight_ns',
     # 'flux_int', 'flux_int_err', 'flux_peak', 'flux_peak_err', 'forced',
@@ -1374,22 +1381,22 @@ def parallel_association(
     # each skyreg_group along with the source_ids. This needs to be collapsed.
 
     # Index example:
-    #                        id (UUIDs)
+    #                  id (UUIDs)
     # skyreg_group
-    # ---------------------------------------------------
-    # 1        0     d02d4a67-e950-48ff-a4e3-f5a69c7dbf63
-    #          1     07471f39-2353-4d4f-af90-76afec47c44b
-    #          2     256ac842-739d-4731-97e9-b0743ad4343e
-    #          3     a16595d1-3082-48ea-b0ee-c174ee577388
-    #          4     f8cf5850-dc4a-4c5b-b8f4-19912072e740
+    # -------------------------------
+    # 1        0     vECaLjUsqMW5sd
+    #          1     qbibpDkdmogQBM
+    #          2     tUcjuPsNjDnodi
+    #          3     bAgBCRKaoMApFg
+    #          4     7QQcidWtEsefUP
     # ...
-    # 30       3709  a1c92307-3d49-4047-80a4-8f70284bf1c9
-    #          3710  c65d6315-f72a-4dc6-8496-bf1d0e627c79
-    #          3711  509179c5-dace-47c7-b2a9-40f97b96745d
-    #          3712  a7cd2d8a-0bfa-4181-b22c-da4c815c4153
-    #          3713  285f659a-0b63-42fa-b73d-07bde3c8ea9c
+    # 30       3709  wWafAHKP2QdGFg
+    #          3710  gCWGDZvMarcEoW
+    #          3711  Nbz4XwjpwX7gXa
+    #          3712  RV9KsSoiumCMU3
+    #          3713  PwEnpyALZXGHk8
 
-    # reset the indeex of the final corrected and collapsed result
+    # reset the index of the final corrected and collapsed result
     results = results.reset_index(drop=True)
 
     logger.info("Total parallel association time: %.2f seconds", timer.reset_init())
