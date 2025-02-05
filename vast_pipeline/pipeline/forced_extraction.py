@@ -363,16 +363,16 @@ def parallel_extraction(
     # out
     # |   | source_tmp_id | wavg_ra | wavg_dec | image_name       | flux_peak |
     # |--:|--------------:|--------:|---------:|:-----------------|----------:|
-    # | 0 |            81 | 317.607 | -8.66952 | VAST_2118-06A... |    11.555 |
-    # | 1 |           894 | 323.803 | -2.6899  | VAST_2118-06A... |     2.178 |
-    # | 2 |          1076 | 316.147 | -3.11408 | VAST_2118-06A... |     6.815 |
-    # | 3 |          1353 | 322.094 | -4.44977 | VAST_2118-06A... |     1.879 |
-    # | 4 |          1387 | 321.734 | -6.82934 | VAST_2118-06A... |     1.61  |
+    # | 0 |  223b8Lp4Sdp3 | 317.607 | -8.66952 | VAST_2118-06A... |    11.555 |
+    # | 1 |  22LyLU54pBPm | 323.803 | -2.6899  | VAST_2118-06A... |     2.178 |
+    # | 2 |  23Vif6cLMQ5C | 316.147 | -3.11408 | VAST_2118-06A... |     6.815 |
+    # | 3 |  zzyc7GFJreMg | 322.094 | -4.44977 | VAST_2118-06A... |     1.879 |
+    # | 4 |  225RNzDTJ3MR | 321.734 | -6.82934 | VAST_2118-06A... |     1.61  |
 
     out = out.drop(["max_snr", "image_rms_min", "detection"], axis=1).rename(
         columns={"image": "image_name"}
     )
-
+    out.to_parquet('/scratch2/v2.0/forced_out_L375.parquet')
     # get the unique images to extract from
     unique_images_to_extract = out["image_name"].unique().tolist()
 
@@ -624,13 +624,12 @@ def forced_extraction(
         )
     ).set_index("name")
 
-    # Also set id to str
-    images_df["id"] = images_df["id"].astype(str)
-    # | name                          |   id | measurements_path   | path         | noise_path   |
-    # |:------------------------------|-----:|:--------------------|:-------------|:-------------|
-    # | VAST_2118-06A.EPOCH01.I.fits  |    1 | path/to/file        | path/to/file | path/to/file |
-    # | VAST_2118-06A.EPOCH03x.I.fits |    3 | path/to/file        | path/to/file | path/to/file |
-    # | VAST_2118-06A.EPOCH02.I.fits  |    2 | path/to/file        | path/to/file | path/to/file |
+    images_df.to_parquet('/scratch2/v2.0/forced_images_df_L627.parquet')
+    # | name                          |   id     | measurements_path   | path         | noise_path   |
+    # |:------------------------------|---------:|:--------------------|:-------------|:-------------|
+    # | VAST_2118-06A.EPOCH01.I.fits  | iTsHMUy3 | path/to/file        | path/to/file | path/to/file |
+    # | VAST_2118-06A.EPOCH03x.I.fits | nBufF23E | path/to/file        | path/to/file | path/to/file |
+    # | VAST_2118-06A.EPOCH02.I.fits  | vxYozMVA | path/to/file        | path/to/file | path/to/file |
 
     # | name                          |   beam_bmaj |   beam_bmin |   beam_bpa | background_path   |
     # |:------------------------------|------------:|------------:|-----------:|:------------------|
