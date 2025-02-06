@@ -114,7 +114,7 @@ def one_to_many_basic(
     ]
 
     # duplicated_skyc2
-    # NOTE: Source ids are shown as integrs for clarity, they
+    # NOTE: Source ids are shown as integers for clarity, they
     # are UUID strings in the actual dataframe.
     # +-----+----------+-----------+---------+
     # |     |   source | related   |     d2d |
