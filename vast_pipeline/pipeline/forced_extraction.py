@@ -372,7 +372,6 @@ def parallel_extraction(
     out = out.drop(["max_snr", "image_rms_min", "detection"], axis=1).rename(
         columns={"image": "image_name"}
     )
-    out.to_parquet('/scratch2/v2.0/forced_out_L375.parquet')
     # get the unique images to extract from
     unique_images_to_extract = out["image_name"].unique().tolist()
 

@@ -29,7 +29,7 @@ from vast_pipeline.image.utils import open_fits
 from vast_pipeline.utils.utils import (
     eq_to_cart, StopWatch, optimise_numeric,
     calculate_workers_and_partitions, copy_file_or_dir,
-    delete_file_or_dir, generate_shortuuid, UUID_LEN_MEAS
+    delete_file_or_dir, generate_shortuuid, UUID_LEN_SOURCE
 )
 from vast_pipeline.models import (
     Band, Image, Run, SkyRegion
@@ -340,7 +340,7 @@ def _load_measurements(
     df["image"] = image.name
     df["datetime"] = image.datetime
     # these are the first 'sources' if ini_df is True.
-    df["source"] = df["id"].apply(lambda _: generate_shortuuid(UUID_LEN_MEAS)) if ini_df else None
+    df["source"] = df["id"].apply(lambda _: generate_shortuuid(UUID_LEN_SOURCE)) if ini_df else None
     df["ra_source"] = df["ra"]
     df["dec_source"] = df["dec"]
     df["d2d"] = 0.0
