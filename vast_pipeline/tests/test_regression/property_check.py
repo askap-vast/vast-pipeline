@@ -140,7 +140,7 @@ def test_known_in_forced(testcase: TestCase, forced: dict, sources: pd.DataFrame
     '''
     sources = sources.reset_index()
     id_match = known_source(sources)
-    source_id = sources.loc[id_match, 'id']
+    source_id = sources.loc[id_match, 'source']
     meas_id = associations[
         associations['source_id'] == source_id
     ]['meas_id'].values

@@ -6,16 +6,14 @@ import pandas as pd
 
 from typing import Iterable, Generator
 from vast_pipeline.utils.utils import deg2hms, deg2dms
-from vast_pipeline.models import (
-    Association, Measurement, Source, RelatedSource, Run
-)
+from vast_pipeline.models import Association, Measurement, Source, RelatedSource, Run
 
 
 logger = logging.getLogger(__name__)
 
 
 def measurement_models_generator(
-    meas_df: pd.DataFrame
+    meas_df: pd.DataFrame,
 ) -> Iterable[Generator[Measurement, None, None]]:
     """
     Creates a generator object containing yielded Measurement objects from
@@ -65,6 +63,7 @@ def source_models_generator(
         src = Source()
         src.run_id = pipeline_run.id
         src.name = name
+        src.id = i
         for fld in src._meta.get_fields():
             if getattr(fld, 'attname', None) and hasattr(row, fld.attname):
                 setattr(src, fld.attname, getattr(row, fld.attname))
@@ -73,7 +72,7 @@ def source_models_generator(
 
 
 def association_models_generator(
-    assoc_df: pd.DataFrame
+    assoc_df: pd.DataFrame,
 ) -> Iterable[Generator[Association, None, None]]:
     """
     Creates a generator object containing yielded Association objects from
@@ -99,7 +98,7 @@ def association_models_generator(
 
 
 def related_models_generator(
-    related_df: pd.DataFrame
+    related_df: pd.DataFrame,
 ) -> Iterable[Generator[RelatedSource, None, None]]:
     """
     Creates a generator object containing yielded Association objects from

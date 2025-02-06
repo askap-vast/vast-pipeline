@@ -83,19 +83,19 @@ def calculate_measurement_pair_metrics(
     the source ID and RangeIndex is an unnamed temporary ID for each measurement pair,
     unique only together with source.
     DataFrame will have columns [0, 1], each containing a measurement ID. e.g.
-                       0      1
-        source
-        1       0      1   9284
-                1      1  17597
-                2      1  26984
-                3   9284  17597
-                4   9284  26984
-        ...          ...    ...
-        11105   2  11845  19961
-        11124   0   3573  12929
-                1   3573  21994
-                2  12929  21994
-        11128   0   6216  23534
+                                  0               1
+    source
+    23tmtjpur5g2 0   A2uMq6e7oVhDLA  crXfDCtmbK5iAx
+                 1   A2uMq6e7oVhDLA  5YZxjnBoDBNiXf
+                 2   A2uMq6e7oVhDLA  yjGgnqDHATtUM9
+                 3   A2uMq6e7oVhDLA  KdfWmxoeXF8MH8
+                 4   A2uMq6e7oVhDLA  im5zhMLyHQxmSJ
+    ...                         ...             ...
+    zz8WBFP9VwHq 31  yYPbGwbib4Kq29  jVUEbuBn7W3oQG
+                 32  yYPbGwbib4Kq29  K9aB9h8aNc9GM3
+                 33  NsHRmiqJvQ6pFV  jVUEbuBn7W3oQG
+                 34  NsHRmiqJvQ6pFV  K9aB9h8aNc9GM3
+                 35  jVUEbuBn7W3oQG  K9aB9h8aNc9GM3
     """
     measurement_combinations = (
         dd.from_pandas(df, npartitions=n_partitions)
@@ -107,54 +107,60 @@ def calculate_measurement_pair_metrics(
 
     """Drop the RangeIndex from the MultiIndex as it isn't required and rename the columns.
     Example resultant DataFrame:
-               source   id_a   id_b
-        0           1      1   9284
-        1           1      1  17597
-        2           1      1  26984
-        3           1   9284  17597
-        4           1   9284  26984
-        ...       ...    ...    ...
-        33640   11105  11845  19961
-        33641   11124   3573  12929
-        33642   11124   3573  21994
-        33643   11124  12929  21994
-        33644   11128   6216  23534
+                    source            id_a            id_b
+    0         23tmtjpur5g2  A2uMq6e7oVhDLA  crXfDCtmbK5iAx
+    1         23tmtjpur5g2  A2uMq6e7oVhDLA  5YZxjnBoDBNiXf
+    2         23tmtjpur5g2  A2uMq6e7oVhDLA  yjGgnqDHATtUM9
+    3         23tmtjpur5g2  A2uMq6e7oVhDLA  KdfWmxoeXF8MH8
+    4         23tmtjpur5g2  A2uMq6e7oVhDLA  im5zhMLyHQxmSJ
+    ...                ...             ...             ...
+    11664374  zz8WBFP9VwHq  yYPbGwbib4Kq29  jVUEbuBn7W3oQG
+    11664375  zz8WBFP9VwHq  yYPbGwbib4Kq29  K9aB9h8aNc9GM3
+    11664376  zz8WBFP9VwHq  NsHRmiqJvQ6pFV  jVUEbuBn7W3oQG
+    11664377  zz8WBFP9VwHq  NsHRmiqJvQ6pFV  K9aB9h8aNc9GM3
+    11664378  zz8WBFP9VwHq  jVUEbuBn7W3oQG  K9aB9h8aNc9GM3
     Where source is the source ID, id_a and id_b are measurement IDs.
     """
-    measurement_combinations = measurement_combinations.reset_index(
-        level=1, drop=True
-    ).rename(columns={0: "id_a", 1: "id_b"}).astype(int).reset_index()
+    measurement_combinations = (
+        measurement_combinations.reset_index(level=1, drop=True)
+        .rename(columns={0: "id_a", 1: "id_b"})
+        .astype(str)
+        .reset_index()
+    )
 
     # Dask has a tendency to swap which order the measurement pairs are
     # defined in, even if the dataframe is pre-sorted. We want the pairs to be
     # in date order (a < b) so the code below corrects any that are not.
     measurement_combinations = measurement_combinations.join(
-        df[['source', 'id', 'datetime']].set_index(['source', 'id']),
-        on=['source', 'id_a'],
+        df[["source", "id", "datetime"]].set_index(["source", "id"]),
+        on=["source", "id_a"],
     )
 
     measurement_combinations = measurement_combinations.join(
-        df[['source', 'id', 'datetime']].set_index(['source', 'id']),
-        on=['source', 'id_b'], lsuffix='_a', rsuffix='_b'
+        df[["source", "id", "datetime"]].set_index(["source", "id"]),
+        on=["source", "id_b"],
+        lsuffix="_a",
+        rsuffix="_b",
     )
 
     to_correct_mask = (
-        measurement_combinations['datetime_a']
-        > measurement_combinations['datetime_b']
+        measurement_combinations["datetime_a"] > measurement_combinations["datetime_b"]
     )
 
     if np.any(to_correct_mask):
-        logger.debug('Correcting measurement pairs order')
+        logger.debug("Correcting measurement pairs order")
         (
-            measurement_combinations.loc[to_correct_mask, 'id_a'],
-            measurement_combinations.loc[to_correct_mask, 'id_b']
-        ) = np.array([
-            measurement_combinations.loc[to_correct_mask, 'id_b'].values,
-            measurement_combinations.loc[to_correct_mask, 'id_a'].values
-        ])
+            measurement_combinations.loc[to_correct_mask, "id_a"],
+            measurement_combinations.loc[to_correct_mask, "id_b"],
+        ) = np.array(
+            [
+                measurement_combinations.loc[to_correct_mask, "id_b"].values,
+                measurement_combinations.loc[to_correct_mask, "id_a"].values,
+            ]
+        )
 
     measurement_combinations = measurement_combinations.drop(
-        ['datetime_a', 'datetime_b'], axis=1
+        ["datetime_a", "datetime_b"], axis=1
     )
 
     # add the measurement fluxes and errors

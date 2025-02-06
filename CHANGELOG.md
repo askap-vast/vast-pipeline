@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- V2: Use `django-postgres-copy` for database uploads [#803](https://github.com/askap-vast/vast-pipeline/pull/803)
 - Added more detailed warnings about the use of Condon Errors throughout the docs and code [#806](https://github.com/askap-vast/vast-pipeline/pull/806)
 - Added processing configuration parameters to the run configuration documentation [#805](https://github.com/askap-vast/vast-pipeline/pull/805)
 - Added option to disable forced photometry clustering [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
@@ -15,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- V2: Replace all source, measurement, run etc. IDs with UUID indices. [#803](https://github.com/askap-vast/vast-pipeline/pull/803)
 - V2: Updated docs dependencies and fixed outdated information and various warnings [#801](https://github.com/askap-vast/vast-pipeline/pull/801)
 - V2: Reorganise new_high_sigma calculation into dedicated function [#714](https://github.com/askap-vast/vast-pipeline/pull/714)
 - V2: Update dependencies to fix dependabot warnings and prepare for Dask distributed implementation.
@@ -26,6 +28,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- V2: Fix bug when deleting source tags from database which are referenced by multiple sources [#803](https://github.com/askap-vast/vast-pipeline/pull/803)
 - Fixed incorrect error ellipse calculation [#792](https://github.com/askap-vast/vast-pipeline/pull/792)
 - V2: Fix incorrect calculation of the new_high_sigma parameter [#714](https://github.com/askap-vast/vast-pipeline/pull/714)
 - Fixed broken links on pipeline websites [#802](https://github.com/askap-vast/vast-pipeline/pull/802)
@@ -40,6 +43,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#803](https://github.com/askap-vast/vast-pipeline/pull/803): feat: V2: Change to UUID indexes and use `django-postgres-copy`.
 - [#792](https://github.com/askap-vast/vast-pipeline/pull/792): fix: Simplify and correct error ellipse calculation.
 - [#801](https://github.com/askap-vast/vast-pipeline/pull/801): docs, dep: v2: Updated docs dependencies and fixed outdated information and various warnings
 - [#714](https://github.com/askap-vast/vast-pipeline/pull/714): fix: V2: Correctly calculate new_high_sigma parameter 
