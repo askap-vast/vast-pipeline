@@ -289,8 +289,9 @@ def final_operations(
     #
     #         from_source_id  to_source_id
     # index
-    # 0       60              14396
-    # 1       94              12961
+    # 0       2VZ84BkbB3Fj    k4HX2abxFFek
+    # 1       2uAMTWTSvBuV    4YNpzF4UE2kn
+    # 2       3XLFPgfGovEW    d6cHFu68PYeJ
 
     related_df = (
         srcs_df.loc[srcs_df["related_list"] != -1, ["related_list"]]
