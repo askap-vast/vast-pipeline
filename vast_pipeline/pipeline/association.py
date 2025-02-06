@@ -323,7 +323,7 @@ def one_to_many_advanced(
     ].copy()
 
     # duplicated_skyc1
-    # NOTE: Source ids are shown as integrs for clarity, they
+    # NOTE: Source ids are shown as integers for clarity, they
     # are UUID strings in the actual dataframe.
     # +-----+-------------------+------------+----------------+
     # |     |   index_old_skyc1 |   id_skyc1 |   source_skyc1 |
