@@ -830,23 +830,22 @@ tests = ["hypothesis (==4.23)", "pytest (>=3.10,<4.0)", "pytest-asyncio (>=0.8,<
 
 [[package]]
 name = "dask"
-version = "2024.12.1"
+version = "2025.1.0"
 description = "Parallel PyData with Task Scheduling"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 markers = "python_version == \"3.11\" or python_version >= \"3.12\""
 files = [
-    {file = "dask-2024.12.1-py3-none-any.whl", hash = "sha256:1f32acddf1a6994e3af6734756f0a92467c47050bc29f3555bb9b140420e8e19"},
-    {file = "dask-2024.12.1.tar.gz", hash = "sha256:bac809af21c2dd7eb06827bccbfc612504f3ee6435580e548af912828f823195"},
+    {file = "dask-2025.1.0-py3-none-any.whl", hash = "sha256:db86220c8d19bdf464cbe11a87a2c8f5d537acf586bb02eed6d61a302af5c2fd"},
+    {file = "dask-2025.1.0.tar.gz", hash = "sha256:bb807586ff20f0f59f3d36fe34eb4a95f75a1aae2a775b521de6dd53727d2063"},
 ]
 
 [package.dependencies]
 bokeh = {version = ">=3.1.0", optional = true, markers = "extra == \"diagnostics\""}
 click = ">=8.1"
 cloudpickle = ">=3.0.0"
-dask-expr = {version = ">=1.1,<1.2", optional = true, markers = "extra == \"dataframe\""}
-distributed = {version = "2024.12.1", optional = true, markers = "extra == \"distributed\""}
+distributed = {version = "2025.1.0", optional = true, markers = "extra == \"distributed\""}
 fsspec = ">=2021.09.0"
 importlib_metadata = {version = ">=4.13.0", markers = "python_version < \"3.12\""}
 jinja2 = {version = ">=2.10.3", optional = true, markers = "extra == \"diagnostics\""}
@@ -855,62 +854,42 @@ numpy = {version = ">=1.24", optional = true, markers = "extra == \"array\""}
 packaging = ">=20.0"
 pandas = {version = ">=2.0", optional = true, markers = "extra == \"dataframe\""}
 partd = ">=1.4.0"
-pyarrow = {version = ">=14.0.1", optional = true, markers = "extra == \"complete\""}
+pyarrow = [
+    {version = ">=14.0.1", optional = true, markers = "extra == \"complete\""},
+    {version = ">=14.0.1", optional = true, markers = "extra == \"dataframe\""},
+]
 pyyaml = ">=5.3.1"
 toolz = ">=0.10.0"
 
 [package.extras]
 array = ["numpy (>=1.24)"]
 complete = ["dask[array,dataframe,diagnostics,distributed]", "lz4 (>=4.3.2)", "pyarrow (>=14.0.1)"]
-dataframe = ["dask-expr (>=1.1,<1.2)", "dask[array]", "pandas (>=2.0)"]
+dataframe = ["dask[array]", "pandas (>=2.0)", "pyarrow (>=14.0.1)"]
 diagnostics = ["bokeh (>=3.1.0)", "jinja2 (>=2.10.3)"]
-distributed = ["distributed (==2024.12.1)"]
-test = ["pandas[test]", "pre-commit", "pytest", "pytest-cov", "pytest-rerunfailures", "pytest-timeout", "pytest-xdist"]
-
-[[package]]
-name = "dask-expr"
-version = "1.1.21"
-description = "High Level Expressions for Dask"
-optional = false
-python-versions = ">=3.10"
-groups = ["main"]
-markers = "python_version == \"3.11\" or python_version >= \"3.12\""
-files = [
-    {file = "dask_expr-1.1.21-py3-none-any.whl", hash = "sha256:2c2a9a0b0e66b26cf918679988f97e947bc936544f3a106102055adb9a9edeba"},
-    {file = "dask_expr-1.1.21.tar.gz", hash = "sha256:eb45de8e6fea1ce2608a431b4e03a484592defb1796665530c91386ffac581d3"},
-]
-
-[package.dependencies]
-dask = "2024.12.1"
-pandas = ">=2"
-pyarrow = ">=14.0.1"
-
-[package.extras]
-analyze = ["crick", "distributed", "graphviz"]
+distributed = ["distributed (==2025.1.0)"]
+test = ["pandas[test]", "pre-commit", "pytest", "pytest-cov", "pytest-mock", "pytest-rerunfailures", "pytest-timeout", "pytest-xdist"]
 
 [[package]]
 name = "datashader"
-version = "0.16.3"
+version = "0.17.0"
 description = "Data visualization toolchain based on aggregating into a grid"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 markers = "python_version == \"3.11\" or python_version >= \"3.12\""
 files = [
-    {file = "datashader-0.16.3-py2.py3-none-any.whl", hash = "sha256:90e7425f17b5dc597ab50facca1d16df53c4893708500ad89d4e64b6eb7238aa"},
-    {file = "datashader-0.16.3.tar.gz", hash = "sha256:9d0040c7887f7a5a5edd374c297402fd208a62bf6845e87631b54f03b9ae479d"},
+    {file = "datashader-0.17.0-py3-none-any.whl", hash = "sha256:39421ff999294913e63d41954af955a5dece5d0c55d8fce1426043d70b22d07a"},
+    {file = "datashader-0.17.0.tar.gz", hash = "sha256:571aaea639e62222ba2fc49a530cffb3b1b183b6ec8ca8054978e01d2de79440"},
 ]
 
 [package.dependencies]
 colorcet = "*"
-dask = "*"
 multipledispatch = "*"
 numba = "*"
 numpy = "*"
 packaging = "*"
 pandas = "*"
 param = "*"
-pillow = "*"
 pyct = "*"
 requests = "*"
 scipy = "*"
@@ -918,13 +897,7 @@ toolz = "*"
 xarray = "*"
 
 [package.extras]
-all = ["bokeh (>3.1)", "bokeh-sampledata", "dask-expr", "dask-geopandas", "fastparquet", "geodatasets", "geopandas", "graphviz", "holoviews", "matplotlib (>=3.3)", "nbsite (>=0.8.4,<0.9.0)", "nbval", "netcdf4", "networkx", "numpydoc", "panel (>1.1)", "psutil", "pyarrow", "pytest", "pytest-benchmark", "pytest-cov", "pytest-xdist", "python-graphviz", "python-snappy", "rasterio", "rioxarray", "scikit-image", "shapely (>=2.0.0)", "spatialpandas", "sphinxcontrib-mermaid", "streamz"]
-doc = ["bokeh (>3.1)", "bokeh-sampledata", "dask-geopandas", "fastparquet", "geodatasets", "geopandas", "graphviz", "holoviews", "matplotlib (>=3.3)", "nbsite (>=0.8.4,<0.9.0)", "networkx", "numpydoc", "panel (>1.1)", "python-graphviz", "python-snappy", "rasterio", "scikit-image", "shapely (>=2.0.0)", "spatialpandas", "sphinxcontrib-mermaid", "streamz"]
-examples = ["bokeh (>3.1)", "bokeh-sampledata", "dask-geopandas", "geodatasets", "geopandas", "holoviews", "matplotlib (>=3.3)", "panel (>1.1)", "scikit-image", "shapely (>=2.0.0)", "spatialpandas"]
-examples-extra = ["bokeh (>3.1)", "bokeh-sampledata", "dask-geopandas", "fastparquet", "geodatasets", "geopandas", "graphviz", "holoviews", "matplotlib (>=3.3)", "networkx", "panel (>1.1)", "python-graphviz", "python-snappy", "rasterio", "scikit-image", "shapely (>=2.0.0)", "spatialpandas", "streamz"]
-geopandas = ["dask-geopandas", "geopandas", "shapely (>=2.0.0)"]
-gpu-tests = ["cudf", "cupy", "dask-cudf"]
-tests = ["dask-expr", "dask-geopandas", "geodatasets", "geopandas", "nbval", "netcdf4", "psutil", "pyarrow", "pytest", "pytest-benchmark", "pytest-cov", "pytest-xdist", "rasterio", "rioxarray", "scikit-image", "shapely (>=2.0.0)", "spatialpandas"]
+tests = ["pytest"]
 
 [[package]]
 name = "decorator"
@@ -971,21 +944,21 @@ profile = ["gprof2dot (>=2022.7.29)"]
 
 [[package]]
 name = "distributed"
-version = "2024.12.1"
+version = "2025.1.0"
 description = "Distributed scheduler for Dask"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 markers = "python_version == \"3.11\" or python_version >= \"3.12\""
 files = [
-    {file = "distributed-2024.12.1-py3-none-any.whl", hash = "sha256:87e31abaa0ee3dc517b44fec4993d4b5d92257f926a8d2a12d52c005227154e7"},
-    {file = "distributed-2024.12.1.tar.gz", hash = "sha256:438aa3ae48bfac9c2bb2ad03f9d47899286f9cb3db8a627b3b8c0de9e26f53dd"},
+    {file = "distributed-2025.1.0-py3-none-any.whl", hash = "sha256:0b9c0ebcab8fe25322d71d04deb6d8ed8c7bbfd1521d1906d5d71bf82eee5ae3"},
+    {file = "distributed-2025.1.0.tar.gz", hash = "sha256:8924c49adae0fc8532b464e94bdfea979c08c67835bafb5f315f33cc0ab14dd3"},
 ]
 
 [package.dependencies]
 click = ">=8.0"
 cloudpickle = ">=3.0.0"
-dask = "2024.12.1"
+dask = "2025.1.0"
 jinja2 = ">=2.10.3"
 locket = ">=1.0.0"
 msgpack = ">=1.0.2"
@@ -5062,4 +5035,4 @@ prod = ["gevent", "gunicorn"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11.0,<3.13"
-content-hash = "8fa296d0538d055a66b26cd2ca8106c1a4e42ed62426143a709d8c06206a4f8f"
+content-hash = "e9bc5608e411a3d263088da64101e8c72044ecdf2e4fd5c62dac5771613f0c2b"
