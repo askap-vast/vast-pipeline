@@ -623,7 +623,6 @@ def forced_extraction(
         )
     ).set_index("name")
 
-    images_df.to_parquet('/scratch2/v2.0/forced_images_df_L627.parquet')
     # | name                          |   id     | measurements_path   | path         | noise_path   |
     # |:------------------------------|---------:|:--------------------|:-------------|:-------------|
     # | VAST_2118-06A.EPOCH01.I.fits  | iTsHMUy3 | path/to/file        | path/to/file | path/to/file |
