@@ -22,7 +22,8 @@ from vast_pipeline.utils.utils import (
     StopWatch,
     calculate_workers_and_partitions,
     generate_shortuuid,
-    UUID_LEN_SOURCE
+    UUID_LEN_SOURCE,
+    UUID_LEN_MEAS
 )
 
 
@@ -1315,7 +1316,7 @@ def parallel_association(
     timer = StopWatch()
 
     meta = {
-        "id": "U36",
+        "id": f"U{UUID_LEN_MEAS}",
         "uncertainty_ew": "f",
         "weight_ew": "f",
         "uncertainty_ns": "f",
@@ -1330,9 +1331,9 @@ def parallel_association(
         "compactness": "f",
         "has_siblings": "?",
         "snr": "f",
-        "image": "U36",
+        "image": "U",
         "datetime": "datetime64[ns]",
-        "source": "U36",
+        "source": f"U{UUID_LEN_SOURCE}",
         "ra": "f",
         "dec": "f",
         "d2d": "f",
