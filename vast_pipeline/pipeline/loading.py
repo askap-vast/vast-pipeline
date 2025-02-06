@@ -583,7 +583,7 @@ def SQL_update(
         SET {set_columns}
         FROM (VALUES {values})
         AS new_values (index_col, {new_columns})
-        WHERE {index}=index_col::uuid;
+        WHERE {index}=index_col::char({model._meta.pk.max_length});
     """
 
     return SQL_comm

@@ -17,6 +17,7 @@ from vast_pipeline.pipeline.association import (
     advanced_association,
 )
 
+from vast_pipeline.utils.utils import UUID_LEN_SOURCE
 
 BASE_PATH = Path(__file__).parent
 DATA_PATH = os.path.join(BASE_PATH, 'data')
@@ -134,7 +135,7 @@ class OneToManyBasicTest(SimpleTestCase):
         assert skyc2_srcs['source'].loc[[0, 2, 3]].to_list() == [1, 2, 3]
         for source_id in skyc2_srcs['source'].loc[[1, 4, 5]]:
             assert isinstance(source_id, str)
-            assert len(source_id) == 36
+            assert len(source_id) == UUID_LEN_SOURCE
         assert skyc2_srcs["related"].fillna(-1).to_list() == [
             -1,
             [2],
@@ -147,7 +148,7 @@ class OneToManyBasicTest(SimpleTestCase):
         assert sources_df['source'].loc[[0, 1, 2, 3, 4]].to_list() == [1, 2, 2, 2, 3]
         for source_id in sources_df['source'].loc[[5, 6, 7, 8, 9]]:
             assert isinstance(source_id, str)
-            assert len(source_id) == 36
+            assert len(source_id) == UUID_LEN_SOURCE
 
 
 class OneToManyAdvancedTest(SimpleTestCase):
@@ -250,7 +251,7 @@ class OneToManyAdvancedTest(SimpleTestCase):
         ]
         for source_id in temp_srcs['source_skyc1'].loc[[1, 3, 4]]:
             assert isinstance(source_id, str)
-            assert len(source_id) == 36
+            assert len(source_id) == UUID_LEN_SOURCE
         assert temp_srcs["related_skyc1"].fillna(-1).to_list() == [
             -1,
             [2],
@@ -267,7 +268,7 @@ class OneToManyAdvancedTest(SimpleTestCase):
         ]
         for source_id in sources_df['source'].loc[[5, 6, 7, 8, 9]]:
             assert isinstance(source_id, str)
-            assert len(source_id) == 36
+            assert len(source_id) == UUID_LEN_SOURCE
 
 
     def test_method_deruiter(self):
@@ -310,7 +311,7 @@ class OneToManyAdvancedTest(SimpleTestCase):
         ]
         for source_id in temp_srcs['source_skyc1'].loc[[2, 4, 5]]:
             assert isinstance(source_id, str)
-            assert len(source_id) == 36
+            assert len(source_id) == UUID_LEN_SOURCE
         assert temp_srcs["related_skyc1"].fillna(-1).to_list() == [
             -1,
             [temp_srcs['source_skyc1'].loc[2]],
@@ -327,7 +328,7 @@ class OneToManyAdvancedTest(SimpleTestCase):
         ]
         for source_id in sources_df['source'].loc[[5, 6, 7, 8, 9]]:
             assert isinstance(source_id, str)
-            assert len(source_id) == 36
+            assert len(source_id) == UUID_LEN_SOURCE
 
 
 class ManyToManyAdvancedTest(SimpleTestCase):

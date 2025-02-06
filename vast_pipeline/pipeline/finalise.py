@@ -246,7 +246,7 @@ def final_operations(
 
     # upload sources to DB
     if add_mode:
-        # if add mode is being used some sources need to updated where as some
+        # if add mode is being used some sources need to updated whereas some
         # need to be newly uploaded.
         # upload new ones first
         src_done_mask = srcs_df.index.isin(done_source_ids)
