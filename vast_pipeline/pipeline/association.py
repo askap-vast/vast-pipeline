@@ -620,7 +620,7 @@ def many_to_one_advanced(temp_srcs: pd.DataFrame) -> pd.DataFrame:
     ]
 
     # duplicated_skyc2
-    # NOTE: Source ids are shown as integrs for clarity, they
+    # NOTE: Source ids are shown as integers for clarity, they
     # are UUID strings in the actual dataframe.
     # +-----+-------------------+------------+----------------+
     # |     |   index_old_skyc1 |   id_skyc1 |   source_skyc1 |
