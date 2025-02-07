@@ -32,4 +32,5 @@ dask_config['logging'] = {}
 dask_config['logging']['distributed'] = 'error'
 dask_config['logging']['shuffle'] = 'error'
 
+# Set the new config as default
 dask.config.update_defaults(dask_config)
