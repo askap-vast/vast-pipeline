@@ -5,7 +5,7 @@ import random
 
 from dask.distributed import Client, LocalCluster
 from django.conf import settings as s
-from . import config
+from . import config # noqa: F401
 
 logger = logging.getLogger(__name__)
 

@@ -1,9 +1,8 @@
 import logging
 
 from time import sleep
-from argparse import ArgumentParser
 from vast_pipeline.daskmanager.manager import DaskManager
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 
 
 logger = logging.getLogger(__name__)
