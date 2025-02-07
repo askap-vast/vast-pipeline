@@ -557,7 +557,7 @@ General usage:
 
 ### runlocalcluster
 
-This sets up a Dask LocalCluster using the configuration provided in [`settings.py`](../gettingstarted/configuration.md). It should be run in a separate terminal and it will provide a client which can be connected to by pipeline runs.
+This sets up a Dask `LocalCluster` using the configuration provided in [`settings.py`](../gettingstarted/configuration.md/#dask). It should be run in a separate terminal and it will provide a scheduler which can be connected to by pipeline runs at the IP and port provided in the settings.
 
 
 ```terminal
