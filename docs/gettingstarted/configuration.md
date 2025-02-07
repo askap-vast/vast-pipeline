@@ -144,6 +144,12 @@ Shown below is the [`.env.template`](https://github.com/askap-vast/vast-pipeline
     # TNS_API_KEY= uncomment and fill to use
     # TNS_USER_AGENT= uncomment and fill to use
 
+    # Dask
+    # DASK_SCHEDULER_HOST=fillMeUp
+    # DASK_SCHEDULER_PORT=fillMeUp
+    DASK_NUM_WORKERS=7
+    DASK_THREADS_PER_WORKER=2
+
     # Pipeline
     PIPELINE_WORKING_DIR=pipeline-runs
     FLUX_DEFAULT_MIN_ERROR=0.001
@@ -163,7 +169,7 @@ Shown below is the [`.env.template`](https://github.com/askap-vast/vast-pipeline
     ETA_V_DATASHADER_THRESHOLD=20000
     ```
 
-The available settings are grouped into 4 distinct categories:
+The available settings are grouped into 5 distinct categories:
 
 ### Django
 
@@ -207,6 +213,14 @@ If you wish to enable TNS cone search results on the [source detail page](../exp
         ```console
         TNS_USER_AGENT='tns_marker{"tns_id": 0000, "type": "user", "name": "your_username"}'
         ```
+
+### Dask
+
+These settings control the use of Dask.distributed by the pipeline.
+The `DASK_SCHEDULER_HOST` and `DASK_SCHEDULER_PORT` settings specify the IP and port of the scheduler that the client will connect to. By default this is
+a Dask cluster instance on localhost (`127.0.0.1`) port `8786`. If a Dask cluster doesnt exist, the pipeline will start a Dask `LocalCLuster` at the address.
+The `DASK_NUM_WORKERS` and `DASK_THREADS_PER_WORKER` options control the number of workers and threads used when setting up a `LocalCluster`.
+
 
 ### Pipeline
 
