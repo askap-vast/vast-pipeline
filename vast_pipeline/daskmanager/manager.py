@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 def _start_cluster():
     logger.info('Starting local Dask Cluster')
     cluster = LocalCluster(
-            n_workers=s.DASK_NUM_WORKERS,
+            n_workers=int(s.DASK_NUM_WORKERS),
             threads_per_worker=s.DASK_THREADS_PER_WORKER,
             host=s.DASK_SCHEDULER_HOST,
             scheduler_port=int(s.DASK_SCHEDULER_PORT)
@@ -32,7 +32,7 @@ class Singleton(type):
         return cls._instances[cls]
 
 class DaskManager(metaclass=Singleton):
-    def __init__(self, skip_connect: bool = True):
+    def __init__(self, skip_connect: bool = False):
         if skip_connect:
             self.client = _start_cluster()
         else:
