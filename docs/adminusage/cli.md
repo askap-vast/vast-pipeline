@@ -24,6 +24,7 @@ Output:
   initpiperun
   restorepiperun
   runpipeline
+  runlocalcluster
 
  ...
 ```
@@ -552,4 +553,76 @@ General usage:
 
 ```terminal
 (pipeline_env)$ ./manage.py runpipeline path/to/my_pipe_run
+```
+
+### runlocalcluster
+
+This sets up a Dask `LocalCluster` using the configuration provided in [`settings.py`](../gettingstarted/configuration.md/#dask). It should be run in a separate terminal and it will provide a scheduler which can be connected to by pipeline runs at the IP and port provided in the settings.
+
+
+```terminal
+(pipeline_env)$ ./manage.py runlocalcluster --help
+usage: manage.py runlocalcluster [-h] [--version] [-v {0,1,2,3}] [--settings SETTINGS] [--pythonpath PYTHONPATH] [--traceback] [--no-color] [--force-color]
+                                 [--skip-checks]
+
+Run a Dask LocalCluster
+
+options:
+  -h, --help            show this help message and exit
+  --version             Show program's version number and exit.
+  -v {0,1,2,3}, --verbosity {0,1,2,3}
+                        Verbosity level; 0=minimal output, 1=normal output, 2=verbose output, 3=very verbose output
+  --settings SETTINGS   The Python path to a settings module, e.g. "myproject.settings.main". If this isn't provided, the DJANGO_SETTINGS_MODULE environment
+                        variable will be used.
+  --pythonpath PYTHONPATH
+                        A directory to add to the Python path, e.g. "/home/djangoprojects/myproject".
+  --traceback           Raise on CommandError exceptions.
+  --no-color            Don't colorize the command output.
+  --force-color         Force colorization of the command output.
+  --skip-checks         Skip system checks.
+```
+
+Example usage:
+
+```terminal
+(pipeline_env)$ ./manage.py runlocalcluster
+2025-02-07 03:39:01,631 manager INFO Starting local Dask Cluster
+2025-02-07 03:39:01,641 proxy INFO To route to workers diagnostics web server please install jupyter-server-proxy: python -m pip install jupyter-server-proxy
+2025-02-07 03:39:01,651 scheduler INFO State start
+2025-02-07 03:39:01,653 scheduler INFO   Scheduler at:      tcp://127.0.0.1:8786
+2025-02-07 03:39:01,653 scheduler INFO   dashboard at:  http://127.0.0.1:8787/status
+2025-02-07 03:39:01,653 scheduler INFO Registering Worker plugin shuffle
+2025-02-07 03:39:01,662 nanny INFO         Start Nanny at: 'tcp://127.0.0.1:32981'
+2025-02-07 03:39:01,663 nanny INFO         Start Nanny at: 'tcp://127.0.0.1:36497'
+2025-02-07 03:39:01,665 nanny INFO         Start Nanny at: 'tcp://127.0.0.1:38307'
+2025-02-07 03:39:01,667 nanny INFO         Start Nanny at: 'tcp://127.0.0.1:36967'
+2025-02-07 03:39:01,668 nanny INFO         Start Nanny at: 'tcp://127.0.0.1:44603'
+2025-02-07 03:39:01,669 nanny INFO         Start Nanny at: 'tcp://127.0.0.1:36287'
+2025-02-07 03:39:01,670 nanny INFO         Start Nanny at: 'tcp://127.0.0.1:36365'
+2025-02-07 03:39:02,396 scheduler INFO Register worker addr: tcp://127.0.0.1:37181 name: 3
+2025-02-07 03:39:02,397 scheduler INFO Starting worker compute stream, tcp://127.0.0.1:37181
+2025-02-07 03:39:02,397 core INFO Starting established connection to tcp://127.0.0.1:34130
+2025-02-07 03:39:02,399 scheduler INFO Register worker addr: tcp://127.0.0.1:35695 name: 5
+2025-02-07 03:39:02,399 scheduler INFO Starting worker compute stream, tcp://127.0.0.1:35695
+2025-02-07 03:39:02,399 core INFO Starting established connection to tcp://127.0.0.1:34142
+2025-02-07 03:39:02,400 scheduler INFO Register worker addr: tcp://127.0.0.1:33161 name: 6
+2025-02-07 03:39:02,400 scheduler INFO Starting worker compute stream, tcp://127.0.0.1:33161
+2025-02-07 03:39:02,400 core INFO Starting established connection to tcp://127.0.0.1:34140
+2025-02-07 03:39:02,401 scheduler INFO Register worker addr: tcp://127.0.0.1:38861 name: 0
+2025-02-07 03:39:02,401 scheduler INFO Starting worker compute stream, tcp://127.0.0.1:38861
+2025-02-07 03:39:02,401 core INFO Starting established connection to tcp://127.0.0.1:34150
+2025-02-07 03:39:02,403 scheduler INFO Register worker addr: tcp://127.0.0.1:33649 name: 1
+2025-02-07 03:39:02,404 scheduler INFO Starting worker compute stream, tcp://127.0.0.1:33649
+2025-02-07 03:39:02,404 core INFO Starting established connection to tcp://127.0.0.1:34152
+2025-02-07 03:39:02,413 scheduler INFO Register worker addr: tcp://127.0.0.1:39867 name: 4
+2025-02-07 03:39:02,413 scheduler INFO Starting worker compute stream, tcp://127.0.0.1:39867
+2025-02-07 03:39:02,413 core INFO Starting established connection to tcp://127.0.0.1:34164
+2025-02-07 03:39:02,416 scheduler INFO Register worker addr: tcp://127.0.0.1:45107 name: 2
+2025-02-07 03:39:02,416 scheduler INFO Starting worker compute stream, tcp://127.0.0.1:45107
+2025-02-07 03:39:02,416 core INFO Starting established connection to tcp://127.0.0.1:34168
+2025-02-07 03:39:02,439 scheduler INFO Receive client connection: Client-12c69a28-e505-11ef-99d1-e89c2528e4d6
+2025-02-07 03:39:02,440 core INFO Starting established connection to tcp://127.0.0.1:34184
+2025-02-07 03:39:02,440 manager INFO Connected to local Dask Cluster
+<Client: 'tcp://127.0.0.1:8786' processes=7 threads=14, memory=62.54 GiB>
+Cluster dashboard: http://127.0.0.1:8787
 ```
