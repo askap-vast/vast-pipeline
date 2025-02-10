@@ -221,7 +221,7 @@ These settings control the use of Dask.distributed by the pipeline.
 The `DASK_SCHEDULER_HOST` and `DASK_SCHEDULER_PORT` settings specify the IP and port of the scheduler that the Client will connect to. By default this is
 localhost (`127.0.0.1`) at port `8786`. If a Dask cluster doesnt exist, the pipeline will start a Dask `LocalCLuster` at the given address.
 
-The `DASK_NUM_WORKERS` and `DASK_THREADS_PER_WORKER` settings control the number of workers (default 8) and threads per worker (default 2) that will be initialised used when setting up a `LocalCluster` using `runlocalcluster`.
+The `DASK_NUM_WORKERS` and `DASK_THREADS_PER_WORKER` settings control the number of workers (default 7) and threads per worker (default 2) that will be initialised used when setting up a `LocalCluster` using `runlocalcluster`.
 
 
 ### Pipeline
