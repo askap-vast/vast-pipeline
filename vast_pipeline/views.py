@@ -2044,10 +2044,6 @@ class MeasurementQuery(APIView):
             else:
                 selection_attr = selection_model
                 selection_name = "source__name"
-            try:
-                selection_id = int(selection_id)
-            except ValueError:
-                raise Http404("GET param selection_id must be an integer.")
 
         measurements = (
             Measurement.objects.filter(image=image_id)
