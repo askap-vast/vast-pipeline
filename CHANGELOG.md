@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- V2: Add Dask.distributed support
 - V2: Use `django-postgres-copy` for database uploads [#803](https://github.com/askap-vast/vast-pipeline/pull/803)
 - Added more detailed warnings about the use of Condon Errors throughout the docs and code [#806](https://github.com/askap-vast/vast-pipeline/pull/806)
 - Added processing configuration parameters to the run configuration documentation [#805](https://github.com/askap-vast/vast-pipeline/pull/805)
@@ -45,6 +46,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### List of PRs
 
 - [#809](https://github.com/askap-vast/vast-pipeline/pull/809): fix: Fix missing JS9 overlays on source webpage
+- [#808](https://github.com/askap-vast/vast-pipeline/pull/808): feat: V2: Add DaskManager for setting up a Dask `LocalCluster` using Dask.Distributed.
 - [#803](https://github.com/askap-vast/vast-pipeline/pull/803): feat: V2: Change to UUID indexes and use `django-postgres-copy`.
 - [#792](https://github.com/askap-vast/vast-pipeline/pull/792): fix: Simplify and correct error ellipse calculation.
 - [#801](https://github.com/askap-vast/vast-pipeline/pull/801): docs, dep: v2: Updated docs dependencies and fixed outdated information and various warnings
