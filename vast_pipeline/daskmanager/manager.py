@@ -46,16 +46,14 @@ class DaskManager(metaclass=Singleton):
             except Exception:
                 logger.warning('Could not connect to Dask Cluster')
                 self.client = _start_cluster()
+        
+        self.num_workers = len(self.client.scheduler_info()['workers'].keys())
 
     def persist(self, collection):
         return self.client.persist(collection)
 
     def compute(self, collection, **kwargs):
         return self.client.compute(collection, **kwargs)
-
-    def get_nr_workers(self):
-        """Number of workers in the cluster"""
-        return len(self.client.scheduler_info()['workers'].keys())
     
     def get_n_random_workers(self, n):
         """Return n random workers from the pool"""

@@ -1179,7 +1179,7 @@ def group_skyregions(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def get_parallel_assoc_image_df(
-    images: List[Image], skyregion_groups: pd.DataFrame
+    images: List[Image], skyregion_groups: pd.DataFrame, image_epochs: List
 ) -> pd.DataFrame:
     """
     Merge the sky region groups with the images and skyreg_ids.
@@ -1196,6 +1196,8 @@ def get_parallel_assoc_image_df(
             |  kbr4Tmyw |              1 |
             |  ntEvPoTZ |              2 |
             +-----------+----------------+
+        image_epochs:
+            The epochs associated with each image.
 
     Returns:
         Dataframe containing the merged images and skyreg_id and skyreg_group
@@ -1220,16 +1222,15 @@ def get_parallel_assoc_image_df(
         {
             "image_dj": images,
             "skyreg_id": skyreg_ids,
+            "image_name": image_names,
+            "image_datetime": image_datetimes,
+            "epoch": image_epochs,
         }
     )
 
     images_df = images_df.merge(
         skyregion_groups, how="left", left_on="skyreg_id", right_index=True
     )
-
-    images_df["image_name"] = images_df["image_dj"].apply(lambda x: x.name)
-
-    images_df["image_datetime"] = images_df["image_dj"].apply(lambda x: x.datetime)
 
     return images_df
 
@@ -1723,8 +1724,15 @@ def get_df_memory_usage(df: pd.DataFrame) -> float:
         df: The pandas dataframe to calculate the memory usage of.
 
     Returns:
-        The pandas dataframe memory usage in MB
+        The dataframe memory usage in MB
     """
-    mem = df.memory_usage(deep=True).sum() / 1e6
 
-    return mem
+    # Check if we are a Pandas or Dask dataframe
+    if type(df) is dd.DataFrame:
+        mem = df.memory_usage(deep=True).sum().compute()
+    else:
+        mem = df.memory_usage(deep=True).sum()
+
+    mem_usage_mb = mem / 1e6
+
+    return mem_usage_mb

@@ -416,7 +416,9 @@ def calculate_n_partitions(
     Returns:
         The optimal number of partitions.
     """
-    mem_usage_mb = df.memory_usage(deep=True).sum() / 1e6
+
+    # Check if we are a pandas or dask dataframe
+    mem_usage_mb = get_df_memory_usage(df)
     n_partitions = int(np.ceil(mem_usage_mb / partition_size_mb))
 
     # n_partitions should be >= n_cpu for optimal parallel processing
