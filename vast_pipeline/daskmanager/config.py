@@ -15,8 +15,8 @@ dask_config['distributed']['worker']['preload'].append(worker_init_file_path)
 dask_config['dataframe']['convert-string'] = False
 
 # Memory configuration for workers
-dask_config['distributed']['worker']['memory']['spill'] = 0.9
-dask_config['distributed']['worker']['memory']['target'] = 0.8
+dask_config['distributed']['worker']['memory']['spill'] = False
+dask_config['distributed']['worker']['memory']['target'] = False
 dask_config['distributed']['worker']['memory']['terminate'] = False
 dask_config['distributed']['worker']['memory']['pause'] = False
 
