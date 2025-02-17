@@ -16,6 +16,7 @@ import pandas as pd
 from django.conf import settings
 from django.db import transaction
 
+from vast_pipeline.daskmanager.manager import DaskManager
 from vast_pipeline.models import Run
 from vast_pipeline.pipeline.utils import add_run_to_img
 from .association import association, parallel_association
@@ -58,7 +59,8 @@ class Pipeline:
     """
 
     def __init__(self, name: str, config_path: str,
-                 validate_config: bool = True):
+                 validate_config: bool = True,
+                 skip_connect: bool = False):
         """Initialise an instance of Pipeline with a name and configuration
         file path.
 
@@ -80,6 +82,9 @@ class Pipeline:
         self.img_epochs: Dict[str, str] = {}  # maps image names to their provided epoch
         self.add_mode: bool = False
         self.previous_parquets: Dict[str, str]
+
+        # Connect to the DaskCluster if available
+        self.dm: DaskManager = DaskManager(skip_connect=skip_connect)
 
     def match_images_to_data(self) -> None:
         """

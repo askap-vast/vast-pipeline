@@ -41,7 +41,7 @@ def run_pipe(
     name: str, path_name: Optional[str] = None,
     run_dj_obj: Optional[Run] = None, cli: bool = True,
     debug: bool = False, user: Optional[User] = None, full_rerun: bool = False,
-    prev_ui_status: str = 'END'
+    prev_ui_status: str = 'END', skip_connect: bool = False
 ) -> bool:
     '''
     Main function to run the pipeline.
@@ -67,6 +67,8 @@ def run_pipe(
             will remove and replace all the previous results.
         prev_ui_status:
             The previous status through the UI. Defaults to 'END'.
+        skip_connect:
+            Whether to skip trying to connect to Dask LocalCluster.
 
     Returns:
         Boolean equal to `True` on a successful completion.
@@ -94,6 +96,7 @@ def run_pipe(
         name=run_dj_obj.name if run_dj_obj else name,
         config_path=os.path.join(path, 'config.yaml'),
         validate_config=False,  # delay validation
+        skip_connect=skip_connect,
     )
 
     # Create the pipeline run in DB
@@ -412,6 +415,17 @@ class Command(BaseCommand):
                 ' Old data is completely removed and replaced.')
         )
 
+        parser.add_argument(
+            '--skip-connect',
+            required=False,
+            default=False,
+            action='store_true',
+            help=(
+                'Skip trying to connect to a Dask LocalCluster and '
+                'instantiate one for the life of this pipeline run.'
+            )
+        )
+
     def handle(self, *args: str, **options: str) -> None:
         """
         Handle function of the command.
@@ -456,6 +470,7 @@ class Command(BaseCommand):
             path_name=run_folder,
             debug=debug_flag,
             full_rerun=options["full_rerun"],
+            skip_connect=options["skip_connect"]
         )
 
         self.stdout.write(self.style.SUCCESS('Finished'))
