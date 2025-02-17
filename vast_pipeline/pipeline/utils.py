@@ -718,40 +718,42 @@ def calc_ave_coord(grp: pd.DataFrame) -> pd.Series:
     return pd.Series(d)
 
 
-def parallel_groupby_coord(df: pd.DataFrame, n_cpu: int = 0, max_partition_mb: int = 15) -> pd.DataFrame:
-    """
-    This function uses Dask to perform the average coordinate and unique image
-    and epoch lists calculation. The result from the Dask compute is returned
-    which is a dataframe containing the results for each source.
+def parallel_groupby_coord(df: dd.DataFrame,) -> pd.DataFrame:
+    """Calculate the weighted average RA and Dec of the sources.
+
+    NOTE: Sergio had the idea to persist the dataframe result and keep it in the
+    cluster. However since then the ideal image method uses the astropy match sky
+    method which relies on being able to iloc the dataframe. This would be really
+    difficult to do with a persisted dataframe. So it is computed.
 
     Args:
-        df: The sources dataframe produced by the pipeline.
-        n_cpu: The desired number of workers for Dask
-        max_partition_mb: The desired maximum size (in MB) of the partitions for Dask.
+        df: The sources dataframe.
 
     Returns:
         The resulting average coordinate values and unique image and epoch
             lists for each unique source (group).
     """
-    col_dtype = {
-        "img_list": "O",
-        "epoch_list": "O",
-        "wavg_ra": "f",
-        "wavg_dec": "f",
-    }
-    n_workers, n_partitions = calculate_workers_and_partitions(
-        df,
-        n_cpu=n_cpu,
-        max_partition_mb=max_partition_mb)
-    logger.debug(f"Running association with {n_workers} CPUs")
+    cols = [
+        'source', 'image', 'epoch', 'interim_ew', 'weight_ew', 'interim_ns', 'weight_ns'
+    ]
+    cols_to_sum = ['interim_ew', 'weight_ew', 'interim_ns', 'weight_ns']
+    aggregations = {'interim_ew': 'sum',
+                    'weight_ew': 'sum',
+                    'interim_ns': 'sum',
+                    'weight_ns': 'sum',
+                    'image': list,
+                    'epoch': list}
 
-    out = dd.from_pandas(df.set_index('source'), npartitions=n_partitions)
-    out = (
-        out.groupby("source")
-        .apply(calc_ave_coord, meta=col_dtype)
-        .compute(num_workers=n_workers, scheduler='processes')
-    )
+    groups = df[cols].set_index('source').groupby('source')
+    out = groups.agg(aggregations)
+    out['wavg_ra'] = out['interim_ew'] / out['weight_ew']
+    out['wavg_dec'] = out['interim_ns'] / out['weight_ns']
+    out = out.drop(cols_to_sum, axis=1).rename(columns={'image': 'img_list', 'epoch': 'epoch_list'})
 
+    # Do the aggregations now.
+    out = out.compute()
+
+    del groups
     return out
 
 
@@ -801,13 +803,8 @@ def get_image_list_diff(row: pd.Series) -> Union[List[str], int]:
 
     Returns:
         A list of the images missing from the observed image list.
-        A '-1' integer value if there are no missing images.
     """
     out = list(filter(lambda arg: arg not in row["img_list"], row["skyreg_img_list"]))
-
-    # set empty list to -1
-    if not out:
-        return -1
 
     # Check that an epoch has not already been seen (just not in the 'ideal'
     # image)
@@ -822,9 +819,6 @@ def get_image_list_diff(row: pd.Series) -> Union[List[str], int]:
         for pair in enumerate(out_epochs)
         if pair[1] not in row["epoch_list"]
     ]
-
-    if not out:
-        return -1
 
     return out
 
@@ -877,8 +871,7 @@ def check_primary_image(row: pd.Series) -> bool:
 
 
 def get_src_skyregion_merged_df(
-    sources_df: pd.DataFrame, images_df: pd.DataFrame, skyreg_df: pd.DataFrame,
-    n_cpu: int = 0, max_partition_mb: int = 15
+    sources_df: dd.DataFrame, images_df: pd.DataFrame, skyreg_df: pd.DataFrame
 ) -> pd.DataFrame:
     """
     Analyses the current sources_df to determine what the 'ideal coverage'
@@ -895,10 +888,6 @@ def get_src_skyregion_merged_df(
         skyreg_df:
             Contains the sky regions of the pipeline run. I.e. all
             sky region objects for the run loaded into a dataframe.
-        n_cpu:
-            The desired number of workers for Dask
-        max_partition_mb:
-            The desired maximum size (in MB) of the partitions for Dask.
 
     Returns:
         DataFrame containing missing image information (see source code for
@@ -947,21 +936,15 @@ def get_src_skyregion_merged_df(
 
     skyreg_df = skyreg_df.drop(["x", "y", "z", "width_ra", "width_dec"], axis=1)
 
-    images_df["name"] = images_df["image_dj"].apply(lambda x: x.name)
-    images_df["datetime"] = images_df["image_dj"].apply(lambda x: x.datetime)
-
     skyreg_df = skyreg_df.join(
         pd.DataFrame(images_df.groupby("skyreg_id").apply(get_names_and_epochs)),
         on="id",
     )
 
-    sources_df = sources_df.sort_values(by="datetime")
     # calculate some metrics on sources
     # compute only some necessary metrics in the groupby
     timer = StopWatch()
-    srcs_df = parallel_groupby_coord(sources_df,
-                                     n_cpu=n_cpu,
-                                     max_partition_mb=max_partition_mb)
+    srcs_df = parallel_groupby_coord(sources_df)
     logger.debug('Groupby-apply time: %.2f seconds', timer.reset())
 
     del sources_df
@@ -971,8 +954,8 @@ def get_src_skyregion_merged_df(
         ra=skyreg_df.centre_ra, dec=skyreg_df.centre_dec, unit="deg"
     )
     srcs_coords = SkyCoord(
-        ra=srcs_df.wavg_ra,
-        dec=srcs_df.wavg_dec,
+        ra=srcs_df["wavg_ra"],
+        dec=srcs_df["wavg_dec"],
         unit="deg")
     skyreg_idx, srcs_idx, sep, _ = srcs_coords.search_around_sky(
         skyreg_coords, skyreg_df.xtr_radius.max() * u.deg
@@ -1034,7 +1017,7 @@ def get_src_skyregion_merged_df(
         ["img_list", "skyreg_img_list", "epoch_list", "skyreg_epoch"]
     ].apply(get_image_list_diff, axis=1)
 
-    srcs_df = srcs_df.loc[srcs_df["img_diff"] != -1]
+    srcs_df = srcs_df.loc[srcs_df["img_diff"].apply(len) > 0]
 
     srcs_df = srcs_df.drop(["epoch_list", "skyreg_epoch"], axis=1)
 

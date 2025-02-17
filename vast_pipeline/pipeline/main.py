@@ -13,6 +13,8 @@ from astropy.coordinates import Angle
 
 import pandas as pd
 
+from dask.distributed import wait
+
 from django.conf import settings
 from django.db import transaction
 
@@ -248,7 +250,7 @@ class Pipeline:
 
         # Obtain the number of selavy measurements for the run
         # n_selavy_measurements = sources_df.
-        nr_selavy_measurements = sources_df["id"].unique().shape[0]
+        nr_selavy_measurements = sources_df["id"].unique().compute().shape[0]
 
         # STEP #3: Merge sky regions and sources ready for
         # steps 4 and 5 below.
@@ -265,13 +267,24 @@ class Pipeline:
         # need to make sure no forced measurments are being passed which
         # could happen in add mode, otherwise the wrong detection image is
         # assigned.
+        images_df = images_df.drop(columns=["image_dj"]).rename(columns={'image_name': 'name', 'image_datetime': 'datetime'})
+        unforced_df = sources_df.loc[sources_df["forced"] == False, missing_source_cols]
         missing_sources_df = get_src_skyregion_merged_df(
-            sources_df.loc[sources_df["forced"] == False, missing_source_cols],
+            unforced_df,
             images_df,
             skyregs_df,
-            n_cpu=self.config['processing']['num_workers'],
-            max_partition_mb=self.config['processing']['max_partition_mb']
         )
+        del images_df
+        del unforced_df
+        # Make missing sources into Dask dataframe
+        # NOTE: This would not be necessary if the get_src_skyregion_merged_df
+        # function was improved to use Dask. (See NOTE in parallel_groupby function.)
+        npartitions = calculate_n_partitions(missing_sources_df, n_cpu=self.dm.num_workers, partition_size_mb=15)
+        missing_sources_df = dd.from_pandas(
+            missing_sources_df,
+            npartitions=npartitions
+        )
+        wait(missing_sources_df)
 
         # STEP #4 New source analysis
         new_sources_df = new_sources(
