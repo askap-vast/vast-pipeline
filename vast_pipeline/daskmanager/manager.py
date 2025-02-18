@@ -57,7 +57,7 @@ class DaskManager(metaclass=Singleton):
     
     def get_n_random_workers(self, n):
         """Return n random workers from the pool"""
-        return random.sample(self.client.scheduler_info()['workers'], n)
+        return random.sample(list(self.client.scheduler_info()['workers'].keys()), n)
 
     def restart(self):
         """Restart the cluster and flush all memory"""
