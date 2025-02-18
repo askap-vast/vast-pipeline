@@ -7,8 +7,9 @@ import os
 import logging
 import shutil
 import shortuuid
-
 import math as m
+
+import dask.dataframe as dd
 import numpy as np
 import pandas as pd
 
@@ -19,7 +20,6 @@ from psutil import cpu_count
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Longitude, Latitude
-
 
 logger = logging.getLogger(__name__)
 
@@ -418,7 +418,13 @@ def calculate_n_partitions(
     """
 
     # Check if we are a pandas or dask dataframe
-    mem_usage_mb = get_df_memory_usage(df)
+    if type(df) is dd.DataFrame:
+        mem = df.memory_usage(deep=True).sum().compute()
+    else:
+        mem = df.memory_usage(deep=True).sum()
+
+    mem_usage_mb = mem / 1e6
+
     n_partitions = int(np.ceil(mem_usage_mb / partition_size_mb))
 
     # n_partitions should be >= n_cpu for optimal parallel processing
