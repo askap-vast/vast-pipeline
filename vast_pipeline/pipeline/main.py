@@ -13,6 +13,7 @@ from astropy.coordinates import Angle
 
 import pandas as pd
 
+from dask import dataframe as dd
 from dask.distributed import wait
 
 from django.conf import settings
@@ -20,7 +21,7 @@ from django.db import transaction
 
 from vast_pipeline.daskmanager.manager import DaskManager
 from vast_pipeline.models import Run
-from vast_pipeline.pipeline.utils import add_run_to_img
+from vast_pipeline.utils.utils import calculate_n_partitions
 from .association import association, parallel_association
 from .config import PipelineConfig
 from .new_sources import new_sources
@@ -33,7 +34,8 @@ from .utils import (
     get_parallel_assoc_image_df,
     write_parquets,
     get_df_memory_usage,
-    log_total_memory_usage
+    log_total_memory_usage,
+    add_run_to_img
 )
 
 from .errors import MaxPipelineRunsError
@@ -212,7 +214,6 @@ class Pipeline:
                 self.previous_parquets,
                 done_images_df,
                 done_source_ids,
-                self.dm
             )
         else:
             images_df = pd.DataFrame.from_dict(
@@ -237,12 +238,14 @@ class Pipeline:
                 done_images_df,
             )
             # Scatter sources_df to the cluster
-            npartitions = calculate_n_partitions(n_cpu=self.dm.num_workers,
+            npartitions = calculate_n_partitions(sources_df,
+                                                 n_cpu=self.dm.num_workers,
                                                  partition_size_mb=15)
             sources_df = dd.from_pandas(
                 sources_df,
                 npartitions=npartitions
             )
+            wait(sources_df)
 
         mem_usage = get_df_memory_usage(sources_df)
         logger.debug(f"Step 2: sources_df memory usage: {mem_usage}MB")
@@ -276,6 +279,7 @@ class Pipeline:
         )
         del images_df
         del unforced_df
+
         # Make missing sources into Dask dataframe
         # NOTE: This would not be necessary if the get_src_skyregion_merged_df
         # function was improved to use Dask. (See NOTE in parallel_groupby function.)
@@ -293,8 +297,7 @@ class Pipeline:
             self.config["new_sources"]["min_sigma"],
             self.config["source_monitoring"]["edge_buffer_scale"],
             p_run,
-            n_cpu=self.config['processing']['num_workers_io'],
-            max_partition_mb=self.config['processing']['max_partition_mb']
+            self.dm.get_n_random_workers(self.config['processing']['num_workers_io']),
         )
 
         # Drop column no longer required in missing_sources_df.

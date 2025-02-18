@@ -3,12 +3,17 @@ import pandas as pd
 import numpy as np
 import dask.dataframe as dd
 
+from typing import Dict, Union, List
+
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.wcs.utils import (
     proj_plane_pixel_scales
 )
+from dask.delayed import delayed
+from dask.distributed import wait
 
 from vast_pipeline.models import Image, Run
 
@@ -50,24 +55,58 @@ def gen_array_coords_from_wcs(coords: SkyCoord, wcs: WCS) -> np.ndarray:
             coordinates, e.g.:
             np.array([[x1, x2, x3], [y1, y2, y3]])
     """
-    array_coords = wcs.world_to_array_index(coords)
-    array_coords = np.array([
-        np.array(array_coords[0]),
-        np.array(array_coords[1]),
-    ])
+    array_coords = np.array(wcs.world_to_array_index(coords), dtype=np.int32)
 
     return array_coords
 
 
-def get_image_rms_measurements(
-    group: pd.DataFrame, nbeam: int = 3, edge_buffer: float = 1.0
-) -> pd.DataFrame:
-    """
-    Take the coordinates provided from the group
-    and measure the array cell value in the provided image.
+def get_coord_array(df: pd.DataFrame) -> SkyCoord:
+    """Get the skycoords from a given dataframe.
+
+    Expects the dataframe to have the columns 'wavg_ra' and 'wavg_dec'.
 
     Args:
-        group:
+        df: The dataframe containing the coordinates.
+
+    Returns:
+        The SkyCoord object containing the coordinates.
+    """
+    coords = SkyCoord(
+        df['wavg_ra'].values,
+        df['wavg_dec'].values,
+        unit=(u.deg, u.deg)
+    )
+
+    return coords
+
+
+def extract_data_from_img(image: str) -> Dict[str, Union[np.ndarray, WCS, fits.Header]]:
+    """Extracts the data, wcs and header from a fits image.
+
+    Args:
+        image: The path to the fits image.
+
+    Returns:
+        Dictionary containing the data, wcs and header of the image.
+    """
+    with open_fits(image) as hdul:
+        header = hdul[0].header
+        bmaj = header['bmaj']
+        wcs = WCS(header, naxis=2)
+        data = hdul[0].data.squeeze().astype(np.float32)
+
+    return {'data': data, 'wcs': wcs, 'bmaj': bmaj}
+
+
+def get_image_rms_measurements(
+    df: pd.DataFrame, nbeam: int = 3, edge_buffer: float = 1.0
+) -> pd.DataFrame:
+    """
+    Take the coordinates provided in df and measure the array
+    cell values in the provided image.
+
+    Args:
+        df:
             The group of sources to measure in the image, requiring the
             columns: 'source', 'wavg_ra', 'wavg_dec' and 'img_diff_rms_path'.
         nbeam:
@@ -77,37 +116,41 @@ def get_image_rms_measurements(
             Multiplicative factor applied to nbeam to act as a buffer.
 
     Returns:
-        The group dataframe with the 'img_diff_true_rms' column added. The
-            column will contain 'NaN' entires for sources that fail.
+        A dataframe containing 'source' and 'true_rms' columns.
+        'true_rms' will contain 'NaN' entires for sources that fail.
     """
-    if len(group) == 0:
+
+    if len(df) == 0:
         # input dataframe is empty, nothing to do
         logger.debug(f"No image RMS measurements to get, returning")
-        return group
-    image = group.iloc[0]['img_diff_rms_path']
+        return pd.DataFrame({'source': [], 'true_sigma': []})
 
-    logger.debug(f"{image} - num. meas. to get: {len(group)}")
-    partition_mem = get_df_memory_usage(group)
-    logger.debug(f"{image} - partition memory usage: {partition_mem}MB")
+    # Ensure there is only one image in the df
+    image = df['img_diff_rms_path'].unique()
+    assert len(image) == 1
+    image = image[0]
+
+    logger.debug("%s - num. meas. to get: %d", image, len(df))
+    partition_mem = get_df_memory_usage(df)
+    logger.debug("%s - partition memory usage: %.3fMB", image, partition_mem)
 
     get_rms_timer = StopWatch()
+    # Get image data from df
+    image_data = extract_data_from_img(image)
+    logger.debug("%s - Time to load fits: %.3fs", image, get_rms_timer.reset())
 
-    with open_fits(image) as hdul:
-        header = hdul[0].header
-        wcs = WCS(header, naxis=2)
-        data = hdul[0].data.squeeze()
-
-    logger.debug(f"{image} - Time to load fits: {get_rms_timer.reset()}s")
+    # Get coordinates from df
+    coords = get_coord_array(df)
 
     # Here we mimic the forced fits behaviour,
     # sources within 3 half BMAJ widths of the image
     # edges are ignored. The user buffer is also
     # applied for consistency.
     pixelscale = (
-        proj_plane_pixel_scales(wcs)[1] * u.deg
+        proj_plane_pixel_scales(image_data["wcs"])[1] * u.deg
     ).to(u.arcsec)
 
-    bmaj = header["BMAJ"] * u.deg
+    bmaj = image_data["bmaj"] * u.deg
 
     npix = round(
         (nbeam / 2. * bmaj.to('arcsec') /
@@ -115,21 +158,16 @@ def get_image_rms_measurements(
     )
 
     npix = int(round(npix * edge_buffer))
-
-    coords = SkyCoord(
-        group.wavg_ra, group.wavg_dec, unit=(u.deg, u.deg)
-    )
-
-    array_coords = gen_array_coords_from_wcs(coords, wcs)
+    array_coords = gen_array_coords_from_wcs(coords, image_data['wcs'])
 
     # check for pixel wrapping
     x_valid = np.logical_or(
-        array_coords[0] >= (data.shape[0] - npix),
+        array_coords[0] >= (image_data['data'].shape[0] - npix),
         array_coords[0] < npix
     )
 
     y_valid = np.logical_or(
-        array_coords[1] >= (data.shape[1] - npix),
+        array_coords[1] >= (image_data['data'].shape[1] - npix),
         array_coords[1] < npix
     )
 
@@ -137,27 +175,8 @@ def get_image_rms_measurements(
         x_valid, y_valid
     )
 
-    valid_indexes = group[valid].index.values
-
-    group = group.loc[valid_indexes]
-
-    if group.empty:
-        # early return if all sources failed range check
-        logger.debug(
-            'All sources out of range in new source rms measurement'
-            f' for image {image}.'
-        )
-        group['img_diff_true_rms'] = np.nan
-        return group
-
     # Now we also need to check proximity to NaN values
     # as forced fits may also drop these values
-    coords = SkyCoord(
-        group.wavg_ra, group.wavg_dec, unit=(u.deg, u.deg)
-    )
-
-    array_coords = gen_array_coords_from_wcs(coords, wcs)
-
     acceptable_no_nan_dist = int(
         round(bmaj.to('arcsec').value / 2. / pixelscale.value)
     )
@@ -165,39 +184,37 @@ def get_image_rms_measurements(
     nan_valid = []
 
     # Get slices of each source and check NaN is not included.
-    for i, j in zip(array_coords[0], array_coords[1]):
+    for i,j in zip(array_coords[0][valid], array_coords[1][valid]):
         sl = tuple((
             slice(i - acceptable_no_nan_dist, i + acceptable_no_nan_dist),
             slice(j - acceptable_no_nan_dist, j + acceptable_no_nan_dist)
         ))
-        if np.any(np.isnan(data[sl])):
+        if np.any(np.isnan(image_data["data"][sl])):
             nan_valid.append(False)
         else:
             nan_valid.append(True)
 
-    valid_indexes = group[nan_valid].index.values
+    valid[valid] = nan_valid
 
-    if np.any(nan_valid):
-        # only run if there are actual values to measure
-        rms_values = data[
-            array_coords[0][nan_valid],
-            array_coords[1][nan_valid]
-        ]
+    # Create the column data, not matched ones will be NaN.
+    rms_values = np.zeros_like(valid, dtype=np.float32)
 
-        # not matched ones will be NaN.
-        group.loc[
-            valid_indexes, 'img_diff_true_rms'
-        ] = rms_values.astype(np.float64) * 1.e3
+    if np.any(valid):
+        rms_values[valid] = image_data['data'][
+            array_coords[0][valid],
+            array_coords[1][valid]
+        ].astype(np.float32) * 1.e3
 
-    else:
-        group['img_diff_true_rms'] = np.nan
+    # Get the columns of returned DataFrame
+    rms_mask = rms_values > 0.
+    source = df['source'].values[rms_mask]
+    true_sigma = df['flux_peak'].values[rms_mask]/rms_values[rms_mask]
 
-    return group
+    return pd.DataFrame({'source': source, 'true_sigma': true_sigma})
 
 
 def parallel_get_new_high_sigma(
-    df: pd.DataFrame, edge_buffer: float = 1.0,
-    n_cpu: int = 0, max_partition_mb: int = 15
+    df: dd.DataFrame, io_workers: List[str], edge_buffer: float = 1.0,
 ) -> pd.DataFrame:
     """
     Wrapper function to use 'get_image_rms_measurements' in parallel with Dask
@@ -208,98 +225,52 @@ def parallel_get_new_high_sigma(
     Args:
         df:
             The group of sources to measure in the images.
+        io_workers:
+            List of worker addresses to use for `finalise_rms_calcs`
+            This is likely the output of `DaskManager.get_n_random_workers()`
         edge_buffer:
             Multiplicative factor to be passed to the
             'get_image_rms_measurements' function.
-        n_cpu:
-            The desired number of workers for Dask
-        max_partition_mb:
-            The desired maximum size (in MB) of the partitions for Dask.
-
 
     Returns:
-        The original input dataframe with the 'img_diff_true_rms' column
-            added. The column will contain 'NaN' entires for sources that fail.
+        A DataFrame indexed by source id and containing a single 'new_high_sigma' column.
+        The column will contain 'NaN' entires for sources that fail.
     """
 
-    out = df[[
-        'source', 'wavg_ra', 'wavg_dec',
-        'img_diff_rms_path'
-    ]]
-
-    col_dtype = {
-        'source': 'i',
-        'wavg_ra': 'f',
-        'wavg_dec': 'f',
-        'img_diff_rms_path': 'U',
-        'img_diff_true_rms': 'f',
-    }
-
-    n_workers, n_partitions = calculate_workers_and_partitions(
-        out,
-        n_cpu=n_cpu,
-        max_partition_mb=max_partition_mb
+    # Get a list of input images.
+    uniq_img_diff = (
+        df['img_diff_rms_path'].unique()
+        .compute()
+        .to_list()
     )
-    logger.debug(f"Running get_image_rms_measurements with {n_workers} CPUs")
+
+    cols = ['img_diff_rms_path', 'flux_peak', 'source', 'wavg_ra', 'wavg_dec']
     
-    out = (
-        dd.from_pandas(out, npartitions=n_partitions)
-        .groupby('img_diff_rms_path')
-        .apply(
-            get_image_rms_measurements,
-            edge_buffer=edge_buffer,
-            meta=col_dtype
-        ).compute(num_workers=n_workers, scheduler='processes')
-    )
+    # Generate a delayed dataframe of sources for each image in uniq_img_diff
+    df_generator = lambda element, df: df[df['img_diff_rms_path'] == element]
+    df_per_img_rms = [delayed(df_generator)(elem, df[cols]) for elem in uniq_img_diff]
 
-    df_to_merge = (df.drop_duplicates('source')
-                   .drop(['img_diff_rms_path'], axis=1)
-                   )
+    # Do the rms calculations per rms image only using the subset of workers for IO
+    out = [delayed(get_image_rms_measurements)(rms_df, edge_buffer=edge_buffer) for rms_df in df_per_img_rms]
+    out = dd.from_delayed(out).persist(workers=io_workers)
 
-    out_to_merge = (out.sort_values(
-        by=['source', 'img_diff_true_rms'], ascending=True
-    )
-        .drop_duplicates('source')
-    )
+    # Remove duplicate sources and only keep high sigma
+    out = out.sort_values('true_sigma', ascending=True) \
+             .drop_duplicates('source', keep='last') \
+             .rename(columns={'true_sigma': 'new_high_sigma'}) \
+             .set_index('source') \
+             .persist()
 
-    new_sources_df = df_to_merge.merge(
-        out_to_merge[['source', 'img_diff_true_rms']],
-        left_on='source', right_on='source',
-        how='left'
-    )
-    
-    # this removes those that are out of range
-    new_sources_df['img_diff_true_rms'] = (
-        new_sources_df['img_diff_true_rms'].fillna(0.)
-    )
-    new_sources_df = new_sources_df[
-        new_sources_df['img_diff_true_rms'] > 0
-    ]
+    # Wait for delayed computations to finish.
+    wait(out)
+    del df_per_img_rms
 
-    # calculate the true sigma
-    new_sources_df['true_sigma'] = (
-        new_sources_df['flux_peak'].values
-        / new_sources_df['img_diff_true_rms'].values
-    )
-
-    # keep only the highest for each source, rename for the daatabase
-    new_sources_df = (
-        new_sources_df
-        .set_index('source')
-        .rename(columns={'true_sigma': 'new_high_sigma'})
-    )
-
-    # moving forward only the new_high_sigma columns is needed, drop all
-    # others.
-    new_sources_df = new_sources_df[['new_high_sigma']]
-
-    return new_sources_df
+    return out
 
 
 def new_sources(
-    sources_df: pd.DataFrame, missing_sources_df: pd.DataFrame,
-    min_sigma: float, edge_buffer: float, p_run: Run, n_cpu: int = 5,
-    max_partition_mb: int = 15
+    sources_df: dd.DataFrame, missing_sources_df: dd.DataFrame,
+    min_sigma: float, edge_buffer: float, p_run: Run, io_workers: List[str]
 ) -> pd.DataFrame:
     """
     Processes the new sources detected to check that they are valid new
@@ -321,35 +292,13 @@ def new_sources(
             'get_image_rms_measurements' function.
         p_run:
             The pipeline run.
-        n_cpu:
-            The desired number of workers for Dask
-        max_partition_mb:
-            The desired maximum size (in MB) of the partitions for Dask.
+        io_workers:
+            List of worker addresses to use for `finalise_rms_calcs`
+            This is likely the output of `DaskManager.get_n_random_workers()`
 
     Returns:
-        The original input dataframe with the 'img_diff_true_rms' column
-            added. The column will contain 'NaN' entires for sources that fail.
-            Columns:
-                source - source id, int.
-                img_list - list of images, List.
-                wavg_ra - weighted average RA, float.
-                wavg_dec - weighted average Dec, float.
-                skyreg_img_list - list of sky regions of images in img_list,
-                    List.
-                img_diff - The images missing from coverage, List.
-                primary - What should be the first image, str.
-                detection - The first detection image, str.
-                detection_time - Datetime of detection, datetime.datetime.
-                img_diff_time - Datetime of img_diff list, datetime.datetime.
-                img_diff_rms_min - Minimum rms of diff images, float.
-                img_diff_rms_median - Median rms of diff images, float.
-                img_diff_rms_path - rms path of diff images, str.
-                flux_peak - Flux peak of source (detection), float.
-                diff_sigma - SNR in differnce images (compared to minimum),
-                    float.
-                img_diff_true_rms - The true rms value from the diff images,
-                    float.
-                new_high_sigma - peak flux / true rms value, float.
+        A DataFrame indexed by source id and containing a single 'new_high_sigma' column.
+        The column will contain 'NaN' entires for sources that fail.
     """
     # Missing sources df layout
     # +----------------+----------------------------------+-----------+------------+
@@ -435,10 +384,6 @@ def new_sources(
         'noise_path': 'img_diff_rms_path'
     })
 
-    logger.debug(f"Time to reset & merge image info into new_sources_df: "
-                 f"{debug_timer.reset()}s"
-                 )
-
     # Select only those images that come before the detection image
     # in time.
     new_sources_df = new_sources_df[
@@ -446,13 +391,20 @@ def new_sources(
     ]
 
     # merge the detection fluxes in
-    new_sources_df = pd.merge(
-        new_sources_df, sources_df[['source', 'image', 'flux_peak']],
+    new_sources_df = new_sources_df.merge(
+        sources_df[['source', 'image', 'flux_peak']],
         left_on=['source', 'detection'], right_on=['source', 'image'],
         how='left'
     ).drop(columns=['image'])
 
-    logger.debug(f"Time to merge detection fluxes into new_sources_df: "
+    # NOTE: Need to persist here since dask loses futures after all the previous
+    # merges. Ideally this should be removed and we only persist at the end of
+    # new_sources.
+    new_sources_df = new_sources_df.persist()
+    wait(new_sources_df)
+
+    logger.debug("Time to reset and merge image info and merge detection "
+                 "fluxes into new_sources_df: "
                  f"{debug_timer.reset()}s"
                  )
 
@@ -467,10 +419,6 @@ def new_sources(
     new_sources_df = new_sources_df.loc[
         new_sources_df['diff_sigma'] >= min_sigma
     ]
-
-    logger.debug(f"Time to do new_sources_df threshold calcs: "
-                 f"{debug_timer.reset()}s"
-                 )
 
     # Now have list of sources that should have been seen before given
     # previous images minimum rms values.
@@ -491,9 +439,9 @@ def new_sources(
 
     logger.debug("Getting new_high_sigma measurements...")
     new_sources_df = parallel_get_new_high_sigma(
-        new_sources_df, edge_buffer=edge_buffer,
-        n_cpu=n_cpu, max_partition_mb=max_partition_mb
+        new_sources_df, io_workers, edge_buffer=edge_buffer
     )
+
     logger.debug(f"Time to get rms measurements: {debug_timer.reset()}s")
 
     logger.info(
