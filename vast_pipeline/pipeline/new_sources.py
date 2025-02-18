@@ -17,7 +17,7 @@ from dask.distributed import wait
 
 from vast_pipeline.models import Image, Run
 
-from vast_pipeline.utils.utils import StopWatch, calculate_workers_and_partitions
+from vast_pipeline.utils.utils import StopWatch
 from vast_pipeline.pipeline.utils import get_df_memory_usage
 from vast_pipeline.image.utils import open_fits
 
