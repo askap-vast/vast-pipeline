@@ -1200,6 +1200,8 @@ def get_parallel_assoc_image_df(
     # |  7 | VAST_0127-73A.EPOCH08.I.fits  |    ntEvPoTZ |              2 |
     # +----+-------------------------------+-------------+----------------+
     skyreg_ids = [str(i.skyreg_id) for i in images]
+    image_names = [i.name for i in images]
+    image_datetimes = [i.datetime for i in images]
 
     images_df = pd.DataFrame(
         {
