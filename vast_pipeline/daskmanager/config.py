@@ -15,6 +15,10 @@ dask_config['distributed']['worker']['preload'].append(worker_init_file_path)
 dask_config['dataframe']['convert-string'] = False
 
 # Memory configuration for workers
+# NOTE: These are set to False to stop memory overflow spill-to-disk
+# pause and terminate conditions on the workers which can happen
+# routinely durin the IO steps in the pipeline, when a subset
+# of workers read a set of FITS files into memory.
 dask_config['distributed']['worker']['memory']['spill'] = False
 dask_config['distributed']['worker']['memory']['target'] = False
 dask_config['distributed']['worker']['memory']['terminate'] = False

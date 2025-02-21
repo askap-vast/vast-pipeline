@@ -1713,10 +1713,9 @@ def get_df_memory_usage(df: pd.DataFrame) -> float:
     """
 
     # Check if we are a Pandas or Dask dataframe
+    mem = df.memory_usage(deep=True).sum()
     if type(df) is dd.DataFrame:
-        mem = df.memory_usage(deep=True).sum().compute()
-    else:
-        mem = df.memory_usage(deep=True).sum()
+        mem = mem.compute()
 
     mem_usage_mb = mem / 1e6
 

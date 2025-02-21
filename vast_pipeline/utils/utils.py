@@ -418,10 +418,9 @@ def calculate_n_partitions(
     """
 
     # Check if we are a pandas or dask dataframe
+    mem = df.memory_usage(deep=True).sum()
     if type(df) is dd.DataFrame:
-        mem = df.memory_usage(deep=True).sum().compute()
-    else:
-        mem = df.memory_usage(deep=True).sum()
+        mem = mem.compute()
 
     mem_usage_mb = mem / 1e6
 
