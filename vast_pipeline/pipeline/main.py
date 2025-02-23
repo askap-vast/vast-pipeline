@@ -318,7 +318,7 @@ class Pipeline:
                 self.add_mode,
                 done_images_df,
                 done_source_ids,
-                n_cpu=self.config['processing']['num_workers_io']
+                self.dm.get_n_random_workers(self.config['processing']['num_workers_io']),
             )
             mem_usage = get_df_memory_usage(sources_df)
             logger.debug(f"Step 5: sources_df memory usage: {mem_usage}MB")
