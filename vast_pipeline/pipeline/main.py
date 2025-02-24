@@ -339,8 +339,6 @@ class Pipeline:
             self.add_mode,
             done_source_ids,
             self.previous_parquets,
-            n_cpu=self.config['processing']['num_workers'],
-            max_partition_mb=self.config['processing']['max_partition_mb']
         )
 
         log_total_memory_usage()
