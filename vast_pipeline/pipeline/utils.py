@@ -632,7 +632,7 @@ def groupby_funcs(grp: pd.DataFrame) -> pd.Series:
     out["related_list"] = get_related_list(grp)
     out['n_rel'] = len(out['related_list'])
 
-    return(pd.Series(out))
+    return(pd.Series(out, name=grp.index.name))
 
 
 def parallel_groupby(df: pd.DataFrame) -> pd.DataFrame:
@@ -695,10 +695,15 @@ def parallel_groupby(df: pd.DataFrame) -> pd.DataFrame:
         "related_list": "O",
         "n_rel": "i",
     }
+
     groupby_df = df[columns].set_index('source')
 
     out = groupby_df.groupby('source').apply(groupby_funcs,
                                              meta=out_col_dtype)
+
+    # For some reason this gets lost - stupid Dask.
+    out.index = out.index.rename('source')
+
     return out
 
 

@@ -724,6 +724,9 @@ def forced_extraction(
     )
 
     # Wait for the forced extraction step to complete
+    # NOTE: Ideally we would have some optimised way of sorting sources_df
+    # by source id at this point. To avoid needing to `set_index` on it
+    # during the finalise step.
     sources_df = sources_df.persist()
     wait(sources_df)
 

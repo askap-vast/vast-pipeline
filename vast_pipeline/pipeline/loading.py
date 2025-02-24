@@ -2,6 +2,7 @@ import os
 import logging
 import numpy as np
 import pandas as pd
+import dask.dataframe as dd
 
 from typing import List, Optional, Dict, Tuple, Generator, Iterable
 from io import StringIO
@@ -400,7 +401,7 @@ def make_upload_related_sources(related_df: pd.DataFrame) -> None:
     bulk_upload_model(RelatedSource, related_models_generator(related_df))
 
 
-def copy_upload_associations(associations_df: pd.DataFrame, batch_size: int = 10_000) -> None:
+def copy_upload_associations(associations_df: dd.DataFrame, batch_size: int = 10_000) -> None:
     """Upload associations using django-postgres-copy in-memory csv method.
 
     Args:
@@ -408,7 +409,7 @@ def copy_upload_associations(associations_df: pd.DataFrame, batch_size: int = 10
         batch_size: The batch size. Defaults to 10_000.
     """
     logger.info("Upload associations...")
-    columns_to_upload = ["source", "db_id"]
+    columns_to_upload = ["source"]
     for fld in Association._meta.get_fields():
         if getattr(fld, "attname", None) and fld.attname in associations_df.columns:
             columns_to_upload.append(fld.attname)
@@ -423,14 +424,18 @@ def copy_upload_associations(associations_df: pd.DataFrame, batch_size: int = 10
         "dr": "dr"
     }
 
-    associations_df["db_id"] = [generate_shortuuid(UUID_LEN_MEAS) for _ in range(len(associations_df))]
+    def upload(df, Association, mapping, batch_size):
+        df["db_id"] = df.apply(lambda _: generate_shortuuid(UUID_LEN_MEAS), axis=1)
+        copy_upload_model(df, Association, mapping=mapping, batch_size=batch_size)
 
-    copy_upload_model(
-        associations_df[columns_to_upload],
-        Association,
-        mapping=mapping,
-        batch_size=batch_size
-    )
+    associations_df = associations_df[columns_to_upload].map_partitions(upload,
+                                                                        Association,
+                                                                        mapping,
+                                                                        batch_size,
+                                                                        enforce_metadata=False,
+                                                                        meta={})
+
+    associations_df.compute()
 
 
 def make_upload_associations(associations_df: pd.DataFrame) -> None:

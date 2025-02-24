@@ -99,6 +99,7 @@ def final_operations(
     add_mode: bool,
     done_source_ids: List[int],
     previous_parquets: Dict[str, str],
+    upload_chunk_size_mb: int
 ) -> Tuple[int, int]:
     """
     Performs the final operations of the pipeline:
@@ -130,6 +131,9 @@ def final_operations(
         done_source_ids:
             A list containing the source ids that have already been uploaded
             in the previous run in add mode.
+        upload_chunk_size_mb:
+            The size in MB to repartition dataframs before uploading and
+            saving to parquet.
 
     Returns:
         The number of sources contained in the pipeline run (used in the next
@@ -350,6 +354,9 @@ def final_operations(
     logger.debug(f"sources_df memory after merge: {mem_usage}MB")
     log_total_memory_usage()
 
+    # Repartition associations df to optimise upload
+    associations_df = associations_df.repartition(partition_size=f'{upload_chunk_size_mb}MB')
+
     if add_mode:
         # Load old associations so the already uploaded ones can be removed
         old_associations = dd.read_parquet(previous_parquets["associations"]).rename(
@@ -367,7 +374,7 @@ def final_operations(
         associations_df_upload = associations_df
 
     # upload associations into DB
-    copy_upload_associations(associations_df_upload.loc[:, ["id", "source", "d2d", "dr"]])
+    #copy_upload_associations(associations_df_upload.loc[:, ["id", "source", "d2d", "dr"]])
 
     # write associations to parquet file
     associations_df[['source', 'id', 'd2d', 'dr']] \
