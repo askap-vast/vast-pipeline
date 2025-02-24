@@ -27,8 +27,7 @@ from multiprocessing import Pool
 from vast_pipeline.image.main import FitsImage, SelavyImage
 from vast_pipeline.image.utils import open_fits
 from vast_pipeline.utils.utils import (
-    eq_to_cart, StopWatch, optimise_numeric,
-    calculate_workers_and_partitions, copy_file_or_dir,
+    eq_to_cart, StopWatch, optimise_numeric, copy_file_or_dir,
     delete_file_or_dir, generate_shortuuid, UUID_LEN_SOURCE
 )
 from vast_pipeline.models import (

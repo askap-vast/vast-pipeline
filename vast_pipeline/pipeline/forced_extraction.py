@@ -12,7 +12,7 @@ from astropy.coordinates import SkyCoord
 from django.conf import settings
 from django.db import transaction
 from pyarrow.parquet import read_schema
-from typing import Any, List, Tuple, Dict, Optional
+from typing import List, Tuple, Dict, Optional
 from dask.delayed import delayed
 from dask.distributed import wait
 
@@ -22,12 +22,10 @@ from vast_pipeline.pipeline.loading import copy_upload_measurements
 from forced_phot import ForcedPhot
 from ..utils.utils import (
     StopWatch,
-    calculate_workers_and_partitions,
     generate_shortuuid,
     UUID_LEN_MEAS
 )
 from vast_pipeline.image.utils import open_fits
-from vast_pipeline.pipeline.utils import log_total_memory_usage
 
 logger = logging.getLogger(__name__)
 
@@ -341,7 +339,7 @@ def parallel_extraction(
             'component_id', 'name', 'flux_int', 'flux_int_err'
     """
     # explode the lists in 'img_diff' column (this will make a copy of the df)
-    # NOTE: Need to persist here since Dask loses futures after all the 
+    # NOTE: Need to persist here since Dask loses futures after all the
     # previous merges. Ideally this should be removed and we only persist at the
     # end of new_sources.
     out = (
