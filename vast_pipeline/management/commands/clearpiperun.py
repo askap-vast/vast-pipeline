@@ -9,7 +9,7 @@ from django.db import transaction
 
 from vast_pipeline.models import Run
 from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
-from vast_pipeline.utils.utils import StopWatch
+from vast_pipeline.utils.utils import StopWatch, delete_file_or_dir
 from ..helpers import get_p_run_name
 
 from ...utils.delete_run import delete_pipeline_run_raw_sql
@@ -130,7 +130,7 @@ class Command(BaseCommand):
                 )
                 for parquet in parquets:
                     try:
-                        os.remove(parquet)
+                        delete_file_or_dir(parquet)
                     except OSError as e:
                         self.stdout.write(self.style.WARNING(
                             f'Parquet file "{os.path.basename(parquet)}" not existent'
