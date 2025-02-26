@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- V2: Migrate pipeline to used a Dask.distributed.LocalCluster throughout [#816](https://github.com/askap-vast/vast-pipeline/pull/816)
 - V2: Add Dask.distributed support
 - V2: Use `django-postgres-copy` for database uploads [#803](https://github.com/askap-vast/vast-pipeline/pull/803)
 - Added more detailed warnings about the use of Condon Errors throughout the docs and code [#806](https://github.com/askap-vast/vast-pipeline/pull/806)
@@ -45,6 +46,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#816](https://github.com/askap-vast/vast-pipeline/pull/816): feat: V2: Update to use Dask `LocalCluster` throughout.
 - [#809](https://github.com/askap-vast/vast-pipeline/pull/809): fix: Fix missing JS9 overlays on source webpage
 - [#808](https://github.com/askap-vast/vast-pipeline/pull/808): feat: V2: Add DaskManager for setting up a Dask `LocalCluster` using Dask.Distributed.
 - [#803](https://github.com/askap-vast/vast-pipeline/pull/803): feat: V2: Change to UUID indexes and use `django-postgres-copy`.
