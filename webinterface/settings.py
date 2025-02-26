@@ -1,5 +1,6 @@
 import os
 import environ
+import sys
 
 # Load the Django congig from the .env file
 env = environ.Env()
@@ -24,6 +25,10 @@ INTERNAL_IPS = [
 ]
 
 SITE_ID = 1
+
+# Check if we are in a test environment so we
+# can fiddle the pipeline to suit it.
+TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
 
 # Application definition
 
@@ -244,8 +249,8 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # Dask cluster
 DASK_SCHEDULER_HOST = env('DASK_SCHEDULER_HOST', cast=str, default='localhost')
 DASK_SCHEDULER_PORT = env('DASK_SCHEDULER_PORT', cast=str, default='8786')
-DASK_NUM_WORKERS = env('DASK_NUM_WORKERS', cast=int, default=7)
-DASK_THREADS_PER_WORKER =  env('DASK_THREADS_PER_WORKER', cast=int, default=2)
+DASK_NUM_WORKERS = env('DASK_NUM_WORKERS', cast=int, default=14)
+DASK_THREADS_PER_WORKER =  env('DASK_THREADS_PER_WORKER', cast=int, default=1)
 
 # Logging
 LOGGING = {

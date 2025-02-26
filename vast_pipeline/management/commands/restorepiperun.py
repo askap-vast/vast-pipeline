@@ -17,7 +17,9 @@ from vast_pipeline.models import (
 from vast_pipeline.pipeline.loading import update_sources
 from vast_pipeline.pipeline.config import PipelineConfig
 from vast_pipeline.pipeline.main import Pipeline
-from vast_pipeline.utils.utils import timeStamped
+from vast_pipeline.utils.utils import (
+    timeStamped, delete_file_or_dir, copy_file_or_dir
+)
 from ..helpers import get_p_run_name
 
 
@@ -267,8 +269,13 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config: PipelineCon
             actual_file = bak_file.replace('.yaml.bak', '_prev.yaml')
         else:
             actual_file = bak_file.replace('.bak', '')
-        shutil.copy(bak_file, actual_file)
-        os.remove(bak_file)
+        # As associations can be a directory, we need to check if it exists
+        # and remove it as the copy will not overwrite the dir.
+        if i == "associations" and os.path.isdir(actual_file):
+            delete_file_or_dir(actual_file)
+
+        copy_file_or_dir(bak_file, actual_file)
+        delete_file_or_dir(bak_file)
 
     if monitor:
         for i in current_forced_parquets:
@@ -276,8 +283,8 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config: PipelineCon
 
         for i in forced_parquets:
             new_file = i.replace('.bak', '')
-            shutil.copy(i, new_file)
-            os.remove(i)
+            copy_file_or_dir(i, new_file)
+            delete_file_or_dir(i)
 
 
 class Command(BaseCommand):
@@ -401,9 +408,12 @@ class Command(BaseCommand):
 
                 if os.path.isfile(f_name):
                     bak_files[i] = f_name
+                elif i == "associations" and os.path.isdir(f_name):
+                    bak_files[i] = f_name
                 elif (
                     i != "measurement_pairs"
-                    or pipeline.config["variability"]["pair_metrics"]
+                    # Note: Deleting just for PR #816
+                    #or pipeline.config["variability"]["pair_metrics"]
                 ):
                     raise CommandError(
                         f'File {f_name} does not exist.'

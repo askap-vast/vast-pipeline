@@ -4,8 +4,11 @@ This module contains all the functions required to perform source association.
 import logging
 import numpy as np
 import pandas as pd
-from typing import Tuple, Dict, List
+from typing import Tuple, Dict
 import dask.dataframe as dd
+from dask.distributed import wait
+
+from django.core import serializers
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -15,12 +18,11 @@ from .utils import (
     prep_skysrc_df,
     add_new_one_to_many_relations,
     add_new_many_to_one_relations,
-    reconstruct_associtaion_dfs,
+    reconstruct_association_dfs,
 )
 from vast_pipeline.pipeline.config import PipelineConfig
 from vast_pipeline.utils.utils import (
     StopWatch,
-    calculate_workers_and_partitions,
     generate_shortuuid,
     UUID_LEN_SOURCE,
     UUID_LEN_MEAS
@@ -291,7 +293,7 @@ def one_to_many_advanced(
 
     Args:
         temp_srcs:
-            The temporary associtation dataframe used through the advanced
+            The temporary association dataframe used through the advanced
             association process.
         sources_df:
             The sources_df produced by each step of association holding
@@ -547,7 +549,7 @@ def many_to_many_advanced(temp_srcs: pd.DataFrame, method: str) -> pd.DataFrame:
 
     Args:
         temp_srcs:
-            The temporary associtation dataframe used through the advanced
+            The temporary association dataframe used through the advanced
             association process.
         method:
             Can be either 'advanced' or 'deruiter' to represent the advanced
@@ -999,6 +1001,11 @@ def association(
             "image_datetime", axis=1
         )
 
+        # Deserialise image_dj back to a django model object.
+        images_df["image_dj"] = images_df["image_dj"].apply(
+            lambda x: [i for i in serializers.deserialize("json", x)][0].object
+        )
+
     if "skyreg_group" in images_df.columns:
         skyreg_group = images_df["skyreg_group"].iloc[0]
         skyreg_tag = " (sky region group %s)" % skyreg_group
@@ -1018,7 +1025,7 @@ def association(
         # are filtered out.
         image_mask = images_df["image_name"].isin(done_images_df["name"])
         images_df_done = images_df[image_mask].copy()
-        sources_df, skyc1_srcs = reconstruct_associtaion_dfs(
+        sources_df, skyc1_srcs = reconstruct_association_dfs(
             images_df_done,
             previous_parquets,
         )
@@ -1272,6 +1279,17 @@ def association(
 
     del skyc1_srcs, skyc2_srcs
 
+    # sort by the datetime of the image as this makes sure that we do things
+    # correctly when computing missing_sources_df
+    sources_df = sources_df.sort_values(by='datetime')
+
+    # Finally the related column Null entries are filled with a list containing "NULL"
+    # to avoid dask schema issues later on.
+    related_null_mask = sources_df["related"].isnull()
+    sources_df.loc[related_null_mask, "related"] = "NULL"
+    sources_df.loc[related_null_mask, "related"] = sources_df.loc[related_null_mask, "related"].apply(
+        lambda x: [x,]
+    )
     logger.info(
         "Total association time: %.2f seconds%s.", timer.reset_init(), skyreg_tag
     )
@@ -1290,7 +1308,6 @@ def parallel_association(
     add_mode: bool,
     previous_parquets: Dict[str, str],
     done_images_df: pd.DataFrame,
-    done_source_ids: List[int],
 ) -> pd.DataFrame:
     """
     Launches association on different sky region groups in parallel using Dask.
@@ -1344,17 +1361,15 @@ def parallel_association(
         "interim_ns": "f",
     }
 
-    n_workers, n_partitions = calculate_workers_and_partitions(
-        images_df,
-        n_cpu=config['processing']['num_workers'],
-        max_partition_mb=config['processing']['max_partition_mb']
-        )
-    logger.debug(f"Running association with {n_workers} CPUs")
-    # pass each skyreg_group through the normal association process.
-    results = (
-        dd.from_pandas(images_df.set_index('skyreg_group'), npartitions=n_partitions)
-        .groupby('skyreg_group')
-        .apply(
+    # Need to serialise the image_dj django models so they can be passed to the Dask cluster
+    images_df["image_dj"] = images_df["image_dj"].apply(
+        lambda x: serializers.serialize("json", [x,])
+    )
+
+    # Pass each skyreg_group through the normal association process.
+    # Convert images_df to dask dataframe and split into n_skyregion_groups partitions.
+    images_dd = dd.from_pandas(images_df.set_index('skyreg_group'), npartitions=n_skyregion_groups, sort=True)
+    results = images_dd.map_partitions(
             association,
             limit=limit,
             dr_limit=dr_limit,
@@ -1366,8 +1381,8 @@ def parallel_association(
             done_images_df=done_images_df,
             parallel=True,
             meta=meta
-        ).compute(n_workers=n_workers, scheduler='processes')
-    )
+        )
+
     # results are the normal dataframe of results with the columns:
     # 'id', 'uncertainty_ew', 'weight_ew', 'uncertainty_ns', 'weight_ns',
     # 'flux_int', 'flux_int_err', 'flux_peak', 'flux_peak_err', 'forced',
@@ -1395,8 +1410,10 @@ def parallel_association(
     #          3712  RV9KsSoiumCMU3
     #          3713  PwEnpyALZXGHk8
 
-    # reset the index of the final corrected and collapsed result
-    results = results.reset_index(drop=True)
+    # reset the index of the final corrected and collapsed result and compute into the cluster
+    results = results.reset_index(drop=True).persist()
+    wait(results)
+    del images_dd
 
     logger.info("Total parallel association time: %.2f seconds", timer.reset_init())
 

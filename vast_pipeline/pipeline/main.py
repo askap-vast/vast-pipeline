@@ -13,11 +13,15 @@ from astropy.coordinates import Angle
 
 import pandas as pd
 
+from dask import dataframe as dd
+from dask.distributed import wait
+
 from django.conf import settings
 from django.db import transaction
 
+from vast_pipeline.daskmanager.manager import DaskManager
 from vast_pipeline.models import Run
-from vast_pipeline.pipeline.utils import add_run_to_img
+from vast_pipeline.utils.utils import calculate_n_partitions
 from .association import association, parallel_association
 from .config import PipelineConfig
 from .new_sources import new_sources
@@ -30,7 +34,8 @@ from .utils import (
     get_parallel_assoc_image_df,
     write_parquets,
     get_df_memory_usage,
-    log_total_memory_usage
+    log_total_memory_usage,
+    add_run_to_img
 )
 
 from .errors import MaxPipelineRunsError
@@ -58,7 +63,8 @@ class Pipeline:
     """
 
     def __init__(self, name: str, config_path: str,
-                 validate_config: bool = True):
+                 validate_config: bool = True,
+                 skip_connect: bool = False):
         """Initialise an instance of Pipeline with a name and configuration
         file path.
 
@@ -80,6 +86,9 @@ class Pipeline:
         self.img_epochs: Dict[str, str] = {}  # maps image names to their provided epoch
         self.add_mode: bool = False
         self.previous_parquets: Dict[str, str]
+
+        # Connect to the DaskCluster if available
+        self.dm: DaskManager = DaskManager(skip_connect=skip_connect)
 
     def match_images_to_data(self) -> None:
         """
@@ -191,8 +200,7 @@ class Pipeline:
 
         # 2.2 Associate with other measurements
         if self.config["source_association"]["parallel"] and n_skyregion_groups > 1:
-            images_df = get_parallel_assoc_image_df(images, skyregion_groups)
-            images_df["epoch"] = image_epochs
+            images_df = get_parallel_assoc_image_df(images, skyregion_groups, image_epochs)
 
             sources_df = parallel_association(
                 images_df,
@@ -205,7 +213,6 @@ class Pipeline:
                 self.add_mode,
                 self.previous_parquets,
                 done_images_df,
-                done_source_ids,
             )
         else:
             images_df = pd.DataFrame.from_dict(
@@ -217,7 +224,7 @@ class Pipeline:
             )
 
             images_df["image_name"] = images_df["image_dj"].apply(lambda x: x.name)
-
+            images_df["image_datetime"] = images_df["image_dj"].apply(lambda x: x.datetime)
             sources_df = association(
                 images_df,
                 limit,
@@ -230,13 +237,23 @@ class Pipeline:
                 done_images_df,
             )
 
+            # Scatter sources_df to the cluster
+            npartitions = calculate_n_partitions(sources_df,
+                                                 n_cpu=self.dm.num_workers,
+                                                 partition_size_mb=15)
+            sources_df = dd.from_pandas(
+                sources_df.reset_index(drop=True),
+                npartitions=npartitions
+            ).persist()
+            wait(sources_df)
+
         mem_usage = get_df_memory_usage(sources_df)
         logger.debug(f"Step 2: sources_df memory usage: {mem_usage}MB")
         log_total_memory_usage()
 
         # Obtain the number of selavy measurements for the run
         # n_selavy_measurements = sources_df.
-        nr_selavy_measurements = sources_df["id"].unique().shape[0]
+        nr_selavy_measurements = sources_df["id"].unique().compute().shape[0]
 
         # STEP #3: Merge sky regions and sources ready for
         # steps 4 and 5 below.
@@ -253,13 +270,27 @@ class Pipeline:
         # need to make sure no forced measurments are being passed which
         # could happen in add mode, otherwise the wrong detection image is
         # assigned.
+        images_df = images_df.drop(columns=["image_dj"]).rename(columns={'image_name': 'name', 'image_datetime': 'datetime'})
+        unforced_df = sources_df.loc[sources_df["forced"] == False, missing_source_cols]
         missing_sources_df = get_src_skyregion_merged_df(
-            sources_df.loc[sources_df["forced"] == False, missing_source_cols],
+            unforced_df,
             images_df,
             skyregs_df,
-            n_cpu=self.config['processing']['num_workers'],
-            max_partition_mb=self.config['processing']['max_partition_mb']
         )
+        del images_df
+        del unforced_df
+
+        # Make missing sources into Dask dataframe
+        # NOTE: This would not be necessary if the get_src_skyregion_merged_df
+        # function was improved to use Dask. (See NOTE in parallel_groupby function.)
+        npartitions = calculate_n_partitions(missing_sources_df,
+                                             n_cpu=self.dm.num_workers,
+                                             partition_size_mb=self.config['processing']['max_partition_mb'])
+        missing_sources_df = dd.from_pandas(
+            missing_sources_df,
+            npartitions=npartitions
+        )
+        wait(missing_sources_df)
 
         # STEP #4 New source analysis
         new_sources_df = new_sources(
@@ -268,8 +299,7 @@ class Pipeline:
             self.config["new_sources"]["min_sigma"],
             self.config["source_monitoring"]["edge_buffer_scale"],
             p_run,
-            n_cpu=self.config['processing']['num_workers_io'],
-            max_partition_mb=self.config['processing']['max_partition_mb']
+            self.dm.get_n_random_workers(self.config['processing']['num_workers_io']),
         )
 
         # Drop column no longer required in missing_sources_df.
@@ -290,7 +320,7 @@ class Pipeline:
                 self.add_mode,
                 done_images_df,
                 done_source_ids,
-                n_cpu=self.config['processing']['num_workers_io']
+                self.dm.get_n_random_workers(self.config['processing']['num_workers_io']),
             )
             mem_usage = get_df_memory_usage(sources_df)
             logger.debug(f"Step 5: sources_df memory usage: {mem_usage}MB")
@@ -311,8 +341,7 @@ class Pipeline:
             self.add_mode,
             done_source_ids,
             self.previous_parquets,
-            n_cpu=self.config['processing']['num_workers'],
-            max_partition_mb=self.config['processing']['max_partition_mb']
+            self.config["processing"]["max_partition_mb"],
         )
 
         log_total_memory_usage()
