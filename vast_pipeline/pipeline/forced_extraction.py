@@ -341,7 +341,7 @@ def parallel_extraction(
             The system path of the pipeline run output.
         io_workers:
             List of dask worker addresses to use for `extract_from_image`
-            This is likely the output of `DaskManager.get_n_random_workers()`
+            This is the output of `DaskManager.get_n_random_workers()`, or similar.
 
     Returns:
         Dataframe with forced extracted measurements data, columns are
