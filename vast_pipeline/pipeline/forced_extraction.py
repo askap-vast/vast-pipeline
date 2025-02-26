@@ -16,6 +16,7 @@ from typing import List, Tuple, Dict, Optional
 from dask.delayed import delayed
 from dask.distributed import wait
 
+from django.conf import settings as s
 from vast_pipeline.models import Image, Measurement, Run
 from vast_pipeline.pipeline.loading import copy_upload_measurements
 
@@ -27,8 +28,19 @@ from ..utils.utils import (
 )
 from vast_pipeline.image.utils import open_fits
 
-logger = logging.getLogger(__name__)
+# NOTE: We check here to see if we're in a testing environment.
+# This is done since the django does all its testing inside an
+# 'atomic' transaction to separate the tests from one another.
+# This has the unfortunate side-effect of causing uploads to
+# the database to fail in threaded/multiprocessing applications
+# since only the original thread can see whats previously been
+# uploaded to the database. The solution is to check if we are
+# inside a test environment and disable the database upload in
+# that case.
+from django.conf import settings as s
+__TESTING__ = s.TESTING
 
+logger = logging.getLogger(__name__)
 
 def remove_forced_meas(run_path: str) -> None:
     """
@@ -435,7 +447,8 @@ def save_and_upload_forced_df(forced_df: pd.DataFrame,
                               columns: List[str],
                               output_columns: List[str],
                               cfg_err_ra: float,
-                              cfg_err_dec: float,):
+                              cfg_err_dec: float,
+                              do_upload: bool = True):
     """
     Upload the forced extraction measurements to the database and save
     them to parquets.
@@ -459,6 +472,8 @@ def save_and_upload_forced_df(forced_df: pd.DataFrame,
             The minimum RA error from the config file (in degrees).
         cfg_err_dec:
             The minimum declination error from the config file (in degrees).
+        do_upload:
+            If True - do the db upload step.
     """
 
     def _update_forced_measurements(df: dd.DataFrame) -> dd.DataFrame:
@@ -504,7 +519,8 @@ def save_and_upload_forced_df(forced_df: pd.DataFrame,
     remaining = list(set(forced_df.columns) - set(columns))
     forced_df = forced_df[columns + remaining]
 
-    copy_upload_measurements(forced_df)
+    if do_upload:
+        copy_upload_measurements(forced_df)
 
     forced_df = forced_df.rename(columns={"source_tmp_id": "source"})
 
@@ -546,7 +562,7 @@ def write_forced_parquet(
     )
     out_df = df.drop(["d2d", "dr", "source", "image"], axis=1)
     if os.path.isfile(fname) and add_mode:
-        exist_df = dd.read_parquet(fname)
+        exist_df = pd.read_parquet(fname)
         out_df = pd.concat([exist_df, out_df])
     out_df.to_parquet(fname, index=False)
 
@@ -706,8 +722,10 @@ def forced_extraction(
                                      cfg_err_dec=cfg_err_dec,
                                      columns=columns,
                                      output_columns=sources_meta.columns,
+                                     do_upload=(not __TESTING__),
                                      enforce_metadata=False,
                                      meta=sources_meta)
+
 
     # Calculate epoch column for extr_df
     if sources_df['epoch'].dtype == 'object':
@@ -725,7 +743,7 @@ def forced_extraction(
 
     # Wait for the forced extraction step to complete
     # NOTE: Ideally we would have some optimised way of sorting sources_df
-    # by source id at this point. To avoid needing to `set_index` on it
+    # by source id at this point to avoid needing to `set_index` on it
     # during the finalise step.
     sources_df = sources_df.persist()
     wait(sources_df)

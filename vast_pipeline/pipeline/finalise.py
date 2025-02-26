@@ -366,8 +366,13 @@ def final_operations(
             [associations_df, old_associations],
             ignore_index=True
         )
-        associations_df_upload = associations_df_upload.drop_duplicates(
-            ["source", "id", "d2d", "dr"], keep=False
+        # NOTE: Annoyingly keep=False doesn't work with dask, so we have to compute
+        # the drop_duplicates and then recompute the dask dataframe.
+        associations_df_upload = associations_df_upload[["source", "id", "d2d", "dr"]] \
+                                 .compute() \
+                                 .drop_duplicates(["source", "id", "d2d", "dr"], keep=False)
+        associations_df_upload = dd.from_pandas(
+            associations_df_upload, npartitions=associations_df.npartitions
         )
         logger.debug(f"Add mode: #{associations_df_upload.shape[0]} associations to upload.")
     else:
@@ -379,7 +384,7 @@ def final_operations(
     # write associations to parquet file
     associations_df[['source', 'id', 'd2d', 'dr']] \
         .rename(columns={"id": "meas_id", "source": "source_id"}) \
-        .to_parquet(os.path.join(p_run.path, "associations.parquet"))
+        .to_parquet(os.path.join(p_run.path, "associations.parquet"), overwrite=True)
 
     if calculate_pairs:
         # optimize measurement pair DataFrame and save to parquet file

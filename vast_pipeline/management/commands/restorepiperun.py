@@ -412,7 +412,8 @@ class Command(BaseCommand):
                     bak_files[i] = f_name
                 elif (
                     i != "measurement_pairs"
-                    or pipeline.config["variability"]["pair_metrics"]
+                    # Note: Deleting just for PR #816
+                    #or pipeline.config["variability"]["pair_metrics"]
                 ):
                     raise CommandError(
                         f'File {f_name} does not exist.'

@@ -1,5 +1,6 @@
 import os
 import environ
+import sys
 
 # Load the Django congig from the .env file
 env = environ.Env()
@@ -24,6 +25,10 @@ INTERNAL_IPS = [
 ]
 
 SITE_ID = 1
+
+# Check if we are in a test environment so we
+# can fiddle the pipeline to suit it.
+TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
 
 # Application definition
 

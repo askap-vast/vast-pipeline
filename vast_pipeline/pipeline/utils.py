@@ -757,7 +757,7 @@ def parallel_groupby_coord(df: dd.DataFrame,) -> pd.DataFrame:
                     'image': list,
                     'epoch': list}
 
-    groups = df[cols].set_index('source').groupby('source')
+    groups = df[cols].groupby('source')
     out = groups.agg(aggregations)
     out['wavg_ra'] = out['interim_ew'] / out['weight_ew']
     out['wavg_dec'] = out['interim_ns'] / out['weight_ns']
@@ -1396,7 +1396,7 @@ def create_temp_config_file(p_run_path: str) -> None:
     )
 
 
-def reconstruct_associtaion_dfs(
+def reconstruct_association_dfs(
     images_df_done: pd.DataFrame, previous_parquet_paths: Dict[str, str]
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
@@ -1437,7 +1437,7 @@ def reconstruct_associtaion_dfs(
         forced_parquet = os.path.join(
             run_path, "forced_measurements_{}.parquet".format(i.replace(".", "_"))
         )
-        if os.path.isfile(forced_parquet):
+        if os.path.isfile(forced_parquet) or os.path.isdir(forced_parquet):
             img_fmeas_paths.append(forced_parquet)
 
     # Create union of paths.
@@ -1501,7 +1501,7 @@ def reconstruct_associtaion_dfs(
             "uncertainty_ew": "uncertainty_ew_source",
             "uncertainty_ns": "uncertainty_ns_source",
         }
-    )
+    ).reset_index(drop=True)
 
     # Load up the previous unique sources.
     prev_sources = pd.read_parquet(
@@ -1526,7 +1526,7 @@ def reconstruct_associtaion_dfs(
             "wavg_uncertainty_ew": "uncertainty_ew",
             "wavg_uncertainty_ns": "uncertainty_ns",
         }
-    )
+    ).reset_index(drop=True)
 
     # Load the previous relations
     prev_relations = pd.read_parquet(previous_parquet_paths["relations"])
@@ -1545,8 +1545,9 @@ def reconstruct_associtaion_dfs(
             'source', keep='last'
     ).index.values
     # Make sure we attach the correct source id
-    source_ids = sources_df.loc[relation_ids].source.values
-    sources_df['related'] = pd.NA
+    source_ids = sources_df.loc[relation_ids]["source"].values
+    sources_df['related'] = "NULL"
+    sources_df["related"] = sources_df["related"].apply(lambda x: [x,])
     relations_to_update = prev_relations.loc[source_ids].to_numpy().copy()
     relations_to_update = np.reshape(relations_to_update, relations_to_update.shape[0])
     sources_df.loc[relation_ids, "related"] = relations_to_update
@@ -1588,7 +1589,7 @@ def reconstruct_associtaion_dfs(
     # Create the unique skyc1_srcs dataframe.
     skyc1_srcs = (
         sources_df[~sources_df["forced"]]
-        .sort_values(by="id")
+        .sort_values(by=["epoch", "id"])
         .drop("related", axis=1)
         .drop_duplicates("source")
     ).copy(deep=True)

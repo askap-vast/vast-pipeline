@@ -21,7 +21,7 @@ no_data = not glob.glob(os.path.join(TEST_ROOT, 'regression-data','EPOCH*'))
     'The regression test data is missing, skipping regression tests'
 )
 @override_settings(
-    PIPELINE_WORKING_DIR=os.path.join(TEST_ROOT, 'pipeline-runs'),
+    PIPELINE_WORKING_DIR = os.path.join(TEST_ROOT, 'pipeline-runs'),
 )
 class BasicForcedTest(TestCase):
     '''
@@ -139,7 +139,7 @@ class BasicForcedTest(TestCase):
     'The regression test data is missing, skipping regression tests'
 )
 @override_settings(
-    PIPELINE_WORKING_DIR=os.path.join(TEST_ROOT, 'pipeline-runs'),
+    PIPELINE_WORKING_DIR = os.path.join(TEST_ROOT, 'pipeline-runs'),
 )
 class AdvancedForcedTest(TestCase):
     '''

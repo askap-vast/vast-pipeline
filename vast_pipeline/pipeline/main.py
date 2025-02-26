@@ -213,7 +213,6 @@ class Pipeline:
                 self.add_mode,
                 self.previous_parquets,
                 done_images_df,
-                done_source_ids,
             )
         else:
             images_df = pd.DataFrame.from_dict(
@@ -225,7 +224,7 @@ class Pipeline:
             )
 
             images_df["image_name"] = images_df["image_dj"].apply(lambda x: x.name)
-
+            images_df["image_datetime"] = images_df["image_dj"].apply(lambda x: x.datetime)
             sources_df = association(
                 images_df,
                 limit,
@@ -237,14 +236,15 @@ class Pipeline:
                 self.previous_parquets,
                 done_images_df,
             )
+
             # Scatter sources_df to the cluster
             npartitions = calculate_n_partitions(sources_df,
                                                  n_cpu=self.dm.num_workers,
                                                  partition_size_mb=15)
             sources_df = dd.from_pandas(
-                sources_df,
+                sources_df.reset_index(drop=True),
                 npartitions=npartitions
-            )
+            ).persist()
             wait(sources_df)
 
         mem_usage = get_df_memory_usage(sources_df)

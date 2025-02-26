@@ -18,7 +18,7 @@ from .utils import (
     prep_skysrc_df,
     add_new_one_to_many_relations,
     add_new_many_to_one_relations,
-    reconstruct_associtaion_dfs,
+    reconstruct_association_dfs,
 )
 from vast_pipeline.pipeline.config import PipelineConfig
 from vast_pipeline.utils.utils import (
@@ -293,7 +293,7 @@ def one_to_many_advanced(
 
     Args:
         temp_srcs:
-            The temporary associtation dataframe used through the advanced
+            The temporary association dataframe used through the advanced
             association process.
         sources_df:
             The sources_df produced by each step of association holding
@@ -549,7 +549,7 @@ def many_to_many_advanced(temp_srcs: pd.DataFrame, method: str) -> pd.DataFrame:
 
     Args:
         temp_srcs:
-            The temporary associtation dataframe used through the advanced
+            The temporary association dataframe used through the advanced
             association process.
         method:
             Can be either 'advanced' or 'deruiter' to represent the advanced
@@ -1025,7 +1025,7 @@ def association(
         # are filtered out.
         image_mask = images_df["image_name"].isin(done_images_df["name"])
         images_df_done = images_df[image_mask].copy()
-        sources_df, skyc1_srcs = reconstruct_associtaion_dfs(
+        sources_df, skyc1_srcs = reconstruct_association_dfs(
             images_df_done,
             previous_parquets,
         )
@@ -1279,7 +1279,7 @@ def association(
 
     del skyc1_srcs, skyc2_srcs
 
-    # sort by the datetime of the image as this make sure that we do things
+    # sort by the datetime of the image as this makes sure that we do things
     # correctly when computing missing_sources_df
     sources_df = sources_df.sort_values(by='datetime')
 
@@ -1308,7 +1308,6 @@ def parallel_association(
     add_mode: bool,
     previous_parquets: Dict[str, str],
     done_images_df: pd.DataFrame,
-    done_source_ids: List[int],
 ) -> pd.DataFrame:
     """
     Launches association on different sky region groups in parallel using Dask.
