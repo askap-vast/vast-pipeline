@@ -16,7 +16,6 @@ from typing import List, Tuple, Dict, Optional
 from dask.delayed import delayed
 from dask.distributed import wait
 
-from django.conf import settings as s
 from vast_pipeline.models import Image, Measurement, Run
 from vast_pipeline.pipeline.loading import copy_upload_measurements
 
@@ -37,8 +36,7 @@ from vast_pipeline.image.utils import open_fits
 # uploaded to the database. The solution is to check if we are
 # inside a test environment and disable the database upload in
 # that case.
-from django.conf import settings as s
-__TESTING__ = s.TESTING
+__TESTING__ = settings.TESTING
 
 logger = logging.getLogger(__name__)
 

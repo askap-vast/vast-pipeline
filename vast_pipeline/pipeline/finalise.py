@@ -6,6 +6,7 @@ import dask.dataframe as dd
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from django.conf import settings
 from typing import List, Dict, Tuple
 
 from vast_pipeline.models import Run
@@ -20,6 +21,10 @@ from vast_pipeline.pipeline.pairs import calculate_measurement_pair_metrics
 from vast_pipeline.pipeline.utils import (
     parallel_groupby, get_df_memory_usage, log_total_memory_usage
 )
+
+# NOTE: Get testing environment status.
+# See comment in forced_extraction.py
+__TESTING__ = settings.TESTING
 
 logger = logging.getLogger(__name__)
 
@@ -379,7 +384,8 @@ def final_operations(
         associations_df_upload = associations_df
 
     # upload associations into DB
-    #copy_upload_associations(associations_df_upload.loc[:, ["id", "source", "d2d", "dr"]])
+    if not __TESTING__:
+        copy_upload_associations(associations_df_upload.loc[:, ["id", "source", "d2d", "dr"]])
 
     # write associations to parquet file
     associations_df[['source', 'id', 'd2d', 'dr']] \
