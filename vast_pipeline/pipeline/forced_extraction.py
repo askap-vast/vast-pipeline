@@ -474,8 +474,17 @@ def save_and_upload_forced_df(forced_df: pd.DataFrame,
             If True - do the db upload step.
     """
 
-    def _update_forced_measurements(df: dd.DataFrame) -> dd.DataFrame:
-        """Update forced extraction dataframe with defaults."""
+    def _update_forced_measurements(df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Update forced extraction dataframe with defaults.
+
+        Args:
+            df:
+                The forced extraction dataframe.
+
+        Returns:
+            The forced extraction dataframe updated with defaults.
+        """
         df["name"] = df["name"] + f"_f_{p_run_id}"
         df["id"] = df.apply(lambda _: generate_shortuuid(UUID_LEN_MEAS), axis=1)
         default_pos_err = settings.POS_DEFAULT_MIN_ERROR / 3600.0

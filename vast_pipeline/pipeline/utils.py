@@ -531,11 +531,19 @@ def cross_join(left: pd.DataFrame, right: pd.DataFrame) -> pd.DataFrame:
 
 
 def get_eta_metric(grp: pd.DataFrame, out: pd.Series) -> pd.Series:
-    '''
+    """
     Calculates the eta variability metric of a source.
     Works on the grouped by dataframe using the fluxes
     of the associated measurements.
-    '''
+
+    Args:
+        grp: The grouped by sources dataframe of the measurements containing all
+            the flux and flux error information,
+        out: A Pandas Series containing statistics for the current source
+
+    Returns:
+        The series `out` updated with calculated eta values.
+    """
     n_meas = grp.shape[0]
     if n_meas == 1:
         out['eta_int'] = 0.
@@ -554,7 +562,17 @@ def get_eta_metric(grp: pd.DataFrame, out: pd.Series) -> pd.Series:
 
 
 def get_non_forced_metric(grp: pd.DataFrame, out: pd.Series) -> pd.Series:
-    '''Get metrics that require forced measurements to be filtered first.'''
+    """
+    Get metrics that require forced measurements to be filtered first.
+
+    Args:
+        grp: The grouped by sources dataframe of the measurements containing all
+            the flux and flux error information,
+        out: A Pandas Series containing statistics for the current source
+
+    Returns:
+        The series `out` updated with calculated statistics.
+    """
 
     non_forced_sel = grp['forced'] != True
     out['wavg_ra'] = (
@@ -582,13 +600,14 @@ def get_related_list(grp: pd.DataFrame) -> list[str]:
     """Collect the unique set of lists from the column.
 
     Args:
-        df: The dataframe to collect the lists from.
+        grp: The dataframe to collect the lists from.
 
     Returns:
         The unique set of lists.
     """
 
-    lists = [list(i) if isinstance(i, np.ndarray) else ["NULL",] for i in grp['related']]
+    lists = [list(i) if isinstance(i, np.ndarray)
+                else ["NULL",] for i in grp['related']]
 
     the_list = list(set(chain.from_iterable(lists)))
 
@@ -600,7 +619,18 @@ def get_related_list(grp: pd.DataFrame) -> list[str]:
 
 
 def groupby_funcs(grp: pd.DataFrame) -> pd.Series:
+    """
+    Performs calculations on the unique sources to get the
+    lightcurve properties. Works on the grouped by source
+    dataframe.
 
+    Args:
+        grp: The current iteration dataframe of the grouped by sources
+            dataframe.
+
+    Returns:
+        Pandas series containing the calculated metrics of the source.
+    """
     out = {}
     out['img_list'] = grp['image'].values.tolist()
     out["n_meas_forced"] = grp["forced"].sum()
@@ -635,7 +665,7 @@ def groupby_funcs(grp: pd.DataFrame) -> pd.Series:
     return(pd.Series(out, name=grp.index.name))
 
 
-def parallel_groupby(df: pd.DataFrame) -> pd.DataFrame:
+def parallel_groupby(df: dd.DataFrame) -> dd.DataFrame:
     """
     Performs the parallel source dataframe operations to calculate the source
     metrics using Dask and returns the resulting dataframe.
