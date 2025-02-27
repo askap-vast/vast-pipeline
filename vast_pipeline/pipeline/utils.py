@@ -678,7 +678,6 @@ def parallel_groupby(df: dd.DataFrame) -> dd.DataFrame:
     """
 
     columns = [
-        'source',
         'id',
         'image',
         'forced',
@@ -726,7 +725,7 @@ def parallel_groupby(df: dd.DataFrame) -> dd.DataFrame:
         "n_rel": "i",
     }
 
-    groupby_df = df[columns].set_index('source')
+    groupby_df = df[columns]
 
     out = groupby_df.groupby('source').apply(groupby_funcs,
                                              meta=out_col_dtype)
