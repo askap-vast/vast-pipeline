@@ -1,8 +1,6 @@
 import os
 import logging
-import shutil
 import warnings
-import numpy as np
 import pandas as pd
 import pyarrow as pa
 import dask.dataframe as dd
@@ -356,9 +354,9 @@ def final_operations(
                                  .rename(columns={"id_a": "meas_id_a", "id_b": "meas_id_b"}) \
                                  .reset_index()
 
-        # try to optimize measurement pair DataFrame and save to parquet file  
+        # try to optimize measurement pair DataFrame and save to parquet file
         # fall back to original dtypes if downcasting fails due to inconsistent issue
-        
+
         # get the schema before downcasting
         measurement_pairs_df._meta[['image_name_a', 'image_name_b']] = measurement_pairs_df._meta[['image_name_a', 'image_name_b']].astype("string")
         o_schema = pa.Schema.from_pandas(measurement_pairs_df._meta, preserve_index=False)
@@ -368,10 +366,10 @@ def final_operations(
             measurement_pairs_df.to_parquet(pairs_dir, write_index=False)
         except Exception as e:
             warnings.warn(f"str{e}; skip downcast int/float")
-            measurement_pairs_df.to_parquet(pairs_dir, write_index=False, schema=o_schema)               
-        
+            measurement_pairs_df.to_parquet(pairs_dir, write_index=False, schema=o_schema)
+
         # clear the temporary folder
-    
+
         delete_file_or_dir(pairs_dir_tmp)
 
         logger.info("Write the final version of measurement pair dataframe into files time: %.2f seconds", timer.reset())

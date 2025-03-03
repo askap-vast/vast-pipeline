@@ -6,9 +6,6 @@ import numpy as np
 import pandas as pd
 import pyarrow as pa
 
-from vast_pipeline.utils.utils import calculate_workers_and_partitions
-
-
 logger = logging.getLogger(__name__)
 
 PAIRS_SCHEMA = [
