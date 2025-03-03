@@ -30,6 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- V2: Pair metrics working with V2 dask LocalCluster changes [#817](https://github.com/askap-vast/vast-pipeline/pull/817)
 - V2: Fixed missing JS9 overlays on source webpage [#809](https://github.com/askap-vast/vast-pipeline/pull/809)
 - V2: Fix bug when deleting source tags from database which are referenced by multiple sources [#803](https://github.com/askap-vast/vast-pipeline/pull/803)
 - Fixed incorrect error ellipse calculation [#792](https://github.com/askap-vast/vast-pipeline/pull/792)
@@ -46,6 +47,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#817](https://github.com/askap-vast/vast-pipeline/pull/817): fix: V2: Updates to pairs calculation to make it work with Dask `LocalCluster`.
 - [#816](https://github.com/askap-vast/vast-pipeline/pull/816): feat: V2: Update to use Dask `LocalCluster` throughout.
 - [#809](https://github.com/askap-vast/vast-pipeline/pull/809): fix: Fix missing JS9 overlays on source webpage
 - [#808](https://github.com/askap-vast/vast-pipeline/pull/808): feat: V2: Add DaskManager for setting up a Dask `LocalCluster` using Dask.Distributed.
