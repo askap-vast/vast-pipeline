@@ -304,7 +304,7 @@ def run_pipe(
             )
         logger.warning(
             "The Condon uncertainties only account for the statistical "
-            "component of the uncertainty - any systematic uncertainty"
+            "component of the uncertainty - any systematic uncertainty "
             "should be taken into account using the ra_uncertainty and "
             "dec_uncertainty parameters in the config file."
             )
