@@ -276,23 +276,39 @@ LOGGING = {
             "formatter": "default",
         },
     },
-    "loggers": {
+        "loggers": {
         "django.request": {
             "handlers": ["mail_admins"],
             "level": "ERROR",
             "propagate": True,
         },
-        # Minimise django-postgres-copy logging.
-        'postgres_copy': {
+        'distributed.scheduler': {
+           "level": "ERROR",
+           "handlers": ['console'],
+        },
+        'distributed.shuffle': {
+           "level": "ERROR",
+           "handlers": ['console'],
+        },
+        'distributed.nanny': {
             "level": "ERROR",
+            "handlers": ['console'],
+        },
+        'distributed.core': {
+            "level": "ERROR",
+            "handlers": ['console'],
+        },
+        'postgres_copy.copy_from': {
+            "level": "INFO",
             "propogate": True,
             "handlers": ["console"]
         },
+
         # root logger
-        "": {
-            "handlers": ["console"],
-            "propagate": True,
-            "level": "INFO",
+        '': {
+            'handlers': ['console'],
+            'propagate': True,
+            'level': 'INFO',
         },
     },
 }
