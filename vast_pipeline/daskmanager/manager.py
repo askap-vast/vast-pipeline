@@ -1,7 +1,8 @@
-# code from https://github.com/MoonVision/django-dask-demo
+# Original code from https://github.com/MoonVision/django-dask-demo
 
 import logging
 import random
+import time
 
 from dask.distributed import Client, LocalCluster
 from django.conf import settings as s
@@ -33,6 +34,7 @@ class Singleton(type):
 
 class DaskManager(metaclass=Singleton):
     def __init__(self, skip_connect: bool = False):
+        self.dedicated_client = True
         if skip_connect:
             self.client = _start_cluster()
         else:
@@ -41,6 +43,7 @@ class DaskManager(metaclass=Singleton):
                 self.client = Client(
                     f'{s.DASK_SCHEDULER_HOST}:{s.DASK_SCHEDULER_PORT}',
                 )
+                self.dedicated_client = False
                 logger.info('Connected to Dask Cluster at %s:%s',
                             s.DASK_SCHEDULER_HOST, s.DASK_SCHEDULER_PORT)
             except Exception:
@@ -62,3 +65,20 @@ class DaskManager(metaclass=Singleton):
     def restart(self):
         """Restart the cluster and flush all memory"""
         self.client.restart()
+
+    def shutdown(self):
+        """Shut down the cluster safely"""
+        logger.info("Shutting down Dask client")
+        
+        logger.info("Cancelling futures...")
+        self.client.cancel(self.client.futures)
+        
+        logger.info("Retiring workers...")
+        self.client.retire_workers()
+        time.sleep(1)
+        
+        logger.debug("Running shutdown...")
+        self.client.shutdown()
+        logger.debug("Running close...")
+        self.client.close()
+        logger.info("Dask client shut down.")
