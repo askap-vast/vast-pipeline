@@ -8,7 +8,7 @@ env:
 
 jobs:
   test:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -86,5 +86,7 @@ jobs:
         run: bash -e ./download.sh
         working-directory: ./vast_pipeline/tests/regression-data
 
+      - name: Run cluster
+        run: poetry run python manage.py runlocalcluster
       - name: Run tests
         run: poetry run python manage.py test
