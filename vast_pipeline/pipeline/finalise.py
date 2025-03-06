@@ -1,7 +1,8 @@
 import os
 import logging
-import numpy as np
+import warnings
 import pandas as pd
+import pyarrow as pa
 import dask.dataframe as dd
 
 from astropy import units as u
@@ -10,16 +11,22 @@ from django.conf import settings
 from typing import List, Dict, Tuple
 
 from vast_pipeline.models import Run
-from vast_pipeline.utils.utils import StopWatch, optimise_numeric
+from vast_pipeline.utils.utils import (
+    StopWatch, optimise_numeric, delete_file_or_dir
+)
 from vast_pipeline.pipeline.loading import (
     update_sources,
     copy_upload_sources,
     copy_upload_related_sources,
     copy_upload_associations,
 )
-from vast_pipeline.pipeline.pairs import calculate_measurement_pair_metrics
+from vast_pipeline.pipeline.pairs import (
+    calculate_measurement_pair_metrics,
+    calculate_measurement_pair_aggregate_metrics
+)
 from vast_pipeline.pipeline.utils import (
-    parallel_groupby, get_df_memory_usage, log_total_memory_usage
+    parallel_groupby, get_df_memory_usage,
+    log_total_memory_usage
 )
 
 # NOTE: Get testing environment status.
@@ -27,73 +34,6 @@ from vast_pipeline.pipeline.utils import (
 __TESTING__ = settings.TESTING
 
 logger = logging.getLogger(__name__)
-
-
-def calculate_measurement_pair_aggregate_metrics(
-    measurement_pairs_df: pd.DataFrame,
-    min_vs: float,
-    flux_type: str = "peak",
-) -> pd.DataFrame:
-    """
-    Calculate the aggregate maximum measurement pair variability metrics
-    to be stored in `Source` objects. Only measurement pairs with
-    abs(Vs metric) >= `min_vs` are considered.
-    The measurement pairs are filtered on abs(Vs metric) >= `min_vs`,
-    grouped by the source ID column `source`, then the row index of the
-    maximum abs(m) metric is found. The absolute Vs and m metric values from
-    this row are returned for each source.
-
-    Args:
-        measurement_pairs_df:
-            The measurement pairs and their variability metrics. Must at least
-            contain the columns: source, vs_{flux_type}, m_{flux_type}.
-        min_vs:
-            The minimum value of the Vs metric (i.e. column `vs_{flux_type}`)
-            the measurement pair must have to be included in the aggregate
-            metric determination.
-        flux_type:
-            The flux type on which to perform the aggregation, either "peak"
-            or "int". Default is "peak".
-
-    Returns:
-        Measurement pair aggregate metrics indexed by the source ID, `source`.
-            The metric columns are named: `vs_abs_significant_max_{flux_type}`
-            and `m_abs_significant_max_{flux_type}`.
-    """
-    check_df = measurement_pairs_df.query(f"abs(vs_{flux_type}) >= @min_vs")
-
-    # This check is performed due to a bug that was occuring after updating the
-    # pandas dependancy (1.4) when performing the tests. The bug was that the
-    # grouby and agg stage below was being performed on an empty series in the
-    # basic association test and causing a failure. Hence this only performs
-    # the groupby if the original query dataframe is not empty.
-    if check_df.empty:
-        pair_agg_metrics = pd.DataFrame(
-            columns=[f"vs_{flux_type}", f"m_{flux_type}", "source"]
-        )
-    else:
-        pair_agg_metrics = measurement_pairs_df.iloc[
-            check_df
-            .groupby("source")
-            .agg(m_abs_max_idx=(f"m_{flux_type}", lambda x: x.abs().idxmax()),)
-            # cast row indices to int and select them
-            .astype(np.int32)["m_abs_max_idx"]
-            .reset_index(drop=True)  # keep only the row indices
-        ][[f"vs_{flux_type}", f"m_{flux_type}", "source"]]
-
-    pair_agg_metrics = (
-        pair_agg_metrics.set_index("source")
-        .abs()
-        .rename(
-            columns={
-                f"vs_{flux_type}": f"vs_abs_significant_max_{flux_type}",
-                f"m_{flux_type}": f"m_abs_significant_max_{flux_type}",
-            }
-        )
-    )
-
-    return pair_agg_metrics
-
 
 def final_operations(
     sources_df: dd.DataFrame,
@@ -152,6 +92,8 @@ def final_operations(
     logger.info("Calculating statistics for sources...")
     log_total_memory_usage()
 
+    sources_df = sources_df.set_index("source") \
+                           .repartition(partition_size=f"{upload_chunk_size_mb}MB")
     srcs_df = parallel_groupby(sources_df)
 
     mem_usage = get_df_memory_usage(srcs_df)
@@ -169,7 +111,9 @@ def final_operations(
     )
     srcs_df["new_high_sigma"] = srcs_df["new_high_sigma"].fillna(0.0)
 
-    # Still might try and move this compute step later on.
+    # NOTE: It should be possible to hold off the compute on srcs_df
+    # until the associations and related parques are written.
+    # This would simplify the merge with maesurement pairs below as well.
     srcs_df = srcs_df.compute()
 
     mem_usage = get_df_memory_usage(srcs_df)
@@ -191,39 +135,36 @@ def final_operations(
     log_total_memory_usage()
 
     # create measurement pairs, aka 2-epoch metrics
-    # Hardcode to False for now.
-    calculate_pairs = False
     if calculate_pairs:
         timer.reset()
-        measurement_pairs_df = calculate_measurement_pair_metrics(
-            sources_df,
-            n_cpu=n_cpu,
-            max_partition_mb=max_partition_mb)
-        logger.info(
-            'Measurement pair metrics time: %.2f seconds',
-            timer.reset())
-        mem_usage = get_df_memory_usage(measurement_pairs_df)
-        logger.debug(f"measurment_pairs_df memory: {mem_usage}MB")
-        log_total_memory_usage()
+
+        pairs_dir = os.path.join(p_run.path, 'measurement_pairs.parquet')
+        pairs_dir_tmp = os.path.join(pairs_dir, "tmp")
+        n_partitions, source_divisions = calculate_measurement_pair_metrics(sources_df, pairs_dir_tmp)
+        logger.info('Measurement pair metrics time: %.2f seconds', timer.reset())
 
         # calculate measurement pair metric aggregates for sources by finding
         # the row indices of the aggregate max of the abs(m) metric for each
         # flux type.
-        pair_agg_metrics = pd.merge(
-            calculate_measurement_pair_aggregate_metrics(
-                measurement_pairs_df,
-                source_aggregate_pair_metrics_min_abs_vs,
-                flux_type="peak",
-            ),
-            calculate_measurement_pair_aggregate_metrics(
-                measurement_pairs_df,
-                source_aggregate_pair_metrics_min_abs_vs,
-                flux_type="int",
-            ),
-            how="outer",
-            left_index=True,
-            right_index=True,
-        )
+        max_peak_pairs = calculate_measurement_pair_aggregate_metrics(
+                            pairs_dir_tmp,
+                            source_aggregate_pair_metrics_min_abs_vs,
+                            flux_type="peak",
+                            )
+        max_int_pairs = calculate_measurement_pair_aggregate_metrics(
+                            pairs_dir_tmp,
+                            source_aggregate_pair_metrics_min_abs_vs,
+                            flux_type="int",
+                            )
+        if max_peak_pairs.npartitions == max_int_pairs.npartitions == n_partitions:
+            pair_agg_metrics = dd.merge(max_peak_pairs, max_int_pairs, on="source", how="outer")
+            pair_agg_metrics = pair_agg_metrics.set_index("source")
+            pair_agg_metrics = pair_agg_metrics.compute()
+        else:
+            max_peak_pairs = max_peak_pairs.compute()
+            max_int_pairs = max_int_pairs.compute()
+            pair_agg_metrics = max_peak_pairs.merge(max_int_pairs, on="source", how="outer")
+            pair_agg_metrics = pair_agg_metrics.set_index("source")
 
         # join with sources and replace agg metrics NaNs with 0 as the
         # DataTables API JSON serialization doesn't like them
@@ -233,6 +174,7 @@ def final_operations(
             "vs_abs_significant_max_int": 0.0,
             "m_abs_significant_max_int": 0.0,
         })
+
         logger.info(
             "Measurement pair aggregate metrics time: %.2f seconds",
             timer.reset())
@@ -353,7 +295,7 @@ def final_operations(
     )
 
     # update measurements with sources to get associations
-    associations_df = sources_df.drop("related", axis=1)
+    associations_df = sources_df.drop("related", axis=1).reset_index()
 
     mem_usage = get_df_memory_usage(associations_df)
     logger.debug(f"sources_df memory after merge: {mem_usage}MB")
@@ -392,25 +334,47 @@ def final_operations(
         .rename(columns={"id": "meas_id", "source": "source_id"}) \
         .to_parquet(os.path.join(p_run.path, "associations.parquet"), overwrite=True)
 
-    if calculate_pairs:
-        # optimize measurement pair DataFrame and save to parquet file
-        measurement_pairs_df = optimise_numeric(
-                measurement_pairs_df.rename(
-                    columns={
-                        "id_a": "meas_id_a",
-                        "id_b": "meas_id_b",
-                        "source": "source_id",
-                    }
-                )
-            )
-        measurement_pairs_df.to_parquet(
-            os.path.join(p_run.path, "measurement_pairs.parquet"), index=False
-        )
-
-    logger.info("Total final operations time: %.2f seconds", timer.reset_init())
-
     nr_sources = srcs_df.shape[0]
     nr_new_sources = srcs_df["new"].sum()
+
+    if calculate_pairs:
+        # optimize measurement pair DataFrame and save to parquet file
+        timer.reset()
+        # ingest to dask data frames
+        srcs_df.index.name = "source_id"
+        srcs_df = dd.from_pandas(srcs_df, npartitions=n_partitions)
+        columns = ['id_a', 'id_b', 'flux_int_a', 'flux_int_err_a', 'flux_peak_a',
+       'flux_peak_err_a', 'image_name_a', 'flux_int_b', 'flux_int_err_b',
+       'flux_peak_b', 'flux_peak_err_b', 'image_name_b', 'vs_peak', 'vs_int',
+       'm_peak', 'm_int']
+
+        measurement_pairs_df = dd.read_parquet(pairs_dir_tmp, columns=columns, index='source') \
+                                 .merge(srcs_df, how="left", left_index=True, right_index=True) \
+                                 .rename(columns={"id_a": "meas_id_a", "id_b": "meas_id_b"}) \
+                                 .reset_index()
+
+        # try to optimize measurement pair DataFrame and save to parquet file
+        # fall back to original dtypes if downcasting fails due to inconsistent issue
+
+        # get the schema before downcasting
+        measurement_pairs_df._meta[['image_name_a', 'image_name_b']] = measurement_pairs_df._meta[['image_name_a', 'image_name_b']].astype("string")
+        o_schema = pa.Schema.from_pandas(measurement_pairs_df._meta, preserve_index=False)
+        
+        try:
+            measurement_pairs_df = measurement_pairs_df.map_partitions(optimise_numeric, enforce_metadata=False)
+            measurement_pairs_df.to_parquet(pairs_dir, write_index=False)
+        except Exception as e:
+            warnings.warn(f"str{e}; skip downcast int/float")
+            measurement_pairs_df.to_parquet(pairs_dir, write_index=False, schema=o_schema)
+
+        # clear the temporary folder
+
+        delete_file_or_dir(pairs_dir_tmp)
+
+        logger.info("Write the final version of measurement pair dataframe into files time: %.2f seconds", timer.reset())
+
+
+    logger.info("Total final operations time: %.2f seconds", timer.reset_init())
 
     # calculate and return total number of extracted sources
     return (nr_sources, nr_new_sources)

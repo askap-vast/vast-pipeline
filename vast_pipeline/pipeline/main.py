@@ -244,7 +244,7 @@ class Pipeline:
             sources_df = dd.from_pandas(
                 sources_df.reset_index(drop=True),
                 npartitions=npartitions
-            ).persist()
+            ).sort_values(['epoch', 'datetime']).persist()
             wait(sources_df)
 
         mem_usage = get_df_memory_usage(sources_df)

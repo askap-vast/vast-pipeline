@@ -269,11 +269,12 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config: PipelineCon
             actual_file = bak_file.replace('.yaml.bak', '_prev.yaml')
         else:
             actual_file = bak_file.replace('.bak', '')
-        # As associations can be a directory, we need to check if it exists
-        # and remove it as the copy will not overwrite the dir.
+        # As associations or pairs can be a directory, we need to check if they exist
+        # and remove them as the copy will not overwrite the dir.
         if i == "associations" and os.path.isdir(actual_file):
             delete_file_or_dir(actual_file)
-
+        if i == "measurement_pairs" and os.path.isdir(actual_file):
+            delete_file_or_dir(actual_file)
         copy_file_or_dir(bak_file, actual_file)
         delete_file_or_dir(bak_file)
 
@@ -410,10 +411,11 @@ class Command(BaseCommand):
                     bak_files[i] = f_name
                 elif i == "associations" and os.path.isdir(f_name):
                     bak_files[i] = f_name
+                elif i == "measurement_pairs" and os.path.isdir(f_name):
+                    bak_files[i] = f_name
                 elif (
                     i != "measurement_pairs"
-                    # Note: Deleting just for PR #816
-                    #or pipeline.config["variability"]["pair_metrics"]
+                    or pipeline.config["variability"]["pair_metrics"]
                 ):
                     raise CommandError(
                         f'File {f_name} does not exist.'

@@ -4,11 +4,82 @@ import logging
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
-
-from vast_pipeline.utils.utils import calculate_workers_and_partitions
-
+import pyarrow as pa
 
 logger = logging.getLogger(__name__)
+
+PAIRS_SCHEMA = [
+                ('id_a', pa.string()),
+                ('id_b', pa.string()),
+                ('source', pa.string()),
+                ('flux_int_a', pa.float32()),
+                ('flux_int_err_a', pa.float32()),
+                ('flux_peak_a', pa.float32()),
+                ('flux_peak_err_a', pa.float32()),
+                ('image_name_a', pa.string()),
+                ('flux_int_b', pa.float32()),
+                ('flux_int_err_b', pa.float32()),
+                ('flux_peak_b', pa.float32()),
+                ('flux_peak_err_b', pa.float32()),
+                ('image_name_b', pa.string()),
+                ('vs_peak', pa.float32()),
+                ('vs_int', pa.float32()),
+                ('m_peak', pa.float32()),
+                ('m_int', pa.float32()),
+                ('vs_abs_significant_max_peak', pa.float32()),
+                ('vs_abs_significant_max_int', pa.float32()),
+                ('m_abs_significant_max_peak', pa.float32()),
+                ('m_abs_significant_max_int', pa.float32()),]
+
+
+def calculate_measurement_pair_aggregate_metrics(
+    pairs_parquet_dir: str,
+    min_vs: float,
+    flux_type: str = "peak",
+) -> pd.DataFrame:
+    """
+    Calculate the aggregate maximum measurement pair variability metrics
+    to be stored in `Source` objects. Only measurement pairs with
+    abs(Vs metric) >= `min_vs` are considered.
+    The measurement pairs are filtered on abs(Vs metric) >= `min_vs`,
+    grouped by the source ID column `source`, then the row index of the
+    maximum abs(m) metric is found. The absolute Vs and m metric values from
+    this row are returned for each source.
+
+    Args:
+        pairs_parquet_dir:
+            The directory where parquets of measurement pairs are saved
+        min_vs:
+            The minimum value of the Vs metric (i.e. column `vs_{flux_type}`)
+            the measurement pair must have to be included in the aggregate
+            metric determination.
+        flux_type:
+            The flux type on which to perform the aggregation, either "peak"
+            or "int". Default is "peak".
+
+    Returns:
+        Measurement pair aggregate metrics indexed by the source ID, `source`.
+            The metric columns are named: `vs_abs_significant_max_{flux_type}`
+            and `m_abs_significant_max_{flux_type}`.
+    """
+
+    # Ingest parquet files
+    columns = ["source", f"vs_abs_significant_max_{flux_type}", f"m_abs_significant_max_{flux_type}"]
+    filters = [(f"vs_abs_significant_max_{flux_type}", ">=", min_vs)]
+
+    pair_filtered = dd.read_parquet(pairs_parquet_dir, columns=columns, filters=filters)
+
+    def _get_max_flux(partition):
+        partition=partition.reset_index(drop=True)
+        inds = []
+        for name, group in partition.groupby("source"):
+            idx = group[f"m_abs_significant_max_{flux_type}"].idxmax()
+            inds.append(int(idx))
+        return partition.loc[inds]
+
+    pair_agg_metrics = pair_filtered.map_partitions(_get_max_flux)
+
+    return pair_agg_metrics
 
 
 def calculate_vs_metric(
@@ -46,7 +117,7 @@ def calculate_m_metric(flux_a: float, flux_b: float) -> float:
 
 
 def calculate_measurement_pair_metrics(
-        df: pd.DataFrame, n_cpu: int = 0, max_partition_mb: int = 15) -> pd.DataFrame:
+        df: pd.DataFrame, pairs_dir="./measurement_pairs.parquet") -> dd.DataFrame:
     """Generate a DataFrame of measurement pairs and their 2-epoch variability metrics
     from a DataFrame of measurements. For more information on the variability metrics, see
     Section 5 of Mooley et al. (2016), DOI: 10.3847/0004-637X/818/2/105.
@@ -70,133 +141,75 @@ def calculate_measurement_pair_metrics(
             vs_peak, vs_int - variability t-statistic
             m_peak, m_int - variability modulation index
     """
+
+    # select relevant columns
+    df_pairs = df[["id", "flux_int", "flux_int_err",
+               "flux_peak", "flux_peak_err", "image", "datetime"]].rename(columns={"image": "image_name"})
+
+    # keep record of divisions
+    source_divisions = df_pairs.divisions
+    n_partitions = df_pairs.npartitions
     
-    n_workers, n_partitions = calculate_workers_and_partitions(
-        df.set_index('source'),
-        n_cpu=n_cpu,
-        max_partition_mb=max_partition_mb
-    )
-    logger.debug(f"Running association with {n_workers} CPUs")
+    def _get_pair_partition(partition):
+        partition = partition.sort_values(["source", "datetime"])
+        # Extract combinations for each group within the partition
+        result = []
+        for name, group in partition.groupby("source"):
+            combs = list(combinations(group['id'], 2))
+            for comb in combs:
+                result.append((comb[0], comb[1], name))
+
+        res = pd.DataFrame(result, columns=["id_a", "id_b", "source"])
+        res = res.sort_values(by=["source", "id_a", "id_b"])
+        return res
     
-    """Create a DataFrame containing all measurement ID combinations per source.
-    Resultant DataFrame will have a MultiIndex(["source", RangeIndex]) where "source" is
-    the source ID and RangeIndex is an unnamed temporary ID for each measurement pair,
-    unique only together with source.
-    DataFrame will have columns [0, 1], each containing a measurement ID. e.g.
-                                  0               1
-    source
-    23tmtjpur5g2 0   A2uMq6e7oVhDLA  crXfDCtmbK5iAx
-                 1   A2uMq6e7oVhDLA  5YZxjnBoDBNiXf
-                 2   A2uMq6e7oVhDLA  yjGgnqDHATtUM9
-                 3   A2uMq6e7oVhDLA  KdfWmxoeXF8MH8
-                 4   A2uMq6e7oVhDLA  im5zhMLyHQxmSJ
-    ...                         ...             ...
-    zz8WBFP9VwHq 31  yYPbGwbib4Kq29  jVUEbuBn7W3oQG
-                 32  yYPbGwbib4Kq29  K9aB9h8aNc9GM3
-                 33  NsHRmiqJvQ6pFV  jVUEbuBn7W3oQG
-                 34  NsHRmiqJvQ6pFV  K9aB9h8aNc9GM3
-                 35  jVUEbuBn7W3oQG  K9aB9h8aNc9GM3
-    """
-    measurement_combinations = (
-        dd.from_pandas(df, npartitions=n_partitions)
-        .groupby("source")["id"]
-        .apply(
-            lambda x: pd.DataFrame(list(combinations(x, 2))), meta={0: "i", 1: "i"},)
-        .compute(num_workers=n_workers, scheduler="processes")
-    )
+    def _merge_pair_partitions(df1_partition, df2_partition, col1, col2, suffixes=("_x", "_y")):
+        return df1_partition.merge(df2_partition, left_on=col1, right_on=col2, how="left", suffixes=suffixes).drop(col2, axis=1)
+        
+    # obtain pairs
+    pairs = df_pairs.map_partitions(_get_pair_partition, meta={"id_a": "str", "id_b": "str", "source": "str"})
 
-    """Drop the RangeIndex from the MultiIndex as it isn't required and rename the columns.
-    Example resultant DataFrame:
-                    source            id_a            id_b
-    0         23tmtjpur5g2  A2uMq6e7oVhDLA  crXfDCtmbK5iAx
-    1         23tmtjpur5g2  A2uMq6e7oVhDLA  5YZxjnBoDBNiXf
-    2         23tmtjpur5g2  A2uMq6e7oVhDLA  yjGgnqDHATtUM9
-    3         23tmtjpur5g2  A2uMq6e7oVhDLA  KdfWmxoeXF8MH8
-    4         23tmtjpur5g2  A2uMq6e7oVhDLA  im5zhMLyHQxmSJ
-    ...                ...             ...             ...
-    11664374  zz8WBFP9VwHq  yYPbGwbib4Kq29  jVUEbuBn7W3oQG
-    11664375  zz8WBFP9VwHq  yYPbGwbib4Kq29  K9aB9h8aNc9GM3
-    11664376  zz8WBFP9VwHq  NsHRmiqJvQ6pFV  jVUEbuBn7W3oQG
-    11664377  zz8WBFP9VwHq  NsHRmiqJvQ6pFV  K9aB9h8aNc9GM3
-    11664378  zz8WBFP9VwHq  jVUEbuBn7W3oQG  K9aB9h8aNc9GM3
-    Where source is the source ID, id_a and id_b are measurement IDs.
-    """
-    measurement_combinations = (
-        measurement_combinations.reset_index(level=1, drop=True)
-        .rename(columns={0: "id_a", 1: "id_b"})
-        .astype(str)
-        .reset_index()
-    )
-
-    # Dask has a tendency to swap which order the measurement pairs are
-    # defined in, even if the dataframe is pre-sorted. We want the pairs to be
-    # in date order (a < b) so the code below corrects any that are not.
-    measurement_combinations = measurement_combinations.join(
-        df[["source", "id", "datetime"]].set_index(["source", "id"]),
-        on=["source", "id_a"],
-    )
-
-    measurement_combinations = measurement_combinations.join(
-        df[["source", "id", "datetime"]].set_index(["source", "id"]),
-        on=["source", "id_b"],
-        lsuffix="_a",
-        rsuffix="_b",
-    )
-
-    to_correct_mask = (
-        measurement_combinations["datetime_a"] > measurement_combinations["datetime_b"]
-    )
-
-    if np.any(to_correct_mask):
-        logger.debug("Correcting measurement pairs order")
-        (
-            measurement_combinations.loc[to_correct_mask, "id_a"],
-            measurement_combinations.loc[to_correct_mask, "id_b"],
-        ) = np.array(
-            [
-                measurement_combinations.loc[to_correct_mask, "id_b"].values,
-                measurement_combinations.loc[to_correct_mask, "id_a"].values,
-            ]
-        )
-
-    measurement_combinations = measurement_combinations.drop(
-        ["datetime_a", "datetime_b"], axis=1
-    )
-
-    # add the measurement fluxes and errors
-    association_fluxes = df.set_index(["source", "id"])[
-        ["flux_int", "flux_int_err", "flux_peak", "flux_peak_err", "image"]
-    ].rename(columns={"image": "image_name"})
-    measurement_combinations = measurement_combinations.join(
-        association_fluxes,
-        on=["source", "id_a"],
-    ).join(
-        association_fluxes,
-        on=["source", "id_b"],
-        lsuffix="_a",
-        rsuffix="_b",
-    )
+    result = dd.map_partitions(_merge_pair_partitions, pairs, df_pairs, "id_a", "id")
+   
+    result = dd.map_partitions(_merge_pair_partitions, result, df_pairs, "id_b", "id", suffixes=("_a", "_b"))
 
     # calculate 2-epoch metrics
-    measurement_combinations["vs_peak"] = calculate_vs_metric(
-        measurement_combinations.flux_peak_a,
-        measurement_combinations.flux_peak_b,
-        measurement_combinations.flux_peak_err_a,
-        measurement_combinations.flux_peak_err_b,
+    
+    result["vs_peak"] = calculate_vs_metric(
+        result["flux_peak_a"],
+        result["flux_peak_b"],
+        result["flux_peak_err_a"],
+        result["flux_peak_err_b"],
     )
-    measurement_combinations["vs_int"] = calculate_vs_metric(
-        measurement_combinations.flux_int_a,
-        measurement_combinations.flux_int_b,
-        measurement_combinations.flux_int_err_a,
-        measurement_combinations.flux_int_err_b,
+    
+    result["vs_int"] = calculate_vs_metric(
+        result.flux_int_a,
+        result.flux_int_b,
+        result.flux_int_err_a,
+        result.flux_int_err_b,
     )
-    measurement_combinations["m_peak"] = calculate_m_metric(
-        measurement_combinations.flux_peak_a,
-        measurement_combinations.flux_peak_b,
-    )
-    measurement_combinations["m_int"] = calculate_m_metric(
-        measurement_combinations.flux_int_a,
-        measurement_combinations.flux_int_b,
+    
+    result["m_peak"] = calculate_m_metric(
+        result.flux_peak_a,
+        result.flux_peak_b,
     )
 
-    return measurement_combinations
+    result["m_int"] = calculate_m_metric(
+        result.flux_int_a,
+        result.flux_int_b,
+    )
+    
+    # remove datetime columns
+    result = result.drop(["datetime_a", "datetime_b"], axis=1)
+
+    # get absolute value of metrics
+    result['vs_abs_significant_max_peak'] = result['vs_peak'].abs()
+    result['vs_abs_significant_max_int'] = result['vs_int'].abs()
+    result['m_abs_significant_max_peak'] = result['m_peak'].abs()
+    result['m_abs_significant_max_int'] = result['m_int'].abs()
+
+    result.to_parquet(pairs_dir, write_index=False, overwrite=True,
+                      compute=True, engine="pyarrow", schema=pa.schema(PAIRS_SCHEMA))
+    
+    return n_partitions, source_divisions
+

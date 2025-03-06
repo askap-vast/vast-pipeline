@@ -1411,7 +1411,9 @@ def parallel_association(
     #          3713  PwEnpyALZXGHk8
 
     # reset the index of the final corrected and collapsed result and compute into the cluster
-    results = results.reset_index(drop=True).persist()
+    # also sort by epoch to avoid unsorted output which can occur due to
+    # what appear to be race conditions in map_partitions above.
+    results = results.reset_index(drop=True).sort_values(['epoch', 'datetime']).persist()
     wait(results)
     del images_dd
 
