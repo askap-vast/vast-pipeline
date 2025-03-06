@@ -7,8 +7,11 @@ import time
 from dask.distributed import Client, LocalCluster
 from django.conf import settings as s
 from . import config # noqa: F401
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
+
+__TESTING__ = settings.TESTING
 
 def _start_cluster():
     logger.info('Starting local Dask Cluster')
@@ -68,6 +71,9 @@ class DaskManager(metaclass=Singleton):
 
     def shutdown(self):
         """Shut down the cluster safely"""
+        
+        if __TESTING__:
+            return
         logger.info("Shutting down Dask client")
         
         logger.info("Cancelling futures...")
