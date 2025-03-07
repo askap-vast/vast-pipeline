@@ -368,9 +368,8 @@ class Pipeline:
             p_run.save()
 
         if self.dm.dedicated_client:
-            #logger.info("Shutting down dedicated client...")
-            #self.dm.shutdown()
-            logger.info("Should be shutting down dedicated client...")
+            logger.info("Shutting down dedicated Dask Cluster...")
+            self.dm.shutdown()
         pass
 
     @staticmethod
