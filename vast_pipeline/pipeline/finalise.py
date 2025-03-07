@@ -179,7 +179,7 @@ def final_operations(
             "Measurement pair aggregate metrics time: %.2f seconds",
             timer.reset())
         mem_usage = get_df_memory_usage(srcs_df)
-        logger.debug("srcs_df memory after calculate_pairs: {mem_usage}MB")
+        logger.debug(f"srcs_df memory after calculate_pairs: {mem_usage}MB")
         log_total_memory_usage()
     else:
         logger.info(

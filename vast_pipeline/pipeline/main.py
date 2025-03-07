@@ -162,6 +162,7 @@ class Pipeline:
 
         # STEP #2: measurements association
         # order images by time
+        logger.info("Running step #2: measurements association...")
         images.sort(key=operator.attrgetter("datetime"))
 
         # If the user has given lists we need to reorder the
@@ -257,6 +258,7 @@ class Pipeline:
 
         # STEP #3: Merge sky regions and sources ready for
         # steps 4 and 5 below.
+        logger.info("Running step #3: Merge sky regions and sources")
         missing_source_cols = [
             "source",
             "datetime",
@@ -293,6 +295,7 @@ class Pipeline:
         wait(missing_sources_df)
 
         # STEP #4 New source analysis
+        logger.info("Running step #4: new source analysis...")
         new_sources_df = new_sources(
             sources_df,
             missing_sources_df,
@@ -307,6 +310,7 @@ class Pipeline:
 
         # STEP #5: Run forced extraction/photometry if asked
         if self.config["source_monitoring"]["monitor"]:
+            logger.info("Running step #5: forced photometry...")
             (sources_df, nr_forced_measurements) = forced_extraction(
                 sources_df,
                 self.config["measurements"]["ra_uncertainty"] / 3600.0,
@@ -332,6 +336,7 @@ class Pipeline:
 
         # STEP #6: finalise the df getting unique sources, calculating
         # metrics and upload data to database
+        logger.info("Running step #6: final operations...")
         nr_sources, nr_new_sources = final_operations(
             sources_df,
             p_run,
@@ -362,6 +367,9 @@ class Pipeline:
             p_run.n_new_sources = nr_new_sources
             p_run.save()
 
+        if self.dm.dedicated_client:
+            logger.info("Shutting down dedicated Dask Cluster...")
+            self.dm.shutdown()
         pass
 
     @staticmethod
