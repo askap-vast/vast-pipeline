@@ -18,7 +18,7 @@ def _start_cluster():
             host=s.DASK_SCHEDULER_HOST,
             scheduler_port=int(s.DASK_SCHEDULER_PORT),
             dashboard_address="0.0.0.0:8787",  # Expose Dask dashboard externally
-            dashboard_kwargs={"base_url": "/dask"}  # Ensure correct routing for static files
+            service_kwargs={'dashboard': {"base_url": "/dask"}}  # Ensure correct routing for static files
         )
     client = Client(cluster)
     logger.info('Connected to local Dask Cluster')
