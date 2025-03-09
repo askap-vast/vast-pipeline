@@ -60,6 +60,7 @@ class DaskManager(metaclass=Singleton):
     
     def get_n_random_workers(self, n):
         """Return n random workers from the pool"""
+        logger.info(f"Getting {n} random workers")
         return random.sample(list(self.client.scheduler_info()['workers'].keys()), n)
 
     def restart(self):

@@ -310,7 +310,7 @@ def parallel_extraction(
     add_mode: bool,
     p_run_path: str,
     io_workers: List[str],
-) -> pd.DataFrame:
+) -> dd.DataFrame:
     """
     Parallelize forced extraction with Dask
 
@@ -348,6 +348,9 @@ def parallel_extraction(
             'source_tmp_id', 'ra', 'dec', 'image', 'flux_peak', 'island_id',
             'component_id', 'name', 'flux_int', 'flux_int_err'
     """
+
+    logger.info("Starting parallel extraction")
+
     # explode the lists in 'img_diff' column (this will make a copy of the df)
     # NOTE: Need to persist here since Dask loses futures after all the
     # previous merges. Ideally this should be removed and we only persist at the
@@ -369,6 +372,8 @@ def parallel_extraction(
         .persist()
     )
 
+    logger.info("Generated out df")
+
     # drop the source for which we would have no hope of detecting
     max_snr = out["flux_peak"].values / out["image_rms_min"].values
     out = out.loc[max_snr > min_sigma].reset_index(drop=True)
@@ -386,6 +391,8 @@ def parallel_extraction(
     out = out.drop(["image_rms_min", "detection"], axis=1).rename(
         columns={"image": "image_name"}
     )
+    logger.info("Dropped low S/N detections")
+
     # get the unique images to extract from
     unique_images_to_extract = out["image_name"].unique().compute().tolist()
 
@@ -412,6 +419,7 @@ def parallel_extraction(
         .merge(df_images[df_cols], on="id", how="left")
         .to_delayed()
     )
+    logger.info("Generated delayed measurements_parquet_Data")
 
     # Create a list of dataframes containing the relevant data from out per image
     # This generates a list of delayed futures that will only  compute at the next persist.
@@ -427,13 +435,18 @@ def parallel_extraction(
                                     cluster_threshold=cluster_threshold, allow_nan=allow_nan)
         for image_df, meas_data in image_data_list
         ]
+    logger.info("Generated forced extraction delayed")
 
     # Persist at this point uning the number of io workers.
     # df_out will contain the forced extraction measurments per image.
     # df_out should be sorted and partitioned by image at this point.
     df_out = dd.from_delayed(func_d).persist(workers=io_workers)
+    
+    logger.info("Persisted forced extraction df")
 
     del out, func_d, df_per_image, measurements_parquet_data
+    
+    wait(df_out)
 
     return df_out
 
@@ -631,7 +644,7 @@ def forced_extraction(
         The `sources_df` with the extracted sources added.
         The total number of forced measurements present in the run.
     """
-    logger.info("Starting force extraction step.")
+    logger.info("Starting forced extraction step.")
 
     timer = StopWatch()
 
@@ -661,6 +674,8 @@ def forced_extraction(
             .values(*tuple(cols))
         )
     ).set_index("name")
+    
+    logger.debug("Made images_df")
 
     # | name                          |   id     | measurements_path   | path         | noise_path   |
     # |:------------------------------|---------:|:--------------------|:-------------|:-------------|
@@ -683,8 +698,12 @@ def forced_extraction(
     # Explode out the img_diff column.
     extr_df = extr_df.explode("img_diff").reset_index()
     total_to_extract = extr_df.shape[0]
+    
+    logger.debug("Exploded out img_diff column")
+    logger.info(f"Total to extract: {total_to_extract}")
 
     if add_mode:
+        logger.info("Running in add mode...")
         # If we are adding images to the run we assume that monitoring was
         # also performed before (enforced by the pre-run checks) so now we
         # only want to force extract in three situations:
@@ -710,17 +729,20 @@ def forced_extraction(
         )
 
     timer.reset()
+    logger.info("Starting parallel extraction...")
     extr_df = parallel_extraction(
         extr_df, images_df, sources_df[['source', 'image', 'flux_peak']],
         min_sigma, edge_buffer, cluster_threshold, allow_nan, add_mode,
         p_run.path, io_workers
     )
+    logger.info("Completed parallel extraction step.")
 
     # Dask needs type metadata for map_partitions
     sources_meta = dd.utils.make_meta(sources_df).drop(['epoch', 'interim_ns', 'interim_ew'], axis=1)
     # Get expected database measurements schema
     columns = read_schema(images_df.iloc[0]["measurements_path"]).names
 
+    logger.info("Starting save and upload...")
     extr_df = extr_df.map_partitions(save_and_upload_forced_df,
                                      p_run_path=p_run.path,
                                      p_run_id=p_run.id,
@@ -733,7 +755,7 @@ def forced_extraction(
                                      enforce_metadata=False,
                                      meta=sources_meta)
 
-
+    logger.info("Finished save and upload")
     # Calculate epoch column for extr_df
     if sources_df['epoch'].dtype == 'object':
         extr_df["epoch"] = "FORCED"
