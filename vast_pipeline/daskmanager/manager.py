@@ -12,13 +12,17 @@ logger = logging.getLogger(__name__)
 
 def _start_cluster():
     logger.info('Starting local Dask Cluster')
+    logger.info(f"n_workers: {s.DASK_NUM_WORKERS}")
+    logger.info(f"threads_per_worker: {s.DASK_THREADS_PER_WORKER}")
+    logger.info(f"scheduler_host: {s.DASK_SCHEDULER_HOST}")
+    logger.info(f"scheduler_port: {s.DASK_SCHEDULER_PORT}")
     cluster = LocalCluster(
             n_workers=int(s.DASK_NUM_WORKERS),
             threads_per_worker=s.DASK_THREADS_PER_WORKER,
             host=s.DASK_SCHEDULER_HOST,
             scheduler_port=int(s.DASK_SCHEDULER_PORT),
             dashboard_address=":8787",  # Expose Dask dashboard externally
-            service_kwargs={'dashboard': {"base_url": "/dask"}}  # Ensure correct routing for static files
+            #service_kwargs={'dashboard': {"base_url": "/dask"}}  # Ensure correct routing for static files
         )
     client = Client(cluster)
     logger.info('Connected to local Dask Cluster')
