@@ -46,12 +46,10 @@ class DaskManager(metaclass=Singleton):
         else:
             try:
                 logger.info('Attempting to connect to existing Dask Cluster')
-                self.client = Client(
-                    f'{s.DASK_SCHEDULER_HOST}:{s.DASK_SCHEDULER_PORT}',
-                )
+                client_up = f'{s.DASK_SCHEDULER_HOST}:{s.DASK_SCHEDULER_PORT}'
+                self.client = Client(client_ip)
                 self.dedicated_client = False
-                logger.info('Connected to Dask Cluster at %s:%s',
-                            s.DASK_SCHEDULER_HOST, s.DASK_SCHEDULER_PORT)
+                logger.info('Connected to Dask Cluster at %s',client_ip)
             except Exception:
                 logger.warning('Could not connect to Dask Cluster - starting locally instead')
                 self.client = _start_cluster()
