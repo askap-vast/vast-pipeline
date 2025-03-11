@@ -1,6 +1,7 @@
 import os
 import logging
 import gc
+import objgraph
 import numpy as np
 import pandas as pd
 import dask.dataframe as dd
@@ -199,6 +200,9 @@ def make_upload_images(
         measurements.to_parquet(img.measurements_path, index=False)
         del measurements, image, band, img
         gc.collect()
+        
+        types_list = objgraph.most_common_types(limit=2000)
+        logger.info(types_list)
 
     logger.info("Total images upload/loading time: %.2f seconds", timer.reset_init())
 
