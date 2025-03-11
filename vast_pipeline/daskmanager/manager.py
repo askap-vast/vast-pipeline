@@ -46,7 +46,7 @@ class DaskManager(metaclass=Singleton):
         else:
             try:
                 logger.info('Attempting to connect to existing Dask Cluster')
-                client_up = f'{s.DASK_SCHEDULER_HOST}:{s.DASK_SCHEDULER_PORT}'
+                client_ip = f'{s.DASK_SCHEDULER_HOST}:{s.DASK_SCHEDULER_PORT}'
                 self.client = Client(client_ip)
                 self.dedicated_client = False
                 logger.info('Connected to Dask Cluster at %s',client_ip)
