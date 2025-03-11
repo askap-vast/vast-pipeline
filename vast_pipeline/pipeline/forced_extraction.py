@@ -447,6 +447,8 @@ def parallel_extraction(
     del out, func_d, df_per_image, measurements_parquet_data
     
     wait(df_out)
+    
+    logger.info("Waiting for forced extraction df to finish compute")
 
     return df_out
 
