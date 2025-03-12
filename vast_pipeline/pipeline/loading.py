@@ -201,8 +201,9 @@ def make_upload_images(
         del measurements, image, band, img
         gc.collect()
         
-        types_list = objgraph.most_common_types(limit=2000)
+        types_list = objgraph.most_common_types(limit=750, shortnames=False)
         logger.info(types_list)
+        leaking_stats = objgraph.typestats(objgraph.get_leaking_objects(), shortnames=False)
 
     logger.info("Total images upload/loading time: %.2f seconds", timer.reset_init())
 
