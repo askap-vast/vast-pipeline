@@ -198,7 +198,7 @@ def make_upload_images(
             os.makedirs(base_folder)
 
         measurements.to_parquet(img.measurements_path, index=False)
-        del measurements, image, band, img
+        del measurements, image, band, img, skyreg
         gc.collect()
         
         types_list = objgraph.most_common_types(limit=750, shortnames=False)
