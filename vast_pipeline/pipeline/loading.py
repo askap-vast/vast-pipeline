@@ -201,9 +201,22 @@ def make_upload_images(
         del measurements, image, band, img, skyreg
         gc.collect()
         
+        logger.info("Logging memory leak checks...")
         types_list = objgraph.most_common_types(limit=750, shortnames=False)
         logger.info(types_list)
         leaking_stats = objgraph.typestats(objgraph.get_leaking_objects(), shortnames=False)
+        logger.info(leaking_stats)
+        
+        for obj_type in ('vast_pipeline.models.Image', 'vast_pipeline.models.SkyRegion'):
+            leaking_obj = objgraph.by_type(obj_type)[-1]  
+            backref_chain = find_backref_chain(obj)
+            logger.info(obj_type)
+            logger.info(backref_chain)
+            referrers = gc.get_referrers(leaking_obj)
+
+            for ref in referrers:
+                logger.info(f"Possible referrer: {type(ref)}, {repr(ref)}")
+        
 
     logger.info("Total images upload/loading time: %.2f seconds", timer.reset_init())
 
