@@ -744,7 +744,7 @@ def forced_extraction(
     # Get expected database measurements schema
     columns = read_schema(images_df.iloc[0]["measurements_path"]).names
 
-    logger.info("Starting save and upload...")
+    logger.info("Building save and upload...")
     extr_df = extr_df.map_partitions(save_and_upload_forced_df,
                                      p_run_path=p_run.path,
                                      p_run_id=p_run.id,
@@ -757,7 +757,6 @@ def forced_extraction(
                                      enforce_metadata=False,
                                      meta=sources_meta)
 
-    logger.info("Finished save and upload")
     # Calculate epoch column for extr_df
     if sources_df['epoch'].dtype == 'object':
         extr_df["epoch"] = "FORCED"
@@ -768,6 +767,7 @@ def forced_extraction(
     else:
         extr_df["epoch"] = sources_df['epoch'].compute().iloc[0]
 
+    logger.info("Built sources_df, extr_df concat")
     sources_df = dd.concat(
         [sources_df, extr_df]
     )
@@ -777,7 +777,9 @@ def forced_extraction(
     # by source id at this point to avoid needing to `set_index` on it
     # during the finalise step.
     sources_df = sources_df.persist()
+    logger.info("Persisted sources_df")
     wait(sources_df)
+    logger.info("Sources_df successfully computed")
 
     del extr_df
 
