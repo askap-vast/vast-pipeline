@@ -1,6 +1,7 @@
 import os
 import logging
 import datetime
+import gc
 import numpy as np
 import pandas as pd
 import dask.dataframe as dd
@@ -767,7 +768,11 @@ def forced_extraction(
     else:
         extr_df["epoch"] = sources_df['epoch'].compute().iloc[0]
 
-    logger.info("Built sources_df, extr_df concat")
+    extr_df = extr_df.persist()
+    logger.info("Persisting extr_df...")
+    wait(extr_df)
+    logger.info("Persisted extr_df...")
+
     sources_df = dd.concat(
         [sources_df, extr_df]
     )
@@ -777,11 +782,12 @@ def forced_extraction(
     # by source id at this point to avoid needing to `set_index` on it
     # during the finalise step.
     sources_df = sources_df.persist()
-    logger.info("Persisted sources_df")
+    logger.info("Persisting sources_df...")
     wait(sources_df)
-    logger.info("Sources_df successfully computed")
+    logger.info("Persisted sources_df")
 
     del extr_df
+    gc.collect()
 
     # get the number of forced extractions for the run
     forced_parquets = glob(os.path.join(p_run.path, "forced_measurements*.parquet"))
