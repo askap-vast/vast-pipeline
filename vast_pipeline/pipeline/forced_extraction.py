@@ -772,10 +772,18 @@ def forced_extraction(
     logger.info("Persisting extr_df...")
     wait(extr_df)
     logger.info("Persisted extr_df...")
+    
+    mem_check = lambda df: df.memory_usage(deep=True).sum()
+    
+    logger.info("Computing memory usage of sources_df...")
+    mem_usage = sources_df.map_partitions(mem_check).compute()
+    logger.info(f"Memory usage of sources_df = {mem_usage}")
+    
+    logger.info("Computing memory usage of sources_df...")
+    mem_usage = sources_df.map_partitions(mem_check).compute()
+    logger.info(f"Memory usage of sources_df = {mem_usage}")
 
-    sources_df = dd.concat(
-        [sources_df, extr_df]
-    )
+    sources_df = dd.concat([sources_df, extr_df], interleave_partitions=True)
 
     # Wait for the forced extraction step to complete
     # NOTE: Ideally we would have some optimised way of sorting sources_df
@@ -788,6 +796,10 @@ def forced_extraction(
 
     del extr_df
     gc.collect()
+    
+    logger.info("Computing memory usage of sources_df...")
+    mem_usage = sources_df.map_partitions(mem_check).compute()
+    logger.info(f"Memory usage of sources_df = {mem_usage}")
 
     # get the number of forced extractions for the run
     forced_parquets = glob(os.path.join(p_run.path, "forced_measurements*.parquet"))

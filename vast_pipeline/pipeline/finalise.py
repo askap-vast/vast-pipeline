@@ -92,7 +92,7 @@ def final_operations(
     logger.info("Calculating statistics for sources...")
     log_total_memory_usage()
 
-    sources_df = sources_df.set_index("source") \
+    sources_df = sources_df.set_index("source", shuffle="disk") \
                            .repartition(partition_size=f"{upload_chunk_size_mb}MB")
     srcs_df = parallel_groupby(sources_df)
 
