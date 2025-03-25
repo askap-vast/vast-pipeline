@@ -249,7 +249,7 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # Dask cluster
 DASK_SCHEDULER_HOST = env('DASK_SCHEDULER_HOST', cast=str, default='localhost')
 DASK_SCHEDULER_PORT = env('DASK_SCHEDULER_PORT', cast=str, default='8786')
-DASK_NUM_WORKERS = env('DASK_NUM_WORKERS', cast=int, default=14)
+DASK_NUM_WORKERS = env('DASK_NUM_WORKERS', cast=int, default=20)
 DASK_THREADS_PER_WORKER =  env('DASK_THREADS_PER_WORKER', cast=int, default=1)
 
 # Logging

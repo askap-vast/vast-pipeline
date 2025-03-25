@@ -202,6 +202,7 @@ def make_upload_images(
         del measurements, image, band
         gc.collect()
         
+        """
         logger.info("Logging memory leak checks...")
         types_list = objgraph.most_common_types(limit=750, shortnames=False)
         logger.info(types_list)
@@ -217,12 +218,12 @@ def make_upload_images(
 
             for ref in referrers:
                 logger.info(f"Possible referrer: {type(ref)}, {repr(ref)}")
-        
-        logger.info("Size of specific objects")
-        logger.info(f"images list: {asizeof(images)/1024**2} MB")
-        logger.info(f"skyregions list: {asizeof(skyregions)/1024**2} MB")
-        logger.info(f"image: {asizeof(img)/1024**2} MB")
-        logger.info(f"skyreg: {asizeof(skyreg)/1024**2} MB")
+        """
+        logger.debug("Size of specific objects")
+        logger.debug(f"images list: {asizeof(images)/1024**2} MB")
+        logger.debug(f"skyregions list: {asizeof(skyregions)/1024**2} MB")
+        logger.debug(f"image: {asizeof(img)/1024**2} MB")
+        logger.debug(f"skyreg: {asizeof(skyreg)/1024**2} MB")
 
     logger.info("Total images upload/loading time: %.2f seconds", timer.reset_init())
 

@@ -29,6 +29,8 @@ from vast_pipeline.pipeline.utils import (
     log_total_memory_usage
 )
 
+from vast_pipeline.utils.utils import calculate_n_partitions
+
 # NOTE: Get testing environment status.
 # See comment in forced_extraction.py
 __TESTING__ = settings.TESTING
@@ -91,9 +93,28 @@ def final_operations(
     # calculate source fields
     logger.info("Calculating statistics for sources...")
     log_total_memory_usage()
+    
+    print(sources_df.source.isna().sum().compute())
+    
+    #sources_df['source'] = sources_df['source'].astype('category')
 
-    sources_df = sources_df.set_index("source", shuffle="disk") \
-                           .repartition(partition_size=f"{upload_chunk_size_mb}MB")
+    #sources_df = sources_df.set_index("source", shuffle="tasks") \
+    #                       .repartition(partition_size="0.1MB") \
+    #                       .persist()
+    
+    #from timeit import default_timer as timer
+    
+    #t0 = timer()
+    npartitions = calculate_n_partitions(sources_df, partition_size_mb=upload_chunk_size_mb)
+    #t1 = timer()
+    
+    sources_df = sources_df.set_index("source") \
+                           .shuffle(npartitions=npartitions, on_index=True)
+    logger.info(sources_df.npartitions)
+    
+    logger.info(sources_df.partitions[0].compute())
+    #assert 1==0
+
     srcs_df = parallel_groupby(sources_df)
 
     mem_usage = get_df_memory_usage(srcs_df)
@@ -140,7 +161,27 @@ def final_operations(
 
         pairs_dir = os.path.join(p_run.path, 'measurement_pairs.parquet')
         pairs_dir_tmp = os.path.join(pairs_dir, "tmp")
+        
+        logger.info("Dumping sources_df to file")
+        
+        #sources_df.compute().to_pickle("sources_df_dump.pickle")
+        #pairs_dir = os.path.join(p_run.path, 'sources_df_dump.csv')
+        #sources_df.to_csv(pairs_dir)
+        
+        #pairs_dir = os.path.join(p_run.path, 'sources_df_dump.hdf')
+        #sources_df = sources_df.drop('related', axis=1)
+        #sources_df.to_hdf(pairs_dir, key='/data')
+        
+        pairs_dir = os.path.join(p_run.path, 'sources_df_dump.parquet')
+        sources_df_out = sources_df.drop('related', axis=1)
+        sources_df_out.to_parquet(pairs_dir)
+        
+        #logger.info("Dumping srcs_df to file")
+        #srcs_df_path = os.path.join(p_run.path,"srcs_df_dump.pickle")
+        #srcs_df.to_pickle(srcs_df_path)
+
         n_partitions, source_divisions = calculate_measurement_pair_metrics(sources_df, pairs_dir_tmp)
+        
         logger.info('Measurement pair metrics time: %.2f seconds', timer.reset())
 
         # calculate measurement pair metric aggregates for sources by finding
@@ -157,15 +198,24 @@ def final_operations(
                             flux_type="int",
                             )
         if max_peak_pairs.npartitions == max_int_pairs.npartitions == n_partitions:
+            logger.debug("Using dd merge")
             pair_agg_metrics = dd.merge(max_peak_pairs, max_int_pairs, on="source", how="outer")
             pair_agg_metrics = pair_agg_metrics.set_index("source")
             pair_agg_metrics = pair_agg_metrics.compute()
         else:
+            logger.debug("Using pd merge")
             max_peak_pairs = max_peak_pairs.compute()
             max_int_pairs = max_int_pairs.compute()
             pair_agg_metrics = max_peak_pairs.merge(max_int_pairs, on="source", how="outer")
             pair_agg_metrics = pair_agg_metrics.set_index("source")
 
+        pair_metrics_dupes = pair_agg_metrics.index.duplicated(keep=False)
+        logger.info("Duplicated pair_agg_metrics:")
+        logger.info(pair_agg_metrics[pair_metrics_dupes])
+        
+        pair_agg_metrics_path = os.path.join(p_run.path, 'pair_agg_metrics.csv')
+        pair_agg_metrics.to_csv(pair_agg_metrics_path)
+        
         # join with sources and replace agg metrics NaNs with 0 as the
         # DataTables API JSON serialization doesn't like them
         srcs_df = srcs_df.join(pair_agg_metrics).fillna(value={
@@ -174,6 +224,13 @@ def final_operations(
             "vs_abs_significant_max_int": 0.0,
             "m_abs_significant_max_int": 0.0,
         })
+        
+        srcs_df_dupes = srcs_df.index.duplicated(keep=False)
+        logger.info("Duplicated srcs_df:")
+        logger.info(srcs_df[srcs_df_dupes])
+        
+        #assert 1 == 0
+        
 
         logger.info(
             "Measurement pair aggregate metrics time: %.2f seconds",

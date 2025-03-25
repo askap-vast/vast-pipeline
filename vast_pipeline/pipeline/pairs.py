@@ -68,6 +68,9 @@ def calculate_measurement_pair_aggregate_metrics(
     filters = [(f"vs_abs_significant_max_{flux_type}", ">=", min_vs)]
 
     pair_filtered = dd.read_parquet(pairs_parquet_dir, columns=columns, filters=filters)
+    logger.info("Pair filtered, inside calculate_measurement_pair_aggregate_metrics:")
+    logger.info(pair_filtered[pair_filtered.source=='svhm7A6i9xDw'].compute())
+    logger.info(pair_filtered[pair_filtered.source=='zyZLnpwkhEYa'].compute())
 
     def _get_max_flux(partition):
         partition=partition.reset_index(drop=True)
@@ -78,6 +81,10 @@ def calculate_measurement_pair_aggregate_metrics(
         return partition.loc[inds]
 
     pair_agg_metrics = pair_filtered.map_partitions(_get_max_flux)
+    
+    logger.info("Pair agg_metrics inside calculate_measurement_pair_aggregate_metrics:")
+    logger.info(pair_agg_metrics[pair_agg_metrics.source=='svhm7A6i9xDw'].compute())
+    logger.info(pair_agg_metrics[pair_agg_metrics.source=='zyZLnpwkhEYa'].compute())
 
     return pair_agg_metrics
 
@@ -141,14 +148,50 @@ def calculate_measurement_pair_metrics(
             vs_peak, vs_int - variability t-statistic
             m_peak, m_int - variability modulation index
     """
-
+    logger.info("input df:")
+    logger.info(df)
+    logger.info(df.columns)
     # select relevant columns
     df_pairs = df[["id", "flux_int", "flux_int_err",
                "flux_peak", "flux_peak_err", "image", "datetime"]].rename(columns={"image": "image_name"})
+               
+    #logger.info(df_pairs.head())
+    #exit()
+
+    duplicated_source_rows = df.loc['svhm7A6i9xDw'].compute()
+    logger.info("Duplicated source rows:")
+    logger.info(duplicated_source_rows)
+    
+    #exit()
+    #duplicated_source_rows.to_csv('duplicated_source_rows.csv')
+    
+    
+    logger.info("Pairs df info:")
+    logger.info(df_pairs.columns)
+    logger.info(df_pairs.head())
 
     # keep record of divisions
     source_divisions = df_pairs.divisions
     n_partitions = df_pairs.npartitions
+    
+    logger.info(f"source divisions: {source_divisions}")
+    logger.info(f"n_partitions: {n_partitions}")
+    
+    
+    def _get_source_ids(partition, partition_info=None):
+        return pd.DataFrame({'source': partition.index.unique(), 'partition_num': partition_info['number']})
+    
+    logger.info(df_pairs.head())
+    #exit()
+    source_partition_df = df_pairs.map_partitions(_get_source_ids, meta={'source':str, 'partition_num':float}).compute()
+    logger.info("Source partition df:")
+    logger.info(source_partition_df)
+    source_partition_df.to_csv('source_partition_df.csv')
+    dupes = source_partition_df['source'].duplicated(keep=False)
+    logger.info("Multi-partition dupes:")
+    logger.info(source_partition_df[dupes])
+    
+    #logger.info(df.loc['okTehBmcSi7y'].compute())
     
     def _get_pair_partition(partition):
         partition = partition.sort_values(["source", "datetime"])
