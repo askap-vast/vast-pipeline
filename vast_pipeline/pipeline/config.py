@@ -529,10 +529,11 @@ class PipelineConfig:
 
         # ensure num_workers and num_workers_io are
         # either None (from null in config yaml) or an integer
-        for param_name in ('num_workers', 'num_workers_io'):
-            param_value = self['processing'][param_name]
-            if (param_value is not None) and (type(param_value) is not int):
-                raise PipelineConfigError(f"{param_name} can only be an integer or 'null'")
+        if 'processing' in self._yaml:
+            for param_name in ('num_workers', 'num_workers_io'):
+                param_value = self['processing'][param_name]
+                if (param_value is not None) and (type(param_value) is not int):
+                    raise PipelineConfigError(f"{param_name} can only be an integer or 'null'")
 
     def check_prev_config_diff(self) -> bool:
         """
