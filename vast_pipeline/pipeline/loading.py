@@ -1,7 +1,6 @@
 import os
 import logging
 import gc
-import objgraph
 import numpy as np
 import pandas as pd
 import dask.dataframe as dd
@@ -11,7 +10,6 @@ from io import StringIO
 from itertools import islice
 from django.db import transaction, connection, models
 from contextlib import closing
-from pympler.asizeof import asizeof
 
 from vast_pipeline.image.main import SelavyImage
 from vast_pipeline.pipeline.model_generator import (
@@ -201,29 +199,6 @@ def make_upload_images(
         measurements.to_parquet(img.measurements_path, index=False)
         del measurements, image, band
         gc.collect()
-        
-        """
-        logger.info("Logging memory leak checks...")
-        types_list = objgraph.most_common_types(limit=750, shortnames=False)
-        logger.info(types_list)
-        leaking_stats = objgraph.typestats(objgraph.get_leaking_objects(), shortnames=False)
-        logger.info(leaking_stats)
-        
-        for obj_type in ('vast_pipeline.models.Image', 'vast_pipeline.models.SkyRegion'):
-            leaking_obj = objgraph.by_type(obj_type)[-1]  
-            backref_chain = objgraph.find_backref_chain(leaking_obj,objgraph.is_proper_module)
-            logger.info(obj_type)
-            logger.info(backref_chain)
-            referrers = gc.get_referrers(leaking_obj)
-
-            for ref in referrers:
-                logger.info(f"Possible referrer: {type(ref)}, {repr(ref)}")
-        """
-        logger.debug("Size of specific objects")
-        logger.debug(f"images list: {asizeof(images)/1024**2} MB")
-        logger.debug(f"skyregions list: {asizeof(skyregions)/1024**2} MB")
-        logger.debug(f"image: {asizeof(img)/1024**2} MB")
-        logger.debug(f"skyreg: {asizeof(skyreg)/1024**2} MB")
 
     logger.info("Total images upload/loading time: %.2f seconds", timer.reset_init())
 
