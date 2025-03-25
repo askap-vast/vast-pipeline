@@ -98,6 +98,8 @@ def final_operations(
     sources_df = sources_df.set_index("source") \
                            .shuffle(npartitions=npartitions, on_index=True)
 
+    srcs_df = parallel_groupby(sources_df)
+
     mem_usage = get_df_memory_usage(srcs_df)
     logger.info('Groupby-apply time: %.2f seconds', timer.reset())
     logger.debug(f"Initial srcs_df memory: {mem_usage}MB")
