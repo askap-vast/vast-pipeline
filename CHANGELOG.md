@@ -23,6 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Updated github actions to use cache@v4 [#825](https://github.com/askap-vast/vast-pipeline/pull/825)
 - Check for whether processing parameters exist in config before validating them [#825](https://github.com/askap-vast/vast-pipeline/pull/825)
 - Updated ubuntu to 24.04 in github workflows and bumped python versions accordingly [#810](https://github.com/askap-vast/vast-pipeline/pull/810)
 - Fixed broken links on pipeline websites [#802](https://github.com/askap-vast/vast-pipeline/pull/802)
@@ -37,7 +38,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
-- [#825](https://github.com/askap-vast/vast-pipeline/pull/825): fix: Check for whether processing parameters exist in config before validating them 
+- [#825](https://github.com/askap-vast/vast-pipeline/pull/825): fix: Check for whether processing parameters exist in config before validating them and updated github actions to use cache@v4
 - [#810](https://github.com/askap-vast/vast-pipeline/pull/810): fix: Updated ubuntu to 24.04 in github workflows and bumped python versions accordingly 
 - [#806](https://github.com/askap-vast/vast-pipeline/pull/806): feat, docs: Added more detailed warnings about the use of Condon Errors throughout the docs and code
 - [#805](https://github.com/askap-vast/vast-pipeline/pull/805): docs: Added processing configuration parameters to the run configuration documentation 
