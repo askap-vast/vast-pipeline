@@ -35,6 +35,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - V2: Fix bug when deleting source tags from database which are referenced by multiple sources [#803](https://github.com/askap-vast/vast-pipeline/pull/803)
 - Fixed incorrect error ellipse calculation [#792](https://github.com/askap-vast/vast-pipeline/pull/792)
 - V2: Fix incorrect calculation of the new_high_sigma parameter [#714](https://github.com/askap-vast/vast-pipeline/pull/714)
+- Fixed potential memory leak in image header extraction [#828](https://github.com/askap-vast/vast-pipeline/pull/828)
+- Updated github actions to use cache@v4 [#825](https://github.com/askap-vast/vast-pipeline/pull/825)
+- Check for whether processing parameters exist in config before validating them [#825](https://github.com/askap-vast/vast-pipeline/pull/825)
+- Updated ubuntu to 24.04 in github workflows and bumped python versions accordingly [#810](https://github.com/askap-vast/vast-pipeline/pull/810)
 - Fixed broken links on pipeline websites [#802](https://github.com/askap-vast/vast-pipeline/pull/802)
 - Fixed outdated jupyterhub link on pipeline website [#795](https://github.com/askap-vast/vast-pipeline/pull/795)
 - Renamed variable in pipeline.finalise to better reflect what the dataframe represents (sources_df -> associations_df) [#787](https://github.com/askap-vast/vast-pipeline/pull/787)
@@ -56,6 +60,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [#801](https://github.com/askap-vast/vast-pipeline/pull/801): docs, dep: v2: Updated docs dependencies and fixed outdated information and various warnings
 - [#714](https://github.com/askap-vast/vast-pipeline/pull/714): fix: V2: Correctly calculate new_high_sigma parameter 
 - [#798](https://github.com/askap-vast/vast-pipeline/pull/798): dep: V2: Update dependencies to deal with dependabot reccomendations and to prepare for V2 upgrades.
+- [#828](https://github.com/askap-vast/vast-pipeline/pull/828): fix: Fix potential memory leak in image header extraction
+- [#825](https://github.com/askap-vast/vast-pipeline/pull/825): fix: Check for whether processing parameters exist in config before validating them and updated github actions to use cache@v4
+- [#810](https://github.com/askap-vast/vast-pipeline/pull/810): fix: Updated ubuntu to 24.04 in github workflows and bumped python versions accordingly 
 - [#806](https://github.com/askap-vast/vast-pipeline/pull/806): feat, docs: Added more detailed warnings about the use of Condon Errors throughout the docs and code
 - [#805](https://github.com/askap-vast/vast-pipeline/pull/805): docs: Added processing configuration parameters to the run configuration documentation 
 - [#802](https://github.com/askap-vast/vast-pipeline/pull/802): fix: Fix broken links on pipeline website
