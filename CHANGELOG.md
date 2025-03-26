@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- V2: Limit associations upload to using num_io_workers [#833](https://github.com/askap-vast/vast-pipeline/pull/833)
 - V2: Allow user specification of dask dashboard paramters and add some further logging to dask setup [#829](https://github.com/askap-vast/vast-pipeline/pull/829)
 - V2: Replace all source, measurement, run etc. IDs with UUID indices. [#803](https://github.com/askap-vast/vast-pipeline/pull/803)
 - V2: Updated docs dependencies and fixed outdated information and various warnings [#801](https://github.com/askap-vast/vast-pipeline/pull/801)
@@ -52,6 +53,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#833](https://github.com/askap-vast/vast-pipeline/pull/833): feat: V2: Limit associations upload to using num_io_workers
 - [#829](https://github.com/askap-vast/vast-pipeline/pull/829): feat: V2: Allow user specification of dask dashboard paramters and add some further logging to dask setup
 - [#817](https://github.com/askap-vast/vast-pipeline/pull/817): fix: V2: Updates to pairs calculation to make it work with Dask `LocalCluster`.
 - [#816](https://github.com/askap-vast/vast-pipeline/pull/816): feat: V2: Update to use Dask `LocalCluster` throughout.

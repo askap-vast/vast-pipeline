@@ -347,6 +347,7 @@ class Pipeline:
             done_source_ids,
             self.previous_parquets,
             self.config["processing"]["max_partition_mb"],
+            self.dm.get_n_random_workers(self.config['processing']['num_workers_io']),
         )
 
         log_total_memory_usage()
