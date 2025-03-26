@@ -44,7 +44,8 @@ def final_operations(
     add_mode: bool,
     done_source_ids: List[int],
     previous_parquets: Dict[str, str],
-    upload_chunk_size_mb: int
+    upload_chunk_size_mb: int,
+    io_workers: List[str],
 ) -> Tuple[int, int]:
     """
     Performs the final operations of the pipeline:
@@ -79,6 +80,9 @@ def final_operations(
         upload_chunk_size_mb:
             The size in MB to repartition dataframs before uploading and
             saving to parquet.
+        io_workers:
+            List of dask worker addresses to use for the compute.
+            This is likely the output of `DaskManager.get_n_random_workers()`.
 
     Returns:
         The number of sources contained in the pipeline run (used in the next
@@ -327,7 +331,8 @@ def final_operations(
 
     # upload associations into DB
     if not __TESTING__:
-        copy_upload_associations(associations_df_upload.loc[:, ["id", "source", "d2d", "dr"]])
+        assoc_df = associations_df_upload.loc[:, ["id", "source", "d2d", "dr"]]
+        copy_upload_associations(assoc_df, io_workers)
 
     # write associations to parquet file
     associations_df[['source', 'id', 'd2d', 'dr']] \
