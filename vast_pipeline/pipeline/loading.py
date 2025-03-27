@@ -325,7 +325,7 @@ def make_upload_sources(
     Args:
         sources_df:
             Holds the measurements associated into sources. The output of of
-            thE association step.
+            the association step.
         pipeline_run:
             The pipeline Run object.
         add_mode:
@@ -403,11 +403,18 @@ def make_upload_related_sources(related_df: pd.DataFrame) -> None:
     bulk_upload_model(RelatedSource, related_models_generator(related_df))
 
 
-def copy_upload_associations(associations_df: dd.DataFrame, batch_size: int = 10_000) -> None:
+def copy_upload_associations(
+    associations_df: dd.DataFrame,
+    io_workers: List[str],
+    batch_size: int = 10_000,
+) -> None:
     """Upload associations using django-postgres-copy in-memory csv method.
 
     Args:
         associations_df: The associations dataframe to upload.
+        io_workers:
+            List of dask worker addresses to use for the compute.
+            This is likely the output of `DaskManager.get_n_random_workers()`.
         batch_size: The batch size. Defaults to 10_000.
     """
     logger.info("Upload associations...")
@@ -437,7 +444,7 @@ def copy_upload_associations(associations_df: dd.DataFrame, batch_size: int = 10
                                                                         enforce_metadata=False,
                                                                         meta={})
 
-    associations_df.compute()
+    associations_df.compute(workers=io_workers)
 
 
 def make_upload_associations(associations_df: pd.DataFrame) -> None:
