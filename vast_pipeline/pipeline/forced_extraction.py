@@ -439,15 +439,16 @@ def parallel_extraction(
     # Persist at this point uning the number of io workers.
     # df_out will contain the forced extraction measurments per image.
     # df_out should be sorted and partitioned by image at this point.
-    df_out = dd.from_delayed(func_d).persist(workers=io_workers)
-    
     logger.info("Persisting forced extraction df...")
+    df_out = dd.from_delayed(func_d).persist(workers=io_workers)
 
     del out, func_d, df_per_image, measurements_parquet_data
     
+    logger.info("Waiting for forced extraction df to finish compute...")
+    
     wait(df_out)
     
-    logger.info("Waiting for forced extraction df to finish compute...")
+    logger.info("Forced extraction df finished compute.")
 
     return df_out
 
