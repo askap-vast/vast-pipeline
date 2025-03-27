@@ -12,7 +12,7 @@ from typing import List, Dict, Tuple
 
 from vast_pipeline.models import Run
 from vast_pipeline.utils.utils import (
-    StopWatch, optimise_numeric, delete_file_or_dir
+    StopWatch, optimise_numeric, delete_file_or_dir, calculate_n_partitions
 )
 from vast_pipeline.pipeline.loading import (
     update_sources,
@@ -28,8 +28,6 @@ from vast_pipeline.pipeline.utils import (
     parallel_groupby, get_df_memory_usage,
     log_total_memory_usage
 )
-
-from vast_pipeline.utils.utils import calculate_n_partitions
 
 # NOTE: Get testing environment status.
 # See comment in forced_extraction.py
@@ -98,7 +96,9 @@ def final_operations(
     logger.info("Calculating statistics for sources...")
     log_total_memory_usage()
 
-    npartitions = calculate_n_partitions(sources_df, partition_size_mb=upload_chunk_size_mb)
+    npartitions = calculate_n_partitions(sources_df,
+                                         partition_size_mb=upload_chunk_size_mb
+                                         )
     sources_df = sources_df.set_index("source") \
                            .shuffle(npartitions=npartitions, on_index=True)
 
@@ -176,9 +176,10 @@ def final_operations(
             pair_agg_metrics = max_peak_pairs.merge(max_int_pairs, on="source", how="outer")
             pair_agg_metrics = pair_agg_metrics.set_index("source")
 
+        # NOTE: this logging check can eventually be removed
         pair_metrics_dupes = pair_agg_metrics.index.duplicated(keep=False)
-        logger.info("Duplicated pair_agg_metrics:")
-        logger.info(pair_agg_metrics[pair_metrics_dupes])
+        logger.debug("Duplicated pair_agg_metrics:")
+        logger.debug(pair_agg_metrics[pair_metrics_dupes])
         
         # join with sources and replace agg metrics NaNs with 0 as the
         # DataTables API JSON serialization doesn't like them
@@ -189,9 +190,10 @@ def final_operations(
             "m_abs_significant_max_int": 0.0,
         })
         
+        # NOTE: this logging check can eventually be removed
         srcs_df_dupes = srcs_df.index.duplicated(keep=False)
-        logger.info("Duplicated srcs_df:")
-        logger.info(srcs_df[srcs_df_dupes])
+        logger.debug("Duplicated srcs_df:")
+        logger.debug(srcs_df[srcs_df_dupes])
 
         logger.info(
             "Measurement pair aggregate metrics time: %.2f seconds",

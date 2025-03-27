@@ -68,7 +68,7 @@ def calculate_measurement_pair_aggregate_metrics(
     filters = [(f"vs_abs_significant_max_{flux_type}", ">=", min_vs)]
 
     pair_filtered = dd.read_parquet(pairs_parquet_dir, columns=columns, filters=filters)
-    
+
     def _get_max_flux(partition):
         partition=partition.reset_index(drop=True)
         inds = []
@@ -141,39 +141,31 @@ def calculate_measurement_pair_metrics(
             vs_peak, vs_int - variability t-statistic
             m_peak, m_int - variability modulation index
     """
-    logger.info("calculate_measurement_pair_metrics input df:")
-    logger.info(df)
-    logger.info(df.columns)
     # select relevant columns
     df_pairs = df[["id", "flux_int", "flux_int_err",
                "flux_peak", "flux_peak_err", "image", "datetime"]].rename(columns={"image": "image_name"})
     
-    logger.info("Pairs df info:")
-    logger.info(df_pairs.columns)
-    logger.info(df_pairs.head())
+    logger.debug("df_pairs info:")
+    logger.debug(df_pairs.columns)
+    logger.debug(df_pairs.head())
 
     # keep record of divisions
     source_divisions = df_pairs.divisions
     n_partitions = df_pairs.npartitions
     
-    logger.info(f"source divisions: {source_divisions}")
-    logger.info(f"n_partitions: {n_partitions}")
+    logger.debug(f"source divisions: {source_divisions}")
+    logger.debug(f"n_partitions: {n_partitions}")
     
-    
+    # NOTE - this check can also probably be removed eventually
     def _get_source_ids(partition, partition_info=None):
         return pd.DataFrame({'source': partition.index.unique(), 'partition_num': partition_info['number']})
-    
-    logger.info(df_pairs.head())
-    #exit()
+
     source_partition_df = df_pairs.map_partitions(_get_source_ids, meta={'source':str, 'partition_num':float}).compute()
-    logger.info("Source partition df:")
-    logger.info(source_partition_df)
-    source_partition_df.to_csv('source_partition_df.csv')
+    logger.debug("Source partition df:")
+    logger.debug(source_partition_df)
     dupes = source_partition_df['source'].duplicated(keep=False)
-    logger.info("Multi-partition dupes:")
-    logger.info(source_partition_df[dupes])
-    
-    #logger.info(df.loc['okTehBmcSi7y'].compute())
+    logger.debug("Indices in multiple partitions:")
+    logger.debug(source_partition_df[dupes])
     
     def _get_pair_partition(partition):
         partition = partition.sort_values(["source", "datetime"])

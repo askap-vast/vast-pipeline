@@ -350,7 +350,7 @@ def parallel_extraction(
             'component_id', 'name', 'flux_int', 'flux_int_err'
     """
 
-    logger.info("Starting parallel extraction")
+    logger.info("Starting parallel extraction...")
 
     # explode the lists in 'img_diff' column (this will make a copy of the df)
     # NOTE: Need to persist here since Dask loses futures after all the
@@ -373,7 +373,7 @@ def parallel_extraction(
         .persist()
     )
 
-    logger.info("Generated out df")
+    logger.debug("Parallel extraction: Generated out df")
 
     # drop the source for which we would have no hope of detecting
     max_snr = out["flux_peak"].values / out["image_rms_min"].values
@@ -392,7 +392,7 @@ def parallel_extraction(
     out = out.drop(["image_rms_min", "detection"], axis=1).rename(
         columns={"image": "image_name"}
     )
-    logger.info("Dropped low S/N detections")
+    logger.debug("Parallel extraction: Dropped low S/N detections")
 
     # get the unique images to extract from
     unique_images_to_extract = out["image_name"].unique().compute().tolist()
@@ -420,7 +420,6 @@ def parallel_extraction(
         .merge(df_images[df_cols], on="id", how="left")
         .to_delayed()
     )
-    logger.info("Generated delayed measurements_parquet_Data")
 
     # Create a list of dataframes containing the relevant data from out per image
     # This generates a list of delayed futures that will only  compute at the next persist.
@@ -436,20 +435,19 @@ def parallel_extraction(
                                     cluster_threshold=cluster_threshold, allow_nan=allow_nan)
         for image_df, meas_data in image_data_list
         ]
-    logger.info("Generated forced extraction delayed")
 
     # Persist at this point uning the number of io workers.
     # df_out will contain the forced extraction measurments per image.
     # df_out should be sorted and partitioned by image at this point.
     df_out = dd.from_delayed(func_d).persist(workers=io_workers)
     
-    logger.info("Persisted forced extraction df")
+    logger.info("Persisting forced extraction df...")
 
     del out, func_d, df_per_image, measurements_parquet_data
     
     wait(df_out)
     
-    logger.info("Waiting for forced extraction df to finish compute")
+    logger.info("Waiting for forced extraction df to finish compute...")
 
     return df_out
 
@@ -678,7 +676,7 @@ def forced_extraction(
         )
     ).set_index("name")
     
-    logger.debug("Made images_df")
+    #logger.debug("Made images_df")
 
     # | name                          |   id     | measurements_path   | path         | noise_path   |
     # |:------------------------------|---------:|:--------------------|:-------------|:-------------|
@@ -702,8 +700,7 @@ def forced_extraction(
     extr_df = extr_df.explode("img_diff").reset_index()
     total_to_extract = extr_df.shape[0]
     
-    logger.debug("Exploded out img_diff column")
-    logger.info(f"Total to extract: {total_to_extract}")
+    logger.debug(f"Total measurements to extract: %d", total_to_extract)
 
     if add_mode:
         logger.info("Running in add mode...")
@@ -732,7 +729,6 @@ def forced_extraction(
         )
 
     timer.reset()
-    logger.info("Starting parallel extraction...")
     extr_df = parallel_extraction(
         extr_df, images_df, sources_df[['source', 'image', 'flux_peak']],
         min_sigma, edge_buffer, cluster_threshold, allow_nan, add_mode,
@@ -745,7 +741,7 @@ def forced_extraction(
     # Get expected database measurements schema
     columns = read_schema(images_df.iloc[0]["measurements_path"]).names
 
-    logger.info("Building save and upload...")
+    logger.debug("Building save and upload...")
     extr_df = extr_df.map_partitions(save_and_upload_forced_df,
                                      p_run_path=p_run.path,
                                      p_run_id=p_run.id,
@@ -771,17 +767,15 @@ def forced_extraction(
     extr_df = extr_df.persist()
     logger.info("Persisting extr_df...")
     wait(extr_df)
-    logger.info("Persisted extr_df...")
+    logger.info("Persisted extr_df.")
     
     mem_check = lambda df: df.memory_usage(deep=True).sum()
     
-    logger.info("Computing memory usage of sources_df...")
     mem_usage = sources_df.map_partitions(mem_check).compute()
-    logger.info(f"Memory usage of sources_df = {mem_usage}")
+    logger.debug(f"Memory usage of sources_df = {mem_usage}")
     
-    logger.info("Computing memory usage of sources_df...")
-    mem_usage = sources_df.map_partitions(mem_check).compute()
-    logger.info(f"Memory usage of sources_df = {mem_usage}")
+    mem_usage = extr_df.map_partitions(mem_check).compute()
+    logger.debug(f"Memory usage of extr_df = {mem_usage}")
 
     sources_df = dd.concat([sources_df, extr_df], interleave_partitions=True)
 
@@ -797,9 +791,8 @@ def forced_extraction(
     del extr_df
     gc.collect()
     
-    logger.info("Computing memory usage of sources_df...")
     mem_usage = sources_df.map_partitions(mem_check).compute()
-    logger.info(f"Memory usage of sources_df = {mem_usage}")
+    logger.debug(f"Memory usage of sources_df = {mem_usage}")
 
     # get the number of forced extractions for the run
     forced_parquets = glob(os.path.join(p_run.path, "forced_measurements*.parquet"))
