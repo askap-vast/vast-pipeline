@@ -20,12 +20,12 @@ def _start_cluster():
     logger.info(f"dashboard_port: {s.DASK_DASHBOARD_PORT}")
 
     cluster = LocalCluster(
-        n_workers=int(s.DASK_NUM_WORKERS),
-        threads_per_worker=s.DASK_THREADS_PER_WORKER,
-        host=s.DASK_SCHEDULER_HOST,
-        scheduler_port=int(s.DASK_SCHEDULER_PORT),
-        dashboard_address=f"{s.DASK_DASHBOARD_HOST}:{s.DASK_DASHBOARD_PORT}",
-    )
+            n_workers=int(s.DASK_NUM_WORKERS),
+            threads_per_worker=s.DASK_THREADS_PER_WORKER,
+            host=s.DASK_SCHEDULER_HOST,
+            scheduler_port=int(s.DASK_SCHEDULER_PORT),
+            dashboard_address=f"{s.DASK_DASHBOARD_HOST}:{s.DASK_DASHBOARD_PORT}",
+        )
     client = Client(cluster)
     logger.info('Connected to local Dask Cluster')
     return client
