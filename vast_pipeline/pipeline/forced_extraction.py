@@ -698,7 +698,7 @@ def forced_extraction(
 
     # Explode out the img_diff column.
     extr_df = extr_df.explode("img_diff").reset_index()
-    total_to_extract = extr_df.shape[0]
+    total_to_extract = extr_df.shape[0].compute()
     
     logger.debug(f"Total measurements to extract: %d", total_to_extract)
 
@@ -712,7 +712,6 @@ def forced_extraction(
         # images.
         # 3. A new relation has been created and they need the forced
         # measuremnts filled in (actually covered by 2.)
-        total_to_extract = extr_df.shape[0].compute()
         extr_df = dd.concat(
             [
                 extr_df[~extr_df["img_diff"].isin(done_images_df["name"])],
