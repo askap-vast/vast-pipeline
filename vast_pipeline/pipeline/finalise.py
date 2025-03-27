@@ -323,6 +323,8 @@ def final_operations(
 
     # Repartition associations df to optimise upload
     associations_df = associations_df.repartition(partition_size=f'{upload_chunk_size_mb}MB')
+    
+    logger.info("Number of associations: %d", len(associations_df.index))
 
     if add_mode:
         # Load old associations so the already uploaded ones can be removed

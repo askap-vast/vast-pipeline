@@ -41,6 +41,8 @@ from vast_pipeline.utils.utils import (
     UUID_LEN_SOURCE
 )
 
+from timeit import default_timer as timer
+
 
 logger = logging.getLogger(__name__)
 
@@ -80,11 +82,13 @@ def copy_upload_model(
         batch_size: The batch size such that in memory csvs don't get crazy big.
             Defaults to 10_000.
     """
+    
     mem_csv = None
     total_rows = len(df)
     start_index = 0
 
     while start_index < total_rows:
+        t0 = timer()
         end_index = min(start_index + batch_size, total_rows)
         batch = df.iloc[start_index:end_index]
 
@@ -93,7 +97,8 @@ def copy_upload_model(
             num_copied = djmodel.copies.from_csv(
                 csv_io, drop_constraints=False, drop_indexes=False, mapping=mapping
             )
-            logging.info(f"Copied {num_copied} {djmodel.__name__} objects to database.")
+            t1 = timer()
+            logging.info(f"Copied {num_copied} {djmodel.__name__} objects to database. (%.2fs)", t1-t0)
 
         start_index = end_index
 
@@ -434,8 +439,13 @@ def copy_upload_associations(
     }
 
     def upload(df, Association, mapping, batch_size):
+        t0 = timer()
         df["db_id"] = df.apply(lambda _: generate_shortuuid(UUID_LEN_MEAS), axis=1)
+        t1 = timer()
         copy_upload_model(df, Association, mapping=mapping, batch_size=batch_size)
+        t2 = timer()
+        
+        logging.info("generate ID time: %.2f, upload time: %.2f",t1-t0, t2-t1)
 
     associations_df = associations_df[columns_to_upload].map_partitions(upload,
                                                                         Association,
