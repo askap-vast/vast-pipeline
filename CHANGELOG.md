@@ -58,7 +58,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
-- [#820](https://github.com/askap-vast/vast-pipeline/pull/820): 
+- [#820](https://github.com/askap-vast/vast-pipeline/pull/820): fix: Fixes for duplicate source ID error and memory leak in forced_extraction. Partial fix for memory leak in image upload.
 - [#833](https://github.com/askap-vast/vast-pipeline/pull/833): feat: V2: Limit associations upload to using num_io_workers
 - [#829](https://github.com/askap-vast/vast-pipeline/pull/829): feat: V2: Allow user specification of dask dashboard paramters and add some further logging to dask setup
 - [#817](https://github.com/askap-vast/vast-pipeline/pull/817): fix: V2: Updates to pairs calculation to make it work with Dask `LocalCluster`.
