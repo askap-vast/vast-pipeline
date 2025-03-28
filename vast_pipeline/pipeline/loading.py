@@ -82,7 +82,7 @@ def copy_upload_model(
         batch_size: The batch size such that in memory csvs don't get crazy big.
             Defaults to 10_000.
     """
-    
+    s = timer()
     mem_csv = None
     total_rows = len(df)
     start_index = 0
@@ -90,15 +90,18 @@ def copy_upload_model(
     while start_index < total_rows:
         t0 = timer()
         end_index = min(start_index + batch_size, total_rows)
+        t1 = timer()
         batch = df.iloc[start_index:end_index]
+        t2 = timer()
 
         mem_csv = in_memory_csv(batch)
+        t3 = timer()
         with closing(mem_csv) as csv_io:
             num_copied = djmodel.copies.from_csv(
                 csv_io, drop_constraints=False, drop_indexes=False, mapping=mapping
             )
-            t1 = timer()
-            logging.info(f"Copied {num_copied} {djmodel.__name__} objects to database. (%.2fs)", t1-t0)
+            t4 = timer()
+            logging.info(f"Copied {num_copied} {djmodel.__name__} objects to database. (%.2fs, %.2fs, %.2fs, %.2fs, %.2fs)", s-t0, t1-t0, t2-t1, t3-t2,t4-t2)
 
         start_index = end_index
 
