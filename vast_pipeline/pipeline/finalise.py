@@ -350,7 +350,7 @@ def final_operations(
     # upload associations into DB
     if not __TESTING__:
         assoc_df = associations_df_upload.loc[:, ["id", "source", "d2d", "dr"]]
-        copy_upload_associations(assoc_df, io_workers, batch_size=100_000)
+        copy_upload_associations(assoc_df, io_workers, batch_size=10_000)
 
     # write associations to parquet file
     associations_df[['source', 'id', 'd2d', 'dr']] \
