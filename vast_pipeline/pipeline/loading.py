@@ -445,7 +445,7 @@ def copy_upload_associations(
         copy_upload_model(df, Association, mapping=mapping, batch_size=batch_size)
         t2 = timer()
         
-        logging.info("generate ID time: %.2f, upload time: %.2f",t1-t0, t2-t1)
+        logging.info("generate ID time: %.2f, partition upload time: %.2f",t1-t0, t2-t1)
 
     associations_df = associations_df[columns_to_upload].map_partitions(upload,
                                                                         Association,
