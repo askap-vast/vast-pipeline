@@ -86,6 +86,7 @@ def copy_upload_model(
     mem_csv = None
     total_rows = len(df)
     start_index = 0
+    s1 = timer()
 
     while start_index < total_rows:
         t0 = timer()
@@ -97,13 +98,15 @@ def copy_upload_model(
         mem_csv = in_memory_csv(batch)
         t3 = timer()
         with closing(mem_csv) as csv_io:
+            t4 = timer()
             num_copied = djmodel.copies.from_csv(
                 csv_io, drop_constraints=False, drop_indexes=False, mapping=mapping
             )
-            t4 = timer()
-            logging.info(f"Copied {num_copied} {djmodel.__name__} objects to database. (%.2fs, %.2fs, %.2fs, %.2fs, %.2fs)", t0-s, t1-t0, t2-t1, t3-t2,t4-t2)
-
+            t5 = timer()
+        t6 = timer()
         start_index = end_index
+        t7 = timer()
+        logging.info(f"Copied {num_copied} {djmodel.__name__} objects to database. (%.2fs, %.2fs, %.2fs, %.2fs, %.2fs, %.2fs, %.2fs, %.2fs)", s1-s, t1-t0, t2-t1, t3-t2,t4-t3, t5-t4, t6-t5, t7-t6)
 
     del mem_csv
 
