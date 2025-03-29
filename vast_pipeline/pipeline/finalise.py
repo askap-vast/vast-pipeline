@@ -318,13 +318,17 @@ def final_operations(
     associations_df = sources_df.drop("related", axis=1).reset_index()
 
     mem_usage = get_df_memory_usage(associations_df)
-    logger.debug(f"sources_df memory after merge: {mem_usage}MB")
+    logger.debug(f"associations_df memory usage after related drop: {mem_usage}MB")
     log_total_memory_usage()
+    
+    logger.debug(f"Associations df has %d partitions", associations_df.npartitions)
 
     # Repartition associations df to optimise upload
     associations_df = associations_df.repartition(partition_size=f'{upload_chunk_size_mb}MB')
     
-    logger.info("Number of associations: %d", len(associations_df.index))
+    logger.debug(f"...and is repartitioned into %d partitions", associations_df.npartitions)
+    
+    logger.info("Total number of associations: %d", len(associations_df.index))
 
     if add_mode:
         # Load old associations so the already uploaded ones can be removed
@@ -343,7 +347,7 @@ def final_operations(
         associations_df_upload = dd.from_pandas(
             associations_df_upload, npartitions=associations_df.npartitions
         )
-        logger.debug(f"Add mode: #{associations_df_upload.shape[0]} associations to upload.")
+        logger.info(f"Add mode: #{associations_df_upload.shape[0]} associations to upload.")
     else:
         associations_df_upload = associations_df
 
