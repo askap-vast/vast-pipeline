@@ -324,7 +324,7 @@ def final_operations(
     logger.debug(f"Associations df has %d partitions", associations_df.npartitions)
 
     # Repartition associations df to optimise upload
-    associations_df = associations_df.repartition(partition_size=f'{upload_chunk_size_mb}MB')
+    #associations_df = associations_df.repartition(partition_size=f'{upload_chunk_size_mb}MB')
     
     logger.debug(f"...and is repartitioned into %d partitions", associations_df.npartitions)
     
