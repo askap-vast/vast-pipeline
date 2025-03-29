@@ -101,7 +101,7 @@ def copy_upload_model(
                 csv_io, drop_constraints=False, drop_indexes=False, mapping=mapping
             )
             t4 = timer()
-            logging.info(f"Copied {num_copied} {djmodel.__name__} objects to database. (%.2fs, %.2fs, %.2fs, %.2fs, %.2fs)", s-t0, t1-t0, t2-t1, t3-t2,t4-t2)
+            logging.info(f"Copied {num_copied} {djmodel.__name__} objects to database. (%.2fs, %.2fs, %.2fs, %.2fs, %.2fs)", t0-s, t1-t0, t2-t1, t3-t2,t4-t2)
 
         start_index = end_index
 
