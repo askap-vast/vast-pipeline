@@ -9,6 +9,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from django.conf import settings
 from typing import List, Dict, Tuple
+from dask.distributed import wait
 
 from vast_pipeline.models import Run
 from vast_pipeline.utils.utils import (
