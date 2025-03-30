@@ -361,10 +361,10 @@ def final_operations(
     if not __TESTING__:
         batch_size = 10_000
         logger.info("Using batches of %d", batch_size)
-        assoc_df = associations_df_upload.loc[:, ["id", "source", "d2d", "dr"]]
-        assoc_df = assoc_df.persist()
-        wait(assoc_df)
-        copy_upload_associations(assoc_df, io_workers, batch_size=batch_size)
+        #assoc_df = associations_df_upload.loc[:, ["id", "source", "d2d", "dr"]]
+        #assoc_df = assoc_df.persist()
+        #wait(assoc_df)
+        copy_upload_associations(associations_df_upload.loc[:, ["id", "source", "d2d", "dr"]], io_workers, batch_size=batch_size)
 
     nr_sources = srcs_df.shape[0]
     nr_new_sources = srcs_df["new"].sum()
