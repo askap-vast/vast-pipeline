@@ -189,7 +189,11 @@ def extract_from_image(
                                            data.pop('noise_path'),
                                            memmap=False
                                            )
+    """
+    data.pop('background_path')
+    data.pop('noise_path')
     FP_timer = StopWatch()
+    """
     FP = ForcedPhot(*forcedphot_input, use_numba=True)
     logger.debug("%s - Time to init FP: %.3f s", image,  FP_timer.reset())
 

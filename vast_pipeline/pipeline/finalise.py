@@ -371,10 +371,11 @@ def final_operations(
 
     if calculate_pairs:
         # optimize measurement pair DataFrame and save to parquet file
+        logger.info("Optimising measurement pair df and saving to parquet...")
         timer.reset()
         # ingest to dask data frames
         srcs_df.index.name = "source_id"
-        srcs_df = dd.from_pandas(srcs_df, npartitions=n_partitions)
+        srcs_df = dd.from_pandas(srcs_df, npartitions=n_partitions).persist()
         columns = ['id_a', 'id_b', 'flux_int_a', 'flux_int_err_a', 'flux_peak_a',
        'flux_peak_err_a', 'image_name_a', 'flux_int_b', 'flux_int_err_b',
        'flux_peak_b', 'flux_peak_err_b', 'image_name_b', 'vs_peak', 'vs_int',
@@ -403,7 +404,7 @@ def final_operations(
 
         delete_file_or_dir(pairs_dir_tmp)
 
-        logger.info("Write the final version of measurement pair dataframe into files time: %.2f seconds", timer.reset())
+        logger.info("Wrote the final version of measurement pair dataframe into files time: %.2f seconds", timer.reset())
 
 
     logger.info("Total final operations time: %.2f seconds", timer.reset_init())
