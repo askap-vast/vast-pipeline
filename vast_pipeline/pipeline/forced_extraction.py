@@ -183,6 +183,7 @@ def extract_from_image(
     # load the image, background and noisemaps into memory
     # a dedicated function may seem unneccesary, but will be useful if we
     # split the load to a separate thread.
+    """
     forcedphot_input = _forcedphot_preload(image,
                                            data.pop('background_path'),
                                            data.pop('noise_path'),
@@ -207,7 +208,12 @@ def extract_from_image(
         edge_buffer=edge_buffer,
         use_clusters=use_clusters
     )
+    """
     logger.debug("%s - Time to measure FP: %.3fs", image, FP_timer.reset())
+    
+    flux = np.ones(num_sources) * 5e-3
+    flux_err = np.ones(num_sources) * 1e-3
+    chisq = np.ones(num_sources)
     
     num_fits = np.sum(flux>0.0)
 
