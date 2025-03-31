@@ -93,7 +93,8 @@ def extract_data_from_img(image: str) -> Dict[str, Union[np.ndarray, WCS, fits.H
         header = hdul[0].header
         bmaj = header['bmaj']
         wcs = WCS(header, naxis=2)
-        data = hdul[0].data.squeeze().astype(np.float32)
+        #data = hdul[0].data.squeeze().astype(np.float32)
+        data = np.ones((header['NAXIS1'], header['NAXIS2'])).astype(np.float32)
 
     return {'data': data, 'wcs': wcs, 'bmaj': bmaj}
 

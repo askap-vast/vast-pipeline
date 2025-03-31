@@ -1,6 +1,7 @@
 import os
 import logging
 import datetime
+import gc
 import numpy as np
 import pandas as pd
 import dask.dataframe as dd
@@ -182,6 +183,7 @@ def extract_from_image(
     # load the image, background and noisemaps into memory
     # a dedicated function may seem unneccesary, but will be useful if we
     # split the load to a separate thread.
+    """
     forcedphot_input = _forcedphot_preload(image,
                                            data.pop('background_path'),
                                            data.pop('noise_path'),
@@ -206,7 +208,12 @@ def extract_from_image(
         edge_buffer=edge_buffer,
         use_clusters=use_clusters
     )
+    """
     logger.debug("%s - Time to measure FP: %.3fs", image, FP_timer.reset())
+    
+    flux = np.ones(num_sources) * 5e-3
+    flux_err = np.ones(num_sources) * 1e-3
+    chisq = np.ones(num_sources)
     
     num_fits = np.sum(flux>0.0)
 
@@ -310,7 +317,7 @@ def parallel_extraction(
     add_mode: bool,
     p_run_path: str,
     io_workers: List[str],
-) -> pd.DataFrame:
+) -> dd.DataFrame:
     """
     Parallelize forced extraction with Dask
 
@@ -348,6 +355,9 @@ def parallel_extraction(
             'source_tmp_id', 'ra', 'dec', 'image', 'flux_peak', 'island_id',
             'component_id', 'name', 'flux_int', 'flux_int_err'
     """
+
+    logger.info("Starting parallel extraction...")
+
     # explode the lists in 'img_diff' column (this will make a copy of the df)
     # NOTE: Need to persist here since Dask loses futures after all the
     # previous merges. Ideally this should be removed and we only persist at the
@@ -369,6 +379,8 @@ def parallel_extraction(
         .persist()
     )
 
+    logger.debug("Parallel extraction: Generated out df")
+
     # drop the source for which we would have no hope of detecting
     max_snr = out["flux_peak"].values / out["image_rms_min"].values
     out = out.loc[max_snr > min_sigma].reset_index(drop=True)
@@ -386,6 +398,8 @@ def parallel_extraction(
     out = out.drop(["image_rms_min", "detection"], axis=1).rename(
         columns={"image": "image_name"}
     )
+    logger.debug("Parallel extraction: Dropped low S/N detections")
+
     # get the unique images to extract from
     unique_images_to_extract = out["image_name"].unique().compute().tolist()
 
@@ -431,9 +445,16 @@ def parallel_extraction(
     # Persist at this point uning the number of io workers.
     # df_out will contain the forced extraction measurments per image.
     # df_out should be sorted and partitioned by image at this point.
+    logger.info("Persisting forced extraction df...")
     df_out = dd.from_delayed(func_d).persist(workers=io_workers)
 
     del out, func_d, df_per_image, measurements_parquet_data
+    
+    logger.info("Waiting for forced extraction df to finish compute...")
+    
+    wait(df_out)
+    
+    logger.info("Forced extraction df finished compute.")
 
     return df_out
 
@@ -631,7 +652,7 @@ def forced_extraction(
         The `sources_df` with the extracted sources added.
         The total number of forced measurements present in the run.
     """
-    logger.info("Starting force extraction step.")
+    logger.info("Starting forced extraction step.")
 
     timer = StopWatch()
 
@@ -661,6 +682,8 @@ def forced_extraction(
             .values(*tuple(cols))
         )
     ).set_index("name")
+    
+    #logger.debug("Made images_df")
 
     # | name                          |   id     | measurements_path   | path         | noise_path   |
     # |:------------------------------|---------:|:--------------------|:-------------|:-------------|
@@ -682,9 +705,12 @@ def forced_extraction(
 
     # Explode out the img_diff column.
     extr_df = extr_df.explode("img_diff").reset_index()
-    total_to_extract = extr_df.shape[0]
+    total_to_extract = extr_df.shape[0].compute()
+    
+    logger.debug(f"Total measurements to extract: %d", total_to_extract)
 
     if add_mode:
+        logger.info("Running in add mode...")
         # If we are adding images to the run we assume that monitoring was
         # also performed before (enforced by the pre-run checks) so now we
         # only want to force extract in three situations:
@@ -693,7 +719,6 @@ def forced_extraction(
         # images.
         # 3. A new relation has been created and they need the forced
         # measuremnts filled in (actually covered by 2.)
-        total_to_extract = extr_df.shape[0].compute()
         extr_df = dd.concat(
             [
                 extr_df[~extr_df["img_diff"].isin(done_images_df["name"])],
@@ -715,12 +740,14 @@ def forced_extraction(
         min_sigma, edge_buffer, cluster_threshold, allow_nan, add_mode,
         p_run.path, io_workers
     )
+    logger.info("Completed parallel extraction step.")
 
     # Dask needs type metadata for map_partitions
     sources_meta = dd.utils.make_meta(sources_df).drop(['epoch', 'interim_ns', 'interim_ew'], axis=1)
     # Get expected database measurements schema
     columns = read_schema(images_df.iloc[0]["measurements_path"]).names
 
+    logger.debug("Building save and upload...")
     extr_df = extr_df.map_partitions(save_and_upload_forced_df,
                                      p_run_path=p_run.path,
                                      p_run_id=p_run.id,
@@ -733,7 +760,6 @@ def forced_extraction(
                                      enforce_metadata=False,
                                      meta=sources_meta)
 
-
     # Calculate epoch column for extr_df
     if sources_df['epoch'].dtype == 'object':
         extr_df["epoch"] = "FORCED"
@@ -744,18 +770,35 @@ def forced_extraction(
     else:
         extr_df["epoch"] = sources_df['epoch'].compute().iloc[0]
 
-    sources_df = dd.concat(
-        [sources_df, extr_df]
-    )
+    extr_df = extr_df.persist()
+    logger.info("Persisting extr_df...")
+    wait(extr_df)
+    logger.info("Persisted extr_df.")
+    
+    mem_check = lambda df: df.memory_usage(deep=True).sum()
+    
+    mem_usage = sources_df.map_partitions(mem_check).compute().sum()
+    logger.debug(f"Memory usage of sources_df = {mem_usage}")
+    
+    mem_usage = extr_df.map_partitions(mem_check).compute().sum()
+    logger.debug(f"Memory usage of extr_df = {mem_usage}")
+
+    sources_df = dd.concat([sources_df, extr_df], interleave_partitions=True)
 
     # Wait for the forced extraction step to complete
     # NOTE: Ideally we would have some optimised way of sorting sources_df
     # by source id at this point to avoid needing to `set_index` on it
     # during the finalise step.
     sources_df = sources_df.persist()
+    logger.info("Persisting sources_df...")
     wait(sources_df)
+    logger.info("Persisted sources_df")
 
     del extr_df
+    gc.collect()
+    
+    mem_usage = sources_df.map_partitions(mem_check).compute()
+    logger.debug(f"Memory usage of sources_df = {mem_usage}")
 
     # get the number of forced extractions for the run
     forced_parquets = glob(os.path.join(p_run.path, "forced_measurements*.parquet"))

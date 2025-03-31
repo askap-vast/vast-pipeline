@@ -123,6 +123,7 @@ class FitsImage(Image):
         try:
             with open_fits(self.path) as hdulist:
                 header = hdulist[hdu_index].header.copy()
+                hdulist.close()
         except Exception:
             raise IOError(
                 ("Could not read this FITS file: " f"{os.path.basename(self.path)}")
