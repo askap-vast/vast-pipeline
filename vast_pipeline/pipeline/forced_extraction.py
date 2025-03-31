@@ -771,10 +771,10 @@ def forced_extraction(
     
     mem_check = lambda df: df.memory_usage(deep=True).sum()
     
-    mem_usage = sources_df.map_partitions(mem_check).compute()
+    mem_usage = sources_df.map_partitions(mem_check).compute().sum()
     logger.debug(f"Memory usage of sources_df = {mem_usage}")
     
-    mem_usage = extr_df.map_partitions(mem_check).compute()
+    mem_usage = extr_df.map_partitions(mem_check).compute().sum()
     logger.debug(f"Memory usage of extr_df = {mem_usage}")
 
     sources_df = dd.concat([sources_df, extr_df], interleave_partitions=True)
