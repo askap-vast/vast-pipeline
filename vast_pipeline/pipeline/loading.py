@@ -428,7 +428,7 @@ def copy_upload_associations(
             This is likely the output of `DaskManager.get_n_random_workers()`.
         batch_size: The batch size. Defaults to 10_000.
     """
-    logger.info("Upload associations...")
+    logger.info("Uploading associations...")
     columns_to_upload = ["source"]
     for fld in Association._meta.get_fields():
         if getattr(fld, "attname", None) and fld.attname in associations_df.columns:
@@ -461,6 +461,8 @@ def copy_upload_associations(
                                                                         meta={})
 
     associations_df.compute(workers=io_workers)
+    
+    logger.info("Associaions upload complete.")
 
 
 def make_upload_associations(associations_df: pd.DataFrame) -> None:
