@@ -10,6 +10,7 @@ from io import StringIO
 from itertools import islice
 from django.db import transaction, connection, models
 from contextlib import closing
+from uuid import uuid4
 
 from vast_pipeline.image.main import SelavyImage
 from vast_pipeline.pipeline.model_generator import (
@@ -42,7 +43,6 @@ from vast_pipeline.utils.utils import (
 )
 
 from timeit import default_timer as timer
-
 
 logger = logging.getLogger(__name__)
 
@@ -446,7 +446,7 @@ def copy_upload_associations(
 
     def upload(df, Association, mapping, batch_size):
         t0 = timer()
-        df["db_id"] = df.apply(lambda _: generate_shortuuid(UUID_LEN_MEAS), axis=1)
+        df["db_id"] = df.apply(lambda _: str(uuid4()), axis=1)
         t1 = timer()
         copy_upload_model(df, Association, mapping=mapping, batch_size=batch_size)
         t2 = timer()

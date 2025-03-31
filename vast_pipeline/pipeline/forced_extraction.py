@@ -7,6 +7,7 @@ import pandas as pd
 import dask.dataframe as dd
 import dask.bag as db
 from glob import glob
+import uuid
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -23,8 +24,8 @@ from vast_pipeline.pipeline.loading import copy_upload_measurements
 from forced_phot import ForcedPhot
 from ..utils.utils import (
     StopWatch,
-    generate_shortuuid,
-    UUID_LEN_MEAS
+    #generate_shortuuid,
+    #UUID_LEN_MEAS
 )
 from vast_pipeline.image.utils import open_fits
 
@@ -208,7 +209,7 @@ def extract_from_image(
         use_clusters=use_clusters
     )
     logger.debug("%s - Time to measure FP: %.3fs", image, FP_timer.reset())
-    
+
     num_fits = np.sum(flux>0.0)
 
     logger.debug("%s: Obtained %d measurements "
@@ -501,7 +502,7 @@ def save_and_upload_forced_df(forced_df: pd.DataFrame,
             The forced extraction dataframe updated with defaults.
         """
         df["name"] = df["name"] + f"_f_{p_run_id}"
-        df["id"] = df.apply(lambda _: generate_shortuuid(UUID_LEN_MEAS), axis=1)
+        df["id"] = df.apply(lambda _: str(uuid.uuid4()), axis=1)
         default_pos_err = settings.POS_DEFAULT_MIN_ERROR / 3600.0
         df["ra_err"] = default_pos_err
         df["dec_err"] = default_pos_err
