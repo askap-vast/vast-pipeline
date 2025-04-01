@@ -372,6 +372,7 @@ def final_operations(
     if calculate_pairs:
         logger.info("Optimising measurement pair dataframe and output to parquet")
         # optimize measurement pair DataFrame and save to parquet file
+        logger.info("Optimising measurement pair df and saving to parquet...")
         timer.reset()
         # ingest to dask data frames
         srcs_df.index.name = "source_id"
@@ -404,7 +405,7 @@ def final_operations(
 
         delete_file_or_dir(pairs_dir_tmp)
 
-        logger.info("Write the final version of measurement pair dataframe into files time: %.2f seconds", timer.reset())
+        logger.info("Wrote the final version of measurement pair dataframe into files time: %.2f seconds", timer.reset())
 
 
     logger.info("Total final operations time: %.2f seconds", timer.reset_init())
