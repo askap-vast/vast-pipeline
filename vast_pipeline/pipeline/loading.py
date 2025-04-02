@@ -444,6 +444,7 @@ def copy_upload_associations(
         "dr": "dr"
     }
 
+    """
     def upload(df, Association, mapping, batch_size):
         t0 = timer()
         df["db_id"] = df.apply(lambda _: str(uuid4()), axis=1)
@@ -464,7 +465,20 @@ def copy_upload_associations(
     associations_df.compute(workers=io_workers)
     
     logger.info("Associaions upload complete.")
-
+    """
+    
+    t0 = timer()
+    associations_df = associations_df.compute()
+    t1 = timer()
+    logger.info("Time to compute associations_df: %.2f s", t1-t0)
+    
+    associations_df["db_id"] = associations_df.apply(lambda _: str(uuid4()), axis=1)
+    t2 = timer()
+    logger.info("Time to add db_id: %.2f s", t2-t1)
+    
+    copy_upload_model(associations_df, Association, mapping=mapping, batch_size=batch_size)
+    t3 = timer()
+    logger.info("Time to upload: %.2f s", t3-t2)
 
 def make_upload_associations(associations_df: pd.DataFrame) -> None:
     """

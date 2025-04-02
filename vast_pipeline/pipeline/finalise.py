@@ -368,10 +368,10 @@ def final_operations(
     if not __TESTING__:
         batch_size = 10_000
         logger.info("Using batches of %d", batch_size)
-        associations_df_upload = associations_df_upload.loc[:, ["id", "source", "d2d", "dr"]].persist()
-        logger.info("Persisting associations_df_upload...")
-        wait(associations_df_upload)
-        logger.info("Persisted associations_df_upload")
+        associations_df_upload = associations_df_upload.loc[:, ["id", "source", "d2d", "dr"]]#.persist()
+        #logger.info("Persisting associations_df_upload...")
+        #wait(associations_df_upload)
+        #logger.info("Persisted associations_df_upload")
         copy_upload_associations(associations_df_upload, io_workers, batch_size=batch_size)
         #copy_upload_associations(associations_df_upload.loc[:, ["id", "source", "d2d", "dr"]], io_workers, batch_size=batch_size)
         
