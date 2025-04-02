@@ -4,6 +4,7 @@ import warnings
 import pandas as pd
 import pyarrow as pa
 import dask.dataframe as dd
+import dask.config as dc
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -100,8 +101,14 @@ def final_operations(
     npartitions = calculate_n_partitions(sources_df,
                                          partition_size_mb=upload_chunk_size_mb
                                          )
-    sources_df = sources_df.set_index("source") \
-                           .shuffle(npartitions=npartitions, on_index=True)
+    with dc.set({"dataframe.shuffle.method": "disk"}):
+        sources_df = sources_df.set_index("source") \
+                               .shuffle(npartitions=npartitions, on_index=True)
+
+    sources_df = sources_df.persist()
+    logger.info("Persisting sources_df...")
+    wait(sources_df)
+    logger.info("Persisted sources_df...")
 
     srcs_df = parallel_groupby(sources_df)
 
@@ -361,10 +368,13 @@ def final_operations(
     if not __TESTING__:
         batch_size = 10_000
         logger.info("Using batches of %d", batch_size)
-        #assoc_df = associations_df_upload.loc[:, ["id", "source", "d2d", "dr"]]
-        #assoc_df = assoc_df.persist()
-        #wait(assoc_df)
-        copy_upload_associations(associations_df_upload.loc[:, ["id", "source", "d2d", "dr"]], io_workers, batch_size=batch_size)
+        associations_df_upload = associations_df_upload.loc[:, ["id", "source", "d2d", "dr"]].persist()
+        logger.info("Persisting associations_df_upload...")
+        wait(associations_df_upload)
+        logger.info("Persisted associations_df_upload")
+        copy_upload_associations(associations_df_upload, io_workers, batch_size=batch_size)
+        #copy_upload_associations(associations_df_upload.loc[:, ["id", "source", "d2d", "dr"]], io_workers, batch_size=batch_size)
+        
 
     nr_sources = srcs_df.shape[0]
     nr_new_sources = srcs_df["new"].sum()

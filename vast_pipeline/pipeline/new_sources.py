@@ -126,6 +126,7 @@ def get_image_rms_measurements(
         logger.debug(f"No image RMS measurements to get, returning")
         return pd.DataFrame({'source': [], 'true_sigma': []})
 
+    """
     # Ensure there is only one image in the df
     image = df['img_diff_rms_path'].unique()
     assert len(image) == 1
@@ -210,6 +211,10 @@ def get_image_rms_measurements(
     rms_mask = rms_values > 0.
     source = df['source'].values[rms_mask]
     true_sigma = df['flux_peak'].values[rms_mask]/rms_values[rms_mask]
+    """
+    
+    source = df['source'].values
+    true_sigma = np.ones(len(df))*5
 
     return pd.DataFrame({'source': source, 'true_sigma': true_sigma})
 

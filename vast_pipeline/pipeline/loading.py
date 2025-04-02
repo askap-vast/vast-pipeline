@@ -460,6 +460,7 @@ def copy_upload_associations(
                                                                         enforce_metadata=False,
                                                                         meta={})
 
+    logger.info("Running compute on upload map_partitions...")
     associations_df.compute(workers=io_workers)
     
     logger.info("Associaions upload complete.")
