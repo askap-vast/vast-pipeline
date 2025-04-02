@@ -174,9 +174,11 @@ def extract_from_image(
     image = data.pop('path')
     # create the skycoord obj to pass to the forced extraction
     # see usage https://github.com/dlakaplan/forced_phot
+    """
     P_islands = SkyCoord(
         df["wavg_ra"].to_numpy(), df["wavg_dec"].to_numpy(), unit=(u.deg, u.deg)
     )
+    """
 
     num_sources = len(df)
     logger.debug("Will fit %d sources for %s...", num_sources, image)
