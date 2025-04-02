@@ -105,10 +105,10 @@ def final_operations(
         sources_df = sources_df.set_index("source") \
                                .shuffle(npartitions=npartitions, on_index=True)
 
-    sources_df = sources_df.persist()
-    logger.info("Persisting sources_df...")
-    wait(sources_df)
-    logger.info("Persisted sources_df...")
+    #sources_df = sources_df.persist()
+    #logger.info("Persisting sources_df...")
+    #wait(sources_df)
+    #logger.info("Persisted sources_df...")
 
     srcs_df = parallel_groupby(sources_df)
 
