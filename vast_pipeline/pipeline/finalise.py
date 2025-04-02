@@ -101,7 +101,7 @@ def final_operations(
     npartitions = calculate_n_partitions(sources_df,
                                          partition_size_mb=upload_chunk_size_mb
                                          )
-    with dc.set({"dataframe.shuffle.method": "disk"}):
+    with dc.set({"dataframe.shuffle.method": "p2p"}):
         sources_df = sources_df.set_index("source") \
                                .shuffle(npartitions=npartitions, on_index=True)
 
