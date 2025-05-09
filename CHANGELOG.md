@@ -28,6 +28,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - V2: Update dependencies to fix dependabot warnings and prepare for Dask distributed implementation.
 - Upgrade measurements file generation to use dask in order to handle larger runs [#797](https://github.com/askap-vast/vast-pipeline/pull/797)
 - Replaced optimise_ints and optimise_floats with single function - optimise_numeric [#797](https://github.com/askap-vast/vast-pipeline/pull/797)
+- Updated open_fits to correctly handle NaN-padded compressed images [#837](https://github.com/askap-vast/vast-pipeline/pull/837)
+- Upgrade measurements file generation to use dask in order to handle larger runs [#789](https://github.com/askap-vast/vast-pipeline/pull/797)
+- Replaced optimise_ints and optimise_floats with single function - optimise_numeric [#789](https://github.com/askap-vast/vast-pipeline/pull/797)
 - Upgrade forced_phot dependency to v0.2 and force `use_numba=True` [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
 - Remove bad forced photometry fits immediately after calculation, rather than after they've all been compiled into a single dataframe [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
 - Optimise associations upload by dropping unnecessary columns prior to a large dataframe merge [#787](https://github.com/askap-vast/vast-pipeline/pull/787)
@@ -70,6 +73,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [#801](https://github.com/askap-vast/vast-pipeline/pull/801): docs, dep: v2: Updated docs dependencies and fixed outdated information and various warnings
 - [#714](https://github.com/askap-vast/vast-pipeline/pull/714): fix: V2: Correctly calculate new_high_sigma parameter 
 - [#798](https://github.com/askap-vast/vast-pipeline/pull/798): dep: V2: Update dependencies to deal with dependabot reccomendations and to prepare for V2 upgrades.
+- [#837](https://github.com/askap-vast/vast-pipeline/pull/837): fix: Updated open_fits to correctly handle NaN-padded compressed images
 - [#828](https://github.com/askap-vast/vast-pipeline/pull/828): fix: Fix potential memory leak in image header extraction
 - [#825](https://github.com/askap-vast/vast-pipeline/pull/825): fix: Check for whether processing parameters exist in config before validating them and updated github actions to use cache@v4
 - [#810](https://github.com/askap-vast/vast-pipeline/pull/810): fix: Updated ubuntu to 24.04 in github workflows and bumped python versions accordingly 
