@@ -464,7 +464,7 @@
     <span class=n>separation</span><span class=p>[</span><span class=n>separation</span> <span class=o>&gt;</span> <span class=mf>1.</span><span class=p>]</span> <span class=o>=</span> <span class=mf>1.</span>
 
     <span class=k>return</span> <span class=n>np</span><span class=o>.</span><span class=n>arccos</span><span class=p>(</span><span class=n>separation</span><span class=p>)</span>
-</code></pre></div></td></tr></table></div> </details> </div> </div> <div class="doc doc-object doc-function"> <h2 id=vast_pipeline.image.utils.open_fits class="doc doc-heading"> <code class="highlight language-python"><span class=n>open_fits</span><span class=p>(</span><span class=n>fits_path</span><span class=p>,</span> <span class=n>memmap</span><span class=o>=</span><span class=kc>True</span><span class=p>)</span></code> <a href=#vast_pipeline.image.utils.open_fits class=headerlink title="Permanent link">&para;</a></h2> <div class="doc doc-contents "> <p>This function opens both compressed and uncompressed fits files.</p> <p><span class=doc-section-title>Parameters:</span></p> <table> <thead> <tr> <th>Name</th> <th>Type</th> <th>Description</th> <th>Default</th> </tr> </thead> <tbody> <tr class=doc-section-item> <td><code>fits_path</code></td> <td> <code><span title="typing.Union">Union</span>[str, <span title="pathlib.Path">Path</span>]</code> </td> <td> <div class=doc-md-description> <p>Path to the fits file</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>memmap</code></td> <td> <code><span title="typing.Optional">Optional</span>[bool]</code> </td> <td> <div class=doc-md-description> <p>Open the fits file with mmap.</p> </div> </td> <td> <code>True</code> </td> </tr> </tbody> </table> <p><span class=doc-section-title>Returns:</span></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr class=doc-section-item> <td> </td> <td> <div class=doc-md-description> <p>HDUList loaded from the fits file</p> </div> </td> </tr> </tbody> </table> <details class=quote> <summary>Source code in <code>vast_pipeline/image/utils.py</code></summary> <div class=highlight><table class=highlighttable><tr><td class=linenos><div class=linenodiv><pre><span></span><span class=normal>256</span>
+</code></pre></div></td></tr></table></div> </details> </div> </div> <div class="doc doc-object doc-function"> <h2 id=vast_pipeline.image.utils.open_fits class="doc doc-heading"> <code class="highlight language-python"><span class=n>open_fits</span><span class=p>(</span><span class=n>fits_path</span><span class=p>,</span> <span class=n>memmap</span><span class=o>=</span><span class=kc>True</span><span class=p>,</span> <span class=n>comp_nan_fill</span><span class=o>=</span><span class=kc>True</span><span class=p>,</span> <span class=n>comp_nan_fill_cut</span><span class=o>=-</span><span class=mf>10000.0</span><span class=p>)</span></code> <a href=#vast_pipeline.image.utils.open_fits class=headerlink title="Permanent link">&para;</a></h2> <div class="doc doc-contents "> <p>This function opens both compressed and uncompressed fits files.</p> <p><span class=doc-section-title>Parameters:</span></p> <table> <thead> <tr> <th>Name</th> <th>Type</th> <th>Description</th> <th>Default</th> </tr> </thead> <tbody> <tr class=doc-section-item> <td><code>fits_path</code></td> <td> <code><span title="typing.Union">Union</span>[str, <span title="pathlib.Path">Path</span>]</code> </td> <td> <div class=doc-md-description> <p>Path to the fits file</p> </div> </td> <td> <em>required</em> </td> </tr> <tr class=doc-section-item> <td><code>memmap</code></td> <td> <code><span title="typing.Optional">Optional</span>[bool]</code> </td> <td> <div class=doc-md-description> <p>Open the fits file with mmap.</p> </div> </td> <td> <code>True</code> </td> </tr> <tr class=doc-section-item> <td><code>comp_nan_fill</code></td> <td> <code><span title="typing.Optional">Optional</span>[bool]</code> </td> <td> <div class=doc-md-description> <p>Fill formerly-NaN values with NaNs in compressed images. Defaults to True.</p> </div> </td> <td> <code>True</code> </td> </tr> <tr class=doc-section-item> <td><code>comp_nan_fill_cut</code></td> <td> </td> <td> <div class=doc-md-description> <p>The cutoff value for replacing negative numbers with NaNs. Only relevant if <code>comp_nan_fill=True</code>. Defaults to -1e4.</p> </div> </td> <td> <code>-10000.0</code> </td> </tr> </tbody> </table> <p><span class=doc-section-title>Returns:</span></p> <table> <thead> <tr> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr class=doc-section-item> <td> <code><span title="astropy.io.fits.HDUList">HDUList</span></code> </td> <td> <div class=doc-md-description> <p>HDUList loaded from the fits file</p> </div> </td> </tr> </tbody> </table> <details class=quote> <summary>Source code in <code>vast_pipeline/image/utils.py</code></summary> <div class=highlight><table class=highlighttable><tr><td class=linenos><div class=linenodiv><pre><span></span><span class=normal>256</span>
 <span class=normal>257</span>
 <span class=normal>258</span>
 <span class=normal>259</span>
@@ -487,13 +487,34 @@
 <span class=normal>276</span>
 <span class=normal>277</span>
 <span class=normal>278</span>
-<span class=normal>279</span></pre></div></td><td class=code><div><pre><span></span><code><span class=k>def</span><span class=w> </span><span class=nf>open_fits</span><span class=p>(</span><span class=n>fits_path</span><span class=p>:</span> <span class=n>Union</span><span class=p>[</span><span class=nb>str</span><span class=p>,</span> <span class=n>Path</span><span class=p>],</span> <span class=n>memmap</span><span class=p>:</span> <span class=n>Optional</span><span class=p>[</span><span class=nb>bool</span><span class=p>]</span> <span class=o>=</span> <span class=kc>True</span><span class=p>):</span>
+<span class=normal>279</span>
+<span class=normal>280</span>
+<span class=normal>281</span>
+<span class=normal>282</span>
+<span class=normal>283</span>
+<span class=normal>284</span>
+<span class=normal>285</span>
+<span class=normal>286</span>
+<span class=normal>287</span>
+<span class=normal>288</span>
+<span class=normal>289</span>
+<span class=normal>290</span>
+<span class=normal>291</span></pre></div></td><td class=code><div><pre><span></span><code><span class=k>def</span><span class=w> </span><span class=nf>open_fits</span><span class=p>(</span>
+    <span class=n>fits_path</span><span class=p>:</span> <span class=n>Union</span><span class=p>[</span><span class=nb>str</span><span class=p>,</span> <span class=n>Path</span><span class=p>],</span>
+    <span class=n>memmap</span><span class=p>:</span> <span class=n>Optional</span><span class=p>[</span><span class=nb>bool</span><span class=p>]</span> <span class=o>=</span> <span class=kc>True</span><span class=p>,</span>
+    <span class=n>comp_nan_fill</span><span class=p>:</span> <span class=n>Optional</span><span class=p>[</span><span class=nb>bool</span><span class=p>]</span><span class=o>=</span> <span class=kc>True</span><span class=p>,</span>
+    <span class=n>comp_nan_fill_cut</span> <span class=o>=</span> <span class=o>-</span><span class=mf>1e4</span><span class=p>,</span>
+<span class=p>)</span> <span class=o>-&gt;</span> <span class=n>fits</span><span class=o>.</span><span class=n>HDUList</span><span class=p>:</span>
 <span class=w>    </span><span class=sd>&quot;&quot;&quot;</span>
 <span class=sd>    This function opens both compressed and uncompressed fits files.</span>
 
 <span class=sd>    Args:</span>
 <span class=sd>        fits_path: Path to the fits file</span>
 <span class=sd>        memmap: Open the fits file with mmap.</span>
+<span class=sd>        comp_nan_fill: Fill formerly-NaN values with NaNs in compressed images.</span>
+<span class=sd>            Defaults to True.</span>
+<span class=sd>        comp_nan_fill_cut: The cutoff value for replacing negative numbers</span>
+<span class=sd>            with NaNs. Only relevant if `comp_nan_fill=True`. Defaults to -1e4.</span>
 
 <span class=sd>    Returns:</span>
 <span class=sd>        HDUList loaded from the fits file</span>
@@ -507,7 +528,10 @@
     <span class=c1># This is a messy way to check, but I can&#39;t think of a better one</span>
     <span class=k>if</span> <span class=nb>len</span><span class=p>(</span><span class=n>hdul</span><span class=p>)</span> <span class=o>==</span> <span class=mi>1</span><span class=p>:</span>
         <span class=k>return</span> <span class=n>hdul</span>
-    <span class=k>elif</span> <span class=nb>type</span><span class=p>(</span><span class=n>hdul</span><span class=p>[</span><span class=mi>1</span><span class=p>])</span> <span class=o>==</span> <span class=n>fits</span><span class=o>.</span><span class=n>hdu</span><span class=o>.</span><span class=n>compressed</span><span class=o>.</span><span class=n>CompImageHDU</span><span class=p>:</span>
+    <span class=k>elif</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>hdul</span><span class=p>[</span><span class=mi>1</span><span class=p>],</span> <span class=n>fits</span><span class=o>.</span><span class=n>hdu</span><span class=o>.</span><span class=n>compressed</span><span class=o>.</span><span class=n>CompImageHDU</span><span class=p>):</span>
+        <span class=k>if</span> <span class=n>comp_nan_fill</span><span class=p>:</span>
+            <span class=n>data</span> <span class=o>=</span> <span class=n>hdul</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span><span class=o>.</span><span class=n>data</span>
+            <span class=n>data</span><span class=p>[</span><span class=n>data</span><span class=o>&lt;</span><span class=n>comp_nan_fill_cut</span><span class=p>]</span> <span class=o>=</span> <span class=n>np</span><span class=o>.</span><span class=n>nan</span>
         <span class=k>return</span> <span class=n>fits</span><span class=o>.</span><span class=n>HDUList</span><span class=p>(</span><span class=n>hdul</span><span class=p>[</span><span class=mi>1</span><span class=p>:])</span>
     <span class=k>else</span><span class=p>:</span>
         <span class=k>return</span> <span class=n>hdul</span>
