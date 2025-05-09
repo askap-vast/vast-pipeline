@@ -282,7 +282,7 @@ def open_fits(
     # This is a messy way to check, but I can't think of a better one
     if len(hdul) == 1:
         return hdul
-   elif isinstance(hdul[1], fits.hdu.compressed.CompImageHDU):
+    elif isinstance(hdul[1], fits.hdu.compressed.CompImageHDU):
         if comp_nan_fill:
             data = hdul[1].data
             data[data<comp_nan_fill_cut] = np.nan
