@@ -84,6 +84,8 @@ def plot_lightcurve(
 
     # lightcurve required cols: taustart_ts, flux, flux_err_upper, flux_err_lower, forced
     lightcurve = pd.DataFrame(measurements_qs)
+    print(lightcurve.columns)
+    lightcurve['id'] = lightcurve['id'].astype(str)
 
     # remap method values to labels to make a better legend
     lightcurve["method"] = lightcurve.forced.map({True: "Forced", False: "Selavy"})
@@ -166,6 +168,11 @@ def plot_lightcurve(
                 f"m_{metric_suffix}.abs() >= {m_abs_min} and vs_{metric_suffix}.abs() >= {vs_abs_min}"
             )
             .reset_index()
+        )
+        candidate_measurement_pairs_df = candidate_measurement_pairs_df.astype(
+            {'measurement_a_id': 'str',
+             'measurement_b_id': 'str',
+            }
         )
         g = nx.Graph()
         for _row in candidate_measurement_pairs_df.itertuples(index=False):
