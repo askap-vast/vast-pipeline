@@ -14,7 +14,7 @@ def _start_cluster():
     logger.info('Starting local Dask Cluster...')
     logger.info(f"n_workers: {s.DASK_NUM_WORKERS}")
     logger.info(f"threads_per_worker: {s.DASK_THREADS_PER_WORKER}")
-    logger.info(f"memory per worker: {s.MEM_PER_WORKER}")
+    logger.info(f"memory per worker: {s.DASK_MEM_PER_WORKER}")
     logger.info(f"scheduler_host: {s.DASK_SCHEDULER_HOST}")
     logger.info(f"scheduler_port: {s.DASK_SCHEDULER_PORT}")
     logger.info(f"dashboard_host: {s.DASK_DASHBOARD_HOST}")
@@ -25,7 +25,7 @@ def _start_cluster():
             threads_per_worker=s.DASK_THREADS_PER_WORKER,
             host=s.DASK_SCHEDULER_HOST,
             scheduler_port=int(s.DASK_SCHEDULER_PORT),
-            memory_limit=float(s.MEM_PER_WORKER),
+            memory_limit=float(s.DASK_MEM_PER_WORKER),
             dashboard_address=f"{s.DASK_DASHBOARD_HOST}:{s.DASK_DASHBOARD_PORT}",
         )
     client = Client(cluster)
