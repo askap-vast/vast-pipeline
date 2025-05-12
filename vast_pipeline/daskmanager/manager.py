@@ -25,7 +25,7 @@ def _start_cluster():
             threads_per_worker=s.DASK_THREADS_PER_WORKER,
             host=s.DASK_SCHEDULER_HOST,
             scheduler_port=int(s.DASK_SCHEDULER_PORT),
-            memory_limit=float(s.MEM_PER_WORKER)
+            memory_limit=float(s.MEM_PER_WORKER),
             dashboard_address=f"{s.DASK_DASHBOARD_HOST}:{s.DASK_DASHBOARD_PORT}",
         )
     client = Client(cluster)
