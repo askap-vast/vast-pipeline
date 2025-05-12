@@ -1261,11 +1261,12 @@ def get_parallel_assoc_image_df(
 
     return images_df
 
-def _process_measurements_file(m_file: str,
-                               i: int,
-                               out_dir: str,
-                               associations: pd.DataFrame
-                               ) -> None:
+def _process_measurements_file(
+    m_file: str,
+    i: int,
+    out_dir: str,
+    associations: pd.DataFrame
+) -> None:
     """
     Process an individual measurements file and output as a single partition
     
@@ -1278,7 +1279,9 @@ def _process_measurements_file(m_file: str,
     Returns:
         None
     """
+    
     measurements = pd.read_parquet(m_file, engine='pyarrow')
+    logger.debug(f"Loaded {m_file}") 
     
     # Memory blows up and everything is slow if we try and do a full merge.
     # Instead, pull out the indices that are in both dfs and then merge those.
@@ -1286,12 +1289,16 @@ def _process_measurements_file(m_file: str,
     measurements = measurements.loc[
         measurements['id'].isin(associations_merge.index)
     ]
+    logger.debug(f"{m_file}: pulled out shared indices")
     
     measurements = optimise_numeric(measurements)
+    logger.debug(f"{m_file}: optimised numeric entries")
     measurements = measurements.merge(associations_merge, right_index=True, left_on='id', how="inner").rename(columns={'source_id': 'source'})
+    logger.debug(f"{m_file}: Finished merge")
     
     partition_file = os.path.join(out_dir, f'part.{i}.parquet')
     measurements.to_parquet(partition_file, index=False)
+    logger.debug(f"{m_file}: Wrote parquet. Finished.")
 
 def _repartition_measurements(in_file: str, out_file: str) -> None:
     """"
@@ -1333,7 +1340,7 @@ def create_measurements_parquet_file(p_run: Run, max_workers: Optional[int] = 10
     logger.info("Will write to final parquet file to %s.", parquet_file)
     
     processed_temp = tempfile.TemporaryDirectory()
-    logger.debug("Writing temporary data to %s", processed_temp.name)
+    logger.info("Writing temporary data to %s", processed_temp.name)
 
     images = pd.read_parquet(
         os.path.join(
@@ -1350,7 +1357,7 @@ def create_measurements_parquet_file(p_run: Run, max_workers: Optional[int] = 10
         'forced*.parquet'
     ))
 
-    logger.info("Will create measurements from %i files...", len(m_files))
+    logger.info("Will create measurements parquet from %i files...", len(m_files))
 
     associations = dd.read_parquet(
         os.path.join(

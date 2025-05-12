@@ -174,11 +174,11 @@ def extract_from_image(
     image = data.pop('path')
     # create the skycoord obj to pass to the forced extraction
     # see usage https://github.com/dlakaplan/forced_phot
-    """
+    #"""
     P_islands = SkyCoord(
         df["wavg_ra"].to_numpy(), df["wavg_dec"].to_numpy(), unit=(u.deg, u.deg)
     )
-    """
+    #"""
 
     num_sources = len(df)
     logger.debug("Will fit %d sources for %s...", num_sources, image)
@@ -186,17 +186,17 @@ def extract_from_image(
     # load the image, background and noisemaps into memory
     # a dedicated function may seem unneccesary, but will be useful if we
     # split the load to a separate thread.
-    """
+    #"""
     forcedphot_input = _forcedphot_preload(image,
                                            data.pop('background_path'),
                                            data.pop('noise_path'),
                                            memmap=False
                                            )
-    """
-    data.pop('background_path')
-    data.pop('noise_path')
+    #"""
+    #data.pop('background_path')
+    #data.pop('noise_path')
     FP_timer = StopWatch()
-    """
+    #"""
     FP = ForcedPhot(*forcedphot_input, use_numba=True)
     logger.debug("%s - Time to init FP: %.3f s", image,  FP_timer.reset())
 
@@ -215,12 +215,12 @@ def extract_from_image(
         edge_buffer=edge_buffer,
         use_clusters=use_clusters
     )
-    """
+    #"""
     logger.debug("%s - Time to measure FP: %.3fs", image, FP_timer.reset())
 
-    flux = np.ones(num_sources) * 5e-3
-    flux_err = np.ones(num_sources) * 1e-3
-    chisq = np.ones(num_sources)
+    #flux = np.ones(num_sources) * 5e-3
+    #flux_err = np.ones(num_sources) * 1e-3
+    #chisq = np.ones(num_sources)
 
     num_fits = np.sum(flux>0.0)
 
