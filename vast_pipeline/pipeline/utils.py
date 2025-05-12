@@ -1350,7 +1350,7 @@ def create_measurements_parquet_file(p_run: Run, max_workers: Optional[int] = 10
         'forced*.parquet'
     ))
 
-    logger.debug("Will create measurements from %i files...", len(m_files))
+    logger.info("Will create measurements from %i files...", len(m_files))
 
     associations = dd.read_parquet(
         os.path.join(
@@ -1361,7 +1361,7 @@ def create_measurements_parquet_file(p_run: Run, max_workers: Optional[int] = 10
         index='meas_id'
     ).compute()
     
-    logger.debug("Processing %d partitions with %d workers", len(m_files), max_workers)
+    logger.info("Processing %d partitions with %d workers...", len(m_files), max_workers)
 
     
     with Pool(max_workers) as pool:
@@ -1373,12 +1373,12 @@ def create_measurements_parquet_file(p_run: Run, max_workers: Optional[int] = 10
         )
         pool.starmap(_process_measurements_file, iterable_arg)
 
-    logger.debug("Repartitioning dataframe and saving")
+    logger.info("Repartitioning dataframe and saving")
     _repartition_measurements(processed_temp.name, parquet_file)
 
-    logger.debug("Cleaning up temporary data")
+    logger.info("Cleaning up temporary data")
     processed_temp.cleanup()
-    logger.debug("Done.")
+    logger.info("Done.")
 
 
 def backup_parquets(p_run_path: str) -> None:
