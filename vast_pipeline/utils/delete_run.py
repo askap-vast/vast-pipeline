@@ -16,7 +16,7 @@ def _run_raw_sql(command, cursor, debug=False, log=True, dry_run=False):
     
     return
 
-def delete_pipeline_run_raw_sql(p_run, source_batch_size=1000):
+def delete_pipeline_run_raw_sql(p_run, source_batch_size=1000, delete_images=True):
     p_run_id = p_run.pk
 
     with connection.cursor() as cursor:
@@ -39,8 +39,7 @@ def delete_pipeline_run_raw_sql(p_run, source_batch_size=1000):
         batch_starts = list(range(0, len(source_ids), BATCH_SIZE))
         for batch_start in tqdm(batch_starts):
             batch = source_ids[batch_start:batch_start+BATCH_SIZE]
-            batch_str = ','.join(str(source_id) for source_id in batch)
-            source_id = source_id_tuple[0]
+            batch_str = ','.join(str(source_id[0]) for source_id in batch)
 
             # Delete entries from vast_pipeline_sourcefav for each source_id
             sql_cmd = f"DELETE FROM vast_pipeline_sourcefav WHERE source_id IN {batch_str};"
@@ -67,9 +66,7 @@ def delete_pipeline_run_raw_sql(p_run, source_batch_size=1000):
 
             sql_cmd = f"DELETE FROM vast_pipeline_association WHERE source_id IN {batch_str};"
             _run_raw_sql(sql_cmd, cursor, log=False)
-            
-            #if i % 1000 == 0:
-            #    logger.info("Finished source id %d (%d of %d)", source_id, i, n_source_ids)
+
         t = timer.reset()
         logger.info("Time to iterate over %d source ids: %.2f seconds", n_source_ids, t)
 
@@ -95,9 +92,13 @@ def delete_pipeline_run_raw_sql(p_run, source_batch_size=1000):
 
         # Iterate over each image ID and delete related information
         n_image_ids = len(image_ids)
-        logger.info("Iterating over %d images to delete measurements and images", n_image_ids)
         timer.reset()
+        
 
+        if not delete_images:
+            logger.info("Iterating over %d images to delete measurements and images", n_image_ids)
+        else:
+            logger.info("Iterating over %d images to unlink run - delete_images=False so not deleting", n_image_ids)
         for image_id_tuple in image_ids:
             image_id = image_id_tuple[0]
             
@@ -113,6 +114,8 @@ def delete_pipeline_run_raw_sql(p_run, source_batch_size=1000):
             # If the image is associated with more than one run, do not delete the image.
             if num_occurences > 1:
                 logger.debug("image_id %d is referenced by %d other pipeline runs, not deleting", image_id, num_occurences-1)
+                continue
+            elif not delete_images:
                 continue
 
             try:
