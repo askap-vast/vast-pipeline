@@ -1,5 +1,6 @@
 import logging
 
+from tqdm import tqdm 
 from django.db import connection
 from vast_pipeline.utils.utils import StopWatch
 
@@ -16,7 +17,7 @@ def _run_raw_sql(command, cursor, debug=False, log=True, dry_run=False):
     
     return
 
-def delete_pipeline_run_raw_sql(p_run, source_batch_size=1000, delete_images=True):
+def delete_pipeline_run_raw_sql(p_run, source_batch_size=10000, delete_images=True):
     p_run_id = p_run.pk
 
     with connection.cursor() as cursor:
@@ -36,17 +37,17 @@ def delete_pipeline_run_raw_sql(p_run, source_batch_size=1000, delete_images=Tru
         logger.info("Using %d batches of %d sources", n_batches, source_batch_size)
         
         timer = StopWatch()
-        batch_starts = list(range(0, len(source_ids), BATCH_SIZE))
+        batch_starts = list(range(0, len(source_ids), source_batch_size))
         for batch_start in tqdm(batch_starts):
-            batch = source_ids[batch_start:batch_start+BATCH_SIZE]
+            batch = source_ids[batch_start:batch_start+source_batch_size]
             batch_str = ','.join(str(source_id[0]) for source_id in batch)
 
             # Delete entries from vast_pipeline_sourcefav for each source_id
-            sql_cmd = f"DELETE FROM vast_pipeline_sourcefav WHERE source_id IN {batch_str};"
+            sql_cmd = f"DELETE FROM vast_pipeline_sourcefav WHERE source_id IN ({batch_str});"
             _run_raw_sql(sql_cmd, cursor, log=False)
 
             # Find source tags related to the source and delete them
-            sql_cmd = f"SELECT tagulous_source_tags_id FROM vast_pipeline_source_tags WHERE source_id IN {batch_str};"
+            sql_cmd = f"SELECT tagulous_source_tags_id FROM vast_pipeline_source_tags WHERE source_id IN ({batch_str});"
             _run_raw_sql(sql_cmd, cursor, log=False)
             tag_ids = cursor.fetchall()
             if tag_ids:
@@ -55,16 +56,16 @@ def delete_pipeline_run_raw_sql(p_run, source_batch_size=1000, delete_images=Tru
                 _run_raw_sql(sql_cmd, cursor, log=False)
 
             # Delete from vast_pipeline_source_tags for the source_id
-            sql_cmd = f"DELETE FROM vast_pipeline_source_tags WHERE source_id IN {batch_str};"
+            sql_cmd = f"DELETE FROM vast_pipeline_source_tags WHERE source_id IN ({batch_str});"
             _run_raw_sql(sql_cmd, cursor, log=False)
 
             # Delete from related source
-            sql_cmd = f"DELETE FROM vast_pipeline_relatedsource WHERE from_source_id IN {batch_str};"
+            sql_cmd = f"DELETE FROM vast_pipeline_relatedsource WHERE from_source_id IN ({batch_str});"
             _run_raw_sql(sql_cmd, cursor, log=False)
-            sql_cmd = f"DELETE FROM vast_pipeline_relatedsource WHERE to_source_id IN {batch_str};"
+            sql_cmd = f"DELETE FROM vast_pipeline_relatedsource WHERE to_source_id IN ({batch_str});"
             _run_raw_sql(sql_cmd, cursor, log=False)
 
-            sql_cmd = f"DELETE FROM vast_pipeline_association WHERE source_id IN {batch_str};"
+            sql_cmd = f"DELETE FROM vast_pipeline_association WHERE source_id IN ({batch_str});"
             _run_raw_sql(sql_cmd, cursor, log=False)
 
         t = timer.reset()
@@ -86,19 +87,62 @@ def delete_pipeline_run_raw_sql(p_run, source_batch_size=1000, delete_images=Tru
         _run_raw_sql(sql_cmd, cursor)
 
         # Fetch image IDs associated with the pipeline run
+        timer.reset()
         sql_cmd = f"SELECT image_id FROM vast_pipeline_image_run WHERE run_id = {p_run_id};"
         _run_raw_sql(sql_cmd, cursor)
         image_ids = cursor.fetchall()
+        n_image_ids = len(image_ids)
+        
+        image_id_str = ','.join(str(image_id[0]) for image_id in image_ids)
+        # Delete the link between the run and the image
+        
+        if n_image_ids > 0:
+            sql_cmd = f"DELETE FROM vast_pipeline_image_run WHERE run_id = {p_run_id} AND image_id IN ({image_id_str});"
+            _run_raw_sql(sql_cmd, cursor)
+            
+            # Only delete the actual images if selected, but only delete if they're not linked to other runs
+            if not delete_images:
+                sql_cmd = f"SELECT image_id FROM vast_pipeline_image_run GROUP BY image_id HAVING COUNT(*) = 1 AND MAX(run_id) = {p_run_id};"
+                _run_raw_sql(sql_cmd, cursor)
+                image_ids = cursor.fetchall()
+                image_id_str = ','.join(str(image_id[0]) for image_id in image_ids)
 
+            for image_id_tuple in image_ids:
+                image_id = image_id_tuple[0]
+                try:
+                    sql_cmd = f"DELETE FROM vast_pipeline_measurement WHERE image_id = {image_id};"
+                    _run_raw_sql(sql_cmd, cursor)
+                except Exception as e:
+                    logger.error("%s %d", e, image_id)
+                    pass
+
+            if delete_images:
+                try:
+                    sql_cmd = f"DELETE FROM vast_pipeline_image WHERE id IN ({image_id_str});"
+                    _run_raw_sql(sql_cmd, cursor)
+                except Exception as e:
+                    logger.error("%s %d", e, image_id_str)
+                    pass
+
+            t = timer.reset()
+            logger.info("Time to iterate over %d image ids: %f seconds", n_image_ids, t)
+        else:
+            logger.info("No images to delete...")
+
+
+
+        """
         # Iterate over each image ID and delete related information
         n_image_ids = len(image_ids)
-        timer.reset()
-        
-
         if not delete_images:
             logger.info("Iterating over %d images to delete measurements and images", n_image_ids)
         else:
             logger.info("Iterating over %d images to unlink run - delete_images=False so not deleting", n_image_ids)
+
+        timer.reset()
+
+        
+        
         for image_id_tuple in image_ids:
             image_id = image_id_tuple[0]
             
@@ -133,7 +177,8 @@ def delete_pipeline_run_raw_sql(p_run, source_batch_size=1000, delete_images=Tru
                 pass
         t = timer.reset()
         logger.info("Time to iterate over %d image ids: %f seconds", n_image_ids, t)
-
+        """
+        
         # Fetch skyregion IDs associated with the pipeline run
         sql_cmd = f"SELECT skyregion_id FROM vast_pipeline_skyregion_run WHERE run_id = {p_run_id};"
         _run_raw_sql(sql_cmd, cursor, debug=True)
@@ -148,11 +193,11 @@ def delete_pipeline_run_raw_sql(p_run, source_batch_size=1000, delete_images=Tru
             
             # Check if the Image is associated with more than one run
             sql_cmd = f"SELECT COUNT(*) FROM vast_pipeline_skyregion_run WHERE skyregion_id={sky_id};"
-            _run_raw_sql(sql_cmd, cursor)
+            _run_raw_sql(sql_cmd, cursor, log=False)
             num_occurences = cursor.fetchone()[0]
             
             sql_cmd = f"DELETE FROM vast_pipeline_skyregion_run WHERE skyregion_id = {sky_id} AND run_id = {p_run_id};"
-            _run_raw_sql(sql_cmd, cursor)
+            _run_raw_sql(sql_cmd, cursor, log=False)
             
             # If the skyregion is associated with more than one run, do not delete the skyregion.
             if num_occurences > 1:

@@ -10,9 +10,10 @@ from glob import glob
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from django.conf import settings
-from django.db import transaction
+from django.db import transaction, connection
 from pyarrow.parquet import read_schema
 from typing import Any, List, Tuple, Dict, Optional
+from tqdm import tqdm
 
 from vast_pipeline.models import Image, Measurement, Run
 from vast_pipeline.pipeline.loading import make_upload_measurements
@@ -25,7 +26,7 @@ from vast_pipeline.pipeline.utils import log_total_memory_usage
 logger = logging.getLogger(__name__)
 
 
-def remove_forced_meas(run_path: str) -> None:
+def remove_forced_meas(run_path: str, batch_size=10000) -> None:
     '''
     Remove forced measurements from the database if forced parquet files
     are found.
@@ -47,6 +48,22 @@ def remove_forced_meas(run_path: str) -> None:
             .compute()
             .tolist()
         )
+        with connection.cursor() as cursor:
+            n_ids = len(ids)
+            logger.info("Iterating over %d forced measurements", len(ids))
+            n_batches = round(n_ids/batch_size)
+            logger.info("Using %d batches of %d measurements", n_batches, batch_size)
+            
+            timer = StopWatch()
+            batch_starts = list(range(0, len(ids), batch_size))
+            for batch_start in tqdm(batch_starts):
+                batch = ids[batch_start:batch_start+batch_size]
+                batch_str = ','.join(str(meas_id) for meas_id in batch)
+                
+                sql_cmd = f"DELETE FROM vast_pipeline_measurement WHERE id IN ({batch_str});"
+                cursor.execute(sql_cmd)
+        
+        """
         obj_to_delete = Measurement.objects.filter(id__in=ids)
         del ids
         if obj_to_delete.exists():
@@ -58,6 +75,7 @@ def remove_forced_meas(run_path: str) -> None:
                     n_del,
                 )
                 logger.debug('(type, #deleted): %s', detail_del)
+        """
 
 
 def get_data_from_parquet(
