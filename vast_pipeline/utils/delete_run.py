@@ -36,7 +36,8 @@ def delete_pipeline_run_raw_sql(p_run, source_batch_size=1000):
         logger.info("Using %d batches of %d sources", n_batches, source_batch_size)
         
         timer = StopWatch()
-        for batch_start in range(0, len(source_ids), BATCH_SIZE):
+        batch_starts = list(range(0, len(source_ids), BATCH_SIZE))
+        for batch_start in tqdm(batch_starts):
             batch = source_ids[batch_start:batch_start+BATCH_SIZE]
             batch_str = ','.join(str(source_id) for source_id in batch)
             source_id = source_id_tuple[0]
@@ -48,11 +49,10 @@ def delete_pipeline_run_raw_sql(p_run, source_batch_size=1000):
             # Find source tags related to the source and delete them
             sql_cmd = f"SELECT tagulous_source_tags_id FROM vast_pipeline_source_tags WHERE source_id IN {batch_str};"
             _run_raw_sql(sql_cmd, cursor, log=False)
-            tagulous_source_tags_ids = cursor.fetchall()
-
-            for tagulous_source_tags_id_tuple in tagulous_source_tags_ids:
-                tagulous_source_tags_id = tagulous_source_tags_id_tuple[0]
-                sql_cmd = f"DELETE FROM vast_pipeline_tagulous_source_tags WHERE id = {tagulous_source_tags_id};"
+            tag_ids = cursor.fetchall()
+            if tag_ids:
+                tag_ids_str = ','.join(str(t[0]) for t in tag_ids)
+                sql_cmd = f"DELETE FROM vast_pipeline_tagulous_source_tags WHERE id IN ({tag_ids_str});"
                 _run_raw_sql(sql_cmd, cursor, log=False)
 
             # Delete from vast_pipeline_source_tags for the source_id
