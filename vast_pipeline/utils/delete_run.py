@@ -5,17 +5,18 @@ from vast_pipeline.utils.utils import StopWatch
 
 logger = logging.getLogger(__name__)
 
-def _run_raw_sql(command, cursor, debug=False, log=True):
+def _run_raw_sql(command, cursor, debug=False, log=True, dry_run=False):
     if log:
         if debug:
             logger.debug("Running %s", command)
         else:
             logger.info("Running %s", command)
-    cursor.execute(command)
+    if not dry_run:
+        cursor.execute(command)
     
     return
 
-def delete_pipeline_run_raw_sql(p_run):
+def delete_pipeline_run_raw_sql(p_run, source_batch_size=1000):
     p_run_id = p_run.pk
 
     with connection.cursor() as cursor:
@@ -31,16 +32,21 @@ def delete_pipeline_run_raw_sql(p_run):
         # Iterate over each source ID and delete related information
         n_source_ids = len(source_ids)
         logger.info("Iterating over %d sources to delete tags and relations", n_source_ids)
+        n_batches = round(n_source_ids/source_batch_size)
+        logger.info("Using %d batches of %d sources", n_batches, source_batch_size)
+        
         timer = StopWatch()
-        for i, source_id_tuple in enumerate(source_ids):
+        for batch_start in range(0, len(source_ids), BATCH_SIZE):
+            batch = source_ids[batch_start:batch_start+BATCH_SIZE]
+            batch_str = ','.join(str(source_id) for source_id in batch)
             source_id = source_id_tuple[0]
 
             # Delete entries from vast_pipeline_sourcefav for each source_id
-            sql_cmd = f"DELETE FROM vast_pipeline_sourcefav WHERE source_id = {source_id};"
+            sql_cmd = f"DELETE FROM vast_pipeline_sourcefav WHERE source_id IN {batch_str};"
             _run_raw_sql(sql_cmd, cursor, log=False)
 
             # Find source tags related to the source and delete them
-            sql_cmd = f"SELECT tagulous_source_tags_id FROM vast_pipeline_source_tags WHERE source_id = {source_id};"
+            sql_cmd = f"SELECT tagulous_source_tags_id FROM vast_pipeline_source_tags WHERE source_id IN {batch_str};"
             _run_raw_sql(sql_cmd, cursor, log=False)
             tagulous_source_tags_ids = cursor.fetchall()
 
@@ -50,26 +56,29 @@ def delete_pipeline_run_raw_sql(p_run):
                 _run_raw_sql(sql_cmd, cursor, log=False)
 
             # Delete from vast_pipeline_source_tags for the source_id
-            sql_cmd = f"DELETE FROM vast_pipeline_source_tags WHERE source_id = {source_id};"
+            sql_cmd = f"DELETE FROM vast_pipeline_source_tags WHERE source_id IN {batch_str};"
             _run_raw_sql(sql_cmd, cursor, log=False)
 
             # Delete from related source
-            sql_cmd = f"DELETE FROM vast_pipeline_relatedsource WHERE from_source_id = {source_id};"
+            sql_cmd = f"DELETE FROM vast_pipeline_relatedsource WHERE from_source_id IN {batch_str};"
             _run_raw_sql(sql_cmd, cursor, log=False)
-            sql_cmd = f"DELETE FROM vast_pipeline_relatedsource WHERE to_source_id = {source_id};"
+            sql_cmd = f"DELETE FROM vast_pipeline_relatedsource WHERE to_source_id IN {batch_str};"
             _run_raw_sql(sql_cmd, cursor, log=False)
 
-            sql_cmd = f"DELETE FROM vast_pipeline_association WHERE source_id = {source_id};"
+            sql_cmd = f"DELETE FROM vast_pipeline_association WHERE source_id IN {batch_str};"
             _run_raw_sql(sql_cmd, cursor, log=False)
             
-            if i % 1000 == 0:
-                logger.info("Finished source id %d (%d of %d)", source_id, i, n_source_ids)
+            #if i % 1000 == 0:
+            #    logger.info("Finished source id %d (%d of %d)", source_id, i, n_source_ids)
         t = timer.reset()
-        logger.info(f"Time to iterate over %d source ids: %f seconds", n_source_ids, t)
+        logger.info("Time to iterate over %d source ids: %.2f seconds", n_source_ids, t)
 
         # Delete source
         sql_cmd = f"DELETE FROM vast_pipeline_source WHERE run_id = {p_run_id};"
         _run_raw_sql(sql_cmd, cursor)
+        
+        t = timer.reset()
+        logger.info("Time to delete source objects: %.2f seconds", t)
         
         # Enable triggers
         #sql_cmd = "ALTER TABLE vast_pipeline_source ENABLE TRIGGER ALL;"
