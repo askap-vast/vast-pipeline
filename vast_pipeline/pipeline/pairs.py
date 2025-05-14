@@ -145,9 +145,9 @@ def calculate_measurement_pair_metrics(
     df_pairs = df[["id", "flux_int", "flux_int_err",
                "flux_peak", "flux_peak_err", "image", "datetime"]].rename(columns={"image": "image_name"})
     
-    logger.debug("df_pairs info:")
-    logger.debug(df_pairs.columns)
-    logger.debug(df_pairs.head())
+    #logger.debug("df_pairs info:")
+    #logger.debug(df_pairs.columns)
+    #logger.debug(df_pairs.head())
 
     # keep record of divisions
     source_divisions = df_pairs.divisions
@@ -157,15 +157,15 @@ def calculate_measurement_pair_metrics(
     logger.debug(f"n_partitions: {n_partitions}")
     
     # NOTE - this check can also probably be removed eventually
-    def _get_source_ids(partition, partition_info=None):
-        return pd.DataFrame({'source': partition.index.unique(), 'partition_num': partition_info['number']})
+    #def _get_source_ids(partition, partition_info=None):
+    #    return pd.DataFrame({'source': partition.index.unique(), 'partition_num': partition_info['number']})
 
-    source_partition_df = df_pairs.map_partitions(_get_source_ids, meta={'source':str, 'partition_num':float}).compute()
-    logger.debug("Source partition df:")
-    logger.debug(source_partition_df)
-    dupes = source_partition_df['source'].duplicated(keep=False)
-    logger.debug("Indices in multiple partitions:")
-    logger.debug(source_partition_df[dupes])
+    #source_partition_df = df_pairs.map_partitions(_get_source_ids, meta={'source':str, 'partition_num':float}).compute()
+    #logger.debug("Source partition df:")
+    #logger.debug(source_partition_df)
+    #dupes = source_partition_df['source'].duplicated(keep=False)
+    #logger.debug("Indices in multiple partitions:")
+    #logger.debug(source_partition_df[dupes])
     
     def _get_pair_partition(partition):
         partition = partition.sort_values(["source", "datetime"])

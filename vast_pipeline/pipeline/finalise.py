@@ -185,9 +185,9 @@ def final_operations(
             pair_agg_metrics = pair_agg_metrics.set_index("source")
 
         # NOTE: this logging check can eventually be removed
-        pair_metrics_dupes = pair_agg_metrics.index.duplicated(keep=False)
-        logger.debug("Duplicated pair_agg_metrics:")
-        logger.debug(pair_agg_metrics[pair_metrics_dupes])
+        #pair_metrics_dupes = pair_agg_metrics.index.duplicated(keep=False)
+        #logger.debug("Duplicated pair_agg_metrics:")
+        #logger.debug(pair_agg_metrics[pair_metrics_dupes])
         
         # join with sources and replace agg metrics NaNs with 0 as the
         # DataTables API JSON serialization doesn't like them
@@ -199,9 +199,9 @@ def final_operations(
         })
         
         # NOTE: this logging check can eventually be removed
-        srcs_df_dupes = srcs_df.index.duplicated(keep=False)
-        logger.debug("Duplicated srcs_df:")
-        logger.debug(srcs_df[srcs_df_dupes])
+        #srcs_df_dupes = srcs_df.index.duplicated(keep=False)
+        #logger.debug("Duplicated srcs_df:")
+        #logger.debug(srcs_df[srcs_df_dupes])
 
         logger.info(
             "Measurement pair aggregate metrics time: %.2f seconds",
