@@ -4,15 +4,17 @@ import warnings
 import pandas as pd
 import pyarrow as pa
 import dask.dataframe as dd
+import dask.config as dc
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from django.conf import settings
 from typing import List, Dict, Tuple
+from dask.distributed import wait
 
 from vast_pipeline.models import Run
 from vast_pipeline.utils.utils import (
-    StopWatch, optimise_numeric, delete_file_or_dir
+    StopWatch, optimise_numeric, delete_file_or_dir, calculate_n_partitions
 )
 from vast_pipeline.pipeline.loading import (
     update_sources,
@@ -96,8 +98,18 @@ def final_operations(
     logger.info("Calculating statistics for sources...")
     log_total_memory_usage()
 
-    sources_df = sources_df.set_index("source") \
-                           .repartition(partition_size=f"{upload_chunk_size_mb}MB")
+    npartitions = calculate_n_partitions(sources_df,
+                                         partition_size_mb=upload_chunk_size_mb
+                                         )
+    with dc.set({"dataframe.shuffle.method": "p2p"}):
+        sources_df = sources_df.set_index("source") \
+                               .shuffle(npartitions=npartitions, on_index=True)
+
+    #sources_df = sources_df.persist()
+    #logger.info("Persisting sources_df...")
+    #wait(sources_df)
+    #logger.info("Persisted sources_df...")
+
     srcs_df = parallel_groupby(sources_df)
 
     mem_usage = get_df_memory_usage(srcs_df)
@@ -144,7 +156,9 @@ def final_operations(
 
         pairs_dir = os.path.join(p_run.path, 'measurement_pairs.parquet')
         pairs_dir_tmp = os.path.join(pairs_dir, "tmp")
+
         n_partitions, source_divisions = calculate_measurement_pair_metrics(sources_df, pairs_dir_tmp)
+        
         logger.info('Measurement pair metrics time: %.2f seconds', timer.reset())
 
         # calculate measurement pair metric aggregates for sources by finding
@@ -170,6 +184,11 @@ def final_operations(
             pair_agg_metrics = max_peak_pairs.merge(max_int_pairs, on="source", how="outer")
             pair_agg_metrics = pair_agg_metrics.set_index("source")
 
+        # NOTE: this logging check can eventually be removed
+        #pair_metrics_dupes = pair_agg_metrics.index.duplicated(keep=False)
+        #logger.debug("Duplicated pair_agg_metrics:")
+        #logger.debug(pair_agg_metrics[pair_metrics_dupes])
+        
         # join with sources and replace agg metrics NaNs with 0 as the
         # DataTables API JSON serialization doesn't like them
         srcs_df = srcs_df.join(pair_agg_metrics).fillna(value={
@@ -178,6 +197,11 @@ def final_operations(
             "vs_abs_significant_max_int": 0.0,
             "m_abs_significant_max_int": 0.0,
         })
+        
+        # NOTE: this logging check can eventually be removed
+        #srcs_df_dupes = srcs_df.index.duplicated(keep=False)
+        #logger.debug("Duplicated srcs_df:")
+        #logger.debug(srcs_df[srcs_df_dupes])
 
         logger.info(
             "Measurement pair aggregate metrics time: %.2f seconds",
@@ -302,11 +326,17 @@ def final_operations(
     associations_df = sources_df.drop("related", axis=1).reset_index()
 
     mem_usage = get_df_memory_usage(associations_df)
-    logger.debug(f"sources_df memory after merge: {mem_usage}MB")
+    logger.debug(f"associations_df memory usage after related drop: {mem_usage}MB")
     log_total_memory_usage()
+    
+    logger.debug(f"Associations df has %d partitions", associations_df.npartitions)
 
     # Repartition associations df to optimise upload
-    associations_df = associations_df.repartition(partition_size=f'{upload_chunk_size_mb}MB')
+    #associations_df = associations_df.repartition(partition_size=f'{upload_chunk_size_mb}MB')
+    
+    logger.debug(f"...and is repartitioned into %d partitions", associations_df.npartitions)
+    
+    logger.info("Total number of associations: %d", len(associations_df.index))
 
     if add_mode:
         # Load old associations so the already uploaded ones can be removed
@@ -325,29 +355,38 @@ def final_operations(
         associations_df_upload = dd.from_pandas(
             associations_df_upload, npartitions=associations_df.npartitions
         )
-        logger.debug(f"Add mode: #{associations_df_upload.shape[0]} associations to upload.")
+        logger.info(f"Add mode: #{associations_df_upload.shape[0]} associations to upload.")
     else:
         associations_df_upload = associations_df
-
-    # upload associations into DB
-    if not __TESTING__:
-        assoc_df = associations_df_upload.loc[:, ["id", "source", "d2d", "dr"]]
-        copy_upload_associations(assoc_df, io_workers)
 
     # write associations to parquet file
     associations_df[['source', 'id', 'd2d', 'dr']] \
         .rename(columns={"id": "meas_id", "source": "source_id"}) \
         .to_parquet(os.path.join(p_run.path, "associations.parquet"), overwrite=True)
 
+    # upload associations into DB
+    if not __TESTING__:
+        batch_size = 10_000
+        logger.info("Using batches of %d", batch_size)
+        associations_df_upload = associations_df_upload.loc[:, ["id", "source", "d2d", "dr"]]#.persist()
+        #logger.info("Persisting associations_df_upload...")
+        #wait(associations_df_upload)
+        #logger.info("Persisted associations_df_upload")
+        copy_upload_associations(associations_df_upload, io_workers, batch_size=batch_size)
+        #copy_upload_associations(associations_df_upload.loc[:, ["id", "source", "d2d", "dr"]], io_workers, batch_size=batch_size)
+        
+
     nr_sources = srcs_df.shape[0]
     nr_new_sources = srcs_df["new"].sum()
 
     if calculate_pairs:
+        logger.info("Optimising measurement pair dataframe and output to parquet")
         # optimize measurement pair DataFrame and save to parquet file
+        logger.info("Optimising measurement pair df and saving to parquet...")
         timer.reset()
         # ingest to dask data frames
         srcs_df.index.name = "source_id"
-        srcs_df = dd.from_pandas(srcs_df, npartitions=n_partitions)
+        srcs_df = dd.from_pandas(srcs_df, npartitions=n_partitions).persist()
         columns = ['id_a', 'id_b', 'flux_int_a', 'flux_int_err_a', 'flux_peak_a',
        'flux_peak_err_a', 'image_name_a', 'flux_int_b', 'flux_int_err_b',
        'flux_peak_b', 'flux_peak_err_b', 'image_name_b', 'vs_peak', 'vs_int',
@@ -376,7 +415,7 @@ def final_operations(
 
         delete_file_or_dir(pairs_dir_tmp)
 
-        logger.info("Write the final version of measurement pair dataframe into files time: %.2f seconds", timer.reset())
+        logger.info("Wrote the final version of measurement pair dataframe into files time: %.2f seconds", timer.reset())
 
 
     logger.info("Total final operations time: %.2f seconds", timer.reset_init())

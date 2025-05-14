@@ -8,7 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+<<<<<<< HEAD
+- V2: Added additional logging throughout forced_extraction to help monitor memory usage [#820](https://github.com/askap-vast/vast-pipeline/pull/820)
+- V2: Added some logging to pinpoint duplicate source ID error - this is likely unnecessary, but keeping in case the error persists  [#820](https://github.com/askap-vast/vast-pipeline/pull/820)
+=======
 
+>>>>>>> v2.0
 - V2: Migrate pipeline to used a Dask.distributed.LocalCluster throughout [#816](https://github.com/askap-vast/vast-pipeline/pull/816)
 - V2: Add Dask.distributed support
 - V2: Use `django-postgres-copy` for database uploads [#803](https://github.com/askap-vast/vast-pipeline/pull/803)
@@ -29,12 +34,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Updated open_fits to correctly handle NaN-padded compressed images [#837](https://github.com/askap-vast/vast-pipeline/pull/837)
 - Upgrade measurements file generation to use dask in order to handle larger runs [#797](https://github.com/askap-vast/vast-pipeline/pull/797)
 - Replaced optimise_ints and optimise_floats with single function - optimise_numeric [#797](https://github.com/askap-vast/vast-pipeline/pull/797)
+<<<<<<< HEAD
+- Updated open_fits to correctly handle NaN-padded compressed images [#837](https://github.com/askap-vast/vast-pipeline/pull/837)
+- Upgrade measurements file generation to use dask in order to handle larger runs [#789](https://github.com/askap-vast/vast-pipeline/pull/797)
+- Replaced optimise_ints and optimise_floats with single function - optimise_numeric [#789](https://github.com/askap-vast/vast-pipeline/pull/797)
+=======
+>>>>>>> v2.0
 - Upgrade forced_phot dependency to v0.2 and force `use_numba=True` [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
 - Remove bad forced photometry fits immediately after calculation, rather than after they've all been compiled into a single dataframe [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
 - Optimise associations upload by dropping unnecessary columns prior to a large dataframe merge [#787](https://github.com/askap-vast/vast-pipeline/pull/787)
 
 #### Fixed
 
+- V2: Fixed duplicate source ID error by switching from sources_df.repartition() to sources_df.shuffle() in pipeline.finalise.final_operations [#820](https://github.com/askap-vast/vast-pipeline/pull/820)
+- V2: Partial fix for image upload memory leak via garbage collect [#820](https://github.com/askap-vast/vast-pipeline/pull/820)
+- V2: Fixed dd.concat memory blow-up in pipeline.forced_extraction.forced_extraction by persisting both dataframes prior [#820](https://github.com/askap-vast/vast-pipeline/pull/820)
 - V2: Pair metrics working with V2 dask LocalCluster changes [#817](https://github.com/askap-vast/vast-pipeline/pull/817)
 - V2: Fixed missing JS9 overlays on source webpage [#809](https://github.com/askap-vast/vast-pipeline/pull/809)
 - V2: Fix bug when deleting source tags from database which are referenced by multiple sources [#803](https://github.com/askap-vast/vast-pipeline/pull/803)
@@ -58,6 +72,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+<<<<<<< HEAD
+- [#820](https://github.com/askap-vast/vast-pipeline/pull/820): fix: Fixes for duplicate source ID error and memory leak in forced_extraction. Partial fix for memory leak in image upload.
+=======
+>>>>>>> v2.0
 - [#833](https://github.com/askap-vast/vast-pipeline/pull/833): feat: V2: Limit associations upload to using num_io_workers
 - [#829](https://github.com/askap-vast/vast-pipeline/pull/829): feat: V2: Allow user specification of dask dashboard paramters and add some further logging to dask setup
 - [#817](https://github.com/askap-vast/vast-pipeline/pull/817): fix: V2: Updates to pairs calculation to make it work with Dask `LocalCluster`.
@@ -69,7 +87,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [#801](https://github.com/askap-vast/vast-pipeline/pull/801): docs, dep: v2: Updated docs dependencies and fixed outdated information and various warnings
 - [#714](https://github.com/askap-vast/vast-pipeline/pull/714): fix: V2: Correctly calculate new_high_sigma parameter 
 - [#798](https://github.com/askap-vast/vast-pipeline/pull/798): dep: V2: Update dependencies to deal with dependabot reccomendations and to prepare for V2 upgrades.
+<<<<<<< HEAD
+=======
 - [#841](https://github.com/askap-vast/vast-pipeline/pull/841): fix: Fix incorrect changelog link, fix slow image initialisation
+>>>>>>> v2.0
 - [#837](https://github.com/askap-vast/vast-pipeline/pull/837): fix: Updated open_fits to correctly handle NaN-padded compressed images
 - [#828](https://github.com/askap-vast/vast-pipeline/pull/828): fix: Fix potential memory leak in image header extraction
 - [#825](https://github.com/askap-vast/vast-pipeline/pull/825): fix: Check for whether processing parameters exist in config before validating them and updated github actions to use cache@v4

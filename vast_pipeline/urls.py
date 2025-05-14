@@ -38,6 +38,7 @@ urlpatterns = [
         name="image_detail",
     ),
     path("measurements/", views.MeasurementIndex, name="measurement_index"),
+    path("measurements/<uuid:id>/", views.MeasurementDetail, name="measurement_detail"),
     re_path(
         fr"^measurements/(?P<id>[\w]{{{UUID_LEN_MEAS}}})(?:/(?P<action>[\w]+))?/$",
         views.MeasurementDetail,

@@ -56,7 +56,7 @@ class ImageSerializer(serializers.ModelSerializer):
 
 
 class MeasurementSerializer(serializers.ModelSerializer):
-    id = serializers.CharField(read_only=True)
+    id = serializers.UUIDField(read_only=True)
     frequency = serializers.SerializerMethodField(read_only=True)
 
     def get_frequency(self, obj):

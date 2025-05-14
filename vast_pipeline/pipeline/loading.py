@@ -1,5 +1,6 @@
 import os
 import logging
+import gc
 import numpy as np
 import pandas as pd
 import dask.dataframe as dd
@@ -9,6 +10,7 @@ from io import StringIO
 from itertools import islice
 from django.db import transaction, connection, models
 from contextlib import closing
+from uuid import uuid4
 
 from vast_pipeline.image.main import SelavyImage
 from vast_pipeline.pipeline.model_generator import (
@@ -40,6 +42,7 @@ from vast_pipeline.utils.utils import (
     UUID_LEN_SOURCE
 )
 
+from timeit import default_timer as timer
 
 logger = logging.getLogger(__name__)
 
@@ -79,22 +82,31 @@ def copy_upload_model(
         batch_size: The batch size such that in memory csvs don't get crazy big.
             Defaults to 10_000.
     """
+    s = timer()
     mem_csv = None
     total_rows = len(df)
     start_index = 0
+    s1 = timer()
 
     while start_index < total_rows:
+        t0 = timer()
         end_index = min(start_index + batch_size, total_rows)
+        t1 = timer()
         batch = df.iloc[start_index:end_index]
+        t2 = timer()
 
         mem_csv = in_memory_csv(batch)
+        t3 = timer()
         with closing(mem_csv) as csv_io:
+            t4 = timer()
             num_copied = djmodel.copies.from_csv(
                 csv_io, drop_constraints=False, drop_indexes=False, mapping=mapping
             )
-            logging.info(f"Copied {num_copied} {djmodel.__name__} objects to database.")
-
+            t5 = timer()
+        t6 = timer()
         start_index = end_index
+        t7 = timer()
+        logging.info(f"Copied {num_copied} {djmodel.__name__} objects to database. (%.2fs, %.2fs, %.2fs, %.2fs, %.2fs, %.2fs, %.2fs, %.2fs)", s1-s, t1-t0, t2-t1, t3-t2,t4-t3, t5-t4, t6-t5, t7-t6)
 
     del mem_csv
 
@@ -196,7 +208,8 @@ def make_upload_images(
             os.makedirs(base_folder)
 
         measurements.to_parquet(img.measurements_path, index=False)
-        del measurements, image, band, img
+        del measurements, image, band
+        gc.collect()
 
     logger.info("Total images upload/loading time: %.2f seconds", timer.reset_init())
 
@@ -415,7 +428,7 @@ def copy_upload_associations(
             This is likely the output of `DaskManager.get_n_random_workers()`.
         batch_size: The batch size. Defaults to 10_000.
     """
-    logger.info("Upload associations...")
+    logger.info("Uploading associations...")
     columns_to_upload = ["source"]
     for fld in Association._meta.get_fields():
         if getattr(fld, "attname", None) and fld.attname in associations_df.columns:
@@ -431,9 +444,15 @@ def copy_upload_associations(
         "dr": "dr"
     }
 
+    """
     def upload(df, Association, mapping, batch_size):
-        df["db_id"] = df.apply(lambda _: generate_shortuuid(UUID_LEN_MEAS), axis=1)
+        t0 = timer()
+        df["db_id"] = df.apply(lambda _: str(uuid4()), axis=1)
+        t1 = timer()
         copy_upload_model(df, Association, mapping=mapping, batch_size=batch_size)
+        t2 = timer()
+        
+        logging.info("generate ID time: %.2f, partition upload time: %.2f",t1-t0, t2-t1)
 
     associations_df = associations_df[columns_to_upload].map_partitions(upload,
                                                                         Association,
@@ -442,8 +461,24 @@ def copy_upload_associations(
                                                                         enforce_metadata=False,
                                                                         meta={})
 
+    logger.info("Running compute on upload map_partitions...")
     associations_df.compute(workers=io_workers)
-
+    
+    logger.info("Associaions upload complete.")
+    """
+    
+    t0 = timer()
+    associations_df = associations_df.compute()
+    t1 = timer()
+    logger.info("Time to compute associations_df: %.2f s", t1-t0)
+    
+    associations_df["db_id"] = associations_df.apply(lambda _: str(uuid4()), axis=1)
+    t2 = timer()
+    logger.info("Time to add db_id: %.2f s", t2-t1)
+    
+    copy_upload_model(associations_df, Association, mapping=mapping, batch_size=batch_size)
+    t3 = timer()
+    logger.info("Time to upload: %.2f s", t3-t2)
 
 def make_upload_associations(associations_df: pd.DataFrame) -> None:
     """

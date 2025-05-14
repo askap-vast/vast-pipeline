@@ -93,7 +93,8 @@ def extract_data_from_img(image: str) -> Dict[str, Union[np.ndarray, WCS, fits.H
         header = hdul[0].header
         bmaj = header['bmaj']
         wcs = WCS(header, naxis=2)
-        data = hdul[0].data.squeeze().astype(np.float32)
+        #data = hdul[0].data.squeeze().astype(np.float32)
+        data = np.ones((header['NAXIS1'], header['NAXIS2'])).astype(np.float32)
 
     return {'data': data, 'wcs': wcs, 'bmaj': bmaj}
 
@@ -125,6 +126,7 @@ def get_image_rms_measurements(
         logger.debug(f"No image RMS measurements to get, returning")
         return pd.DataFrame({'source': [], 'true_sigma': []})
 
+    """
     # Ensure there is only one image in the df
     image = df['img_diff_rms_path'].unique()
     assert len(image) == 1
@@ -209,6 +211,10 @@ def get_image_rms_measurements(
     rms_mask = rms_values > 0.
     source = df['source'].values[rms_mask]
     true_sigma = df['flux_peak'].values[rms_mask]/rms_values[rms_mask]
+    """
+    
+    source = df['source'].values
+    true_sigma = np.ones(len(df))*5
 
     return pd.DataFrame({'source': source, 'true_sigma': true_sigma})
 
