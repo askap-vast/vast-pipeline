@@ -19,19 +19,11 @@ from .utils import calc_condon_flux_errors, open_fits
 
 from vast_pipeline import models
 from vast_pipeline.survey.translators import tr_selavy
-<<<<<<< HEAD
+
 #from vast_pipeline.utils.utils import (
 #    generate_shortuuid, UUID_LEN_MEAS,
 #)
-=======
-<<<<<<< HEAD
-from vast_pipeline.utils.utils import (
-    generate_shortuuid, UUID_LEN_MEAS,
-)
-=======
 from vast_pipeline.image.utils import get_fits_header
->>>>>>> dev
->>>>>>> v2.0
 
 
 logger = logging.getLogger(__name__)
