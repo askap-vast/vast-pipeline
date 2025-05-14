@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added image.utils.get_fits_header to only fetch header when initialising Image object [#841](https://github.com/askap-vast/vast-pipeline/pull/841)
 - Added more detailed warnings about the use of Condon Errors throughout the docs and code [#806](https://github.com/askap-vast/vast-pipeline/pull/806)
 - Added processing configuration parameters to the run configuration documentation [#805](https://github.com/askap-vast/vast-pipeline/pull/805)
 - Added option to disable forced photometry clustering [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
@@ -24,6 +25,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed slow image initialisation by disabling comp_nan_fill when fetching header [#841](https://github.com/askap-vast/vast-pipeline/pull/841)
+- Fixed incorrect link in changelog section header [#841](https://github.com/askap-vast/vast-pipeline/pull/841)
 - Fixed potential memory leak in image header extraction [#828](https://github.com/askap-vast/vast-pipeline/pull/828)
 - Updated github actions to use cache@v4 [#825](https://github.com/askap-vast/vast-pipeline/pull/825)
 - Check for whether processing parameters exist in config before validating them [#825](https://github.com/askap-vast/vast-pipeline/pull/825)
@@ -40,6 +43,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#841](https://github.com/askap-vast/vast-pipeline/pull/841): fix: Fix incorrect changelog link, fix slow image initialisation
 - [#837](https://github.com/askap-vast/vast-pipeline/pull/837): fix: Updated open_fits to correctly handle NaN-padded compressed images
 - [#828](https://github.com/askap-vast/vast-pipeline/pull/828): fix: Fix potential memory leak in image header extraction
 - [#825](https://github.com/askap-vast/vast-pipeline/pull/825): fix: Check for whether processing parameters exist in config before validating them and updated github actions to use cache@v4
