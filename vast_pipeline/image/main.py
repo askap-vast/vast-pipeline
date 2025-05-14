@@ -116,13 +116,6 @@ class FitsImage(Image):
             The FITS header as an astropy.io.fits.Header object.
         """
 
-        """try:
-            header = get_fits_header.copy()
-        except Exception:
-            raise IOError((
-                'Could not read FITS file: '
-                f'{self.path}'
-            ))"""
         header = get_fits_header(self.path).copy()
 
         return header
