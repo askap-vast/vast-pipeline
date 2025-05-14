@@ -256,8 +256,8 @@ def calc_condon_flux_errors(
 def open_fits(
     fits_path: Union[str, Path],
     memmap: Optional[bool] = True,
-    comp_nan_fill: Optional[bool]= True,
-    comp_nan_fill_cut = -1e4,
+    comp_nan_fill: Optional[bool] = True,
+    comp_nan_fill_cut=-1e4,
 ) -> fits.HDUList:
     """
     This function opens both compressed and uncompressed fits files.
@@ -278,17 +278,18 @@ def open_fits(
         fits_path = str(fits_path)
 
     hdul = fits.open(fits_path, memmap=memmap)
-    
+
     # This is a messy way to check, but I can't think of a better one
     if len(hdul) == 1:
         return hdul
     elif isinstance(hdul[1], fits.hdu.compressed.CompImageHDU):
         if comp_nan_fill:
             data = hdul[1].data
-            data[data<comp_nan_fill_cut] = np.nan
+            data[data < comp_nan_fill_cut] = np.nan
         return fits.HDUList(hdul[1:])
     else:
         return hdul
+
 
 def get_fits_header(
     fits_path: Union[str, Path],
@@ -297,10 +298,10 @@ def get_fits_header(
     """
     Get the header from a fits file, with handling for both compressed and
     uncompressed HDUs.
-    
-    Args: 
+
+    Args:
         fits_path: Path to the fits file
         ext: header extension to get
     """
-    
+
     return open_fits(fits_path, comp_nan_fill=False)[ext].header
