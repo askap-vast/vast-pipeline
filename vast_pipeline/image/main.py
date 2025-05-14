@@ -19,7 +19,7 @@ from .utils import calc_condon_flux_errors
 
 from vast_pipeline import models
 from vast_pipeline.survey.translators import tr_selavy
-from vast_pipeline.image.utils import open_fits
+from vast_pipeline.image.utils import get_fits_header
 
 
 logger = logging.getLogger(__name__)
@@ -97,13 +97,10 @@ class FitsImage(Image):
         """
         # inherit from parent
         super().__init__(path)
-
         # set other attributes
         header = self.__get_header(hdu_index)
-
         # set the rest of the attributes
         self.__set_img_attr_for_telescope(header)
-
         # get the frequency
         self.__get_frequency(header)
 
@@ -119,14 +116,14 @@ class FitsImage(Image):
             The FITS header as an astropy.io.fits.Header object.
         """
 
-        try:
-            with open_fits(self.path) as hdulist:
-                header = hdulist[hdu_index].header.copy()
+        """try:
+            header = get_fits_header.copy()
         except Exception:
             raise IOError((
                 'Could not read FITS file: '
                 f'{self.path}'
-            ))
+            ))"""
+        header = get_fits_header(self.path).copy()
 
         return header
 
@@ -299,11 +296,13 @@ class SelavyImage(FitsImage):
         Returns:
             None.
         """
+
         # inherit from parent
         self.selavy_path = paths['selavy'][path]
         self.noise_path = paths['noise'].get(path, '')
         self.background_path = paths['background'].get(path, '')
         self.config: Dict = config
+
         super().__init__(path, hdu_index)
 
     def read_selavy(self, dj_image: models.Image) -> pd.DataFrame:

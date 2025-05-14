@@ -293,8 +293,8 @@ def open_fits(
 
 def get_fits_header(
     fits_path: Union[str, Path],
-    ext: int
-): - fits.header.Header:
+    ext: int = 0
+) -> fits.header.Header:
     """
     Get the header from a fits file, with handling for both compressed and
     uncompressed HDUs.
