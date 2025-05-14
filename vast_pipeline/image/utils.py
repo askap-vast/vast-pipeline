@@ -289,3 +289,18 @@ def open_fits(
         return fits.HDUList(hdul[1:])
     else:
         return hdul
+
+def get_fits_header(
+    fits_path: Union[str, Path],
+    ext: int
+): - fits.header.Header:
+    """
+    Get the header from a fits file, with handling for both compressed and
+    uncompressed HDUs.
+    
+    Args: 
+        fits_path: Path to the fits file
+        ext: header extension to get
+    """
+    
+    return open_fits(fits_path, comp_nan_fill=False)[ext].header
