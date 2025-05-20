@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class Command(BaseCommand):
     """
     This script will run a Dask LocalCluster on the IP and port
-    sepcified in the settings. Use --help for usage.
+    specified in the settings. Use --help for usage.
     """
     help = 'Run a Dask LocalCluster'
 

@@ -14,7 +14,7 @@ from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
 from typing import Dict
 
-from .utils import calc_condon_flux_errors, open_fits
+from .utils import calc_condon_flux_errors
 
 from vast_pipeline import models
 from vast_pipeline.survey.translators import tr_selavy
