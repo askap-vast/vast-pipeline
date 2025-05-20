@@ -1,5 +1,7 @@
 import os
 import logging
+import gc
+
 import numpy as np
 import pandas as pd
 import dask.dataframe as dd
@@ -196,7 +198,8 @@ def make_upload_images(
             os.makedirs(base_folder)
 
         measurements.to_parquet(img.measurements_path, index=False)
-        del measurements, image, band, img
+        del measurements, image, band
+        gc.collect()
 
     logger.info("Total images upload/loading time: %.2f seconds", timer.reset_init())
 
