@@ -682,7 +682,7 @@ def forced_extraction(
 
     # Explode out the img_diff column.
     extr_df = extr_df.explode("img_diff").reset_index()
-    total_to_extract = extr_df.shape[0]
+    total_to_extract = extr_df.shape[0].compute()
 
     if add_mode:
         # If we are adding images to the run we assume that monitoring was
@@ -693,7 +693,7 @@ def forced_extraction(
         # images.
         # 3. A new relation has been created and they need the forced
         # measuremnts filled in (actually covered by 2.)
-        total_to_extract = extr_df.shape[0].compute()
+        logger.info("Running extraction in add mode...")
         extr_df = dd.concat(
             [
                 extr_df[~extr_df["img_diff"].isin(done_images_df["name"])],
@@ -715,12 +715,14 @@ def forced_extraction(
         min_sigma, edge_buffer, cluster_threshold, allow_nan, add_mode,
         p_run.path, io_workers
     )
+    logger.info("Completed parallel extraction step.")
 
     # Dask needs type metadata for map_partitions
     sources_meta = dd.utils.make_meta(sources_df).drop(['epoch', 'interim_ns', 'interim_ew'], axis=1)
     # Get expected database measurements schema
     columns = read_schema(images_df.iloc[0]["measurements_path"]).names
 
+    logger.debug("Building save and upload...")
     extr_df = extr_df.map_partitions(save_and_upload_forced_df,
                                      p_run_path=p_run.path,
                                      p_run_id=p_run.id,
@@ -744,18 +746,27 @@ def forced_extraction(
     else:
         extr_df["epoch"] = sources_df['epoch'].compute().iloc[0]
 
+    logger.info("Persisting extr_df...")
+    extr_df = extr_df.persist()
+    wait(extr_df)
+    logger.info("Persisted extr_df.")
+
     sources_df = dd.concat(
-        [sources_df, extr_df]
+        [sources_df, extr_df],
+        interleave_partitions=True
     )
 
     # Wait for the forced extraction step to complete
     # NOTE: Ideally we would have some optimised way of sorting sources_df
     # by source id at this point to avoid needing to `set_index` on it
     # during the finalise step.
+    logger.info("Persisting sources_df...")
     sources_df = sources_df.persist()
     wait(sources_df)
+    logger.info("Persisted sources_df")
 
     del extr_df
+    gc.collect()
 
     # get the number of forced extractions for the run
     forced_parquets = glob(os.path.join(p_run.path, "forced_measurements*.parquet"))
