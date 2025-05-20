@@ -9,6 +9,7 @@ from io import StringIO
 from itertools import islice
 from django.db import transaction, connection, models
 from contextlib import closing
+from uuid import uuid4
 
 from vast_pipeline.image.main import SelavyImage
 from vast_pipeline.pipeline.model_generator import (
@@ -432,7 +433,7 @@ def copy_upload_associations(
     }
 
     def upload(df, Association, mapping, batch_size):
-        df["db_id"] = df.apply(lambda _: generate_shortuuid(UUID_LEN_MEAS), axis=1)
+        df["db_id"] = df.apply(lambda _: str(uuid4()), axis=1)
         copy_upload_model(df, Association, mapping=mapping, batch_size=batch_size)
 
     associations_df = associations_df[columns_to_upload].map_partitions(upload,
