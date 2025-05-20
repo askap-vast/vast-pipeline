@@ -37,7 +37,6 @@ from vast_pipeline.utils.utils import (
     deg2hms,
     deg2dms,
     generate_shortuuid,
-    UUID_LEN_MEAS,
     UUID_LEN_SOURCE
 )
 
