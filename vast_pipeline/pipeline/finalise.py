@@ -1,18 +1,24 @@
 import os
 import logging
 import warnings
+
 import pandas as pd
 import pyarrow as pa
 import dask.dataframe as dd
+import dask.config as dc
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from django.conf import settings
 from typing import List, Dict, Tuple
+from dask.distributed import wait
 
 from vast_pipeline.models import Run
 from vast_pipeline.utils.utils import (
-    StopWatch, optimise_numeric, delete_file_or_dir
+    StopWatch,
+    optimise_numeric,
+    delete_file_or_dir,
+    calculate_n_partitions
 )
 from vast_pipeline.pipeline.loading import (
     update_sources,
