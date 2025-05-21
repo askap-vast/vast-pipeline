@@ -682,6 +682,7 @@ def forced_extraction(
     # Explode out the img_diff column.
     extr_df = extr_df.explode("img_diff").reset_index()
     total_to_extract = extr_df.shape[0].compute()
+    logger.info("%d forced measurements to extract", total_to_extract)
 
     if add_mode:
         # If we are adding images to the run we assume that monitoring was
