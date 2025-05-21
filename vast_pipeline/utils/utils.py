@@ -393,8 +393,8 @@ def timeStamped(fname, fmt="%Y-%m-%d-%H-%M-%S_{fname}"):
 
 
 def calculate_n_partitions(
-    df: pd.DataFrame,
-    n_cpu: int,
+    df: Union[pd.DataFrame, dd.DataFrame],
+    n_cpu: Optional[int] = None,
     partition_size_mb: Optional[int] = 15
 ) -> int:
     """
@@ -427,15 +427,17 @@ def calculate_n_partitions(
     n_partitions = int(np.ceil(mem_usage_mb / partition_size_mb))
 
     # n_partitions should be >= n_cpu for optimal parallel processing
-    if n_partitions < n_cpu:
-        n_partitions = n_cpu
+    if n_cpu is not None:
+        if n_partitions < n_cpu:
+            n_partitions = n_cpu
 
-    partition_size_mb = int(np.ceil(mem_usage_mb / n_partitions))
+    partition_size_mb = mem_usage_mb / n_partitions
 
     logger.debug(
-        "Using %d partitions of %dMB",
+        "Using %d partitions of %.1fMB",
         n_partitions,
-        partition_size_mb)
+        partition_size_mb
+    )
 
     return n_partitions
 

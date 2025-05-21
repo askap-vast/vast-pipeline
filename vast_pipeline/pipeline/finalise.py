@@ -1,9 +1,11 @@
 import os
 import logging
 import warnings
+
 import pandas as pd
 import pyarrow as pa
 import dask.dataframe as dd
+import dask.config as dc
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -12,7 +14,10 @@ from typing import List, Dict, Tuple
 
 from vast_pipeline.models import Run
 from vast_pipeline.utils.utils import (
-    StopWatch, optimise_numeric, delete_file_or_dir
+    StopWatch,
+    optimise_numeric,
+    delete_file_or_dir,
+    calculate_n_partitions
 )
 from vast_pipeline.pipeline.loading import (
     update_sources,
@@ -96,8 +101,15 @@ def final_operations(
     logger.info("Calculating statistics for sources...")
     log_total_memory_usage()
 
-    sources_df = sources_df.set_index("source") \
-                           .repartition(partition_size=f"{upload_chunk_size_mb}MB")
+    npartitions = calculate_n_partitions(
+        sources_df,
+        partition_size_mb=upload_chunk_size_mb
+    )
+
+    with dc.set({"dataframe.shuffle.method": "p2p"}):
+        sources_df = sources_df.set_index("source") \
+                               .shuffle(npartitions=npartitions, on_index=True)
+
     srcs_df = parallel_groupby(sources_df)
 
     mem_usage = get_df_memory_usage(srcs_df)

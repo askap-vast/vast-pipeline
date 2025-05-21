@@ -36,6 +36,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- V2: Fixed duplicate source ID error by switching from sources_df.repartition() to sources_df.shuffle() in pipeline.finalise.final_operations [#845](https://github.com/askap-vast/vast-pipeline/pull/845)
+- V2: Tentative fix for image upload memory leak via garbage collect [#845](https://github.com/askap-vast/vast-pipeline/pull/845)
+- V2: Fixed dd.concat memory blow-up in pipeline.forced_extraction.forced_extraction by persisting both dataframes prior [#845](https://github.com/askap-vast/vast-pipeline/pull/845)
 - V2: Pair metrics working with V2 dask LocalCluster changes [#817](https://github.com/askap-vast/vast-pipeline/pull/817)
 - V2: Fixed missing JS9 overlays on source webpage [#809](https://github.com/askap-vast/vast-pipeline/pull/809)
 - V2: Fix bug when deleting source tags from database which are referenced by multiple sources [#803](https://github.com/askap-vast/vast-pipeline/pull/803)
@@ -59,6 +62,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#845](https://github.com/askap-vast/vast-pipeline/pull/845): fix: V2: Fix memory leaks and duplicate source ID issue
 - [#844](https://github.com/askap-vast/vast-pipeline/pull/844): fix: V2: Change measurements and association DB indices to UUIDs
 - [#843](https://github.com/askap-vast/vast-pipeline/pull/843): feat: V2: Enable specification of Dask worker memory limits
 - [#833](https://github.com/askap-vast/vast-pipeline/pull/833): feat: V2: Limit associations upload to using num_io_workers
