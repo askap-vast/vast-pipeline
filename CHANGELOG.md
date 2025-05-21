@@ -20,6 +20,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- V2: Compute associations prior to upload, and then upload in serial [#846](https://github.com/askap-vast/vast-pipeline/pull/846)
+- V2: Persist srcs_df prior to measurement pairs df output file computation [#846](https://github.com/askap-vast/vast-pipeline/pull/846)
 - V2: Change measurement and association DB indices to UUIDs [#844](https://github.com/askap-vast/vast-pipeline/pull/844)
 - V2: Limit associations upload to using num_io_workers [#833](https://github.com/askap-vast/vast-pipeline/pull/833)
 - V2: Allow user specification of dask dashboard paramters and add some further logging to dask setup [#829](https://github.com/askap-vast/vast-pipeline/pull/829)
@@ -62,6 +64,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#846](https://github.com/askap-vast/vast-pipeline/pull/846): fix: V2: Compute associations prior to upload and persist srcs_df in final pairs calculation
 - [#845](https://github.com/askap-vast/vast-pipeline/pull/845): fix: V2: Fix memory leaks and duplicate source ID issue
 - [#844](https://github.com/askap-vast/vast-pipeline/pull/844): fix: V2: Change measurements and association DB indices to UUIDs
 - [#843](https://github.com/askap-vast/vast-pipeline/pull/843): feat: V2: Enable specification of Dask worker memory limits
