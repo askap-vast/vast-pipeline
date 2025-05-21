@@ -6,6 +6,7 @@ import os
 import logging
 import numpy as np
 import pandas as pd
+import uuid
 
 from django.conf import settings
 from astropy.io import fits
@@ -18,9 +19,7 @@ from .utils import calc_condon_flux_errors
 
 from vast_pipeline import models
 from vast_pipeline.survey.translators import tr_selavy
-from vast_pipeline.utils.utils import (
-    generate_shortuuid, UUID_LEN_MEAS,
-)
+
 from vast_pipeline.image.utils import get_fits_header
 
 
@@ -341,7 +340,7 @@ class SelavyImage(FitsImage):
                 df[key["name"]] = df[key["name"]].astype(key["dtype"])
 
         # Add id column
-        df["id"] = df.apply(lambda _: generate_shortuuid(UUID_LEN_MEAS), axis=1)
+        df["id"] = df.apply(lambda _: str(uuid.uuid4()), axis=1)
 
         # do checks and fill in missing field for uploading sources
         # in DB (see fields in models.py -> Source model)

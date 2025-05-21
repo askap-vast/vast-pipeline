@@ -1,4 +1,5 @@
 import numpy as np
+import uuid
 
 from dataclasses import dataclass
 from itertools import combinations
@@ -417,7 +418,7 @@ class Measurement(CommentableModel):
     Essentially a source single measurement in time.
     """
 
-    id = ShortUUIDField(primary_key=True, editable=False, length=UUID_LEN_MEAS, alphabet=UUID_ALPHABET)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     image = models.ForeignKey(
         Image, null=True, on_delete=models.CASCADE, to_field="id"
     )  # first image seen in
@@ -713,7 +714,7 @@ class Association(models.Model):
     some parameters
     """
 
-    id = ShortUUIDField(primary_key=True, editable=False, length=UUID_LEN_MEAS, alphabet=UUID_ALPHABET)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     source = models.ForeignKey(Source, on_delete=models.CASCADE, to_field="id")
     meas = models.ForeignKey(Measurement, on_delete=models.CASCADE, to_field="id")
 
