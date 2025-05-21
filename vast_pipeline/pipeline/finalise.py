@@ -343,8 +343,8 @@ def final_operations(
 
     # upload associations into DB
     if not __TESTING__:
-        assoc_df = associations_df_upload.loc[:, ["id", "source", "d2d", "dr"]]
-        copy_upload_associations(assoc_df, io_workers)
+        associations_df_upload = associations_df_upload.loc[:, ["id", "source", "d2d", "dr"]]
+        copy_upload_associations(associations_df_upload)
 
     # write associations to parquet file
     associations_df[['source', 'id', 'd2d', 'dr']] \
@@ -359,7 +359,7 @@ def final_operations(
         timer.reset()
         # ingest to dask data frames
         srcs_df.index.name = "source_id"
-        srcs_df = dd.from_pandas(srcs_df, npartitions=n_partitions)
+        srcs_df = dd.from_pandas(srcs_df, npartitions=n_partitions).persist()
         columns = ['id_a', 'id_b', 'flux_int_a', 'flux_int_err_a', 'flux_peak_a',
        'flux_peak_err_a', 'image_name_a', 'flux_int_b', 'flux_int_err_b',
        'flux_peak_b', 'flux_peak_err_b', 'image_name_b', 'vs_peak', 'vs_int',

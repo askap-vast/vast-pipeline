@@ -406,19 +406,15 @@ def make_upload_related_sources(related_df: pd.DataFrame) -> None:
 
 def copy_upload_associations(
     associations_df: dd.DataFrame,
-    io_workers: List[str],
     batch_size: int = 10_000,
 ) -> None:
     """Upload associations using django-postgres-copy in-memory csv method.
 
     Args:
         associations_df: The associations dataframe to upload.
-        io_workers:
-            List of dask worker addresses to use for the compute.
-            This is likely the output of `DaskManager.get_n_random_workers()`.
         batch_size: The batch size. Defaults to 10_000.
     """
-    logger.info("Upload associations...")
+    logger.info("Uploading associations in batches of %d", batch_size)
     columns_to_upload = ["source"]
     for fld in Association._meta.get_fields():
         if getattr(fld, "attname", None) and fld.attname in associations_df.columns:
@@ -433,19 +429,16 @@ def copy_upload_associations(
         "d2d": "d2d",
         "dr": "dr"
     }
-
-    def upload(df, Association, mapping, batch_size):
-        df["db_id"] = df.apply(lambda _: str(uuid4()), axis=1)
-        copy_upload_model(df, Association, mapping=mapping, batch_size=batch_size)
-
-    associations_df = associations_df[columns_to_upload].map_partitions(upload,
-                                                                        Association,
-                                                                        mapping,
-                                                                        batch_size,
-                                                                        enforce_metadata=False,
-                                                                        meta={})
-
-    associations_df.compute(workers=io_workers)
+    timer = StopWatch()
+    associations_df = associations_df.compute()
+    logger.debug("Time to compute associations_df: %.1f s", timer.reset())
+    
+    associations_df["db_id"] = associations_df.apply(lambda _: str(uuid4()), axis=1)
+    logger.debug("Time to add db_id: %.1f s", timer.reset())
+    
+    copy_upload_model(associations_df, Association, mapping=mapping, batch_size=batch_size)
+    logger.debug("Time to upload associations: %.1f s", timer.reset())
+    logger.info("Associations upload complete")
 
 
 def make_upload_associations(associations_df: pd.DataFrame) -> None:
