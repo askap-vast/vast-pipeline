@@ -4,7 +4,7 @@ import logging
 import random
 import time
 
-from dask.distributed import Client, LocalCluster
+from dask.distributed import Client, LocalCluster, Semaphore
 from django.conf import settings as s
 from . import config # noqa: F401
 
@@ -31,6 +31,9 @@ def _start_cluster():
     client = Client(cluster)
     logger.info('Connected to local Dask Cluster')
     return client
+
+def get_semaphore(name, num_workers=5):
+    return Semaphore(name=name, max_leases=num_workers)
 
 class Singleton(type):
     _instances = {}

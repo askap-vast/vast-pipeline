@@ -19,10 +19,10 @@ dask_config['dataframe']['convert-string'] = False
 # pause and terminate conditions on the workers which can happen
 # routinely durin the IO steps in the pipeline, when a subset
 # of workers read a set of FITS files into memory.
-dask_config['distributed']['worker']['memory']['spill'] = False
 dask_config['distributed']['worker']['memory']['target'] = False
-dask_config['distributed']['worker']['memory']['terminate'] = False
+dask_config['distributed']['worker']['memory']['spill'] = 0.9
 dask_config['distributed']['worker']['memory']['pause'] = False
+dask_config['distributed']['worker']['memory']['terminate'] = False
 
 # Further distributed configuration
 # (see: https://distributed.dask.org/en/stable/worker-memory.html)

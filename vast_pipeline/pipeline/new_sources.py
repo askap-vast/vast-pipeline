@@ -20,6 +20,7 @@ from vast_pipeline.models import Image, Run
 from vast_pipeline.utils.utils import StopWatch
 from vast_pipeline.pipeline.utils import get_df_memory_usage
 from vast_pipeline.image.utils import open_fits
+from vast_pipeline.daskmanager.manager import get_semaphore
 
 
 logger = logging.getLogger(__name__)
@@ -89,11 +90,14 @@ def extract_data_from_img(image: str) -> Dict[str, Union[np.ndarray, WCS, fits.H
     Returns:
         Dictionary containing the data, wcs and header of the image.
     """
-    with open_fits(image) as hdul:
-        header = hdul[0].header
-        bmaj = header['bmaj']
-        wcs = WCS(header, naxis=2)
-        data = hdul[0].data.squeeze().astype(np.float32)
+
+    sem = get_semaphore('io_throttle')    
+    with sem:
+        with open_fits(image) as hdul:
+            header = hdul[0].header
+            bmaj = header['bmaj']
+            wcs = WCS(header, naxis=2)
+            data = hdul[0].data.squeeze().astype(np.float32)
 
     return {'data': data, 'wcs': wcs, 'bmaj': bmaj}
 
@@ -237,22 +241,32 @@ def parallel_get_new_high_sigma(
         The column will contain 'NaN' entires for sources that fail.
     """
 
+    logger.debug("Inside parallel_get_new_high_sigma")
+
     # Get a list of input images.
     uniq_img_diff = (
         df['img_diff_rms_path'].unique()
         .compute()
         .to_list()
     )
+    logger.debug("Got list of input images")
 
     cols = ['img_diff_rms_path', 'flux_peak', 'source', 'wavg_ra', 'wavg_dec']
     
     # Generate a delayed dataframe of sources for each image in uniq_img_diff
     df_generator = lambda element, df: df[df['img_diff_rms_path'] == element]
+    logger.debug("Produced df_generator")
     df_per_img_rms = [delayed(df_generator)(elem, df[cols]) for elem in uniq_img_diff]
+    logger.debug("Produced df_per_img_rms delayed")
 
     # Do the rms calculations per rms image only using the subset of workers for IO
     out = [delayed(get_image_rms_measurements)(rms_df, edge_buffer=edge_buffer) for rms_df in df_per_img_rms]
-    out = dd.from_delayed(out).persist(workers=io_workers)
+    logger.debug("Produced out delayed")
+    out = dd.from_delayed(out).persist()#workers=io_workers)
+    logger.debug("Persisting out df...")
+    
+    wait(out)
+    logger.debug("Finished persisting out df")
 
     # Remove duplicate sources and only keep high sigma
     out = out.sort_values('true_sigma', ascending=True) \
@@ -260,9 +274,10 @@ def parallel_get_new_high_sigma(
              .rename(columns={'true_sigma': 'new_high_sigma'}) \
              .set_index('source') \
              .persist()
-
+    logger.debug("Set up value sort, duplicate drop etc in out df")
     # Wait for delayed computations to finish.
     wait(out)
+    logger.debug("Finished persisting out df")
     del df_per_img_rms
 
     return out

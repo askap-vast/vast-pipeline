@@ -25,6 +25,7 @@ from vast_pipeline.pipeline.loading import copy_upload_measurements
 from forced_phot import ForcedPhot
 from ..utils.utils import StopWatch
 from vast_pipeline.image.utils import open_fits
+from vast_pipeline.daskmanager.manager import get_semaphore
 
 # NOTE: We check here to see if we're in a testing environment.
 # This is done since the django does all its testing inside an
@@ -127,10 +128,11 @@ def _forcedphot_preload(image: str,
     Returns:
         A tuple containing the HDU lists
     """
-
-    image_hdul = open_fits(image, memmap=memmap)
-    background_hdul = open_fits(background, memmap=memmap)
-    noise_hdul = open_fits(noise, memmap=memmap)
+    sem = get_semaphore('io_throttle')
+    with sem:
+        image_hdul = open_fits(image, memmap=memmap)
+        background_hdul = open_fits(background, memmap=memmap)
+        noise_hdul = open_fits(noise, memmap=memmap)
 
     return image_hdul, background_hdul, noise_hdul
 
@@ -206,6 +208,8 @@ def extract_from_image(
         use_clusters=use_clusters
     )
     logger.debug("%s - Time to measure FP: %.3fs", image, FP_timer.reset())
+    
+    del FP
     
     num_fits = np.sum(flux>0.0)
 
@@ -430,7 +434,7 @@ def parallel_extraction(
     # Persist at this point uning the number of io workers.
     # df_out will contain the forced extraction measurments per image.
     # df_out should be sorted and partitioned by image at this point.
-    df_out = dd.from_delayed(func_d).persist(workers=io_workers)
+    df_out = dd.from_delayed(func_d).persist()#workers=io_workers)
 
     del out, func_d, df_per_image, measurements_parquet_data
 

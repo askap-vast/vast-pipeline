@@ -41,6 +41,7 @@ from vast_pipeline.utils.utils import (
     generate_shortuuid,
     UUID_LEN_SOURCE
 )
+from vast_pipeline.daskmanager.manager import get_semaphore
 
 
 logger = logging.getLogger(__name__)
@@ -63,6 +64,13 @@ def in_memory_csv(df: pd.DataFrame) -> StringIO:
 
     return mem_csv
 
+
+def _csv_upload(djmodel, mem_csv, mapping):
+    with closing(mem_csv) as csv_io:
+        num_copied = djmodel.copies.from_csv(
+            csv_io, drop_constraints=False, drop_indexes=False, mapping=mapping
+        )
+    return num_copied
 
 def copy_upload_model(
         df: pd.DataFrame,
@@ -87,14 +95,15 @@ def copy_upload_model(
 
     while start_index < total_rows:
         end_index = min(start_index + batch_size, total_rows)
+        logging.debug("Calculated end_index")
         batch = df.iloc[start_index:end_index]
-
+        logging.debug("Got batch")
         mem_csv = in_memory_csv(batch)
-        with closing(mem_csv) as csv_io:
-            num_copied = djmodel.copies.from_csv(
-                csv_io, drop_constraints=False, drop_indexes=False, mapping=mapping
-            )
-            logging.info(f"Copied {num_copied} {djmodel.__name__} objects to database.")
+        logging.debug("Got mem_csv")
+
+        with get_semaphore('csv_upload', num_workers=10):
+            num_copied = _csv_upload(djmodel, mem_csv, mapping)
+        logging.info(f"Copied {num_copied} {djmodel.__name__} objects to database.")
 
         start_index = end_index
 
@@ -406,7 +415,7 @@ def make_upload_related_sources(related_df: pd.DataFrame) -> None:
 
 def copy_upload_associations(
     associations_df: dd.DataFrame,
-    batch_size: int = 10_000,
+    batch_size: int = 1000,
 ) -> None:
     """Upload associations using django-postgres-copy in-memory csv method.
 
@@ -414,7 +423,8 @@ def copy_upload_associations(
         associations_df: The associations dataframe to upload.
         batch_size: The batch size. Defaults to 10_000.
     """
-    logger.info("Uploading associations in batches of %d", batch_size)
+    n_associations = len(associations_df)
+    logger.info("Uploading %d associations in batches of %d", n_associations, batch_size)
     columns_to_upload = ["source"]
     for fld in Association._meta.get_fields():
         if getattr(fld, "attname", None) and fld.attname in associations_df.columns:
@@ -429,6 +439,23 @@ def copy_upload_associations(
         "d2d": "d2d",
         "dr": "dr"
     }
+    
+    def upload(df, Association, mapping, batch_size):
+        logger.info("Uploading %d associations in batches of %d", len(df), batch_size)
+        df["db_id"] = df.apply(lambda _: str(uuid4()), axis=1)
+        copy_upload_model(df, Association, mapping=mapping, batch_size=batch_size)
+    
+    logger.debug(f"associations partitions: {associations_df.npartitions}")
+    associations_df = associations_df[columns_to_upload].map_partitions(upload,
+                                                                        Association,
+                                                                        mapping,
+                                                                        batch_size,
+                                                                        enforce_metadata=False,
+                                                                        meta={})
+    timer = StopWatch()
+    associations_df.compute()
+    logger.info("Uploaded %d associations in %.1f s", n_associations, timer.reset())
+    """
     timer = StopWatch()
     associations_df = associations_df.compute()
     logger.debug("Time to compute associations_df: %.1f s", timer.reset())
@@ -439,6 +466,7 @@ def copy_upload_associations(
     copy_upload_model(associations_df, Association, mapping=mapping, batch_size=batch_size)
     logger.debug("Time to upload associations: %.1f s", timer.reset())
     logger.info("Associations upload complete")
+    """
 
 
 def make_upload_associations(associations_df: pd.DataFrame) -> None:
