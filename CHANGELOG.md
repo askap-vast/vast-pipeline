@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- V2: Revert back to parallel association upload [#852](https://github.com/askap-vast/vast-pipeline/pull/852)
 - V2: Change worker throttling to use Dask Semaphore [#852](https://github.com/askap-vast/vast-pipeline/pull/852)
 - V2: Compute associations prior to upload, and then upload in serial [#846](https://github.com/askap-vast/vast-pipeline/pull/846)
 - V2: Persist srcs_df prior to measurement pairs df output file computation [#846](https://github.com/askap-vast/vast-pipeline/pull/846)
