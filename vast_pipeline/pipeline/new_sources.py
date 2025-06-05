@@ -124,9 +124,10 @@ def get_image_rms_measurements(
         'true_rms' will contain 'NaN' entires for sources that fail.
     """
 
-    if len(df) == 0:
+    num_coords = len(df)
+    if num_coords == 0:
         # input dataframe is empty, nothing to do
-        logger.debug(f"No image RMS measurements to get, returning")
+        logger.info(f"No image RMS measurements to get, returning")
         return pd.DataFrame({'source': [], 'true_sigma': []})
 
     # Ensure there is only one image in the df
@@ -134,17 +135,19 @@ def get_image_rms_measurements(
     assert len(image) == 1
     image = image[0]
 
-    logger.debug("%s - num. meas. to get: %d", image, len(df))
+    logger.info("%s - num. meas. to get: %d", image, num_coords)
     partition_mem = get_df_memory_usage(df)
-    logger.debug("%s - partition memory usage: %.3fMB", image, partition_mem)
+    logger.info("%s - partition memory usage: %.3fMB", image, partition_mem)
 
     get_rms_timer = StopWatch()
     # Get image data from df
     image_data = extract_data_from_img(image)
-    logger.debug("%s - Time to load fits: %.3fs", image, get_rms_timer.reset())
+    logger.info("%s - Time to load fits: %.3fs", image, get_rms_timer.reset())
 
     # Get coordinates from df
     coords = get_coord_array(df)
+    
+    logger.info("%s - Time to get coords: %.3fs", image, get_rms_timer.reset())
 
     # Here we mimic the forced fits behaviour,
     # sources within 3 half BMAJ widths of the image
@@ -184,6 +187,8 @@ def get_image_rms_measurements(
     acceptable_no_nan_dist = int(
         round(bmaj.to('arcsec').value / 2. / pixelscale.value)
     )
+    
+    logger.info("%s - Time to run pixel wrapping calcs: %.3fs", image, get_rms_timer.reset())
 
     nan_valid = []
 
@@ -199,6 +204,8 @@ def get_image_rms_measurements(
             nan_valid.append(True)
 
     valid[valid] = nan_valid
+    
+    logger.info("%s - Time to get valid slices: %.3fs", image, get_rms_timer.reset())
 
     # Create the column data, not matched ones will be NaN.
     rms_values = np.zeros_like(valid, dtype=np.float32)
@@ -209,10 +216,14 @@ def get_image_rms_measurements(
             array_coords[1][valid]
         ].astype(np.float32) * 1.e3
 
+    logger.info("%s - Time to get rms values: %.3fs", image, get_rms_timer.reset())
+    
     # Get the columns of returned DataFrame
     rms_mask = rms_values > 0.
     source = df['source'].values[rms_mask]
     true_sigma = df['flux_peak'].values[rms_mask]/rms_values[rms_mask]
+    
+    logger.info("%s - Time to get true sigma values: %.3fs", image, get_rms_timer.reset())
 
     return pd.DataFrame({'source': source, 'true_sigma': true_sigma})
 
@@ -252,7 +263,16 @@ def parallel_get_new_high_sigma(
     logger.debug("Got list of input images")
 
     cols = ['img_diff_rms_path', 'flux_peak', 'source', 'wavg_ra', 'wavg_dec']
-    
+
+    def process_group(df_group):
+        return get_image_rms_measurements(df_group, edge_buffer=edge_buffer)
+
+    out = df[cols].groupby("img_diff_rms_path") \
+                  .apply(process_group,
+                         meta={'source': str, 'true_sigma': float}
+                         ) \
+                  .persist()
+    """
     # Generate a delayed dataframe of sources for each image in uniq_img_diff
     df_generator = lambda element, df: df[df['img_diff_rms_path'] == element]
     logger.debug("Produced df_generator")
@@ -267,18 +287,22 @@ def parallel_get_new_high_sigma(
     
     wait(out)
     logger.debug("Finished persisting out df")
+    """
+    
 
     # Remove duplicate sources and only keep high sigma
     out = out.sort_values('true_sigma', ascending=True) \
              .drop_duplicates('source', keep='last') \
              .rename(columns={'true_sigma': 'new_high_sigma'}) \
              .set_index('source') \
-             .persist()
+             .compute()
+    logger.info(out)
+    logger.info(out.columns)
     logger.debug("Set up value sort, duplicate drop etc in out df")
     # Wait for delayed computations to finish.
-    wait(out)
+    #wait(out)
     logger.debug("Finished persisting out df")
-    del df_per_img_rms
+    #del df_per_img_rms
 
     return out
 

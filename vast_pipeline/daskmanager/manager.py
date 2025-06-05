@@ -94,3 +94,17 @@ class DaskManager(metaclass=Singleton):
         logger.debug("Running close...")
         self.client.close()
         logger.info("Dask Cluster shut down.")
+
+    def log_cluster_memory(self):
+        workers = self.client.scheduler_info()['workers']
+        logger.info("Logging memory usage for %d workers...", len(workers))
+        for addr, info in workers.items():
+            memory_limit = info['memory_limit'] / 1e9
+            
+            mem_metrics = info['metrics']
+            managed = mem_metrics['managed_bytes'] / 1e9
+            spilled_memory = mem_metrics['spilled_bytes']['memory'] / 1e9
+            spilled_disk = mem_metrics['spilled_bytes']['disk'] / 1e9
+            memory_used = mem_metrics['memory'] / 1e9
+
+            logger.info(f"Worker {addr}: {memory_used:.2f}GB (managed: {managed:.2f}GB, spilled disk: {spilled_disk:.2f}GB, spilled memory: {spilled_memory:.2f}GB) of {memory_limit:.2f}GB.")

@@ -143,8 +143,10 @@ def final_operations(
     # add the separation distance in degrees
     srcs_df["n_neighbour_dist"] = d2d.deg
 
+    print(new_sources_df)
+    print(new_sources_df.columns)
     # add new sources
-    srcs_df["new"] = srcs_df.index.isin(new_sources_df.index.compute().values)
+    srcs_df["new"] = srcs_df.index.isin(new_sources_df.index.values)
 
     mem_usage = get_df_memory_usage(srcs_df)
     logger.debug(f"srcs_df memory after nearest-neighbour: {mem_usage}MB")
