@@ -246,13 +246,14 @@ def parallel_get_new_high_sigma(
 
     cols = ['img_diff_rms_path', 'flux_peak', 'source', 'wavg_ra', 'wavg_dec']
     
-    # Generate a delayed dataframe of sources for each image in uniq_img_diff
-    df_generator = lambda element, df: df[df['img_diff_rms_path'] == element]
-    df_per_img_rms = [delayed(df_generator)(elem, df[cols]) for elem in uniq_img_diff]
+    def process_group(df_group):
+        return get_image_rms_measurements(df_group, edge_buffer=edge_buffer)
 
-    # Do the rms calculations per rms image only using the subset of workers for IO
-    out = [delayed(get_image_rms_measurements)(rms_df, edge_buffer=edge_buffer) for rms_df in df_per_img_rms]
-    out = dd.from_delayed(out).persist()
+    out = df[cols].groupby("img_diff_rms_path") \
+                  .apply(process_group,
+                         meta={'source': str, 'true_sigma': float}
+                         ) \
+                  .persist()
 
     # Remove duplicate sources and only keep high sigma
     out = out.sort_values('true_sigma', ascending=True) \
@@ -260,10 +261,9 @@ def parallel_get_new_high_sigma(
              .rename(columns={'true_sigma': 'new_high_sigma'}) \
              .set_index('source') \
              .persist()
-
-    # Wait for delayed computations to finish.
+    logger.debug("Set up value sort, duplicate drop in out df and persisted")
     wait(out)
-    del df_per_img_rms
+    logger.debug("Finished persisting out df")
 
     return out
 
