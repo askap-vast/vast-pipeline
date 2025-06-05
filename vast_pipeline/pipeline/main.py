@@ -160,6 +160,8 @@ class Pipeline:
             images, skyregions, bands, self.config["run"]["path"]
         )
 
+        self.dm.log_cluster_memory()
+        
         # STEP #2: measurements association
         # order images by time
         logger.info("Running step #2: measurements association...")
@@ -179,6 +181,8 @@ class Pipeline:
         duplicate_limit = Angle(
             self.config["source_association"]["epoch_duplicate_radius"] * u.arcsec
         )
+        
+        self.dm.log_cluster_memory()
 
         # 2.1 Check if sky regions to be associated can be
         # split into connected point groups
@@ -198,6 +202,8 @@ class Pipeline:
         else:
             done_images_df = None
             done_source_ids = None
+        
+        self.dm.log_cluster_memory()
 
         # 2.2 Associate with other measurements
         if self.config["source_association"]["parallel"] and n_skyregion_groups > 1:
@@ -251,6 +257,7 @@ class Pipeline:
         mem_usage = get_df_memory_usage(sources_df)
         logger.debug(f"Step 2: sources_df memory usage: {mem_usage}MB")
         log_total_memory_usage()
+        self.dm.log_cluster_memory()
 
         # Obtain the number of selavy measurements for the run
         # n_selavy_measurements = sources_df.
@@ -281,6 +288,7 @@ class Pipeline:
         )
         del images_df
         del unforced_df
+        self.dm.log_cluster_memory()
 
         # Make missing sources into Dask dataframe
         # NOTE: This would not be necessary if the get_src_skyregion_merged_df
@@ -293,6 +301,7 @@ class Pipeline:
             npartitions=npartitions
         )
         wait(missing_sources_df)
+        self.dm.log_cluster_memory()
 
         # STEP #4 New source analysis
         logger.info("Running step #4: new source analysis...")
@@ -304,6 +313,7 @@ class Pipeline:
             p_run,
             self.dm.get_n_random_workers(self.config['processing']['num_workers_io']),
         )
+        self.dm.log_cluster_memory()
 
         # Drop column no longer required in missing_sources_df.
         missing_sources_df = missing_sources_df.drop(["in_primary"], axis=1)
@@ -329,10 +339,12 @@ class Pipeline:
             mem_usage = get_df_memory_usage(sources_df)
             logger.debug(f"Step 5: sources_df memory usage: {mem_usage}MB")
             log_total_memory_usage()
+            self.dm.log_cluster_memory()
 
         del missing_sources_df
 
         log_total_memory_usage()
+        self.dm.log_cluster_memory()
 
         # STEP #6: finalise the df getting unique sources, calculating
         # metrics and upload data to database
@@ -351,6 +363,7 @@ class Pipeline:
         )
 
         log_total_memory_usage()
+        self.dm.log_cluster_memory()
 
         # calculate number processed images
         nr_img_processed = len(images)

@@ -775,6 +775,9 @@ def parallel_groupby_coord(df: dd.DataFrame,) -> pd.DataFrame:
         The resulting average coordinate values and unique image and epoch
             lists for each unique source (group).
     """
+    
+    logger.info("Running parallel_groupby_coord...")
+
     cols = [
         'source', 'image', 'epoch', 'interim_ew', 'weight_ew', 'interim_ns', 'weight_ns'
     ]
@@ -792,8 +795,10 @@ def parallel_groupby_coord(df: dd.DataFrame,) -> pd.DataFrame:
     out['wavg_dec'] = out['interim_ns'] / out['weight_ns']
     out = out.drop(cols_to_sum, axis=1).rename(columns={'image': 'img_list', 'epoch': 'epoch_list'})
 
+    logger.debug("Set up the compute - running now...")
     # Do the aggregations now.
     out = out.compute()
+    logger.debug("Compute complete.")
 
     del groups
     return out
