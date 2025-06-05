@@ -32,11 +32,32 @@ def _start_cluster():
     logger.info('Connected to local Dask Cluster')
     return client
 
-def get_io_semaphore():
-    return Semaphore(name='io_throttle', max_leases=int(s.DASK_NUM_IO_WORKERS))
+def get_io_semaphore(num_workers: int=None):
+    """
+    Generate a dask semaphore object labelled `io_throttle` for limiting the
+    number of parallel IO operations
+    
+    num_workers:
+        Number of workers. If not specified it defaults to the number specified
+        in the dask settings.
+    """
 
-def get_db_semaphore():
-    return Semaphore(name='db_throttle', max_leases=int(s.DASK_NUM_DB_WORKERS))
+    if num_workers is None:
+        num_workers = int(s.DASK_NUM_IO_WORKERS)
+    return Semaphore(name='io_throttle', max_leases=num_workers)
+
+def get_db_semaphore(num_workers: int=None):
+    """
+    Generate a dask semaphore object labelled `db_throttle` for limiting the
+    number of parallel uploads to the database.
+    
+    num_workers:
+        Number of workers. If not specified it defaults to the number specified
+        in the dask settings.
+    """
+    if num_workers is None:
+        num_workers = int(s.DASK_NUM_DB_WORKERS)
+    return Semaphore(name='db_throttle', max_leases=)
 
 class Singleton(type):
     _instances = {}
