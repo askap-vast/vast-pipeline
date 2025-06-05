@@ -704,9 +704,15 @@ def forced_extraction(
 
     timer.reset()
     extr_df = parallel_extraction(
-        extr_df, images_df, sources_df[['source', 'image', 'flux_peak']],
-        min_sigma, edge_buffer, cluster_threshold, allow_nan, add_mode,
-        p_run.path, io_workers
+        extr_df,
+        images_df,
+        sources_df[['source', 'image', 'flux_peak']],
+        min_sigma,
+        edge_buffer,
+        cluster_threshold,
+        allow_nan,
+        add_mode,
+        p_run.path,
     )
     logger.info("Completed parallel extraction step.")
 

@@ -217,7 +217,7 @@ def get_image_rms_measurements(
 
 
 def parallel_get_new_high_sigma(
-    df: dd.DataFrame, io_workers: List[str], edge_buffer: float = 1.0,
+    df: dd.DataFrame, edge_buffer: float = 1.0,
 ) -> pd.DataFrame:
     """
     Wrapper function to use 'get_image_rms_measurements' in parallel with Dask
@@ -228,9 +228,6 @@ def parallel_get_new_high_sigma(
     Args:
         df:
             The group of sources to measure in the images.
-        io_workers:
-            List of worker addresses to use for `finalise_rms_calcs`
-            This is likely the output of `DaskManager.get_n_random_workers()`
         edge_buffer:
             Multiplicative factor to be passed to the
             'get_image_rms_measurements' function.
@@ -255,7 +252,7 @@ def parallel_get_new_high_sigma(
 
     # Do the rms calculations per rms image only using the subset of workers for IO
     out = [delayed(get_image_rms_measurements)(rms_df, edge_buffer=edge_buffer) for rms_df in df_per_img_rms]
-    out = dd.from_delayed(out).persist(workers=io_workers)
+    out = dd.from_delayed(out).persist()
 
     # Remove duplicate sources and only keep high sigma
     out = out.sort_values('true_sigma', ascending=True) \
@@ -272,8 +269,11 @@ def parallel_get_new_high_sigma(
 
 
 def new_sources(
-    sources_df: dd.DataFrame, missing_sources_df: dd.DataFrame,
-    min_sigma: float, edge_buffer: float, p_run: Run, io_workers: List[str]
+    sources_df: dd.DataFrame,
+    missing_sources_df: dd.DataFrame,
+    min_sigma: float,
+    edge_buffer: float,
+    p_run: Run,
 ) -> pd.DataFrame:
     """
     Processes the new sources detected to check that they are valid new
@@ -295,9 +295,6 @@ def new_sources(
             'get_image_rms_measurements' function.
         p_run:
             The pipeline run.
-        io_workers:
-            List of worker addresses to use for `finalise_rms_calcs`
-            This is likely the output of `DaskManager.get_n_random_workers()`
 
     Returns:
         A DataFrame indexed by source id and containing a single 'new_high_sigma' column.
@@ -442,7 +439,7 @@ def new_sources(
 
     logger.debug("Getting new_high_sigma measurements...")
     new_sources_df = parallel_get_new_high_sigma(
-        new_sources_df, io_workers, edge_buffer=edge_buffer
+        new_sources_df, edge_buffer=edge_buffer
     )
 
     logger.debug(f"Time to get rms measurements: {debug_timer.reset()}s")

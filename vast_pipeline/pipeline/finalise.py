@@ -50,7 +50,6 @@ def final_operations(
     done_source_ids: List[int],
     previous_parquets: Dict[str, str],
     upload_chunk_size_mb: int,
-    io_workers: List[str],
 ) -> Tuple[int, int]:
     """
     Performs the final operations of the pipeline:
@@ -85,9 +84,6 @@ def final_operations(
         upload_chunk_size_mb:
             The size in MB to repartition dataframs before uploading and
             saving to parquet.
-        io_workers:
-            List of dask worker addresses to use for the compute.
-            This is likely the output of `DaskManager.get_n_random_workers()`.
 
     Returns:
         The number of sources contained in the pipeline run (used in the next

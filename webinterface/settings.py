@@ -252,6 +252,8 @@ DASK_SCHEDULER_PORT = env('DASK_SCHEDULER_PORT', cast=str, default='8786')
 DASK_DASHBOARD_HOST = env('DASK_DASHBOARD_HOST', cast=str, default='localhost')
 DASK_DASHBOARD_PORT = env('DASK_DASHBOARD_PORT', cast=str, default='8787')
 DASK_NUM_WORKERS = env('DASK_NUM_WORKERS', cast=int, default=14)
+DASK_NUM_IO_WORKERS = env('DASK_NUM_IO_WORKERS', cast=int, default=5)
+DASK_NUM_DB_WORKERS = env('DASK_NUM_DB_WORKERS', cast=int, default=5)
 DASK_THREADS_PER_WORKER =  env('DASK_THREADS_PER_WORKER', cast=int, default=1)
 DASK_MEM_PER_WORKER = env('DASK_MEM_PER_WORKER', cast=str, default='1GB')
 
