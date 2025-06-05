@@ -57,7 +57,7 @@ def get_db_semaphore(num_workers: int=None):
     """
     if num_workers is None:
         num_workers = int(s.DASK_NUM_DB_WORKERS)
-    return Semaphore(name='db_throttle', max_leases=)
+    return Semaphore(name='db_throttle', max_leases=num_workers)
 
 class Singleton(type):
     _instances = {}
