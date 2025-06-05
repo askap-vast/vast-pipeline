@@ -21,6 +21,7 @@ from dask.distributed import wait
 
 from vast_pipeline.models import Image, Measurement, Run
 from vast_pipeline.pipeline.loading import copy_upload_measurements
+from vast_pipeline.daskmanager.manager import get_io_semaphore
 
 from forced_phot import ForcedPhot
 from ..utils.utils import StopWatch
@@ -127,10 +128,10 @@ def _forcedphot_preload(image: str,
     Returns:
         A tuple containing the HDU lists
     """
-
-    image_hdul = open_fits(image, memmap=memmap)
-    background_hdul = open_fits(background, memmap=memmap)
-    noise_hdul = open_fits(noise, memmap=memmap)
+    with get_io_semaphore():
+        image_hdul = open_fits(image, memmap=memmap)
+        background_hdul = open_fits(background, memmap=memmap)
+        noise_hdul = open_fits(noise, memmap=memmap)
 
     return image_hdul, background_hdul, noise_hdul
 
@@ -308,7 +309,6 @@ def parallel_extraction(
     allow_nan: bool,
     add_mode: bool,
     p_run_path: str,
-    io_workers: List[str],
 ) -> pd.DataFrame:
     """
     Parallelize forced extraction with Dask
@@ -338,9 +338,6 @@ def parallel_extraction(
             True when the pipeline is running in add image mode.
         p_run_path:
             The system path of the pipeline run output.
-        io_workers:
-            List of dask worker addresses to use for `extract_from_image`
-            This is the output of `DaskManager.get_n_random_workers()`, or similar.
 
     Returns:
         Dataframe with forced extracted measurements data, columns are
@@ -430,7 +427,7 @@ def parallel_extraction(
     # Persist at this point uning the number of io workers.
     # df_out will contain the forced extraction measurments per image.
     # df_out should be sorted and partitioned by image at this point.
-    df_out = dd.from_delayed(func_d).persist(workers=io_workers)
+    df_out = dd.from_delayed(func_d).persist()
 
     del out, func_d, df_per_image, measurements_parquet_data
 
@@ -586,7 +583,6 @@ def forced_extraction(
     add_mode: bool,
     done_images_df: pd.DataFrame,
     done_source_ids: List[int],
-    io_workers: List[str],
 ) -> Tuple[pd.DataFrame, int]:
     """
     Check and extract expected measurements, and associated them with the
@@ -622,9 +618,6 @@ def forced_extraction(
         done_source_ids:
             List of the source ids that were already present in the previous
             run (used in add image mode).
-        io_workers:
-            List of dask worker addresses to use for `extract_from_image`
-            This is likely the output of `DaskManager.get_n_random_workers()`
 
     Returns:
         The `sources_df` with the extracted sources added.
