@@ -32,8 +32,11 @@ def _start_cluster():
     logger.info('Connected to local Dask Cluster')
     return client
 
-def get_semaphore(name, num_workers=5):
-    return Semaphore(name=name, max_leases=num_workers)
+def get_io_semaphore():
+    return Semaphore(name='io_throttle', max_leases=int(s.DASK_NUM_IO_WORKERS))
+
+def get_db_semaphore():
+    return Semaphore(name='db_throttle', max_leases=int(s.DASK_NUM_IO_WORKERS))
 
 class Singleton(type):
     _instances = {}
