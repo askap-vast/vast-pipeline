@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- V2: Added functionality to throttle parallel database uploads [#852](https://github.com/askap-vast/vast-pipeline/pull/852)
+- V2: Added Dask cluster memory usage logging [#852](https://github.com/askap-vast/vast-pipeline/pull/852)
 - V2: Enable specification of Dask worker memory limits [#843](https://github.com/askap-vast/vast-pipeline/pull/843)
 - V2: Migrate pipeline to used a Dask.distributed.LocalCluster throughout [#816](https://github.com/askap-vast/vast-pipeline/pull/816)
 - V2: Add Dask.distributed support
@@ -20,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- V2: Change worker throttling to use Dask Semaphore [#852](https://github.com/askap-vast/vast-pipeline/pull/852)
 - V2: Compute associations prior to upload, and then upload in serial [#846](https://github.com/askap-vast/vast-pipeline/pull/846)
 - V2: Persist srcs_df prior to measurement pairs df output file computation [#846](https://github.com/askap-vast/vast-pipeline/pull/846)
 - V2: Change measurement and association DB indices to UUIDs [#844](https://github.com/askap-vast/vast-pipeline/pull/844)
@@ -64,6 +67,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#852](https://github.com/askap-vast/vast-pipeline/pull/852): feat: V2: Switch worker throttling to use Dask Semaphore and add Dask cluster memory usage logging
 - [#846](https://github.com/askap-vast/vast-pipeline/pull/846): fix: V2: Compute associations prior to upload and persist srcs_df in final pairs calculation
 - [#845](https://github.com/askap-vast/vast-pipeline/pull/845): fix: V2: Fix memory leaks and duplicate source ID issue
 - [#844](https://github.com/askap-vast/vast-pipeline/pull/844): fix: V2: Change measurements and association DB indices to UUIDs
