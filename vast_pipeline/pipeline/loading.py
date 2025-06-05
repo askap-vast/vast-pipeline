@@ -41,6 +41,7 @@ from vast_pipeline.utils.utils import (
     generate_shortuuid,
     UUID_LEN_SOURCE
 )
+from vast_pipeline.daskmanager.manager import get_db_semaphore
 
 
 logger = logging.getLogger(__name__)
@@ -91,9 +92,13 @@ def copy_upload_model(
 
         mem_csv = in_memory_csv(batch)
         with closing(mem_csv) as csv_io:
-            num_copied = djmodel.copies.from_csv(
-                csv_io, drop_constraints=False, drop_indexes=False, mapping=mapping
-            )
+            with get_db_semaphore():
+                num_copied = djmodel.copies.from_csv(
+                    csv_io,
+                    drop_constraints=False,
+                    drop_indexes=False,
+                    mapping=mapping
+                )
             logging.info(f"Copied {num_copied} {djmodel.__name__} objects to database.")
 
         start_index = end_index
