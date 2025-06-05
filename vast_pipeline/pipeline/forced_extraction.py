@@ -91,8 +91,8 @@ def get_data_from_parquet(
             id of the image.
     """
     file, image_id = file_and_image_id
+    image_name = file.split("/")[-2]
     if add_mode:
-        image_name = file.split("/")[-2]
         forced_parquet = os.path.join(
             p_run_path, f"forced_measurements_{image_name}.parquet"
         )
@@ -109,7 +109,14 @@ def get_data_from_parquet(
     else:
         prefix = "island_"
         max_id = 1
-    return {"prefix": prefix, "max_id": max_id, "id": image_id}
+    
+    return_dict = {
+        "prefix": prefix,
+        "max_id": max_id,
+        "id": image_id,
+    }
+    
+    return return_dict
 
 
 def _forcedphot_preload(image: str,
@@ -401,28 +408,92 @@ def parallel_extraction(
     # in list_meas_parquets. This generates a list of delayed futures that will only
     # compute at the next persist.
     df_cols = ["id", "path", "background_path", "noise_path", "beam_bmaj", "beam_bmin", "beam_bpa", "datetime"]
+    print(df_images.head())
+    print(df_images.columns)
     measurements_parquet_data = (
         db.from_sequence(list_meas_parquets, npartitions=len(list_meas_parquets))
         .map(get_data_from_parquet, p_run_path, add_mode)
         .to_dataframe()
-        .merge(df_images[df_cols], on="id", how="left")
-        .to_delayed()
+        .merge(df_images[df_cols].reset_index(names=["image_name"]), on="id", how="left")
+        #.to_delayed()
     )
+    
+    ex_measurements_parquet_data = measurements_parquet_data.compute()
+    print()
+    print("measurements_parquet_data")
+    print(ex_measurements_parquet_data)
+    print(ex_measurements_parquet_data.columns)
+    print()
+    
+    #assert 1==0
 
     # Create a list of dataframes containing the relevant data from out per image
     # This generates a list of delayed futures that will only  compute at the next persist.
     generate_df = lambda name, out: out[out["image_name"] == name]
     df_per_image=[delayed(generate_df)(n, out) for n in unique_images_to_extract]
+    
+    #df_per_image_dict = {
+    #    name: out[out["image_name"] == name] for name in unique_images_to_extract
+    #}
+    #df_per_image=[out[out["image_name"] == name] for name in unique_images_to_extract]
 
     # Do the forced extraction work by combining the two delayed lists above then
     # running extract_from_image on the tuple of delayed futures.
     # Persist at this point uning the number of io workers.
-    image_data_list = zip(df_per_image, measurements_parquet_data)
+    #image_data_list = zip(df_per_image, measurements_parquet_data)
+    #image_data_list = [
+    #    (df_per_image_dict[name], meas_df)
+    #    for name, meas_df in zip(unique_images_to_extract, measurements_parquet_data)
+    #]
+    
+    ex_df_per_image = df_per_image[0].compute()
+    print("df_per_image")
+    print(ex_df_per_image)
+    print(ex_df_per_image.columns)
+    #ex_measurements_parquet_data = measurements_parquet_data[0].compute()
+    #print()
+    #print("measurements_parquet_data")
+    #print(ex_measurements_parquet_data)
+    #print(ex_measurements_parquet_data.columns)
+    print()
+    print("out")
+    print(out)
+    print(out.columns)
+    print(out.head())
+    print()
+    
+    merged_df = out.merge(measurements_parquet_data, on="image_name", how="left")
+    
+    print("merged_df")
+    print(merged_df.columns)
+    print(merged_df.head())
+    
+    def apply_extract_from_image(df):
+        
+        image_df = df[df.columns not in measurements_parquet_data.columns]
+        meas_data = df[measurements_parquet_data.columns].iloc[0]
+    
+        extract_from_image(
+            image_df,
+            meas_data,
+            edge_buffer=edge_buffer,
+            cluster_threshold=cluster_threshold,
+            allow_nan=allow_nan
+        )
+
+    df_out = merged_df.groupby("image_name").apply(
+        apply_extract_from_image,
+        #meta=your_meta_schema,
+    )
+
+    """
     func_d = [
         delayed(extract_from_image)(image_df, meas_data, edge_buffer=edge_buffer,
                                     cluster_threshold=cluster_threshold, allow_nan=allow_nan)
         for image_df, meas_data in image_data_list
         ]
+    """
+    
 
     # Persist at this point uning the number of io workers.
     # df_out will contain the forced extraction measurments per image.
