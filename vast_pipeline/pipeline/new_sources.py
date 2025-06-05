@@ -20,6 +20,7 @@ from vast_pipeline.models import Image, Run
 from vast_pipeline.utils.utils import StopWatch
 from vast_pipeline.pipeline.utils import get_df_memory_usage
 from vast_pipeline.image.utils import open_fits
+from vast_pipeline.daskmanager.manager import get_io_semaphore
 
 
 logger = logging.getLogger(__name__)
@@ -89,11 +90,13 @@ def extract_data_from_img(image: str) -> Dict[str, Union[np.ndarray, WCS, fits.H
     Returns:
         Dictionary containing the data, wcs and header of the image.
     """
-    with open_fits(image) as hdul:
-        header = hdul[0].header
-        bmaj = header['bmaj']
-        wcs = WCS(header, naxis=2)
-        data = hdul[0].data.squeeze().astype(np.float32)
+
+    with get_io_semaphore():
+        with open_fits(image) as hdul:
+            header = hdul[0].header
+            bmaj = header['bmaj']
+            wcs = WCS(header, naxis=2)
+            data = hdul[0].data.squeeze().astype(np.float32)
 
     return {'data': data, 'wcs': wcs, 'bmaj': bmaj}
 
