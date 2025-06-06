@@ -173,6 +173,7 @@ def extract_from_image(
         Dictionary with input dataframe with added columns (flux_int,
             flux_int_err, chi_squared_fit) and image name.
     """
+
     timer = StopWatch()
 
     data = data.to_dict(orient='records')[0]
@@ -194,6 +195,7 @@ def extract_from_image(
                                            data.pop('noise_path'),
                                            memmap=False
                                            )
+
     FP_timer = StopWatch()
     FP = ForcedPhot(*forcedphot_input, use_numba=True)
     logger.debug("%s - Time to init FP: %.3f s", image,  FP_timer.reset())
@@ -214,7 +216,7 @@ def extract_from_image(
         use_clusters=use_clusters
     )
     logger.debug("%s - Time to measure FP: %.3fs", image, FP_timer.reset())
-    
+
     num_fits = np.sum(flux>0.0)
 
     logger.debug("%s: Obtained %d measurements "
@@ -237,10 +239,11 @@ def extract_from_image(
         & (df['chi_squared_fit'] != np.inf)
         & (df['chi_squared_fit'] != np.nan)
     ]
-
+    
     df = finalise_forced_dfs(df, **data)
 
     logger.debug("%s - Total extraction time: %ds", image, timer.reset())
+    #print("Finished extract_from_image")
 
     return df
 
@@ -469,22 +472,102 @@ def parallel_extraction(
     print(merged_df.head())
     
     def apply_extract_from_image(df):
+        #print("Inside apply_extract_from_image")
+        #print(df)
+        #print(df.columns)
+        #print("Resetting index...")
+        #df = df.reset_index()
+        #print(df)
+        #print(df.columns)
+        #print("getting meas_data...")
         
-        image_df = df[df.columns not in measurements_parquet_data.columns]
-        meas_data = df[measurements_parquet_data.columns].iloc[0]
-    
-        extract_from_image(
+        image_df_cols = [
+            'flux_peak',
+            'image_name',
+            'source_tmp_id',
+            'wavg_dec',
+            'wavg_ra'
+        ]
+        
+        image_df = df[image_df_cols]
+        
+        meas_data = df[df.columns.difference(image_df_cols)].iloc[:1]
+        #print(meas_data)
+        #print("getting image_df...")
+        
+        #print(image_df)
+        
+        #print("running extract_from_image...")
+        df = extract_from_image(
             image_df,
             meas_data,
             edge_buffer=edge_buffer,
             cluster_threshold=cluster_threshold,
             allow_nan=allow_nan
         )
+        #print("Finished running extract_from_image.")
+        return df
 
-    df_out = merged_df.groupby("image_name").apply(
-        apply_extract_from_image,
-        #meta=your_meta_schema,
-    )
+    """
+    print("\n\n\n\n")
+    print("About to apply extract_from_image...")
+    print(merged_df.columns)
+    print(measurements_parquet_data.columns)
+    print(out.columns)
+    print(merged_df.columns.difference(measurements_parquet_data.columns))
+    print(merged_df[merged_df.columns.difference(measurements_parquet_data.columns)])
+    print("\n\n\n\n")
+    
+    test_subset = merged_df.compute().iloc[:10]
+    print(test_subset)
+    test_group_name = test_subset["image_name"].unique()[0]
+    print(test_group_name)
+    test_group = test_subset.groupby("image_name").get_group(test_group_name)
+    print(test_group)
+    
+    test_output = apply_extract_from_image(test_group)
+    print(test_output)
+    print(test_output.dtypes)
+    """
+    
+    meta = [
+        ('flux_peak', float),
+        ('image', object),
+        ('source_tmp_id',object),
+        ('dec',float),
+        ('ra',float),
+        ('flux_int',float),
+        ('flux_int_err',float),
+        ('chi_squared_fit',float),
+        ('island_id',object),
+        ('component_id',object),
+        ('name',object),
+        ('bmaj',float),
+        ('bmin',float),
+        ('pa',float),
+        ('image_id',object),
+        ('time','datetime64[ns, UTC]')
+    ]
+    
+    #assert 1==0
+    
+    print("\n\n\n\n")
+    print("cols")
+    print(list(measurements_parquet_data.columns))
+    df_out = merged_df.set_index("image_name", drop=False) \
+                      .groupby("image_name") \
+                      .apply(apply_extract_from_image,meta=meta)
+                      #.reset_index(level='image_name') \
+                      #.reset_index(drop=True) 
+    
+    df_out = df_out.persist()
+    logger.info("Persisting df_out...")
+    wait(df_out)
+    logger.info("Finished")
+    
+    #df_out.compute(scheduler='single-threaded')
+    
+    #assert 1==0
 
     """
     func_d = [
@@ -498,9 +581,18 @@ def parallel_extraction(
     # Persist at this point uning the number of io workers.
     # df_out will contain the forced extraction measurments per image.
     # df_out should be sorted and partitioned by image at this point.
-    df_out = dd.from_delayed(func_d).persist()
+    #df_out = dd.from_delayed(func_d).persist()
 
-    del out, func_d, df_per_image, measurements_parquet_data
+    #del out, func_d, df_per_image, measurements_parquet_data
+    del out, merged_df, measurements_parquet_data
+    
+    df_computed = df_out.compute()
+    
+    print(df_computed.columns)
+    print(df_computed.head())
+    print(df_computed)
+    
+    #assert 1==0
 
     return df_out
 
@@ -627,6 +719,9 @@ def write_forced_parquet(
         None
     """
     image = df["image"].unique().tolist()
+    print(image)
+    print(df)
+    print(df.columns)
     # Ensure our dataframe only has one image
     assert len(image) == 1
     image = image[0]
