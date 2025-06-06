@@ -554,8 +554,7 @@ def parallel_extraction(
     print("\n\n\n\n")
     print("cols")
     print(list(measurements_parquet_data.columns))
-    df_out = merged_df.set_index("image_name", drop=False) \
-                      .groupby("image_name") \
+    df_out = merged_df.groupby("image_name") \
                       .apply(apply_extract_from_image,meta=meta)
                       #.reset_index(level='image_name') \
                       #.reset_index(drop=True) 
@@ -592,7 +591,7 @@ def parallel_extraction(
     print(df_computed.head())
     print(df_computed)
     
-    #assert 1==0
+    assert 1==0
 
     return df_out
 
