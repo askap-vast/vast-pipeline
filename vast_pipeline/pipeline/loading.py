@@ -411,7 +411,7 @@ def make_upload_related_sources(related_df: pd.DataFrame) -> None:
 
 def copy_upload_associations(
     associations_df: dd.DataFrame,
-    batch_size: int = 1000,
+    batch_size: int = 10_000,
 ) -> None:
     """Upload associations using django-postgres-copy in-memory csv method.
 

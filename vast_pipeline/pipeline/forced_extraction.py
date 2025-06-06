@@ -169,6 +169,10 @@ def extract_from_image(
     timer = StopWatch()
     
     print(data)
+    
+    print("printing df")
+    print(df)
+    print(df["wavg_ra"])
 
     data = data.to_dict(orient='records')[0]
     image = data.pop('path')
@@ -424,18 +428,29 @@ def parallel_extraction(
 
     # Create a list of dataframes containing the relevant data from out per image
     # This generates a list of delayed futures that will only  compute at the next persist.
-    generate_df = lambda name, out: out.loc[name].copy().reset_index()
-    df_per_image=[delayed(generate_df)(n, out) for n in unique_images_to_extract]
+    #generate_df = lambda name, out: out.loc[name].copy().reset_index()
+    #df_per_image=[delayed(generate_df)(n, out) for n in unique_images_to_extract]
+    
+    #generate_df = lambda name, out: out.loc[name].copy().reset_index()
+    @delayed
+    def generate_df(name):
+        return out.loc[name].compute().reset_index()
+    df_per_image=[generate_df(n) for n in unique_images_to_extract]
+    
+    print(df_per_image)
+    print(df_per_image[0])
+    #assert 1==0
     
 
     # Do the forced extraction work by combining the two delayed lists above then
     # running extract_from_image on the tuple of delayed futures.
     # Persist at this point uning the number of io workers.
-    image_data_list = zip(df_per_image, measurements_parquet_data)
+    #image_data_list = zip(df_per_image, measurements_parquet_data)
     func_d = [
-        delayed(extract_from_image)(image_df, measurements_parquet_data.loc[idx], edge_buffer=edge_buffer,
+        delayed(extract_from_image)(image_df, measurements_parquet_data.loc[[idx]], edge_buffer=edge_buffer,
                                     cluster_threshold=cluster_threshold, allow_nan=allow_nan)
         #for image_df, meas_data in image_data_list
+        #for idx, image_name in enumerate(unique_images_to_extract)
         for idx, image_df in enumerate(df_per_image)
         ]
 
@@ -447,11 +462,13 @@ def parallel_extraction(
     # df_out will contain the forced extraction measurments per image.
     # df_out should be sorted and partitioned by image at this point.
     df_out = dd.from_delayed(func_d).persist()
+    wait(df_out)
+    logger.info("Finished persisting df_out")
 
     del out, func_d, df_per_image, measurements_parquet_data
     
     
-    assert 1==0
+    #assert 1==0
 
     return df_out
 
