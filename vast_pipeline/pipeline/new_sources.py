@@ -250,9 +250,9 @@ def parallel_get_new_high_sigma(
         return get_image_rms_measurements(df_group, edge_buffer=edge_buffer)
 
     out = df[cols].groupby("img_diff_rms_path") \
-                  .apply(process_group,
-                         meta={'source': str, 'true_sigma': float}
-                         ) \
+                  .apply(
+                    process_group,
+                    meta={'source': str, 'true_sigma': float}) \
                   .persist()
 
     # Remove duplicate sources and only keep high sigma
@@ -261,7 +261,7 @@ def parallel_get_new_high_sigma(
              .rename(columns={'true_sigma': 'new_high_sigma'}) \
              .set_index('source') \
              .persist()
-    logger.debug("Set up value sort, duplicate drop in out df and persisted")
+    logger.debug("Setup out df persisting...")
     wait(out)
     logger.debug("Finished persisting out df")
 

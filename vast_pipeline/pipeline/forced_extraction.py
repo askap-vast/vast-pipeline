@@ -167,12 +167,6 @@ def extract_from_image(
             flux_int_err, chi_squared_fit) and image name.
     """
     timer = StopWatch()
-    
-    print(data)
-    
-    print("printing df")
-    print(df)
-    print(df["wavg_ra"])
 
     data = data.to_dict(orient='records')[0]
     image = data.pop('path')
@@ -389,6 +383,7 @@ def parallel_extraction(
         columns={"image": "image_name"}
     )
     out = out.set_index("image_name", sorted=False).persist()
+    logger.info("Persisting out df...")
     wait(out)
     logger.info("Persisted out df")
 
@@ -407,9 +402,8 @@ def parallel_extraction(
         )
     )
 
-    # Get a map of the columns that have a fixed value from the measurements parquets
-    # in list_meas_parquets. This generates a list of delayed futures that will only
-    # compute at the next persist.
+    # Get the columns that have a fixed value from the measurements parquets
+    # - this will be computed, which should be fine for a moderate number of images
     df_cols = ["id", "path", "background_path", "noise_path", "beam_bmaj", "beam_bmin", "beam_bpa", "datetime"]
     measurements_parquet_data = (
         db.from_sequence(list_meas_parquets, npartitions=len(list_meas_parquets))
@@ -420,26 +414,11 @@ def parallel_extraction(
         .compute()
         .reset_index(drop=True)
     )
-    print(measurements_parquet_data)
-    #measurements_parquet_data = measurements_parquet_data.reset_index()
-    
-    #print(measurements_parquet_data.compute())
-    #assert False
 
-    # Create a list of dataframes containing the relevant data from out per image
-    # This generates a list of delayed futures that will only  compute at the next persist.
-    #generate_df = lambda name, out: out.loc[name].copy().reset_index()
-    #df_per_image=[delayed(generate_df)(n, out) for n in unique_images_to_extract]
-    
-    #generate_df = lambda name, out: out.loc[name].copy().reset_index()
     @delayed
     def generate_df(name):
         return out.loc[name].compute().reset_index()
     df_per_image=[generate_df(n) for n in unique_images_to_extract]
-    
-    print(df_per_image)
-    print(df_per_image[0])
-    #assert 1==0
     
 
     # Do the forced extraction work by combining the two delayed lists above then
@@ -447,28 +426,22 @@ def parallel_extraction(
     # Persist at this point uning the number of io workers.
     #image_data_list = zip(df_per_image, measurements_parquet_data)
     func_d = [
-        delayed(extract_from_image)(image_df, measurements_parquet_data.loc[[idx]], edge_buffer=edge_buffer,
-                                    cluster_threshold=cluster_threshold, allow_nan=allow_nan)
-        #for image_df, meas_data in image_data_list
-        #for idx, image_name in enumerate(unique_images_to_extract)
+        delayed(extract_from_image)(
+            image_df,
+            measurements_parquet_data.loc[[idx]],
+            edge_buffer=edge_buffer,
+            cluster_threshold=cluster_threshold,
+            allow_nan=allow_nan
+        )
         for idx, image_df in enumerate(df_per_image)
         ]
 
-
-    #func_d[0].compute()
-    #assert 1==0
-
-    # Persist at this point uning the number of io workers.
-    # df_out will contain the forced extraction measurments per image.
-    # df_out should be sorted and partitioned by image at this point.
     df_out = dd.from_delayed(func_d).persist()
+    logger.info("Generating df_out from delayeds and persisting...")
     wait(df_out)
     logger.info("Finished persisting df_out")
 
     del out, func_d, df_per_image, measurements_parquet_data
-    
-    
-    #assert 1==0
 
     return df_out
 
