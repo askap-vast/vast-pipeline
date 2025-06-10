@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import dask.dataframe as dd
 
-from typing import Dict, Union, List
+from typing import Dict, Union
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -20,6 +20,7 @@ from vast_pipeline.models import Image, Run
 from vast_pipeline.utils.utils import StopWatch
 from vast_pipeline.pipeline.utils import get_df_memory_usage
 from vast_pipeline.image.utils import open_fits
+from vast_pipeline.daskmanager.manager import get_io_semaphore
 
 
 logger = logging.getLogger(__name__)
@@ -89,11 +90,13 @@ def extract_data_from_img(image: str) -> Dict[str, Union[np.ndarray, WCS, fits.H
     Returns:
         Dictionary containing the data, wcs and header of the image.
     """
-    with open_fits(image) as hdul:
-        header = hdul[0].header
-        bmaj = header['bmaj']
-        wcs = WCS(header, naxis=2)
-        data = hdul[0].data.squeeze().astype(np.float32)
+
+    with get_io_semaphore():
+        with open_fits(image) as hdul:
+            header = hdul[0].header
+            bmaj = header['bmaj']
+            wcs = WCS(header, naxis=2)
+            data = hdul[0].data.squeeze().astype(np.float32)
 
     return {'data': data, 'wcs': wcs, 'bmaj': bmaj}
 
@@ -214,7 +217,7 @@ def get_image_rms_measurements(
 
 
 def parallel_get_new_high_sigma(
-    df: dd.DataFrame, io_workers: List[str], edge_buffer: float = 1.0,
+    df: dd.DataFrame, edge_buffer: float = 1.0,
 ) -> pd.DataFrame:
     """
     Wrapper function to use 'get_image_rms_measurements' in parallel with Dask
@@ -225,9 +228,6 @@ def parallel_get_new_high_sigma(
     Args:
         df:
             The group of sources to measure in the images.
-        io_workers:
-            List of worker addresses to use for `finalise_rms_calcs`
-            This is likely the output of `DaskManager.get_n_random_workers()`
         edge_buffer:
             Multiplicative factor to be passed to the
             'get_image_rms_measurements' function.
@@ -252,7 +252,7 @@ def parallel_get_new_high_sigma(
 
     # Do the rms calculations per rms image only using the subset of workers for IO
     out = [delayed(get_image_rms_measurements)(rms_df, edge_buffer=edge_buffer) for rms_df in df_per_img_rms]
-    out = dd.from_delayed(out).persist(workers=io_workers)
+    out = dd.from_delayed(out).persist()
 
     # Remove duplicate sources and only keep high sigma
     out = out.sort_values('true_sigma', ascending=True) \
@@ -269,8 +269,11 @@ def parallel_get_new_high_sigma(
 
 
 def new_sources(
-    sources_df: dd.DataFrame, missing_sources_df: dd.DataFrame,
-    min_sigma: float, edge_buffer: float, p_run: Run, io_workers: List[str]
+    sources_df: dd.DataFrame,
+    missing_sources_df: dd.DataFrame,
+    min_sigma: float,
+    edge_buffer: float,
+    p_run: Run,
 ) -> pd.DataFrame:
     """
     Processes the new sources detected to check that they are valid new
@@ -292,9 +295,6 @@ def new_sources(
             'get_image_rms_measurements' function.
         p_run:
             The pipeline run.
-        io_workers:
-            List of worker addresses to use for `finalise_rms_calcs`
-            This is likely the output of `DaskManager.get_n_random_workers()`
 
     Returns:
         A DataFrame indexed by source id and containing a single 'new_high_sigma' column.
@@ -439,7 +439,7 @@ def new_sources(
 
     logger.debug("Getting new_high_sigma measurements...")
     new_sources_df = parallel_get_new_high_sigma(
-        new_sources_df, io_workers, edge_buffer=edge_buffer
+        new_sources_df, edge_buffer=edge_buffer
     )
 
     logger.debug(f"Time to get rms measurements: {debug_timer.reset()}s")

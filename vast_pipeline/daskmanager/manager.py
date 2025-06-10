@@ -4,7 +4,7 @@ import logging
 import random
 import time
 
-from dask.distributed import Client, LocalCluster
+from dask.distributed import Client, LocalCluster, Semaphore
 from django.conf import settings as s
 from . import config # noqa: F401
 
@@ -31,6 +31,33 @@ def _start_cluster():
     client = Client(cluster)
     logger.info('Connected to local Dask Cluster')
     return client
+
+def get_io_semaphore(num_workers: int=None):
+    """
+    Generate a dask semaphore object labelled `io_throttle` for limiting the
+    number of parallel IO operations
+    
+    num_workers:
+        Number of workers. If not specified it defaults to the number specified
+        in the dask settings.
+    """
+
+    if num_workers is None:
+        num_workers = int(s.DASK_NUM_IO_WORKERS)
+    return Semaphore(name='io_throttle', max_leases=num_workers)
+
+def get_db_semaphore(num_workers: int=None):
+    """
+    Generate a dask semaphore object labelled `db_throttle` for limiting the
+    number of parallel uploads to the database.
+    
+    num_workers:
+        Number of workers. If not specified it defaults to the number specified
+        in the dask settings.
+    """
+    if num_workers is None:
+        num_workers = int(s.DASK_NUM_DB_WORKERS)
+    return Semaphore(name='db_throttle', max_leases=num_workers)
 
 class Singleton(type):
     _instances = {}
@@ -70,6 +97,20 @@ class DaskManager(metaclass=Singleton):
         """Return n random workers from the pool"""
         logger.debug("Getting %d random workers...", n)
         return random.sample(list(self.client.scheduler_info()['workers'].keys()), n)
+
+    def log_cluster_memory(self):
+        workers = self.client.scheduler_info()['workers']
+        logger.info("Logging memory usage for %d workers...", len(workers))
+        for addr, info in workers.items():
+            memory_limit = info['memory_limit'] / 1e9
+
+            mem_metrics = info['metrics']
+            managed = mem_metrics['managed_bytes'] / 1e9
+            spilled_memory = mem_metrics['spilled_bytes']['memory'] / 1e9
+            spilled_disk = mem_metrics['spilled_bytes']['disk'] / 1e9
+            memory_used = mem_metrics['memory'] / 1e9
+
+            logger.info(f"Worker {addr}: {memory_used:.2f}GB (managed: {managed:.2f}GB, spilled disk: {spilled_disk:.2f}GB, spilled memory: {spilled_memory:.2f}GB) of {memory_limit:.2f}GB.")
 
     def restart(self):
         """Restart the cluster and flush all memory"""

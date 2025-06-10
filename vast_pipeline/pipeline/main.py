@@ -302,7 +302,6 @@ class Pipeline:
             self.config["new_sources"]["min_sigma"],
             self.config["source_monitoring"]["edge_buffer_scale"],
             p_run,
-            self.dm.get_n_random_workers(self.config['processing']['num_workers_io']),
         )
 
         # Drop column no longer required in missing_sources_df.
@@ -324,7 +323,6 @@ class Pipeline:
                 self.add_mode,
                 done_images_df,
                 done_source_ids,
-                self.dm.get_n_random_workers(self.config['processing']['num_workers_io']),
             )
             mem_usage = get_df_memory_usage(sources_df)
             logger.debug(f"Step 5: sources_df memory usage: {mem_usage}MB")
@@ -347,7 +345,6 @@ class Pipeline:
             done_source_ids,
             self.previous_parquets,
             self.config["processing"]["max_partition_mb"],
-            self.dm.get_n_random_workers(self.config['processing']['num_workers_io']),
         )
 
         log_total_memory_usage()
