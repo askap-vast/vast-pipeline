@@ -381,6 +381,23 @@ class Image(CommentableModel):
         return self.name
 
 
+class ImageCutout(models.Model):
+    measurement = models.ForeignKey(
+        "Measurement", on_delete=models.CASCADE, related_name="cutouts"
+    )
+    image = models.ImageField(upload_to="cutouts/")
+    size = models.CharField(max_length=10, choices=[("normal", "Normal"), ("large", "Large"), ("xlarge", "XLarge")])
+    img_type = models.CharField(max_length=10, choices=[("fits", "FITS"), ("png", "PNG")])
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_accessed = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ("measurement", "size", "img_type")
+
+    def __str__(self):
+        return f"{self.measurement.name} - {self.size} ({self.img_type})"
+
+
 class MeasurementQuerySet(models.QuerySet):
 
     def cone_search(

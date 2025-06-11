@@ -355,3 +355,7 @@ PIPELINE_MAINTAINANCE_MESSAGE = env('PIPELINE_MAINTAINANCE_MESSAGE', cast=str, d
 
 # web server eta v plot datashader threshold
 ETA_V_DATASHADER_THRESHOLD = env('ETA_V_DATASHADER_THRESHOLD', cast=int, default=20000)
+
+CUTOFF_DAYS = env("CUTOFF_DAYS", cast=int, default=30)
+MAX_SIZE_GB = env("MAX_SIZE_GB", cast=float, default=0.01)
+CUTOUT_DIR = env("CUTOUT_DIR", cast=str, default=None)
