@@ -151,13 +151,6 @@ def delete_pipeline_run_raw_sql(p_run, source_batch_size=10000, delete_images=Fa
                 image_ids = cursor.fetchall()
                 image_id_str = ','.join(str(image_id[0]) for image_id in image_ids)
         
-        
-        
-        
-        
-        
-        
-        
         for sky_id_tuple in sky_ids:
             sky_id = sky_id_tuple[0]
             
