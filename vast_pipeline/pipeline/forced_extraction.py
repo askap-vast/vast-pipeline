@@ -60,6 +60,9 @@ def remove_forced_meas(run_path: str, batch_size=10000) -> None:
                 batch = ids[batch_start:batch_start+batch_size]
                 batch_str = ','.join(str(meas_id) for meas_id in batch)
                 
+                sql_cmd = f"DELETE FROM vast_pipeline_association WHERE meas_id IN ({batch_str});"
+                cursor.execute(sql_cmd)
+
                 sql_cmd = f"DELETE FROM vast_pipeline_measurement WHERE id IN ({batch_str});"
                 cursor.execute(sql_cmd)
         
