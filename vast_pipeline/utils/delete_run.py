@@ -142,11 +142,11 @@ def delete_pipeline_run_raw_sql(p_run, source_batch_size=10000, delete_images=Fa
         timer.reset()
         
         if n_sky_ids > 0:
-            sql_cmd = f"DELETE FROM vast_pipeline_skyregion_run WHERE run_id = {p_run_id} AND sky_id IN ({sky_id_str});"
+            sql_cmd = f"DELETE FROM vast_pipeline_skyregion_run WHERE run_id = {p_run_id} AND skyregion_id IN ({sky_id_str});"
             _run_raw_sql(sql_cmd, cursor, log=False)
         
             if delete_images:
-                sql_cmd = f"SELECT sky_id FROM vast_pipeline_skyregion_run GROUP BY sky_id HAVING COUNT(*) = 1 AND MAX(run_id) = {p_run_id};"
+                sql_cmd = f"SELECT skyregion_id FROM vast_pipeline_skyregion_run GROUP BY skyregion_id HAVING COUNT(*) = 1 AND MAX(run_id) = {p_run_id};"
                 _run_raw_sql(sql_cmd, cursor)
                 image_ids = cursor.fetchall()
                 image_id_str = ','.join(str(image_id[0]) for image_id in image_ids)
