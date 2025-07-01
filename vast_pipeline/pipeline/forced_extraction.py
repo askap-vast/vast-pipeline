@@ -65,20 +65,6 @@ def remove_forced_meas(run_path: str, batch_size=10000) -> None:
 
                 sql_cmd = f"DELETE FROM vast_pipeline_measurement WHERE id IN ({batch_str});"
                 cursor.execute(sql_cmd)
-        
-        """
-        obj_to_delete = Measurement.objects.filter(id__in=ids)
-        del ids
-        if obj_to_delete.exists():
-            with transaction.atomic():
-                n_del, detail_del = obj_to_delete.delete()
-                logger.info(
-                    ('Deleting all previous forced measurement and association'
-                     ' objects for this run. Total objects deleted: %i'),
-                    n_del,
-                )
-                logger.debug('(type, #deleted): %s', detail_del)
-        """
 
 
 def get_data_from_parquet(
