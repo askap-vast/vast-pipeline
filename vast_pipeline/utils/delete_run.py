@@ -1,6 +1,6 @@
 import logging
 
-from tqdm import tqdm 
+from tqdm import tqdm
 from django.db import connection
 from vast_pipeline.utils.utils import StopWatch
 
