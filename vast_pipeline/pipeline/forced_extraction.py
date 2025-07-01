@@ -34,6 +34,8 @@ def remove_forced_meas(run_path: str, batch_size=10000) -> None:
     Args:
         run_path:
             The run path of the pipeline run.
+        batch_size:
+            Number of forced measurements to delete per iteration
 
     Returns:
         None
