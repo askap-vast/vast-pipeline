@@ -4,10 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), with an added `List of PRs` section and links to the relevant PRs on the individual updates. This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/v1.1.0...HEAD)
+## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/v1.2.0...HEAD)
 
 #### Added
 
+- Added image.utils.get_fits_header to only fetch header when initialising Image object [#841](https://github.com/askap-vast/vast-pipeline/pull/841)
 - Added more detailed warnings about the use of Condon Errors throughout the docs and code [#806](https://github.com/askap-vast/vast-pipeline/pull/806)
 - Added processing configuration parameters to the run configuration documentation [#805](https://github.com/askap-vast/vast-pipeline/pull/805)
 - Added option to disable forced photometry clustering [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
@@ -26,6 +27,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### Fixed
 
 - Fixed extremely slow pipeline run deletion via batching [#840](https://github.com/askap-vast/vast-pipeline/pull/840)
+- Fixed slow image initialisation by disabling comp_nan_fill when fetching header [#841](https://github.com/askap-vast/vast-pipeline/pull/841)
+- Fixed incorrect link in changelog section header [#841](https://github.com/askap-vast/vast-pipeline/pull/841)
 - Fixed potential memory leak in image header extraction [#828](https://github.com/askap-vast/vast-pipeline/pull/828)
 - Updated github actions to use cache@v4 [#825](https://github.com/askap-vast/vast-pipeline/pull/825)
 - Check for whether processing parameters exist in config before validating them [#825](https://github.com/askap-vast/vast-pipeline/pull/825)
@@ -43,6 +46,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### List of PRs
 
 - [#840](https://github.com/askap-vast/vast-pipeline/pull/840): fix, feat: Overhaul pipeline run and forced fits deletion
+- [#841](https://github.com/askap-vast/vast-pipeline/pull/841): fix: Fix incorrect changelog link, fix slow image initialisation
 - [#837](https://github.com/askap-vast/vast-pipeline/pull/837): fix: Updated open_fits to correctly handle NaN-padded compressed images
 - [#828](https://github.com/askap-vast/vast-pipeline/pull/828): fix: Fix potential memory leak in image header extraction
 - [#825](https://github.com/askap-vast/vast-pipeline/pull/825): fix: Check for whether processing parameters exist in config before validating them and updated github actions to use cache@v4
