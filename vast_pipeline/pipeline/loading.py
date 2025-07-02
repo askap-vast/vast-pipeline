@@ -95,8 +95,11 @@ def make_upload_images(
     images = []
     skyregions = []
     bands = []
+    
+    dt = StopWatch()
 
     for path in paths['selavy']:
+        dt.reset()
         # STEP #1: Load image and measurements
         image = SelavyImage(
             path,
@@ -104,22 +107,26 @@ def make_upload_images(
             image_config
         )
         logger.info('Reading image %s ...', image.name)
+        logger.debug('Generated SelavyImage in %.3f s', dt.reset())
 
         # 1.1 get/create the frequency band
         with transaction.atomic():
             band = get_create_img_band(image)
         if band not in bands:
             bands.append(band)
+        logger.debug('Generated band in %.3f s', dt.reset())
 
         # 1.2 create image and skyregion entry in DB
         with transaction.atomic():
             img, exists_f = get_create_img(band.id, image)
+            logger.debug('get_create_img in %.3f s', dt.reset())
             skyreg = img.skyreg
 
             # add image and skyregion to respective lists
             images.append(img)
             if skyreg not in skyregions:
                 skyregions.append(skyreg)
+            logger.debug('Images and skyregions appended in %.3f s', dt.reset())
 
             if exists_f:
                 logger.info("Image %s already processed", img.name)
@@ -177,7 +184,26 @@ def make_upload_sources(
     logger.debug(f"sources_df memory usage: {mem_usage}MB")
     log_total_memory_usage()
 
+    _clear_old_sources(pipeline_run)
     # create sources in DB
+    src_dj_ids = bulk_upload_model(
+        Source,
+        source_models_generator(sources_df, pipeline_run=pipeline_run),
+        return_ids=True
+    )
+
+    sources_df['id'] = src_dj_ids
+
+    return sources_df
+
+def _clear_old_sources(run):
+    """
+    Clear the existing sources associated with a run
+    
+    Args:
+        run: the pipeline run to clear
+    """
+
     with transaction.atomic():
         if (add_mode is False and
                 Source.objects.filter(run=pipeline_run).exists()):
@@ -191,16 +217,6 @@ def make_upload_sources(
                 n_del,
             )
             logger.debug('(type, #deleted): %s', detail_del)
-
-    src_dj_ids = bulk_upload_model(
-        Source,
-        source_models_generator(sources_df, pipeline_run=pipeline_run),
-        return_ids=True
-    )
-
-    sources_df['id'] = src_dj_ids
-
-    return sources_df
 
 
 def make_upload_related_sources(related_df: pd.DataFrame) -> None:
