@@ -26,60 +26,7 @@ def delete_pipeline_run_raw_sql(p_run, source_batch_size=10000, delete_images=Fa
         # Step 1: handle sources
         #
         #####
-
-        # Fetch source IDs associated with the pipeline run
-        sql_cmd = f"SELECT id FROM vast_pipeline_source WHERE run_id = {p_run_id};"
-        _run_raw_sql(sql_cmd, cursor)
-        source_ids = cursor.fetchall()
-
-        # Iterate over each source ID and delete related information
-        n_source_ids = len(source_ids)
-        logger.info("Iterating over %d sources to delete tags and relations", n_source_ids)
-        n_batches = round(n_source_ids/source_batch_size)
-        logger.info("Using %d batches of %d sources", n_batches, source_batch_size)
-        
-        timer = StopWatch()
-        batch_starts = list(range(0, len(source_ids), source_batch_size))
-        for batch_start in tqdm(batch_starts):
-            batch = source_ids[batch_start:batch_start+source_batch_size]
-            batch_str = ','.join(str(source_id[0]) for source_id in batch)
-
-            # Delete entries from vast_pipeline_sourcefav for each source_id
-            sql_cmd = f"DELETE FROM vast_pipeline_sourcefav WHERE source_id IN ({batch_str});"
-            _run_raw_sql(sql_cmd, cursor, log=False)
-
-            # Find source tags related to the source and delete them
-            sql_cmd = f"SELECT tagulous_source_tags_id FROM vast_pipeline_source_tags WHERE source_id IN ({batch_str});"
-            _run_raw_sql(sql_cmd, cursor, log=False)
-            tag_ids = cursor.fetchall()
-            if tag_ids:
-                tag_ids_str = ','.join(str(t[0]) for t in tag_ids)
-                sql_cmd = f"DELETE FROM vast_pipeline_tagulous_source_tags WHERE id IN ({tag_ids_str});"
-                _run_raw_sql(sql_cmd, cursor, log=False)
-
-            # Delete from vast_pipeline_source_tags for the source_id
-            sql_cmd = f"DELETE FROM vast_pipeline_source_tags WHERE source_id IN ({batch_str});"
-            _run_raw_sql(sql_cmd, cursor, log=False)
-
-            # Delete from related source
-            sql_cmd = f"DELETE FROM vast_pipeline_relatedsource WHERE from_source_id IN ({batch_str});"
-            _run_raw_sql(sql_cmd, cursor, log=False)
-            sql_cmd = f"DELETE FROM vast_pipeline_relatedsource WHERE to_source_id IN ({batch_str});"
-            _run_raw_sql(sql_cmd, cursor, log=False)
-
-            # Delete from association
-            sql_cmd = f"DELETE FROM vast_pipeline_association WHERE source_id IN ({batch_str});"
-            _run_raw_sql(sql_cmd, cursor, log=False)
-
-        t = timer.reset()
-        logger.info("Time to iterate over %d source ids: %.2f seconds", n_source_ids, t)
-
-        # Delete source
-        sql_cmd = f"DELETE FROM vast_pipeline_source WHERE run_id = {p_run_id};"
-        _run_raw_sql(sql_cmd, cursor)
-        
-        t = timer.reset()
-        logger.info("Time to delete source objects: %.2f seconds", t)
+        clear_run_sources(p_run_id, batch_size=source_batch_size)
         
         #####
         #
@@ -179,3 +126,65 @@ def delete_pipeline_run_raw_sql(p_run, source_batch_size=10000, delete_images=Fa
         # Finally delete the pipeline run
         sql_cmd = f"DELETE FROM vast_pipeline_run WHERE id = {p_run_id};"
         _run_raw_sql(sql_cmd, cursor)
+
+def clear_run_sources(p_run_id, batch_size=10_000):
+    """
+    Clear the existing sources associated with a run
+    
+    Args:
+        run: the pipeline run to clear
+    """
+
+    with connection.cursor() as cursor:
+        sql_cmd = f"SELECT id FROM vast_pipeline_source WHERE run_id = {p_run_id};"
+        _run_raw_sql(sql_cmd, cursor)
+        source_ids = cursor.fetchall()
+
+        # Iterate over each source ID and delete related information
+        n_source_ids = len(source_ids)
+        logger.info("Iterating over %d sources to delete tags and relations", n_source_ids)
+        n_batches = round(n_source_ids/batch_size)
+        logger.info("Using %d batches of %d sources", n_batches, batch_size)
+        
+        timer = StopWatch()
+        batch_starts = list(range(0, len(source_ids), batch_size))
+        for batch_start in tqdm(batch_starts):
+            batch = source_ids[batch_start:batch_start+batch_size]
+            batch_str = ','.join(str(source_id[0]) for source_id in batch)
+
+            # Delete entries from vast_pipeline_sourcefav for each source_id
+            sql_cmd = f"DELETE FROM vast_pipeline_sourcefav WHERE source_id IN ({batch_str});"
+            _run_raw_sql(sql_cmd, cursor, log=False)
+
+            # Find source tags related to the source and delete them
+            sql_cmd = f"SELECT tagulous_source_tags_id FROM vast_pipeline_source_tags WHERE source_id IN ({batch_str});"
+            _run_raw_sql(sql_cmd, cursor, log=False)
+            tag_ids = cursor.fetchall()
+            if tag_ids:
+                tag_ids_str = ','.join(str(t[0]) for t in tag_ids)
+                sql_cmd = f"DELETE FROM vast_pipeline_tagulous_source_tags WHERE id IN ({tag_ids_str});"
+                _run_raw_sql(sql_cmd, cursor, log=False)
+
+            # Delete from vast_pipeline_source_tags for the source_id
+            sql_cmd = f"DELETE FROM vast_pipeline_source_tags WHERE source_id IN ({batch_str});"
+            _run_raw_sql(sql_cmd, cursor, log=False)
+
+            # Delete from related source
+            sql_cmd = f"DELETE FROM vast_pipeline_relatedsource WHERE from_source_id IN ({batch_str});"
+            _run_raw_sql(sql_cmd, cursor, log=False)
+            sql_cmd = f"DELETE FROM vast_pipeline_relatedsource WHERE to_source_id IN ({batch_str});"
+            _run_raw_sql(sql_cmd, cursor, log=False)
+
+            # Delete from association
+            sql_cmd = f"DELETE FROM vast_pipeline_association WHERE source_id IN ({batch_str});"
+            _run_raw_sql(sql_cmd, cursor, log=False)
+
+        t = timer.reset()
+        logger.info("Time to iterate over %d source ids: %.2f seconds", n_source_ids, t)
+
+        # Delete source
+        sql_cmd = f"DELETE FROM vast_pipeline_source WHERE run_id = {p_run_id};"
+        _run_raw_sql(sql_cmd, cursor)
+        
+        t = timer.reset()
+        logger.info("Time to delete source objects: %.2f seconds", t)
