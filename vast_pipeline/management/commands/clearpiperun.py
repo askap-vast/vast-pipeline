@@ -168,3 +168,5 @@ class Command(BaseCommand):
                         f'Issues in removing run folder: {e}'
                     ))
                     pass
+
+            logger.info(f"Successfully cleared {p_run_name}")
