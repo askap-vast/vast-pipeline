@@ -185,8 +185,56 @@ def make_upload_sources(
     logger.debug(f"sources_df memory usage: {mem_usage}MB")
     log_total_memory_usage()
 
-    clear_run_sources(pipeline_run.pk)
+    BATCH_SIZE = 1000
 
+    with transaction.atomic():
+        sources = Source.objects.filter(run=pipeline_run)
+        if not add_mode and sources.exists():
+            logger.info('Removing objects from previous pipeline run...')
+
+            ids_to_delete = list(sources.values_list('id', flat=True))
+            total_deleted = 0
+
+            for i in range(0, len(source_ids), BATCH_SIZE):
+                batch_ids = source_ids[i : i + BATCH_SIZE]
+                n_deleted, details = Source.objects.filter(id__in=batch_ids).delete()
+                total_deleted += n_deleted
+
+                logger.debug(
+                    "Deleted %d objects in this batch.", n_deleted
+                )
+
+            logger.info(
+                'Deleting all sources and related objects for this run. '
+                'Total objects deleted: %i',
+                total_deleted
+            )
+    
+    
+    """
+    with transaction.atomic():
+        if not add_mode and Source.objects.filter(run=pipeline_run).exists():
+            logger.info('Removing objects from previous pipeline run')
+
+            total_deleted = 0
+            while True:
+                sources_to_delete = Source.objects.filter(run=pipeline_run)[:BATCH_SIZE]
+                if not sources_to_delete.exists():
+                    break
+
+                deleted_count = sources_to_delete.delete()[0]
+                total_deleted += deleted_count
+                logger.debug('Deleted %d objects in this batch', deleted_count)
+
+                # Optional: Pause slightly to reduce DB strain
+                # sleep(0.1)
+
+            logger.info(
+                'Deleting all sources and related objects for this run. '
+                'Total objects deleted: %i',
+                total_deleted
+            )
+    """
     # create sources in DB
     src_dj_ids = bulk_upload_model(
         Source,

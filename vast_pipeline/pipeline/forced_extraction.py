@@ -50,23 +50,26 @@ def remove_forced_meas(run_path: str, batch_size=10000) -> None:
             .compute()
             .tolist()
         )
-        with connection.cursor() as cursor:
-            n_ids = len(ids)
-            logger.info("Iterating over %d forced measurements", len(ids))
-            n_batches = round(n_ids/batch_size)
-            logger.info("Using %d batches of %d measurements", n_batches, batch_size)
-            
-            timer = StopWatch()
-            batch_starts = list(range(0, len(ids), batch_size))
-            for batch_start in tqdm(batch_starts):
-                batch = ids[batch_start:batch_start+batch_size]
-                batch_str = ','.join(str(meas_id) for meas_id in batch)
-                
-                sql_cmd = f"DELETE FROM vast_pipeline_association WHERE meas_id IN ({batch_str});"
-                cursor.execute(sql_cmd)
 
-                sql_cmd = f"DELETE FROM vast_pipeline_measurement WHERE id IN ({batch_str});"
-                cursor.execute(sql_cmd)
+        forced_meas = Measurement.objects.filter(id__in=ids)
+        if forced_meas.exists():
+            with transaction.atomic():
+                logger.info("Iterating over %d forced measurements", len(forced_meas))
+                n_batches = round(n_ids/batch_size)
+                logger.info("Using %d batches of %d measurements", n_batches, batch_size)
+
+                ids_to_delete = list(forced_meas.values_list('id', flat=True))
+                total_deleted = 0
+
+                for i in range(0, len(source_ids), BATCH_SIZE):
+                    batch_ids = ids_to_delete[i : i + BATCH_SIZE]
+                    n_deleted, details = Measurement.objects.filter(id__in=batch_ids).delete()
+                    total_deleted += n_deleted
+
+                logger.info(
+                    'Total objects deleted: %i',
+                    total_deleted
+                )
 
 
 def get_data_from_parquet(
