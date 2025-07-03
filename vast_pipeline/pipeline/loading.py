@@ -23,7 +23,6 @@ from vast_pipeline.pipeline.utils import (
     get_df_memory_usage, log_total_memory_usage
 )
 from vast_pipeline.utils.utils import StopWatch
-from vast_pipeline.utils.delete_run import clear_run_sources
 
 
 logger = logging.getLogger(__name__)
