@@ -23,6 +23,7 @@ from vast_pipeline.pipeline.utils import (
     get_df_memory_usage, log_total_memory_usage
 )
 from vast_pipeline.utils.utils import StopWatch
+from vast_pipeline.utils.delete_run import clear_run_sources
 
 
 logger = logging.getLogger(__name__)
@@ -184,7 +185,8 @@ def make_upload_sources(
     logger.debug(f"sources_df memory usage: {mem_usage}MB")
     log_total_memory_usage()
 
-    _clear_old_sources(pipeline_run)
+    clear_run_sources(pipeline_run.pk)
+
     # create sources in DB
     src_dj_ids = bulk_upload_model(
         Source,
@@ -195,28 +197,6 @@ def make_upload_sources(
     sources_df['id'] = src_dj_ids
 
     return sources_df
-
-def _clear_old_sources(run):
-    """
-    Clear the existing sources associated with a run
-    
-    Args:
-        run: the pipeline run to clear
-    """
-
-    with transaction.atomic():
-        if (add_mode is False and
-                Source.objects.filter(run=pipeline_run).exists()):
-            logger.info('Removing objects from previous pipeline run')
-            n_del, detail_del = (
-                Source.objects.filter(run=pipeline_run).delete()
-            )
-            logger.info(
-                ('Deleting all sources and related objects for this run. '
-                 'Total objects deleted: %i'),
-                n_del,
-            )
-            logger.debug('(type, #deleted): %s', detail_del)
 
 
 def make_upload_related_sources(related_df: pd.DataFrame) -> None:
