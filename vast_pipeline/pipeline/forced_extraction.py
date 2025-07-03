@@ -10,10 +10,8 @@ from glob import glob
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from django.conf import settings
-from django.db import connection
 from pyarrow.parquet import read_schema
 from typing import Any, List, Tuple, Dict, Optional
-from tqdm import tqdm
 
 from vast_pipeline.models import Image, Run
 from vast_pipeline.pipeline.loading import make_upload_measurements
