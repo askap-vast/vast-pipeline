@@ -26,7 +26,8 @@ def delete_pipeline_run_raw_sql(p_run, source_batch_size=10000, delete_images=Fa
         # Step 1: handle sources
         #
         #####
-        clear_run_sources(p_run_id, batch_size=source_batch_size)
+        timer = StopWatch()
+        clear_run_sources(p_run_id, batch_size=source_batch_size, timer=timer)
         
         #####
         #
@@ -127,13 +128,16 @@ def delete_pipeline_run_raw_sql(p_run, source_batch_size=10000, delete_images=Fa
         sql_cmd = f"DELETE FROM vast_pipeline_run WHERE id = {p_run_id};"
         _run_raw_sql(sql_cmd, cursor)
 
-def clear_run_sources(p_run_id, batch_size=10_000):
+def clear_run_sources(p_run_id, batch_size=10_000, timer=None):
     """
     Clear the existing sources associated with a run
     
     Args:
         run: the pipeline run to clear
     """
+
+    if timer is None:
+        timer = StopWatch()
 
     with connection.cursor() as cursor:
         sql_cmd = f"SELECT id FROM vast_pipeline_source WHERE run_id = {p_run_id};"
@@ -145,9 +149,9 @@ def clear_run_sources(p_run_id, batch_size=10_000):
         logger.info("Iterating over %d sources to delete tags and relations", n_source_ids)
         n_batches = round(n_source_ids/batch_size)
         logger.info("Using %d batches of %d sources", n_batches, batch_size)
-        
-        timer = StopWatch()
+
         batch_starts = list(range(0, len(source_ids), batch_size))
+        timer.reset()
         for batch_start in tqdm(batch_starts):
             batch = source_ids[batch_start:batch_start+batch_size]
             batch_str = ','.join(str(source_id[0]) for source_id in batch)
