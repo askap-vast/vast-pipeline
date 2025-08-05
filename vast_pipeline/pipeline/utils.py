@@ -55,11 +55,31 @@ def get_create_skyreg(image: Image) -> SkyRegion:
     # In the calculations below, it is assumed the image has square
     # pixels (this pipeline has been designed for ASKAP images, so it
     # should always be square). It will likely give wrong results if not
+    
+    """
+    skyregion_search_radius = 1*u.arcmin
+    centre_sc = SkyCoord(image.ra, image.dec, unit=u.deg)
+    print(skyregion_search_radius)
+    ra_min = centre_sc.spherical_offsets_by(-skyregion_search_radius,0*u.deg)
+    ra_max = centre_sc.spherical_offsets_by(skyregion_search_radius,0*u.deg)
+    dec_min = centre_sc.spherical_offsets_by(0*u.deg,-skyregion_search_radius)
+    dec_max = centre_sc.spherical_offsets_by(0*u.deg,skyregion_search_radius)
+    
+    
+    skyregions = SkyRegion.objects.filter(
+        centre_ra__gte=ra_min.ra.deg,
+        centre_ra__lte=ra_max.ra.deg,
+        centre_dec__gte=dec_min.dec.deg,
+        centre_dec__lte=dec_max.dec.deg
+    )
+    """ 
+    
     skyregions = SkyRegion.objects.filter(
         centre_ra=image.ra,
         centre_dec=image.dec,
         xtr_radius=image.fov_bmin
     )
+
     if skyregions:
         skyr = skyregions.get()
         logger.info('Found sky region %s', skyr)
@@ -1150,12 +1170,20 @@ def _get_skyregion_relations(
     )
 
     seps = target.separation(coords)
+    
+    print(target)
+    print(seps)
+    print(sorted(seps))
+    print(row['xtr_radius'])
 
     # place a slight buffer on the radius to make sure
     # any neighbouring fields are caught
     mask = seps <= row['xtr_radius'] * 1.1 * u.deg
 
     related_ids = ids[mask].to_list()
+    
+    print(row)
+    print(related_ids)
 
     return related_ids
 
