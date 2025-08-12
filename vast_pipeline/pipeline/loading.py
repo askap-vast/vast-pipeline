@@ -189,6 +189,7 @@ def make_upload_sources(
     logger.debug(f"sources_df memory usage: {mem_usage}MB")
     log_total_memory_usage()
 
+    # NOTE - all of this logic will need to be updated for V2 changes
     with transaction.atomic():
         sources = Source.objects.filter(run=pipeline_run)
         if not add_mode and sources.exists():
