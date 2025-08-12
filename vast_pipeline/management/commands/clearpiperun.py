@@ -118,7 +118,6 @@ class Command(BaseCommand):
         for piperun in piperuns:
             p_run_name = get_p_run_name(piperun)
             try:
-            
                 p_run = Run.objects.get(name=p_run_name)
             except Run.DoesNotExist:
                 raise CommandError(f'Pipeline run {p_run_name} does not exist')
