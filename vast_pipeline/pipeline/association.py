@@ -1608,6 +1608,22 @@ def parallel_association(
         max_partition_mb=config['processing']['max_partition_mb']
         )
     logger.debug(f"Running association with {n_workers} CPUs")
+    
+    images_df.to_parquet('association_testing/images_df_association_testing.parquet')
+    
+    print(limit)
+    print(dr_limit)
+    print(bw_limit)
+    print(duplicate_limit)
+    print(config)
+    print(add_mode)
+    print(previous_parquets)
+    print(done_images_df)
+    print(id_incr_par_assoc)
+    print(meta)
+    
+    assert False
+    
     # pass each skyreg_group through the normal association process.
     results = (
         dd.from_pandas(images_df.set_index('skyreg_group'), npartitions=n_partitions)

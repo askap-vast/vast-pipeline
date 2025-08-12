@@ -197,16 +197,7 @@ class FitsImage(Image):
         # set the pixels radius
         # TODO: check calcs
         self.radius_pixels = usable_radius_pix
-        
-        #print(header[fits_naxis1], header[fits_naxis2])
-        
-        #print(usable_radius_pix)
-        #print(self.fov_bmin)
-        #print(self.physical_bmin)
-        
-        #assert 1==0
 
-    def __estimate_nan_padding(data)
     def __get_radius_pixels(
         self, header: fits.Header, fits_naxis1: str, fits_naxis2: str
     ) -> float:
