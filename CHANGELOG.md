@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed adjacent skyregions not being grouped together by correcting the skyregion FoV, which was incorrectly using the radius when it should use the diameter [#858](https://github.com/askap-vast/vast-pipeline/pull/858)
 - Fixed slow image initialisation by disabling comp_nan_fill when fetching header [#841](https://github.com/askap-vast/vast-pipeline/pull/841)
 - Fixed incorrect link in changelog section header [#841](https://github.com/askap-vast/vast-pipeline/pull/841)
 - Fixed potential memory leak in image header extraction [#828](https://github.com/askap-vast/vast-pipeline/pull/828)
@@ -43,6 +44,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#858](https://github.com/askap-vast/vast-pipeline/pull/858): fix: Fixed adjacent skyregions not being grouped together
 - [#841](https://github.com/askap-vast/vast-pipeline/pull/841): fix: Fix incorrect changelog link, fix slow image initialisation
 - [#837](https://github.com/askap-vast/vast-pipeline/pull/837): fix: Updated open_fits to correctly handle NaN-padded compressed images
 - [#828](https://github.com/askap-vast/vast-pipeline/pull/828): fix: Fix potential memory leak in image header extraction
