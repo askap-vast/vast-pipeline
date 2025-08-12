@@ -160,7 +160,10 @@ def make_upload_images(
 
 
 def make_upload_sources(
-    sources_df: pd.DataFrame, pipeline_run: Run, add_mode: bool = False
+    sources_df: pd.DataFrame,
+    pipeline_run: Run,
+    add_mode: bool = False
+    batch_size: int = 1000
 ) -> pd.DataFrame:
     '''
     Delete previous sources for given pipeline run and bulk upload
@@ -168,12 +171,14 @@ def make_upload_sources(
 
     Args:
         sources_df:
-            Holds the measurements associated into sources. The output of of
-            thE association step.
+            Holds the measurements associated into sources. The output of
+            the association step.
         pipeline_run:
             The pipeline Run object.
         add_mode:
-            Whether the pipeline is running in add image mode.
+            Whether the pipeline is running in add image mode. Defaults to False.
+        batch_size:
+            The size of batch to use. Defaults to 1000.
 
     Returns:
         The input dataframe with the 'id' column added.
@@ -184,8 +189,6 @@ def make_upload_sources(
     logger.debug(f"sources_df memory usage: {mem_usage}MB")
     log_total_memory_usage()
 
-    BATCH_SIZE = 1000
-
     with transaction.atomic():
         sources = Source.objects.filter(run=pipeline_run)
         if not add_mode and sources.exists():
@@ -194,8 +197,8 @@ def make_upload_sources(
             ids_to_delete = list(sources.values_list('id', flat=True))
             total_deleted = 0
 
-            for i in range(0, len(source_ids), BATCH_SIZE):
-                batch_ids = source_ids[i : i + BATCH_SIZE]
+            for i in range(0, len(source_ids), batch_size):
+                batch_ids = source_ids[i : i + batch_size]
                 n_deleted, details = Source.objects.filter(id__in=batch_ids).delete()
                 total_deleted += n_deleted
 
