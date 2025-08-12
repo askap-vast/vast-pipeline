@@ -1170,20 +1170,12 @@ def _get_skyregion_relations(
     )
 
     seps = target.separation(coords)
-    
-    print(target)
-    print(seps)
-    print(sorted(seps))
-    print(row['xtr_radius'])
 
     # place a slight buffer on the radius to make sure
     # any neighbouring fields are caught
     mask = seps <= row['xtr_radius'] * 1.1 * u.deg
 
     related_ids = ids[mask].to_list()
-    
-    print(row)
-    print(related_ids)
 
     return related_ids
 
