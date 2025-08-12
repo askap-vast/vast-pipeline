@@ -210,30 +210,6 @@ def make_upload_sources(
             )
     
     
-    """
-    with transaction.atomic():
-        if not add_mode and Source.objects.filter(run=pipeline_run).exists():
-            logger.info('Removing objects from previous pipeline run')
-
-            total_deleted = 0
-            while True:
-                sources_to_delete = Source.objects.filter(run=pipeline_run)[:BATCH_SIZE]
-                if not sources_to_delete.exists():
-                    break
-
-                deleted_count = sources_to_delete.delete()[0]
-                total_deleted += deleted_count
-                logger.debug('Deleted %d objects in this batch', deleted_count)
-
-                # Optional: Pause slightly to reduce DB strain
-                # sleep(0.1)
-
-            logger.info(
-                'Deleting all sources and related objects for this run. '
-                'Total objects deleted: %i',
-                total_deleted
-            )
-    """
     # create sources in DB
     src_dj_ids = bulk_upload_model(
         Source,
