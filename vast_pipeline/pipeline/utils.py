@@ -55,11 +55,13 @@ def get_create_skyreg(image: Image) -> SkyRegion:
     # In the calculations below, it is assumed the image has square
     # pixels (this pipeline has been designed for ASKAP images, so it
     # should always be square). It will likely give wrong results if not
+
     skyregions = SkyRegion.objects.filter(
         centre_ra=image.ra,
         centre_dec=image.dec,
         xtr_radius=image.fov_bmin
     )
+
     if skyregions:
         skyr = skyregions.get()
         logger.info('Found sky region %s', skyr)
