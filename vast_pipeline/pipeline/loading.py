@@ -162,7 +162,7 @@ def make_upload_images(
 def make_upload_sources(
     sources_df: pd.DataFrame,
     pipeline_run: Run,
-    add_mode: bool = False
+    add_mode: bool = False,
     batch_size: int = 1000
 ) -> pd.DataFrame:
     '''
