@@ -206,6 +206,7 @@ class FitsImage(Image):
         
         #assert 1==0
 
+    def __estimate_nan_padding(data)
     def __get_radius_pixels(
         self, header: fits.Header, fits_naxis1: str, fits_naxis2: str
     ) -> float:

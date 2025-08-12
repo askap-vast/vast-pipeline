@@ -1120,17 +1120,21 @@ def association(
             .drop('image_datetime', axis=1)
         )
 
-    if 'skyreg_group' in images_df.columns:
-        skyreg_group = images_df['skyreg_group'].iloc[0]
-        skyreg_tag = " (sky region group %s)" % skyreg_group
+    if images_df.index.name == 'skyreg_group':
+        skyreg_group = images_df.index[0]
+        skyreg_tag = "sky region group %s" % skyreg_group
     else:
         skyreg_group = -1
         skyreg_tag = ""
+    #logger.info(images_df.index)
+    #logger.info(images_df)
+    #logger.info(f"{skyreg_tag}, {skyreg_group}")
+    #assert False
 
     method = config["source_association"]["method"]
 
-    logger.info('Starting association%s.', skyreg_tag)
-    logger.info('Association mode selected: %s.', method)
+    logger.info('%s:Starting association...', skyreg_tag)
+    #logger.info('Association mode selected: %s.', method)
 
     unique_epochs = np.sort(images_df['epoch'].unique())
 
@@ -1146,7 +1150,7 @@ def association(
         images_df = images_df.loc[~image_mask]
         if images_df.empty:
             logger.info(
-                'No new images found, stopping association%s.', skyreg_tag
+                'No new images found, stopping association %s.', skyreg_tag
             )
             sources_df['interim_ew'] = (
                 sources_df['ra_source'].values * sources_df['weight_ew'].values
@@ -1160,7 +1164,7 @@ def association(
                 .rename(columns={'ra_source': 'ra', 'dec_source': 'dec'})
             )
         logger.info(
-            f'Found {images_df.shape[0]} images to add to the run{skyreg_tag}.')
+            f'Found {images_df.shape[0]} images to add to the run {skyreg_tag}.')
         # re-get the unique epochs
         unique_epochs = np.sort(images_df['epoch'].unique())
         start_epoch = 0
@@ -1193,10 +1197,10 @@ def association(
         # can just be returned as sources_df. ra_source and dec_source can just
         # be dropped as the ra and dec are already the average values.
         logger.warning(
-            'No images to associate with!%s.', skyreg_tag
+            'No images to associate with! %s.', skyreg_tag
         )
         logger.info(
-            'Returning base sources only%s.', skyreg_tag
+            'Returning base sources only %s.', skyreg_tag
         )
         # reorder the columns to match Dask expectations (parallel)
         skyc1_srcs = skyc1_srcs[[
@@ -1220,9 +1224,12 @@ def association(
         skyc1_srcs['dec'].values,
         unit=(u.deg, u.deg)
     )
-
+    
+    logger.info(f"Initial size of skyc1: {len(skyc1)}")
+    num_epochs = len(unique_epochs[start_epoch:])
     for it, epoch in enumerate(unique_epochs[start_epoch:]):
-        logger.info('Association iteration: #%i%s', it + 1, skyreg_tag)
+        logger.info(f'{skyreg_tag}: Running association on epoch {epoch} ({it+1} of {num_epochs})')
+        it_timer = StopWatch()
         # load skyc2 source measurements and create SkyCoord
         images = (
             images_df.loc[images_df['epoch'] == epoch, 'image_dj'].to_list()
@@ -1232,11 +1239,13 @@ def association(
             .apply(lambda x: x.beam_bmaj)
             .max()
         )
+        logger.info("%s: epoch %s: Load images and max_beam_maj: %.2f s", skyreg_tag, epoch, it_timer.reset())
         skyc2_srcs = prep_skysrc_df(
             images,
             config["measurements"]["flux_fractional_error"],
             duplicate_limit
         )
+        logger.info("%s: epoch %s: prep_skysrc_df(skyc2_srcs): %.2f s", skyreg_tag, epoch, it_timer.reset())
 
         skyc2_srcs['epoch'] = epoch
         skyc2 = SkyCoord(
@@ -1244,6 +1253,7 @@ def association(
             skyc2_srcs['dec'].values,
             unit=(u.deg, u.deg)
         )
+        logger.info("%s: epoch %s: generate skyc2: %.2f s", skyreg_tag, epoch, it_timer.reset())
 
         if method == 'basic':
             sources_df, skyc1_srcs = basic_association(
@@ -1277,9 +1287,9 @@ def association(
         else:
             raise Exception('association method not implemented!')
 
+        logger.info("%s: epoch %s: association step: %.2f s", skyreg_tag, epoch, it_timer.reset())
         logger.info(
-            'Calculating weighted average RA and Dec for sources%s...',
-            skyreg_tag
+            '%s: epoch %s: Calculating weighted average RA and Dec for sources...', skyreg_tag, epoch,
         )
 
         # account for RA wrapping
@@ -1309,6 +1319,8 @@ def association(
             ]
             .groupby('source')
         )
+        
+        logger.info("%s: epoch %s: Handle wrapping: %.2f s", skyreg_tag, epoch, it_timer.reset())
 
         stats = StopWatch()
 
@@ -1340,13 +1352,13 @@ def association(
             ra_wrap_mask, 'ra'
         ] = weighted_df[ra_wrap_mask].ra.values - 360.
 
-        logger.debug('Groupby concat time %f', stats.reset())
+        logger.debug('%s: epoch %s: Groupby concat time %f', skyreg_tag, epoch, stats.reset())
 
         logger.info(
-            'Finalising base sources catalogue ready for next iteration%s...',
-            skyreg_tag
-        )
-
+            '%s: epoch %s: Finalising base sources catalogue ready for next iteration...', skyreg_tag, epoch
+            )
+        
+        it_timer.reset()
         # merge the weighted ra and dec and replace the values
         skyc1_srcs = skyc1_srcs.merge(
             weighted_df,
@@ -1354,6 +1366,7 @@ def association(
             how='left',
             suffixes=('', '_skyc2')
         )
+        logger.info("%s: epoch %s: merge skyc1_srcs: %.2f s", skyreg_tag, epoch, it_timer.reset())
         del tmp_srcs_df, weighted_df
         skyc1_srcs['ra'] = skyc1_srcs['ra_skyc2']
         skyc1_srcs['dec'] = skyc1_srcs['dec_skyc2']
@@ -1367,6 +1380,7 @@ def association(
                 'uncertainty_ns_skyc2'
             ], axis=1
         )
+        logger.info("%s: epoch %s: Drop old columns from skyc1_srcs: %.2f s", skyreg_tag, epoch, it_timer.reset())
 
         # generate new sky coord ready for next iteration
         skyc1 = SkyCoord(
@@ -1374,6 +1388,7 @@ def association(
             skyc1_srcs['dec'].values,
             unit=(u.deg, u.deg)
         )
+        logger.info("%s: epoch %s: Generate new skyc1: %.2f s", skyreg_tag, epoch, it_timer.reset())
 
         # and update relations in skyc1
         skyc1_srcs = skyc1_srcs.drop('related', axis=1)
@@ -1383,14 +1398,14 @@ def association(
             .groupby('source')['related']
             .apply(lambda x: x.unique().tolist())
         )
+        logger.info("%s: epoch %s: Update skyc1_srcs: %.2f s", skyreg_tag, epoch, it_timer.reset())
 
         skyc1_srcs = skyc1_srcs.merge(
             relations_unique, how='left', left_on='source', right_index=True
         )
+        logger.info("%s: epoch %s: Merge relations into skyc1_srcs: %.2f s", skyreg_tag, epoch, it_timer.reset())
 
-        logger.info(
-            'Association iteration #%i complete%s.', it + 1, skyreg_tag
-        )
+        logger.info('%s: epoch %s: complete.', skyreg_tag, epoch)
 
     # End of iteration over images, ra and dec columns are actually the
     # average over each iteration so remove ave ra and ave dec used for
@@ -1403,10 +1418,12 @@ def association(
     del skyc1_srcs, skyc2_srcs
 
     logger.info(
-        'Total association time: %.2f seconds%s.',
+        '%s: Total association time: %.2f seconds.',
+        skyreg_tag,
         timer.reset_init(),
-        skyreg_tag
     )
+    
+    #assert False
 
     return sources_df
 
@@ -1610,6 +1627,8 @@ def parallel_association(
             meta=meta
         ).compute(n_workers=n_workers, scheduler='processes')
     )
+    
+    assert False
 
     # results are the normal dataframe of results with the columns:
     # 'id', 'uncertainty_ew', 'weight_ew', 'uncertainty_ns', 'weight_ns',
