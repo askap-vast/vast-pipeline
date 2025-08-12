@@ -2,7 +2,7 @@ import os
 from typing import Dict
 
 from django.conf import settings as s
-from django.test import TestCase, override_settings
+from django.test import TransactionTestCase, override_settings
 from django.utils import timezone
 from django.core.management import call_command
 
@@ -15,15 +15,15 @@ TEST_ROOT = os.path.join(s.BASE_DIR, "vast_pipeline", "tests")
 @override_settings(
     PIPELINE_WORKING_DIR=os.path.join(TEST_ROOT, "pipeline-runs"),
 )
-class ClearPipelineRunTest(TestCase):
+class ClearPipelineRunTest(TransactionTestCase):
     band: Band
     run_1: Run
     run_2: Run
     skyregs: Dict[str, SkyRegion]
     images: Dict[str, Image]
 
-    @classmethod
-    def setUpTestData(cls):
+    def setUp(self):
+
         default_image_kwargs = dict(
             measurements_path="",
             polarisation="I",
@@ -63,41 +63,41 @@ class ClearPipelineRunTest(TestCase):
         # The letter suffix indicates the sky region, e.g. image_a1 is in sky region a.
 
         # create a band
-        cls.band = Band.objects.create(name="band", frequency=887, bandwidth=128)
+        self.band = Band.objects.create(name="band", frequency=887, bandwidth=128)
         # create runs
-        cls.run_1 = Run.objects.create(name="run_1", path="run_1")
-        cls.run_2 = Run.objects.create(name="run_2", path="run_2")
+        self.run_1 = Run.objects.create(name="run_1", path="run_1")
+        self.run_2 = Run.objects.create(name="run_2", path="run_2")
         # create sky regions
-        cls.skyregs = {
+        self.skyregs = {
             k: SkyRegion.objects.create(**default_skyreg_kwargs)
             for k in ("a", "b", "c")
         }
         # create some images
-        cls.images = {
+        self.images = {
             f"{k}1": Image.objects.create(
-                band=cls.band,
+                band=self.band,
                 skyreg=skyreg,
                 name=f"image_{k}1",
                 **default_image_kwargs,
             )
-            for k, skyreg in cls.skyregs.items()
+            for k, skyreg in self.skyregs.items()
         }
-        cls.images["a2"] = Image.objects.create(
-            band=cls.band,
-            skyreg=cls.skyregs["a"],
+        self.images["a2"] = Image.objects.create(
+            band=self.band,
+            skyreg=self.skyregs["a"],
             name="image_a2",
             **default_image_kwargs,
         )
-        cls.images["a1"].run.add(cls.run_1)
-        cls.images["a2"].run.add(cls.run_1)
-        cls.images["b1"].run.add(cls.run_1)
-        cls.images["b1"].run.add(cls.run_2)
-        cls.images["c1"].run.add(cls.run_2)
+        self.images["a1"].run.add(self.run_1)
+        self.images["a2"].run.add(self.run_1)
+        self.images["b1"].run.add(self.run_1)
+        self.images["b1"].run.add(self.run_2)
+        self.images["c1"].run.add(self.run_2)
 
-        cls.skyregs["a"].run.add(cls.run_1)
-        cls.skyregs["b"].run.add(cls.run_1)
-        cls.skyregs["b"].run.add(cls.run_2)
-        cls.skyregs["c"].run.add(cls.run_2)
+        self.skyregs["a"].run.add(self.run_1)
+        self.skyregs["b"].run.add(self.run_1)
+        self.skyregs["b"].run.add(self.run_2)
+        self.skyregs["c"].run.add(self.run_2)
 
     def test_data(self):
         """Check that the object relationships exist as expected.
@@ -112,7 +112,7 @@ class ClearPipelineRunTest(TestCase):
         """Delete a run and check that the appropriate objects are also deleted.
         """
         # delete run_1
-        call_command("clearpiperun", self.run_1.name)
+        call_command("clearpiperun", self.run_1.name, delete_images=True)
 
         # ensure the images and sky regions that were only used in run_1 are deleted
         with self.assertRaises(Image.DoesNotExist):
@@ -121,12 +121,13 @@ class ClearPipelineRunTest(TestCase):
             _ = Image.objects.get(name="image_a2")
         with self.assertRaises(SkyRegion.DoesNotExist):
             _ = SkyRegion.objects.get(pk=self.skyregs["a"].pk)
+
         # ensure the images and sky regions that were used in both run_1 and run_2 remain
         _ = Image.objects.get(name="image_b1")
         _ = SkyRegion.objects.get(pk=self.skyregs["b"].pk)
 
         # delete run_2
-        call_command("clearpiperun", self.run_2.name)
+        call_command("clearpiperun", self.run_2.name, delete_images=True)
         # ensure no images nor sky regions remain
         self.assertEqual(Image.objects.count(), 0)
         self.assertEqual(SkyRegion.objects.count(), 0)
