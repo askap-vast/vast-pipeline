@@ -1283,20 +1283,17 @@ def association(
         )
 
         # account for RA wrapping
-        ra_wrap_mask = sources_df.ra <= 0.1
-        sources_df['ra_wrap'] = sources_df.ra.values
-        sources_df.loc[
-            ra_wrap_mask, 'ra_wrap'
-        ] = sources_df[ra_wrap_mask].ra.values + 360.
+        ra = sources_df.ra.values
+        dec = sources_df.dec.values
+        ra_wrap_mask = ra <= 0.1 # Why is this 0.1 and not 0.0? Is this the cause of issue 711?
+        ra[ra_wrap_mask] = ra[ra_wrap_mask]+360.
 
         sources_df['interim_ew'] = (
-            sources_df['ra_wrap'].values * sources_df['weight_ew'].values
+            ra * sources_df['weight_ew'].values
         )
         sources_df['interim_ns'] = (
             sources_df['dec'].values * sources_df['weight_ns'].values
         )
-
-        sources_df = sources_df.drop(['ra_wrap'], axis=1)
 
         tmp_srcs_df = (
             sources_df.loc[
