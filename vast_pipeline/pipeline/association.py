@@ -1031,14 +1031,14 @@ def advanced_association(
     sources_df = pd.concat(
         [sources_df, skyc2_srcs_toappend],
         ignore_index=True
-    ).reset_index(drop=True)
+    )
 
     # update skyc1 and df for next association iteration
     # calculate average angles for skyc1
     skyc1_srcs = pd.concat(
         [skyc1_srcs, new_sources],
         ignore_index=True
-    ).reset_index(drop=True)
+    )
 
     # also need to append any related sources that created a new
     # source, we can use the skyc2_srcs_toappend to get these
