@@ -1122,10 +1122,14 @@ def association(
 
     if 'skyreg_group' in images_df.columns:
         skyreg_group = images_df['skyreg_group'].iloc[0]
-        skyreg_tag = " (sky region group %s)" % skyreg_group
+    elif images_df.index.name == 'skyreg_group':
+        skyreg_group = images_df.index[0]
     else:
         skyreg_group = -1
         skyreg_tag = ""
+
+    if skyreg_group > 0:
+        skyreg_tag = " (sky region group %s)" % skyreg_group
 
     method = config["source_association"]["method"]
 
