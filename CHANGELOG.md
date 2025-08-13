@@ -20,7 +20,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Speed up wrap handling by not writing to main dataframe [#861](https://github.com/askap-vast/vast-pipeline/pull/861)
 - Speed up tmp_srcs_df groupby by not sorting (2x faster) [#861](https://github.com/askap-vast/vast-pipeline/pull/861)
 - Speed up various steps by not computing dataframe values multiple times [#861](https://github.com/askap-vast/vast-pipeline/pull/861)
-- Speed up cleanup step by using rename rather than copying and dropping [#861](https://github.com/askap-vast/vast-pipeline/pull/861)
 - Converted forced fits and sources removals for re-runs to use raw SQL queries [#840](https://github.com/askap-vast/vast-pipeline/pull/840)
 - Updated open_fits to correctly handle NaN-padded compressed images [#837](https://github.com/askap-vast/vast-pipeline/pull/837)
 - Upgrade measurements file generation to use dask in order to handle larger runs [#789](https://github.com/askap-vast/vast-pipeline/pull/797)
