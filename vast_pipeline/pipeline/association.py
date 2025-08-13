@@ -1357,12 +1357,18 @@ def association(
         )
         del tmp_srcs_df, weighted_df
 
-        skyc1_srcs = skyc1_srcs.rename(columns={
-            'ra_skyc2': 'ra',
-            'dec_skyc2': 'dec',
-            'uncertainty_ew_skyc2': 'uncertainty_ew',
-            'uncertainty_ns_skyc2': 'uncertainty_ns',
-        })
+        skyc1_srcs['ra'] = skyc1_srcs['ra_skyc2']
+        skyc1_srcs['dec'] = skyc1_srcs['dec_skyc2']
+        skyc1_srcs['uncertainty_ew'] = skyc1_srcs['uncertainty_ew_skyc2']
+        skyc1_srcs['uncertainty_ns'] = skyc1_srcs['uncertainty_ns_skyc2']
+        skyc1_srcs = skyc1_srcs.drop(
+            [
+                'ra_skyc2',
+                'dec_skyc2',
+                'uncertainty_ew_skyc2',
+                'uncertainty_ns_skyc2'
+            ], axis=1
+        )
 
         # generate new sky coord ready for next iteration
         skyc1 = SkyCoord(
