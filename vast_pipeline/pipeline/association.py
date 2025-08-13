@@ -864,7 +864,7 @@ def basic_association(
     sources_df = pd.concat(
         [sources_df, skyc2_srcs],
         ignore_index=True
-    ).reset_index(drop=True)
+    )
 
     # and update skyc1 with the sources that were created from the one
     # to many relations and any new sources.
@@ -876,7 +876,7 @@ def basic_association(
             ]
         ],
         ignore_index=True
-    ).reset_index(drop=True)
+    )
 
     return sources_df, skyc1_srcs
 
@@ -1031,14 +1031,14 @@ def advanced_association(
     sources_df = pd.concat(
         [sources_df, skyc2_srcs_toappend],
         ignore_index=True
-    ).reset_index(drop=True)
+    )
 
     # update skyc1 and df for next association iteration
     # calculate average angles for skyc1
     skyc1_srcs = pd.concat(
         [skyc1_srcs, new_sources],
         ignore_index=True
-    ).reset_index(drop=True)
+    )
 
     # also need to append any related sources that created a new
     # source, we can use the skyc2_srcs_toappend to get these
@@ -1122,10 +1122,14 @@ def association(
 
     if 'skyreg_group' in images_df.columns:
         skyreg_group = images_df['skyreg_group'].iloc[0]
-        skyreg_tag = " (sky region group %s)" % skyreg_group
+    elif images_df.index.name == 'skyreg_group':
+        skyreg_group = images_df.index[0]
     else:
         skyreg_group = -1
         skyreg_tag = ""
+
+    if skyreg_group > 0:
+        skyreg_tag = " (sky region group %s)" % skyreg_group
 
     method = config["source_association"]["method"]
 
@@ -1221,12 +1225,29 @@ def association(
         unit=(u.deg, u.deg)
     )
 
-    for it, epoch in enumerate(unique_epochs[start_epoch:]):
-        logger.info('Association iteration: #%i%s', it + 1, skyreg_tag)
-        # load skyc2 source measurements and create SkyCoord
-        images = (
-            images_df.loc[images_df['epoch'] == epoch, 'image_dj'].to_list()
+    iter_timer = StopWatch()
+    epochs = unique_epochs[start_epoch:]
+    num_iterations = len(epochs)
+    for it, epoch in enumerate(epochs):
+        logger.info(
+            'Starting association iteration: %i/%i%s',
+            it + 1,
+            num_iterations,
+            skyreg_tag
         )
+        logger.debug('len(skyc1): %i%s', len(skyc1_srcs), skyreg_tag)
+        # load skyc2 source measurements and create SkyCoord
+        images_df_rows = images_df.loc[images_df['epoch'] == epoch]
+        images = (
+            images_df_rows['image_dj'].to_list()
+        )
+        image_names = (
+            images_df_rows['image_name'].to_list()
+        )
+        
+        image_name_str = ",".join(image_names)
+        logger.info('Loaded %s%s', image_name_str, skyreg_tag)
+
         max_beam_maj = (
             images_df.loc[images_df['epoch'] == epoch, 'image_dj']
             .apply(lambda x: x.beam_bmaj)
@@ -1237,6 +1258,7 @@ def association(
             config["measurements"]["flux_fractional_error"],
             duplicate_limit
         )
+        logger.debug('len(skyc2_srcs): %i%s', len(skyc2_srcs), skyreg_tag)
 
         skyc2_srcs['epoch'] = epoch
         skyc2 = SkyCoord(
@@ -1245,6 +1267,8 @@ def association(
             unit=(u.deg, u.deg)
         )
 
+        
+        iter_timer.reset()
         if method == 'basic':
             sources_df, skyc1_srcs = basic_association(
                 sources_df,
@@ -1276,6 +1300,11 @@ def association(
             )
         else:
             raise Exception('association method not implemented!')
+        logger.debug(
+            'Time to carry out association: %.2f%s',
+            iter_timer.reset(),
+            skyreg_tag
+        )
 
         logger.info(
             'Calculating weighted average RA and Dec for sources%s...',
@@ -1283,20 +1312,18 @@ def association(
         )
 
         # account for RA wrapping
-        ra_wrap_mask = sources_df.ra <= 0.1
-        sources_df['ra_wrap'] = sources_df.ra.values
-        sources_df.loc[
-            ra_wrap_mask, 'ra_wrap'
-        ] = sources_df[ra_wrap_mask].ra.values + 360.
+        iter_timer.reset()
+        ra = sources_df.ra.values
+        dec = sources_df.dec.values
+        ra_wrap_mask = ra <= 0.1 # Why is this 0.1 and not 0.0? Is this the cause of issue 711?
+        ra[ra_wrap_mask] = ra[ra_wrap_mask]+360.
 
         sources_df['interim_ew'] = (
-            sources_df['ra_wrap'].values * sources_df['weight_ew'].values
+            ra * sources_df['weight_ew'].values
         )
         sources_df['interim_ns'] = (
             sources_df['dec'].values * sources_df['weight_ns'].values
         )
-
-        sources_df = sources_df.drop(['ra_wrap'], axis=1)
 
         tmp_srcs_df = (
             sources_df.loc[
@@ -1307,16 +1334,22 @@ def association(
                     'weight_ns'
                 ]
             ]
-            .groupby('source')
+            .groupby('source', sort=False)
+        )
+        logger.debug(
+            'Time to handle RA wrapping: %.2f%s',
+            iter_timer.reset(),
+            skyreg_tag
         )
 
-        stats = StopWatch()
+        weight_ew = tmp_srcs_df['weight_ew'].sum()
+        weight_ns = tmp_srcs_df['weight_ns'].sum()
 
-        wm_ra = tmp_srcs_df['interim_ew'].sum() / tmp_srcs_df['weight_ew'].sum()
-        wm_uncertainty_ew = 1. / np.sqrt(tmp_srcs_df['weight_ew'].sum())
+        wm_ra = tmp_srcs_df['interim_ew'].sum() / weight_ew
+        wm_uncertainty_ew = 1. / np.sqrt(weight_ew)
 
-        wm_dec = tmp_srcs_df['interim_ns'].sum() / tmp_srcs_df['weight_ns'].sum()
-        wm_uncertainty_ns = 1. / np.sqrt(tmp_srcs_df['weight_ns'].sum())
+        wm_dec = tmp_srcs_df['interim_ns'].sum() / weight_ns
+        wm_uncertainty_ns = 1. / np.sqrt(weight_ns)
 
         weighted_df = (
             pd.concat(
@@ -1335,12 +1368,17 @@ def association(
         )
 
         # correct the RA wrapping
-        ra_wrap_mask = weighted_df.ra >= 360.
+        weighted_ra = weighted_df.ra.values
+        ra_wrap_mask = weighted_ra >= 360.
         weighted_df.loc[
             ra_wrap_mask, 'ra'
-        ] = weighted_df[ra_wrap_mask].ra.values - 360.
+        ] = weighted_ra[ra_wrap_mask] - 360.
 
-        logger.debug('Groupby concat time %f', stats.reset())
+        logger.debug(
+            'Time to recalculate wavg coordinates: %.2f%s',
+            iter_timer.reset(),
+            skyreg_tag
+        )
 
         logger.info(
             'Finalising base sources catalogue ready for next iteration%s...',
@@ -1355,6 +1393,7 @@ def association(
             suffixes=('', '_skyc2')
         )
         del tmp_srcs_df, weighted_df
+
         skyc1_srcs['ra'] = skyc1_srcs['ra_skyc2']
         skyc1_srcs['dec'] = skyc1_srcs['dec_skyc2']
         skyc1_srcs['uncertainty_ew'] = skyc1_srcs['uncertainty_ew_skyc2']
@@ -1387,9 +1426,18 @@ def association(
         skyc1_srcs = skyc1_srcs.merge(
             relations_unique, how='left', left_on='source', right_index=True
         )
+        
+        logger.debug(
+            'Time to finalise sources: %.2f%s',
+            iter_timer.reset(),
+            skyreg_tag
+        )
 
         logger.info(
-            'Association iteration #%i complete%s.', it + 1, skyreg_tag
+            'Completed association iteration: %i/%i%s',
+            it + 1,
+            num_iterations,
+            skyreg_tag
         )
 
     # End of iteration over images, ra and dec columns are actually the

@@ -16,6 +16,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Speed up final step of basic/advanced association by not resetting index twice (factor of 5-100x faster!) [#861](https://github.com/askap-vast/vast-pipeline/pull/861)
+- Speed up wrap handling by not writing to main dataframe [#861](https://github.com/askap-vast/vast-pipeline/pull/861)
+- Speed up tmp_srcs_df groupby by not sorting (2x faster) [#861](https://github.com/askap-vast/vast-pipeline/pull/861)
+- Speed up various steps by not computing dataframe values multiple times [#861](https://github.com/askap-vast/vast-pipeline/pull/861)
 - Converted forced fits and sources removals for re-runs to use raw SQL queries [#840](https://github.com/askap-vast/vast-pipeline/pull/840)
 - Updated open_fits to correctly handle NaN-padded compressed images [#837](https://github.com/askap-vast/vast-pipeline/pull/837)
 - Upgrade measurements file generation to use dask in order to handle larger runs [#789](https://github.com/askap-vast/vast-pipeline/pull/797)
@@ -26,6 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed broken skyregion group tag in association logging [#861](https://github.com/askap-vast/vast-pipeline/pull/861)
 - Fixed extremely slow pipeline run deletion via batching [#840](https://github.com/askap-vast/vast-pipeline/pull/840)
 - Fixed adjacent skyregions not being grouped together by correcting the skyregion FoV, which was incorrectly using the radius when it should use the diameter [#858](https://github.com/askap-vast/vast-pipeline/pull/858)
 - Fixed slow image initialisation by disabling comp_nan_fill when fetching header [#841](https://github.com/askap-vast/vast-pipeline/pull/841)
@@ -46,6 +51,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#861](https://github.com/askap-vast/vast-pipeline/pull/861): fix, feat: Major optimisations and minor logging tweaks in association step
 - [#840](https://github.com/askap-vast/vast-pipeline/pull/840): fix, feat: Optimise database clearing (sources, forced fits and runs)
 - [#858](https://github.com/askap-vast/vast-pipeline/pull/858): fix: Fixed adjacent skyregions not being grouped together
 - [#841](https://github.com/askap-vast/vast-pipeline/pull/841): fix: Fix incorrect changelog link, fix slow image initialisation
