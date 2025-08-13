@@ -864,7 +864,7 @@ def basic_association(
     sources_df = pd.concat(
         [sources_df, skyc2_srcs],
         ignore_index=True
-    ).reset_index(drop=True)
+    )
 
     # and update skyc1 with the sources that were created from the one
     # to many relations and any new sources.
@@ -876,7 +876,7 @@ def basic_association(
             ]
         ],
         ignore_index=True
-    ).reset_index(drop=True)
+    )
 
     return sources_df, skyc1_srcs
 
@@ -1045,25 +1045,15 @@ def advanced_association(
     sources_df_orig = pd.concat(
         [sources_df, skyc2_srcs_toappend],
         ignore_index=True
-    ).reset_index(drop=True)
-    logger.info("Time to concat to sources_df (orig): %.2f", a_timer.reset())
-    
-    sources_df = pd.concat(
-        [sources_df, skyc2_srcs_toappend],
-        ignore_index=True
-    )#.reset_index(drop=True)
-    logger.info("Time to concat to sources_df (new): %.2f", a_timer.reset())
-    
-    logger.info(sources_df.equals(sources_df_orig))
-    
-    a_timer.reset()
+    )
+    logger.info("Time to update sources_df for next iter: %.2f", a_timer.reset())
 
     # update skyc1 and df for next association iteration
     # calculate average angles for skyc1
     skyc1_srcs = pd.concat(
         [skyc1_srcs, new_sources],
         ignore_index=True
-    ).reset_index(drop=True)
+    )
     logger.info("Time to update skyc1_srcs for next iter: %.2f", a_timer.reset())
 
     # also need to append any related sources that created a new
@@ -1327,107 +1317,44 @@ def association(
         wrap_timer = StopWatch()
 
         # account for RA wrapping
-        
-        if orig:
-            ra_wrap_mask = sources_df.ra <= 0.1
-            logger.info("%s: epoch %s: generate wrap_mask %.2f s", skyreg_tag, epoch, wrap_timer.reset())
-            sources_df['ra_wrap'] = sources_df.ra.values
-            logger.info("%s: epoch %s: generate dummy wrap values %.2f s", skyreg_tag, epoch, wrap_timer.reset())
+        ra = sources_df.ra.values
+        dec = sources_df.dec.values
+        ra_wrap_mask = ra <= 0.1 # Why is this 0.1 and not 0.0? Is this the cause of issue 711?
+        ra[ra_wrap_mask] = ra[ra_wrap_mask]+360.
+
+        sources_df['interim_ew'] = (
+            ra * sources_df['weight_ew'].values
+        )
+        sources_df['interim_ns'] = (
+            sources_df['dec'].values * sources_df['weight_ns'].values
+        )
+        logger.info("%s: epoch %s: Initial wrapping calcs %.2f s", skyreg_tag, epoch, wrap_timer.reset())
+
+        tmp_srcs_df = (
             sources_df.loc[
-                ra_wrap_mask, 'ra_wrap'
-            ] = sources_df[ra_wrap_mask].ra.values + 360.
-            logger.info("%s: epoch %s: Calculate wrap values %.2f s", skyreg_tag, epoch, wrap_timer.reset())
-
-            sources_df['interim_ew'] = (
-                sources_df['ra_wrap'].values * sources_df['weight_ew'].values
-            )
-            sources_df['interim_ns'] = (
-                sources_df['dec'].values * sources_df['weight_ns'].values
-            )
-            logger.info("%s: epoch %s: Assign interm ew and ns values %.2f s", skyreg_tag, epoch, wrap_timer.reset())
-
-            sources_df = sources_df.drop(['ra_wrap'], axis=1)
-            
-            logger.info("%s: epoch %s: drop wrap values %.2f s", skyreg_tag, epoch, wrap_timer.reset())
-
-            tmp_srcs_df = (
-                sources_df.loc[
-                    (sources_df['source'] != -1) & (sources_df['forced'] == False),
-                    [
-                        'ra', 'dec', 'uncertainty_ew', 'uncertainty_ns',
-                        'source', 'interim_ew', 'interim_ns', 'weight_ew',
-                        'weight_ns'
-                    ]
+                (sources_df['source'] != -1) & (sources_df['forced'] == False),
+                [
+                    'ra', 'dec', 'uncertainty_ew', 'uncertainty_ns',
+                    'source', 'interim_ew', 'interim_ns', 'weight_ew',
+                    'weight_ns'
                 ]
-                .groupby('source')
-            )
-            logger.info("%s: epoch %s: build tmp_srcs_df %.2f s", skyreg_tag, epoch, wrap_timer.reset())
-        else:
-            ra = sources_df.ra.values
-            dec = sources_df.dec.values
-            ra_wrap_mask = ra <= 0.1
-            
-            logger.info("%s: epoch %s: generate wrap_mask %.2f s", skyreg_tag, epoch, wrap_timer.reset())
-            logger.info("%s: epoch %s: generate dummy wrap values %.2f s", skyreg_tag, epoch, wrap_timer.reset())
-            ra[ra_wrap_mask] = ra[ra_wrap_mask]+360.
-            logger.info("%s: epoch %s: Calculate wrap values %.2f s", skyreg_tag, epoch, wrap_timer.reset())
-
-            sources_df['interim_ew'] = (
-                ra * sources_df['weight_ew'].values
-            )
-            sources_df['interim_ns'] = (
-                sources_df['dec'].values * sources_df['weight_ns'].values
-            )
-            logger.info("%s: epoch %s: Assign interm ew and ns values %.2f s", skyreg_tag, epoch, wrap_timer.reset())
-            
-            logger.info("%s: epoch %s: drop wrap values %.2f s", skyreg_tag, epoch, wrap_timer.reset())
-
-            tmp_srcs_df = (
-                sources_df.loc[
-                    (sources_df['source'] != -1) & (sources_df['forced'] == False),
-                    [
-                        'ra', 'dec', 'uncertainty_ew', 'uncertainty_ns',
-                        'source', 'interim_ew', 'interim_ns', 'weight_ew',
-                        'weight_ns'
-                    ]
-                ]
-                .groupby('source')
-            )
-            logger.info("%s: epoch %s: build tmp_srcs_df orig %.2f s", skyreg_tag, epoch, wrap_timer.reset())
-            
-            tmp_srcs_df = (
-                sources_df.loc[
-                    (sources_df['source'] != -1) & (sources_df['forced'] == False),
-                    [
-                        'ra', 'dec', 'uncertainty_ew', 'uncertainty_ns',
-                        'source', 'interim_ew', 'interim_ns', 'weight_ew',
-                        'weight_ns'
-                    ]
-                ]
-                .groupby('source', sort=False)
-            )
-            logger.info("%s: epoch %s: build tmp_srcs_df no sort %.2f s", skyreg_tag, epoch, wrap_timer.reset())
-
-
-
-            mask = (sources_df['source'] != -1) & (~sources_df['forced'])
-            cols = [
-                'ra', 'dec', 'uncertainty_ew', 'uncertainty_ns',
-                'source', 'interim_ew', 'interim_ns', 'weight_ew',
-                'weight_ns'
             ]
-            tmp_srcs_df = sources_df[mask][cols].groupby('source', sort=False)
-            logger.info("%s: epoch %s: build tmp_srcs_df speedup %.2f s", skyreg_tag, epoch, wrap_timer.reset())
+            .groupby('source')
+        )
+        logger.info("%s: epoch %s: build tmp_srcs_df %.2f s", skyreg_tag, epoch, wrap_timer.reset())
         
         logger.info("%s: epoch %s: Handle wrapping: %.2f s", skyreg_tag, epoch, it_timer.reset())
 
         stats = StopWatch()
 
-        wm_ra = tmp_srcs_df['interim_ew'].sum() / tmp_srcs_df['weight_ew'].sum()
-        wm_uncertainty_ew = 1. / np.sqrt(tmp_srcs_df['weight_ew'].sum())
+        weight_ew = tmp_srcs_df['weight_ew'].sum()
+        weight_ns = tmp_srcs_df['weight_ns'].sum()
 
-        wm_dec = tmp_srcs_df['interim_ns'].sum() / tmp_srcs_df['weight_ns'].sum()
-        wm_uncertainty_ns = 1. / np.sqrt(tmp_srcs_df['weight_ns'].sum())
+        wm_ra = tmp_srcs_df['interim_ew'].sum() / weight_ew
+        wm_uncertainty_ew = 1. / np.sqrt(weight_ew)
+
+        wm_dec = tmp_srcs_df['interim_ns'].sum() / weight_ns
+        wm_uncertainty_ns = 1. / np.sqrt(weight_ns)
 
         weighted_df = (
             pd.concat(
@@ -1446,10 +1373,11 @@ def association(
         )
 
         # correct the RA wrapping
-        ra_wrap_mask = weighted_df.ra >= 360.
+        weighted_ra = weighted_df.ra.values
+        ra_wrap_mask = weighted_ra >= 360.
         weighted_df.loc[
             ra_wrap_mask, 'ra'
-        ] = weighted_df[ra_wrap_mask].ra.values - 360.
+        ] = weighted_ra[ra_wrap_mask] - 360.
 
         logger.debug('%s: epoch %s: Groupby concat time %f', skyreg_tag, epoch, stats.reset())
 
@@ -1467,19 +1395,14 @@ def association(
         )
         logger.info("%s: epoch %s: merge skyc1_srcs: %.2f s", skyreg_tag, epoch, it_timer.reset())
         del tmp_srcs_df, weighted_df
-        skyc1_srcs['ra'] = skyc1_srcs['ra_skyc2']
-        skyc1_srcs['dec'] = skyc1_srcs['dec_skyc2']
-        skyc1_srcs['uncertainty_ew'] = skyc1_srcs['uncertainty_ew_skyc2']
-        skyc1_srcs['uncertainty_ns'] = skyc1_srcs['uncertainty_ns_skyc2']
-        skyc1_srcs = skyc1_srcs.drop(
-            [
-                'ra_skyc2',
-                'dec_skyc2',
-                'uncertainty_ew_skyc2',
-                'uncertainty_ns_skyc2'
-            ], axis=1
-        )
-        logger.info("%s: epoch %s: Drop old columns from skyc1_srcs: %.2f s", skyreg_tag, epoch, it_timer.reset())
+
+        skyc1_srcs = skyc1_srcs.rename(columns={
+            'ra_skyc2': 'ra',
+            'dec_skyc2': 'dec',
+            'uncertainty_ew_skyc2': 'uncertainty_ew',
+            'uncertainty_ns_skyc2': 'uncertainty_ns',
+        })
+        logger.info("%s: epoch %s: Rename columns in skyc1_srcs: %.2f s", skyreg_tag, epoch, it_timer.reset())
 
         # generate new sky coord ready for next iteration
         skyc1 = SkyCoord(

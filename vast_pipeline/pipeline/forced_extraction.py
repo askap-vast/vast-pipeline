@@ -10,11 +10,10 @@ from glob import glob
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from django.conf import settings
-from django.db import transaction
 from pyarrow.parquet import read_schema
 from typing import Any, List, Tuple, Dict, Optional
 
-from vast_pipeline.models import Image, Measurement, Run
+from vast_pipeline.models import Image, Run
 from vast_pipeline.pipeline.loading import make_upload_measurements
 
 from forced_phot import ForcedPhot
@@ -25,7 +24,7 @@ from vast_pipeline.pipeline.utils import log_total_memory_usage
 logger = logging.getLogger(__name__)
 
 
-def remove_forced_meas(run_path: str) -> None:
+def remove_forced_meas(run_path: str, batch_size=10000) -> None:
     '''
     Remove forced measurements from the database if forced parquet files
     are found.
@@ -33,6 +32,8 @@ def remove_forced_meas(run_path: str) -> None:
     Args:
         run_path:
             The run path of the pipeline run.
+        batch_size:
+            Number of forced measurements to delete per iteration
 
     Returns:
         None
@@ -47,17 +48,26 @@ def remove_forced_meas(run_path: str) -> None:
             .compute()
             .tolist()
         )
-        obj_to_delete = Measurement.objects.filter(id__in=ids)
-        del ids
-        if obj_to_delete.exists():
+
+        forced_meas = Measurement.objects.filter(id__in=ids)
+        if forced_meas.exists():
             with transaction.atomic():
-                n_del, detail_del = obj_to_delete.delete()
+                logger.info("Iterating over %d forced measurements", len(forced_meas))
+                n_batches = round(n_ids/batch_size)
+                logger.info("Using %d batches of %d measurements", n_batches, batch_size)
+
+                ids_to_delete = list(forced_meas.values_list('id', flat=True))
+                total_deleted = 0
+
+                for i in range(0, len(source_ids), BATCH_SIZE):
+                    batch_ids = ids_to_delete[i : i + BATCH_SIZE]
+                    n_deleted, details = Measurement.objects.filter(id__in=batch_ids).delete()
+                    total_deleted += n_deleted
+
                 logger.info(
-                    ('Deleting all previous forced measurement and association'
-                     ' objects for this run. Total objects deleted: %i'),
-                    n_del,
+                    'Total objects deleted: %i',
+                    total_deleted
                 )
-                logger.debug('(type, #deleted): %s', detail_del)
 
 
 def get_data_from_parquet(
