@@ -932,11 +932,15 @@ def advanced_association(
         The output `skyc1_srcs` with updated with new sources from the
             association.
     '''
+    #logger = logging.getLogger(__name__)
+    
+    a_timer = StopWatch()
     # read the needed sources fields
     # Step 1: get matches within semimajor axis of image.
     idx_skyc1, idx_skyc2, d2d, d3d = skyc2.search_around_sky(
         skyc1, bw_max
     )
+    logger.info("Time to search around sky: %.2f", a_timer.reset())
 
     # Step 2: merge the candidates so the de ruiter can be calculated
     temp_skyc1_srcs = (
@@ -949,6 +953,7 @@ def advanced_association(
         .reset_index()
         .rename(columns={'index': 'index_old'})
     )
+    logger.info("Time to create temp_srcs: %.2f", a_timer.reset())
 
     temp_skyc2_srcs['d2d'] = d2d.arcsec
     temp_srcs = temp_skyc1_srcs.merge(
@@ -957,6 +962,7 @@ def advanced_association(
         right_index=True,
         suffixes=('_skyc1', '_skyc2')
     )
+    logger.info("Time to merge temp_srcs: %.2f", a_timer.reset())
 
     # drop the double d2d column and keep the d2d_skyc2 as assigned above
     temp_srcs = (
@@ -976,22 +982,26 @@ def advanced_association(
         temp_srcs = temp_srcs[temp_srcs['dr'] <= dr_limit]
     else:
         temp_srcs['dr'] = 0.
+    logger.info("Time to do de Ruiter: %.2f", a_timer.reset())
 
     # Now have the 'good' matches
     # Step 5: Check for one-to-many, many-to-one and many-to-many
     # associations. First the many-to-many
+    a_timer.reset()
     temp_srcs = many_to_many_advanced(temp_srcs, method)
-
+    logger.info("Time to do many_to_many: %.2f", a_timer.reset())
     # Next one-to-many
     # Get the sources which are doubled
     temp_srcs, sources_df = one_to_many_advanced(
         temp_srcs, sources_df, method, id_incr_par_assoc
     )
+    logger.info("Time to do one_to_many: %.2f", a_timer.reset())
 
     # Finally many-to-one associations, the opposite of above but we
     # don't have to create new ids for these so it's much simpler in fact
     # we don't need to do anything but lets get the number for debugging.
     temp_srcs = many_to_one_advanced(temp_srcs)
+    logger.info("Time to do many_to_one: %.2f", a_timer.reset())
 
     # Now everything in place to append
     # First the skyc2 sources with a match.
@@ -1004,6 +1014,7 @@ def advanced_association(
     skyc2_srcs_toappend['related'] = temp_srcs['related_skyc1'].values
     skyc2_srcs_toappend['d2d'] = temp_srcs['d2d'].values
     skyc2_srcs_toappend['dr'] = temp_srcs['dr'].values
+    logger.info("Time to prepare for append: %.2f", a_timer.reset())
 
     # and get the skyc2 sources with no match
     logger.info(
@@ -1022,16 +1033,30 @@ def advanced_association(
         start_elem + new_sources.shape[0],
         dtype=int
     )
+    logger.info("Time to get new_sources: %.2f", a_timer.reset())
     skyc2_srcs_toappend = pd.concat(
         [skyc2_srcs_toappend, new_sources],
         ignore_index=True
     )
+    logger.info("Time to get skyc2_srcs_toappend: %.2f", a_timer.reset())
+    
 
     # and skyc2 is now ready to be concatenated with source_df
-    sources_df = pd.concat(
+    sources_df_orig = pd.concat(
         [sources_df, skyc2_srcs_toappend],
         ignore_index=True
     ).reset_index(drop=True)
+    logger.info("Time to concat to sources_df (orig): %.2f", a_timer.reset())
+    
+    sources_df = pd.concat(
+        [sources_df, skyc2_srcs_toappend],
+        ignore_index=True
+    )#.reset_index(drop=True)
+    logger.info("Time to concat to sources_df (new): %.2f", a_timer.reset())
+    
+    logger.info(sources_df.equals(sources_df_orig))
+    
+    a_timer.reset()
 
     # update skyc1 and df for next association iteration
     # calculate average angles for skyc1
@@ -1039,6 +1064,7 @@ def advanced_association(
         [skyc1_srcs, new_sources],
         ignore_index=True
     ).reset_index(drop=True)
+    logger.info("Time to update skyc1_srcs for next iter: %.2f", a_timer.reset())
 
     # also need to append any related sources that created a new
     # source, we can use the skyc2_srcs_toappend to get these
@@ -1050,6 +1076,7 @@ def advanced_association(
             ]
         ]
     )
+    logger.info("Time to append to skyc1_srcs for next iter: %.2f", a_timer.reset())
 
     return sources_df, skyc1_srcs
 
@@ -1108,6 +1135,8 @@ def association(
         Exception: Raised if association method is not valid.
     '''
     timer = StopWatch()
+    
+    orig = False
 
     if parallel:
         # Skip empty groups that seems to sometimes happen with the
@@ -1246,6 +1275,10 @@ def association(
             duplicate_limit
         )
         logger.info("%s: epoch %s: prep_skysrc_df(skyc2_srcs): %.2f s", skyreg_tag, epoch, it_timer.reset())
+        
+        logger.info("%s: epoch %s: len(skyc2_srcs): %d", skyreg_tag, epoch, len(skyc2_srcs))
+        logger.info("%s: epoch %s: len(skyc1_srcs): %d", skyreg_tag, epoch, len(skyc1_srcs))
+        it_timer.reset()
 
         skyc2_srcs['epoch'] = epoch
         skyc2 = SkyCoord(
@@ -1291,34 +1324,100 @@ def association(
         logger.info(
             '%s: epoch %s: Calculating weighted average RA and Dec for sources...', skyreg_tag, epoch,
         )
+        wrap_timer = StopWatch()
 
         # account for RA wrapping
-        ra_wrap_mask = sources_df.ra <= 0.1
-        sources_df['ra_wrap'] = sources_df.ra.values
-        sources_df.loc[
-            ra_wrap_mask, 'ra_wrap'
-        ] = sources_df[ra_wrap_mask].ra.values + 360.
-
-        sources_df['interim_ew'] = (
-            sources_df['ra_wrap'].values * sources_df['weight_ew'].values
-        )
-        sources_df['interim_ns'] = (
-            sources_df['dec'].values * sources_df['weight_ns'].values
-        )
-
-        sources_df = sources_df.drop(['ra_wrap'], axis=1)
-
-        tmp_srcs_df = (
+        
+        if orig:
+            ra_wrap_mask = sources_df.ra <= 0.1
+            logger.info("%s: epoch %s: generate wrap_mask %.2f s", skyreg_tag, epoch, wrap_timer.reset())
+            sources_df['ra_wrap'] = sources_df.ra.values
+            logger.info("%s: epoch %s: generate dummy wrap values %.2f s", skyreg_tag, epoch, wrap_timer.reset())
             sources_df.loc[
-                (sources_df['source'] != -1) & (sources_df['forced'] == False),
-                [
-                    'ra', 'dec', 'uncertainty_ew', 'uncertainty_ns',
-                    'source', 'interim_ew', 'interim_ns', 'weight_ew',
-                    'weight_ns'
+                ra_wrap_mask, 'ra_wrap'
+            ] = sources_df[ra_wrap_mask].ra.values + 360.
+            logger.info("%s: epoch %s: Calculate wrap values %.2f s", skyreg_tag, epoch, wrap_timer.reset())
+
+            sources_df['interim_ew'] = (
+                sources_df['ra_wrap'].values * sources_df['weight_ew'].values
+            )
+            sources_df['interim_ns'] = (
+                sources_df['dec'].values * sources_df['weight_ns'].values
+            )
+            logger.info("%s: epoch %s: Assign interm ew and ns values %.2f s", skyreg_tag, epoch, wrap_timer.reset())
+
+            sources_df = sources_df.drop(['ra_wrap'], axis=1)
+            
+            logger.info("%s: epoch %s: drop wrap values %.2f s", skyreg_tag, epoch, wrap_timer.reset())
+
+            tmp_srcs_df = (
+                sources_df.loc[
+                    (sources_df['source'] != -1) & (sources_df['forced'] == False),
+                    [
+                        'ra', 'dec', 'uncertainty_ew', 'uncertainty_ns',
+                        'source', 'interim_ew', 'interim_ns', 'weight_ew',
+                        'weight_ns'
+                    ]
                 ]
+                .groupby('source')
+            )
+            logger.info("%s: epoch %s: build tmp_srcs_df %.2f s", skyreg_tag, epoch, wrap_timer.reset())
+        else:
+            ra = sources_df.ra.values
+            dec = sources_df.dec.values
+            ra_wrap_mask = ra <= 0.1
+            
+            logger.info("%s: epoch %s: generate wrap_mask %.2f s", skyreg_tag, epoch, wrap_timer.reset())
+            logger.info("%s: epoch %s: generate dummy wrap values %.2f s", skyreg_tag, epoch, wrap_timer.reset())
+            ra[ra_wrap_mask] = ra[ra_wrap_mask]+360.
+            logger.info("%s: epoch %s: Calculate wrap values %.2f s", skyreg_tag, epoch, wrap_timer.reset())
+
+            sources_df['interim_ew'] = (
+                ra * sources_df['weight_ew'].values
+            )
+            sources_df['interim_ns'] = (
+                sources_df['dec'].values * sources_df['weight_ns'].values
+            )
+            logger.info("%s: epoch %s: Assign interm ew and ns values %.2f s", skyreg_tag, epoch, wrap_timer.reset())
+            
+            logger.info("%s: epoch %s: drop wrap values %.2f s", skyreg_tag, epoch, wrap_timer.reset())
+
+            tmp_srcs_df = (
+                sources_df.loc[
+                    (sources_df['source'] != -1) & (sources_df['forced'] == False),
+                    [
+                        'ra', 'dec', 'uncertainty_ew', 'uncertainty_ns',
+                        'source', 'interim_ew', 'interim_ns', 'weight_ew',
+                        'weight_ns'
+                    ]
+                ]
+                .groupby('source')
+            )
+            logger.info("%s: epoch %s: build tmp_srcs_df orig %.2f s", skyreg_tag, epoch, wrap_timer.reset())
+            
+            tmp_srcs_df = (
+                sources_df.loc[
+                    (sources_df['source'] != -1) & (sources_df['forced'] == False),
+                    [
+                        'ra', 'dec', 'uncertainty_ew', 'uncertainty_ns',
+                        'source', 'interim_ew', 'interim_ns', 'weight_ew',
+                        'weight_ns'
+                    ]
+                ]
+                .groupby('source', sort=False)
+            )
+            logger.info("%s: epoch %s: build tmp_srcs_df no sort %.2f s", skyreg_tag, epoch, wrap_timer.reset())
+
+
+
+            mask = (sources_df['source'] != -1) & (~sources_df['forced'])
+            cols = [
+                'ra', 'dec', 'uncertainty_ew', 'uncertainty_ns',
+                'source', 'interim_ew', 'interim_ns', 'weight_ew',
+                'weight_ns'
             ]
-            .groupby('source')
-        )
+            tmp_srcs_df = sources_df[mask][cols].groupby('source', sort=False)
+            logger.info("%s: epoch %s: build tmp_srcs_df speedup %.2f s", skyreg_tag, epoch, wrap_timer.reset())
         
         logger.info("%s: epoch %s: Handle wrapping: %.2f s", skyreg_tag, epoch, it_timer.reset())
 
@@ -1391,12 +1490,21 @@ def association(
         logger.info("%s: epoch %s: Generate new skyc1: %.2f s", skyreg_tag, epoch, it_timer.reset())
 
         # and update relations in skyc1
-        skyc1_srcs = skyc1_srcs.drop('related', axis=1)
+        skyc1_srcs_orig = skyc1_srcs.drop('related', axis=1)
         relations_unique = pd.DataFrame(
             sources_df[sources_df['related'].notna()]
             .explode('related')
             .groupby('source')['related']
             .apply(lambda x: x.unique().tolist())
+        )
+        logger.info("%s: epoch %s: Update skyc1_srcs orig: %.2f s", skyreg_tag, epoch, it_timer.reset())
+        
+        skyc1_srcs = skyc1_srcs.drop('related', axis=1)
+        relations_unique = pd.DataFrame(
+            sources_df[sources_df['related'].notna()]
+            .explode('related')
+            .groupby('source')['related']
+            .apply(pd.Series.unique)
         )
         logger.info("%s: epoch %s: Update skyc1_srcs: %.2f s", skyreg_tag, epoch, it_timer.reset())
 
@@ -1609,7 +1717,7 @@ def parallel_association(
         )
     logger.debug(f"Running association with {n_workers} CPUs")
     
-    images_df.to_parquet('association_testing/images_df_association_testing.parquet')
+    #images_df.to_parquet('association_testing/images_df_association_testing.parquet')
     
     print(limit)
     print(dr_limit)
@@ -1621,6 +1729,46 @@ def parallel_association(
     print(done_images_df)
     print(id_incr_par_assoc)
     print(meta)
+    """
+    import pickle
+    with open('association_testing/images_df.pickle', 'wb') as fdump:
+        pickle.dump(images_df, fdump)
+    
+    with open('association_testing/pipeline_config.pickle', 'wb') as fdump:
+        pickle.dump(config, fdump)
+    
+    with open('association_testing/args.pickle', 'wb') as fdump:
+        args = (
+            limit,
+            dr_limit,
+            bw_limit,
+            duplicate_limit,
+            add_mode,
+            previous_parquets,
+            done_images_df,
+            id_incr_par_assoc,
+            meta
+        )
+        pickle.dump(args, fdump)
+    """
+    import pickle
+    with open("association_testing/checkpoint.pkl", "wb") as f:
+        pickle.dump({
+            "images_df": images_df,
+            "n_partitions": n_partitions,
+            "limit": limit,
+            "dr_limit": dr_limit,
+            "bw_limit": bw_limit,
+            "duplicate_limit": duplicate_limit,
+            "config": config,
+            "add_mode": add_mode,
+            "previous_parquets": previous_parquets,
+            "done_images_df": done_images_df,
+            "id_incr_par_assoc": id_incr_par_assoc,
+            "meta": meta,
+            "n_workers": n_workers
+        }, f)
+    
     
     assert False
     
