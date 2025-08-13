@@ -1304,7 +1304,7 @@ def association(
                     'weight_ns'
                 ]
             ]
-            .groupby('source')
+            .groupby('source', sort=False)
         )
 
         stats = StopWatch()
