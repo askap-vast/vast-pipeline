@@ -864,7 +864,7 @@ def basic_association(
     sources_df = pd.concat(
         [sources_df, skyc2_srcs],
         ignore_index=True
-    ).reset_index(drop=True)
+    )
 
     # and update skyc1 with the sources that were created from the one
     # to many relations and any new sources.
@@ -876,7 +876,7 @@ def basic_association(
             ]
         ],
         ignore_index=True
-    ).reset_index(drop=True)
+    )
 
     return sources_df, skyc1_srcs
 
