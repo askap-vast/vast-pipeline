@@ -1335,10 +1335,11 @@ def association(
         )
 
         # correct the RA wrapping
-        ra_wrap_mask = weighted_df.ra >= 360.
+        weighted_ra = weighted_df.ra.values
+        ra_wrap_mask = weighted_ra >= 360.
         weighted_df.loc[
             ra_wrap_mask, 'ra'
-        ] = weighted_df[ra_wrap_mask].ra.values - 360.
+        ] = weighted_ra[ra_wrap_mask] - 360.
 
         logger.debug('Groupby concat time %f', stats.reset())
 
