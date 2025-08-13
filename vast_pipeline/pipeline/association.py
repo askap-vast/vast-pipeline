@@ -1237,9 +1237,17 @@ def association(
         )
         logger.debug('len(skyc1): %i%s', len(skyc1_srcs), skyreg_tag)
         # load skyc2 source measurements and create SkyCoord
+        images_df_rows = images_df.loc[images_df['epoch'] == epoch]
         images = (
-            images_df.loc[images_df['epoch'] == epoch, 'image_dj'].to_list()
+            images_df_rows['image_dj'].to_list()
         )
+        image_names = (
+            images_df_rows['image_name'].to_list()
+        )
+        
+        image_name_str = ",".join(image_names)
+        logger.info('Loaded %s%s', image_name_str, skyreg_tag)
+
         max_beam_maj = (
             images_df.loc[images_df['epoch'] == epoch, 'image_dj']
             .apply(lambda x: x.beam_bmaj)
