@@ -1309,11 +1309,14 @@ def association(
 
         stats = StopWatch()
 
-        wm_ra = tmp_srcs_df['interim_ew'].sum() / tmp_srcs_df['weight_ew'].sum()
-        wm_uncertainty_ew = 1. / np.sqrt(tmp_srcs_df['weight_ew'].sum())
+        weight_ew = tmp_srcs_df['weight_ew'].sum()
+        weight_ns = tmp_srcs_df['weight_ns'].sum()
 
-        wm_dec = tmp_srcs_df['interim_ns'].sum() / tmp_srcs_df['weight_ns'].sum()
-        wm_uncertainty_ns = 1. / np.sqrt(tmp_srcs_df['weight_ns'].sum())
+        wm_ra = tmp_srcs_df['interim_ew'].sum() / weight_ew
+        wm_uncertainty_ew = 1. / np.sqrt(weight_ew)
+
+        wm_dec = tmp_srcs_df['interim_ns'].sum() / weight_ns
+        wm_uncertainty_ns = 1. / np.sqrt(weight_ns)
 
         weighted_df = (
             pd.concat(
