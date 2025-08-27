@@ -609,6 +609,10 @@ def groupby_funcs(df: pd.DataFrame) -> pd.Series:
     Returns:
         Pandas series containing the calculated metrics of the source.
     '''
+    logger.debug("Inside groupby_funcs...")
+    logger.debug(d[['weight_ew', 'weight_ns']])
+    
+    
     # calculated average ra, dec, fluxes and metrics
     d = {}
     d['img_list'] = df['image'].values.tolist()
