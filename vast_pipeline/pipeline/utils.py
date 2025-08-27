@@ -636,10 +636,10 @@ def groupby_funcs(df: pd.DataFrame) -> pd.Series:
             non_forced_sel, 'snr'
         ].max()
         d['wavg_uncertainty_ew'] = (
-            1. / np.sqrt(df.loc[non_forced_sel, 'weight_ew'].sum()
+            1. / np.sqrt(df.loc[non_forced_sel, 'weight_ew'].sum())
         )
         d['wavg_uncertainty_ns'] = (
-            1. / np.sqrt(df.loc[non_forced_sel, 'weight_ns'].sum()
+            1. / np.sqrt(df.loc[non_forced_sel, 'weight_ns'].sum())
         )
 
     else:
