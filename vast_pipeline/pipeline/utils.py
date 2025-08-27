@@ -609,10 +609,7 @@ def groupby_funcs(df: pd.DataFrame) -> pd.Series:
     Returns:
         Pandas series containing the calculated metrics of the source.
     '''
-    logger.debug("Inside groupby_funcs...")
-    logger.debug(d[['weight_ew', 'weight_ns']])
-    
-    
+
     # calculated average ra, dec, fluxes and metrics
     d = {}
     d['img_list'] = df['image'].values.tolist()
@@ -727,7 +724,7 @@ def parallel_groupby(df: pd.DataFrame, n_cpu: int = 0, max_partition_mb: int = 1
         df,
         n_cpu=n_cpu,
         max_partition_mb=max_partition_mb)
-    logger.debug(f"Running association with {n_workers} CPUs")
+    logger.debug(f"Calculating final source statistics with {n_workers} CPUs")
     out = dd.from_pandas(df.set_index('source'), npartitions=n_partitions)
     out = (
         out.groupby('source')
