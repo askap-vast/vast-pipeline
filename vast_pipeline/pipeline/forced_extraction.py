@@ -13,6 +13,7 @@ from glob import glob
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from django.conf import settings
+from django.db import transaction
 from pyarrow.parquet import read_schema
 from typing import List, Tuple, Dict, Optional
 from dask.delayed import delayed
@@ -60,16 +61,17 @@ def remove_forced_meas(run_path: str, batch_size=10000) -> None:
         forced_meas = Measurement.objects.filter(id__in=ids)
         if forced_meas.exists():
             with transaction.atomic():
-                logger.info("Iterating over %d forced measurements", len(forced_meas))
+                ids_to_delete = list(forced_meas.values_list('id', flat=True))
+                n_ids = len(ids_to_delete)
+                
+                logger.info("Iterating over %d forced measurements", n_ids)
                 n_batches = round(n_ids/batch_size)
                 logger.info("Using %d batches of %d measurements", n_batches, batch_size)
 
-                ids_to_delete = list(forced_meas.values_list('id', flat=True))
                 total_deleted = 0
-
-                for i in range(0, len(source_ids), BATCH_SIZE):
-                    batch_ids = ids_to_delete[i : i + BATCH_SIZE]
-                    n_deleted, details = Measurement.objects.filter(id__in=batch_ids).delete()
+                for i in range(0, n_ids, batch_size):
+                    batch_ids = ids_to_delete[i : i + batch_size]
+                    n_deleted, _ = Measurement.objects.filter(id__in=batch_ids).delete()
                     total_deleted += n_deleted
 
                 logger.info('Total objects deleted: %i', total_deleted)
