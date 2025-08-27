@@ -649,6 +649,8 @@ def groupby_funcs(df: pd.DataFrame) -> pd.Series:
         d['avg_compactness'] = df['compactness'].mean()
         d['min_snr'] = df['snr'].min()
         d['max_snr'] = df['snr'].max()
+        d['wavg_uncertainty_ew'] = 1. / np.sqrt(df['weight_ew'].sum())
+        d['wavg_uncertainty_ns'] = 1. / np.sqrt(df['weight_ns'].sum())
 
     for col in ['avg_flux_int', 'avg_flux_peak']:
         d[col] = df[col.split('_', 1)[1]].mean()
