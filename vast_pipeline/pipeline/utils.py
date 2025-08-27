@@ -635,6 +635,12 @@ def groupby_funcs(df: pd.DataFrame) -> pd.Series:
         d['max_snr'] = df.loc[
             non_forced_sel, 'snr'
         ].max()
+        d['wavg_uncertainty_ew'] = (
+            1. / np.sqrt(df.loc[non_forced_sel, 'weight_ew'].sum()
+        )
+        d['wavg_uncertainty_ns'] = (
+            1. / np.sqrt(df.loc[non_forced_sel, 'weight_ns'].sum()
+        )
 
     else:
         d['wavg_ra'] = df['interim_ew'].sum() / df['weight_ew'].sum()
@@ -643,8 +649,6 @@ def groupby_funcs(df: pd.DataFrame) -> pd.Series:
         d['min_snr'] = df['snr'].min()
         d['max_snr'] = df['snr'].max()
 
-    d['wavg_uncertainty_ew'] = 1. / np.sqrt(df['weight_ew'].sum())
-    d['wavg_uncertainty_ns'] = 1. / np.sqrt(df['weight_ns'].sum())
     for col in ['avg_flux_int', 'avg_flux_peak']:
         d[col] = df[col.split('_', 1)[1]].mean()
     for col in ['max_flux_peak', 'max_flux_int']:
