@@ -609,6 +609,7 @@ def groupby_funcs(df: pd.DataFrame) -> pd.Series:
     Returns:
         Pandas series containing the calculated metrics of the source.
     '''
+
     # calculated average ra, dec, fluxes and metrics
     d = {}
     d['img_list'] = df['image'].values.tolist()
@@ -635,6 +636,12 @@ def groupby_funcs(df: pd.DataFrame) -> pd.Series:
         d['max_snr'] = df.loc[
             non_forced_sel, 'snr'
         ].max()
+        d['wavg_uncertainty_ew'] = (
+            1. / np.sqrt(df.loc[non_forced_sel, 'weight_ew'].sum())
+        )
+        d['wavg_uncertainty_ns'] = (
+            1. / np.sqrt(df.loc[non_forced_sel, 'weight_ns'].sum())
+        )
 
     else:
         d['wavg_ra'] = df['interim_ew'].sum() / df['weight_ew'].sum()
@@ -642,9 +649,9 @@ def groupby_funcs(df: pd.DataFrame) -> pd.Series:
         d['avg_compactness'] = df['compactness'].mean()
         d['min_snr'] = df['snr'].min()
         d['max_snr'] = df['snr'].max()
+        d['wavg_uncertainty_ew'] = 1. / np.sqrt(df['weight_ew'].sum())
+        d['wavg_uncertainty_ns'] = 1. / np.sqrt(df['weight_ns'].sum())
 
-    d['wavg_uncertainty_ew'] = 1. / np.sqrt(df['weight_ew'].sum())
-    d['wavg_uncertainty_ns'] = 1. / np.sqrt(df['weight_ns'].sum())
     for col in ['avg_flux_int', 'avg_flux_peak']:
         d[col] = df[col.split('_', 1)[1]].mean()
     for col in ['max_flux_peak', 'max_flux_int']:
@@ -719,7 +726,7 @@ def parallel_groupby(df: pd.DataFrame, n_cpu: int = 0, max_partition_mb: int = 1
         df,
         n_cpu=n_cpu,
         max_partition_mb=max_partition_mb)
-    logger.debug(f"Running association with {n_workers} CPUs")
+    logger.debug(f"Calculating final source statistics with {n_workers} CPUs")
     out = dd.from_pandas(df.set_index('source'), npartitions=n_partitions)
     out = (
         out.groupby('source')
