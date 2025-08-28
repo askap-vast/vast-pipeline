@@ -30,6 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Correctly calculate per-source average astrometric uncertainties by excluding forced phot measurements [#864](https://github.com/askap-vast/vast-pipeline/pull/864/)
 - Fixed broken skyregion group tag in association logging [#861](https://github.com/askap-vast/vast-pipeline/pull/861)
 - Fixed extremely slow pipeline run deletion via batching [#840](https://github.com/askap-vast/vast-pipeline/pull/840)
 - Fixed adjacent skyregions not being grouped together by correcting the skyregion FoV, which was incorrectly using the radius when it should use the diameter [#858](https://github.com/askap-vast/vast-pipeline/pull/858)
@@ -51,6 +52,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#864](https://github.com/askap-vast/vast-pipeline/pull/864/): fix: Correctly calculate per-source average astrometric uncertainties by excluding forced phot measurements
 - [#861](https://github.com/askap-vast/vast-pipeline/pull/861): fix, feat: Major optimisations and minor logging tweaks in association step
 - [#840](https://github.com/askap-vast/vast-pipeline/pull/840): fix, feat: Optimise database clearing (sources, forced fits and runs)
 - [#858](https://github.com/askap-vast/vast-pipeline/pull/858): fix: Fixed adjacent skyregions not being grouped together
