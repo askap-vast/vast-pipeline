@@ -466,15 +466,15 @@ class Measurement(CommentableModel):
     # quadratic sum of error_radius and ew_sys_err
     uncertainty_ew = models.FloatField(
         help_text=(
-            "Total east-west (RA) uncertainty, quadratic sum of"
-            " error_radius and ew_sys_err (Deg)."
+            'Total east-west (RA) uncertainty, quadratic sum of '
+            'the measured error in RA and ew_sys_err (Deg).'
         )
     )
     # quadratic sum of error_radius and ns_sys_err
     uncertainty_ns = models.FloatField(
         help_text=(
-            "Total north-south (Dec) uncertainty, quadratic sum of "
-            "error_radius and ns_sys_err (Deg)."
+            'Total north-south (Dec) uncertainty, quadratic sum of '
+            'the measured error in Dec and ns_sys_err (Deg).'
         )
     )
 
