@@ -585,6 +585,8 @@ def get_non_forced_metric(grp: pd.DataFrame, out: pd.Series) -> pd.Series:
     out['max_snr'] = grp.loc[
         non_forced_sel, 'snr'
     ].max()
+    d['wavg_uncertainty_ew'] = 1. / np.sqrt(df.loc[non_forced_sel, 'weight_ew'].sum())
+    d['wavg_uncertainty_ns'] = 1. / np.sqrt(df.loc[non_forced_sel, 'weight_ns'].sum())
 
     return out
 
@@ -632,9 +634,6 @@ def groupby_funcs(grp: pd.DataFrame) -> pd.Series:
     out["n_sibl"] = grp["has_siblings"].sum()
 
     out = get_non_forced_metric(grp, out)
-
-    out["wavg_uncertainty_ew"] = 1.0 / np.sqrt(grp["weight_ew"].sum())
-    out["wavg_uncertainty_ns"] = 1.0 / np.sqrt(grp["weight_ns"].sum())
 
     for col in ["avg_flux_int", "avg_flux_peak"]:
         out[col] = grp[col.split("_", 1)[1]].mean()
