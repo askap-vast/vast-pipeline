@@ -89,10 +89,11 @@ If selected in the pipeline run configuration file, the flux and positional erro
 
 #### Positional Errors (de Ruiter method)
 
-Firstly, the systematic astrometry error from the user pipeline run configuration file (`measurements.ra_uncertainty` and `measurements.dec_uncertainty`) are applied to the measurement. These values are saved as `ew_sys_err` and `ns_sys_err`.
+### TODO - FIX THIS, IT'S ALL WRONG!!!
+The systematic astrometry error from the user pipeline run configuration file (`measurements.ra_uncertainty` and `measurements.dec_uncertainty`) are saved as `ew_sys_err` and `ns_sys_err`.
 
 !!! warning
-    Currently the systematic errors applied at the pipeline run stage are then permanently fixed to the measurements, meaning that all subsequent runs using these measurements will use the fixed astrometic error.
+    Currently the systematic errors applied at the pipeline run stage are then permanently fixed to the measurements, meaning that all subsequent runs using these measurements will use the fixed astrometric error.
     
     It is recommended to leave the values to the default value of 1.0.
 
