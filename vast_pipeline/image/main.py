@@ -438,11 +438,11 @@ class SelavyImage(FitsImage):
         )
 
         df['uncertainty_ew'] = np.hypot(
-            df['ew_sys_err'].values, df['error_radius'].values
+            df['ew_sys_err'].values, df['ra_err'].values
         )
 
         df['uncertainty_ns'] = np.hypot(
-            df['ns_sys_err'].values, df['error_radius'].values
+            df['ns_sys_err'].values, df['dec_err'].values
         )
 
         # weight calculations to use later
