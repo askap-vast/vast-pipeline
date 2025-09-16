@@ -951,7 +951,7 @@ def association(
     add_mode: bool,
     previous_parquets: Dict[str, str],
     done_images_df: pd.DataFrame,
-    parallel: bool = False,
+    parallel: bool = False
 ) -> pd.DataFrame:
     """
     The main association function that does the common tasks between basic
@@ -1018,7 +1018,6 @@ def association(
         skyreg_tag = " (sky region group %s)" % skyreg_group
 
     method = config["source_association"]["method"]
-
     logger.info("Starting association%s.", skyreg_tag)
     logger.info("Association mode selected: %s.", method)
 
@@ -1417,7 +1416,8 @@ def parallel_association(
 
     # Pass each skyreg_group through the normal association process.
     # Convert images_df to dask dataframe and split into n_skyregion_groups partitions.
-    images_dd = dd.from_pandas(images_df.set_index('skyreg_group'), npartitions=n_skyregion_groups, sort=True)
+    images_dd = dd.from_pandas(images_df.set_index('skyreg_group'), sort=True)
+    images_dd = images_dd.repartition(divisions=list(range(1, n_skyregion_groups + 1)) + [n_skyregion_groups])
     results = images_dd.map_partitions(
             association,
             limit=limit,
@@ -1430,8 +1430,9 @@ def parallel_association(
             done_images_df=done_images_df,
             parallel=True,
             meta=meta
-        )
-
+        ).persist()
+    wait(results)
+    del images_df, images_dd
     # results are the normal dataframe of results with the columns:
     # 'id', 'uncertainty_ew', 'weight_ew', 'uncertainty_ns', 'weight_ns',
     # 'flux_int', 'flux_int_err', 'flux_peak', 'flux_peak_err', 'forced',
@@ -1464,7 +1465,6 @@ def parallel_association(
     # what appear to be race conditions in map_partitions above.
     results = results.reset_index(drop=True).sort_values(['epoch', 'datetime']).persist()
     wait(results)
-    del images_dd
 
     logger.info("Total parallel association time: %.2f seconds", timer.reset_init())
 
