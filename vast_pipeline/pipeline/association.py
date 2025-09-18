@@ -1310,6 +1310,12 @@ def association(
             iter_timer.reset(),
             skyreg_tag
         )
+        
+        logger.debug(
+            'Time to finalise sources: %.2f%s',
+            iter_timer.reset(),
+            skyreg_tag
+        )
 
         logger.info(
             'Completed association iteration: %i/%i%s',
