@@ -486,7 +486,12 @@ measurements:
   ra_uncertainty: 1.0
   dec_uncertainty: 1.0
 variability:
+  pair_metrics: True
   source_aggregate_pair_metrics_min_abs_vs: 4.3
+processing:
+  num_workers: null
+  num_workers_io: 5
+  max_partition_mb: 15
 
 Would you like to restore the run ? (y/n): y
 2021-04-02 21:24:28,685 restorepiperun INFO Restoring 'docs_example_run' from backup parquet files.

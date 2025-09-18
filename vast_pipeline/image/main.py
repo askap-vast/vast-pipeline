@@ -19,7 +19,7 @@ from .utils import calc_condon_flux_errors
 
 from vast_pipeline import models
 from vast_pipeline.survey.translators import tr_selavy
-from vast_pipeline.image.utils import open_fits
+from vast_pipeline.image.utils import get_fits_header
 
 
 logger = logging.getLogger(__name__)
@@ -97,13 +97,10 @@ class FitsImage(Image):
         """
         # inherit from parent
         super().__init__(path)
-
         # set other attributes
         header = self.__get_header(hdu_index)
-
         # set the rest of the attributes
         self.__set_img_attr_for_telescope(header)
-
         # get the frequency
         self.__get_frequency(header)
 
@@ -119,16 +116,9 @@ class FitsImage(Image):
             The FITS header as an astropy.io.fits.Header object.
         """
 
-        try:
-            with open_fits(self.path) as hdulist:
-                hdu = hdulist[hdu_index]
-        except Exception:
-            raise IOError((
-                'Could not read FITS file: '
-                f'{self.path}'
-            ))
+        header = get_fits_header(self.path).copy()
 
-        return hdu.header.copy()
+        return header
 
     def __set_img_attr_for_telescope(self, header):
         '''
@@ -199,8 +189,8 @@ class FitsImage(Image):
             header, fits_naxis1, fits_naxis2
         ) - unusedpix
         cdelt1, cdelt2 = proj_plane_pixel_scales(WCS(header).celestial)
-        self.fov_bmin = usable_radius_pix * abs(cdelt1)
-        self.fov_bmaj = usable_radius_pix * abs(cdelt2)
+        self.fov_bmin = 2*usable_radius_pix * abs(cdelt1)
+        self.fov_bmaj = 2*usable_radius_pix * abs(cdelt2)
         self.physical_bmin = header[fits_naxis1] * abs(cdelt1)
         self.physical_bmaj = header[fits_naxis2] * abs(cdelt2)
 
@@ -232,6 +222,7 @@ class FitsImage(Image):
         else:
             # We simply place the largest circle we can in the centre.
             diameter = min(header[fits_naxis1], header[fits_naxis2])
+
         return diameter / 2.
 
     def __get_frequency(self, header: fits.Header) -> None:
@@ -299,11 +290,13 @@ class SelavyImage(FitsImage):
         Returns:
             None.
         """
+
         # inherit from parent
         self.selavy_path = paths['selavy'][path]
         self.noise_path = paths['noise'].get(path, '')
         self.background_path = paths['background'].get(path, '')
         self.config: Dict = config
+
         super().__init__(path, hdu_index)
 
     def read_selavy(self, dj_image: models.Image) -> pd.DataFrame:
@@ -403,6 +396,7 @@ class SelavyImage(FitsImage):
 
         if self.config["condon_errors"]:
             logger.debug("Calculating Condon '97 errors...")
+
             theta_B = dj_image.beam_bmaj
             theta_b = dj_image.beam_bmin
 

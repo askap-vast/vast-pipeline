@@ -13,18 +13,23 @@ import pyarrow as pa
 import astropy.units as u
 import dask
 import dask.dataframe as dd
+import dask.config as dc
 import psutil
+import tempfile
+import vaex
+import itertools
 
 from typing import Any, List, Optional, Dict, Tuple, Union
 from astropy.coordinates import SkyCoord, Angle
 from django.conf import settings
 from django.contrib.auth.models import User
 from itertools import chain
+from multiprocessing import Pool
 
 from vast_pipeline.image.main import FitsImage, SelavyImage
 from vast_pipeline.image.utils import open_fits
 from vast_pipeline.utils.utils import (
-    eq_to_cart, StopWatch, optimize_ints, optimize_floats,
+    eq_to_cart, StopWatch, optimise_numeric,
     calculate_workers_and_partitions
 )
 from vast_pipeline.models import (
@@ -50,11 +55,13 @@ def get_create_skyreg(image: Image) -> SkyRegion:
     # In the calculations below, it is assumed the image has square
     # pixels (this pipeline has been designed for ASKAP images, so it
     # should always be square). It will likely give wrong results if not
+
     skyregions = SkyRegion.objects.filter(
         centre_ra=image.ra,
         centre_dec=image.dec,
         xtr_radius=image.fov_bmin
     )
+
     if skyregions:
         skyr = skyregions.get()
         logger.info('Found sky region %s', skyr)
@@ -602,6 +609,7 @@ def groupby_funcs(df: pd.DataFrame) -> pd.Series:
     Returns:
         Pandas series containing the calculated metrics of the source.
     '''
+
     # calculated average ra, dec, fluxes and metrics
     d = {}
     d['img_list'] = df['image'].values.tolist()
@@ -628,6 +636,12 @@ def groupby_funcs(df: pd.DataFrame) -> pd.Series:
         d['max_snr'] = df.loc[
             non_forced_sel, 'snr'
         ].max()
+        d['wavg_uncertainty_ew'] = (
+            1. / np.sqrt(df.loc[non_forced_sel, 'weight_ew'].sum())
+        )
+        d['wavg_uncertainty_ns'] = (
+            1. / np.sqrt(df.loc[non_forced_sel, 'weight_ns'].sum())
+        )
 
     else:
         d['wavg_ra'] = df['interim_ew'].sum() / df['weight_ew'].sum()
@@ -635,9 +649,9 @@ def groupby_funcs(df: pd.DataFrame) -> pd.Series:
         d['avg_compactness'] = df['compactness'].mean()
         d['min_snr'] = df['snr'].min()
         d['max_snr'] = df['snr'].max()
+        d['wavg_uncertainty_ew'] = 1. / np.sqrt(df['weight_ew'].sum())
+        d['wavg_uncertainty_ns'] = 1. / np.sqrt(df['weight_ns'].sum())
 
-    d['wavg_uncertainty_ew'] = 1. / np.sqrt(df['weight_ew'].sum())
-    d['wavg_uncertainty_ns'] = 1. / np.sqrt(df['weight_ns'].sum())
     for col in ['avg_flux_int', 'avg_flux_peak']:
         d[col] = df[col.split('_', 1)[1]].mean()
     for col in ['max_flux_peak', 'max_flux_int']:
@@ -712,7 +726,7 @@ def parallel_groupby(df: pd.DataFrame, n_cpu: int = 0, max_partition_mb: int = 1
         df,
         n_cpu=n_cpu,
         max_partition_mb=max_partition_mb)
-    logger.debug(f"Running association with {n_workers} CPUs")
+    logger.debug(f"Calculating final source statistics with {n_workers} CPUs")
     out = dd.from_pandas(df.set_index('source'), npartitions=n_partitions)
     out = (
         out.groupby('source')
@@ -1318,8 +1332,60 @@ def get_parallel_assoc_image_df(
 
     return images_df
 
+def _process_measurements_file(m_file: str,
+                               i: int,
+                               out_dir: str,
+                               associations: pd.DataFrame
+                               ) -> None:
+    """
+    Process an individual measurements file and output as a single partition
+    
+    Args:
+        m_file: Path to measurements file.
+        i: Measurements file index.
+        out_dir: Path to directory containing parquet partitions
+        associations: Associations dataframe
+    
+    Returns:
+        None
+    """
+    measurements = pd.read_parquet(m_file, engine='pyarrow')
+    
+    # Memory blows up and everything is slow if we try and do a full merge.
+    # Instead, pull out the indices that are in both dfs and then merge those.
+    associations_merge = associations[associations.index.isin(measurements['id'])]
+    measurements = measurements.loc[
+        measurements['id'].isin(associations_merge.index)
+    ]
+    
+    # drop timezone from datetime for vaex compatibility. V2 NOTE - remove
+    measurements['time'] = measurements['time'].dt.tz_localize(None)
+    
+    measurements = optimise_numeric(measurements)
+    measurements = measurements.merge(associations_merge, right_index=True, left_on='id', how="inner").rename(columns={'source_id': 'source'})
+    
+    partition_file = os.path.join(out_dir, f'part.{i}.parquet')
+    measurements.to_parquet(partition_file, index=False)
 
-def create_measurements_arrow_file(p_run: Run) -> None:
+def _repartition_measurements(in_file: str, out_file: str) -> None:
+    """"
+    Repartition the combined measurements file to be indexed by source id
+    
+    Args:
+        in_file: path to parquet file to be repartitioned.
+        out_file: path to parquet file to be written.
+    Returns:
+        None
+    """
+
+    # Using large datasets, so need to do the shuffling on disk
+    with dc.set(shuffle='disk'):
+        dask_df = dd.read_parquet(in_file).repartition(partition_size="100MB")
+        dask_df = dask_df.set_index('source', drop=True)
+        dask_df = dask_df.repartition(partition_size="100MB")
+        dask_df.to_parquet(out_file)
+
+def create_measurements_arrow_file(p_run: Run, max_workers: Optional[int] =10) -> None:
     """
     Creates a measurements.arrow file using the parquet outputs
     of a pipeline run.
@@ -1327,68 +1393,80 @@ def create_measurements_arrow_file(p_run: Run) -> None:
     Args:
         p_run:
             Pipeline model instance.
+        max_workers:
+            Maximum number of workers to use when processing
+            individual partitions. Defaults to 10.
 
     Returns:
         None
     """
     logger.info('Creating measurements.arrow for run %s.', p_run.name)
+    
+    p_run_path = p_run.path
+    arrow_file = os.path.join(p_run_path, 'measurements.arrow')
+    logger.info("Will write to final arrow file to %s.", arrow_file)
+    
+    # V2 NOTE - the repartitioned data will be the final data product.
+    # Need to scrap arrow_file and change the repartitioned file to measurements.parquet
+    processed_temp = tempfile.TemporaryDirectory()
+    repartitioned_temp = tempfile.TemporaryDirectory()
+    logger.debug("But in the meantime, writing temporary data to %s and %s",
+                 processed_temp.name,
+                 repartitioned_temp.name
+                 )
 
-    associations = pd.read_parquet(
-        os.path.join(
-            p_run.path,
-            'associations.parquet'
-        )
-    )
     images = pd.read_parquet(
         os.path.join(
-            p_run.path,
+            p_run_path,
             'images.parquet'
-        )
+        ),
+        columns=['measurements_path']
     )
-
     m_files = images['measurements_path'].tolist()
+    del images
 
     m_files += glob.glob(os.path.join(
-        p_run.path,
+        p_run_path,
         'forced*.parquet'
     ))
 
-    logger.debug('Loading %i files...', len(m_files))
-    measurements = dd.read_parquet(m_files, engine='pyarrow').compute()
+    logger.debug("Will create measurements from %i files...", len(m_files))
 
-    measurements = measurements.loc[
-        measurements['id'].isin(associations['meas_id'].values)
-    ]
+    associations = dd.read_parquet(
+        os.path.join(
+            p_run_path,
+            'associations.parquet'
+        ),
+        columns=['source_id'],
+        index='meas_id'
+    ).compute()
+    
+    logger.debug("Processing %d partitions with %d workers", len(m_files), max_workers)
 
-    measurements = (
-        associations.loc[:, ['meas_id', 'source_id']]
-        .set_index('meas_id')
-        .merge(
-            measurements,
-            left_index=True,
-            right_on='id'
+    
+    with Pool(max_workers) as pool:
+        iterable_arg = zip(
+            m_files,
+            range(len(m_files)),
+            itertools.repeat(processed_temp.name),
+            itertools.repeat(associations),
         )
-        .rename(columns={'source_id': 'source'})
-    )
+        pool.starmap(_process_measurements_file, iterable_arg)
+    
+    logger.debug("Repartitioning dataframe")
+    _repartition_measurements(processed_temp.name, repartitioned_temp.name)
 
-    # drop timezone from datetime for vaex compatibility
-    # TODO: Look to keep the timezone if/when vaex is compatible.
-    measurements['time'] = measurements['time'].dt.tz_localize(None)
+    logger.debug("Opening and exporting in vaex")
 
-    logger.debug('Optimising dataframes.')
-    measurements = optimize_ints(optimize_floats(measurements))
+    # V2 NOTE - remove in V2
+    vaex_df = vaex.open(repartitioned_temp.name)
+    vaex_df.export(arrow_file)
 
-    logger.debug("Loading to pyarrow table.")
-    measurements = pa.Table.from_pandas(measurements)
+    logger.debug("Cleaning up temporary data")
+    repartitioned_temp.cleanup()
+    processed_temp.cleanup()
 
-    logger.debug("Exporting to arrow file.")
-    outname = os.path.join(p_run.path, 'measurements.arrow')
-
-    local = pa.fs.LocalFileSystem()
-
-    with local.open_output_stream(outname) as file:
-        with pa.RecordBatchFileWriter(file, measurements.schema) as writer:
-            writer.write_table(measurements)
+    logger.debug("Done.")
 
 
 def create_measurement_pairs_arrow_file(p_run: Run) -> None:
@@ -1413,7 +1491,7 @@ def create_measurement_pairs_arrow_file(p_run: Run) -> None:
     )
 
     logger.debug('Optimising dataframe.')
-    measurement_pairs_df = optimize_ints(optimize_floats(measurement_pairs_df))
+    measurement_pairs_df = optimise_numeric(measurement_pairs_df)
 
     logger.debug("Loading to pyarrow table.")
     measurement_pairs_df = pa.Table.from_pandas(measurement_pairs_df)

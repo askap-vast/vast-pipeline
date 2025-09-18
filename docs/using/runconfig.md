@@ -431,7 +431,7 @@ where $f_{peak}$ is the initial detection peak flux measurement of the source in
 Float. Monitor forced extractions are not performed when the location is within 3 beamwidths of the image edge. This parameter scales this distance by the value set, which can help avoid errors when the 3 beamwidth limit is insufficient to avoid extraction failures. Defaults to 1.2.
 
 **`source_monitoring.cluster_threshold`**
-Float. A argument directly passed to the [forced photometry package](https://github.com/askap-vast/forced_phot/) used by the pipeline. It defines the multiple of `major_axes` to use for identifying clusters. Defaults to 3.0.
+Float. A argument directly passed to the [forced photometry package](https://github.com/askap-vast/forced_phot/) used by the pipeline. It defines the multiple of `major_axes` to use for identifying clusters. Defaults to 3.0. To turn off clustering, set it to 0.
 
 **`source_monitoring.allow_nan`**
 Boolean. A argument directly passed to the [forced photometry package](https://github.com/askap-vast/forced_phot/) used by the pipeline. It defines whether `NaN` values are allowed to be present in the extraction area in the rms or background maps. `True` would mean that `NaN` values are allowed. Defaults to False.
@@ -484,6 +484,11 @@ Define a fractional flux error that will be added in quadrature to the extracted
 **`measurements.condon_errors`**
 Boolean. Calculate the Condon errors of the extractions when read in from the source extraction file. If `False` then the errors directly from the source finder output are used. Recommended to set to `True` for selavy extractions. Defaults to `True`.
 
+!!! Warning
+    This will completely overwrite the uncertainties provided by the input catalogue.
+    Hence, this option should not be used if you have applied any sort of corrections
+    to the input catalogue prior to ingest, or if you trust the existing uncertainties.
+
 **`measurements.selavy_local_rms_fill_value`**
 Float. Value to substitute for the `local_rms` parameter in selavy extractions if a `0.0` value is found. Unit is mJy. Defaults to `0.2`.
 
@@ -512,3 +517,14 @@ Boolean. When `True` then the two-epoch metrics are calculated for each source. 
 
 **`variability.source_aggregate_pair_metrics_min_abs_vs`**
 Float. Defines the minimum $V_s$ two-epoch metric value threshold used to attach the most significant pair value to the source. Defaults to `4.3`.
+
+### Processing
+
+**`processing.num_workers`**
+Integer or `null`. The total number of workers available to Dask when running the pipeline. `null` means use one less than all available cores. Defaults to `null`.
+
+**`processing.num_workers_io`**
+Integer. The total number of workers to use for disk IO operations (e.g. when reading images for forced extraction). Defaults to 5.
+
+**`processing.max_partition_mb`**
+Integer. The default maximum size (in MB) to allow per partition of Dask DataFrames. Increasing this will create fewer partitions and will potentially increase the memory footprint of parallelised tasks. Defaults to 15.

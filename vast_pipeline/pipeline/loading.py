@@ -95,8 +95,11 @@ def make_upload_images(
     images = []
     skyregions = []
     bands = []
+    
+    dt = StopWatch()
 
     for path in paths['selavy']:
+        dt.reset()
         # STEP #1: Load image and measurements
         image = SelavyImage(
             path,
@@ -104,22 +107,26 @@ def make_upload_images(
             image_config
         )
         logger.info('Reading image %s ...', image.name)
+        logger.debug('Generated SelavyImage in %.3f s', dt.reset())
 
         # 1.1 get/create the frequency band
         with transaction.atomic():
             band = get_create_img_band(image)
         if band not in bands:
             bands.append(band)
+        logger.debug('Generated band in %.3f s', dt.reset())
 
         # 1.2 create image and skyregion entry in DB
         with transaction.atomic():
             img, exists_f = get_create_img(band.id, image)
+            logger.debug('get_create_img in %.3f s', dt.reset())
             skyreg = img.skyreg
 
             # add image and skyregion to respective lists
             images.append(img)
             if skyreg not in skyregions:
                 skyregions.append(skyreg)
+            logger.debug('Images and skyregions appended in %.3f s', dt.reset())
 
             if exists_f:
                 logger.info("Image %s already processed", img.name)
@@ -153,7 +160,10 @@ def make_upload_images(
 
 
 def make_upload_sources(
-    sources_df: pd.DataFrame, pipeline_run: Run, add_mode: bool = False
+    sources_df: pd.DataFrame,
+    pipeline_run: Run,
+    add_mode: bool = False,
+    batch_size: int = 1000
 ) -> pd.DataFrame:
     '''
     Delete previous sources for given pipeline run and bulk upload
@@ -161,12 +171,14 @@ def make_upload_sources(
 
     Args:
         sources_df:
-            Holds the measurements associated into sources. The output of of
-            thE association step.
+            Holds the measurements associated into sources. The output of
+            the association step.
         pipeline_run:
             The pipeline Run object.
         add_mode:
-            Whether the pipeline is running in add image mode.
+            Whether the pipeline is running in add image mode. Defaults to False.
+        batch_size:
+            The size of batch to use. Defaults to 1000.
 
     Returns:
         The input dataframe with the 'id' column added.
@@ -177,21 +189,32 @@ def make_upload_sources(
     logger.debug(f"sources_df memory usage: {mem_usage}MB")
     log_total_memory_usage()
 
-    # create sources in DB
+    # NOTE - all of this logic will need to be updated for V2 changes
     with transaction.atomic():
-        if (add_mode is False and
-                Source.objects.filter(run=pipeline_run).exists()):
-            logger.info('Removing objects from previous pipeline run')
-            n_del, detail_del = (
-                Source.objects.filter(run=pipeline_run).delete()
-            )
-            logger.info(
-                ('Deleting all sources and related objects for this run. '
-                 'Total objects deleted: %i'),
-                n_del,
-            )
-            logger.debug('(type, #deleted): %s', detail_del)
+        sources = Source.objects.filter(run=pipeline_run)
+        if not add_mode and sources.exists():
+            logger.info('Removing objects from previous pipeline run...')
 
+            ids_to_delete = list(sources.values_list('id', flat=True))
+            total_deleted = 0
+
+            for i in range(0, len(source_ids), batch_size):
+                batch_ids = source_ids[i : i + batch_size]
+                n_deleted, details = Source.objects.filter(id__in=batch_ids).delete()
+                total_deleted += n_deleted
+
+                logger.debug(
+                    "Deleted %d objects in this batch.", n_deleted
+                )
+
+            logger.info(
+                'Deleting all sources and related objects for this run. '
+                'Total objects deleted: %i',
+                total_deleted
+            )
+    
+    
+    # create sources in DB
     src_dj_ids = bulk_upload_model(
         Source,
         source_models_generator(sources_df, pipeline_run=pipeline_run),

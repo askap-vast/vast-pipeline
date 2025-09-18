@@ -4,6 +4,74 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), with an added `List of PRs` section and links to the relevant PRs on the individual updates. This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/v1.2.0...HEAD)
+
+#### Added
+
+- Added image.utils.get_fits_header to only fetch header when initialising Image object [#841](https://github.com/askap-vast/vast-pipeline/pull/841)
+- Added more detailed warnings about the use of Condon Errors throughout the docs and code [#806](https://github.com/askap-vast/vast-pipeline/pull/806)
+- Added processing configuration parameters to the run configuration documentation [#805](https://github.com/askap-vast/vast-pipeline/pull/805)
+- Added option to disable forced photometry clustering [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
+- Added additional logging to forced extraction step [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
+
+#### Changed
+
+- Speed up final step of basic/advanced association by not resetting index twice (factor of 5-100x faster!) [#861](https://github.com/askap-vast/vast-pipeline/pull/861)
+- Speed up wrap handling by not writing to main dataframe [#861](https://github.com/askap-vast/vast-pipeline/pull/861)
+- Speed up tmp_srcs_df groupby by not sorting (2x faster) [#861](https://github.com/askap-vast/vast-pipeline/pull/861)
+- Speed up various steps by not computing dataframe values multiple times [#861](https://github.com/askap-vast/vast-pipeline/pull/861)
+- Converted forced fits and sources removals for re-runs to use raw SQL queries [#840](https://github.com/askap-vast/vast-pipeline/pull/840)
+- Updated open_fits to correctly handle NaN-padded compressed images [#837](https://github.com/askap-vast/vast-pipeline/pull/837)
+- Upgrade measurements file generation to use dask in order to handle larger runs [#789](https://github.com/askap-vast/vast-pipeline/pull/797)
+- Replaced optimise_ints and optimise_floats with single function - optimise_numeric [#789](https://github.com/askap-vast/vast-pipeline/pull/797)
+- Upgrade forced_phot dependency to v0.2 and force `use_numba=True` [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
+- Remove bad forced photometry fits immediately after calculation, rather than after they've all been compiled into a single dataframe [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
+- Optimise associations upload by dropping unnecessary columns prior to a large dataframe merge [#787](https://github.com/askap-vast/vast-pipeline/pull/787)
+
+#### Fixed
+
+- Correctly calculate per-source average astrometric uncertainties by excluding forced phot measurements [#864](https://github.com/askap-vast/vast-pipeline/pull/864/)
+- Fixed broken skyregion group tag in association logging [#861](https://github.com/askap-vast/vast-pipeline/pull/861)
+- Fixed extremely slow pipeline run deletion via batching [#840](https://github.com/askap-vast/vast-pipeline/pull/840)
+- Fixed adjacent skyregions not being grouped together by correcting the skyregion FoV, which was incorrectly using the radius when it should use the diameter [#858](https://github.com/askap-vast/vast-pipeline/pull/858)
+- Fixed slow image initialisation by disabling comp_nan_fill when fetching header [#841](https://github.com/askap-vast/vast-pipeline/pull/841)
+- Fixed incorrect link in changelog section header [#841](https://github.com/askap-vast/vast-pipeline/pull/841)
+- Fixed potential memory leak in image header extraction [#828](https://github.com/askap-vast/vast-pipeline/pull/828)
+- Updated github actions to use cache@v4 [#825](https://github.com/askap-vast/vast-pipeline/pull/825)
+- Check for whether processing parameters exist in config before validating them [#825](https://github.com/askap-vast/vast-pipeline/pull/825)
+- Updated ubuntu to 24.04 in github workflows and bumped python versions accordingly [#810](https://github.com/askap-vast/vast-pipeline/pull/810)
+- Fixed broken links on pipeline websites [#802](https://github.com/askap-vast/vast-pipeline/pull/802)
+- Fixed outdated jupyterhub link on pipeline website [#795](https://github.com/askap-vast/vast-pipeline/pull/795)
+- Renamed variable in pipeline.finalise to better reflect what the dataframe represents (sources_df -> associations_df) [#787](https://github.com/askap-vast/vast-pipeline/pull/787)
+- Fixed typo in variable name ("assoications") [#787](https://github.com/askap-vast/vast-pipeline/pull/787)
+- Fix partition calculation from wrong DataFrame object [#783](https://github.com/askap-vast/vast-pipeline/pull/783)
+- Fix processing config parameters not displaying in web interface [#782](https://github.com/askap-vast/vast-pipeline/pull/782)
+- Fix incorrect zenodo links [#780](https://github.com/askap-vast/vast-pipeline/pull/780)
+
+#### Removed
+
+#### List of PRs
+
+- [#864](https://github.com/askap-vast/vast-pipeline/pull/864/): fix: Correctly calculate per-source average astrometric uncertainties by excluding forced phot measurements
+- [#861](https://github.com/askap-vast/vast-pipeline/pull/861): fix, feat: Major optimisations and minor logging tweaks in association step
+- [#840](https://github.com/askap-vast/vast-pipeline/pull/840): fix, feat: Optimise database clearing (sources, forced fits and runs)
+- [#858](https://github.com/askap-vast/vast-pipeline/pull/858): fix: Fixed adjacent skyregions not being grouped together
+- [#841](https://github.com/askap-vast/vast-pipeline/pull/841): fix: Fix incorrect changelog link, fix slow image initialisation
+- [#837](https://github.com/askap-vast/vast-pipeline/pull/837): fix: Updated open_fits to correctly handle NaN-padded compressed images
+- [#828](https://github.com/askap-vast/vast-pipeline/pull/828): fix: Fix potential memory leak in image header extraction
+- [#825](https://github.com/askap-vast/vast-pipeline/pull/825): fix: Check for whether processing parameters exist in config before validating them and updated github actions to use cache@v4
+- [#810](https://github.com/askap-vast/vast-pipeline/pull/810): fix: Updated ubuntu to 24.04 in github workflows and bumped python versions accordingly 
+- [#806](https://github.com/askap-vast/vast-pipeline/pull/806): feat, docs: Added more detailed warnings about the use of Condon Errors throughout the docs and code
+- [#805](https://github.com/askap-vast/vast-pipeline/pull/805): docs: Added processing configuration parameters to the run configuration documentation 
+- [#802](https://github.com/askap-vast/vast-pipeline/pull/802): fix: Fix broken links on pipeline website
+- [#789](https://github.com/askap-vast/vast-pipeline/pull/797): feat: Convert measurements.arrow generation to use dask, and combine optimise_ints/floats to optimise_numeric
+- [#795](https://github.com/askap-vast/vast-pipeline/pull/795): fix: Fixed outdated jupyterhub link on pipeline website
+- [#788](https://github.com/askap-vast/vast-pipeline/pull/788): feat, fix: Speed up forced fitting code by using numba-fied forced_phot code and reordering some calculations
+- [#787](https://github.com/askap-vast/vast-pipeline/pull/787): fix: Optimise associations merge and minor variable name updates
+- [#783](https://github.com/askap-vast/vast-pipeline/pull/783): fix: Fix partition calculation from wrong DataFrame object
+- [#782](https://github.com/askap-vast/vast-pipeline/pull/782): fix: Fix processing config parameters not displaying in web interface
+- [#780](https://github.com/askap-vast/vast-pipeline/pull/780): docs: Fix incorrect zenodo links
+
 ## [1.2.0](https://github.com/askap-vast/vast-pipeline/releases/v1.2.0) (2024-11-07)
 
 #### Added
