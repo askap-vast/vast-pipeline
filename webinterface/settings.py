@@ -358,4 +358,4 @@ ETA_V_DATASHADER_THRESHOLD = env('ETA_V_DATASHADER_THRESHOLD', cast=int, default
 
 CUTOFF_DAYS = env("CUTOFF_DAYS", cast=int, default=30)
 MAX_SIZE_GB = env("MAX_SIZE_GB", cast=float, default=0.01)
-CUTOUT_DIR = env("CUTOUT_DIR", cast=str, default=None)
+MEDIA_ROOT = env("MEDIA_ROOT", cast=str, default=None)
