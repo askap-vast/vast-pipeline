@@ -1875,8 +1875,10 @@ class ImageCutout(APIView):
             raise Http404("Measurement not found.")
 
         # Check if cutout already exists in the database
+        logger.info("Checking for existing cutout...")
         existing_cutout = ImageCutoutModel.objects.filter(measurement=measurement, size=size, img_type=img_type).first()
         if existing_cutout:
+            logger.info("Cutout exists...")
             existing_cutout.last_accessed = timezone.now()
             existing_cutout.save(update_fields=["last_accessed"])
             return FileResponse(
@@ -1884,7 +1886,7 @@ class ImageCutout(APIView):
                 as_attachment=True,
                 filename=os.path.basename(existing_cutout.image.path)
             )
-
+        logger.info("Existing cutout does not exist...")
         try:
             image_hdu: fits.PrimaryHDU = open_fits(measurement.image.path)[0]
             data = image_hdu.data
@@ -1925,8 +1927,10 @@ class ImageCutout(APIView):
         )
 
         cutout_hdu = fits.PrimaryHDU(data=cutout.data, header=cutout_header)
-        filename = f"cutouts/{measurement.name}_cutout_{size}.{img_type}"
+        filename = f"{measurement.name}_cutout_{size}.{img_type}"
         cutout_path = os.path.join(settings.MEDIA_ROOT, filename)
+
+        logger.info(f"Saving to {cutout_path}...")
 
         # Save the cutout file
         if img_type == "fits":
