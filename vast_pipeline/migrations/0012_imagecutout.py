@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
             name='ImageCutout',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('image', models.ImageField(upload_to='cutouts/')),
+                ('image', models.ImageField()),
                 ('size', models.CharField(choices=[('normal', 'Normal'), ('large', 'Large'), ('xlarge', 'XLarge')], max_length=10)),
                 ('img_type', models.CharField(choices=[('fits', 'FITS'), ('png', 'PNG')], max_length=10)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),

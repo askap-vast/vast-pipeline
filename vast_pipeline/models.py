@@ -8,6 +8,7 @@ from django.core.validators import RegexValidator
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
+from django.conf import settings
 from django.templatetags.static import static
 from social_django.models import UserSocialAuth
 from tagulous.models import TagField
@@ -385,7 +386,7 @@ class ImageCutout(models.Model):
     measurement = models.ForeignKey(
         "Measurement", on_delete=models.CASCADE, related_name="cutouts"
     )
-    image = models.ImageField(upload_to="cutouts/")
+    image = models.ImageField()
     size = models.CharField(max_length=10, choices=[("normal", "Normal"), ("large", "Large"), ("xlarge", "XLarge")])
     img_type = models.CharField(max_length=10, choices=[("fits", "FITS"), ("png", "PNG")])
     created_at = models.DateTimeField(auto_now_add=True)
