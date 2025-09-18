@@ -65,7 +65,7 @@ class BasicEpochTest(TestCase):
         '''
         See documentation for test_num_sources in property_check.
         '''
-        property_check.test_num_sources(self, self.sources, 616)
+        property_check.test_num_sources(self, self.sources, 617)
 
     def test_most_relations(self):
         '''
@@ -73,22 +73,22 @@ class BasicEpochTest(TestCase):
         '''
         # this is the expected highest relation sources
         expected = pd.DataFrame(
-            [[21.033441, -73.151101, 1],
-             [21.035019, -73.151512, 1],
-             [23.061180, -73.651803, 1],
-             [23.063015, -73.650433, 1],
-             [23.425469, -73.296979, 1],
-             [23.429945, -73.297484, 1],
-             [322.249559, -4.402759, 1],
-             [322.249615, -4.402745, 1],
-             [322.752246, -3.982728, 1],
-             [322.752994, -3.982975, 1],
-             [322.822412, -5.092524, 1],
-             [322.825119, -5.090515, 1],
-             [322.875352, -4.231587, 1],
-             [322.875452, -4.231785, 1],
-             [322.927896, -5.030347, 1],
-             [322.930617, -5.031158, 1]],
+            [[322.75292, -3.982978, 2],
+             [21.033440, -73.151102, 1],
+             [21.034743, -73.151590, 1],
+             [23.061181, -73.651803, 1],
+             [23.063016, -73.650433, 1],
+             [23.425656, -73.296978, 1],
+             [23.431615, -73.297481, 1],
+             [322.249550, -4.402741, 1],
+             [322.249601, -4.402723, 1],
+             [322.751992, -3.983102, 1],
+             [322.752802, -3.982956, 1],
+             [322.822385, -5.092387, 1],
+             [322.825281, -5.090753, 1],
+             [322.875345, -4.231618, 1],
+             [322.875472, -4.231777, 1],
+             [322.927902, -5.030378, 1]],
              columns = ['wavg_ra', 'wavg_dec', 'relations']
         )
 
@@ -152,7 +152,7 @@ class AdvancedEpochTest(TestCase):
         '''
         See documentation for test_num_sources in property_check.
         '''
-        property_check.test_num_sources(self, self.sources, 624)
+        property_check.test_num_sources(self, self.sources, 622)
 
     def test_most_relations(self):
         '''
@@ -225,7 +225,7 @@ class DeruiterEpochTest(TestCase):
         '''
         See documentation for test_num_sources in property_check.
         '''
-        property_check.test_num_sources(self, self.sources, 609)
+        property_check.test_num_sources(self, self.sources, 617)
 
     def test_most_relations(self):
         '''
@@ -233,11 +233,11 @@ class DeruiterEpochTest(TestCase):
         '''
         # this is the expected highest relation sources
         expected = pd.DataFrame(
-            [[322.752467, -3.982379, 4],
-             [322.752646, -3.982859, 4],
-             [322.752791, -3.982937, 4],
-             [322.752859, -3.983386, 4],
-             [322.753513, -3.985183, 4]],
+            [[322.752313, -3.982144, 4],
+             [322.752458, -3.982929, 4],
+             [322.752811, -3.983308, 4],
+             [322.752833, -3.983007, 4],
+             [322.753856, -3.984780, 4]],
             columns=['wavg_ra', 'wavg_dec', 'relations']
         )
 
