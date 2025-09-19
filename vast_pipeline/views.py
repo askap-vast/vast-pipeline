@@ -2,7 +2,6 @@ import io
 import os
 import json
 import logging
-import time
 
 import matplotlib.pyplot as plt
 import traceback

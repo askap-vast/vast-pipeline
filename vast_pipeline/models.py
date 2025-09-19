@@ -8,7 +8,6 @@ from django.core.validators import RegexValidator
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
-from django.conf import settings
 from django.templatetags.static import static
 from social_django.models import UserSocialAuth
 from tagulous.models import TagField
