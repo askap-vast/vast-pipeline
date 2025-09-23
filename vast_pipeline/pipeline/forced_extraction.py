@@ -40,7 +40,8 @@ __TESTING__ = settings.TESTING
 
 logger = logging.getLogger(__name__)
 
-def remove_forced_meas(run_path: str) -> None:
+
+def remove_forced_meas(run_path: str, batch_size=10000) -> None:
     """
     Remove forced measurements from the database if forced parquet files
     are found.
@@ -48,6 +49,8 @@ def remove_forced_meas(run_path: str) -> None:
     Args:
         run_path:
             The run path of the pipeline run.
+        batch_size:
+            Number of forced measurements to delete per iteration
 
     Returns:
         None
@@ -55,20 +58,23 @@ def remove_forced_meas(run_path: str) -> None:
     path_glob = glob(os.path.join(run_path, "forced_measurements_*.parquet"))
     if path_glob:
         ids = dd.read_parquet(path_glob, columns="id").values.compute().tolist()
-        obj_to_delete = Measurement.objects.filter(id__in=ids)
-        del ids
-        if obj_to_delete.exists():
+        forced_meas = Measurement.objects.filter(id__in=ids)
+        if forced_meas.exists():
             with transaction.atomic():
-                n_del, detail_del = obj_to_delete.delete()
-                logger.info(
-                    (
-                        "Deleting all previous forced measurement and association"
-                        " objects for this run. Total objects deleted: %i"
-                    ),
-                    n_del,
-                )
-                logger.debug("(type, #deleted): %s", detail_del)
+                ids_to_delete = list(forced_meas.values_list('id', flat=True))
+                n_ids = len(ids_to_delete)
+                
+                logger.info("Iterating over %d forced measurements", n_ids)
+                n_batches = round(n_ids/batch_size)
+                logger.info("Using %d batches of %d measurements", n_batches, batch_size)
 
+                total_deleted = 0
+                for i in range(0, n_ids, batch_size):
+                    batch_ids = ids_to_delete[i : i + batch_size]
+                    n_deleted, _ = Measurement.objects.filter(id__in=batch_ids).delete()
+                    total_deleted += n_deleted
+
+                logger.info('Total objects deleted: %i', total_deleted)
 
 def get_data_from_parquet(
     file_and_image_id: Tuple[str, int], p_run_path: str, add_mode: bool = False

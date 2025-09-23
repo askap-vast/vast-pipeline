@@ -41,7 +41,7 @@ dask.config.set({"multiprocessing.context": "fork",
                  "dataframe.convert-string": False})
 
 
-def get_create_skyreg(image: Image, radius: float = 10.) -> SkyRegion:
+def get_create_skyreg(image: Image) -> SkyRegion:
     '''
     This creates a SkyRegion object in Django ORM given the related
     image object. If a SkyRegion already exists and has an image radius
@@ -49,7 +49,6 @@ def get_create_skyreg(image: Image, radius: float = 10.) -> SkyRegion:
 
     Args:
         image: The image Django ORM object.
-        radius: Search radius (in arcsec) for matching to existing SkyRegion
 
     Returns:
         The sky region Django ORM object.
@@ -58,18 +57,12 @@ def get_create_skyreg(image: Image, radius: float = 10.) -> SkyRegion:
     # pixels (this pipeline has been designed for ASKAP images, so it
     # should always be square). It will likely give wrong results if not
 
-    # Get SkyRegions and image radii areas within `radius` arcsec
-    radius_deg = radius/3600.
-    skyregions = SkyRegion.objects.cone_search(
-        ra=float(image.ra),
-        dec=float(image.dec),
-        radius_deg=float(radius_deg)
-    ).filter(
-        xtr_radius__range=(
-            image.fov_bmin - radius_deg/2.,
-            image.fov_bmin + radius_deg/2.
-        )
+    skyregions = SkyRegion.objects.filter(
+        centre_ra=image.ra,
+        centre_dec=image.dec,
+        xtr_radius=image.fov_bmin
     )
+
     if skyregions:
         # Get the closest in case of multiple matches.
         skyr = skyregions[0]
@@ -592,6 +585,8 @@ def get_non_forced_metric(grp: pd.DataFrame, out: pd.Series) -> pd.Series:
     out['max_snr'] = grp.loc[
         non_forced_sel, 'snr'
     ].max()
+    out['wavg_uncertainty_ew'] = 1. / np.sqrt(grp.loc[non_forced_sel, 'weight_ew'].sum())
+    out['wavg_uncertainty_ns'] = 1. / np.sqrt(grp.loc[non_forced_sel, 'weight_ns'].sum())
 
     return out
 
@@ -639,9 +634,6 @@ def groupby_funcs(grp: pd.DataFrame) -> pd.Series:
     out["n_sibl"] = grp["has_siblings"].sum()
 
     out = get_non_forced_metric(grp, out)
-
-    out["wavg_uncertainty_ew"] = 1.0 / np.sqrt(grp["weight_ew"].sum())
-    out["wavg_uncertainty_ns"] = 1.0 / np.sqrt(grp["weight_ns"].sum())
 
     for col in ["avg_flux_int", "avg_flux_peak"]:
         out[col] = grp[col.split("_", 1)[1]].mean()

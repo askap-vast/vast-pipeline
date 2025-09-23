@@ -193,8 +193,8 @@ class FitsImage(Image):
             self.__get_radius_pixels(header, fits_naxis1, fits_naxis2) - unusedpix
         )
         cdelt1, cdelt2 = proj_plane_pixel_scales(WCS(header).celestial)
-        self.fov_bmin = usable_radius_pix * abs(cdelt1)
-        self.fov_bmaj = usable_radius_pix * abs(cdelt2)
+        self.fov_bmin = 2*usable_radius_pix * abs(cdelt1)
+        self.fov_bmaj = 2*usable_radius_pix * abs(cdelt2)
         self.physical_bmin = header[fits_naxis1] * abs(cdelt1)
         self.physical_bmaj = header[fits_naxis2] * abs(cdelt2)
 
