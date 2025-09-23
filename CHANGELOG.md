@@ -47,6 +47,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- V2: Fixed memory leaks caused by nested delays [#854](https://github.com/askap-vast/vast-pipeline/pull/854)
 - V2: Fixed duplicate source ID error by switching from sources_df.repartition() to sources_df.shuffle() in pipeline.finalise.final_operations [#845](https://github.com/askap-vast/vast-pipeline/pull/845)
 - V2: Tentative fix for image upload memory leak via garbage collect [#845](https://github.com/askap-vast/vast-pipeline/pull/845)
 - V2: Fixed dd.concat memory blow-up in pipeline.forced_extraction.forced_extraction by persisting both dataframes prior [#845](https://github.com/askap-vast/vast-pipeline/pull/845)
@@ -77,6 +78,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#854](https://github.com/askap-vast/vast-pipeline/pull/854): fix: V2: Fixed memory leaks caused by nested delays
 - [#852](https://github.com/askap-vast/vast-pipeline/pull/852): feat: V2: Switch worker throttling to use Dask Semaphore and add Dask cluster memory usage logging
 - [#846](https://github.com/askap-vast/vast-pipeline/pull/846): fix: V2: Compute associations prior to upload and persist srcs_df in final pairs calculation
 - [#845](https://github.com/askap-vast/vast-pipeline/pull/845): fix: V2: Fix memory leaks and duplicate source ID issue
