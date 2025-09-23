@@ -410,7 +410,6 @@ def parallel_extraction(
         .map(get_data_from_parquet, p_run_path, add_mode)
         .to_dataframe()
         .merge(df_images[df_cols], on="id", how="left")
-        #.to_delayed()
         .compute()
         .reset_index(drop=True)
     )
@@ -424,7 +423,6 @@ def parallel_extraction(
     # Do the forced extraction work by combining the two delayed lists above then
     # running extract_from_image on the tuple of delayed futures.
     # Persist at this point uning the number of io workers.
-    #image_data_list = zip(df_per_image, measurements_parquet_data)
     func_d = [
         delayed(extract_from_image)(
             image_df,
