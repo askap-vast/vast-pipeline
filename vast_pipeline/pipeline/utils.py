@@ -41,7 +41,7 @@ dask.config.set({"multiprocessing.context": "fork",
                  "dataframe.convert-string": False})
 
 
-def get_create_skyreg(image: Image) -> SkyRegion:
+def get_create_skyreg(image: Image, radius: float = 10.) -> SkyRegion:
     '''
     This creates a SkyRegion object in Django ORM given the related
     image object. If a SkyRegion already exists and has an image radius
@@ -49,6 +49,7 @@ def get_create_skyreg(image: Image) -> SkyRegion:
 
     Args:
         image: The image Django ORM object.
+        radius: Search radius (in arcsec) for matching to existing SkyRegion.
 
     Returns:
         The sky region Django ORM object.
@@ -57,11 +58,16 @@ def get_create_skyreg(image: Image) -> SkyRegion:
     # pixels (this pipeline has been designed for ASKAP images, so it
     # should always be square). It will likely give wrong results if not
 
-    skyregions = SkyRegion.objects.filter(
-        centre_ra=image.ra,
-        centre_dec=image.dec,
-        xtr_radius=image.fov_bmin
-    )
+    radius_deg = radius/3600.
+    skyregions = SkyRegion.objects.cone_search(
+        ra=float(image.ra),
+        dec=float(image.dec),
+        radius_deg=float(radius_deg)
+    ).filter(
+        xtr_radius__range=(
+            image.fov_bmin - radius_deg/2.,
+            image.fov_bmin + radius_deg/2.
+        )
 
     if skyregions:
         # Get the closest in case of multiple matches.
