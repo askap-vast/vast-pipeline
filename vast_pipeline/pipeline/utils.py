@@ -68,6 +68,7 @@ def get_create_skyreg(image: Image, radius: float = 10.) -> SkyRegion:
             image.fov_bmin - radius_deg/2.,
             image.fov_bmin + radius_deg/2.
         )
+    )
 
     if skyregions:
         # Get the closest in case of multiple matches.
