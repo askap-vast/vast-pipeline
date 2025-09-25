@@ -990,11 +990,11 @@ def association(
         Exception: Raised if association method is not valid.
     """
     timer = StopWatch()
+
+    skyreg = images_df.index[0]
+    #skyreg_group = _head_df['skyreg_group'].iloc[0]
     
-    print(images_df.compute().columns)
-    print(images_df.compute())
-    
-    assert False
+    #assert False
 
     if parallel:
         # Skip empty groups that seems to sometimes happen with the
@@ -1021,6 +1021,9 @@ def association(
 
     if skyreg_group > 0:
         skyreg_tag = " (sky region group %s)" % skyreg_group
+    
+    
+    
 
     method = config["source_association"]["method"]
     logger.info("Starting association%s.", skyreg_tag)
@@ -1349,6 +1352,11 @@ def association(
     sources_df.loc[related_null_mask, "related"] = sources_df.loc[related_null_mask, "related"].apply(
         lambda x: [x,]
     )
+    #sources_df.reset_index(inplace=True)
+    sources_df['skyreg_id'] = skyreg
+    sources_df['skyreg_group'] = skyreg_group
+    
+    
     logger.info(
         "Total association time: %.2f seconds%s.", timer.reset_init(), skyreg_tag
     )
@@ -1418,6 +1426,9 @@ def parallel_association(
         "epoch": "i",
         "interim_ew": "f",
         "interim_ns": "f",
+        "skyreg_id": str,
+        "skyreg_group": int
+        
     }
 
     # Need to serialise the image_dj django models so they can be passed to the Dask cluster
@@ -1453,23 +1464,38 @@ def parallel_association(
     
     ##### Need to partition by skyregion group first
     # then for each skyreggroup, process each skyregion and then combine
+    images_dd = dd.from_pandas(images_df.set_index('skyreg_id'), sort=True)
+    #n_skyregions = len(images_df.skyreg_id.unique())
+    #divisions = list(range(1, n_skyregions + 1)) + [n_skyregions]
+    divisions = list(sorted(images_df.skyreg_id.unique()))
     
-    skyreg_groups = list(sorted(images_df.skyreg_group.unique()))
+    images_dd = images_dd.repartition(divisions=divisions)
     
-    total_results_out = []
     
-    for skyreg_group in skyreg_groups:
-        logger.info(skyreg_group)
-        group_df = images_df[images_df.skyreg_group==skyreg_group]
-        images_dd = dd.from_pandas(group_df.set_index('skyreg_id'), sort=True)
-        n_skyregions = len(group_df.skyreg_id.unique())
-        divisions = list(range(1, n_skyregions + 1)) + [n_skyregions]
-        divisions = list(sorted(group_df.skyreg_id.unique()))
-        
-        images_dd = images_dd.repartition(divisions=divisions)
-        
-        association(
-            images_dd.partitions[0],
+    """
+    print("Running association...")
+    
+    res = association(
+        images_dd.partitions[0].compute(),
+        limit=limit,
+        dr_limit=dr_limit,
+        bw_limit=bw_limit,
+        duplicate_limit=duplicate_limit,
+        config=config,
+        add_mode=add_mode,
+        previous_parquets=previous_parquets,
+        done_images_df=done_images_df,
+        parallel=True,
+        #meta=meta
+    )
+    
+    print("Association finished...")
+    assert False
+    
+    """
+    
+    results = images_dd.map_partitions(
+            association,
             limit=limit,
             dr_limit=dr_limit,
             bw_limit=bw_limit,
@@ -1479,31 +1505,27 @@ def parallel_association(
             previous_parquets=previous_parquets,
             done_images_df=done_images_df,
             parallel=True,
-            #meta=meta
-        )
-        
-        assert False
-        
-        results = images_dd.map_partitions(
-                association,
-                limit=limit,
-                dr_limit=dr_limit,
-                bw_limit=bw_limit,
-                duplicate_limit=duplicate_limit,
-                config=config,
-                add_mode=add_mode,
-                previous_parquets=previous_parquets,
-                done_images_df=done_images_df,
-                parallel=True,
-                meta=meta,
-                #partition_info=True,
-            ).persist()
-        wait(results)
-        #total_results_out.append(results.compute())
-        print(results.columns)
-        assert False
+            meta=meta,
+        ).persist()
+    wait(results)
     
-    pd.concat(total_results_out).to_parquet('results_split.parquet')
+    print(results.npartitions)
+    for i, part in enumerate(results.partitions):
+        print(i, part.index.name, part.columns)
+        print(part.index.compute())
+        
+    #assert False
+    
+    #total_results_out.append(results.compute())
+    #print(results.columns)
+    #assert False
+    
+    results = results.compute()
+    
+    print(results)
+    print(results.columns)
+    
+    results.to_parquet('results_new_new.parquet')
     
     assert False
     
