@@ -32,6 +32,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed the code handling the updated TNS API [#872](https://github.com/askap-vast/vast-pipeline/pull/872)
 - Correctly calculate per-source average astrometric uncertainties by excluding forced phot measurements [#864](https://github.com/askap-vast/vast-pipeline/pull/864/)
 - Fixed broken skyregion group tag in association logging [#861](https://github.com/askap-vast/vast-pipeline/pull/861)
 - Fixed extremely slow pipeline run deletion via batching [#840](https://github.com/askap-vast/vast-pipeline/pull/840)
@@ -54,6 +55,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#872](https://github.com/askap-vast/vast-pipeline/pull/872): fix: Fixed the code handling the updated TNS API
 - [#869](https://github.com/askap-vast/vast-pipeline/pull/869): feat: Speed up source webpage load times by caching cutouts
 - [#864](https://github.com/askap-vast/vast-pipeline/pull/864/): fix: Correctly calculate per-source average astrometric uncertainties by excluding forced phot measurements
 - [#861](https://github.com/askap-vast/vast-pipeline/pull/861): fix, feat: Major optimisations and minor logging tweaks in association step
