@@ -89,16 +89,14 @@ If selected in the pipeline run configuration file, the flux and positional erro
 
 #### Positional Errors (de Ruiter method)
 
-Firstly, the systematic astrometry error from the user pipeline run configuration file (`measurements.ra_uncertainty` and `measurements.dec_uncertainty`) are applied to the measurement. These values are saved as `ew_sys_err` and `ns_sys_err`.
+The systematic astrometry error from the user pipeline run configuration file (`measurements.ra_uncertainty` and `measurements.dec_uncertainty`) are saved as `ew_sys_err` and `ns_sys_err`.
 
 !!! warning
-    Currently the systematic errors applied at the pipeline run stage are then permanently fixed to the measurements, meaning that all subsequent runs using these measurements will use the fixed astrometic error.
+    Currently the systematic errors applied at the pipeline run stage are then permanently fixed to the measurements, meaning that all subsequent runs using these measurements will use the fixed astrometric error.
     
     It is recommended to leave the values to the default value of 1.0.
 
-In order to apply the `TraP` de Ruiter association method, some extra positional error values are calculated. Firstly the `ra_err` and `dec_err` are used to estimate the largest angular uncertainty of the measurement which is recorded as the `error_radius`. It is estimated by finding the largest angular separation between the measurement coordinate and every coordinate combination of $ra \pm \delta ra$ and $dec \pm \delta dec$.
-
-The final uncertainties are then defined as the hypotenuse values of `ew_sys_err`/`ns_sys_err` and the `error_radius`. These are defined as the `uncertainty_ew` and `uncertainty_ns`, respectively. The weights of the errors are defined as $\frac{1}{\text{uncertainty_x}^{2}}$ where `x` is either `ew` or `ns`.
+The position uncertainties are calculated from the quadratic sum of `ew_sys_err`/`ns_sys_err` and `ra_err`/`dec_err` respectively and are defined as `uncertainty_ew` and `uncertainty_ns`. The weights of the errors are defined as $\frac{1}{\text{uncertainty_x}^{2}}$ where `x` is either `ew` or `ns`.
 
 #### Other Metrics
 
