@@ -533,12 +533,14 @@
   $(document).on("JS9:ready", async function () {
     var measurementData = JSON.parse(document.getElementById("data-js9").textContent);
     var firstDetectionMeasurementData = JSON.parse(document.getElementById("data-js9-first-detection").textContent);
-    measurementData.push(firstDetectionMeasurementData);
+    const last_id = measurementData.length + 1;
+    await loadFitsImage(firstDetectionMeasurementData.id, "JS9_" + last_id);
     // load all images and wait until they're all done
     await Promise.all(measurementData.map((measurement, i) => {
       var displayId = "JS9_" + (i + 1);
       return loadFitsImage(measurement.id, displayId);
     }));
+    measurementData.push(firstDetectionMeasurementData);
     JS9.SyncImages(); // sync panning between images
     focusOnSource(4.0);
     // overlay nearby components as regions

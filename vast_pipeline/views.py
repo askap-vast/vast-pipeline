@@ -2,6 +2,7 @@ import io
 import os
 import json
 import logging
+
 import matplotlib.pyplot as plt
 import shortuuid
 import traceback
@@ -36,6 +37,7 @@ from django.http import (
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.safestring import mark_safe
 
 from django_q.tasks import async_task
@@ -59,6 +61,7 @@ from vast_pipeline.models import (
     Comment,
     CommentableModel,
     Image,
+    ImageCutout as ImageCutoutModel,
     Measurement,
     Run,
     Source,
@@ -1922,34 +1925,48 @@ class ImageCutout(APIView):
         if img_type not in ("fits", "png"):
             raise Http404("GET query param img_type must be either 'fits' or 'png'.")
 
-        measurement = Measurement.objects.get(id=measurement_id)
+        try:
+            measurement = Measurement.objects.get(id=measurement_id)
+        except Measurement.DoesNotExist:
+            raise Http404("Measurement not found.")
 
-        image_hdu: fits.PrimaryHDU = open_fits(measurement.image.path)[0]
+        # Check if cutout already exists in the database
+        logger.info("Checking for existing cutout...")
+        existing_cutout = ImageCutoutModel.objects.filter(measurement=measurement, size=size, img_type=img_type).first()
+        if existing_cutout:
+            logger.info("Cutout exists...")
+            existing_cutout.last_accessed = timezone.now()
+            existing_cutout.save(update_fields=["last_accessed"])
+            return FileResponse(
+                open(existing_cutout.image.path, "rb"),
+                as_attachment=True,
+                filename=os.path.basename(existing_cutout.image.path)
+            )
+        logger.info("Existing cutout does not exist...")
+        try:
+            image_hdu: fits.PrimaryHDU = open_fits(measurement.image.path)[0]
+            data = image_hdu.data
+            if data.ndim == 4:
+                data = data[0, 0, :, :]
+        except Exception as e:
+            raise Http404(f"Error opening FITS file: {str(e)}")
+
         coord = SkyCoord(ra=measurement.ra, dec=measurement.dec, unit="deg")
         sizes = {
             "xlarge": "40arcmin",
             "large": "20arcmin",
             "normal": "2arcmin",
         }
-
-        filenames = {
-            "xlarge": f"{measurement.name}_cutout_xlarge.{img_type}",
-            "large": f"{measurement.name}_cutout_large.fits.{img_type}",
-            "normal": f"{measurement.name}_cutout.fits.{img_type}",
-        }
+        if size not in sizes:
+            raise Http404("Invalid size parameter.")
 
         try:
-            data = image_hdu.data[0, 0, :, :]
+            cutout = Cutout2D(
+                data, coord, Angle(sizes[size]), wcs=WCS(image_hdu.header, naxis=2),
+                mode='partial'
+            )
         except Exception as e:
-            data = image_hdu.data
-
-        cutout = Cutout2D(
-            data,
-            coord,
-            Angle(sizes[size]),
-            wcs=WCS(image_hdu.header, naxis=2),
-            mode="partial",
-        )
+            raise Http404(f"Failed to create cutout: {str(e)}")
 
         # add beam properties to the cutout header and fix cdelts as JS9 does not deal
         # with PCi_j properly
@@ -1966,17 +1983,32 @@ class ImageCutout(APIView):
         )
 
         cutout_hdu = fits.PrimaryHDU(data=cutout.data, header=cutout_header)
-        cutout_file = io.BytesIO()
+        filename = f"{measurement.name}_cutout_{size}.{img_type}"
+        cutout_path = os.path.join(settings.MEDIA_ROOT, filename)
 
+        logger.info(f"Saving to {cutout_path}...")
+
+        # Save the cutout file
         if img_type == "fits":
-            cutout_hdu.writeto(cutout_file)
+            cutout_hdu.writeto(cutout_path, overwrite=True)
         else:
-            plt.imsave(cutout_file, cutout.data, dpi=600)
-        cutout_file.seek(0)
-        response = FileResponse(
-            cutout_file, as_attachment=True, filename=filenames[size]
+            plt.imsave(cutout_path, cutout.data, dpi=600)
+
+        # Save to database
+        ImageCutoutModel.objects.create(
+            measurement=measurement,
+            size=size,
+            img_type=img_type,
+            image=filename,
+            last_accessed=timezone.now()
         )
-        return response
+
+        # Serve the saved file
+        return FileResponse(
+            open(cutout_path, "rb"),
+            as_attachment=True,
+            filename=os.path.basename(cutout_path)
+        )
 
 
 class MeasurementQuery(APIView):

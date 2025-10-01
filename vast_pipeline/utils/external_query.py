@@ -3,10 +3,15 @@ from typing import Any, Dict, List
 from urllib.parse import urljoin
 
 from astropy.coordinates import SkyCoord, Angle, Longitude, Latitude
+
 from astroquery.simbad import Simbad
 from astroquery.ipac.ned import Ned
 from django.conf import settings
 import requests
+
+import logging
+
+logger = logging.getLogger()
 
 
 def simbad(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
@@ -206,6 +211,7 @@ def tns(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
             - ra_hms: RA coordinate string in hms format.
             - dec_dms: Dec coordinate string in ±dms format.
     """
+
     TNS_API_URL = "https://www.wis-tns.org/api/"
     headers = {
         "user-agent": settings.TNS_USER_AGENT,
@@ -224,7 +230,8 @@ def tns(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
     )
     tns_results_dict_list: List[Dict[str, Any]] = []
     if r.ok:
-        tns_results_dict_list = r.json()["data"]["reply"]
+        logger.debug(r.json())
+        tns_results_dict_list = r.json()["data"]
         # Get details for each object result. TNS API doesn't support doing this in one
         # request, so we iterate.
         for result in tns_results_dict_list:
@@ -237,7 +244,8 @@ def tns(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
                 headers=headers,
             )
             if r.ok:
-                object_dict = r.json()["data"]["reply"]
+                logger.debug(r.json())
+                object_dict = r.json()["data"]
                 object_coord = SkyCoord(
                     ra=object_dict["radeg"], dec=object_dict["decdeg"], unit="deg"
                 )
