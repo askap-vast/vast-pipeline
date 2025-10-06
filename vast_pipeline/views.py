@@ -1633,7 +1633,8 @@ def SourceDetail(request, pk):
     source = Source.objects.filter(id=pk).annotate(run_name=F('run__name')).values().get()
     source['aladin_ra'] = source['wavg_ra']
     source['aladin_dec'] = source['wavg_dec']
-    source['aladin_zoom'] = 0.15
+    source['aladin_zoom'] = settings.ALADIN_ZOOM
+    source['aladin_radius'] = settings.ALADIN_RADIUS
     source['wavg_ra_hms'] = deg2hms(source['wavg_ra'], hms_format=True)
     source['wavg_dec_dms'] = deg2dms(source['wavg_dec'], dms_format=True)
     source['wavg_l'], source['wavg_b'] = equ2gal(source['wavg_ra'], source['wavg_dec'])
