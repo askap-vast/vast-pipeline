@@ -3,7 +3,7 @@ from typing import Any, Dict, List
 from urllib.parse import urljoin
 
 from astropy.coordinates import SkyCoord, Angle, Longitude, Latitude
-
+from astropy import units as u
 from astroquery.simbad import Simbad
 from astroquery.ipac.ned import Ned
 from django.conf import settings
@@ -259,3 +259,80 @@ def tns(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
                 result["database"] = "TNS"
                 result["object_name"] = object_dict["objname"]
     return tns_results_dict_list
+
+
+def das(
+    coord: SkyCoord,
+    radius: Angle,
+    catalogues: List[str],
+    api_url: str = "https://das.datacentral.org.au/vast",
+) -> List[Dict[str, Any]]:
+    """
+    Performs a cone search with the DAS VAST API.
+
+    Args:
+        coord: SkyCoord of the search center.
+        radius: Angle of the search radius.
+        catalogues: List of catalogues to query.
+        api_url: DAS API endpoint.
+
+    Returns:
+        List of dicts. Each dict contains:
+            - object_name
+            - database (catalogue)
+            - separation_arcsec
+            - ra_hms
+            - dec_dms
+            - object_url
+            - otype (empty string, for serializer compatibility)
+            - otype_long (empty string, for serializer compatibility)
+    """
+    results: List[Dict[str, Any]] = []
+
+    payload = {
+        "ra": coord.ra.deg,
+        "dec": coord.dec.deg,
+        "radius": radius.to(u.deg).value,
+        "catalogues": catalogues,
+    }
+
+    headers = {"Content-Type": "application/json"}
+
+    try:
+        response = requests.post(api_url, json=payload, headers=headers, timeout=30)
+        response.raise_for_status()
+        data = response.json()
+
+        if data.get("status") != "ok":
+            print(f"DAS API returned status: {data.get('status_msg')}")
+            return results
+
+        results_data = data.get("results", {})
+        for cat in catalogues:
+            cat_data = results_data.get(cat, {})
+            if not cat_data:
+                continue
+
+            offsets = cat_data.get("offsets", [])
+            ras = cat_data.get("ra", [])
+            decs = cat_data.get("dec", [])
+            ids = cat_data.get("ids", [])
+            object_url_base = cat_data.get("object_url", "")
+
+            for i in range(len(ids)):
+                obj_coord = SkyCoord(ra=float(ras[i]), dec=float(decs[i]), unit="deg")
+                results.append({
+                    "object_name": ids[i],
+                    "database": cat,
+                    "separation_arcsec": float(offsets[i]) if i < len(offsets) else None,
+                    "ra_hms": obj_coord.ra.to_string(unit="hourangle"),
+                    "dec_dms": obj_coord.dec.to_string(unit="deg"),
+                    "object_url": f"{object_url_base}{ids[i]}",
+                    "otype": "",
+                    "otype_long": "",
+                })
+
+    except (requests.RequestException, KeyError, ValueError) as exc:
+        print(f"Error querying DAS API: {exc}")
+
+    return results

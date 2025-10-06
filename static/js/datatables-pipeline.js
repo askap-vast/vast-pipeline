@@ -67,14 +67,18 @@ function drawExternalResultsTable(id, buttons = DEFAULT_DATATABLE_BUTTONS) {
         {
           "targets": 0,
           "render": function( data, type, row, meta) {
-            if (row["database"] === "SIMBAD") {
-              return '<a href="http://simbad.u-strasbg.fr/simbad/sim-id?Ident=' + row['object_name'] + '" target="_blank">' + row['object_name'] + '</a> (' + row['database'] + ')'
-            } else if (row["database"] == "NED") {
-              return '<a href="https://ned.ipac.caltech.edu/byname?objname=' + encodeURIComponent(row['object_name']) + '" target="_blank">' + row['object_name'] + '</a> (' + row['database'] + ')'
-            } else if (row["database"] == "TNS") {
-              return '<a href="https://www.wis-tns.org/object/' + row['object_name'] + '" target="_blank">' + row['object_name'] + '</a> (' + row['database'] + ')'
+            if (row['object_url']) {
+              return '<a href="' + row['object_url'] + '" target="_blank">' + row['object_name'] + '</a> (' + row['database'] + ')';
             } else {
-              return row['object_name'] + ' (' + row['database'] + ')'
+              if (row["database"] === "SIMBAD") {
+                return '<a href="http://simbad.u-strasbg.fr/simbad/sim-id?Ident=' + row['object_name'] + '" target="_blank">' + row['object_name'] + '</a> (' + row['database'] + ')'
+              } else if (row["database"] == "NED") {
+                return '<a href="https://ned.ipac.caltech.edu/byname?objname=' + encodeURIComponent(row['object_name']) + '" target="_blank">' + row['object_name'] + '</a> (' + row['database'] + ')'
+              } else if (row["database"] == "TNS") {
+                return '<a href="https://www.wis-tns.org/object/' + row['object_name'] + '" target="_blank">' + row['object_name'] + '</a> (' + row['database'] + ')'
+              } else {
+                return row['object_name'] + ' (' + row['database'] + ')'
+              }
             }
           }
         },
