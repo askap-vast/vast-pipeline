@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - V2: Migrate pipeline to used a Dask.distributed.LocalCluster throughout [#816](https://github.com/askap-vast/vast-pipeline/pull/816)
 - V2: Add Dask.distributed support
 - V2: Use `django-postgres-copy` for database uploads [#803](https://github.com/askap-vast/vast-pipeline/pull/803)
+- Added source cutout cache and corresponding helper functions [#869](https://github.com/askap-vast/vast-pipeline/pull/869)
 - Added image.utils.get_fits_header to only fetch header when initialising Image object [#841](https://github.com/askap-vast/vast-pipeline/pull/841)
 - Added more detailed warnings about the use of Condon Errors throughout the docs and code [#806](https://github.com/askap-vast/vast-pipeline/pull/806)
 - Added processing configuration parameters to the run configuration documentation [#805](https://github.com/askap-vast/vast-pipeline/pull/805)
@@ -33,6 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - V2: Updated docs dependencies and fixed outdated information and various warnings [#801](https://github.com/askap-vast/vast-pipeline/pull/801)
 - V2: Reorganise new_high_sigma calculation into dedicated function [#714](https://github.com/askap-vast/vast-pipeline/pull/714)
 - V2: Update dependencies to fix dependabot warnings and prepare for Dask distributed implementation.
+- Changed loading of source cutouts to utilise caching [#869](https://github.com/askap-vast/vast-pipeline/pull/869)
 - Speed up final step of basic/advanced association by not resetting index twice (factor of 5-100x faster!) [#861](https://github.com/askap-vast/vast-pipeline/pull/861)
 - Speed up wrap handling by not writing to main dataframe [#861](https://github.com/askap-vast/vast-pipeline/pull/861)
 - Speed up tmp_srcs_df groupby by not sorting (2x faster) [#861](https://github.com/askap-vast/vast-pipeline/pull/861)
@@ -55,6 +57,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - V2: Fix bug when deleting source tags from database which are referenced by multiple sources [#803](https://github.com/askap-vast/vast-pipeline/pull/803)
 - Fixed incorrect error ellipse calculation [#792](https://github.com/askap-vast/vast-pipeline/pull/792)
 - V2: Fix incorrect calculation of the new_high_sigma parameter [#714](https://github.com/askap-vast/vast-pipeline/pull/714)
+- Fixed the code handling the updated TNS API [#872](https://github.com/askap-vast/vast-pipeline/pull/872)
 - Correctly calculate per-source average astrometric uncertainties by excluding forced phot measurements [#864](https://github.com/askap-vast/vast-pipeline/pull/864/)
 - Fixed broken skyregion group tag in association logging [#861](https://github.com/askap-vast/vast-pipeline/pull/861)
 - Fixed extremely slow pipeline run deletion via batching [#840](https://github.com/askap-vast/vast-pipeline/pull/840)
@@ -93,6 +96,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [#801](https://github.com/askap-vast/vast-pipeline/pull/801): docs, dep: v2: Updated docs dependencies and fixed outdated information and various warnings
 - [#714](https://github.com/askap-vast/vast-pipeline/pull/714): fix: V2: Correctly calculate new_high_sigma parameter 
 - [#798](https://github.com/askap-vast/vast-pipeline/pull/798): dep: V2: Update dependencies to deal with dependabot reccomendations and to prepare for V2 upgrades.
+- [#872](https://github.com/askap-vast/vast-pipeline/pull/872): fix: Fixed the code handling the updated TNS API
+- [#869](https://github.com/askap-vast/vast-pipeline/pull/869): feat: Speed up source webpage load times by caching cutouts
 - [#864](https://github.com/askap-vast/vast-pipeline/pull/864/): fix: Correctly calculate per-source average astrometric uncertainties by excluding forced phot measurements
 - [#861](https://github.com/askap-vast/vast-pipeline/pull/861): fix, feat: Major optimisations and minor logging tweaks in association step
 - [#840](https://github.com/askap-vast/vast-pipeline/pull/840): fix, feat: Optimise database clearing (sources, forced fits and runs)
