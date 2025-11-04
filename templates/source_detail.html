@@ -234,6 +234,9 @@
                       let zoomLevel = {{ source.aladin_zoom }};
                       let radius = {{ source.aladin_radius }};
                       let radiusDeg = radius / 60;
+                      let targetRA = {{ source.aladin_ra }};
+                      let targetDec = {{ source.aladin_dec }};
+                      let targetRad = 0.0020833333333333333;
 
                       A.init.then(() => {
                           aladin = A.aladin('#aladin-lite-div', {
@@ -242,6 +245,10 @@
                               fov: zoomLevel,
                               log: false
                           });
+                          
+                          var overlay = A.graphicOverlay({color: '#ffffff', lineWidth: 2, name: 'Error radius'});
+                                aladin.addOverlay(overlay);
+                          overlay.add(A.circle(targetRA, targetDec, targetRad, {color: 'white'}));
 
                           document.getElementById('surveySelect').addEventListener('change', function () {
                               const selectedSurvey = this.value;
@@ -283,21 +290,25 @@
                           });
 
                           const checkboxes = document.querySelectorAll('#vizierCatalogues input[type="checkbox"]');
-                          console.log(`Found ${checkboxes.length} catalog checkboxes`);
+                            console.log(`Found ${checkboxes.length} catalog checkboxes`);
 
-                          checkboxes.forEach(checkbox => {
-                              checkbox.addEventListener('change', function () {
-                                  const catalogCode = this.value;
+                            checkboxes.forEach(checkbox => {
+                                const catalogCode = checkbox.value;
 
-                                  console.log(`Checkbox (${catalogCode}) changed to ${this.checked}`);
+                                checkbox.checked = true;
 
-                                  if (this.checked) {
-                                      aladin.addCatalog(catalogs[catalogCode]);
-                                  } else {
-                                      aladin.removeOverlay(catalogs[catalogCode]);
-                                  }
-                              });
-                          });
+                                aladin.addCatalog(catalogs[catalogCode]);
+
+                                checkbox.addEventListener('change', function () {
+                                    console.log(`Checkbox (${catalogCode}) changed to ${this.checked}`);
+
+                                    if (this.checked) {
+                                        aladin.addCatalog(catalogs[catalogCode]);
+                                    } else {
+                                        aladin.removeOverlay(catalogs[catalogCode]);
+                                    }
+                                });
+                            });
                       });
 
                   </script>
