@@ -361,5 +361,5 @@ CUTOFF_DAYS = env("CUTOFF_DAYS", cast=int, default=30)
 MAX_SIZE_GB = env("MAX_SIZE_GB", cast=float, default=0.01)
 MEDIA_ROOT = env("MEDIA_ROOT", cast=str, default=None)
 
-ALADIN_ZOOM = env("ALADIN_ZOOM", cast=float, default=0.15)
+ALADIN_ZOOM = env("ALADIN_ZOOM", cast=float, default=0.017)
 ALADIN_RADIUS = env("ALADIN_RADIUS", cast=float, default=1)
