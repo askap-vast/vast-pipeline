@@ -67,6 +67,7 @@ function drawExternalResultsTable(id, buttons = DEFAULT_DATATABLE_BUTTONS) {
         {
           "targets": 0,
           "render": function( data, type, row, meta) {
+            console.log(row)
             if (row['object_url']) {
               return '<a href="' + row['object_url'] + '" target="_blank">' + row['object_name'] + '</a> (' + row['database'] + ')';
             } else {

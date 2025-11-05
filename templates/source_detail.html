@@ -417,7 +417,7 @@
     <div class="col-xl-6 mb-4">
       <div class="card shadow mb-4 h-100">
         <div class="card-header py-3">
-          <h6 class="m-0 font-weight-bold text-primary">External Search Results (1 arcmin)</h6>
+          <h6 class="m-0 font-weight-bold text-primary">External Search Results (30 arcsec)</h6>
         </div>
         <div class="card-body small">
           <div class="table-responsive">
@@ -603,7 +603,7 @@
 
 <!-- Datatable scripts -->
 {{ datatables|json_script:"datatable-conf" }}
-<script src="{% static 'js/datatables-pipeline.min.js' %}"></script>
+<script src="{% static 'js/datatables-pipeline.js' %}"></script>
 
 <!-- Bokeh scripts -->
 <script src="{% static 'vendor/bokehjs/bokeh.min.js' %}"></script>
