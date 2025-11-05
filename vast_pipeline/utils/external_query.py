@@ -349,7 +349,7 @@ def das(
     naming_dict = {
         "I/355": "Gaia DR3 ",
         "IV/39": "TIC ", #TIC
-        "B/psr": "", #PSR
+        "B/psr": "PSR ", #PSR
         "VIII/65": "NVSS J",
         "J/ApJS/255/30": "VLASS ", #VLASS
         "II/365": "CatWISE ",
