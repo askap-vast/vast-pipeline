@@ -2583,10 +2583,33 @@ class UtilitiesSet(ViewSet):
             fink_results = external_query.fink(coord, radius)
         except Exception as e:
             messages.error(request, f"Unable to get FINK query results: {str(e)}")
-
-        print(das_results)
         
         results = simbad_results + ned_results + tns_results + fink_results + das_results
+        
+        """results = simbad_results + ned_results + tns_results + fink_results# + das_results
+        
+        existing_names = []
+        for result in results:
+            existing_names.append(result['object_name'])
+        print("\n\n\n\n")
+        print(existing_names)
+        
+        for result in das_results:
+            print(result)
+            if result['object_name'] in existing_names:
+                print("Object exists")
+                das_results.remove(result)
+
+        
+        print("\n\n\n\n")
+        print(results)
+        
+        results += das_results
+        
+        print("\n\n\n\n")
+        print(results)
+        """
+        
         serializer = ExternalSearchSerializer(data=results, many=True)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
