@@ -2573,12 +2573,18 @@ class UtilitiesSet(ViewSet):
         cats = request.query_params.get("catalogues")
         catalogues = cats.split(",") if cats else ["I/355/gaiadr3"]
         das_results = []
-        try:
+        """try:
             das_results = external_query.das(coord, radius, catalogues=catalogues)
         except Exception as e:
             messages.error(request, f"Unable to get DAS query results: {str(e)}")
+        """
+        fink_results = []
+        try:
+            fink_results = external_query.fink(coord, radius)
+        except Exception as e:
+            messages.error(request, f"Unable to get FINK query results: {str(e)}")
 
-        results = simbad_results + ned_results + tns_results + das_results
+        results = simbad_results + ned_results + tns_results + fink_results + das_results
         serializer = ExternalSearchSerializer(data=results, many=True)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)

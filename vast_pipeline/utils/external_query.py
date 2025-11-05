@@ -260,6 +260,64 @@ def tns(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
                 result["object_name"] = object_dict["objname"]
     return tns_results_dict_list
 
+def fink(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
+    """Perform a cone search for sources with Fink.
+
+    Args:
+        coord: The coordinate of the centre of the cone.
+        radius: The radius of the cone in angular units.
+
+    Returns:
+        A list of dicts, where each dict is a query result row with the following keys:
+
+            - object_name: the name of the transient.
+            - database: the source of the result, i.e. TNS.
+            - separation_arcsec: separation to the query coordinate in arcsec.
+            - otype: object type.
+            - otype_long: long form of the object type. Not given by TNS, will always be
+                an empty string.
+            - ra_hms: RA coordinate string in hms format.
+            - dec_dms: Dec coordinate string in ±dms format.
+    """
+    FINK_API_URL = "https://api.fink-portal.org/api/v1/"
+    search_dict = {
+        'ra': str(coord.ra.deg),
+        'dec': str(coord.dec.deg),
+        'radius': str(radius.arcsec)
+      }
+    r = requests.post(
+        urljoin(FINK_API_URL,'conesearch'),
+        json=search_dict
+    )
+    
+    fink_results_dict_list: List[Dict[str, Any]]
+    
+    print(r)
+    print(r.ok)
+    print(r.json())
+    
+    if r.ok:
+        logger.debug(r.json())
+        
+    
+        fink_results_dict_list = r.json()
+        
+        for result in fink_results_dict_list:
+            object_coord = SkyCoord(
+                    ra=result["i:ra"], dec=result["i:dec"], unit="deg"
+                )
+            result["otype"] = result['d:classification']
+            result["otype_long"] = ""
+            result['separation_arcsec'] = result['v:separation_degree']*3600.
+            result["ra_hms"] = object_coord.ra.to_string(unit="hourangle")
+            result["dec_dms"] = object_coord.dec.to_string(unit="deg")
+            result['object_name'] = result['i:objectId']
+            result['database'] = 'FINK'
+            result['object_url'] = urljoin('https://fink-portal.org/',result['object_name'])
+            print(result)
+            
+    return fink_results_dict_list
+
 
 def das(
     coord: SkyCoord,

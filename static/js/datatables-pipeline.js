@@ -76,6 +76,8 @@ function drawExternalResultsTable(id, buttons = DEFAULT_DATATABLE_BUTTONS) {
                 return '<a href="https://ned.ipac.caltech.edu/byname?objname=' + encodeURIComponent(row['object_name']) + '" target="_blank">' + row['object_name'] + '</a> (' + row['database'] + ')'
               } else if (row["database"] == "TNS") {
                 return '<a href="https://www.wis-tns.org/object/' + row['object_name'] + '" target="_blank">' + row['object_name'] + '</a> (' + row['database'] + ')'
+              } else if (row["database"] == "FINK") {
+                return '<a href="https://fink-portal.org/' + row['object_name'] + '" target="_blank">' + row['object_name'] + '</a> (' + row['database'] + ')'
               } else {
                 return row['object_name'] + ' (' + row['database'] + ')'
               }
