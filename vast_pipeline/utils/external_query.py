@@ -392,7 +392,7 @@ def das(
                 obj_coord = SkyCoord(ra=float(ras[i]), dec=float(decs[i]), unit="deg")
                 results.append({
                     "object_name": f"{naming_dict[cat]}{ids[i]}",
-                    "database": cat,
+                    "database": f"VizieR: {cat}",
                     "separation_arcsec": float(offsets[i]) if i < len(offsets) else None,
                     "ra_hms": obj_coord.ra.to_string(unit="hourangle"),
                     "dec_dms": obj_coord.dec.to_string(unit="deg"),
