@@ -178,8 +178,9 @@
                   <div class="d-flex align-items-center mb-2" style="gap: 0.5rem;">
                       <label for="surveySelect" class="text-primary font-weight-bold mb-0" style="min-width: 80px;">Survey:</label>
                       <select id="surveySelect" class="form-control form-control-sm w-100">
-                          <option value="CDS/P/2MASS/color">2MASS</option>
+                          <option value="CDS/P/DSS/color">DSS</option>
                           <option value="CDS/P/DECaLS/DR5/color">DECaLS DR5</option>
+                          <option value="CDS/P/DECaPS/DR2/color">DECaPS DR2</option>
                           <option value="CDS/P/DES-DR2/ColorIRG">DES DR2</option>
                           <option value="CDS/P/DESI-Legacy-Surveys/DR10/color">DESI Legacy DR10</option>
                           <option value="CDS/P/SUMSS">SUMSS</option>
@@ -187,6 +188,9 @@
                           <option value="CDS/P/VISTA/VVV/DR4/ColorJYZ">VISTA VVV DR4</option>
                           <option value="CDS/P/ZTF/DR7/color">ZTF DR7</option>
                           <option value="CDS/P/PanSTARRS/DR1/color-i-r-g">PanSTARRS DR1</option>
+                          <option value="CDS/P/2MASS/color">2MASS</option>
+                          <option value="CSIRO/P/RACS/low/I">RACS Low Epoch 1</option>
+                          <option value="CSIRO/P/RACS/mid/I">RACS Mid Epoch 1</option>
                       </select>
                   </div>
 
@@ -240,7 +244,7 @@
 
                       A.init.then(() => {
                           aladin = A.aladin('#aladin-lite-div', {
-                              survey: 'CDS/P/2MASS/color',
+                              survey: 'CDS/P/DSS/color',
                               target: targetCoords,
                               fov: zoomLevel,
                               log: false
@@ -291,13 +295,18 @@
 
                           const checkboxes = document.querySelectorAll('#vizierCatalogues input[type="checkbox"]');
                             console.log(`Found ${checkboxes.length} catalog checkboxes`);
+                            
+                            const defaultCatalogs = ['I/355', 'B/psr'];
 
                             checkboxes.forEach(checkbox => {
                                 const catalogCode = checkbox.value;
 
-                                checkbox.checked = true;
-
-                                aladin.addCatalog(catalogs[catalogCode]);
+                                if (defaultCatalogs.includes(catalogCode)) {
+                                    checkbox.checked = true;
+                                    aladin.addCatalog(catalogs[catalogCode]);
+                                } else {
+                                    checkbox.checked = false;
+                                }
 
                                 checkbox.addEventListener('change', function () {
                                     console.log(`Checkbox (${catalogCode}) changed to ${this.checked}`);
