@@ -421,7 +421,7 @@
           <div class="table-responsive">
             <table class="table table-sm table-bordered table-striped table-hover" id="externalResultsTable"
               width="100%" cellspacing="0" data-server-side="false"
-              data-ajax="{% url 'vast_pipeline:api_utils-external-search' %}?coord={{ source.wavg_ra_hms }}{{ source.wavg_dec_dms }}&catalogues=I/355,IV/39,B/psr,VIII/65,J/ApJS/255/30,II/365&format=datatables&keep=otype_long,database">
+              data-ajax="{% url 'vast_pipeline:api_utils-external-search' %}?coord={{ source.wavg_ra_hms }}{{ source.wavg_dec_dms }}&catalogues=I/355/gaiadr3,IV/39,B/psr/psr,VIII/65,J/ApJS/255/30,II/365&format=datatables&keep=otype_long,database">
               <thead>
                 <tr>
                   <th data-data="object_name">ID</th>

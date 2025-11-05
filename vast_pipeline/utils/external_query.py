@@ -347,9 +347,9 @@ def das(
     """
     
     naming_dict = {
-        "I/355": "Gaia DR3 ",
+        "I/355/gaiadr3": "Gaia DR3 ",
         "IV/39": "TIC ", #TIC
-        "B/psr": "PSR ", #PSR
+        "B/psr/psr": "PSR ", #PSR
         "VIII/65": "NVSS J",
         "J/ApJS/255/30": "VLASS ", #VLASS
         "II/365": "CatWISE ",
@@ -392,7 +392,7 @@ def das(
                 obj_coord = SkyCoord(ra=float(ras[i]), dec=float(decs[i]), unit="deg")
                 results.append({
                     "object_name": f"{naming_dict[cat]}{ids[i]}",
-                    "database": f"VizieR: {cat}",
+                    "database": f"VizieR",
                     "separation_arcsec": float(offsets[i]) if i < len(offsets) else None,
                     "ra_hms": obj_coord.ra.to_string(unit="hourangle"),
                     "dec_dms": obj_coord.dec.to_string(unit="deg"),
