@@ -191,7 +191,7 @@
             <span class="text-primary font-weight-bold mb-0 me-3" style="white-space: nowrap;">VizieR Catalogues:</span>
 
             <div class="form-check mb-0 me-3" style="margin-left: 0.5rem">
-              <input class="form-check-input" type="checkbox" value="I/355" id="gaia">
+              <input class="form-check-input" type="checkbox" value="I/355/gaiadr3" id="gaia">
               <label class="form-check-label" for="gaia" style="color:#ff0000">Gaia DR3</label>
             </div>
             <div class="form-check mb-0 me-3" style="margin-left: 0.5rem">
@@ -199,7 +199,7 @@
               <label class="form-check-label" for="tess" style="color: #db01fd">TIC v8.2</label>
             </div>
             <div class="form-check mb-0 me-3" style="margin-left: 0.5rem">
-              <input class="form-check-input" type="checkbox" value="B/psr" id="psr">
+              <input class="form-check-input" type="checkbox" value="B/psr/psr" id="psr">
               <label class="form-check-label" for="psr" style="color: #bdb400">PSRcat</label>
             </div>
             <div class="form-check mb-0 me-3" style="margin-left: 0.5rem">
@@ -258,14 +258,14 @@
 
           // Catalogs
           const catalogs = {};
-          catalogs["I/355"] = A.catalogFromURL(`https://vizier.u-strasbg.fr/viz-bin/votable?-source=I/355/gaiadr3&-c=${targetCoords}&-c.rd=${radiusDeg}&-out=RA_ICRS,DE_ICRS&-out.max=99999`, { sourceSize: 12, color: '#ff0000' });
+          catalogs["I/355/gaiadr3"] = A.catalogFromURL(`https://vizier.u-strasbg.fr/viz-bin/votable?-source=I/355/gaiadr3&-c=${targetCoords}&-c.rd=${radiusDeg}&-out=RA_ICRS,DE_ICRS&-out.max=99999`, { sourceSize: 12, color: '#ff0000' });
           catalogs["IV/39"] = A.catalogFromURL(`https://vizier.u-strasbg.fr/viz-bin/votable?-source=IV/39&-c=${targetCoords}&-c.rd=${radiusDeg}&-out=ra,dec&-out.max=99999`, { sourceSize: 12, color: '#db01fd' });
-          catalogs["B/psr"] = A.catalogFromURL(`https://vizier.u-strasbg.fr/viz-bin/votable?-source=B/psr&-c=${targetCoords}&-c.rd=${radiusDeg}&-out=RAJ2000,DEJ2000&-out.max=99999`, { sourceSize: 12, color: '#bdb400' });
+          catalogs["B/psr/psr"] = A.catalogFromURL(`https://vizier.u-strasbg.fr/viz-bin/votable?-source=B/psr/psr&-c=${targetCoords}&-c.rd=${radiusDeg}&-out=RAJ2000,DEJ2000&-out.max=99999`, { sourceSize: 12, color: '#bdb400' });
           catalogs["VIII/65"] = A.catalogFromURL(`https://vizier.u-strasbg.fr/viz-bin/votable?-source=VIII/65&-c=${targetCoords}&-c.rd=${radiusDeg}&-out=RA_ICRS,DE_ICRS&-out.max=99999`, { sourceSize: 12, color: '#0000ff' });
           catalogs["J/ApJS/255/30"] = A.catalogFromURL(`https://vizier.u-strasbg.fr/viz-bin/votable?-source=J/ApJS/255/30&-c=${targetCoords}&-c.rd=${radiusDeg}&-out=RA_ICRS,DE_ICRS&-out.max=99999`, { sourceSize: 12, color: '#ffa500' });
           catalogs["II/365"] = A.catalogFromURL(`https://vizier.u-strasbg.fr/viz-bin/votable?-source=II/365&-c=${targetCoords}&-c.rd=${radiusDeg}&-out=RA_ICRS,DE_ICRS&-out.max=99999`, { sourceSize: 12, color: '#00bbff' });
 
-          const defaultCatalogs = ['I/355', 'B/psr'];
+          const defaultCatalogs = ['I/355/gaiadr3', 'B/psr/psr'];
           document.querySelectorAll('#vizierCatalogues input[type="checkbox"]').forEach(checkbox => {
             const code = checkbox.value;
             checkbox.checked = defaultCatalogs.includes(code);
