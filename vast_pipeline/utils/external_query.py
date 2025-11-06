@@ -292,10 +292,6 @@ def fink(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
     
     fink_results_dict_list: List[Dict[str, Any]]
     
-    #print(r)
-    #print(r.ok)
-    #print(r.json())
-    
     if r.ok:
         logger.debug(r.json())
         
@@ -314,7 +310,6 @@ def fink(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
             result['object_name'] = result['i:objectId']
             result['database'] = 'FINK'
             result['object_url'] = urljoin('https://fink-portal.org/',result['object_name'])
-            print(result)
             
     return fink_results_dict_list
 

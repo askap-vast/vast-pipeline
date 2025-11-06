@@ -2586,13 +2586,16 @@ class UtilitiesSet(ViewSet):
         
         results = simbad_results + ned_results + tns_results + fink_results + das_results
         
-        """results = simbad_results + ned_results + tns_results + fink_results# + das_results
+        # The below code will remove duplicates from the DAS results
+        # However, I'm not sure if that's actually the best way forward - 
+        # e.g. the Gaia positions from DAS are PM corrected, whereas those
+        # in SIMBAD are not, even though SIMBAD has more info
+
+        """results = simbad_results + ned_results + tns_results + fink_results
         
         existing_names = []
         for result in results:
             existing_names.append(result['object_name'])
-        print("\n\n\n\n")
-        print(existing_names)
         
         for result in das_results:
             print(result)
@@ -2600,14 +2603,7 @@ class UtilitiesSet(ViewSet):
                 print("Object exists")
                 das_results.remove(result)
 
-        
-        print("\n\n\n\n")
-        print(results)
-        
         results += das_results
-        
-        print("\n\n\n\n")
-        print(results)
         """
         
         serializer = ExternalSearchSerializer(data=results, many=True)
