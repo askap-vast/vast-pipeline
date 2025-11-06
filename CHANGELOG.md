@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added custom Aladin lite display to source webpages [#874](https://github.com/askap-vast/vast-pipeline/pull/874)
+- Added Vizier crossmatches to source webpages via Data Central API [#874](https://github.com/askap-vast/vast-pipeline/pull/874)
+- Added Fink crossmatches to source webpages [#874](https://github.com/askap-vast/vast-pipeline/pull/874)
 - Added source cutout cache and corresponding helper functions [#869](https://github.com/askap-vast/vast-pipeline/pull/869)
 - Added image.utils.get_fits_header to only fetch header when initialising Image object [#841](https://github.com/askap-vast/vast-pipeline/pull/841)
 - Added more detailed warnings about the use of Condon Errors throughout the docs and code [#806](https://github.com/askap-vast/vast-pipeline/pull/806)
@@ -53,8 +56,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Removed
 
+- Removed Aladin lite display containing RACS and other ASKAP HIPS images [#874](https://github.com/askap-vast/vast-pipeline/pull/874)
+
+
 #### List of PRs
 
+- [#874](https://github.com/askap-vast/vast-pipeline/pull/874): feat: Upgrade source webpages with improved Aladin lite display and expanded external crossmatching
 - [#872](https://github.com/askap-vast/vast-pipeline/pull/872): fix: Fixed the code handling the updated TNS API
 - [#869](https://github.com/askap-vast/vast-pipeline/pull/869): feat: Speed up source webpage load times by caching cutouts
 - [#864](https://github.com/askap-vast/vast-pipeline/pull/864/): fix: Correctly calculate per-source average astrometric uncertainties by excluding forced phot measurements
