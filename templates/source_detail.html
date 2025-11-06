@@ -164,163 +164,129 @@
     </div>
 
     <!-- Aladin -->
-      <div class="col-xl-4 d-flex">
-          <div class="card shadow mb-4 flex-fill">
-              <div class="card-body d-flex flex-column gap-3">
+    <div class="col-xl-4 d-flex">
+      <div class="card shadow mb-4 flex-fill">
+        <div class="card-body d-flex flex-column gap-3">
 
-                  <!-- Survey -->
-                  <div class="d-flex align-items-center mb-2" style="gap: 0.5rem;">
-                      <label for="surveySelect" class="text-primary font-weight-bold mb-0" style="min-width: 80px;">Survey:</label>
-                      <select id="surveySelect" class="form-control form-control-sm w-100">
-                          <option value="CDS/P/DSS/color">DSS</option>
-                          <option value="CDS/P/DECaLS/DR5/color">DECaLS DR5</option>
-                          <option value="CDS/P/DECaPS/DR2/color">DECaPS DR2</option>
-                          <option value="CDS/P/SUMSS">SUMSS</option>
-                          <option value="CDS/P/Skymapper-color-IRG">Skymapper</option>
-                          <option value="CDS/P/VISTA/VVV/DR4/ColorJYZ">VISTA VVV DR4</option>
-                          <option value="CDS/P/ZTF/DR7/color">ZTF DR7</option>
-                          <option value="CDS/P/PanSTARRS/DR1/color-i-r-g">PanSTARRS DR1</option>
-                          <option value="CDS/P/2MASS/color">2MASS</option>
-                          <option value="CSIRO/P/RACS/low/I">RACS Low Epoch 1</option>
-                          <option value="CSIRO/P/RACS/mid/I">RACS Mid Epoch 1</option>
-                      </select>
-                  </div>
-
-                  <!-- VizieR Catalogues -->
-                  <div id="vizierCatalogues" class="mb-2 d-flex align-items-center flex-wrap">
-                      <span class="text-primary font-weight-bold mb-0 me-3" style="white-space: nowrap;">VizieR Catalogues:</span>
-
-                      <div class="form-check mb-0 me-3" style="margin-left: 0.5rem">
-                          <input class="form-check-input" type="checkbox" value="I/355" id="gaia">
-                          <label class="form-check-label" for="gaia" style="color:#ff0000">Gaia DR3</label>
-                      </div>
-                      <div class="form-check mb-0 me-3" style="margin-left: 0.5rem">
-                          <input class="form-check-input" type="checkbox" value="IV/39" id="tess">
-                          <label class="form-check-label" for="tess" style="color: #db01fd">TIC v8.2</label>
-                      </div>
-                      <div class="form-check mb-0 me-3" style="margin-left: 0.5rem">
-                          <input class="form-check-input" type="checkbox" value="B/psr" id="psr">
-                          <label class="form-check-label" for="psr" style="color: #bdb400">PSRcat</label>
-                      </div>
-                      <div class="form-check mb-0 me-3" style="margin-left: 0.5rem">
-                          <input class="form-check-input" type="checkbox" value="VIII/65" id="nvss">
-                          <label class="form-check-label" for="nvss" style="color: #0000ff">NVSS</label>
-                      </div>
-                      <div class="form-check mb-0 me-3" style="margin-left: 0.5rem">
-                          <input class="form-check-input" type="checkbox" value="J/ApJS/255/30" id="vlass">
-                          <label class="form-check-label" for="vlass" style="color: #ffa500">VLASS</label>
-                      </div>
-                      <div class="form-check mb-0" style="margin-left: 0.5rem">
-                          <input class="form-check-input" type="checkbox" value="II/365" id="catwise">
-                          <label class="form-check-label" for="catwise" style="color: #00bbff">CatWISE</label>
-                      </div>
-                  </div>
-
-                  <!-- Aladin Viewer -->
-                  <div style="min-height: 400px">
-                      <div id='aladin-lite-div' style='width: 100%; height: 100%;'></div>
-                  </div>
-                  <script
-                    src='https://aladin.cds.unistra.fr/AladinLite/api/v3/latest/aladin.js'
-                    charset='utf-8'>
-                  </script>
-
-                  <script>
-                      let aladin;
-
-                      let targetCoords = "{{ source.aladin_ra }}%20{{ source.aladin_dec }}";
-                      let zoomLevel = {{ source.aladin_zoom }};
-                      let radius = {{ source.aladin_radius }};
-                      let radiusDeg = radius / 60;
-                      let targetRA = {{ source.aladin_ra }};
-                      let targetDec = {{ source.aladin_dec }};
-                      let targetRad = 0.0020833333333333333;
-
-                      A.init.then(() => {
-                          aladin = A.aladin('#aladin-lite-div', {
-                              survey: 'CDS/P/DSS/color',
-                              target: targetCoords,
-                              fov: zoomLevel,
-                              log: false
-                          });
-                          
-                          var overlay = A.graphicOverlay({color: '#ffffff', lineWidth: 2, name: 'Source position'});
-                                aladin.addOverlay(overlay);
-                          overlay.add(A.circle(targetRA, targetDec, targetRad, {color: 'white'}));
-
-                          document.getElementById('surveySelect').addEventListener('change', function () {
-                              const selectedSurvey = this.value;
-                              if (selectedSurvey) {
-                                  aladin.setImageSurvey(selectedSurvey);
-                              }
-                          });
-
-                          let catalogs = {};
-                          catalogs["I/355"] = A.catalogFromURL('https://vizier.u-strasbg.fr/viz-bin/votable?-source=I/355/gaiadr3&-c=' + targetCoords + '&-c.rd=' + radiusDeg + '&-out=RA_ICRS,DE_ICRS&-out.max=99999', {
-                              sourceSize: 12,
-                              color: '#ff0000',
-                              onClick: 'showTable',
-                          });
-                          catalogs["IV/39"] = A.catalogFromURL('https://vizier.u-strasbg.fr/viz-bin/votable?-source=IV/39&-c=' + targetCoords + '&-c.rd=' + radiusDeg + '&-out=ra,dec&-out.max=99999', {
-                              sourceSize: 12,
-                              color: '#db01fd',
-                              onClick: 'showTable',
-                          });
-                          catalogs["B/psr"] = A.catalogFromURL('https://vizier.u-strasbg.fr/viz-bin/votable?-source=B/psr&-c=' + targetCoords + '&-c.rd=' + radiusDeg + '&-out=RAJ2000,DEJ2000&-out.max=99999', {
-                              sourceSize: 12,
-                              color: '#bdb400',
-                              onClick: 'showTable',
-                          });
-                          catalogs["VIII/65"] = A.catalogFromURL('https://vizier.u-strasbg.fr/viz-bin/votable?-source=VIII/65&-c=' + targetCoords + '&-c.rd=' + radiusDeg + '&-out=RA_ICRS,DE_ICRS&-out.max=99999', {
-                              sourceSize: 12,
-                              color: '#0000ff',
-                              onClick: 'showTable',
-                          });
-                          catalogs["J/ApJS/255/30"] = A.catalogFromURL('https://vizier.u-strasbg.fr/viz-bin/votable?-source=J/ApJS/255/30&-c=' + targetCoords + '&-c.rd=' + radiusDeg + '&-out=RA_ICRS,DE_ICRS&-out.max=99999', {
-                              sourceSize: 12,
-                              color: '#ffa500',
-                              onClick: 'showTable',
-                          });
-                          catalogs["II/365"] = A.catalogFromURL('https://vizier.u-strasbg.fr/viz-bin/votable?-source=II/365&-c=' + targetCoords + '&-c.rd=' + radiusDeg + '&-out=RA_ICRS,DE_ICRS&-out.max=99999', {
-                              sourceSize: 12,
-                              color: '#00bbff',
-                              onClick: 'showTable',
-                          });
-
-                          const checkboxes = document.querySelectorAll('#vizierCatalogues input[type="checkbox"]');
-                            console.log(`Found ${checkboxes.length} catalog checkboxes`);
-                            
-                            const defaultCatalogs = ['I/355', 'B/psr'];
-
-                            checkboxes.forEach(checkbox => {
-                                const catalogCode = checkbox.value;
-
-                                if (defaultCatalogs.includes(catalogCode)) {
-                                    checkbox.checked = true;
-                                    aladin.addCatalog(catalogs[catalogCode]);
-                                } else {
-                                    checkbox.checked = false;
-                                }
-
-                                checkbox.addEventListener('change', function () {
-                                    console.log(`Checkbox (${catalogCode}) changed to ${this.checked}`);
-
-                                    if (this.checked) {
-                                        aladin.addCatalog(catalogs[catalogCode]);
-                                    } else {
-                                        aladin.removeOverlay(catalogs[catalogCode]);
-                                    }
-                                });
-                            });
-                      });
-
-                  </script>
-              </div>
+          <!-- Survey -->
+          <div class="d-flex align-items-center mb-2" style="gap: 0.5rem;">
+            <label for="surveySelect" class="text-primary font-weight-bold mb-0" style="min-width: 80px;">Survey:</label>
+            <select id="surveySelect" class="form-control form-control-sm w-100">
+              <option value="CDS/P/DSS/color">DSS</option>
+              <option value="CDS/P/DECaLS/DR5/color">DECaLS DR5</option>
+              <option value="CDS/P/DECaPS/DR2/color">DECaPS DR2</option>
+              <option value="CDS/P/SUMSS">SUMSS</option>
+              <option value="CDS/P/Skymapper-color-IRG">Skymapper</option>
+              <option value="CDS/P/VISTA/VVV/DR4/ColorJYZ">VISTA VVV DR4</option>
+              <option value="CDS/P/ZTF/DR7/color">ZTF DR7</option>
+              <option value="CDS/P/PanSTARRS/DR1/color-i-r-g">PanSTARRS DR1</option>
+              <option value="CDS/P/2MASS/color">2MASS</option>
+              <option value="CSIRO/P/RACS/low/I">RACS Low Epoch 1</option>
+              <option value="CSIRO/P/RACS/mid/I">RACS Mid Epoch 1</option>
+            </select>
           </div>
 
+          <!-- VizieR Catalogues -->
+          <div id="vizierCatalogues" class="mb-2 d-flex align-items-center flex-wrap">
+            <span class="text-primary font-weight-bold mb-0 me-3" style="white-space: nowrap;">VizieR Catalogues:</span>
+
+            <div class="form-check mb-0 me-3" style="margin-left: 0.5rem">
+              <input class="form-check-input" type="checkbox" value="I/355" id="gaia">
+              <label class="form-check-label" for="gaia" style="color:#ff0000">Gaia DR3</label>
+            </div>
+            <div class="form-check mb-0 me-3" style="margin-left: 0.5rem">
+              <input class="form-check-input" type="checkbox" value="IV/39" id="tess">
+              <label class="form-check-label" for="tess" style="color: #db01fd">TIC v8.2</label>
+            </div>
+            <div class="form-check mb-0 me-3" style="margin-left: 0.5rem">
+              <input class="form-check-input" type="checkbox" value="B/psr" id="psr">
+              <label class="form-check-label" for="psr" style="color: #bdb400">PSRcat</label>
+            </div>
+            <div class="form-check mb-0 me-3" style="margin-left: 0.5rem">
+              <input class="form-check-input" type="checkbox" value="VIII/65" id="nvss">
+              <label class="form-check-label" for="nvss" style="color: #0000ff">NVSS</label>
+            </div>
+            <div class="form-check mb-0 me-3" style="margin-left: 0.5rem">
+              <input class="form-check-input" type="checkbox" value="J/ApJS/255/30" id="vlass">
+              <label class="form-check-label" for="vlass" style="color: #ffa500">VLASS</label>
+            </div>
+            <div class="form-check mb-0" style="margin-left: 0.5rem">
+              <input class="form-check-input" type="checkbox" value="II/365" id="catwise">
+              <label class="form-check-label" for="catwise" style="color: #00bbff">CatWISE</label>
+            </div>
+          </div>
+
+          <!-- Aladin Viewer -->
+          <div style="min-height: 400px">
+            <div id="aladin-lite-div" style="width: 100%; height: 100%;"></div>
+          </div>
+
+        </div>
       </div>
-      <!--<script src='https://aladin.cds.unistra.fr/AladinLite/api/v3/latest/aladin.js' charset='utf-8'></script>-->
-      <!-- End Aladin -->
+    </div>
+
+    <!-- Load Aladin asynchronously -->
+    <script async defer src="https://aladin.cds.unistra.fr/AladinLite/api/v3/latest/aladin.js" charset="utf-8"></script>
+
+    <script>
+    window.addEventListener('load', function() {
+      // Wait until the Aladin library is ready
+      function startAladin() {
+        if (typeof A === 'undefined' || !A.init) {
+          return setTimeout(startAladin, 100);
+        }
+
+        A.init.then(() => {
+          const targetCoords = "{{ source.aladin_ra }}%20{{ source.aladin_dec }}";
+          const zoomLevel = {{ source.aladin_zoom }};
+          const radius = {{ source.aladin_radius }};
+          const radiusDeg = radius / 60;
+          const targetRA = {{ source.aladin_ra }};
+          const targetDec = {{ source.aladin_dec }};
+          const targetRad = 0.0020833333333333333;
+
+          const aladin = A.aladin('#aladin-lite-div', {
+            survey: 'CDS/P/DSS/color',
+            target: targetCoords,
+            fov: zoomLevel,
+            log: false
+          });
+
+          const overlay = A.graphicOverlay({ color: '#ffffff', lineWidth: 2, name: 'Source position' });
+          aladin.addOverlay(overlay);
+          overlay.add(A.circle(targetRA, targetDec, targetRad, { color: 'white' }));
+
+          // Catalogs
+          const catalogs = {};
+          catalogs["I/355"] = A.catalogFromURL(`https://vizier.u-strasbg.fr/viz-bin/votable?-source=I/355/gaiadr3&-c=${targetCoords}&-c.rd=${radiusDeg}&-out=RA_ICRS,DE_ICRS&-out.max=99999`, { sourceSize: 12, color: '#ff0000' });
+          catalogs["IV/39"] = A.catalogFromURL(`https://vizier.u-strasbg.fr/viz-bin/votable?-source=IV/39&-c=${targetCoords}&-c.rd=${radiusDeg}&-out=ra,dec&-out.max=99999`, { sourceSize: 12, color: '#db01fd' });
+          catalogs["B/psr"] = A.catalogFromURL(`https://vizier.u-strasbg.fr/viz-bin/votable?-source=B/psr&-c=${targetCoords}&-c.rd=${radiusDeg}&-out=RAJ2000,DEJ2000&-out.max=99999`, { sourceSize: 12, color: '#bdb400' });
+          catalogs["VIII/65"] = A.catalogFromURL(`https://vizier.u-strasbg.fr/viz-bin/votable?-source=VIII/65&-c=${targetCoords}&-c.rd=${radiusDeg}&-out=RA_ICRS,DE_ICRS&-out.max=99999`, { sourceSize: 12, color: '#0000ff' });
+          catalogs["J/ApJS/255/30"] = A.catalogFromURL(`https://vizier.u-strasbg.fr/viz-bin/votable?-source=J/ApJS/255/30&-c=${targetCoords}&-c.rd=${radiusDeg}&-out=RA_ICRS,DE_ICRS&-out.max=99999`, { sourceSize: 12, color: '#ffa500' });
+          catalogs["II/365"] = A.catalogFromURL(`https://vizier.u-strasbg.fr/viz-bin/votable?-source=II/365&-c=${targetCoords}&-c.rd=${radiusDeg}&-out=RA_ICRS,DE_ICRS&-out.max=99999`, { sourceSize: 12, color: '#00bbff' });
+
+          const defaultCatalogs = ['I/355', 'B/psr'];
+          document.querySelectorAll('#vizierCatalogues input[type="checkbox"]').forEach(checkbox => {
+            const code = checkbox.value;
+            checkbox.checked = defaultCatalogs.includes(code);
+            if (checkbox.checked) aladin.addCatalog(catalogs[code]);
+            checkbox.addEventListener('change', () => {
+              checkbox.checked ? aladin.addCatalog(catalogs[code]) : aladin.removeOverlay(catalogs[code]);
+            });
+          });
+
+          document.getElementById('surveySelect').addEventListener('change', e => {
+            const selectedSurvey = e.target.value;
+            if (selectedSurvey) aladin.setImageSurvey(selectedSurvey);
+          });
+        });
+      }
+
+      startAladin();
+    });
+    </script>
+    <!-- End Aladin -->
+
 
   </div>
 
