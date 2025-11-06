@@ -2587,7 +2587,7 @@ class UtilitiesSet(ViewSet):
         results = simbad_results + ned_results + tns_results + fink_results + das_results
         
         # The below code will remove duplicates from the DAS results
-        # However, I'm not sure if that's actually the best way forward - 
+        # However, I'm not sure if that's actually the best way forward -
         # e.g. the Gaia positions from DAS are PM corrected, whereas those
         # in SIMBAD are not, even though SIMBAD has more info
 
