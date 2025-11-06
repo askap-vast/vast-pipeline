@@ -265,7 +265,7 @@
           catalogs["J/ApJS/255/30"] = A.catalogFromURL(`https://vizier.u-strasbg.fr/viz-bin/votable?-source=J/ApJS/255/30&-c=${targetCoords}&-c.rd=${radiusDeg}&-out=RA_ICRS,DE_ICRS&-out.max=99999`, { sourceSize: 12, color: '#ffa500' });
           catalogs["II/365"] = A.catalogFromURL(`https://vizier.u-strasbg.fr/viz-bin/votable?-source=II/365&-c=${targetCoords}&-c.rd=${radiusDeg}&-out=RA_ICRS,DE_ICRS&-out.max=99999`, { sourceSize: 12, color: '#00bbff' });
 
-          const defaultCatalogs = ['I/355/gaiadr3', 'B/psr/psr'];
+          const defaultCatalogs = ['I/355/gaiadr3', 'B/psr/psr', 'IV/39', 'VIII/65', 'J/ApJS/255/30', 'II/365'];
           document.querySelectorAll('#vizierCatalogues input[type="checkbox"]').forEach(checkbox => {
             const code = checkbox.value;
             checkbox.checked = defaultCatalogs.includes(code);
