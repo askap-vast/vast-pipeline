@@ -1633,7 +1633,8 @@ def SourceDetail(request, pk):
     source = Source.objects.filter(id=pk).annotate(run_name=F('run__name')).values().get()
     source['aladin_ra'] = source['wavg_ra']
     source['aladin_dec'] = source['wavg_dec']
-    source['aladin_zoom'] = 0.15
+    source['aladin_zoom'] = settings.ALADIN_ZOOM
+    source['aladin_radius'] = settings.ALADIN_RADIUS
     source['wavg_ra_hms'] = deg2hms(source['wavg_ra'], hms_format=True)
     source['wavg_dec_dms'] = deg2dms(source['wavg_dec'], dms_format=True)
     source['wavg_l'], source['wavg_b'] = equ2gal(source['wavg_ra'], source['wavg_dec'])
@@ -2546,7 +2547,7 @@ class UtilitiesSet(ViewSet):
                     - dec_dms: Dec coordinate string in ±<DD>d<MM>m<SS.SSS>s format.
         """
         coord_string = request.query_params.get("coord", "")
-        radius_string = request.query_params.get("radius", "1arcmin")
+        radius_string = request.query_params.get("radius", "30arcsec")
 
         # validate inputs
         try:
@@ -2569,7 +2570,42 @@ class UtilitiesSet(ViewSet):
             external_query.tns, coord, radius, "TNS", request
         )
 
-        results = simbad_results + ned_results + tns_results
+        cats = request.query_params.get("catalogues")
+        catalogues = cats.split(",") if cats else ["I/355/gaiadr3"]
+        das_results = []
+        try:
+            das_results = external_query.das(coord, radius, catalogues=catalogues)
+        except Exception as e:
+            messages.error(request, f"Unable to get DAS query results: {str(e)}")
+
+        fink_results = []
+        try:
+            fink_results = external_query.fink(coord, radius)
+        except Exception as e:
+            messages.error(request, f"Unable to get FINK query results: {str(e)}")
+        
+        results = simbad_results + ned_results + tns_results + fink_results + das_results
+        
+        # The below code will remove duplicates from the DAS results
+        # However, I'm not sure if that's actually the best way forward -
+        # e.g. the Gaia positions from DAS are PM corrected, whereas those
+        # in SIMBAD are not, even though SIMBAD has more info
+
+        """results = simbad_results + ned_results + tns_results + fink_results
+        
+        existing_names = []
+        for result in results:
+            existing_names.append(result['object_name'])
+        
+        for result in das_results:
+            print(result)
+            if result['object_name'] in existing_names:
+                print("Object exists")
+                das_results.remove(result)
+
+        results += das_results
+        """
+        
         serializer = ExternalSearchSerializer(data=results, many=True)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)

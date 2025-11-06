@@ -165,10 +165,128 @@
 
     <!-- Aladin -->
     <div class="col-xl-4 d-flex">
-      <div class="card shadow mb-4 flex-fill" style="min-height: 33vh;">
-        <div id="aladinViz"></div>
+      <div class="card shadow mb-4 flex-fill">
+        <div class="card-body d-flex flex-column gap-3">
+
+          <!-- Survey -->
+          <div class="d-flex align-items-center mb-2" style="gap: 0.5rem;">
+            <label for="surveySelect" class="text-primary font-weight-bold mb-0" style="min-width: 80px;">Survey:</label>
+            <select id="surveySelect" class="form-control form-control-sm w-100">
+              <option value="CDS/P/DSS/color">DSS</option>
+              <option value="CDS/P/DECaLS/DR5/color">DECaLS DR5</option>
+              <option value="CDS/P/DECaPS/DR2/color">DECaPS DR2</option>
+              <option value="CDS/P/SUMSS">SUMSS</option>
+              <option value="CDS/P/Skymapper-color-IRG">Skymapper</option>
+              <option value="CDS/P/VISTA/VVV/DR4/ColorJYZ">VISTA VVV DR4</option>
+              <option value="CDS/P/ZTF/DR7/color">ZTF DR7</option>
+              <option value="CDS/P/PanSTARRS/DR1/color-i-r-g">PanSTARRS DR1</option>
+              <option value="CDS/P/2MASS/color">2MASS</option>
+              <option value="CSIRO/P/RACS/low/I">RACS Low Epoch 1</option>
+              <option value="CSIRO/P/RACS/mid/I">RACS Mid Epoch 1</option>
+            </select>
+          </div>
+
+          <!-- VizieR Catalogues -->
+          <div id="vizierCatalogues" class="mb-2 d-flex align-items-center flex-wrap">
+            <span class="text-primary font-weight-bold mb-0 me-3" style="white-space: nowrap;">VizieR Catalogues:</span>
+
+            <div class="form-check mb-0 me-3" style="margin-left: 0.5rem">
+              <input class="form-check-input" type="checkbox" value="I/355/gaiadr3" id="gaia">
+              <label class="form-check-label" for="gaia" style="color:#ff0000">Gaia DR3</label>
+            </div>
+            <div class="form-check mb-0 me-3" style="margin-left: 0.5rem">
+              <input class="form-check-input" type="checkbox" value="IV/39" id="tess">
+              <label class="form-check-label" for="tess" style="color: #db01fd">TIC v8.2</label>
+            </div>
+            <div class="form-check mb-0 me-3" style="margin-left: 0.5rem">
+              <input class="form-check-input" type="checkbox" value="B/psr/psr" id="psr">
+              <label class="form-check-label" for="psr" style="color: #bdb400">PSRcat</label>
+            </div>
+            <div class="form-check mb-0 me-3" style="margin-left: 0.5rem">
+              <input class="form-check-input" type="checkbox" value="VIII/65" id="nvss">
+              <label class="form-check-label" for="nvss" style="color: #0000ff">NVSS</label>
+            </div>
+            <div class="form-check mb-0 me-3" style="margin-left: 0.5rem">
+              <input class="form-check-input" type="checkbox" value="J/ApJS/255/30" id="vlass">
+              <label class="form-check-label" for="vlass" style="color: #ffa500">VLASS</label>
+            </div>
+            <div class="form-check mb-0" style="margin-left: 0.5rem">
+              <input class="form-check-input" type="checkbox" value="II/365" id="catwise">
+              <label class="form-check-label" for="catwise" style="color: #00bbff">CatWISE</label>
+            </div>
+          </div>
+
+          <!-- Aladin Viewer -->
+          <div style="min-height: 400px">
+            <div id="aladin-lite-div" style="width: 100%; height: 100%;"></div>
+          </div>
+
+        </div>
       </div>
     </div>
+
+    <!-- Load Aladin asynchronously -->
+    <script async defer src="https://aladin.cds.unistra.fr/AladinLite/api/v3/latest/aladin.js" charset="utf-8"></script>
+
+    <script>
+    window.addEventListener('load', function() {
+      // Wait until the Aladin library is ready
+      function startAladin() {
+        if (typeof A === 'undefined' || !A.init) {
+          return setTimeout(startAladin, 100);
+        }
+
+        A.init.then(() => {
+          const targetCoords = "{{ source.aladin_ra }}%20{{ source.aladin_dec }}";
+          const zoomLevel = {{ source.aladin_zoom }};
+          const radius = {{ source.aladin_radius }};
+          const radiusDeg = radius / 60;
+          const targetRA = {{ source.aladin_ra }};
+          const targetDec = {{ source.aladin_dec }};
+          const targetRad = 0.0020833333333333333;
+
+          const aladin = A.aladin('#aladin-lite-div', {
+            survey: 'CDS/P/DSS/color',
+            target: targetCoords,
+            fov: zoomLevel,
+            log: false
+          });
+
+          const overlay = A.graphicOverlay({ color: '#ffffff', lineWidth: 2, name: 'Source position' });
+          aladin.addOverlay(overlay);
+          overlay.add(A.circle(targetRA, targetDec, targetRad, { color: 'white' }));
+
+          // Catalogs
+          const catalogs = {};
+          catalogs["I/355/gaiadr3"] = A.catalogFromURL(`https://vizier.u-strasbg.fr/viz-bin/votable?-source=I/355/gaiadr3&-c=${targetCoords}&-c.rd=${radiusDeg}&-out=RA_ICRS,DE_ICRS&-out.max=99999`, { sourceSize: 12, color: '#ff0000' });
+          catalogs["IV/39"] = A.catalogFromURL(`https://vizier.u-strasbg.fr/viz-bin/votable?-source=IV/39&-c=${targetCoords}&-c.rd=${radiusDeg}&-out=ra,dec&-out.max=99999`, { sourceSize: 12, color: '#db01fd' });
+          catalogs["B/psr/psr"] = A.catalogFromURL(`https://vizier.u-strasbg.fr/viz-bin/votable?-source=B/psr/psr&-c=${targetCoords}&-c.rd=${radiusDeg}&-out=RAJ2000,DEJ2000&-out.max=99999`, { sourceSize: 12, color: '#bdb400' });
+          catalogs["VIII/65"] = A.catalogFromURL(`https://vizier.u-strasbg.fr/viz-bin/votable?-source=VIII/65&-c=${targetCoords}&-c.rd=${radiusDeg}&-out=RA_ICRS,DE_ICRS&-out.max=99999`, { sourceSize: 12, color: '#0000ff' });
+          catalogs["J/ApJS/255/30"] = A.catalogFromURL(`https://vizier.u-strasbg.fr/viz-bin/votable?-source=J/ApJS/255/30&-c=${targetCoords}&-c.rd=${radiusDeg}&-out=RA_ICRS,DE_ICRS&-out.max=99999`, { sourceSize: 12, color: '#ffa500' });
+          catalogs["II/365"] = A.catalogFromURL(`https://vizier.u-strasbg.fr/viz-bin/votable?-source=II/365&-c=${targetCoords}&-c.rd=${radiusDeg}&-out=RA_ICRS,DE_ICRS&-out.max=99999`, { sourceSize: 12, color: '#00bbff' });
+
+          const defaultCatalogs = ['I/355/gaiadr3', 'B/psr/psr', 'IV/39', 'VIII/65', 'J/ApJS/255/30', 'II/365'];
+          document.querySelectorAll('#vizierCatalogues input[type="checkbox"]').forEach(checkbox => {
+            const code = checkbox.value;
+            checkbox.checked = defaultCatalogs.includes(code);
+            if (checkbox.checked) aladin.addCatalog(catalogs[code]);
+            checkbox.addEventListener('change', () => {
+              checkbox.checked ? aladin.addCatalog(catalogs[code]) : aladin.removeOverlay(catalogs[code]);
+            });
+          });
+
+          document.getElementById('surveySelect').addEventListener('change', e => {
+            const selectedSurvey = e.target.value;
+            if (selectedSurvey) aladin.setImageSurvey(selectedSurvey);
+          });
+        });
+      }
+
+      startAladin();
+    });
+    </script>
+    <!-- End Aladin -->
+
 
   </div>
 
@@ -259,13 +377,13 @@
     <div class="col-xl-6 mb-4">
       <div class="card shadow mb-4 h-100">
         <div class="card-header py-3">
-          <h6 class="m-0 font-weight-bold text-primary">External Search Results (1 arcmin)</h6>
+          <h6 class="m-0 font-weight-bold text-primary">External Search Results (30 arcsec)</h6>
         </div>
         <div class="card-body small">
           <div class="table-responsive">
             <table class="table table-sm table-bordered table-striped table-hover" id="externalResultsTable"
               width="100%" cellspacing="0" data-server-side="false"
-              data-ajax="{% url 'vast_pipeline:api_utils-external-search' %}?coord={{ source.wavg_ra_hms }}{{ source.wavg_dec_dms }}&format=datatables&keep=otype_long,database">
+              data-ajax="{% url 'vast_pipeline:api_utils-external-search' %}?coord={{ source.wavg_ra_hms }}{{ source.wavg_dec_dms }}&catalogues=I/355/gaiadr3,IV/39,B/psr/psr,VIII/65,J/ApJS/255/30,II/365&format=datatables&keep=otype_long,database">
               <thead>
                 <tr>
                   <th data-data="object_name">ID</th>
@@ -445,7 +563,7 @@
 
 <!-- Datatable scripts -->
 {{ datatables|json_script:"datatable-conf" }}
-<script src="{% static 'js/datatables-pipeline.min.js' %}"></script>
+<script src="{% static 'js/datatables-pipeline.js' %}"></script>
 
 <!-- Bokeh scripts -->
 <script src="{% static 'vendor/bokehjs/bokeh.min.js' %}"></script>
@@ -459,27 +577,6 @@
 <script src="{% static 'js/clipboard-copy.min.js' %}"></script>
 <script src="{% static 'js/source-fav.min.js' %}" apiSourceFavUrl="{% url 'vast_pipeline:api_sources_favs-list' %}" id="SourceFavScript"></script>
 
-<script type="text/javascript">
-  // configure aladin
-  let aladin; // cannot init aladin here or it will overflow the parent element
-  $('#externalResultsTable')
-    // wait until the external search results table has fully loaded to ensure Aladin Lite
-    // occupies the full height of the parent element
-    .on("init.dt", function () {
-      aladin = A.aladin('#aladinViz', {
-        fov: 1
-      });
-      let aladinConf = JSON.parse(document.getElementById('data-aladin').textContent);
-      configureAladin(aladin, aladinConf);
-    })
-    // force Aladin to resize the canvas elements whenever the table is redrawn and potentially
-    // changes height
-    .on("draw.dt", function () {
-      if (aladin !== undefined) {
-        aladin.view.fixLayoutDimensions();
-      }
-    })
-</script>
 
 {{ cutout_measurements|json_script:"data-js9" }}
 {{ first_det_meas|json_script:"data-js9-first-detection" }}
