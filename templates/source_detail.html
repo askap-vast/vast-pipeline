@@ -164,12 +164,6 @@
     </div>
 
     <!-- Aladin -->
-{#    <div class="col-xl-4 d-flex">#}
-{#      <div class="card shadow mb-4 flex-fill" style="min-height: 33vh;">#}
-{#        <div id="aladinViz"></div>#}
-{#      </div>#}
-{#    </div>#}
-      <!-- Aladin -->
       <div class="col-xl-4 d-flex">
           <div class="card shadow mb-4 flex-fill">
               <div class="card-body d-flex flex-column gap-3">
@@ -615,27 +609,6 @@
 <script src="{% static 'js/clipboard-copy.min.js' %}"></script>
 <script src="{% static 'js/source-fav.min.js' %}" apiSourceFavUrl="{% url 'vast_pipeline:api_sources_favs-list' %}" id="SourceFavScript"></script>
 
-{#<script type="text/javascript">#}
-{#  // configure aladin#}
-{#  let aladin; // cannot init aladin here or it will overflow the parent element#}
-{#  $('#externalResultsTable')#}
-{#    // wait until the external search results table has fully loaded to ensure Aladin Lite#}
-{#    // occupies the full height of the parent element#}
-{#    .on("init.dt", function () {#}
-{#      aladin = A.aladin('#aladinViz', {#}
-{#        fov: 1#}
-{#      });#}
-{#      let aladinConf = JSON.parse(document.getElementById('data-aladin').textContent);#}
-{#      configureAladin(aladin, aladinConf);#}
-{#    })#}
-{#    // force Aladin to resize the canvas elements whenever the table is redrawn and potentially#}
-{#    // changes height#}
-{#    .on("draw.dt", function () {#}
-{#      if (aladin !== undefined) {#}
-{#        aladin.view.fixLayoutDimensions();#}
-{#      }#}
-{#    })#}
-{#</script>#}
 
 {{ cutout_measurements|json_script:"data-js9" }}
 {{ first_det_meas|json_script:"data-js9-first-detection" }}
