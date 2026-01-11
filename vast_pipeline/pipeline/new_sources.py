@@ -12,7 +12,6 @@ from astropy.wcs import WCS
 from astropy.wcs.utils import (
     proj_plane_pixel_scales
 )
-from dask.delayed import delayed
 from dask.distributed import wait
 
 from vast_pipeline.models import Image, Run
