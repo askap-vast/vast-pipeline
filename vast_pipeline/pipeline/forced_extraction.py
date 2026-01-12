@@ -388,8 +388,13 @@ def parallel_extraction(
     out = out.drop(["image_rms_min", "detection"], axis=1).rename(
         columns={"image": "image_name"}
     )
+    out = out.set_index("image_name", sorted=False).persist()
+    logger.info("Persisting out df...")
+    wait(out)
+    logger.info("Persisted out df")
+
     # get the unique images to extract from
-    unique_images_to_extract = out["image_name"].unique().compute().tolist()
+    unique_images_to_extract = out.index.unique().compute().tolist()
 
     # create a list of all the measurements parquet files to extract data from,
     # such as prefix and max_id
@@ -403,37 +408,42 @@ def parallel_extraction(
         )
     )
 
-    # Get a map of the columns that have a fixed value from the measurements parquets
-    # in list_meas_parquets. This generates a list of delayed futures that will only
-    # compute at the next persist.
+    # Get the columns that have a fixed value from the measurements parquets
+    # - this will be computed, which should be fine for a moderate number of images
     df_cols = ["id", "path", "background_path", "noise_path", "beam_bmaj", "beam_bmin", "beam_bpa", "datetime"]
     measurements_parquet_data = (
         db.from_sequence(list_meas_parquets, npartitions=len(list_meas_parquets))
         .map(get_data_from_parquet, p_run_path, add_mode)
         .to_dataframe()
         .merge(df_images[df_cols], on="id", how="left")
-        .to_delayed()
+        .compute()
+        .reset_index(drop=True)
     )
 
-    # Create a list of dataframes containing the relevant data from out per image
-    # This generates a list of delayed futures that will only  compute at the next persist.
-    generate_df = lambda name, out: out[out["image_name"] == name]
-    df_per_image=[delayed(generate_df)(n, out) for n in unique_images_to_extract]
+    @delayed
+    def generate_df(name):
+        return out.loc[name].compute().reset_index()
+    df_per_image=[generate_df(n) for n in unique_images_to_extract]
+    
 
     # Do the forced extraction work by combining the two delayed lists above then
     # running extract_from_image on the tuple of delayed futures.
     # Persist at this point uning the number of io workers.
-    image_data_list = zip(df_per_image, measurements_parquet_data)
     func_d = [
-        delayed(extract_from_image)(image_df, meas_data, edge_buffer=edge_buffer,
-                                    cluster_threshold=cluster_threshold, allow_nan=allow_nan)
-        for image_df, meas_data in image_data_list
+        delayed(extract_from_image)(
+            image_df,
+            measurements_parquet_data.loc[[idx]],
+            edge_buffer=edge_buffer,
+            cluster_threshold=cluster_threshold,
+            allow_nan=allow_nan
+        )
+        for idx, image_df in enumerate(df_per_image)
         ]
 
-    # Persist at this point uning the number of io workers.
-    # df_out will contain the forced extraction measurments per image.
-    # df_out should be sorted and partitioned by image at this point.
     df_out = dd.from_delayed(func_d).persist()
+    logger.info("Generating df_out from delayeds and persisting...")
+    wait(df_out)
+    logger.info("Finished persisting df_out")
 
     del out, func_d, df_per_image, measurements_parquet_data
 
