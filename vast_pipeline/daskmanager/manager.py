@@ -4,7 +4,7 @@ import logging
 import random
 import time
 
-from dask.distributed import Client, LocalCluster, Semaphore
+from dask.distributed import Client, LocalCluster, Semaphore, WorkerPlugin
 from django.conf import settings as s
 from . import config # noqa: F401
 
@@ -29,6 +29,8 @@ def _start_cluster():
             dashboard_address=f"{s.DASK_DASHBOARD_HOST}:{s.DASK_DASHBOARD_PORT}",
         )
     client = Client(cluster)
+    # Register our new plugin to log worker names
+    client.register_plugin(LogWorkerNamePlugin())
     logger.info('Connected to local Dask Cluster')
     return client
 
@@ -58,6 +60,54 @@ def get_db_semaphore(num_workers: int=None):
     if num_workers is None:
         num_workers = int(s.DASK_NUM_DB_WORKERS)
     return Semaphore(name='db_throttle', max_leases=num_workers)
+
+class WorkerLogFilter(logging.Filter):
+    """
+    Logging filter to inject the worker id into the LogRecord.
+    """
+    def __init__(self, worker = '0'):
+        self.worker = worker
+
+    def filter(self, record):
+        # Inject worker ID to the LogeRecord
+        record.msg = f'WORKER:{self.worker} {record.msg}'
+        return True
+
+class QuietStreamHandler(logging.StreamHandler):
+    """
+    Custom logging handler that prevents writing to
+    stderr by the workers.
+    """
+    def __init__(self):
+        super().__init__()
+
+    def emit(self, record):
+        # Override emit to do nothing
+        pass
+
+class LogWorkerNamePlugin(WorkerPlugin):
+    """
+    A Dask WorkerPlugin to log the worker name in worker logging messages.
+    Also sets up a custom logging handler to prevent
+    workers from writing to stderr.
+    """
+    def setup(self, worker):
+        worker_name = worker.name
+        logger = logging.getLogger('')
+        logger.setLevel(logging.DEBUG)
+        # Find the existing StreamHandler and remove it
+        for handler in logger.handlers:
+            if isinstance(handler, logging.StreamHandler):
+                logger.removeHandler(handler)
+        # Add the QuietStreamHandler to suppress stderr output
+        quiet_handler = QuietStreamHandler()
+        logger.addHandler(quiet_handler)
+
+        # Add a filter to inject worker name into log records
+        worker_filter = WorkerLogFilter(worker=worker_name)
+
+        for handler in logger.handlers:
+            handler.addFilter(worker_filter)
 
 class Singleton(type):
     _instances = {}
