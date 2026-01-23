@@ -80,9 +80,9 @@ def run_pipe(
     '''
     path = run_dj_obj.path if run_dj_obj else path_name
     # set up logging for running pipeline from UI
+    root_logger = logging.getLogger('')
     if not cli:
         # set up the logger for the UI job
-        root_logger = logging.getLogger('')
         if debug:
             root_logger.setLevel(logging.DEBUG)
         f_handler = logging.FileHandler(
@@ -98,6 +98,9 @@ def run_pipe(
         validate_config=False,  # delay validation
         skip_connect=skip_connect,
     )
+
+    # Forward all logging from workers to the main logger
+    pipeline.dm.client.forward_logging('', root_logger.level)
 
     # Create the pipeline run in DB
     p_run, flag_exist = get_create_p_run(
