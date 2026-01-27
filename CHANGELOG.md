@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- V2: Forward logging from Dask workers to the client [#877](https://github.com/askap-vast/vast-pipeline/pull/877)
 - V2: Added functionality to throttle parallel database uploads [#852](https://github.com/askap-vast/vast-pipeline/pull/852)
 - V2: Added Dask cluster memory usage logging [#852](https://github.com/askap-vast/vast-pipeline/pull/852)
 - V2: Enable specification of Dask worker memory limits [#843](https://github.com/askap-vast/vast-pipeline/pull/843)
@@ -81,6 +82,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#877](https://github.com/askap-vast/vast-pipeline/pull/877): feat: V2: Capture worker logs by client
 - [#854](https://github.com/askap-vast/vast-pipeline/pull/854): fix: V2: Fixed memory leaks caused by nested delays
 - [#852](https://github.com/askap-vast/vast-pipeline/pull/852): feat: V2: Switch worker throttling to use Dask Semaphore and add Dask cluster memory usage logging
 - [#846](https://github.com/askap-vast/vast-pipeline/pull/846): fix: V2: Compute associations prior to upload and persist srcs_df in final pairs calculation
