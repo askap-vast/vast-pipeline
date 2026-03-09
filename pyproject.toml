@@ -15,15 +15,15 @@ cloudpickle = "^3.1"
 colorcet = "^2.0.6"
 crispy-bootstrap4 = "2024.10"
 datashader = "^0.17"
-dask = {extras = ["complete"], version = "^2025.1.0"}
+dask = {extras = ["complete"], version = "2025.1.0"}
 dill = "^0"
-distributed = "^2025.1.0"
-Django = "^5.1"
+distributed = "2025.1.0"
+Django = "5.2.12"
 django-crispy-forms = "^2.3"
 django-environ = "^0.12.0"
 django-postgres-copy = "^2.7.6"
 django-q2 = "^1.7.6"
-django-tagulous = "^2.1.0"
+django-tagulous = { git = "https://github.com/valentijnscholten/django-tagulous", branch = "django-5.2" }
 djangorestframework = "^3.15.0"
 djangorestframework-datatables = "0.7.2"
 forced-phot = { git = "https://github.com/askap-vast/forced_phot.git", tag = "v0.2.0" }
