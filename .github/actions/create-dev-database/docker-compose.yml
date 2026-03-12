@@ -3,7 +3,7 @@ version: "3"
 services:
 
   database:
-    image: ghcr.io/marxide/postgres-q3c:latest
+    image: ghcr.io/mauch/postgres-q3c:latest
     container_name: vast-dev-db
     ports:
       - "127.0.0.1:${DB_PORT}:5432"
