@@ -87,7 +87,7 @@ jobs:
         working-directory: ./vast_pipeline/tests/regression-data
 
       - name: Run cluster
-        run: . $VENV && python manage.py runlocalcluster &
+        run: poetry run python manage.py runlocalcluster &
 
       - name: Run tests
-        run: . $VENV && python manage.py test
+        run: poetry run python manage.py test

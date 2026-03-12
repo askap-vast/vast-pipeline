@@ -7,7 +7,7 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = ">=3.11.0,<3.13"
-astropy = "^7.0"
+astropy = "7.2"
 astroquery = "==0.4.7"
 bokeh = "3.6.2" # must align with @bokeh/bokehjs version in package.json
 channels = "^3.0.5"
@@ -39,7 +39,7 @@ numpy = "2.4.3"
 pandas = "2.3.3"
 psutil = "^5.9"
 psycopg2 = "^2.9.10"
-pyarrow = "^18.1"
+pyarrow = "23.0.1"
 scipy = "1.17.1"
 shortuuid = "^1.0"
 social-auth-app-django = "^5.4.2"
