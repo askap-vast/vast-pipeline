@@ -178,7 +178,7 @@ def one_to_many_basic(
 
     new_original_related = pd.DataFrame(
         not_original[["source", "new_source_id"]]
-        .groupby("source")
+        .groupby("source")[["source", "new_source_id"]]
         .apply(lambda grp: grp["new_source_id"].tolist())
     )
 
@@ -234,12 +234,12 @@ def one_to_many_basic(
     # Get all the indexes required for each original
     # `source_skyc1` value
     source_df_index_to_copy = pd.DataFrame(
-        duplicated_skyc2.groupby("source").apply(
+        duplicated_skyc2.groupby("source")["source"].apply(
             lambda grp: sources_df[
                 sources_df["source"] == grp.name
             ].index.values.tolist()
         )
-    )
+    ).rename(columns={"source": 0})
 
     # source_df_index_to_copy
     # +----------+-------+
@@ -420,7 +420,7 @@ def one_to_many_advanced(
     # to the original related column.
     new_original_related = pd.DataFrame(
         not_original[["source_skyc1", "new_source_id"]]
-        .groupby("source_skyc1")
+        .groupby("source_skyc1")[["source_skyc1", "new_source_id"]]
         .apply(lambda grp: grp["new_source_id"].tolist())
     )
 
@@ -477,13 +477,12 @@ def one_to_many_advanced(
     # Get all the indexes required for each original
     # `source_skyc1` value
     source_df_index_to_copy = pd.DataFrame(
-        duplicated_skyc1.groupby("source_skyc1").apply(
+        duplicated_skyc1.groupby("source_skyc1")["source_skyc1"]
+        .apply(
             lambda grp: sources_df[
                 sources_df["source"] == grp.name
-            ].index.values.tolist()
-        )
-    )
-
+            ].index.values.tolist())
+    ).rename(columns={"source_skyc1": 0})
     # source_df_index_to_copy
     # +----------------+-------+
     # |   source_skyc1 | 0     |
@@ -664,7 +663,8 @@ def many_to_one_advanced(temp_srcs: pd.DataFrame) -> pd.DataFrame:
     # 'one'. Below for each 'one' group we gather all the ids of the many
     # sources.
     new_relations = pd.DataFrame(
-        duplicated_skyc2.groupby("index_old_skyc2").apply(
+        duplicated_skyc2.groupby("index_old_skyc2")[["index_old_skyc2", "source_skyc1"]]
+        .apply(
             lambda grp: grp["source_skyc1"].tolist()
         )
     ).rename(columns={0: "new_relations"})

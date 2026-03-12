@@ -248,7 +248,7 @@ def parallel_get_new_high_sigma(
     def process_group(df_group):
         return get_image_rms_measurements(df_group, edge_buffer=edge_buffer)
 
-    out = df[cols].groupby("img_diff_rms_path") \
+    out = df[cols].groupby("img_diff_rms_path")[cols] \
                   .apply(
                     process_group,
                     meta={'source': str, 'true_sigma': float}) \
