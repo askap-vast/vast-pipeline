@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- V2: Pin package repos for compatibility with latest Python 3.11 & 3.12 [#879](https://github.com/askap-vast/vast-pipeline/pull/879)
 - V2: Revert back to parallel association upload [#852](https://github.com/askap-vast/vast-pipeline/pull/852)
 - V2: Change worker throttling to use Dask Semaphore [#852](https://github.com/askap-vast/vast-pipeline/pull/852)
 - V2: Compute associations prior to upload, and then upload in serial [#846](https://github.com/askap-vast/vast-pipeline/pull/846)
@@ -50,6 +51,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- V2: Fix association upload to work with dask > 2025.5.0 [#879](https://github.com/askap-vast/vast-pipeline/pull/879)
 - V2: Fixed memory leaks caused by nested delays [#854](https://github.com/askap-vast/vast-pipeline/pull/854)
 - V2: Fixed duplicate source ID error by switching from sources_df.repartition() to sources_df.shuffle() in pipeline.finalise.final_operations [#845](https://github.com/askap-vast/vast-pipeline/pull/845)
 - V2: Tentative fix for image upload memory leak via garbage collect [#845](https://github.com/askap-vast/vast-pipeline/pull/845)
@@ -82,6 +84,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#879](https://github.com/askap-vast/vast-pipeline/pull/879): fix: V2: Update dependencies to work with latest python 3.11&3.12 and pin them
 - [#877](https://github.com/askap-vast/vast-pipeline/pull/877): feat: V2: Capture worker logs by client
 - [#854](https://github.com/askap-vast/vast-pipeline/pull/854): fix: V2: Fixed memory leaks caused by nested delays
 - [#852](https://github.com/askap-vast/vast-pipeline/pull/852): feat: V2: Switch worker throttling to use Dask Semaphore and add Dask cluster memory usage logging
