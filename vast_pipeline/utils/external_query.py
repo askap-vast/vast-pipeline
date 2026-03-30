@@ -165,7 +165,7 @@ def ned(coord: SkyCoord, radius: Angle, input=None) -> List[Dict[str, Any]]:
     """
     if input is not None:
         ned_result_table = input
-    else:   
+    else:
         ned_result_table = Ned.query_region(coord, radius=radius)
     if ned_result_table is None or len(ned_result_table) == 0:
         ned_results_dict_list = []
