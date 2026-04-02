@@ -200,12 +200,15 @@ def ned(coord: SkyCoord, radius: Angle, input=None) -> List[Dict[str, Any]]:
     return ned_results_dict_list
 
 
-def tns(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
+def tns(coord: SkyCoord, radius: Angle, input=None) -> List[Dict[str, Any]]:
     """Perform a cone search for sources with the Transient Name Server (TNS).
 
     Args:
         coord: The coordinate of the centre of the cone.
         radius: The radius of the cone in angular units.
+        input: Optional input data for testing purposes.
+               Should contain 2 request results for the TNS API:
+               one for the search and one a dictionary of object details.
 
     Returns:
         A list of dicts, where each dict is a query result row with the following keys:
@@ -220,40 +223,46 @@ def tns(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
             - dec_dms: Dec coordinate string in ±dms format.
     """
 
-    TNS_API_URL = "https://www.wis-tns.org/api/"
-    headers = {
-        "user-agent": settings.TNS_USER_AGENT,
-    }
+    if input is not None:
+        # First element of input should be the search request result.
+        r = input[0]
+    else:
+        TNS_API_URL = "https://www.wis-tns.org/api/"
+        headers = {
+            "user-agent": settings.TNS_USER_AGENT,
+        }
 
-    search_dict = {
-        "ra": coord.ra.to_string(unit="hourangle", sep=":", pad=True),
-        "dec": coord.dec.to_string(unit="deg", sep=":", alwayssign=True, pad=True),
-        "radius": str(radius.value),
-        "units": radius.unit.name,
-    }
-    r = requests.post(
-        urljoin(TNS_API_URL, "get/search"),
-        data={"api_key": settings.TNS_API_KEY, "data": json.dumps(search_dict)},
-        headers=headers,
-    )
+        search_dict = {
+            "ra": coord.ra.to_string(unit="hourangle", sep=":", pad=True),
+            "dec": coord.dec.to_string(unit="deg", sep=":", alwayssign=True, pad=True),
+            "radius": str(radius.value),
+            "units": radius.unit.name,
+        }
+        r = requests.post(
+            urljoin(TNS_API_URL, "get/search"),
+            data={"api_key": settings.TNS_API_KEY, "data": json.dumps(search_dict)},
+            headers=headers,
+        )
     tns_results_dict_list: List[Dict[str, Any]] = []
     if r.ok:
         logger.debug(r.json())
         tns_results_dict_list = r.json()["data"]
-        # Get details for each object result. TNS API doesn't support doing this in one
-        # request, so we iterate.
         for result in tns_results_dict_list:
             search_dict = {
                 "objname": result["objname"],
             }
-            r = requests.post(
-                urljoin(TNS_API_URL, "get/object"),
-                data={"api_key": settings.TNS_API_KEY, "data": json.dumps(search_dict)},
-                headers=headers,
-            )
-            if r.ok:
-                logger.debug(r.json())
-                object_dict = r.json()["data"]
+            if input is not None:
+                # For testing. Second element of input should be the object details request result.
+                r_object = input[1][result["objname"]]
+            else:
+                r_object = requests.post(
+                    urljoin(TNS_API_URL, "get/object"),
+                    data={"api_key": settings.TNS_API_KEY, "data": json.dumps(search_dict)},
+                    headers=headers,
+                )
+            if r_object.ok:
+                logger.debug(r_object.json())
+                object_dict = r_object.json()["data"]
                 object_coord = SkyCoord(
                     ra=object_dict["radeg"], dec=object_dict["decdeg"], unit="deg"
                 )
@@ -266,4 +275,5 @@ def tns(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
                 result["dec_dms"] = object_coord.dec.to_string(unit="deg")
                 result["database"] = "TNS"
                 result["object_name"] = object_dict["objname"]
+
     return tns_results_dict_list

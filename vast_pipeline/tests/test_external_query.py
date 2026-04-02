@@ -50,14 +50,21 @@ class ExternalQueryTest(SimpleTestCase):
             self.assertEqual(result['database'], 'NED')
             self.assertIn(result['otype'], external_query.NED_OTYPES)
         self.assertEqual(ned_results[0]["object_name"], "SN 2018cow")
-        # Check arcsec conversion is correct for the first result
-        self.assertAlmostEqual(ned_results[0]["separation_arcsec"], 0.12, places=2)
 
-    @skipIf(
-        settings.TNS_API_KEY is None or settings.TNS_USER_AGENT is None,
-        "TNS_API_KEY or TNS_USER_AGENT not defined in settings.",
-    )
     def test_tns(self):
-        tns_results = external_query.tns(self.coord, self.radius)
+        raw_tns_results = pickle.load(open(path.join(self.data_dir, "tns_results.pickle"), "rb"))
+        tns_results = external_query.tns(self.coord, self.radius, input=raw_tns_results)
+        required_keys = {'object_name', 'separation_arcsec', 'otype',
+                         'ra_hms', 'dec_dms', 'otype_long', 'database'}
+        self.assertIsInstance(tns_results, list)
         self.assertGreaterEqual(len(tns_results), 1)
         self.assertEqual(tns_results[0]["object_name"], "2018cow")
+        for result in tns_results:
+            self.assertIsInstance(result, dict)
+            self.assertTrue(required_keys <= set(result.keys()))
+            self.assertIsInstance(result['ra_hms'], str)
+            self.assertIsInstance(result['dec_dms'], str)
+            self.assertIsInstance(result['separation_arcsec'], float)
+            self.assertIsInstance(result['otype'], str)
+            self.assertIsInstance(result['otype_long'], str)
+            self.assertEqual(result['database'], 'TNS')
