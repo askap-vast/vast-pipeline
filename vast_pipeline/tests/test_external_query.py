@@ -1,9 +1,7 @@
 import pickle
 from os import path
-from unittest import skipIf
 
 from astropy.coordinates import SkyCoord, Angle
-from django.conf import settings
 from django.test import SimpleTestCase
 
 from vast_pipeline.utils import external_query
