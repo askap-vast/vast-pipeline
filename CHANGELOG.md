@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- V2: Update external query tests to work when external sites are down [#880](https://github.com/askap-vast/vast-pipeline/pull/880)
 - V2: Pin package repos for compatibility with latest Python 3.11 & 3.12 [#879](https://github.com/askap-vast/vast-pipeline/pull/879)
 - V2: Revert back to parallel association upload [#852](https://github.com/askap-vast/vast-pipeline/pull/852)
 - V2: Change worker throttling to use Dask Semaphore [#852](https://github.com/askap-vast/vast-pipeline/pull/852)
@@ -84,6 +85,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#880](https://github.com/askap-vast/vast-pipeline/pull/880): fix: V2: Ensure external dependencies pass when etxternal websites are down
 - [#879](https://github.com/askap-vast/vast-pipeline/pull/879): fix: V2: Update dependencies to work with latest python 3.11&3.12 and pin them
 - [#877](https://github.com/askap-vast/vast-pipeline/pull/877): feat: V2: Capture worker logs by client
 - [#854](https://github.com/askap-vast/vast-pipeline/pull/854): fix: V2: Fixed memory leaks caused by nested delays
