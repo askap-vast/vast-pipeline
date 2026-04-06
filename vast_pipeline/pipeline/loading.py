@@ -508,6 +508,7 @@ def copy_upload_associations(
         n_associations,
         timer.reset()
     )
+    del associations_df
 
 
 def make_upload_associations(associations_df: pd.DataFrame) -> None:

@@ -307,45 +307,40 @@ def final_operations(
     )
 
     # update measurements with sources to get associations
-    associations_df = sources_df.drop("related", axis=1).reset_index()
+    # Can compute here since associations df is small - this also saves a compute later on
+    # since drop_duplicates in copy_upload_associations doesn't work as we want with dask dataframes
+    associations_df = sources_df.reset_index().loc[:, ['source', 'id', 'd2d', 'dr']].compute()
+
+    del sources_df
 
     mem_usage = get_df_memory_usage(associations_df)
     logger.debug(f"sources_df memory after merge: {mem_usage}MB")
     log_total_memory_usage()
 
-    # Repartition associations df to optimise upload
-    associations_df = associations_df.repartition(partition_size=f'{upload_chunk_size_mb}MB')
-
     if add_mode:
         # Load old associations so the already uploaded ones can be removed
-        old_associations = dd.read_parquet(previous_parquets["associations"]).rename(
+        old_associations = pd.read_parquet(previous_parquets["associations"]).rename(
             columns={"meas_id": "id", "source_id": "source"}
         )
-        associations_df_upload = dd.concat(
+        associations_df_upload = pd.concat(
             [associations_df, old_associations],
             ignore_index=True
-        )
-        # NOTE: Annoyingly keep=False doesn't work with dask, so we have to compute
-        # the drop_duplicates and then recompute the dask dataframe.
-        associations_df_upload = associations_df_upload[["source", "id", "d2d", "dr"]] \
-                                 .compute() \
-                                 .drop_duplicates(["source", "id", "d2d", "dr"], keep=False)
-        associations_df_upload = dd.from_pandas(
-            associations_df_upload, npartitions=associations_df.npartitions
-        )
+        ).drop_duplicates(keep=False)
         logger.debug(f"Add mode: #{associations_df_upload.shape[0]} associations to upload.")
     else:
         associations_df_upload = associations_df
 
     # upload associations into DB
     if not __TESTING__:
-        associations_df_upload = associations_df_upload.loc[:, ["id", "source", "d2d", "dr"]]
+        associations_df_upload = dd.from_pandas(associations_df_upload).repartition(partition_size=f'{upload_chunk_size_mb}MB')
         copy_upload_associations(associations_df_upload)
+        del associations_df_upload
 
     # write associations to parquet file
-    associations_df[['source', 'id', 'd2d', 'dr']] \
-        .rename(columns={"id": "meas_id", "source": "source_id"}) \
-        .to_parquet(os.path.join(p_run.path, "associations.parquet"), overwrite=True)
+    associations_df.rename(columns={"id": "meas_id", "source": "source_id"}) \
+                   .to_parquet(os.path.join(p_run.path, "associations.parquet"))
+
+    del associations_df
 
     nr_sources = srcs_df.shape[0]
     nr_new_sources = srcs_df["new"].sum()

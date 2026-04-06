@@ -978,7 +978,8 @@ def get_src_skyregion_merged_df(
     skyreg_df = skyreg_df.drop(["x", "y", "z", "width_ra", "width_dec"], axis=1)
 
     skyreg_df = skyreg_df.join(
-        pd.DataFrame(images_df.groupby("skyreg_id").apply(get_names_and_epochs)),
+        pd.DataFrame(images_df.groupby("skyreg_id")[["skyreg_id", "name", "epoch", "datetime"]]
+                              .apply(get_names_and_epochs)),
         on="id",
     )
 
