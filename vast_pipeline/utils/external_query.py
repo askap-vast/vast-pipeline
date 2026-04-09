@@ -13,13 +13,81 @@ import logging
 
 logger = logging.getLogger()
 
+# NED API doesn't supply the long-form object types.
+# Copied from https://ned.ipac.caltech.edu/Documents/Guides/Database
+NED_OTYPES = {
+    "*": "Star or Point Source",
+    "**": "Double star",
+    "*Ass": "Stellar association",
+    "*Cl": "Star cluster",
+    "AbLS": "Absorption line system",
+    "Blue*": "Blue star",
+    "C*": "Carbon star",
+    "EmLS": "Emission line source",
+    "EmObj": "Emission object",
+    "exG*": "Extragalactic star (not a member of an identified galaxy)",
+    "Flare*": "Flare star",
+    "G": "Galaxy",
+    "GammaS": "Gamma ray source",
+    "GClstr": "Cluster of galaxies",
+    "GGroup": "Group of galaxies",
+    "GPair": "Galaxy pair",
+    "GTrpl": "Galaxy triple",
+    "G_Lens": "Lensed image of a galaxy",
+    "HII": "HII region",
+    "IrS": "Infrared source",
+    "MCld": "Molecular cloud",
+    "Neb": "Nebula",
+    "Nova": "Nova",
+    "Other": "Other classification (e.g. comet; plate defect)",
+    "PN": "Planetary nebula",
+    "PofG": "Part of galaxy",
+    "Psr": "Pulsar",
+    "QGroup": "Group of QSOs",
+    "QSO": "Quasi-stellar object",
+    "Q_Lens": "Lensed image of a QSO",
+    "RadioS": "Radio source",
+    "Red*": "Red star",
+    "RfN": "Reflection nebula",
+    "SN": "Supernova",
+    "SNR": "Supernova remnant",
+    "UvES": "Ultraviolet excess source",
+    "UvS": "Ultraviolet source",
+    "V*": "Variable star",
+    "VisS": "Visual source",
+    "WD*": "White dwarf",
+    "WR*": "Wolf-Rayet star",
+    "XrayS": "X-ray source",
+    "!*": "Galactic star",
+    "!**": "Galactic double star",
+    "!*Ass": "Galactic star association",
+    "!*Cl": "Galactic Star cluster",
+    "!Blue*": "Galactic blue star",
+    "!C*": "Galactic carbon star",
+    "!EmObj": "Galactic emission line object",
+    "!Flar*": "Galactic flare star",
+    "!HII": "Galactic HII region",
+    "!MCld": "Galactic molecular cloud",
+    "!Neb": "Galactic nebula",
+    "!Nova": "Galactic nova",
+    "!PN": "Galactic planetary nebula",
+    "!Psr": "Galactic pulsar",
+    "!RfN": "Galactic reflection nebula",
+    "!Red*": "Galactic red star",
+    "!SN": "Galactic supernova",
+    "!SNR": "Galactic supernova remnant",
+    "!V*": "Galactic variable star",
+    "!WD*": "Galactic white dwarf",
+    "!WR*": "Galactic Wolf-Rayet star",
+}
 
-def simbad(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
+def simbad(coord: SkyCoord, radius: Angle, input=None) -> List[Dict[str, Any]]:
     """Perform a cone search for sources with SIMBAD.
 
     Args:
         coord: The coordinate of the centre of the cone.
         radius: The radius of the cone in angular units.
+        input: Optional input data for testing purposes.
 
     Returns:
         A list of dicts, where each dict is a query result row with the following keys:
@@ -39,12 +107,15 @@ def simbad(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
         "otype(V)",
         "otypes",
     )
-    try:
-        simbad_result_table = CustomSimbad.query_region(coord, radius=radius)
-    except requests.HTTPError:
-        # try the Harvard mirror
-        CustomSimbad.SIMBAD_URL = "https://simbad.harvard.edu/simbad/sim-script"
-        simbad_result_table = CustomSimbad.query_region(coord, radius=radius)
+    if input is not None:
+        simbad_result_table = input
+    else:
+        try:
+            simbad_result_table = CustomSimbad.query_region(coord, radius=radius)
+        except requests.HTTPError:
+            # try the Harvard mirror
+            CustomSimbad.SIMBAD_URL = "https://simbad.harvard.edu/simbad/sim-script"
+            simbad_result_table = CustomSimbad.query_region(coord, radius=radius)
     if simbad_result_table is None:
         simbad_results_dict_list = []
     else:
@@ -73,12 +144,13 @@ def simbad(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
     return simbad_results_dict_list
 
 
-def ned(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
+def ned(coord: SkyCoord, radius: Angle, input=None) -> List[Dict[str, Any]]:
     """Perform a cone search for sources with NED.
 
     Args:
         coord: The coordinate of the centre of the cone.
         radius: The radius of the cone in angular units.
+        input: Optional input data for testing purposes.
 
     Returns:
         A list of dicts, where each dict is a query result row with the following keys:
@@ -91,74 +163,10 @@ def ned(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
             - ra_hms: RA coordinate string in hms format.
             - dec_dms: Dec coordinate string in ±dms format.
     """
-    # NED API doesn't supply the long-form object types.
-    # Copied from https://ned.ipac.caltech.edu/Documents/Guides/Database
-    NED_OTYPES = {
-        "*": "Star or Point Source",
-        "**": "Double star",
-        "*Ass": "Stellar association",
-        "*Cl": "Star cluster",
-        "AbLS": "Absorption line system",
-        "Blue*": "Blue star",
-        "C*": "Carbon star",
-        "EmLS": "Emission line source",
-        "EmObj": "Emission object",
-        "exG*": "Extragalactic star (not a member of an identified galaxy)",
-        "Flare*": "Flare star",
-        "G": "Galaxy",
-        "GammaS": "Gamma ray source",
-        "GClstr": "Cluster of galaxies",
-        "GGroup": "Group of galaxies",
-        "GPair": "Galaxy pair",
-        "GTrpl": "Galaxy triple",
-        "G_Lens": "Lensed image of a galaxy",
-        "HII": "HII region",
-        "IrS": "Infrared source",
-        "MCld": "Molecular cloud",
-        "Neb": "Nebula",
-        "Nova": "Nova",
-        "Other": "Other classification (e.g. comet; plate defect)",
-        "PN": "Planetary nebula",
-        "PofG": "Part of galaxy",
-        "Psr": "Pulsar",
-        "QGroup": "Group of QSOs",
-        "QSO": "Quasi-stellar object",
-        "Q_Lens": "Lensed image of a QSO",
-        "RadioS": "Radio source",
-        "Red*": "Red star",
-        "RfN": "Reflection nebula",
-        "SN": "Supernova",
-        "SNR": "Supernova remnant",
-        "UvES": "Ultraviolet excess source",
-        "UvS": "Ultraviolet source",
-        "V*": "Variable star",
-        "VisS": "Visual source",
-        "WD*": "White dwarf",
-        "WR*": "Wolf-Rayet star",
-        "XrayS": "X-ray source",
-        "!*": "Galactic star",
-        "!**": "Galactic double star",
-        "!*Ass": "Galactic star association",
-        "!*Cl": "Galactic Star cluster",
-        "!Blue*": "Galactic blue star",
-        "!C*": "Galactic carbon star",
-        "!EmObj": "Galactic emission line object",
-        "!Flar*": "Galactic flare star",
-        "!HII": "Galactic HII region",
-        "!MCld": "Galactic molecular cloud",
-        "!Neb": "Galactic nebula",
-        "!Nova": "Galactic nova",
-        "!PN": "Galactic planetary nebula",
-        "!Psr": "Galactic pulsar",
-        "!RfN": "Galactic reflection nebula",
-        "!Red*": "Galactic red star",
-        "!SN": "Galactic supernova",
-        "!SNR": "Galactic supernova remnant",
-        "!V*": "Galactic variable star",
-        "!WD*": "Galactic white dwarf",
-        "!WR*": "Galactic Wolf-Rayet star",
-    }
-    ned_result_table = Ned.query_region(coord, radius=radius)
+    if input is not None:
+        ned_result_table = input
+    else:
+        ned_result_table = Ned.query_region(coord, radius=radius)
     if ned_result_table is None or len(ned_result_table) == 0:
         ned_results_dict_list = []
     else:
@@ -176,7 +184,7 @@ def ned(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
         )
         ned_results_df["otype_long"] = ned_results_df.otype.replace(NED_OTYPES)
         # convert NED result separation (arcmin) to arcsec
-        ned_results_df["separation_arcsec"] = ned_results_df["separation_arcsec"] * 60
+        ned_results_df["separation_arcsec"] = ned_results_df["separation_arcsec"] * 60.
         # convert coordinates to RA (hms) Dec (dms) strings
         ned_results_df["ra_hms"] = Longitude(
             ned_results_df["ra_hms"], unit="deg"
@@ -192,12 +200,15 @@ def ned(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
     return ned_results_dict_list
 
 
-def tns(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
+def tns(coord: SkyCoord, radius: Angle, input=None) -> List[Dict[str, Any]]:
     """Perform a cone search for sources with the Transient Name Server (TNS).
 
     Args:
         coord: The coordinate of the centre of the cone.
         radius: The radius of the cone in angular units.
+        input: Optional input data for testing purposes.
+               Should contain 2 request results for the TNS API:
+               one for the search and one a dictionary of object details.
 
     Returns:
         A list of dicts, where each dict is a query result row with the following keys:
@@ -212,40 +223,46 @@ def tns(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
             - dec_dms: Dec coordinate string in ±dms format.
     """
 
-    TNS_API_URL = "https://www.wis-tns.org/api/"
-    headers = {
-        "user-agent": settings.TNS_USER_AGENT,
-    }
+    if input is not None:
+        # First element of input should be the search request result.
+        r = input[0]
+    else:
+        TNS_API_URL = "https://www.wis-tns.org/api/"
+        headers = {
+            "user-agent": settings.TNS_USER_AGENT,
+        }
 
-    search_dict = {
-        "ra": coord.ra.to_string(unit="hourangle", sep=":", pad=True),
-        "dec": coord.dec.to_string(unit="deg", sep=":", alwayssign=True, pad=True),
-        "radius": str(radius.value),
-        "units": radius.unit.name,
-    }
-    r = requests.post(
-        urljoin(TNS_API_URL, "get/search"),
-        data={"api_key": settings.TNS_API_KEY, "data": json.dumps(search_dict)},
-        headers=headers,
-    )
+        search_dict = {
+            "ra": coord.ra.to_string(unit="hourangle", sep=":", pad=True),
+            "dec": coord.dec.to_string(unit="deg", sep=":", alwayssign=True, pad=True),
+            "radius": str(radius.value),
+            "units": radius.unit.name,
+        }
+        r = requests.post(
+            urljoin(TNS_API_URL, "get/search"),
+            data={"api_key": settings.TNS_API_KEY, "data": json.dumps(search_dict)},
+            headers=headers,
+        )
     tns_results_dict_list: List[Dict[str, Any]] = []
     if r.ok:
         logger.debug(r.json())
         tns_results_dict_list = r.json()["data"]
-        # Get details for each object result. TNS API doesn't support doing this in one
-        # request, so we iterate.
         for result in tns_results_dict_list:
             search_dict = {
                 "objname": result["objname"],
             }
-            r = requests.post(
-                urljoin(TNS_API_URL, "get/object"),
-                data={"api_key": settings.TNS_API_KEY, "data": json.dumps(search_dict)},
-                headers=headers,
-            )
-            if r.ok:
-                logger.debug(r.json())
-                object_dict = r.json()["data"]
+            if input is not None:
+                # For testing. Second element of input should be the object details request result.
+                r_object = input[1][result["objname"]]
+            else:
+                r_object = requests.post(
+                    urljoin(TNS_API_URL, "get/object"),
+                    data={"api_key": settings.TNS_API_KEY, "data": json.dumps(search_dict)},
+                    headers=headers,
+                )
+            if r_object.ok:
+                logger.debug(r_object.json())
+                object_dict = r_object.json()["data"]
                 object_coord = SkyCoord(
                     ra=object_dict["radeg"], dec=object_dict["decdeg"], unit="deg"
                 )
@@ -258,4 +275,5 @@ def tns(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
                 result["dec_dms"] = object_coord.dec.to_string(unit="deg")
                 result["database"] = "TNS"
                 result["object_name"] = object_dict["objname"]
+
     return tns_results_dict_list
