@@ -2616,22 +2616,13 @@ class UtilitiesSet(ViewSet):
         """
         
         serializer = ExternalSearchSerializer(data=results, many=True)
-        logger.info("Running ExternalSearchSerializer")
-        logger.info(serializer)
-        logger.info("\n\n\n\n")
         
         if not serializer.is_valid():
             for i, (record, error) in enumerate(zip(results, serializer.errors)):
                 if error:
-                    print(f"Record {i} FAILED: {error}")
-                    print(f"Data: {results[i]}")
+                    logger.error(f"Record {i} FAILED: {error}")
+                    logger.error(f"Data: {results[i]}")
             raise serializers.ValidationError(serializer.errors)
-        
-        
-        
-        serializer.is_valid(raise_exception=True)
-        logger.info("Here is the serializer data:")
-        logger.info(serializer.data)
         return Response(serializer.data)
 
 

@@ -282,7 +282,7 @@ def fink(coord: SkyCoord, radius: Angle, survey: str) -> List[Dict[str, Any]]:
     Raises:
         ValueError: Survey must be 'ztf' or 'lsst'.
     """
-    if survey not in ['ztf', 'lsst']
+    if survey not in ['ztf', 'lsst']:
         raise ValueError("Survey must be 'ztf' or 'lsst'")
     
     
