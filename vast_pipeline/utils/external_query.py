@@ -385,13 +385,14 @@ def das(
 
             for i in range(len(ids)):
                 obj_coord = SkyCoord(ra=float(ras[i]), dec=float(decs[i]), unit="deg")
+                object_url = f"{object_url_base}{ids[i]}".replace(" ", "%20")
                 results.append({
                     "object_name": f"{naming_dict[cat]}{ids[i]}",
                     "database": f"VizieR",
                     "separation_arcsec": float(offsets[i]) if i < len(offsets) else None,
                     "ra_hms": obj_coord.ra.to_string(unit="hourangle"),
                     "dec_dms": obj_coord.dec.to_string(unit="deg"),
-                    "object_url": f"{object_url_base}{ids[i]}",
+                    "object_url": object_url,
                     "otype": "",
                     "otype_long": "",
                 })
