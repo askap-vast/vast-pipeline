@@ -260,12 +260,13 @@ def tns(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
                 result["object_name"] = object_dict["objname"]
     return tns_results_dict_list
 
-def fink(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
+def fink(coord: SkyCoord, radius: Angle, survey: str) -> List[Dict[str, Any]]:
     """Perform a cone search for sources with Fink.
 
     Args:
         coord: The coordinate of the centre of the cone.
         radius: The radius of the cone in angular units.
+        survey: The survey to query - should be 'ztf' or 'lsst'.
 
     Returns:
         A list of dicts, where each dict is a query result row with the following keys:
@@ -278,8 +279,14 @@ def fink(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
                 an empty string.
             - ra_hms: RA coordinate string in hms format.
             - dec_dms: Dec coordinate string in ±dms format.
+    Raises:
+        ValueError: Survey must be 'ztf' or 'lsst'.
     """
-    FINK_API_URL = "https://api.fink-portal.org/api/v1/"
+    if survey not in ['ztf', 'lsst']
+        raise ValueError("Survey must be 'ztf' or 'lsst'")
+    
+    
+    FINK_API_URL = "https://api.{survey}.fink-portal.org/"
     search_dict = {
         'ra': str(coord.ra.deg),
         'dec': str(coord.dec.deg),

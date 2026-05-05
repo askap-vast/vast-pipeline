@@ -2578,13 +2578,22 @@ class UtilitiesSet(ViewSet):
         except Exception as e:
             messages.error(request, f"Unable to get DAS query results: {str(e)}")
 
-        fink_results = []
+        fink_ztf_results = []
         try:
-            fink_results = external_query.fink(coord, radius)
+            fink_results = external_query.fink(coord, radius, 'ztf')
         except Exception as e:
-            messages.error(request, f"Unable to get FINK query results: {str(e)}")
+            messages.error(request, f"Unable to get FINK-ZTF query results: {str(e)}")
+
+        fink_lsst_results = []
+        try:
+            fink_results = external_query.fink(coord, radius, 'lsst')
+        except Exception as e:
+            messages.error(request, f"Unable to get FINK-LSST query results: {str(e)}")
         
-        results = simbad_results + ned_results + tns_results + fink_results + das_results
+        results = simbad_results + ned_results + tns_results + fink_ztf_results + fink_lsst_results + das_results
+        
+        logger.info("Here are the results:")
+        logger.info(results)
         
         # The below code will remove duplicates from the DAS results
         # However, I'm not sure if that's actually the best way forward -
@@ -2607,7 +2616,22 @@ class UtilitiesSet(ViewSet):
         """
         
         serializer = ExternalSearchSerializer(data=results, many=True)
+        logger.info("Running ExternalSearchSerializer")
+        logger.info(serializer)
+        logger.info("\n\n\n\n")
+        
+        if not serializer.is_valid():
+            for i, (record, error) in enumerate(zip(results, serializer.errors)):
+                if error:
+                    print(f"Record {i} FAILED: {error}")
+                    print(f"Data: {results[i]}")
+            raise serializers.ValidationError(serializer.errors)
+        
+        
+        
         serializer.is_valid(raise_exception=True)
+        logger.info("Here is the serializer data:")
+        logger.info(serializer.data)
         return Response(serializer.data)
 
 
