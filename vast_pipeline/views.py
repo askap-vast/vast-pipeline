@@ -2520,6 +2520,22 @@ class UtilitiesSet(ViewSet):
         serializer.is_valid(raise_exception=True)
         return Response()
 
+    def _run_das(self, coord, radius, catalogues):
+        das_results = []
+        try:
+            return external_query.das(coord, radius, catalogues=catalogues)
+        except Exception as e:
+            messages.error(request, f"Unable to get DAS query results: {str(e)}")
+            return []
+
+    def _run_fink(self, coord, radius, survey):
+        fink_lsst_results = []
+        try:
+            return external_query.fink(coord, radius, survey)
+        except Exception as e:
+            messages.error(request, f"Unable to get FINK-LSST query results: {str(e)}")
+            return []
+
     @rest_framework.decorators.action(methods=["get"], detail=False)
     def external_search(self, request: Request) -> Response:
         """Perform a cone search with external providers (e.g. SIMBAD, NED, TNS) and
@@ -2550,6 +2566,8 @@ class UtilitiesSet(ViewSet):
         """
         coord_string = request.query_params.get("coord", "")
         radius_string = request.query_params.get("radius", "30arcsec")
+        cats = request.query_params.get("catalogues")
+        catalogues = cats.split(",") if cats else ["I/355/gaiadr3"]
 
         # validate inputs
         try:
@@ -2562,54 +2580,35 @@ class UtilitiesSet(ViewSet):
         except ValueError as e:
             raise serializers.ValidationError({"radius": str(e.args[0])})
 
+        
+        
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        
+        tasks = {
+            "simbad":    lambda: self._external_search_error_handler(external_query.simbad, coord, radius, "SIMBAD", request),
+            "ned":       lambda: self._external_search_error_handler(external_query.ned,    coord, radius, "NED",    request),
+            "tns":       lambda: self._external_search_error_handler(external_query.tns,    coord, radius, "TNS",    request),
+            "das":       lambda: self._run_das(coord, radius, catalogues),
+            "fink_ztf":  lambda: self._run_fink(coord, radius, 'ztf'),
+            "fink_lsst": lambda: self._run_fink(coord, radius, 'lsst'),
+        }
+        
+        
         t0 = timer()
-        simbad_results = self._external_search_error_handler(
-            external_query.simbad, coord, radius, "SIMBAD", request
-        )
+        query_output = {}
+        results = [] 
+        with ThreadPoolExecutor(max_workers=len(tasks)) as executor:
+            futures = {executor.submit(fn): name for name, fn in tasks.items()}
+            for future in as_completed(futures):
+                #query_output[futures[future]] = future.result()
+                results += future.result()
         t1 = timer()
-        ned_results = self._external_search_error_handler(
-            external_query.ned, coord, radius, "NED", request
-        )
-        t2 = timer()
-        tns_results = self._external_search_error_handler(
-            external_query.tns, coord, radius, "TNS", request
-        )
-        t3 = timer()
-        cats = request.query_params.get("catalogues")
-        catalogues = cats.split(",") if cats else ["I/355/gaiadr3"]
-        das_results = []
-        try:
-            das_results = external_query.das(coord, radius, catalogues=catalogues)
-        except Exception as e:
-            messages.error(request, f"Unable to get DAS query results: {str(e)}")
-        t4 = timer()
-        fink_ztf_results = []
-        #"""
-        try:
-            fink_ztf_results = external_query.fink(coord, radius, 'ztf')
-        except Exception as e:
-            messages.error(request, f"Unable to get FINK-ZTF query results: {str(e)}")
-        #"""
-        t5 = timer()
-        fink_lsst_results = []
-        #"""
-        try:
-            fink_lsst_results = external_query.fink(coord, radius, 'lsst')
-        except Exception as e:
-            messages.error(request, f"Unable to get FINK-LSST query results: {str(e)}")
-        #""" 
-        #logger.info(fink_ztf_results)
-        #logger.info(fink_lsst_results)
-        
-        t6 = timer()
+        print("Threaded query timing:")
         print(t1-t0)
-        print(t2-t1)
-        print(t3-t2)
-        print(t4-t3)
-        print(t5-t4)
-        print(t6-t5)
         
-        results = simbad_results + ned_results + tns_results + fink_ztf_results + fink_lsst_results + das_results
+        #for 
+        
+        #results = simbad_results + ned_results + tns_results + fink_ztf_results + fink_lsst_results + das_results
         
         # The below code will remove duplicates from the DAS results
         # However, I'm not sure if that's actually the best way forward -
