@@ -288,6 +288,13 @@ def fink(coord: SkyCoord, radius: Angle, survey: str) -> List[Dict[str, Any]]:
 
     FINK_API_URL = f"https://api.{survey}.fink-portal.org/api/v1/"
 
+    search_dict = {
+        'ra': str(coord.ra.deg),
+        'dec': str(coord.dec.deg),
+        'radius': str(radius.arcsec),
+        'output-format': 'json'
+    }
+
     if survey == 'lsst':
         columns = (
             "f:clf_cats_class,"
@@ -295,22 +302,14 @@ def fink(coord: SkyCoord, radius: Angle, survey: str) -> List[Dict[str, Any]]:
             "r:diaObjectId,"
             "r:midpointMjdTai"
         )
-    else:
-        columns = None
+        search_dict['columns'] = columns
 
-    search_dict = {
-        'ra': str(coord.ra.deg),
-        'dec': str(coord.dec.deg),
-        'radius': str(radius.arcsec),
-        "columns": columns,
-        'output-format': 'json'
-      }
     r = requests.post(
         urljoin(FINK_API_URL, 'conesearch'),
         json=search_dict
     )
 
-    fink_results_dict_list: List[Dict[str, Any]]
+    fink_results_dict_list: List[Dict[str, Any]] = []
 
     if r.ok:
         fink_results_dict_list = r.json()
@@ -343,6 +342,10 @@ def fink(coord: SkyCoord, radius: Angle, survey: str) -> List[Dict[str, Any]]:
             result["ra_hms"] = object_coord.ra.to_string(unit="hourangle")
             result["dec_dms"] = object_coord.dec.to_string(unit="deg")
             result['separation_arcsec'] = result['v:separation_degree']*3600.
+    else:
+        logger.error(f"Unable to query Fink API ({r.status_code})")
+        logger.error(r.reason)
+        logger.error(r)
 
     return fink_results_dict_list
 

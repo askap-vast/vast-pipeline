@@ -2630,7 +2630,6 @@ class UtilitiesSet(ViewSet):
                                 ),
         }
 
-        query_output = {}
         results = []
         with ThreadPoolExecutor(max_workers=len(tasks)) as executor:
             futures = {executor.submit(fn): name for name, fn in tasks.items()}
