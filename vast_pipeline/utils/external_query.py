@@ -189,6 +189,7 @@ def ned(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
         ned_results_dict_list = ned_results_df.sort_values("separation_arcsec").to_dict(
             orient="records"
         )
+
     return ned_results_dict_list
 
 
@@ -327,7 +328,7 @@ def fink(coord: SkyCoord, radius: Angle, survey: str) -> List[Dict[str, Any]]:
             else:
                 otype = result['f:clf_cats_class']
                 if otype == -1:
-                    otype = "Unclassified"
+                    otype = ""
                 result['otype'] = otype
                 object_coord = SkyCoord(
                     ra=result["r:ra"], dec=result["r:dec"], unit="deg"
