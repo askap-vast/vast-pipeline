@@ -2589,40 +2589,40 @@ class UtilitiesSet(ViewSet):
             raise serializers.ValidationError({"radius": str(e.args[0])})
 
         tasks = {
-            "simbad": lambda: self._external_search_error_handler(
+            "Simbad": lambda: self._external_search_error_handler(
                                 external_query.simbad,
                                 coord,
                                 radius,
                                 "SIMBAD",
                                 request
                                 ),
-            "ned": lambda: self._external_search_error_handler(
+            "NED": lambda: self._external_search_error_handler(
                                 external_query.ned,
                                 coord,
                                 radius,
                                 "NED",
                                 request
                                 ),
-            "tns": lambda: self._external_search_error_handler(
+            "TNS": lambda: self._external_search_error_handler(
                                 external_query.tns,
                                 coord,
                                 radius,
                                 "TNS",
                                 request
                                 ),
-            "das": lambda: self._run_das_query(
+            "DAS": lambda: self._run_das_query(
                                 coord,
                                 radius,
                                 catalogues,
                                 request,
                                 ),
-            "ztf": lambda: self._run_fink_query(
+            "ZTF": lambda: self._run_fink_query(
                                 coord,
                                 radius,
                                 'ztf',
                                 request,
                                 ),
-            "lsst": lambda: self._run_fink_query(
+            "LSST": lambda: self._run_fink_query(
                                 coord,
                                 radius,
                                 'lsst',
@@ -2634,7 +2634,17 @@ class UtilitiesSet(ViewSet):
         with ThreadPoolExecutor(max_workers=len(tasks)) as executor:
             futures = {executor.submit(fn): name for name, fn in tasks.items()}
             for future in as_completed(futures):
-                results += future.result()
+                try:
+                    result = future.result()
+                    results += result
+                except Exception as e:
+                    messages.error(
+                        request,
+                        f"Unable to get {futures[future]} query results: {str(e)}"
+                    )
+                    logger.exception(
+                        f"Unable to get {futures[future]} query results: {str(e)}"
+                    )
 
         # The below code will remove duplicates from the DAS results
         # However, I'm not sure if that's actually the best way forward -
