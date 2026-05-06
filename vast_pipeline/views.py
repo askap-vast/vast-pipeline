@@ -49,6 +49,9 @@ from rest_framework.authentication import (
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import serializers
+
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.contrib.auth.decorators import login_required
 
@@ -69,7 +72,6 @@ from vast_pipeline.management.commands.initpiperun import initialise_run
 from vast_pipeline.forms import PipelineRunForm, CommentForm, TagWithCommentsForm
 from vast_pipeline.pipeline.config import PipelineConfig
 from vast_pipeline.image.utils import open_fits
-
 
 logger = logging.getLogger(__name__)
 
@@ -2518,6 +2520,30 @@ class UtilitiesSet(ViewSet):
         serializer.is_valid(raise_exception=True)
         return Response()
 
+    def _run_das_query(self, coord, radius, catalogues, request):
+        """Wrapper for external_query.das"""
+        das_results = []
+        try:
+            return external_query.das(coord, radius, catalogues=catalogues)
+        except Exception as e:
+            messages.error(
+                request,
+                f"Unable to get DAS query results: {str(e)}"
+            )
+            return []
+
+    def _run_fink_query(self, coord, radius, survey, request):
+        """Wrapper for external_query.fink"""
+        fink_lsst_results = []
+        try:
+            return external_query.fink(coord, radius, survey)
+        except Exception as e:
+            messages.error(
+                request,
+                f"Unable to get FINK-LSST query results: {str(e)}"
+            )
+            return []
+
     @rest_framework.decorators.action(methods=["get"], detail=False)
     def external_search(self, request: Request) -> Response:
         """Perform a cone search with external providers (e.g. SIMBAD, NED, TNS) and
@@ -2548,6 +2574,8 @@ class UtilitiesSet(ViewSet):
         """
         coord_string = request.query_params.get("coord", "")
         radius_string = request.query_params.get("radius", "30arcsec")
+        cats = request.query_params.get("catalogues")
+        catalogues = cats.split(",") if cats else ["I/355/gaiadr3"]
 
         # validate inputs
         try:
@@ -2560,39 +2588,60 @@ class UtilitiesSet(ViewSet):
         except ValueError as e:
             raise serializers.ValidationError({"radius": str(e.args[0])})
 
-        simbad_results = self._external_search_error_handler(
-            external_query.simbad, coord, radius, "SIMBAD", request
-        )
-        ned_results = self._external_search_error_handler(
-            external_query.ned, coord, radius, "NED", request
-        )
-        tns_results = self._external_search_error_handler(
-            external_query.tns, coord, radius, "TNS", request
-        )
+        tasks = {
+            "simbad": lambda: self._external_search_error_handler(
+                                external_query.simbad,
+                                coord,
+                                radius,
+                                "SIMBAD",
+                                request
+                                ),
+            "ned": lambda: self._external_search_error_handler(
+                                external_query.ned,
+                                coord,
+                                radius,
+                                "NED",
+                                request
+                                ),
+            "tns": lambda: self._external_search_error_handler(
+                                external_query.tns,
+                                coord,
+                                radius,
+                                "TNS",
+                                request
+                                ),
+            "das": lambda: self._run_das_query(
+                                coord,
+                                radius,
+                                catalogues,
+                                request,
+                                ),
+            "ztf": lambda: self._run_fink_query(
+                                coord,
+                                radius,
+                                'ztf',
+                                request,
+                                ),
+            "lsst": lambda: self._run_fink_query(
+                                coord,
+                                radius,
+                                'lsst',
+                                request
+                                ),
+        }
 
-        cats = request.query_params.get("catalogues")
-        catalogues = cats.split(",") if cats else ["I/355/gaiadr3"]
-        das_results = []
-        try:
-            das_results = external_query.das(coord, radius, catalogues=catalogues)
-        except Exception as e:
-            messages.error(request, f"Unable to get DAS query results: {str(e)}")
+        results = []
+        with ThreadPoolExecutor(max_workers=len(tasks)) as executor:
+            futures = {executor.submit(fn): name for name, fn in tasks.items()}
+            for future in as_completed(futures):
+                results += future.result()
 
-        fink_results = []
-        try:
-            fink_results = external_query.fink(coord, radius)
-        except Exception as e:
-            messages.error(request, f"Unable to get FINK query results: {str(e)}")
-        
-        results = simbad_results + ned_results + tns_results + fink_results + das_results
-        
         # The below code will remove duplicates from the DAS results
         # However, I'm not sure if that's actually the best way forward -
         # e.g. the Gaia positions from DAS are PM corrected, whereas those
         # in SIMBAD are not, even though SIMBAD has more info
 
-        """results = simbad_results + ned_results + tns_results + fink_results
-        
+        """
         existing_names = []
         for result in results:
             existing_names.append(result['object_name'])
@@ -2605,9 +2654,15 @@ class UtilitiesSet(ViewSet):
 
         results += das_results
         """
-        
+
         serializer = ExternalSearchSerializer(data=results, many=True)
-        serializer.is_valid(raise_exception=True)
+
+        if not serializer.is_valid():
+            for i, (record, error) in enumerate(zip(results, serializer.errors)):
+                if error:
+                    logger.error(f"Record {i} FAILED: {error}")
+                    logger.error(f"Data: {results[i]}")
+            raise serializers.ValidationError(serializer.errors)
         return Response(serializer.data)
 
 

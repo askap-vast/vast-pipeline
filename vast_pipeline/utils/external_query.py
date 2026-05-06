@@ -260,12 +260,14 @@ def tns(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
                 result["object_name"] = object_dict["objname"]
     return tns_results_dict_list
 
-def fink(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
+
+def fink(coord: SkyCoord, radius: Angle, survey: str) -> List[Dict[str, Any]]:
     """Perform a cone search for sources with Fink.
 
     Args:
         coord: The coordinate of the centre of the cone.
         radius: The radius of the cone in angular units.
+        survey: The survey to query - should be 'ztf' or 'lsst'.
 
     Returns:
         A list of dicts, where each dict is a query result row with the following keys:
@@ -278,39 +280,73 @@ def fink(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
                 an empty string.
             - ra_hms: RA coordinate string in hms format.
             - dec_dms: Dec coordinate string in ±dms format.
+    Raises:
+        ValueError: Survey must be 'ztf' or 'lsst'.
     """
-    FINK_API_URL = "https://api.fink-portal.org/api/v1/"
+    if survey not in ['ztf', 'lsst']:
+        raise ValueError("Survey must be 'ztf' or 'lsst'")
+
+    FINK_API_URL = f"https://api.{survey}.fink-portal.org/api/v1/"
+
     search_dict = {
         'ra': str(coord.ra.deg),
         'dec': str(coord.dec.deg),
-        'radius': str(radius.arcsec)
-      }
+        'radius': str(radius.arcsec),
+        'output-format': 'json'
+    }
+
+    if survey == 'lsst':
+        columns = (
+            "f:clf_cats_class,"
+            "r:diaSourceId,"
+            "r:diaObjectId,"
+            "r:midpointMjdTai"
+        )
+        search_dict['columns'] = columns
+
     r = requests.post(
-        urljoin(FINK_API_URL,'conesearch'),
+        urljoin(FINK_API_URL, 'conesearch'),
         json=search_dict
     )
-    
-    fink_results_dict_list: List[Dict[str, Any]]
-    
+
+    fink_results_dict_list: List[Dict[str, Any]] = []
+
     if r.ok:
-        logger.debug(r.json())
-        
-    
         fink_results_dict_list = r.json()
-        
+        logger.debug(fink_results_dict_list)
+
         for result in fink_results_dict_list:
-            object_coord = SkyCoord(
+            result['database'] = f'Fink ({survey.upper()})'
+            if survey == 'ztf':
+                object_coord = SkyCoord(
                     ra=result["i:ra"], dec=result["i:dec"], unit="deg"
                 )
-            result["otype"] = result['d:classification']
+                result["otype"] = result['d:classification']
+                result['object_name'] = result['i:objectId']
+
+            else:
+                otype = result['f:clf_cats_class']
+                if otype == -1:
+                    otype = "Unclassified"
+                result['otype'] = otype
+                object_coord = SkyCoord(
+                    ra=result["r:ra"], dec=result["r:dec"], unit="deg"
+                )
+                result['object_name'] = str(result['r:diaObjectId'])
+
             result["otype_long"] = ""
-            result['separation_arcsec'] = result['v:separation_degree']*3600.
+            result['object_url'] = urljoin(
+                f'https://{survey}.fink-portal.org/',
+                result['object_name']
+            )
             result["ra_hms"] = object_coord.ra.to_string(unit="hourangle")
             result["dec_dms"] = object_coord.dec.to_string(unit="deg")
-            result['object_name'] = result['i:objectId']
-            result['database'] = 'FINK'
-            result['object_url'] = urljoin('https://fink-portal.org/',result['object_name'])
-            
+            result['separation_arcsec'] = result['v:separation_degree']*3600.
+    else:
+        logger.error(f"Unable to query Fink API ({r.status_code})")
+        logger.error(r.reason)
+        logger.error(r)
+
     return fink_results_dict_list
 
 
@@ -385,13 +421,14 @@ def das(
 
             for i in range(len(ids)):
                 obj_coord = SkyCoord(ra=float(ras[i]), dec=float(decs[i]), unit="deg")
+                object_url = f"{object_url_base}{ids[i]}".replace(" ", "%20")
                 results.append({
                     "object_name": f"{naming_dict[cat]}{ids[i]}",
                     "database": f"VizieR",
                     "separation_arcsec": float(offsets[i]) if i < len(offsets) else None,
                     "ra_hms": obj_coord.ra.to_string(unit="hourangle"),
                     "dec_dms": obj_coord.dec.to_string(unit="deg"),
-                    "object_url": f"{object_url_base}{ids[i]}",
+                    "object_url": object_url,
                     "otype": "",
                     "otype_long": "",
                 })

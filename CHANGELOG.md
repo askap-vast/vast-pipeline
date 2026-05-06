@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added Fink Rubin alerts to external query table on source webpage [#884](https://github.com/askap-vast/vast-pipeline/pull/884)
 - Added custom Aladin lite display to source webpages [#874](https://github.com/askap-vast/vast-pipeline/pull/874)
 - Added Vizier crossmatches to source webpages via Data Central API [#874](https://github.com/askap-vast/vast-pipeline/pull/874)
 - Added Fink crossmatches to source webpages [#874](https://github.com/askap-vast/vast-pipeline/pull/874)
@@ -20,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Changed execution of external queries to run in parallel [#884](https://github.com/askap-vast/vast-pipeline/pull/884)
 - Changed loading of source cutouts to utilise caching [#869](https://github.com/askap-vast/vast-pipeline/pull/869)
 - Speed up final step of basic/advanced association by not resetting index twice (factor of 5-100x faster!) [#861](https://github.com/askap-vast/vast-pipeline/pull/861)
 - Speed up wrap handling by not writing to main dataframe [#861](https://github.com/askap-vast/vast-pipeline/pull/861)
@@ -35,6 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fixed external query breaking due to spaces in URLs [#884](https://github.com/askap-vast/vast-pipeline/pull/884)
 - Fixed the code handling the updated TNS API [#872](https://github.com/askap-vast/vast-pipeline/pull/872)
 - Correctly calculate per-source average astrometric uncertainties by excluding forced phot measurements [#864](https://github.com/askap-vast/vast-pipeline/pull/864/)
 - Fixed broken skyregion group tag in association logging [#861](https://github.com/askap-vast/vast-pipeline/pull/861)
@@ -61,6 +64,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#884](https://github.com/askap-vast/vast-pipeline/pull/884): fix, feat: Fixed issues with and parallelised source webpage external query table
 - [#874](https://github.com/askap-vast/vast-pipeline/pull/874): feat: Upgrade source webpages with improved Aladin lite display and expanded external crossmatching
 - [#872](https://github.com/askap-vast/vast-pipeline/pull/872): fix: Fixed the code handling the updated TNS API
 - [#869](https://github.com/askap-vast/vast-pipeline/pull/869): feat: Speed up source webpage load times by caching cutouts
