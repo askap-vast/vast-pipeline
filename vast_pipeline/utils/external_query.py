@@ -314,29 +314,26 @@ def fink(coord: SkyCoord, radius: Angle, survey: str) -> List[Dict[str, Any]]:
             result['database'] = f'Fink ({survey.upper()})'
             if survey == 'ztf':
                 object_coord = SkyCoord(
-                        ra=result["i:ra"], dec=result["i:dec"], unit="deg"
-                    )
+                    ra=result["i:ra"], dec=result["i:dec"], unit="deg"
+                )
                 result["otype"] = result['d:classification']
-                result["otype_long"] = ""
-                result['separation_arcsec'] = result['v:separation_degree']*3600.
                 result['object_name'] = result['i:objectId']
+
             else:
                 otype = result['f:clf_cats_class']
                 if otype == -1:
                     otype = "Unclassified"
                 result['otype'] = otype
-                result["otype_long"] = ""
-                
                 object_coord = SkyCoord(
                     ra=result["r:ra"], dec=result["r:dec"], unit="deg"
                 )
-                 
-                result['separation_arcsec'] = result['v:separation_degree']*3600.
                 result['object_name'] = str(result['r:diaObjectId'])
                 
+            result["otype_long"] = ""
             result['object_url'] = urljoin(f'https://{survey}.fink-portal.org/',result['object_name'])
             result["ra_hms"] = object_coord.ra.to_string(unit="hourangle")
             result["dec_dms"] = object_coord.dec.to_string(unit="deg")
+            result['separation_arcsec'] = result['v:separation_degree']*3600.
             
     return fink_results_dict_list
 
