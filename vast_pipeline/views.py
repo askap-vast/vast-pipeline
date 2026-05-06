@@ -70,6 +70,8 @@ from vast_pipeline.forms import PipelineRunForm, CommentForm, TagWithCommentsFor
 from vast_pipeline.pipeline.config import PipelineConfig
 from vast_pipeline.image.utils import open_fits
 
+from timeit import default_timer as timer
+
 
 logger = logging.getLogger(__name__)
 
@@ -2560,16 +2562,19 @@ class UtilitiesSet(ViewSet):
         except ValueError as e:
             raise serializers.ValidationError({"radius": str(e.args[0])})
 
+        t0 = timer()
         simbad_results = self._external_search_error_handler(
             external_query.simbad, coord, radius, "SIMBAD", request
         )
+        t1 = timer()
         ned_results = self._external_search_error_handler(
             external_query.ned, coord, radius, "NED", request
         )
+        t2 = timer()
         tns_results = self._external_search_error_handler(
             external_query.tns, coord, radius, "TNS", request
         )
-
+        t3 = timer()
         cats = request.query_params.get("catalogues")
         catalogues = cats.split(",") if cats else ["I/355/gaiadr3"]
         das_results = []
@@ -2577,23 +2582,34 @@ class UtilitiesSet(ViewSet):
             das_results = external_query.das(coord, radius, catalogues=catalogues)
         except Exception as e:
             messages.error(request, f"Unable to get DAS query results: {str(e)}")
-
+        t4 = timer()
         fink_ztf_results = []
+        #"""
         try:
-            fink_results = external_query.fink(coord, radius, 'ztf')
+            fink_ztf_results = external_query.fink(coord, radius, 'ztf')
         except Exception as e:
             messages.error(request, f"Unable to get FINK-ZTF query results: {str(e)}")
-
+        #"""
+        t5 = timer()
         fink_lsst_results = []
+        #"""
         try:
-            fink_results = external_query.fink(coord, radius, 'lsst')
+            fink_lsst_results = external_query.fink(coord, radius, 'lsst')
         except Exception as e:
             messages.error(request, f"Unable to get FINK-LSST query results: {str(e)}")
+        #""" 
+        #logger.info(fink_ztf_results)
+        #logger.info(fink_lsst_results)
+        
+        t6 = timer()
+        print(t1-t0)
+        print(t2-t1)
+        print(t3-t2)
+        print(t4-t3)
+        print(t5-t4)
+        print(t6-t5)
         
         results = simbad_results + ned_results + tns_results + fink_ztf_results + fink_lsst_results + das_results
-        
-        logger.info("Here are the results:")
-        logger.info(results)
         
         # The below code will remove duplicates from the DAS results
         # However, I'm not sure if that's actually the best way forward -
