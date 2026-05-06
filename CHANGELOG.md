@@ -36,7 +36,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Optimise associations upload by dropping unnecessary columns prior to a large dataframe merge [#787](https://github.com/askap-vast/vast-pipeline/pull/787)
 
 #### Fixed
-
+- Fix bug introduced by #884 regarding error handling of external query table [#885](https://github.com/askap-vast/vast-pipeline/pull/885)
 - Fixed external query breaking due to spaces in URLs [#884](https://github.com/askap-vast/vast-pipeline/pull/884)
 - Fixed the code handling the updated TNS API [#872](https://github.com/askap-vast/vast-pipeline/pull/872)
 - Correctly calculate per-source average astrometric uncertainties by excluding forced phot measurements [#864](https://github.com/askap-vast/vast-pipeline/pull/864/)
@@ -63,7 +63,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 
 #### List of PRs
-
+- [#885](https://github.com/askap-vast/vast-pipeline/pull/885): fix: Fix bug introduced by #884 regarding error handling of external query table
 - [#884](https://github.com/askap-vast/vast-pipeline/pull/884): fix, feat: Fixed issues with and parallelised source webpage external query table
 - [#874](https://github.com/askap-vast/vast-pipeline/pull/874): feat: Upgrade source webpages with improved Aladin lite display and expanded external crossmatching
 - [#872](https://github.com/askap-vast/vast-pipeline/pull/872): fix: Fixed the code handling the updated TNS API
