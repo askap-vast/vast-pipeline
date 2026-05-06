@@ -260,6 +260,7 @@ def tns(coord: SkyCoord, radius: Angle) -> List[Dict[str, Any]]:
                 result["object_name"] = object_dict["objname"]
     return tns_results_dict_list
 
+
 def fink(coord: SkyCoord, radius: Angle, survey: str) -> List[Dict[str, Any]]:
     """Perform a cone search for sources with Fink.
 
@@ -284,11 +285,16 @@ def fink(coord: SkyCoord, radius: Angle, survey: str) -> List[Dict[str, Any]]:
     """
     if survey not in ['ztf', 'lsst']:
         raise ValueError("Survey must be 'ztf' or 'lsst'")
-    
+
     FINK_API_URL = f"https://api.{survey}.fink-portal.org/api/v1/"
-    
+
     if survey == 'lsst':
-        columns = "f:clf_cats_class,r:diaSourceId,r:diaObjectId,r:midpointMjdTai"
+        columns = (
+            "f:clf_cats_class,"
+            "r:diaSourceId,"
+            "r:diaObjectId,"
+            "r:midpointMjdTai"
+        )
     else:
         columns = None
 
@@ -296,20 +302,20 @@ def fink(coord: SkyCoord, radius: Angle, survey: str) -> List[Dict[str, Any]]:
         'ra': str(coord.ra.deg),
         'dec': str(coord.dec.deg),
         'radius': str(radius.arcsec),
-        #"columns": columns,
+        "columns": columns,
         'output-format': 'json'
       }
     r = requests.post(
-        urljoin(FINK_API_URL,'conesearch'),
+        urljoin(FINK_API_URL, 'conesearch'),
         json=search_dict
     )
-    
+
     fink_results_dict_list: List[Dict[str, Any]]
-    
+
     if r.ok:
         fink_results_dict_list = r.json()
         logger.debug(fink_results_dict_list)
-        
+
         for result in fink_results_dict_list:
             result['database'] = f'Fink ({survey.upper()})'
             if survey == 'ztf':
@@ -328,13 +334,16 @@ def fink(coord: SkyCoord, radius: Angle, survey: str) -> List[Dict[str, Any]]:
                     ra=result["r:ra"], dec=result["r:dec"], unit="deg"
                 )
                 result['object_name'] = str(result['r:diaObjectId'])
-                
+
             result["otype_long"] = ""
-            result['object_url'] = urljoin(f'https://{survey}.fink-portal.org/',result['object_name'])
+            result['object_url'] = urljoin(
+                f'https://{survey}.fink-portal.org/',
+                result['object_name']
+            )
             result["ra_hms"] = object_coord.ra.to_string(unit="hourangle")
             result["dec_dms"] = object_coord.dec.to_string(unit="deg")
             result['separation_arcsec'] = result['v:separation_degree']*3600.
-            
+
     return fink_results_dict_list
 
 
