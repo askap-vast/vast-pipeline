@@ -73,9 +73,6 @@ from vast_pipeline.forms import PipelineRunForm, CommentForm, TagWithCommentsFor
 from vast_pipeline.pipeline.config import PipelineConfig
 from vast_pipeline.image.utils import open_fits
 
-from timeit import default_timer as timer
-
-
 logger = logging.getLogger(__name__)
 
 
