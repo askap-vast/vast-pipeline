@@ -1,10 +1,10 @@
-import os
 import logging
 import shutil
 import numpy as np
 import pandas as pd
 
 from argparse import ArgumentParser
+from pathlib import Path
 from glob import glob
 from django.db.models import Q
 from django.db import transaction
@@ -52,7 +52,7 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config: PipelineCon
     Args:
         p_run (Run):
             The run model object.
-        bak_files (Dict[str, str]):
+        bak_files (Dict[str, Path]):
             Dictionary containing the paths to the .bak files.
         prev_config (PipelineConfig):
             Back up run configuration.
@@ -60,13 +60,15 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config: PipelineCon
     Returns:
         None
     """
+    p_run_path = Path(p_run.path)
+    
     # check images match
     img_f_list = prev_config["inputs"]["image"]
     if isinstance(img_f_list, dict):
         img_f_list = [
             item for sublist in img_f_list.values() for item in sublist
         ]
-    img_f_list = [os.path.basename(i) for i in img_f_list]
+    img_f_list = [Path(i).name for i in img_f_list]
 
     prev_images = pd.read_parquet(
         bak_files['images'], columns=['id', 'name', 'measurements_path']
@@ -82,9 +84,7 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config: PipelineCon
     # check forced measurements
     monitor = prev_config["source_monitoring"]["monitor"]
     if monitor:
-        forced_parquets = glob(os.path.join(
-            p_run.path, 'forced_*.parquet.bak'
-        ))
+        forced_parquets = p_run_path.glob('forced_*.parquet.bak')
 
         if not forced_parquets:
             raise CommandError(
@@ -175,9 +175,7 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config: PipelineCon
         logger.debug('(type, #deleted): %s', detail_del)
 
     if monitor:
-        current_forced_parquets = glob(os.path.join(
-            p_run.path, 'forced_*.parquet'
-        ))
+        current_forced_parquets = p_run_path.glob('forced_*.parquet')
 
         current_forced_meas = pd.concat(
             [pd.read_parquet(
@@ -264,20 +262,20 @@ def restore_pipe(p_run: Run, bak_files: Dict[str, str], prev_config: PipelineCon
     for i in bak_files:
         bak_file = bak_files[i]
         if i == 'config':
-            actual_file = bak_file.replace('.yaml.bak', '_prev.yaml')
+            actual_file = str(bak_file).replace('.yaml.bak', '_prev.yaml')
         else:
-            actual_file = bak_file.replace('.bak', '')
+            actual_file = str(bak_file).replace('.bak', '')
         shutil.copy(bak_file, actual_file)
-        os.remove(bak_file)
+        bak_file/unlink()
 
     if monitor:
         for i in current_forced_parquets:
-            os.remove(i)
+            i.unlink()
 
         for i in forced_parquets:
-            new_file = i.replace('.bak', '')
+            new_file = str(i).replace('.bak', '')
             shutil.copy(i, new_file)
-            os.remove(i)
+            i.unlink()
 
 
 class Command(BaseCommand):
@@ -338,7 +336,7 @@ class Command(BaseCommand):
         # configure logging
         root_logger = logging.getLogger('')
         f_handler = logging.FileHandler(
-            os.path.join(run_folder, timeStamped('restore_log.txt')),
+            run_folder/timeStamped('restore_log.txt'),
             mode='w'
         )
         f_handler.setFormatter(root_logger.handlers[0].formatter)
@@ -361,28 +359,27 @@ class Command(BaseCommand):
                 " Unable to run restore."
             )
 
-        path = p_run.path
+        path = Path(p_run.path)
         pipeline = Pipeline(
             name=p_run_name,
-            config_path=os.path.join(path, 'config.yaml')
+            config_path=path/'config.yaml'
         )
         try:
             # update pipeline run status to restoring
             prev_status = p_run.status
             pipeline.set_status(p_run, 'RES')
 
-            prev_config_file = os.path.join(p_run.path, 'config.yaml.bak')
+            prev_config_file = path/'config.yaml.bak'
 
-            if os.path.isfile(prev_config_file):
+            if prev_config_file.isfile():
+                new_prev_config_file = Path(str(prev_config_file).replace('.yaml.bak', '.bak.yaml'))
                 shutil.copy(
                     prev_config_file,
-                    prev_config_file.replace('.yaml.bak', '.bak.yaml')
+                    new_prev_config_file
                 )
-                prev_config_file = prev_config_file.replace(
-                    '.yaml.bak', '.bak.yaml'
-                )
+                prev_config_file = new_prev_config_file
                 prev_config = PipelineConfig.from_file(prev_config_file)
-                os.remove(prev_config_file)
+                prev_config_file.unlink()
             else:
                 raise CommandError(
                     'Previous config file does not exist.'
@@ -395,11 +392,11 @@ class Command(BaseCommand):
                 'relations', 'skyregions', 'sources', 'config'
             ]:
                 if i == 'config':
-                    f_name = os.path.join(p_run.path, f'{i}.yaml.bak')
+                    f_name = path/f'{i}.yaml.bak'
                 else:
-                    f_name = os.path.join(p_run.path, f'{i}.parquet.bak')
+                    f_name = path/f'{i}.parquet.bak'
 
-                if os.path.isfile(f_name):
+                if f_name.isfile():
                     bak_files[i] = f_name
                 elif (
                     i != "measurement_pairs"
