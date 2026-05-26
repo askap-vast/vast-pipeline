@@ -166,6 +166,39 @@ class DaskManager(metaclass=Singleton):
         """Restart the cluster and flush all memory"""
         self.client.restart()
 
+    def restart_workers(self, timeout: int = 60) -> None:
+        """Restart all workers to clear their memory between pipeline steps.
+
+        Logs the current cluster memory state, cancels any outstanding futures,
+        restarts all workers (clearing all persisted data), and updates the
+        cached worker count.
+
+        This should only be called once all required persisted Dask futures for
+        the current step have been computed and their results saved (e.g. to
+        parquet or returned as pandas DataFrames). Any persisted data that has
+        not been materialised will be lost.
+
+        Args:
+            timeout: Seconds to wait for workers to come back online after
+                restarting. Defaults to 60.
+        """
+        logger.info("Restarting Dask workers to clear memory...")
+        self.log_cluster_memory()
+
+        # Cancel any futures still tracked by the client before restarting so
+        # the scheduler does not attempt to resubmit them on the new workers.
+        if self.client.futures:
+            logger.info("Cancelling %d outstanding futures...", len(self.client.futures))
+            self.client.cancel(list(self.client.futures))
+
+        self.client.restart(timeout=timeout)
+
+        self.num_workers = len(self.client.scheduler_info()["workers"].keys())
+        logger.info(
+            "Dask workers restarted successfully. %d workers available.",
+            self.num_workers,
+        )
+
     def shutdown(self):
         """Shut down the cluster safely"""
         logger.info("Shutting down Dask Cluster")
