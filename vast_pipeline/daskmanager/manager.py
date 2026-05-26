@@ -3,6 +3,10 @@
 import logging
 import random
 import time
+from typing import Dict, Union
+
+import pandas as pd
+import dask.dataframe as dd
 
 from dask.distributed import Client, LocalCluster, Semaphore, WorkerPlugin
 from django.conf import settings as s
@@ -165,6 +169,60 @@ class DaskManager(metaclass=Singleton):
     def restart(self):
         """Restart the cluster and flush all memory"""
         self.client.restart()
+
+    def checkpoint_and_restart(
+        self,
+        checkpoints: Dict[str, Union[pd.DataFrame, dd.DataFrame]],
+        timeout: int = 60,
+    ) -> None:
+        """Save dataframes to parquet on disk then restart all workers.
+
+        Each entry in `checkpoints` maps an output path to a DataFrame (either
+        pandas or Dask).  Dask DataFrames are written as a directory of part
+        files; pandas DataFrames are written as a single file.  Once every
+        dataframe has been flushed to disk the cluster workers are restarted via
+        :meth:`restart_workers`, clearing all in-memory futures.
+
+        The caller is responsible for reloading the saved parquets after this
+        method returns, e.g. with ``dd.read_parquet(path)``.
+
+        Example usage::
+
+            self.dm.checkpoint_and_restart({
+                run_path / "sources_df.parquet": sources_df,
+                run_path / "missing_sources.parquet": missing_sources_df,
+            })
+            sources_df = dd.read_parquet(run_path / "sources_df.parquet").persist()
+
+        Args:
+            checkpoints:
+                Mapping of output path (str or path-like) to DataFrame.  Dask
+                DataFrames are written with ``overwrite=True`` so the call is
+                idempotent across re-runs.
+            timeout:
+                Seconds to wait for workers to come back online after
+                restarting.  Passed through to :meth:`restart_workers`.
+        """
+        logger.info(
+            "Checkpointing %d dataframe(s) to disk before cluster restart...",
+            len(checkpoints),
+        )
+
+        for path, df in checkpoints.items():
+            path = str(path)
+            if isinstance(df, dd.DataFrame):
+                logger.info("Writing Dask DataFrame to parquet directory: %s", path)
+                df.to_parquet(path, overwrite=True)
+            elif isinstance(df, pd.DataFrame):
+                logger.info("Writing pandas DataFrame to parquet file: %s", path)
+                df.to_parquet(path)
+            else:
+                raise TypeError(
+                    f"Expected a pandas or Dask DataFrame for path '{path}', "
+                    f"got {type(df).__name__}"
+                )
+
+        self.restart_workers(timeout=timeout)
 
     def restart_workers(self, timeout: int = 60) -> None:
         """Restart all workers to clear their memory between pipeline steps.
