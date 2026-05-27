@@ -297,6 +297,14 @@ LOGGING = {
             "level": "ERROR",
             "handlers": ['console'],
         },
+        # Suppress the INFO-level CommClosedError tracebacks that distributed
+        # logs from its background _background_send coroutine when workers are
+        # killed during a cluster restart.  The errors are caught internally by
+        # Dask and do not affect execution; they are purely cosmetic noise.
+        'distributed.batched': {
+            "level": "WARNING",
+            "handlers": ['console'],
+        },
         'postgres_copy.copy_from': {
             "level": "INFO",
             "propogate": True,

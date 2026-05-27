@@ -1469,7 +1469,7 @@ def parallel_association(
     # reset the index of the final corrected and collapsed result and compute into the cluster
     # also sort by epoch to avoid unsorted output which can occur due to
     # what appear to be race conditions in map_partitions above.
-    results = results.reset_index(drop=True).sort_values(['epoch', 'datetime']).persist()
+    results = results.sort_values(['epoch', 'datetime']).reset_index(drop=True).persist()
     wait(results)
 
     logger.info("Total parallel association time: %.2f seconds", timer.reset_init())

@@ -96,6 +96,8 @@ class Pipeline:
         # steps.  Cleaned up at the end of a successful run.
         self._ckpt_dir: str = os.path.join(self.config["run"]["path"], "_checkpoints")
         self._sources_ckpt: str = os.path.join(self._ckpt_dir, "sources_df.parquet")
+        self._new_sources_ckpt: str = os.path.join(self._ckpt_dir, "new_sources_df.parquet")
+        self._missing_sources_ckpt: str = os.path.join(self._ckpt_dir, "missing_sources_df.parquet")
 
     def match_images_to_data(self) -> None:
         """
@@ -253,9 +255,8 @@ class Pipeline:
             sources_df = dd.from_pandas(
                 sources_df.reset_index(drop=True),
                 npartitions=npartitions
-            ).sort_values(['epoch', 'datetime']).persist()
+            ).sort_values(['epoch', 'datetime']).reset_index(drop=True).persist()
             wait(sources_df)
-
         mem_usage = get_df_memory_usage(sources_df)
         logger.debug(f"Step 2: sources_df memory usage: {mem_usage}MB")
         log_total_memory_usage()
@@ -311,11 +312,22 @@ class Pipeline:
         missing_sources_df = dd.from_pandas(
             missing_sources_df,
             npartitions=npartitions
-        )
+        ).persist()
         wait(missing_sources_df)
 
-        # STEP #4 New source analysis - new_sources() only needs 3 columns.
+        # Checkpoint missing_sources_df after step #3 and restart workers.
+        # In future, when get_src_skyregion_merged_df returns a Dask DataFrame
+        # directly, this checkpoint will also free that memory.
+        logger.info("Checkpointing missing_sources_df after step #3...")
+        self.dm.checkpoint_and_restart(
+            {self._missing_sources_ckpt: missing_sources_df},
+        )
+
+        # STEP #4 New source analysis - new_sources() only needs 3 columns of
+        # sources_df; missing_sources_df is loaded with all columns because
+        # new_sources() uses in_primary for filtering internally.
         logger.info("Running step #4: new source analysis...")
+        missing_sources_df = dd.read_parquet(self._missing_sources_ckpt)
         sources_df = dd.read_parquet(
             self._sources_ckpt, columns=["source", "image", "flux_peak"]
         )
@@ -327,11 +339,19 @@ class Pipeline:
             p_run,
         )
 
-        # Drop column no longer required in missing_sources_df.
-        missing_sources_df = missing_sources_df.drop(["in_primary"], axis=1)
-
-        # Reload full sources_df from the checkpoint for steps 5 and 6.
+        # Checkpoint new_sources_df after step #4; restart workers to clear
+        # cluster memory before step #5.
+        logger.info("Checkpointing new_sources_df after step #4...")
+        self.dm.checkpoint_and_restart(
+            {self._new_sources_ckpt: new_sources_df},
+        )
+        new_sources_df = dd.read_parquet(self._new_sources_ckpt)
         sources_df = dd.read_parquet(self._sources_ckpt)
+        # forced_extraction only needs these 4 data columns (source is the index).
+        missing_sources_df = dd.read_parquet(
+            self._missing_sources_ckpt,
+            columns=["wavg_ra", "wavg_dec", "img_diff", "detection"],
+        )
 
         # STEP #5: Run forced extraction/photometry if asked
         if self.config["source_monitoring"]["monitor"]:
@@ -354,15 +374,15 @@ class Pipeline:
             logger.debug(f"Step 5: sources_df memory usage: {mem_usage}MB")
             log_total_memory_usage()
 
-            # Checkpoint sources_df (now including forced measurements) before
-            # step #6.  The same parquet path is reused with overwrite=True.
-            # forced_extraction already persisted sources_df in cluster memory,
-            # so there is no circular read-then-overwrite issue.
+            # Checkpoint sources_df (now including forced measurements) then
+            # restart workers.  new_sources_df was already checkpointed after
+            # step #4 and has not changed, so it is reloaded from that path.
             logger.info("Checkpointing sources_df after step #5...")
             self.dm.checkpoint_and_restart(
                 {self._sources_ckpt: sources_df},
             )
             sources_df = dd.read_parquet(self._sources_ckpt)
+            new_sources_df = dd.read_parquet(self._new_sources_ckpt)
 
         del missing_sources_df
 

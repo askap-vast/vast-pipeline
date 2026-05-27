@@ -10,6 +10,7 @@ import pyarrow as pa
 import dask.dataframe as dd
 
 from dask.distributed import Client, LocalCluster, Semaphore, WorkerPlugin
+from distributed.comm.core import CommClosedError
 from django.conf import settings as s
 from . import config # noqa: F401
 
@@ -140,7 +141,7 @@ class DaskManager(metaclass=Singleton):
                 logger.warning('Could not connect to Dask Cluster at %s - starting locally instead', client_ip)
                 self.client = _start_cluster()
         
-        self.num_workers = len(self.client.scheduler_info()['workers'].keys())
+        self.num_workers = len(self.client.scheduler_info(-1)['workers'].keys())
 
     def persist(self, collection):
         return self.client.persist(collection)
@@ -151,10 +152,10 @@ class DaskManager(metaclass=Singleton):
     def get_n_random_workers(self, n):
         """Return n random workers from the pool"""
         logger.debug("Getting %d random workers...", n)
-        return random.sample(list(self.client.scheduler_info()['workers'].keys()), n)
+        return random.sample(list(self.client.scheduler_info(-1)['workers'].keys()), n)
 
     def log_cluster_memory(self):
-        workers = self.client.scheduler_info()['workers']
+        workers = self.client.scheduler_info(-1)['workers']
         logger.info("Logging memory usage for %d workers...", len(workers))
         for addr, info in workers.items():
             memory_limit = info['memory_limit'] / 1e9
@@ -174,7 +175,7 @@ class DaskManager(metaclass=Singleton):
     def checkpoint_and_restart(
         self,
         checkpoints: Dict[str, Union[pd.DataFrame, dd.DataFrame]],
-        timeout: int = 60,
+        timeout: int = 180,
     ) -> None:
         """Save dataframes to parquet on disk then restart all workers.
 
@@ -214,9 +215,15 @@ class DaskManager(metaclass=Singleton):
             if isinstance(df, dd.DataFrame):
                 logger.info("Writing Dask DataFrame to parquet directory: %s", path)
                 first_partition = df.get_partition(0).compute()
-                schema = pa.Schema.from_pandas(first_partition, preserve_index=False)
+                # Preserve the index only when it has a meaningful name (e.g.
+                # 'source').  Unnamed or shuffled integer indexes are dropped so
+                # that the schema and Dask's write_index flag stay consistent.
+                write_index = first_partition.index.name is not None
+                schema = pa.Schema.from_pandas(
+                    first_partition, preserve_index=write_index
+                )
                 del first_partition
-                df.to_parquet(path, overwrite=True, schema=schema)
+                df.to_parquet(path, overwrite=True, schema=schema, write_index=write_index)
             elif isinstance(df, pd.DataFrame):
                 logger.info("Writing pandas DataFrame to parquet file: %s", path)
                 df.to_parquet(path)
@@ -228,7 +235,7 @@ class DaskManager(metaclass=Singleton):
 
         self.restart_workers(timeout=timeout)
 
-    def restart_workers(self, timeout: int = 60) -> None:
+    def restart_workers(self, timeout: int = 180) -> None:
         """Restart all workers to clear their memory between pipeline steps.
 
         Logs the current cluster memory state, cancels any outstanding futures,
@@ -241,21 +248,47 @@ class DaskManager(metaclass=Singleton):
         not been materialised will be lost.
 
         Args:
-            timeout: Seconds to wait for workers to come back online after
-                restarting. Defaults to 60.
+            timeout: Seconds to wait for workers to shut down and come back
+                online after restarting. Defaults to 180.
         """
         logger.info("Restarting Dask workers to clear memory...")
         self.log_cluster_memory()
 
         # Cancel any futures still tracked by the client before restarting so
         # the scheduler does not attempt to resubmit them on the new workers.
+        # client.cancel() is fire-and-forget, so sleep briefly to give workers
+        # time to actually stop their in-flight tasks before the nanny sends
+        # SIGTERM.
         if self.client.futures:
             logger.info("Cancelling %d outstanding futures...", len(self.client.futures))
             self.client.cancel(list(self.client.futures))
+            time.sleep(5)
 
-        self.client.restart(timeout=timeout)
+        try:
+            self.client.restart(timeout=timeout)
+        except CommClosedError:
+            # The scheduler's batched TCP comm to a dying worker can be closed
+            # mid-restart.  Wait briefly for the scheduler to settle, then
+            # retry once.
+            logger.warning(
+                "CommClosedError during worker restart; waiting 5 s and retrying..."
+            )
+            time.sleep(5)
+            self.client.restart(timeout=timeout)
+        except TimeoutError:
+            # Workers did not shut down within `timeout` seconds (likely still
+            # draining I/O or GC).  Wait for the nanny SIGKILL cycle to
+            # complete (another `timeout` seconds) and retry once.
+            logger.warning(
+                "Worker restart timed out after %d s; waiting and retrying with "
+                "%d s timeout...",
+                timeout,
+                timeout * 2,
+            )
+            time.sleep(10)
+            self.client.restart(timeout=timeout * 2)
 
-        self.num_workers = len(self.client.scheduler_info()["workers"].keys())
+        self.num_workers = len(self.client.scheduler_info(-1)["workers"].keys())
         logger.info(
             "Dask workers restarted successfully. %d workers available.",
             self.num_workers,
