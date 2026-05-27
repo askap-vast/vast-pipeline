@@ -13,7 +13,7 @@ from astropy import units as u
 from astropy.coordinates import Angle
 
 import pandas as pd
-
+import pyarrow as pa
 
 from dask import dataframe as dd
 from dask.distributed import wait
@@ -255,22 +255,23 @@ class Pipeline:
             sources_df = dd.from_pandas(
                 sources_df.reset_index(drop=True),
                 npartitions=npartitions
-            ).sort_values(['epoch', 'datetime']).reset_index(drop=True).persist()
-            wait(sources_df)
-        mem_usage = get_df_memory_usage(sources_df)
-        logger.debug(f"Step 2: sources_df memory usage: {mem_usage}MB")
+            ).sort_values(['epoch', 'datetime']).reset_index(drop=True)
         log_total_memory_usage()
 
-        # Obtain the number of selavy measurements for the run
-        # n_selavy_measurements = sources_df.
-        nr_selavy_measurements = sources_df["id"].unique().compute().shape[0]
-
         # Checkpoint sources_df to disk and restart workers to clear cluster
-        # memory before step #3.  sources_df is the only persisted future that
-        # needs to survive; it is reloaded from the checkpoint parquet below.
+        # memory before step #3.  sources_df is written as a lazy Dask graph
+        # (no prior persist) so the computation runs once during the write.
         logger.info("Checkpointing sources_df after step #2...")
         self.dm.checkpoint_and_restart(
             {self._sources_ckpt: sources_df},
+            schema={"related": pa.list_(pa.string())},
+        )
+
+        # Count unique selavy measurement IDs from the checkpoint parquet
+        # rather than from a persisted DataFrame (avoids an extra compute pass
+        # before the write).
+        nr_selavy_measurements = (
+            dd.read_parquet(self._sources_ckpt, columns=["id"])["id"].nunique().compute()
         )
 
         # STEP #3: Merge sky regions and sources ready for
@@ -380,6 +381,7 @@ class Pipeline:
             logger.info("Checkpointing sources_df after step #5...")
             self.dm.checkpoint_and_restart(
                 {self._sources_ckpt: sources_df},
+                schema={"related": pa.list_(pa.string())},
             )
             sources_df = dd.read_parquet(self._sources_ckpt)
             new_sources_df = dd.read_parquet(self._new_sources_ckpt)

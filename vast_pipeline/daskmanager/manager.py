@@ -3,7 +3,7 @@
 import logging
 import random
 import time
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 
 import pandas as pd
 import pyarrow as pa
@@ -175,6 +175,7 @@ class DaskManager(metaclass=Singleton):
     def checkpoint_and_restart(
         self,
         checkpoints: Dict[str, Union[pd.DataFrame, dd.DataFrame]],
+        schema: Optional[Dict[str, pa.DataType]] = None,
         timeout: int = 180,
     ) -> None:
         """Save dataframes to parquet on disk then restart all workers.
@@ -188,19 +189,17 @@ class DaskManager(metaclass=Singleton):
         The caller is responsible for reloading the saved parquets after this
         method returns, e.g. with ``dd.read_parquet(path)``.
 
-        Example usage::
-
-            self.dm.checkpoint_and_restart(
-                {run_path / "sources_df.parquet": sources_df},
-                write_kwargs={"schema": pa.schema([("related", pa.list_(pa.string()))])},
-            )
-            sources_df = dd.read_parquet(run_path / "sources_df.parquet").persist()
-
         Args:
             checkpoints:
                 Mapping of output path (str or path-like) to DataFrame.  Dask
                 DataFrames are written with ``overwrite=True`` so the call is
                 idempotent across re-runs.
+            schema:
+                Optional ``{field_name: pa.DataType}`` dict for columns whose
+                types cannot be inferred correctly (e.g. list-typed columns
+                such as ``'related'``).  Only the listed fields are included in
+                the partial schema passed to ``to_parquet``; all other column
+                types are inferred normally by Dask.
             timeout:
                 Seconds to wait for workers to come back online after
                 restarting.  Passed through to :meth:`restart_workers`.
@@ -214,16 +213,10 @@ class DaskManager(metaclass=Singleton):
             path = str(path)
             if isinstance(df, dd.DataFrame):
                 logger.info("Writing Dask DataFrame to parquet directory: %s", path)
-                first_partition = df.get_partition(0).compute()
-                # Preserve the index only when it has a meaningful name (e.g.
-                # 'source').  Unnamed or shuffled integer indexes are dropped so
-                # that the schema and Dask's write_index flag stay consistent.
-                write_index = first_partition.index.name is not None
-                schema = pa.Schema.from_pandas(
-                    first_partition, preserve_index=write_index
-                )
-                del first_partition
-                df.to_parquet(path, overwrite=True, schema=schema, write_index=write_index)
+                # write_index: preserve named indexes (e.g. 'source') but drop
+                # unnamed integer indexes.
+                write_index = df._meta.index.name is not None
+                df.to_parquet(path, overwrite=True, write_index=write_index, schema=schema)
             elif isinstance(df, pd.DataFrame):
                 logger.info("Writing pandas DataFrame to parquet file: %s", path)
                 df.to_parquet(path)

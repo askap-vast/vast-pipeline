@@ -12,7 +12,6 @@ from astropy.wcs import WCS
 from astropy.wcs.utils import (
     proj_plane_pixel_scales
 )
-from dask.distributed import wait
 
 from vast_pipeline.models import Image, Run
 
@@ -236,33 +235,21 @@ def parallel_get_new_high_sigma(
         The column will contain 'NaN' entires for sources that fail.
     """
 
-    # Get a list of input images.
-    uniq_img_diff = (
-        df['img_diff_rms_path'].unique()
-        .compute()
-        .to_list()
-    )
-
     cols = ['img_diff_rms_path', 'flux_peak', 'source', 'wavg_ra', 'wavg_dec']
-    
+
     def process_group(df_group):
         return get_image_rms_measurements(df_group, edge_buffer=edge_buffer)
 
     out = df[cols].groupby("img_diff_rms_path")[cols] \
                   .apply(
-                    process_group,
-                    meta={'source': str, 'true_sigma': float}) \
-                  .persist()
+                      process_group,
+                      meta={'source': str, 'true_sigma': float})
 
-    # Remove duplicate sources and only keep high sigma
-    out = out.sort_values('true_sigma', ascending=True) \
-             .drop_duplicates('source', keep='last') \
-             .rename(columns={'true_sigma': 'new_high_sigma'}) \
-             .set_index('source') \
-             .persist()
-    logger.debug("Setup out df persisting...")
-    wait(out)
-    logger.debug("Finished persisting out df")
+    # For each source keep only the maximum true_sigma across all images.
+    # groupby+max is a tree-reduction (no global shuffle) so sort_values is
+    # not needed, and the result flows lazily to the caller.
+    out = out.groupby('source').agg({'true_sigma': 'max'}) \
+             .rename(columns={'true_sigma': 'new_high_sigma'})
 
     return out
 
@@ -396,12 +383,6 @@ def new_sources(
         how='left'
     ).drop(columns=['image'])
 
-    # NOTE: Need to persist here since dask loses futures after all the previous
-    # merges. Ideally this should be removed and we only persist at the end of
-    # new_sources.
-    new_sources_df = new_sources_df.persist()
-    wait(new_sources_df)
-
     logger.debug("Time to reset and merge image info and merge detection "
                  "fluxes into new_sources_df: "
                  f"{debug_timer.reset()}s"
@@ -410,8 +391,8 @@ def new_sources(
     # calculate the sigma of the source if it was placed in the
     # minimum rms region of the previous images
     new_sources_df['diff_sigma'] = (
-        new_sources_df['flux_peak'].values
-        / new_sources_df['img_diff_rms_min'].values
+        new_sources_df['flux_peak']
+        / new_sources_df['img_diff_rms_min']
     )
 
     # keep those that are above the user specified threshold

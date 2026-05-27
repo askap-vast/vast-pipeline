@@ -1466,11 +1466,12 @@ def parallel_association(
     #          3712  RV9KsSoiumCMU3
     #          3713  PwEnpyALZXGHk8
 
-    # reset the index of the final corrected and collapsed result and compute into the cluster
-    # also sort by epoch to avoid unsorted output which can occur due to
+    # reset the index of the final corrected and collapsed result.
+    # Sort by epoch to avoid unsorted output which can occur due to
     # what appear to be race conditions in map_partitions above.
-    results = results.sort_values(['epoch', 'datetime']).reset_index(drop=True).persist()
-    wait(results)
+    # Return as a lazy Dask graph (no persist); the caller writes directly
+    # to parquet so there is no benefit to materialising into cluster memory.
+    results = results.sort_values(['epoch', 'datetime']).reset_index(drop=True)
 
     logger.info("Total parallel association time: %.2f seconds", timer.reset_init())
 
