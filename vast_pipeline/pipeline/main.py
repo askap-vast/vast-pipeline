@@ -6,12 +6,14 @@ run.
 import os
 import operator
 import logging
+import shutil
 from typing import Dict
 
 from astropy import units as u
 from astropy.coordinates import Angle
 
 import pandas as pd
+
 
 from dask import dataframe as dd
 from dask.distributed import wait
@@ -90,6 +92,11 @@ class Pipeline:
         # Connect to the DaskCluster if available
         self.dm: DaskManager = DaskManager(skip_connect=skip_connect)
 
+        # Directory used to store intermediate checkpoints between pipeline
+        # steps.  Cleaned up at the end of a successful run.
+        self._ckpt_dir: str = os.path.join(self.config["run"]["path"], "_checkpoints")
+        self._sources_ckpt: str = os.path.join(self._ckpt_dir, "sources_df.parquet")
+
     def match_images_to_data(self) -> None:
         """
         Loops through images and matches the selavy, noise and bkg images.
@@ -130,6 +137,7 @@ class Pipeline:
             None
         """
         logger.info(f"Epoch based association: {self.config.epoch_based}")
+        os.makedirs(self._ckpt_dir, exist_ok=True)
         if self.add_mode:
             logger.info("Running in image add mode.")
 
@@ -256,6 +264,14 @@ class Pipeline:
         # n_selavy_measurements = sources_df.
         nr_selavy_measurements = sources_df["id"].unique().compute().shape[0]
 
+        # Checkpoint sources_df to disk and restart workers to clear cluster
+        # memory before step #3.  sources_df is the only persisted future that
+        # needs to survive; it is reloaded from the checkpoint parquet below.
+        logger.info("Checkpointing sources_df after step #2...")
+        self.dm.checkpoint_and_restart(
+            {self._sources_ckpt: sources_df},
+        )
+
         # STEP #3: Merge sky regions and sources ready for
         # steps 4 and 5 below.
         logger.info("Running step #3: Merge sky regions and sources")
@@ -273,7 +289,11 @@ class Pipeline:
         # could happen in add mode, otherwise the wrong detection image is
         # assigned.
         images_df = images_df.drop(columns=["image_dj"]).rename(columns={'image_name': 'name', 'image_datetime': 'datetime'})
-        unforced_df = sources_df.loc[sources_df["forced"] == False, missing_source_cols]
+        unforced_df = dd.read_parquet(
+            self._sources_ckpt,
+            columns=missing_source_cols,
+            filters=[("forced", "==", False)],
+        )
         missing_sources_df = get_src_skyregion_merged_df(
             unforced_df,
             images_df,
@@ -294,8 +314,11 @@ class Pipeline:
         )
         wait(missing_sources_df)
 
-        # STEP #4 New source analysis
+        # STEP #4 New source analysis - new_sources() only needs 3 columns.
         logger.info("Running step #4: new source analysis...")
+        sources_df = dd.read_parquet(
+            self._sources_ckpt, columns=["source", "image", "flux_peak"]
+        )
         new_sources_df = new_sources(
             sources_df,
             missing_sources_df,
@@ -306,6 +329,9 @@ class Pipeline:
 
         # Drop column no longer required in missing_sources_df.
         missing_sources_df = missing_sources_df.drop(["in_primary"], axis=1)
+
+        # Reload full sources_df from the checkpoint for steps 5 and 6.
+        sources_df = dd.read_parquet(self._sources_ckpt)
 
         # STEP #5: Run forced extraction/photometry if asked
         if self.config["source_monitoring"]["monitor"]:
@@ -327,6 +353,16 @@ class Pipeline:
             mem_usage = get_df_memory_usage(sources_df)
             logger.debug(f"Step 5: sources_df memory usage: {mem_usage}MB")
             log_total_memory_usage()
+
+            # Checkpoint sources_df (now including forced measurements) before
+            # step #6.  The same parquet path is reused with overwrite=True.
+            # forced_extraction already persisted sources_df in cluster memory,
+            # so there is no circular read-then-overwrite issue.
+            logger.info("Checkpointing sources_df after step #5...")
+            self.dm.checkpoint_and_restart(
+                {self._sources_ckpt: sources_df},
+            )
+            sources_df = dd.read_parquet(self._sources_ckpt)
 
         del missing_sources_df
 
@@ -365,10 +401,14 @@ class Pipeline:
             p_run.n_new_sources = nr_new_sources
             p_run.save()
 
+        # Clean up intermediate checkpoint files now that the run has
+        # completed successfully.
+        logger.info("Removing checkpoint directory: %s", self._ckpt_dir)
+        shutil.rmtree(self._ckpt_dir, ignore_errors=True)
+
         if self.dm.dedicated_client:
             logger.info("Shutting down dedicated Dask Cluster...")
             self.dm.shutdown()
-        pass
 
     @staticmethod
     def check_current_runs() -> None:

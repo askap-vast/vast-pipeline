@@ -6,6 +6,7 @@ import time
 from typing import Dict, Union
 
 import pandas as pd
+import pyarrow as pa
 import dask.dataframe as dd
 
 from dask.distributed import Client, LocalCluster, Semaphore, WorkerPlugin
@@ -188,10 +189,10 @@ class DaskManager(metaclass=Singleton):
 
         Example usage::
 
-            self.dm.checkpoint_and_restart({
-                run_path / "sources_df.parquet": sources_df,
-                run_path / "missing_sources.parquet": missing_sources_df,
-            })
+            self.dm.checkpoint_and_restart(
+                {run_path / "sources_df.parquet": sources_df},
+                write_kwargs={"schema": pa.schema([("related", pa.list_(pa.string()))])},
+            )
             sources_df = dd.read_parquet(run_path / "sources_df.parquet").persist()
 
         Args:
@@ -202,7 +203,7 @@ class DaskManager(metaclass=Singleton):
             timeout:
                 Seconds to wait for workers to come back online after
                 restarting.  Passed through to :meth:`restart_workers`.
-        """
+            """
         logger.info(
             "Checkpointing %d dataframe(s) to disk before cluster restart...",
             len(checkpoints),
@@ -212,7 +213,10 @@ class DaskManager(metaclass=Singleton):
             path = str(path)
             if isinstance(df, dd.DataFrame):
                 logger.info("Writing Dask DataFrame to parquet directory: %s", path)
-                df.to_parquet(path, overwrite=True)
+                first_partition = df.get_partition(0).compute()
+                schema = pa.Schema.from_pandas(first_partition, preserve_index=False)
+                del first_partition
+                df.to_parquet(path, overwrite=True, schema=schema)
             elif isinstance(df, pd.DataFrame):
                 logger.info("Writing pandas DataFrame to parquet file: %s", path)
                 df.to_parquet(path)
