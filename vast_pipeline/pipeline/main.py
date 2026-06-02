@@ -331,13 +331,14 @@ class Pipeline:
         missing_sources_df = dd.read_parquet(self._missing_sources_ckpt)
         sources_df = dd.read_parquet(
             self._sources_ckpt, columns=["source", "image", "flux_peak"]
-        )
+        ).compute()
         new_sources_df = new_sources(
             sources_df,
             missing_sources_df,
             self.config["new_sources"]["min_sigma"],
             self.config["source_monitoring"]["edge_buffer_scale"],
             p_run,
+            self.config["processing"]["max_partition_mb"],
         )
 
         # Checkpoint new_sources_df after step #4; restart workers to clear
@@ -346,17 +347,16 @@ class Pipeline:
         self.dm.checkpoint_and_restart(
             {self._new_sources_ckpt: new_sources_df},
         )
-        new_sources_df = dd.read_parquet(self._new_sources_ckpt)
-        sources_df = dd.read_parquet(self._sources_ckpt)
-        # forced_extraction only needs these 4 data columns (source is the index).
-        missing_sources_df = dd.read_parquet(
-            self._missing_sources_ckpt,
-            columns=["wavg_ra", "wavg_dec", "img_diff", "detection"],
-        )
 
         # STEP #5: Run forced extraction/photometry if asked
         if self.config["source_monitoring"]["monitor"]:
             logger.info("Running step #5: forced photometry...")
+            sources_df = dd.read_parquet(self._sources_ckpt)
+            # forced_extraction only needs these 4 data columns (source is the index).
+            missing_sources_df = dd.read_parquet(
+                self._missing_sources_ckpt,
+                columns=["wavg_ra", "wavg_dec", "img_diff", "detection"],
+            )
             (sources_df, nr_forced_measurements) = forced_extraction(
                 sources_df,
                 self.config["measurements"]["ra_uncertainty"] / 3600.0,
@@ -383,8 +383,6 @@ class Pipeline:
                 {self._sources_ckpt: sources_df},
                 schema={"related": pa.list_(pa.string())},
             )
-            sources_df = dd.read_parquet(self._sources_ckpt)
-            new_sources_df = dd.read_parquet(self._new_sources_ckpt)
 
         del missing_sources_df
 
@@ -392,7 +390,10 @@ class Pipeline:
 
         # STEP #6: finalise the df getting unique sources, calculating
         # metrics and upload data to database
+
         logger.info("Running step #6: final operations...")
+        sources_df = dd.read_parquet(self._sources_ckpt)
+        new_sources_df = dd.read_parquet(self._new_sources_ckpt).compute()
         nr_sources, nr_new_sources = final_operations(
             sources_df,
             p_run,

@@ -104,18 +104,18 @@ def final_operations(
 
     with dc.set({"dataframe.shuffle.method": "p2p"}):
         sources_df = sources_df.set_index("source") \
-                               .shuffle(npartitions=npartitions, on_index=True)
+                               .shuffle(npartitions=npartitions, on_index=True) \
+                               .persist()
 
     srcs_df = parallel_groupby(sources_df)
 
-    mem_usage = get_df_memory_usage(srcs_df)
+    #mem_usage = get_df_memory_usage(srcs_df)
     logger.info('Groupby-apply time: %.2f seconds', timer.reset())
-    logger.debug(f"Initial srcs_df memory: {mem_usage}MB")
+    #logger.debug(f"Initial srcs_df memory: {mem_usage}MB")
     log_total_memory_usage()
 
     # Add new high sigma
-    srcs_df = dd.merge(
-        srcs_df,
+    srcs_df = srcs_df.merge(
         new_sources_df,
         left_index=True,
         right_index=True,
@@ -140,7 +140,7 @@ def final_operations(
     srcs_df["n_neighbour_dist"] = d2d.deg
 
     # add new sources
-    srcs_df["new"] = srcs_df.index.isin(new_sources_df.index.compute().values)
+    srcs_df["new"] = srcs_df.index.isin(new_sources_df.index.values)
 
     mem_usage = get_df_memory_usage(srcs_df)
     logger.debug(f"srcs_df memory after nearest-neighbour: {mem_usage}MB")
@@ -332,7 +332,7 @@ def final_operations(
 
     # upload associations into DB
     if not __TESTING__:
-        associations_df_upload = dd.from_pandas(associations_df_upload).repartition(partition_size=f'{upload_chunk_size_mb}MB')
+        #associations_df_upload = dd.from_pandas(associations_df_upload).repartition(partition_size=f'{upload_chunk_size_mb}MB')
         copy_upload_associations(associations_df_upload)
         del associations_df_upload
 
@@ -349,8 +349,8 @@ def final_operations(
         # optimize measurement pair DataFrame and save to parquet file
         timer.reset()
         # ingest to dask data frames
-        srcs_df.index.name = "source_id"
-        srcs_df = dd.from_pandas(srcs_df, npartitions=n_partitions).persist()
+        #srcs_df.index.name = "source_id"
+        #srcs_df = dd.from_pandas(srcs_df, npartitions=n_partitions).persist()
         columns = ['id_a', 'id_b', 'flux_int_a', 'flux_int_err_a', 'flux_peak_a',
        'flux_peak_err_a', 'image_name_a', 'flux_int_b', 'flux_int_err_b',
        'flux_peak_b', 'flux_peak_err_b', 'image_name_b', 'vs_peak', 'vs_int',

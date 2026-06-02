@@ -255,11 +255,12 @@ def parallel_get_new_high_sigma(
 
 
 def new_sources(
-    sources_df: dd.DataFrame,
+    sources_df: pd.DataFrame,
     missing_sources_df: dd.DataFrame,
     min_sigma: float,
     edge_buffer: float,
     p_run: Run,
+    max_partition_mb: int = 15,
 ) -> pd.DataFrame:
     """
     Processes the new sources detected to check that they are valid new
@@ -281,6 +282,9 @@ def new_sources(
             'get_image_rms_measurements' function.
         p_run:
             The pipeline run.
+        max_partition_mb:
+            Target partition size in MB after exploding the img_diff column.
+            Defaults to 15.
 
     Returns:
         A DataFrame indexed by source id and containing a single 'new_high_sigma' column.
@@ -344,8 +348,12 @@ def new_sources(
     # save the index before exploding
     new_sources_df = new_sources_df.reset_index()
 
-    # Explode now to avoid two loops below
-    new_sources_df = new_sources_df.explode('img_diff')
+    # Explode now to avoid two loops below. Repartition immediately after
+    # because each row expands into len(img_diff) rows, which can make
+    # partitions very uneven and oversized.
+    new_sources_df = new_sources_df.explode('img_diff').repartition(
+        partition_size=f"{max_partition_mb}MiB"
+    )
 
     # Merge the respective image information to the df
     new_sources_df = new_sources_df.merge(
@@ -378,7 +386,7 @@ def new_sources(
 
     # merge the detection fluxes in
     new_sources_df = new_sources_df.merge(
-        sources_df[['source', 'image', 'flux_peak']],
+        sources_df,
         left_on=['source', 'detection'], right_on=['source', 'image'],
         how='left'
     ).drop(columns=['image'])
