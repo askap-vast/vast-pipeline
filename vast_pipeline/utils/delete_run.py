@@ -113,7 +113,7 @@ def delete_pipeline_run_raw_sql(p_run, source_batch_size=10000, delete_images=Fa
             image_count = cursor.fetchone()[0]
             # Delete skyregions that no longer have an image associated with them
             if image_count > 0:
-                logger.debug("Not deleting skyregion_id %d; %d image(s) still reference it.", sky_id, image_count)
+                logger.debug("Not deleting skyregion_id %s; %d image(s) still reference it.", sky_id, image_count)
                 continue
             else:
                 sql_cmd = f"DELETE FROM vast_pipeline_skyregion WHERE id = '{sky_id}';"
