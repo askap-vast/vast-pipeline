@@ -264,6 +264,12 @@ def tns(coord: SkyCoord, radius: Angle, input=None) -> List[Dict[str, Any]]:
                 object_coord = SkyCoord(
                     ra=object_dict["radeg"], dec=object_dict["decdeg"], unit="deg"
                 )
+                result["otype"] = object_dict["object_type"]["name"]
+                if result["otype"] is None:
+                    result["otype"] = ""
+                result["otype_long"] = ""
+                result["separation_arcsec"] = coord.separation(object_coord).arcsec
+                result["ra_hms"] = object_coord.ra.to_string(unit="hourangle")
                 result["dec_dms"] = object_coord.dec.to_string(unit="deg")
                 result["database"] = "TNS"
                 result["object_name"] = object_dict["objname"]
