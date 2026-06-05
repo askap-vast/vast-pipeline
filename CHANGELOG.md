@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Update external query tests to work when external sites are down [#880](https://github.com/askap-vast/vast-pipeline/pull/880)
 - Changed execution of external queries to run in parallel [#884](https://github.com/askap-vast/vast-pipeline/pull/884)
 - Changed loading of source cutouts to utilise caching [#869](https://github.com/askap-vast/vast-pipeline/pull/869)
 - Speed up final step of basic/advanced association by not resetting index twice (factor of 5-100x faster!) [#861](https://github.com/askap-vast/vast-pipeline/pull/861)
@@ -63,6 +64,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 
 #### List of PRs
+- [#880](https://github.com/askap-vast/vast-pipeline/pull/880): fix: Ensure external dependencies pass when etxternal websites are down
 - [#885](https://github.com/askap-vast/vast-pipeline/pull/885): fix: Fix bug introduced by #884 regarding error handling of external query table
 - [#884](https://github.com/askap-vast/vast-pipeline/pull/884): fix, feat: Fixed issues with and parallelised source webpage external query table
 - [#874](https://github.com/askap-vast/vast-pipeline/pull/874): feat: Upgrade source webpages with improved Aladin lite display and expanded external crossmatching
