@@ -13,13 +13,12 @@ from glob import glob
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from django.conf import settings
-from django.db import transaction
 from pyarrow.parquet import read_schema
 from typing import List, Tuple, Dict, Optional
 from dask.delayed import delayed
 from dask.distributed import wait
 
-from vast_pipeline.models import Image, Measurement, Run
+from vast_pipeline.models import Image, Run
 from vast_pipeline.pipeline.loading import copy_upload_measurements
 from vast_pipeline.daskmanager.manager import get_io_semaphore
 
