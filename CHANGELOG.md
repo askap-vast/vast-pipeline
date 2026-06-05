@@ -52,6 +52,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- V2: Fix and optimise forced measurement deletion [#887](https://github.com/askap-vast/vast-pipeline/pull/887)
 - V2: Fix association upload to work with dask > 2025.5.0 [#879](https://github.com/askap-vast/vast-pipeline/pull/879)
 - V2: Fixed memory leaks caused by nested delays [#854](https://github.com/askap-vast/vast-pipeline/pull/854)
 - V2: Fixed duplicate source ID error by switching from sources_df.repartition() to sources_df.shuffle() in pipeline.finalise.final_operations [#845](https://github.com/askap-vast/vast-pipeline/pull/845)
@@ -85,6 +86,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### List of PRs
 
+- [#887](https://github.com/askap-vast/vast-pipeline/pull/887): fix: V2: Move forced measurement deletion to delete_run and optimise it
 - [#880](https://github.com/askap-vast/vast-pipeline/pull/880): fix: V2: Ensure external dependencies pass when etxternal websites are down
 - [#879](https://github.com/askap-vast/vast-pipeline/pull/879): fix: V2: Update dependencies to work with latest python 3.11&3.12 and pin them
 - [#877](https://github.com/askap-vast/vast-pipeline/pull/877): feat: V2: Capture worker logs by client
