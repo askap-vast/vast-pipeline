@@ -10,11 +10,10 @@ from glob import glob
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from django.conf import settings
-from django.db import transaction
 from pyarrow.parquet import read_schema
 from typing import Any, List, Tuple, Dict, Optional
 
-from vast_pipeline.models import Image, Measurement, Run
+from vast_pipeline.models import Image, Run
 from vast_pipeline.pipeline.loading import make_upload_measurements
 
 from forced_phot import ForcedPhot
@@ -23,53 +22,6 @@ from vast_pipeline.image.utils import open_fits
 from vast_pipeline.pipeline.utils import log_total_memory_usage
 
 logger = logging.getLogger(__name__)
-
-
-def remove_forced_meas(run_path: str, batch_size=10000) -> None:
-    '''
-    Remove forced measurements from the database if forced parquet files
-    are found.
-
-    Args:
-        run_path:
-            The run path of the pipeline run.
-        batch_size:
-            Number of forced measurements to delete per iteration
-
-    Returns:
-        None
-    '''
-    path_glob = glob(
-        os.path.join(run_path, 'forced_measurements_*.parquet')
-    )
-    if path_glob:
-        ids = (
-            dd.read_parquet(path_glob, columns='id')
-            .values
-            .compute()
-            .tolist()
-        )
-
-        forced_meas = Measurement.objects.filter(id__in=ids)
-        if forced_meas.exists():
-            with transaction.atomic():
-                ids_to_delete = list(forced_meas.values_list('id', flat=True))
-                n_ids = len(ids_to_delete)
-                
-                logger.info("Iterating over %d forced measurements", n_ids)
-                n_batches = round(n_ids/batch_size)
-                logger.info("Using %d batches of %d measurements", n_batches, batch_size)
-
-                total_deleted = 0
-                for i in range(0, n_ids, batch_size):
-                    batch_ids = ids_to_delete[i : i + batch_size]
-                    n_deleted, details = Measurement.objects.filter(id__in=batch_ids).delete()
-                    total_deleted += n_deleted
-
-                logger.info(
-                    'Total objects deleted: %i',
-                    total_deleted
-                )
 
 
 def get_data_from_parquet(
