@@ -209,3 +209,8 @@ class ExternalSearchSerializer(serializers.Serializer):
     )
     ra_hms = serializers.CharField()
     dec_dms = serializers.CharField()
+    object_url = serializers.URLField(
+        required=False,
+        allow_blank=True,
+        help_text="Optional URL linking to the object in the source database (e.g. SIMBAD page)."
+    )

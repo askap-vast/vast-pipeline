@@ -1,6 +1,10 @@
 import logging
+import math
+import os
 
+from glob import glob
 from tqdm import tqdm
+import dask.dataframe as dd
 from django.db import connection
 from vast_pipeline.utils.utils import StopWatch
 
@@ -108,7 +112,7 @@ def delete_pipeline_run_raw_sql(p_run, source_batch_size=10000, delete_images=Fa
             image_count = cursor.fetchone()[0]
             # Delete skyregions that no longer have an image associated with them
             if image_count > 0:
-                logger.debug("Not deleting skyregion_id %d; %d image(s) still reference it.", sky_id, image_count)
+                logger.debug("Not deleting skyregion_id %s; %d image(s) still reference it.", sky_id, image_count)
                 continue
             else:
                 sql_cmd = f"DELETE FROM vast_pipeline_skyregion WHERE id = '{sky_id}';"
@@ -192,3 +196,60 @@ def clear_run_sources(p_run_id, batch_size=10_000, timer=None):
         
         t = timer.reset()
         logger.info("Time to delete source objects: %.2f seconds", t)
+
+def remove_forced_meas(run_path: str, batch_size: int = 10000) -> None:
+    """
+    Remove forced measurements from the database if forced parquet files
+    are found.
+
+    Args:
+        run_path:
+            The run path of the pipeline run.
+        batch_size:
+            Number of forced measurements to delete per iteration.
+
+    Returns:
+        None
+    """
+    path_glob = glob(os.path.join(run_path, "forced_measurements_*.parquet"))
+
+    # Collect all forced measurement IDs from every parquet file simultaneously
+    if not path_glob:
+        logger.info("No forced measurement parquet files found in %s", run_path)
+        return
+    all_ids = dd.read_parquet(path_glob, columns=["id"])["id"].compute().tolist()
+
+    if not all_ids:
+        logger.info("No forced measurements found in parquet files in %s", run_path)
+        return
+
+    n_ids = len(all_ids)
+    n_batches = math.ceil(n_ids / batch_size)
+    logger.info(
+        "Deleting %d forced measurements in %d batches of %d",
+        n_ids, n_batches, batch_size,
+    )
+
+    timer = StopWatch()
+    total_deleted = 0
+    batch_starts = list(range(0, n_ids, batch_size))
+    with connection.cursor() as cursor:
+        for i in tqdm(batch_starts):
+            batch = all_ids[i : i + batch_size]
+            id_str = ",".join(f"'{mid}'" for mid in batch)
+
+            # Remove associations first (FK constraint)
+            cursor.execute(
+                f"DELETE FROM vast_pipeline_association WHERE meas_id IN ({id_str});"
+            )
+
+            # Delete the measurements themselves
+            cursor.execute(
+                f"DELETE FROM vast_pipeline_measurement WHERE id IN ({id_str});"
+            )
+            total_deleted += cursor.rowcount
+
+    t = timer.reset()
+    logger.info(
+        "Deleted %d forced measurements in %.2f seconds", total_deleted, t
+    )

@@ -8,11 +8,10 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from vast_pipeline.models import Run
-from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
 from vast_pipeline.utils.utils import StopWatch, delete_file_or_dir
 from ..helpers import get_p_run_name
 
-from ...utils.delete_run import delete_pipeline_run_raw_sql
+from ...utils.delete_run import delete_pipeline_run_raw_sql, remove_forced_meas
 
 logger = logging.getLogger(__name__)
 
@@ -135,8 +134,8 @@ class Command(BaseCommand):
             t = timer.reset()
             logger.info("Time to delete run from database: %.2f sec", t)
 
-            # remove forced measurements in db if presents
-            forced_parquets = remove_forced_meas(p_run.path)
+            # remove forced measurements in db if present
+            remove_forced_meas(p_run.path)
             t = timer.reset()
             logger.info("Time to delete forced measurements: %.2f sec", t)
 

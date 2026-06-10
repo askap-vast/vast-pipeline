@@ -18,7 +18,6 @@ from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand, CommandError
 
 from vast_pipeline._version import __version__ as pipeline_version
-from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
 from vast_pipeline.pipeline.main import Pipeline
 from vast_pipeline.pipeline.utils import (
     get_create_p_run, create_measurements_parquet_file,
@@ -27,6 +26,7 @@ from vast_pipeline.pipeline.utils import (
 from vast_pipeline.utils.utils import (
     StopWatch, timeStamped, delete_file_or_dir
 )
+from vast_pipeline.utils.delete_run import remove_forced_meas
 from vast_pipeline.models import Run
 from ..helpers import get_p_run_name
 

@@ -53,6 +53,9 @@ from rest_framework.viewsets import ModelViewSet, ViewSet
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import serializers
+
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.contrib.auth.decorators import login_required
 
@@ -88,7 +91,6 @@ from vast_pipeline.management.commands.initpiperun import initialise_run
 from vast_pipeline.forms import PipelineRunForm, CommentForm, TagWithCommentsForm
 from vast_pipeline.pipeline.config import PipelineConfig
 from vast_pipeline.image.utils import open_fits
-
 
 logger = logging.getLogger(__name__)
 
@@ -1677,14 +1679,13 @@ def SourceEtaVPlotUpdate(request: Request, pk: str) -> Response:
 @login_required
 def SourceDetail(request, pk):
     # source data
-    source = (
-        Source.objects.filter(id=pk).annotate(run_name=F("run__name")).values().get()
-    )
-    source["aladin_ra"] = source["wavg_ra"]
-    source["aladin_dec"] = source["wavg_dec"]
-    source["aladin_zoom"] = 0.15
-    source["wavg_ra_hms"] = deg2hms(source["wavg_ra"], hms_format=True)
-    source["wavg_dec_dms"] = deg2dms(source["wavg_dec"], dms_format=True)
+    source = Source.objects.filter(id=pk).annotate(run_name=F('run__name')).values().get()
+    source['aladin_ra'] = source['wavg_ra']
+    source['aladin_dec'] = source['wavg_dec']
+    source['aladin_zoom'] = settings.ALADIN_ZOOM
+    source['aladin_radius'] = settings.ALADIN_RADIUS
+    source['wavg_ra_hms'] = deg2hms(source['wavg_ra'], hms_format=True)
+    source['wavg_dec_dms'] = deg2dms(source['wavg_dec'], dms_format=True)
     source["wavg_l"], source["wavg_b"] = equ2gal(source["wavg_ra"], source["wavg_dec"])
 
     # source data
@@ -2572,6 +2573,30 @@ class UtilitiesSet(ViewSet):
         serializer.is_valid(raise_exception=True)
         return Response()
 
+    def _run_das_query(self, coord, radius, catalogues, request):
+        """Wrapper for external_query.das"""
+        das_results = []
+        try:
+            return external_query.das(coord, radius, catalogues=catalogues)
+        except Exception as e:
+            messages.error(
+                request,
+                f"Unable to get DAS query results: {str(e)}"
+            )
+            return []
+
+    def _run_fink_query(self, coord, radius, survey, request):
+        """Wrapper for external_query.fink"""
+        fink_lsst_results = []
+        try:
+            return external_query.fink(coord, radius, survey)
+        except Exception as e:
+            messages.error(
+                request,
+                f"Unable to get FINK-LSST query results: {str(e)}"
+            )
+            return []
+
     @rest_framework.decorators.action(methods=["get"], detail=False)
     def external_search(self, request: Request) -> Response:
         """Perform a cone search with external providers (e.g. SIMBAD, NED, TNS) and
@@ -2601,7 +2626,9 @@ class UtilitiesSet(ViewSet):
                     - dec_dms: Dec coordinate string in ±<DD>d<MM>m<SS.SSS>s format.
         """
         coord_string = request.query_params.get("coord", "")
-        radius_string = request.query_params.get("radius", "1arcmin")
+        radius_string = request.query_params.get("radius", "30arcsec")
+        cats = request.query_params.get("catalogues")
+        catalogues = cats.split(",") if cats else ["I/355/gaiadr3"]
 
         # validate inputs
         try:
@@ -2614,19 +2641,91 @@ class UtilitiesSet(ViewSet):
         except ValueError as e:
             raise serializers.ValidationError({"radius": str(e.args[0])})
 
-        simbad_results = self._external_search_error_handler(
-            external_query.simbad, coord, radius, "SIMBAD", request
-        )
-        ned_results = self._external_search_error_handler(
-            external_query.ned, coord, radius, "NED", request
-        )
-        tns_results = self._external_search_error_handler(
-            external_query.tns, coord, radius, "TNS", request
-        )
+        tasks = {
+            "Simbad": lambda: self._external_search_error_handler(
+                                external_query.simbad,
+                                coord,
+                                radius,
+                                "SIMBAD",
+                                request
+                                ),
+            "NED": lambda: self._external_search_error_handler(
+                                external_query.ned,
+                                coord,
+                                radius,
+                                "NED",
+                                request
+                                ),
+            "TNS": lambda: self._external_search_error_handler(
+                                external_query.tns,
+                                coord,
+                                radius,
+                                "TNS",
+                                request
+                                ),
+            "DAS": lambda: self._run_das_query(
+                                coord,
+                                radius,
+                                catalogues,
+                                request,
+                                ),
+            "ZTF": lambda: self._run_fink_query(
+                                coord,
+                                radius,
+                                'ztf',
+                                request,
+                                ),
+            "LSST": lambda: self._run_fink_query(
+                                coord,
+                                radius,
+                                'lsst',
+                                request
+                                ),
+        }
 
-        results = simbad_results + ned_results + tns_results
+        results = []
+        with ThreadPoolExecutor(max_workers=len(tasks)) as executor:
+            futures = {executor.submit(fn): name for name, fn in tasks.items()}
+            for future in as_completed(futures):
+                try:
+                    result = future.result()
+                    results += result
+                except Exception as e:
+                    messages.error(
+                        request,
+                        f"Unable to get {futures[future]} query results: {str(e)}"
+                    )
+                    logger.exception(
+                        f"Unable to get {futures[future]} query results: {str(e)}"
+                    )
+
+        # The below code will remove duplicates from the DAS results
+        # However, I'm not sure if that's actually the best way forward -
+        # e.g. the Gaia positions from DAS are PM corrected, whereas those
+        # in SIMBAD are not, even though SIMBAD has more info
+
+        """
+        existing_names = []
+        for result in results:
+            existing_names.append(result['object_name'])
+        
+        for result in das_results:
+            print(result)
+            if result['object_name'] in existing_names:
+                print("Object exists")
+                das_results.remove(result)
+
+        results += das_results
+        """
+
         serializer = ExternalSearchSerializer(data=results, many=True)
-        serializer.is_valid(raise_exception=True)
+
+        if not serializer.is_valid():
+            for i, (record, error) in enumerate(zip(results, serializer.errors)):
+                if error:
+                    logger.error(f"Record {i} FAILED: {error}")
+                    logger.error(f"Data: {results[i]}")
+            raise serializers.ValidationError(serializer.errors)
         return Response(serializer.data)
 
 

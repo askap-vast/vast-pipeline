@@ -3,7 +3,7 @@ from typing import Any, Dict, List
 from urllib.parse import urljoin
 
 from astropy.coordinates import SkyCoord, Angle, Longitude, Latitude
-
+from astropy import units as u
 from astroquery.simbad import Simbad
 from astroquery.ipac.ned import Ned
 from django.conf import settings
@@ -80,6 +80,7 @@ NED_OTYPES = {
     "!WD*": "Galactic white dwarf",
     "!WR*": "Galactic Wolf-Rayet star",
 }
+
 
 def simbad(coord: SkyCoord, radius: Angle, input=None) -> List[Dict[str, Any]]:
     """Perform a cone search for sources with SIMBAD.
@@ -277,3 +278,181 @@ def tns(coord: SkyCoord, radius: Angle, input=None) -> List[Dict[str, Any]]:
                 result["object_name"] = object_dict["objname"]
 
     return tns_results_dict_list
+
+
+def fink(coord: SkyCoord, radius: Angle, survey: str) -> List[Dict[str, Any]]:
+    """Perform a cone search for sources with Fink.
+
+    Args:
+        coord: The coordinate of the centre of the cone.
+        radius: The radius of the cone in angular units.
+        survey: The survey to query - should be 'ztf' or 'lsst'.
+
+    Returns:
+        A list of dicts, where each dict is a query result row with the following keys:
+
+            - object_name: the name of the transient.
+            - database: the source of the result, i.e. TNS.
+            - separation_arcsec: separation to the query coordinate in arcsec.
+            - otype: object type.
+            - otype_long: long form of the object type. Not given by TNS, will always be
+                an empty string.
+            - ra_hms: RA coordinate string in hms format.
+            - dec_dms: Dec coordinate string in ±dms format.
+    Raises:
+        ValueError: Survey must be 'ztf' or 'lsst'.
+    """
+    if survey not in ['ztf', 'lsst']:
+        raise ValueError("Survey must be 'ztf' or 'lsst'")
+
+    FINK_API_URL = f"https://api.{survey}.fink-portal.org/api/v1/"
+
+    search_dict = {
+        'ra': str(coord.ra.deg),
+        'dec': str(coord.dec.deg),
+        'radius': str(radius.arcsec),
+        'output-format': 'json'
+    }
+
+    if survey == 'lsst':
+        columns = (
+            "f:clf_cats_class,"
+            "r:diaSourceId,"
+            "r:diaObjectId,"
+            "r:midpointMjdTai"
+        )
+        search_dict['columns'] = columns
+
+    r = requests.post(
+        urljoin(FINK_API_URL, 'conesearch'),
+        json=search_dict
+    )
+
+    fink_results_dict_list: List[Dict[str, Any]] = []
+
+    if r.ok:
+        fink_results_dict_list = r.json()
+        logger.debug(fink_results_dict_list)
+
+        for result in fink_results_dict_list:
+            result['database'] = f'Fink ({survey.upper()})'
+            if survey == 'ztf':
+                object_coord = SkyCoord(
+                    ra=result["i:ra"], dec=result["i:dec"], unit="deg"
+                )
+                result["otype"] = result['d:classification']
+                result['object_name'] = result['i:objectId']
+
+            else:
+                otype = result['f:clf_cats_class']
+                if otype == -1:
+                    otype = ""
+                result['otype'] = otype
+                object_coord = SkyCoord(
+                    ra=result["r:ra"], dec=result["r:dec"], unit="deg"
+                )
+                result['object_name'] = str(result['r:diaObjectId'])
+
+            result["otype_long"] = ""
+            result['object_url'] = urljoin(
+                f'https://{survey}.fink-portal.org/',
+                result['object_name']
+            )
+            result["ra_hms"] = object_coord.ra.to_string(unit="hourangle")
+            result["dec_dms"] = object_coord.dec.to_string(unit="deg")
+            result['separation_arcsec'] = result['v:separation_degree']*3600.
+    else:
+        logger.error(f"Unable to query Fink API ({r.status_code})")
+        logger.error(r.reason)
+        logger.error(r)
+
+    return fink_results_dict_list
+
+
+def das(
+    coord: SkyCoord,
+    radius: Angle,
+    catalogues: List[str],
+    api_url: str = "https://das.datacentral.org.au/vast",
+) -> List[Dict[str, Any]]:
+    """
+    Performs a cone search with the DAS VAST API.
+
+    Args:
+        coord: SkyCoord of the search center.
+        radius: Angle of the search radius.
+        catalogues: List of catalogues to query.
+        api_url: DAS API endpoint.
+
+    Returns:
+        List of dicts. Each dict contains:
+            - object_name
+            - database (catalogue)
+            - separation_arcsec
+            - ra_hms
+            - dec_dms
+            - object_url
+            - otype (empty string, for serializer compatibility)
+            - otype_long (empty string, for serializer compatibility)
+    """
+    
+    naming_dict = {
+        "I/355/gaiadr3": "Gaia DR3 ",
+        "IV/39": "TIC ", #TIC
+        "B/psr/psr": "PSR ", #PSR
+        "VIII/65": "NVSS J",
+        "J/ApJS/255/30": "VLASS ", #VLASS
+        "II/365": "CatWISE ",
+    }
+    
+    results: List[Dict[str, Any]] = []
+
+    payload = {
+        "ra": coord.ra.deg,
+        "dec": coord.dec.deg,
+        "radius": radius.to(u.deg).value,
+        "catalogues": catalogues,
+    }
+
+    headers = {"Content-Type": "application/json"}
+
+    try:
+        response = requests.post(api_url, json=payload, headers=headers, timeout=30)
+        response.raise_for_status()
+        data = response.json()
+
+        if data.get("status") != "ok":
+            print(f"DAS API returned status: {data.get('status_msg')}")
+            return results
+
+        results_data = data.get("results", {})
+        for cat in catalogues:
+            cat_data = results_data.get(cat, {})
+            if not cat_data:
+                continue
+
+            
+            offsets = cat_data.get("offsets", [])
+            ras = cat_data.get("ra", [])
+            decs = cat_data.get("dec", [])
+            ids = cat_data.get("ids", [])
+            object_url_base = cat_data.get("object_url", "")
+
+            for i in range(len(ids)):
+                obj_coord = SkyCoord(ra=float(ras[i]), dec=float(decs[i]), unit="deg")
+                object_url = f"{object_url_base}{ids[i]}".replace(" ", "%20")
+                results.append({
+                    "object_name": f"{naming_dict[cat]}{ids[i]}",
+                    "database": f"VizieR",
+                    "separation_arcsec": float(offsets[i]) if i < len(offsets) else None,
+                    "ra_hms": obj_coord.ra.to_string(unit="hourangle"),
+                    "dec_dms": obj_coord.dec.to_string(unit="deg"),
+                    "object_url": object_url,
+                    "otype": "",
+                    "otype_long": "",
+                })
+
+    except (requests.RequestException, KeyError, ValueError) as exc:
+        print(f"Error querying DAS API: {exc}")
+
+    return results
