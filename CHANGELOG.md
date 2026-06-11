@@ -66,7 +66,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 
 #### List of PRs
-- [#890](https://github.com/askap-vast/vast-pipeline/pull/890): fix: Update ci-docs github actions to be compatible with new poetry
+- [#890](https://github.com/askap-vast/vast-pipeline/pull/891): fix: Update ci-docs github actions to be compatible with new poetry
 - [#889](https://github.com/askap-vast/vast-pipeline/pull/889): fix: Ensure external dependencies pass when etxternal websites are down
 - [#888](https://github.com/askap-vast/vast-pipeline/pull/888): fix: Move forced measurement deletion to delete_run and optimise it
 - [#885](https://github.com/askap-vast/vast-pipeline/pull/885): fix: Fix bug introduced by #884 regarding error handling of external query table
