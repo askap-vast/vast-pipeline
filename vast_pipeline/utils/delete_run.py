@@ -65,7 +65,7 @@ def delete_pipeline_run_raw_sql(p_run, source_batch_size=10000, delete_images=Fa
                         sql_cmd = f"DELETE FROM vast_pipeline_measurement WHERE image_id = {image_id};"
                         _run_raw_sql(sql_cmd, cursor)
                     except Exception as e:
-                        logger.error("%s %d", e, image_id)
+                        logger.error("%s %s", e, image_id)
                         pass
 
             # Delete link between run and images for all images
@@ -79,7 +79,7 @@ def delete_pipeline_run_raw_sql(p_run, source_batch_size=10000, delete_images=Fa
                         sql_cmd = f"DELETE FROM vast_pipeline_image WHERE id IN ({unique_image_id_str});"
                         _run_raw_sql(sql_cmd, cursor)
                     except Exception as e:
-                        logger.error("%s %d", e, image_id_str)
+                        logger.error("%s %s", e, image_id_str)
                         pass
 
             
