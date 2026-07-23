@@ -48,7 +48,8 @@ def get_create_skyreg(image: Image, radius: float = 10.) -> SkyRegion:
     within `radius` arcsec of the input image then use that SkyRegion.
 
     Args:
-        image: The image Django ORM object.
+        image: An Image object containing attrbutes ra, dec, fov_bmin,
+            physical_bmin and physical_bmaj
         radius: Search radius (in arcsec) for matching to existing SkyRegion.
 
     Returns:
