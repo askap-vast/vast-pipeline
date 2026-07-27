@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- V2: Parallelise ingest of measurments to database [#893](https://github.com/askap-vast/vast-pipeline/pull/893)
 - V2: Forward logging from Dask workers to the client [#877](https://github.com/askap-vast/vast-pipeline/pull/877)
 - V2: Added functionality to throttle parallel database uploads [#852](https://github.com/askap-vast/vast-pipeline/pull/852)
 - V2: Added Dask cluster memory usage logging [#852](https://github.com/askap-vast/vast-pipeline/pull/852)
@@ -94,6 +95,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Removed Aladin lite display containing RACS and other ASKAP HIPS images [#874](https://github.com/askap-vast/vast-pipeline/pull/874)
 
 #### List of PRs
+- [#893](https://github.com/askap-vast/vast-pipeline/pull/893): feat: V2: Parallelise ingest of measurements
 - [#880](https://github.com/askap-vast/vast-pipeline/pull/880): fix: V2: Ensure external dependencies pass when etxternal websites are down
 - [#879](https://github.com/askap-vast/vast-pipeline/pull/879): fix: V2: Update dependencies to work with latest python 3.11&3.12 and pin them
 - [#877](https://github.com/askap-vast/vast-pipeline/pull/877): feat: V2: Capture worker logs by client
