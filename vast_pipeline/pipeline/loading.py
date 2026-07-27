@@ -11,6 +11,7 @@ from typing import List, Optional, Dict, Tuple, Generator, Iterable
 from io import StringIO
 from itertools import islice
 from django.db import transaction, connection, models
+from django.conf import settings
 from contextlib import closing
 from uuid import uuid4
 
@@ -46,6 +47,15 @@ from vast_pipeline.daskmanager.manager import get_db_semaphore, get_io_semaphore
 
 
 logger = logging.getLogger(__name__)
+
+# NOTE: Get testing environment status.
+# Dask workers are spawned as separate processes and run worker_init.py which
+# calls django.setup() fresh from the settings file, connecting to the
+# production database rather than the per-test database created by TestCase.
+# In test mode we therefore bypass the parallel Dask path entirely and process
+# images serially in the main thread so all DB writes share the test
+# transaction.
+__TESTING__ = settings.TESTING
 
 
 def in_memory_csv(df: pd.DataFrame) -> StringIO:
@@ -136,14 +146,13 @@ def bulk_upload_model(
         logger.info("Bulk created #%i %s", len(out_bulk), djmodel.__name__)
 
 
-def _process_image_parallel(
+def _process_image(
     image: SelavyImage,
 ) -> None:
-    """Worker function for parallel measurement ingestion.
+    """Worker function for measurement ingestion.
 
-    Called by a dask bag worker for a single image. Creates the
-    Image DB row then reads the Selavy catalogue, uploads measurements
-    and writes the parquet file.
+    Creates the Image DB row then reads the Selavy catalogue,
+    uploads measurements and writes a parquet file with the measurements.
 
     Args:
         image: The SelavyImage constructed during the serial pre-pass.
@@ -172,7 +181,6 @@ def _process_image_parallel(
 
     del measurements, band, img, image
     gc.collect()
-
 
 
 def make_upload_images(
@@ -242,18 +250,22 @@ def make_upload_images(
         len(new_selavy_images),
     )
 
-    # Create Image DB rows (including noise-image RMS IO), read Selavy catalogues,
-    # upload measurements and write parquet files in parallel using dask bag.
+    # Create Image DB rows, read Selavy catalogues, upload measurements and write parquet files.
     if new_selavy_images:
-        (
-            db.from_sequence(new_selavy_images, npartitions=max(1, len(new_selavy_images)))
-            .map(_process_image_parallel)
-            .compute()
-        )
+        if __TESTING__:
+            # When testing process images in the main thread so all DB writes
+            # share the test transaction.
+            for image in new_selavy_images:
+                _process_image(image)
+        else:
+                (
+                    db.from_sequence(new_selavy_images, npartitions=max(1, len(new_selavy_images)))
+                    .map(_process_image)
+                    .compute()
+                )
         # Collect the Image objects created by the workers from the DB.
         new_names = [img.name for img in new_selavy_images]
         images.extend(Image.objects.filter(name__in=new_names))
-
     logger.info("Total images upload/loading time: %.2f seconds", timer.reset_init())
 
     return images, skyregions, bands
