@@ -4,12 +4,14 @@ import gc
 
 import numpy as np
 import pandas as pd
+import dask.bag as db
 import dask.dataframe as dd
 
 from typing import List, Optional, Dict, Tuple, Generator, Iterable
 from io import StringIO
 from itertools import islice
 from django.db import transaction, connection, models
+from django.conf import settings
 from contextlib import closing
 from uuid import uuid4
 
@@ -31,7 +33,7 @@ from vast_pipeline.models import (
     Image,
 )
 from vast_pipeline.pipeline.utils import (
-    get_create_img, get_create_img_band,
+    get_create_img, get_create_img_band, get_create_skyreg,
     get_df_memory_usage, log_total_memory_usage
 )
 from vast_pipeline.utils.utils import (
@@ -41,10 +43,19 @@ from vast_pipeline.utils.utils import (
     generate_shortuuid,
     UUID_LEN_SOURCE
 )
-from vast_pipeline.daskmanager.manager import get_db_semaphore
+from vast_pipeline.daskmanager.manager import get_db_semaphore, get_io_semaphore
 
 
 logger = logging.getLogger(__name__)
+
+# NOTE: Get testing environment status.
+# Dask workers are spawned as separate processes and run worker_init.py which
+# calls django.setup() fresh from the settings file, connecting to the
+# production database rather than the per-test database created by TestCase.
+# In test mode we therefore bypass the parallel Dask path entirely and process
+# images serially in the main thread so all DB writes share the test
+# transaction.
+__TESTING__ = settings.TESTING
 
 
 def in_memory_csv(df: pd.DataFrame) -> StringIO:
@@ -135,6 +146,43 @@ def bulk_upload_model(
         logger.info("Bulk created #%i %s", len(out_bulk), djmodel.__name__)
 
 
+def _process_image(
+    image: SelavyImage,
+) -> None:
+    """Worker function for measurement ingestion.
+
+    Creates the Image DB row then reads the Selavy catalogue,
+    uploads measurements and writes a parquet file with the measurements.
+
+    Args:
+        image: The SelavyImage constructed during the serial pre-pass.
+    """
+
+    with transaction.atomic(), get_io_semaphore():
+        # Get image band object (Should have been created already)
+        band = get_create_img_band(image)
+        # Create Image object in DB
+        img, _ = get_create_img(band.id, image)
+        # Get measurements from Selavy catalogue
+        measurements = image.read_selavy(img)
+
+    logger.info(
+        'Worker: processed measurements for %s, shape (%i, %i)',
+        image.name,
+        measurements.shape[0],
+        measurements.shape[1],
+    )
+
+    copy_upload_measurements(measurements)
+
+    base_folder = os.path.dirname(img.measurements_path)
+    os.makedirs(base_folder, exist_ok=True)
+    measurements.to_parquet(img.measurements_path, index=False)
+
+    del measurements, band, img, image
+    gc.collect()
+
+
 def make_upload_images(
     paths: Dict[str, Dict[str, str]], image_config: Dict
 ) -> Tuple[List[Image], List[SkyRegion], List[Band]]:
@@ -160,59 +208,64 @@ def make_upload_images(
     images = []
     skyregions = []
     bands = []
+
+    new_selavy_images = []  # SelavyImage objects whose measurements still need ingesting
     
     dt = StopWatch()
 
+    logger.info("Creating band and sky region DB entries...")
     for path in paths['selavy']:
         dt.reset()
-        # STEP #1: Load image and measurements
+        # Load image metadata from FITS header
         image = SelavyImage(path, paths, image_config)
         logger.info('Reading image %s ...', image.name)
         logger.debug('Generated SelavyImage in %.3f s', dt.reset())
 
-        # 1.1 get/create the frequency band
+        # Get or create the DB frequency band
         with transaction.atomic():
             band = get_create_img_band(image)
         if band not in bands:
             bands.append(band)
         logger.debug('Generated band in %.3f s', dt.reset())
 
-        # 1.2 create image and skyregion entry in DB
+        # Get or create the DB SkyRegion.
         with transaction.atomic():
-            img, exists_f = get_create_img(band.id, image)
-            logger.debug('get_create_img in %.3f s', dt.reset())
-            skyreg = img.skyreg
+            skyreg = get_create_skyreg(image)
+        if skyreg not in skyregions:
+            skyregions.append(skyreg)
+        logger.debug('Generated sky region in %.3f s', dt.reset())
 
-            # add image and skyregion to respective lists
-            images.append(img)
-            if skyreg not in skyregions:
-                skyregions.append(skyreg)
-            logger.debug('Images and skyregions appended in %.3f s', dt.reset())
+        # Already-processed images skip the parallel phase but their Image
+        # objects are still needed for the return value.
+        existing = Image.objects.filter(name__exact=image.name).first()
+        if existing is not None:
+            logger.info("Image %s already processed", existing.name)
+            images.append(existing)
+            continue
 
-            if exists_f:
-                logger.info("Image %s already processed", img.name)
-                continue
+        new_selavy_images.append(image)
 
-        # 1.3 get the image measurements and save them in DB
-        measurements = image.read_selavy(img)
-        logger.info(
-            "Processed measurements dataframe of shape: (%i, %i)",
-            measurements.shape[0],
-            measurements.shape[1],
-        )
+    logger.info(
+        "Pre-pass complete: %i new images to ingest in parallel.",
+        len(new_selavy_images),
+    )
 
-        # upload measurements, a column with the db is added to the df
-        copy_upload_measurements(measurements)
-
-        # save measurements to parquet file in pipeline run folder
-        base_folder = os.path.dirname(img.measurements_path)
-        if not os.path.exists(base_folder):
-            os.makedirs(base_folder)
-
-        measurements.to_parquet(img.measurements_path, index=False)
-        del measurements, image, band
-        gc.collect()
-
+    # Create Image DB rows, read Selavy catalogues, upload measurements and write parquet files.
+    if new_selavy_images:
+        if __TESTING__:
+            # When testing process images in the main thread so all DB writes
+            # share the test transaction.
+            for image in new_selavy_images:
+                _process_image(image)
+        else:
+                (
+                    db.from_sequence(new_selavy_images, npartitions=max(1, len(new_selavy_images)))
+                    .map(_process_image)
+                    .compute()
+                )
+        # Collect the Image objects created by the workers from the DB.
+        new_names = [img.name for img in new_selavy_images]
+        images.extend(Image.objects.filter(name__in=new_names))
     logger.info("Total images upload/loading time: %.2f seconds", timer.reset_init())
 
     return images, skyregions, bands
