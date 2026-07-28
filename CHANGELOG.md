@@ -38,6 +38,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fix incorrect variable name bug introduced by #840 [#896](https://github.com/askap-vast/vast-pipeline/pull/896)
 - Fix and optimise forced measurement deletion [#888](https://github.com/askap-vast/vast-pipeline/pull/888)
 - Fix bug introduced by #884 regarding error handling of external query table [#885](https://github.com/askap-vast/vast-pipeline/pull/885)
 - Fixed external query breaking due to spaces in URLs [#884](https://github.com/askap-vast/vast-pipeline/pull/884)
@@ -66,6 +67,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 
 #### List of PRs
+
+- [#896](https://github.com/askap-vast/vast-pipeline/pull/896): Fix incorrect variable name bug introduced by #840
 - [#890](https://github.com/askap-vast/vast-pipeline/pull/891): fix: Update ci-docs github actions to be compatible with new poetry
 - [#889](https://github.com/askap-vast/vast-pipeline/pull/889): fix: Ensure external dependencies pass when etxternal websites are down
 - [#888](https://github.com/askap-vast/vast-pipeline/pull/888): fix: Move forced measurement deletion to delete_run and optimise it
