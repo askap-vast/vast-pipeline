@@ -198,8 +198,8 @@ def make_upload_sources(
             ids_to_delete = list(sources.values_list('id', flat=True))
             total_deleted = 0
 
-            for i in range(0, len(source_ids), batch_size):
-                batch_ids = source_ids[i : i + batch_size]
+            for i in range(0, len(ids_to_delete), batch_size):
+                batch_ids = ids_to_delete[i : i + batch_size]
                 n_deleted, details = Source.objects.filter(id__in=batch_ids).delete()
                 total_deleted += n_deleted
 
