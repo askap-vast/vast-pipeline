@@ -2,6 +2,7 @@ import io
 import os
 import json
 import logging
+
 import matplotlib.pyplot as plt
 import traceback
 import dask.bag as db
@@ -31,6 +32,7 @@ from django.http import (
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.safestring import mark_safe
 
 from django_q.tasks import async_task
@@ -47,12 +49,15 @@ from rest_framework.authentication import (
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import serializers
+
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.contrib.auth.decorators import login_required
 
 from vast_pipeline.plots import plot_lightcurve, plot_eta_v_bokeh
 from vast_pipeline.models import (
-    Comment, CommentableModel, Image, Measurement, Run, Source, SourceFav,
+    Comment, CommentableModel, Image, ImageCutout as ImageCutoutModel, Measurement, Run, Source, SourceFav,
 )
 from vast_pipeline.serializers import (
     ImageSerializer, MeasurementSerializer, RunSerializer,
@@ -67,7 +72,6 @@ from vast_pipeline.management.commands.initpiperun import initialise_run
 from vast_pipeline.forms import PipelineRunForm, CommentForm, TagWithCommentsForm
 from vast_pipeline.pipeline.config import PipelineConfig
 from vast_pipeline.image.utils import open_fits
-
 
 logger = logging.getLogger(__name__)
 
@@ -1631,7 +1635,8 @@ def SourceDetail(request, pk):
     source = Source.objects.filter(id=pk).annotate(run_name=F('run__name')).values().get()
     source['aladin_ra'] = source['wavg_ra']
     source['aladin_dec'] = source['wavg_dec']
-    source['aladin_zoom'] = 0.15
+    source['aladin_zoom'] = settings.ALADIN_ZOOM
+    source['aladin_radius'] = settings.ALADIN_RADIUS
     source['wavg_ra_hms'] = deg2hms(source['wavg_ra'], hms_format=True)
     source['wavg_dec_dms'] = deg2dms(source['wavg_dec'], dms_format=True)
     source['wavg_l'], source['wavg_b'] = equ2gal(source['wavg_ra'], source['wavg_dec'])
@@ -1866,31 +1871,48 @@ class ImageCutout(APIView):
                 "GET query param img_type must be either 'fits' or 'png'."
             )
 
-        measurement = Measurement.objects.get(id=measurement_id)
+        try:
+            measurement = Measurement.objects.get(id=measurement_id)
+        except Measurement.DoesNotExist:
+            raise Http404("Measurement not found.")
 
-        image_hdu: fits.PrimaryHDU = open_fits(measurement.image.path)[0]
+        # Check if cutout already exists in the database
+        logger.info("Checking for existing cutout...")
+        existing_cutout = ImageCutoutModel.objects.filter(measurement=measurement, size=size, img_type=img_type).first()
+        if existing_cutout:
+            logger.info("Cutout exists...")
+            existing_cutout.last_accessed = timezone.now()
+            existing_cutout.save(update_fields=["last_accessed"])
+            return FileResponse(
+                open(existing_cutout.image.path, "rb"),
+                as_attachment=True,
+                filename=os.path.basename(existing_cutout.image.path)
+            )
+        logger.info("Existing cutout does not exist...")
+        try:
+            image_hdu: fits.PrimaryHDU = open_fits(measurement.image.path)[0]
+            data = image_hdu.data
+            if data.ndim == 4:
+                data = data[0, 0, :, :]
+        except Exception as e:
+            raise Http404(f"Error opening FITS file: {str(e)}")
+
         coord = SkyCoord(ra=measurement.ra, dec=measurement.dec, unit="deg")
         sizes = {
             "xlarge": "40arcmin",
             "large": "20arcmin",
             "normal": "2arcmin",
         }
-
-        filenames = {
-            "xlarge": f"{measurement.name}_cutout_xlarge.{img_type}",
-            "large": f"{measurement.name}_cutout_large.fits.{img_type}",
-            "normal": f"{measurement.name}_cutout.fits.{img_type}",
-        }
+        if size not in sizes:
+            raise Http404("Invalid size parameter.")
 
         try:
-            data = image_hdu.data[0, 0, :, :]
+            cutout = Cutout2D(
+                data, coord, Angle(sizes[size]), wcs=WCS(image_hdu.header, naxis=2),
+                mode='partial'
+            )
         except Exception as e:
-            data = image_hdu.data
-
-        cutout = Cutout2D(
-            data, coord, Angle(sizes[size]), wcs=WCS(image_hdu.header, naxis=2),
-            mode='partial'
-        )
+            raise Http404(f"Failed to create cutout: {str(e)}")
 
         # add beam properties to the cutout header and fix cdelts as JS9 does not deal
         # with PCi_j properly
@@ -1907,19 +1929,32 @@ class ImageCutout(APIView):
         )
 
         cutout_hdu = fits.PrimaryHDU(data=cutout.data, header=cutout_header)
-        cutout_file = io.BytesIO()
+        filename = f"{measurement.name}_cutout_{size}.{img_type}"
+        cutout_path = os.path.join(settings.MEDIA_ROOT, filename)
 
+        logger.info(f"Saving to {cutout_path}...")
+
+        # Save the cutout file
         if img_type == "fits":
-            cutout_hdu.writeto(cutout_file)
+            cutout_hdu.writeto(cutout_path, overwrite=True)
         else:
-            plt.imsave(cutout_file, cutout.data, dpi=600)
-        cutout_file.seek(0)
-        response = FileResponse(
-            cutout_file,
-            as_attachment=True,
-            filename=filenames[size]
+            plt.imsave(cutout_path, cutout.data, dpi=600)
+
+        # Save to database
+        ImageCutoutModel.objects.create(
+            measurement=measurement,
+            size=size,
+            img_type=img_type,
+            image=filename,
+            last_accessed=timezone.now()
         )
-        return response
+
+        # Serve the saved file
+        return FileResponse(
+            open(cutout_path, "rb"),
+            as_attachment=True,
+            filename=os.path.basename(cutout_path)
+        )
 
 
 class MeasurementQuery(APIView):
@@ -2485,6 +2520,30 @@ class UtilitiesSet(ViewSet):
         serializer.is_valid(raise_exception=True)
         return Response()
 
+    def _run_das_query(self, coord, radius, catalogues, request):
+        """Wrapper for external_query.das"""
+        das_results = []
+        try:
+            return external_query.das(coord, radius, catalogues=catalogues)
+        except Exception as e:
+            messages.error(
+                request,
+                f"Unable to get DAS query results: {str(e)}"
+            )
+            return []
+
+    def _run_fink_query(self, coord, radius, survey, request):
+        """Wrapper for external_query.fink"""
+        fink_lsst_results = []
+        try:
+            return external_query.fink(coord, radius, survey)
+        except Exception as e:
+            messages.error(
+                request,
+                f"Unable to get FINK-LSST query results: {str(e)}"
+            )
+            return []
+
     @rest_framework.decorators.action(methods=["get"], detail=False)
     def external_search(self, request: Request) -> Response:
         """Perform a cone search with external providers (e.g. SIMBAD, NED, TNS) and
@@ -2514,7 +2573,9 @@ class UtilitiesSet(ViewSet):
                     - dec_dms: Dec coordinate string in ±<DD>d<MM>m<SS.SSS>s format.
         """
         coord_string = request.query_params.get("coord", "")
-        radius_string = request.query_params.get("radius", "1arcmin")
+        radius_string = request.query_params.get("radius", "30arcsec")
+        cats = request.query_params.get("catalogues")
+        catalogues = cats.split(",") if cats else ["I/355/gaiadr3"]
 
         # validate inputs
         try:
@@ -2527,19 +2588,91 @@ class UtilitiesSet(ViewSet):
         except ValueError as e:
             raise serializers.ValidationError({"radius": str(e.args[0])})
 
-        simbad_results = self._external_search_error_handler(
-            external_query.simbad, coord, radius, "SIMBAD", request
-        )
-        ned_results = self._external_search_error_handler(
-            external_query.ned, coord, radius, "NED", request
-        )
-        tns_results = self._external_search_error_handler(
-            external_query.tns, coord, radius, "TNS", request
-        )
+        tasks = {
+            "Simbad": lambda: self._external_search_error_handler(
+                                external_query.simbad,
+                                coord,
+                                radius,
+                                "SIMBAD",
+                                request
+                                ),
+            "NED": lambda: self._external_search_error_handler(
+                                external_query.ned,
+                                coord,
+                                radius,
+                                "NED",
+                                request
+                                ),
+            "TNS": lambda: self._external_search_error_handler(
+                                external_query.tns,
+                                coord,
+                                radius,
+                                "TNS",
+                                request
+                                ),
+            "DAS": lambda: self._run_das_query(
+                                coord,
+                                radius,
+                                catalogues,
+                                request,
+                                ),
+            "ZTF": lambda: self._run_fink_query(
+                                coord,
+                                radius,
+                                'ztf',
+                                request,
+                                ),
+            "LSST": lambda: self._run_fink_query(
+                                coord,
+                                radius,
+                                'lsst',
+                                request
+                                ),
+        }
 
-        results = simbad_results + ned_results + tns_results
+        results = []
+        with ThreadPoolExecutor(max_workers=len(tasks)) as executor:
+            futures = {executor.submit(fn): name for name, fn in tasks.items()}
+            for future in as_completed(futures):
+                try:
+                    result = future.result()
+                    results += result
+                except Exception as e:
+                    messages.error(
+                        request,
+                        f"Unable to get {futures[future]} query results: {str(e)}"
+                    )
+                    logger.exception(
+                        f"Unable to get {futures[future]} query results: {str(e)}"
+                    )
+
+        # The below code will remove duplicates from the DAS results
+        # However, I'm not sure if that's actually the best way forward -
+        # e.g. the Gaia positions from DAS are PM corrected, whereas those
+        # in SIMBAD are not, even though SIMBAD has more info
+
+        """
+        existing_names = []
+        for result in results:
+            existing_names.append(result['object_name'])
+        
+        for result in das_results:
+            print(result)
+            if result['object_name'] in existing_names:
+                print("Object exists")
+                das_results.remove(result)
+
+        results += das_results
+        """
+
         serializer = ExternalSearchSerializer(data=results, many=True)
-        serializer.is_valid(raise_exception=True)
+
+        if not serializer.is_valid():
+            for i, (record, error) in enumerate(zip(results, serializer.errors)):
+                if error:
+                    logger.error(f"Record {i} FAILED: {error}")
+                    logger.error(f"Data: {results[i]}")
+            raise serializers.ValidationError(serializer.errors)
         return Response(serializer.data)
 
 

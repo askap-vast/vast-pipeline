@@ -139,6 +139,7 @@ SOCIAL_AUTH_GITHUB_ORG_KEY = env('SOCIAL_AUTH_GITHUB_KEY', cast=str, default='')
 SOCIAL_AUTH_GITHUB_ORG_SECRET = env('SOCIAL_AUTH_GITHUB_SECRET', cast=str, default='')
 SOCIAL_AUTH_GITHUB_ORG_NAME = env('SOCIAL_AUTH_GITHUB_ORG_NAME', cast=str, default='')
 SOCIAL_AUTH_GITHUB_ADMIN_TEAM = env('SOCIAL_AUTH_GITHUB_ADMIN_TEAM', cast=str, default='')
+SOCIAL_AUTH_REDIRECT_IS_HTTPS = env('SOCIAL_AUTH_REDIRECT_IS_HTTPS', cast=bool, default=False)
 SOCIAL_AUTH_GITHUB_ORG_SCOPE = ['read:org', 'user:email']
 
 CRISPY_TEMPLATE_PACK = "bootstrap4"
@@ -355,3 +356,10 @@ PIPELINE_MAINTAINANCE_MESSAGE = env('PIPELINE_MAINTAINANCE_MESSAGE', cast=str, d
 
 # web server eta v plot datashader threshold
 ETA_V_DATASHADER_THRESHOLD = env('ETA_V_DATASHADER_THRESHOLD', cast=int, default=20000)
+
+CUTOFF_DAYS = env("CUTOFF_DAYS", cast=int, default=30)
+MAX_SIZE_GB = env("MAX_SIZE_GB", cast=float, default=0.01)
+MEDIA_ROOT = env("MEDIA_ROOT", cast=str, default=None)
+
+ALADIN_ZOOM = env("ALADIN_ZOOM", cast=float, default=0.017)
+ALADIN_RADIUS = env("ALADIN_RADIUS", cast=float, default=0.6)

@@ -10,54 +10,18 @@ from glob import glob
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from django.conf import settings
-from django.db import transaction
 from pyarrow.parquet import read_schema
 from typing import Any, List, Tuple, Dict, Optional
 
-from vast_pipeline.models import Image, Measurement, Run
+from vast_pipeline.models import Image, Run
 from vast_pipeline.pipeline.loading import make_upload_measurements
 
 from forced_phot import ForcedPhot
 from ..utils.utils import StopWatch, calculate_workers_and_partitions
 from vast_pipeline.image.utils import open_fits
-
+from vast_pipeline.pipeline.utils import log_total_memory_usage
 
 logger = logging.getLogger(__name__)
-
-
-def remove_forced_meas(run_path: str) -> None:
-    '''
-    Remove forced measurements from the database if forced parquet files
-    are found.
-
-    Args:
-        run_path:
-            The run path of the pipeline run.
-
-    Returns:
-        None
-    '''
-    path_glob = glob(
-        os.path.join(run_path, 'forced_measurements_*.parquet')
-    )
-    if path_glob:
-        ids = (
-            dd.read_parquet(path_glob, columns='id')
-            .values
-            .compute()
-            .tolist()
-        )
-        obj_to_delete = Measurement.objects.filter(id__in=ids)
-        del ids
-        if obj_to_delete.exists():
-            with transaction.atomic():
-                n_del, detail_del = obj_to_delete.delete()
-                logger.info(
-                    ('Deleting all previous forced measurement and association'
-                     ' objects for this run. Total objects deleted: %i'),
-                    n_del,
-                )
-                logger.debug('(type, #deleted): %s', detail_del)
 
 
 def get_data_from_parquet(
@@ -174,6 +138,10 @@ def extract_from_image(
         df['wavg_dec'].values,
         unit=(u.deg, u.deg)
     )
+    
+    num_sources = len(df)
+    logger.debug(f"Will fit {num_sources} sources for {image}...")
+
     # load the image, background and noisemaps into memory
     # a dedicated function may seem unneccesary, but will be useful if we
     # split the load to a separate thread.
@@ -182,19 +150,49 @@ def extract_from_image(
                                            noise,
                                            memmap=False
                                            )
-    FP = ForcedPhot(*forcedphot_input)
+    FP_timer = StopWatch()
+    FP = ForcedPhot(*forcedphot_input, use_numba=True)
+    logger.debug(f"{image} - Time to init FP: {FP_timer.reset()} s")
+
+    # This should ultimately be removed in v2, but for now I am keeping the
+    # option to use clustering in order to keep things backward-compatible.
+    use_clusters=True
+    if cluster_threshold == 0:
+        use_clusters=False
 
     flux, flux_err, chisq, DOF, cluster_id = FP.measure(
         P_islands,
         cluster_threshold=cluster_threshold,
         allow_nan=allow_nan,
-        edge_buffer=edge_buffer
+        edge_buffer=edge_buffer,
+        use_clusters=use_clusters
     )
+    logger.debug(f"{image} - Time to measure FP: {FP_timer.reset()}s")
+    
+    num_fits = np.sum(flux>0.0)
+
+    logger.debug(f"{image}: Obtained {num_fits} measurements "
+                 f"({num_sources-num_fits} sources outside of image range)."
+                 )
+
     df['flux_int'] = flux * 1.e3
     df['flux_int_err'] = flux_err * 1.e3
     df['chi_squared_fit'] = chisq
+    
+    values = {
+        'flux_int': 0,
+        'flux_int_err': 0
+    }
+    df = df.fillna(value=values)
 
-    logger.debug(f"Time to measure FP for {image}: {timer.reset()}s")
+    df = df[
+        (df['flux_int'] != 0)
+        & (df['flux_int_err'] != 0)
+        & (df['chi_squared_fit'] != np.inf)
+        & (df['chi_squared_fit'] != np.nan)
+    ]
+
+    logger.debug(f"{image} - Total extraction time: {timer.reset()}s")
 
     return {'df': df, 'image': df['image_name'].iloc[0]}
 
@@ -394,6 +392,8 @@ def parallel_extraction(
     )
     del col_to_drop
 
+    logger.debug("Starting image extraction....")
+    extract_timer = StopWatch()
     bags = db.from_sequence(list_to_map, npartitions=len(list_to_map))
     forced_dfs = (
         bags.map(lambda x: extract_from_image(
@@ -404,13 +404,19 @@ def parallel_extraction(
         ))
         .compute(num_workers=n_workers, scheduler='processes')
     )
+    logger.debug(f"Completed image extraction in {extract_timer.reset()} s")
+
     del bags
+    log_total_memory_usage()
+
     # create intermediates dfs combining the mapping data and the forced
     # extracted data from the images
     intermediate_df = list(map(
         lambda x: {**(mapping.loc[x['image'], :].to_dict()), **x},
         forced_dfs
     ))
+    logger.debug(f"Created {len(intermediate_df)} intermediate dfs")
+    log_total_memory_usage()
 
     # compute the rest of the columns
     # NOTE: Avoid using dask bags to parallelise the mapping
@@ -418,10 +424,14 @@ def parallel_extraction(
     # dask bags make a copy of the output before collecting the results.
     # There is also a minimal speed penalty for doing this step without
     # parallelism.
+    extract_timer.reset()
     intermediate_df = list(map(
         lambda x: finalise_forced_dfs(**x),
         intermediate_df
         ))
+    logger.debug(f"Populated intermediate df in {extract_timer.reset()} s")
+    log_total_memory_usage()
+
     df_out = (
         pd.concat(intermediate_df, axis=0, sort=False)
         .rename(
@@ -430,6 +440,8 @@ def parallel_extraction(
             }
         )
     )
+    logger.debug(f"Successfully concatenated intermediate dfs")
+    log_total_memory_usage()
 
     return df_out
 
@@ -622,20 +634,6 @@ def forced_extraction(
 
     # make measurement names unique for db constraint
     extr_df['name'] = extr_df['name'] + f'_f_run{p_run.id:03d}'
-
-    # select sensible flux values and set the columns with fix values
-    values = {
-        'flux_int': 0,
-        'flux_int_err': 0
-    }
-    extr_df = extr_df.fillna(value=values)
-
-    extr_df = extr_df[
-        (extr_df['flux_int'] != 0)
-        & (extr_df['flux_int_err'] != 0)
-        & (extr_df['chi_squared_fit'] != np.inf)
-        & (extr_df['chi_squared_fit'] != np.nan)
-    ]
 
     default_pos_err = settings.POS_DEFAULT_MIN_ERROR / 3600.
     extr_df['ra_err'] = default_pos_err

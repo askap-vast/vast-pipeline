@@ -18,13 +18,13 @@ from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand, CommandError
 
 from vast_pipeline._version import __version__ as pipeline_version
-from vast_pipeline.pipeline.forced_extraction import remove_forced_meas
 from vast_pipeline.pipeline.main import Pipeline
 from vast_pipeline.pipeline.utils import (
     get_create_p_run, create_measurements_arrow_file,
     create_measurement_pairs_arrow_file, backup_parquets,
     create_temp_config_file
 )
+from vast_pipeline.utils.delete_run import remove_forced_meas
 from vast_pipeline.utils.utils import StopWatch, timeStamped
 from vast_pipeline.models import Run
 from ..helpers import get_p_run_name
@@ -293,6 +293,21 @@ def run_pipe(
         "Source monitoring: %s",
         pipeline.config["source_monitoring"]["monitor"]
     )
+    
+    if pipeline.config["measurements"]["condon_errors"]:
+        logger.warning(
+            "You have selected condon_errors=True. "
+            "Using the Condon uncertainties will overwrite those provide "
+            "by the input catalogue and should not be used if you have "
+            "applied any corrections to the input catalogues, or if you "
+            "trust their uncertainties."
+            )
+        logger.warning(
+            "The Condon uncertainties only account for the statistical "
+            "component of the uncertainty - any systematic uncertainty"
+            "should be taken into account using the ra_uncertainty and "
+            "dec_uncertainty parameters in the config file."
+            )
 
     # log the list of input data files for posterity
     inputs = pipeline.config["inputs"]

@@ -308,43 +308,22 @@ def parse_coord(coord_string: str, coord_frame: str = "icrs") -> SkyCoord:
     return coord
 
 
-def optimize_floats(df: pd.DataFrame) -> pd.DataFrame:
+def optimise_numeric(df):
     """
-    Downcast float columns in a pd.DataFrame to the smallest
+    Downcast integer and float columns in a pd.DataFrame to the smallest
     data type without losing any information.
-
-    Credit to Robbert van der Gugten.
-
-    Args:
-        df:
-            input dataframe, no specific columns.
-
-    Returns:
-        The input dataframe with the `float64` type columns downcasted.
-    """
-    floats = df.select_dtypes(include=["float64"]).columns.tolist()
-    df[floats] = df[floats].apply(pd.to_numeric, downcast="float")
-
-    return df
-
-
-def optimize_ints(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Downcast integer columns in a pd.DataFrame to the smallest
-    data type without losing any information.
-
-    Credit to Robbert van der Gugten.
 
     Args:
         df:
             Input dataframe, no specific columns.
 
     Returns:
-        The input dataframe with the `int64` type columns downcasted.
+        The input dataframe with the `int64` and `float64` columns downcasted.
     """
-    ints = df.select_dtypes(include=["int64"]).columns.tolist()
-    df[ints] = df[ints].apply(pd.to_numeric, downcast="integer")
-
+    for col in df.select_dtypes(include=["float64"]).columns:
+        df[col] = df[col].apply(pd.to_numeric, downcast="float")
+    for col in df.select_dtypes(include=["int64"]).columns:
+        df[col] = df[col].apply(pd.to_numeric, downcast="integer")
     return df
 
 
@@ -422,7 +401,7 @@ def calculate_n_partitions(df, n_cpu, partition_size_mb=15):
 
     partition_size_mb = int(np.ceil(mem_usage_mb / n_partitions))
 
-    logger.debug("Using %d partions of %dMB", n_partitions, partition_size_mb)
+    logger.debug("Using %d partitions of %dMB", n_partitions, partition_size_mb)
 
     return n_partitions
 
