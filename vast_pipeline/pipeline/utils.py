@@ -883,6 +883,18 @@ def _build_compact_indices(
     # _compute_missing_images' vectorized membership test.
     img_mult = len(image_names)
 
+    # Epoch labels are free-form strings (e.g. '03x'), so they are factorized
+    # into int32 codes on both sides rather than cast to int.
+    epoch_values = pd.unique(images_df["epoch"])
+    epoch_to_idx = pd.Series(np.arange(len(epoch_values), dtype=np.int32), index=epoch_values)
+    images_df = images_df.assign(
+        epoch=epoch_to_idx.reindex(images_df["epoch"]).to_numpy()
+    )
+    sources_df["epoch"] = sources_df["epoch"].map(epoch_to_idx, meta=("epoch", "int32"))
+    # Multiplier for the combined (source, epoch) key used by
+    # _compute_missing_images.
+    epoch_mult = len(epoch_values)
+
     skyreg_img_df = images_df[["skyreg_id", "name", "epoch", "datetime"]].rename(
         columns={
             "name": "skyreg_img_list",
@@ -890,13 +902,6 @@ def _build_compact_indices(
             "datetime": "skyreg_datetime",
         }
     )
-    # int32/int64 downcasts halve these columns' cost across the large
-    # crossmatch expansion in _crossmatch_sources_to_skyregions.
-    skyreg_img_df["skyreg_epoch"] = skyreg_img_df["skyreg_epoch"].astype(np.int32)
-    # Multiplier for the combined (source, epoch) key used by
-    # _compute_missing_images; captured now while skyreg_img_df still holds
-    # the full epoch universe.
-    epoch_mult = int(skyreg_img_df["skyreg_epoch"].max()) + 1
     # Avoids boxing tz-aware Timestamps in the merges/sorts that follow;
     # only used to establish sort order, then dropped.
     skyreg_img_df["skyreg_datetime"] = skyreg_img_df["skyreg_datetime"].astype(np.int64)
