@@ -6,6 +6,7 @@ the processing of a run.
 import os
 import logging
 import glob
+import gc
 import shutil
 import numpy as np
 import pandas as pd
@@ -904,6 +905,65 @@ def _build_compact_indices(
 
     return sources_df, image_names, img_mult, skyreg_img_df, epoch_mult
 
+
+def _crossmatch_sources_to_skyregions(
+    coords_df: pd.DataFrame, skyreg_df: pd.DataFrame, skyreg_img_df: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Crossmatches each source with every sky region within that region's
+    extraction radius, then expands each match with every image belonging
+    to the sky region -- i.e. the source's "ideal coverage" images/epochs.
+
+    Args:
+        coords_df: Per-source average coordinates, indexed by int32 source
+            code. Only 'wavg_ra'/'wavg_dec' are used.
+        skyreg_df: Sky regions of the run, with 'id', 'centre_ra',
+            'centre_dec' and 'xtr_radius' columns.
+        skyreg_img_df: Per-image ideal-coverage frame indexed by
+            'skyreg_id', as returned by `_build_compact_indices`.
+
+    Returns:
+        Dataframe with one row per (source, sky region, ideal image) match
+        and columns 'source', 'sep', 'skyreg_img_list', 'skyreg_epoch' and
+        'skyreg_datetime'.
+    """
+    skyreg_df = skyreg_df[["id", "centre_ra", "centre_dec", "xtr_radius"]]
+
+    # crossmatch sources with sky regions up to the max sky region radius
+    skyreg_coords = SkyCoord(
+        ra=skyreg_df.centre_ra.values, dec=skyreg_df.centre_dec.values, unit="deg"
+    )
+    srcs_coords = SkyCoord(
+        ra=coords_df["wavg_ra"],
+        dec=coords_df["wavg_dec"],
+        unit="deg")
+    skyreg_idx, srcs_idx, sep, _ = srcs_coords.search_around_sky(
+        skyreg_coords, skyreg_df.xtr_radius.values * u.deg
+    )
+    skyreg_df = skyreg_df.drop(
+        columns=[
+            "centre_ra",
+            "centre_dec",
+            "xtr_radius"]).set_index("id")
+
+    # Build the per-source ideal-images frame
+    src_skyrg_df = pd.DataFrame(
+        {
+            "source": coords_df.iloc[srcs_idx].index,
+            "sep": sep.to("deg").value.astype(np.float32),
+        },
+        index=skyreg_df.iloc[skyreg_idx].index,
+    )
+
+    src_skyrg_df = src_skyrg_df.join(skyreg_df, how="inner")
+    src_skyrg_df = src_skyrg_df.join(skyreg_img_df, how="inner")
+
+    src_skyrg_df = src_skyrg_df.reset_index(drop=True)
+
+    del skyreg_df, skyreg_img_df
+    gc.collect()
+
+    return src_skyrg_df
 
 def get_image_list_diff(row: pd.Series) -> Union[List[str], int]:
     """
