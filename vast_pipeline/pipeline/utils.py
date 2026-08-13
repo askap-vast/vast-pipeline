@@ -760,8 +760,18 @@ def calc_ave_coord(grp: pd.DataFrame) -> pd.Series:
     return pd.Series(d)
 
 
-def parallel_groupby_coord(df: dd.DataFrame,) -> pd.DataFrame:
+def parallel_groupby_coord(df: dd.DataFrame,) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Calculate the weighted average RA and Dec of the sources.
+
+    Produces two separate per-source DataFrames in a single Dask compute pass:
+
+    * **coords_df** — lightweight numeric frame (one float per column) used
+      for the AstroPy sky crossmatch: ``wavg_ra``, ``wavg_dec``,
+      ``flux_peak``.
+    * **lists_df** — heavyweight frame holding Python list columns
+      ``img_list`` and ``epoch_list``, only needed for the "missing image"
+      computation in ``get_src_skyregion_merged_df``.  Keeping it separate
+      means the large list objects are not in memory during the crossmatch.
 
     NOTE: Sergio had the idea to persist the dataframe result and keep it in the
     cluster. However since then the ideal image method uses the astropy match sky
@@ -772,31 +782,36 @@ def parallel_groupby_coord(df: dd.DataFrame,) -> pd.DataFrame:
         df: The sources dataframe.
 
     Returns:
-        The resulting average coordinate values and unique image and epoch
-            lists for each unique source (group).
+        Tuple of (coords_df, lists_df) — both indexed by source id.
     """
-    cols = [
-        'source', 'image', 'epoch', 'interim_ew', 'weight_ew', 'interim_ns', 'weight_ns'
+
+    coord_cols = [
+        'source', 'interim_ew', 'weight_ew', 'interim_ns', 'weight_ns',
     ]
-    cols_to_sum = ['interim_ew', 'weight_ew', 'interim_ns', 'weight_ns']
-    aggregations = {'interim_ew': 'sum',
-                    'weight_ew': 'sum',
-                    'interim_ns': 'sum',
-                    'weight_ns': 'sum',
-                    'image': list,
-                    'epoch': list}
+    coord_agg = {
+        'interim_ew': 'sum',
+        'weight_ew': 'sum',
+        'interim_ns': 'sum',
+        'weight_ns': 'sum',
+    }
+    coord_groups = df[coord_cols].groupby('source').agg(coord_agg)
 
-    groups = df[cols].groupby('source')
-    out = groups.agg(aggregations)
-    out['wavg_ra'] = out['interim_ew'] / out['weight_ew']
-    out['wavg_dec'] = out['interim_ns'] / out['weight_ns']
-    out = out.drop(cols_to_sum, axis=1).rename(columns={'image': 'img_list', 'epoch': 'epoch_list'})
+    list_cols = ['source', 'image', 'epoch']
+    list_agg = {'image': list, 'epoch': list}
+    list_groups = df[list_cols].groupby('source').agg(list_agg)
 
-    # Do the aggregations now.
-    out = out.compute()
+    coords_raw, lists_raw = dask.compute(coord_groups, list_groups)
 
-    del groups
-    return out
+    coords_df = coords_raw
+    coords_df['wavg_ra'] = coords_df['interim_ew'] / coords_df['weight_ew']
+    coords_df['wavg_dec'] = coords_df['interim_ns'] / coords_df['weight_ns']
+    coords_df = coords_df.drop(
+        columns=['interim_ew', 'weight_ew', 'interim_ns', 'weight_ns']
+    )
+
+    lists_df = lists_raw.rename(columns={'image': 'img_list', 'epoch': 'epoch_list'})
+
+    return coords_df, lists_df
 
 
 def get_rms_noise_image_values(rms_path: str) -> Tuple[float, float, float]:
