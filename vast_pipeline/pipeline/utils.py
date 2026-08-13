@@ -29,7 +29,7 @@ from vast_pipeline.image.main import FitsImage, SelavyImage
 from vast_pipeline.image.utils import open_fits
 from vast_pipeline.utils.utils import (
     eq_to_cart, StopWatch, optimise_numeric, copy_file_or_dir,
-    delete_file_or_dir, generate_shortuuid, UUID_LEN_SOURCE
+    delete_file_or_dir, generate_shortuuid, UUID_LEN_SOURCE, calculate_n_partitions
 )
 from vast_pipeline.models import (
     Band, Image, Run, SkyRegion
@@ -767,8 +767,7 @@ def parallel_groupby_coord(df: dd.DataFrame,) -> Tuple[pd.DataFrame, pd.DataFram
     Produces two separate per-source DataFrames in a single Dask compute pass:
 
     * **coords_df** — lightweight numeric frame (one float per column) used
-      for the AstroPy sky crossmatch: ``wavg_ra``, ``wavg_dec``,
-      ``flux_peak``.
+      for the AstroPy sky crossmatch: ``wavg_ra``, ``wavg_dec``.
     * **lists_df** — heavyweight frame holding Python list columns
       ``img_list`` and ``epoch_list``, only needed for the "missing image"
       computation in ``get_src_skyregion_merged_df``.  Keeping it separate
@@ -1142,9 +1141,8 @@ def _explode_missing_images_to_dask(
 
     Args:
         srcs_df: One row per source, with 'wavg_ra', 'wavg_dec',
-            'flux_peak', 'detection' (image name), 'in_primary' and
-            'img_diff' (a list of int32 image codes), indexed by source
-            ShortUUID.
+            'detection' (image name), 'in_primary' and 'img_diff',
+            indexed by source.
         image_names: Array mapping int32 image code -> original image name.
         n_cpu: Number of available CPUs/workers, used to size the returned
             Dask DataFrame's partitions (via `calculate_n_partitions`). If
@@ -1160,7 +1158,7 @@ def _explode_missing_images_to_dask(
     srcs_df = dd.from_pandas(srcs_df, npartitions=exploded_npartitions)
 
     srcs_df = srcs_df.reset_index()[
-        ["source", "wavg_ra", "wavg_dec", "img_diff", "detection", "in_primary", "flux_peak"]
+        ["source", "wavg_ra", "wavg_dec", "img_diff", "detection", "in_primary"]
     ].explode("img_diff")
 
     def _convert_img_diff_names(partition: pd.DataFrame) -> pd.DataFrame:
@@ -1245,7 +1243,7 @@ def get_src_skyregion_merged_df(
 
 
     coords_df, lists_df = parallel_groupby_coord(sources_df)
-    # coords_df: wavg_ra/wavg_dec/flux_peak, used by _crossmatch_sources_to_skyregions.
+    # coords_df: wavg_ra/wavg_dec, used by _crossmatch_sources_to_skyregions.
     # lists_df: img_list/epoch_list, used by _compute_missing_images.
     del sources_df
 
