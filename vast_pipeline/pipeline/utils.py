@@ -848,6 +848,63 @@ def get_rms_noise_image_values(rms_path: str) -> Tuple[float, float, float]:
     return med_val, min_val, max_val
 
 
+def _build_compact_indices(
+    sources_df: dd.DataFrame, images_df: pd.DataFrame,
+) -> Tuple[dd.DataFrame, np.ndarray, int, pd.DataFrame, int]:
+    """
+    Replaces image name strings with compact int32 codes for the rest of
+    `get_src_skyregion_merged_df`, and builds the per-image ideal-coverage
+    frame used by the later crossmatch.
+
+    Args:
+        sources_df: The association step output, must have an 'image'
+            column holding image name strings.
+        images_df: All image objects for the run, with 'name', 'skyreg_id',
+            'epoch' and 'datetime' columns.
+
+    Returns:
+        sources_df: With the 'image' column replaced by int32 codes.
+        image_names: Array mapping int32 image code -> original image name.
+        img_mult: Multiplier for the combined (source, image) key used by
+            the vectorized "missing image" membership test.
+        skyreg_img_df: Per-image ideal-coverage frame indexed by
+            'skyreg_id', columns 'skyreg_img_list' (int32 image code),
+            'skyreg_epoch' (int32) and 'skyreg_datetime' (int64, a sort key
+            only, not a real datetime).
+        epoch_mult: Multiplier for the combined (source, epoch) key.
+    """
+    # Compact int32 image code replaces the name string from here on;
+    # image_names converts back to names in get_src_skyregion_merged_df.
+    image_names = images_df["name"].to_numpy()
+    name_to_idx = pd.Series(np.arange(len(image_names), dtype=np.int32), index=image_names)
+    images_df = images_df.assign(name=np.arange(len(image_names), dtype=np.int32))
+    sources_df["image"] = sources_df["image"].map(name_to_idx, meta=("image", "int32"))
+    # Multiplier for the combined (source, image) key used by
+    # _compute_missing_images' vectorized membership test.
+    img_mult = len(image_names)
+
+    skyreg_img_df = images_df[["skyreg_id", "name", "epoch", "datetime"]].rename(
+        columns={
+            "name": "skyreg_img_list",
+            "epoch": "skyreg_epoch",
+            "datetime": "skyreg_datetime",
+        }
+    )
+    # int32/int64 downcasts halve these columns' cost across the large
+    # crossmatch expansion in _crossmatch_sources_to_skyregions.
+    skyreg_img_df["skyreg_epoch"] = skyreg_img_df["skyreg_epoch"].astype(np.int32)
+    # Multiplier for the combined (source, epoch) key used by
+    # _compute_missing_images; captured now while skyreg_img_df still holds
+    # the full epoch universe.
+    epoch_mult = int(skyreg_img_df["skyreg_epoch"].max()) + 1
+    # Avoids boxing tz-aware Timestamps in the merges/sorts that follow;
+    # only used to establish sort order, then dropped.
+    skyreg_img_df["skyreg_datetime"] = skyreg_img_df["skyreg_datetime"].astype(np.int64)
+    skyreg_img_df = skyreg_img_df.set_index("skyreg_id")
+
+    return sources_df, image_names, img_mult, skyreg_img_df, epoch_mult
+
+
 def get_image_list_diff(row: pd.Series) -> Union[List[str], int]:
     """
     Calculate the difference between the ideal coverage image list of a source
