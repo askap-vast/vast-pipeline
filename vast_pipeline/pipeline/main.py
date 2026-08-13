@@ -285,14 +285,14 @@ class Pipeline:
         # Make missing sources into Dask dataframe
         # NOTE: This would not be necessary if the get_src_skyregion_merged_df
         # function was improved to use Dask. (See NOTE in parallel_groupby function.)
-        npartitions = calculate_n_partitions(missing_sources_df,
-                                             n_cpu=self.dm.num_workers,
-                                             partition_size_mb=self.config['processing']['max_partition_mb'])
-        missing_sources_df = dd.from_pandas(
-            missing_sources_df,
-            npartitions=npartitions
-        )
-        wait(missing_sources_df)
+        #npartitions = calculate_n_partitions(missing_sources_df,
+        #                                     n_cpu=self.dm.num_workers,
+        #                                     partition_size_mb=self.config['processing']['max_partition_mb'])
+        #missing_sources_df = dd.from_pandas(
+        #    missing_sources_df,
+        #    npartitions=npartitions
+        #)
+        #wait(missing_sources_df)
 
         # STEP #4 New source analysis
         logger.info("Running step #4: new source analysis...")
