@@ -1006,7 +1006,8 @@ def _dedupe_closest_skyregion_per_epoch(src_skyrg_df: pd.DataFrame) -> pd.DataFr
 
 def _isin_sorted(keys: np.ndarray, sorted_unique_ref: np.ndarray) -> np.ndarray:
     """
-    Vectorized membership test of `keys` against a sorted, unique reference
+    Optimised implementation of `np.isin(keys, sorted_unique_ref)`. Does a
+    vectorized membership test of `keys` against a sorted, unique reference
     array, via binary search.
 
     Args:
@@ -1182,14 +1183,13 @@ def get_src_skyregion_merged_df(
         sources_df, images_df
     )
 
-
     coords_df, lists_df = parallel_groupby_coord(sources_df)
     # coords_df: wavg_ra/wavg_dec, used by _crossmatch_sources_to_skyregions.
     # lists_df: img_list/epoch_list, used by _compute_missing_images.
     del sources_df
 
     # Use compact int32 source code instead of the ShortUUID string for the
-    # rest of this function; converted back on the final index only.
+    # rest of this function.
     source_ids = coords_df.index.to_numpy()
     source_to_idx = pd.Series(np.arange(len(source_ids), dtype=np.int32), index=source_ids)
     coords_df.index = np.arange(len(source_ids), dtype=np.int32)
@@ -1217,7 +1217,6 @@ def get_src_skyregion_merged_df(
     # inner join filters down to only sources with >=1 missing image.
     srcs_df = coords_df.join(per_source_df, how="inner")
     del coords_df, per_source_df
-    # Join img_diff — the inner join filters down to only sources with >=1 missing image.
     srcs_df = srcs_df.join(img_diff_series, how="inner")
     del img_diff_series
 
@@ -1228,9 +1227,7 @@ def get_src_skyregion_merged_df(
 
     # Convert srcs_df to a Dask DataFrame and explode 'img_diff' to one row per missing image.
     exploded_npartitions = calculate_n_partitions(srcs_df, n_cpu=n_cpu)
-
     srcs_df = dd.from_pandas(srcs_df, npartitions=exploded_npartitions)
-
     srcs_df = srcs_df.reset_index()[
         ["source", "wavg_ra", "wavg_dec", "img_diff", "detection", "in_primary"]
     ].explode("img_diff")
