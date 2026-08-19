@@ -18,6 +18,8 @@ import psutil
 import tempfile
 import itertools
 
+from dask.distributed import wait
+
 from typing import Any, List, Optional, Dict, Tuple, Union
 from astropy.coordinates import SkyCoord, Angle
 from django.conf import settings
@@ -1133,7 +1135,7 @@ def _compute_missing_images(
 
 def get_src_skyregion_merged_df(
     sources_df: dd.DataFrame, images_df: pd.DataFrame, skyreg_df: pd.DataFrame, n_cpu: int
-) -> pd.DataFrame:
+) -> dd.DataFrame:
     """
     Analyses the current sources_df to determine what the 'ideal coverage'
     for each source should be. In other words, what images is the source
@@ -1241,6 +1243,9 @@ def get_src_skyregion_merged_df(
     srcs_df = srcs_df.map_partitions(
         _convert_img_diff_names, meta=srcs_df._meta.assign(img_diff=pd.Series(dtype=object)),
     )
+
+    srcs_df = srcs_df.persist()
+    wait(srcs_df)
 
     logger.info("Ideal source coverage time: %.2f seconds", merged_timer.reset())
 
