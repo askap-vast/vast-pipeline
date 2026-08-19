@@ -20,7 +20,7 @@ import itertools
 
 from dask.distributed import wait
 
-from typing import Any, List, Optional, Dict, Tuple, Union
+from typing import Any, List, Optional, Dict, Tuple
 from astropy.coordinates import SkyCoord, Angle
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -1211,7 +1211,7 @@ def get_src_skyregion_merged_df(
         src_skyrg_df, lists_df, len(image_names), len(pd.unique(images_df["epoch"]))
     )
     # img_diff_series: per-source list of missing ideal images.
-    # per_source_df: has per-source 'detection' (first observed image) and 
+    # per_source_df: has per-source 'detection' (first observed image) and
     # 'in_primary' (whether the source was detected in its first ideal image) columns.
     del src_skyrg_df, lists_df
 
