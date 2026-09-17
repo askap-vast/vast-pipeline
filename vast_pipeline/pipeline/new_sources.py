@@ -357,9 +357,6 @@ def new_sources(
     # save the index before exploding
     new_sources_df = new_sources_df.reset_index()
 
-    # Explode now to avoid two loops below
-    new_sources_df = new_sources_df.explode('img_diff')
-
     # Merge the respective image information to the df
     new_sources_df = new_sources_df.merge(
         images_df[['datetime']],

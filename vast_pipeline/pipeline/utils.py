@@ -6,6 +6,7 @@ the processing of a run.
 import os
 import logging
 import glob
+import gc
 import shutil
 import numpy as np
 import pandas as pd
@@ -17,7 +18,9 @@ import psutil
 import tempfile
 import itertools
 
-from typing import Any, List, Optional, Dict, Tuple, Union
+from dask.distributed import wait
+
+from typing import Any, List, Optional, Dict, Tuple
 from astropy.coordinates import SkyCoord, Angle
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -28,7 +31,7 @@ from vast_pipeline.image.main import FitsImage, SelavyImage
 from vast_pipeline.image.utils import open_fits
 from vast_pipeline.utils.utils import (
     eq_to_cart, StopWatch, optimise_numeric, copy_file_or_dir,
-    delete_file_or_dir, generate_shortuuid, UUID_LEN_SOURCE
+    delete_file_or_dir, generate_shortuuid, UUID_LEN_SOURCE, calculate_n_partitions
 )
 from vast_pipeline.models import (
     Band, Image, Run, SkyRegion
@@ -760,8 +763,17 @@ def calc_ave_coord(grp: pd.DataFrame) -> pd.Series:
     return pd.Series(d)
 
 
-def parallel_groupby_coord(df: dd.DataFrame,) -> pd.DataFrame:
+def parallel_groupby_coord(df: dd.DataFrame,) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Calculate the weighted average RA and Dec of the sources.
+
+    Produces two separate per-source DataFrames in a single Dask compute pass:
+
+    * **coords_df** — lightweight numeric frame (one float per column) used
+      for the AstroPy sky crossmatch: ``wavg_ra``, ``wavg_dec``.
+    * **lists_df** — heavyweight frame holding Python list columns
+      ``img_list`` and ``epoch_list``, only needed for the "missing image"
+      computation in ``get_src_skyregion_merged_df``.  Keeping it separate
+      means the large list objects are not in memory during the crossmatch.
 
     NOTE: Sergio had the idea to persist the dataframe result and keep it in the
     cluster. However since then the ideal image method uses the astropy match sky
@@ -772,31 +784,36 @@ def parallel_groupby_coord(df: dd.DataFrame,) -> pd.DataFrame:
         df: The sources dataframe.
 
     Returns:
-        The resulting average coordinate values and unique image and epoch
-            lists for each unique source (group).
+        Tuple of (coords_df, lists_df) — both indexed by source id.
     """
-    cols = [
-        'source', 'image', 'epoch', 'interim_ew', 'weight_ew', 'interim_ns', 'weight_ns'
+
+    coord_cols = [
+        'source', 'interim_ew', 'weight_ew', 'interim_ns', 'weight_ns',
     ]
-    cols_to_sum = ['interim_ew', 'weight_ew', 'interim_ns', 'weight_ns']
-    aggregations = {'interim_ew': 'sum',
-                    'weight_ew': 'sum',
-                    'interim_ns': 'sum',
-                    'weight_ns': 'sum',
-                    'image': list,
-                    'epoch': list}
+    coord_agg = {
+        'interim_ew': 'sum',
+        'weight_ew': 'sum',
+        'interim_ns': 'sum',
+        'weight_ns': 'sum',
+    }
+    coord_groups = df[coord_cols].groupby('source').agg(coord_agg)
 
-    groups = df[cols].groupby('source')
-    out = groups.agg(aggregations)
-    out['wavg_ra'] = out['interim_ew'] / out['weight_ew']
-    out['wavg_dec'] = out['interim_ns'] / out['weight_ns']
-    out = out.drop(cols_to_sum, axis=1).rename(columns={'image': 'img_list', 'epoch': 'epoch_list'})
+    list_cols = ['source', 'image', 'epoch']
+    list_agg = {'image': list, 'epoch': list}
+    list_groups = df[list_cols].groupby('source').agg(list_agg)
 
-    # Do the aggregations now.
-    out = out.compute()
+    coords_raw, lists_raw = dask.compute(coord_groups, list_groups)
 
-    del groups
-    return out
+    coords_df = coords_raw
+    coords_df['wavg_ra'] = coords_df['interim_ew'] / coords_df['weight_ew']
+    coords_df['wavg_dec'] = coords_df['interim_ns'] / coords_df['weight_ns']
+    coords_df = coords_df.drop(
+        columns=['interim_ew', 'weight_ew', 'interim_ns', 'weight_ns']
+    )
+
+    lists_df = lists_raw.rename(columns={'image': 'img_list', 'epoch': 'epoch_list'})
+
+    return coords_df, lists_df
 
 
 def get_rms_noise_image_values(rms_path: str) -> Tuple[float, float, float]:
@@ -833,88 +850,292 @@ def get_rms_noise_image_values(rms_path: str) -> Tuple[float, float, float]:
     return med_val, min_val, max_val
 
 
-def get_image_list_diff(row: pd.Series) -> Union[List[str], int]:
+def _build_compact_indices(
+    sources_df: dd.DataFrame, images_df: pd.DataFrame,
+) -> Tuple[dd.DataFrame, np.ndarray, pd.DataFrame]:
     """
-    Calculate the difference between the ideal coverage image list of a source
-    and the actual observed image list. Also checks whether an epoch does in
-    fact contain a detection but is not in the expected 'ideal' image for that
-    epoch.
+    Replaces image name strings with compact int32 codes for the rest of
+    `get_src_skyregion_merged_df`, and builds the per-image ideal-coverage
+    frame used by the later crossmatch.
 
     Args:
-        row: The row from the sources dataframe that is being iterated over.
+        sources_df: The association step output, must have an 'image'
+            column holding image name strings.
+        images_df: All images, with 'name', 'skyreg_id',
+            'epoch' and 'datetime' columns.
 
     Returns:
-        A list of the images missing from the observed image list.
+        sources_df: With the 'image' column replaced by int32 codes.
+        image_names: Array mapping int32 image code -> original image name.
+        skyreg_img_df: Per-image ideal-coverage frame indexed by
+            'skyreg_id', columns 'skyreg_img_list' (int32 image code),
+            'skyreg_epoch' (int32) and 'skyreg_datetime' (int64, a sort key
+            only, not a real datetime).
     """
-    out = list(filter(lambda arg: arg not in row["img_list"], row["skyreg_img_list"]))
+    # int32 image code replaces the name string from here on;
+    # image_names converts back to names in get_src_skyregion_merged_df.
+    image_names = images_df["name"].to_numpy()
+    name_to_idx = pd.Series(np.arange(len(image_names), dtype=np.int32), index=image_names)
+    images_df = images_df.assign(name=np.arange(len(image_names), dtype=np.int32))
+    sources_df["image"] = sources_df["image"].map(name_to_idx, meta=("image", "int32"))
 
-    # Check that an epoch has not already been seen (just not in the 'ideal'
-    # image)
-    out_epochs = [
-        row["skyreg_epoch"][pair[0]]
-        for pair in enumerate(row["skyreg_img_list"])
-        if pair[1] in out
-    ]
+    # int32 epoch code replaces the original epoch string from here on;
+    # epoch_to_idx converts back to original epoch strings in
+    epoch_values = pd.unique(images_df["epoch"])
+    epoch_to_idx = pd.Series(np.arange(len(epoch_values), dtype=np.int32), index=epoch_values)
+    images_df = images_df.assign(
+        epoch=epoch_to_idx.reindex(images_df["epoch"]).to_numpy()
+    )
+    sources_df["epoch"] = sources_df["epoch"].map(epoch_to_idx, meta=("epoch", "int32"))
 
-    out = [
-        out[pair[0]]
-        for pair in enumerate(out_epochs)
-        if pair[1] not in row["epoch_list"]
-    ]
+    skyreg_img_df = images_df[["skyreg_id", "name", "epoch", "datetime"]].rename(
+        columns={
+            "name": "skyreg_img_list",
+            "epoch": "skyreg_epoch",
+            "datetime": "skyreg_datetime",
+        }
+    )
+    # Convert timestamp to lightweight int64;
+    skyreg_img_df["skyreg_datetime"] = skyreg_img_df["skyreg_datetime"].astype(np.int64)
+    skyreg_img_df = skyreg_img_df.set_index("skyreg_id")
 
-    return out
+    return sources_df, image_names, skyreg_img_df
 
 
-def get_names_and_epochs(grp: pd.DataFrame) -> pd.Series:
+def _crossmatch_sources_to_skyregions(
+    coords_df: pd.DataFrame, skyreg_df: pd.DataFrame, skyreg_img_df: pd.DataFrame,
+) -> pd.DataFrame:
     """
-    Convenience function to group together the image names, epochs and
-    datetimes into one list object which is then returned as a pandas series.
-    This is necessary for easier processing in the ideal coverage analysis.
+    Crossmatches each source with every sky region within that region's
+    extraction radius, then expands each match with every image belonging
+    to the sky region -- i.e. the source's "ideal coverage" images/epochs.
 
     Args:
-        grp: A group from the grouped by sources DataFrame.
+        coords_df: Per-source average coordinates, indexed by int32 source
+            code. Only 'wavg_ra'/'wavg_dec' are used.
+        skyreg_df: Sky regions of the run, with 'id', 'centre_ra',
+            'centre_dec' and 'xtr_radius' columns.
+        skyreg_img_df: Per-image ideal-coverage frame indexed by
+            'skyreg_id', as returned by `_build_compact_indices`.
 
     Returns:
-        Pandas series containing the list object that contains the lists of the
-            image names, epochs and datetimes.
+        Dataframe with one row per (source, sky region, ideal image) match
+        and columns 'source', 'sep', 'skyreg_img_list', 'skyreg_epoch' and
+        'skyreg_datetime'.
     """
-    d = {}
-    d["skyreg_img_epoch_list"] = [
-        [
-            [
-                x,
-            ],
-            y,
-            z,
-        ]
-        for x, y, z in zip(
-            grp["name"].values.tolist(),
-            grp["epoch"].values.tolist(),
-            grp["datetime"].values.tolist(),
-        )
-    ]
+    skyreg_df = skyreg_df[["id", "centre_ra", "centre_dec", "xtr_radius"]]
 
-    return pd.Series(d)
+    # crossmatch sources with sky regions up to the max sky region radius
+    skyreg_coords = SkyCoord(
+        ra=skyreg_df.centre_ra.values, dec=skyreg_df.centre_dec.values, unit="deg"
+    )
+    srcs_coords = SkyCoord(
+        ra=coords_df["wavg_ra"],
+        dec=coords_df["wavg_dec"],
+        unit="deg")
+    skyreg_idx, srcs_idx, sep, _ = srcs_coords.search_around_sky(
+        skyreg_coords, skyreg_df.xtr_radius.values * u.deg
+    )
+    skyreg_df = skyreg_df.drop(
+        columns=[
+            "centre_ra",
+            "centre_dec",
+            "xtr_radius"]).set_index("id")
+
+    # Build the per-source ideal-images frame
+    src_skyrg_df = pd.DataFrame(
+        {
+            "source": coords_df.iloc[srcs_idx].index,
+            "sep": sep.to("deg").value.astype(np.float32),
+        },
+        index=skyreg_df.iloc[skyreg_idx].index,
+    )
+
+    src_skyrg_df = src_skyrg_df.join(skyreg_df, how="inner")
+    src_skyrg_df = src_skyrg_df.join(skyreg_img_df, how="inner")
+
+    src_skyrg_df = src_skyrg_df.reset_index(drop=True)
+
+    del skyreg_df, skyreg_img_df
+    gc.collect()
+
+    return src_skyrg_df
 
 
-def check_primary_image(row: pd.Series) -> bool:
+def _dedupe_closest_skyregion_per_epoch(src_skyrg_df: pd.DataFrame) -> pd.DataFrame:
     """
-    Checks whether the primary image of the ideal source
-    dataframe is in the image list for the source.
+    For each (source, ideal epoch) pair, keeps only the closest-matching
+    sky region (smallest separation), then sorts the result by datetime then source.
 
     Args:
-        row:
-            Input dataframe row, with columns ['primary'] and ['img_list'].
+        src_skyrg_df: Output of `_crossmatch_sources_to_skyregions`, one
+            row per (source, sky region, ideal image) match, still with
+            'sep' and 'skyreg_datetime' columns.
 
     Returns:
-        True if primary in image list else False.
+        One row per (source, ideal image), sorted by 'source' (stable
+        sort, so each source's rows stay in the chronological order
+        established via 'skyreg_datetime'), with 'sep' and
+        'skyreg_datetime' dropped.
     """
-    return row["primary"] in row["img_list"]
+    # Sort by (source, skyreg_epoch, sep) so every row sharing a
+    # (source, skyreg_epoch) pair is contiguous, smallest sep first.
+    src_skyrg_df.sort_values(
+        ['source', 'skyreg_epoch', 'sep'], inplace=True
+    )
 
+    # Use numpy arrays to find the first row of each (source, skyreg_epoch) group
+    # and drop the rest (keeping only the closest sky region per ideal epoch).
+    source_arr = src_skyrg_df["source"].to_numpy()
+    epoch_arr = src_skyrg_df["skyreg_epoch"].to_numpy()
+    is_first = np.empty(len(source_arr), dtype=bool)
+    is_first[0] = True
+    is_first[1:] = (source_arr[1:] != source_arr[:-1]) | (epoch_arr[1:] != epoch_arr[:-1])
+
+    del source_arr, epoch_arr
+
+    src_skyrg_df = src_skyrg_df[is_first].drop(columns=["sep"])
+
+    # Now sort by datetime int64 value
+    src_skyrg_df.sort_values(by="skyreg_datetime", inplace=True)
+    src_skyrg_df.drop(columns=["skyreg_datetime"], inplace=True)
+
+    # Stable sort to preserve the datetime order of each source's rows
+    src_skyrg_df.sort_values(by="source", kind="stable", inplace=True)
+
+    return src_skyrg_df
+
+
+def _isin_sorted(keys: np.ndarray, sorted_unique_ref: np.ndarray) -> np.ndarray:
+    """
+    Optimised implementation of `np.isin(keys, sorted_unique_ref)`. Does a
+    vectorized membership test of `keys` against a sorted, unique reference
+    array, via binary search.
+
+    Args:
+        keys: Array of int64 keys to test.
+        sorted_unique_ref: Sorted, unique int64 reference array.
+
+    Returns:
+        Boolean array, True where the corresponding key is present in
+        `sorted_unique_ref`.
+    """
+    idx = np.searchsorted(sorted_unique_ref, keys)
+    idx = np.clip(idx, 0, len(sorted_unique_ref) - 1)
+    return (idx < len(sorted_unique_ref)) & (sorted_unique_ref[idx] == keys)
+
+
+def _compute_missing_images(
+    src_skyrg_df: pd.DataFrame, lists_df: pd.DataFrame, img_mult: int, epoch_mult: int
+) -> Tuple[pd.Series, pd.DataFrame]:
+    """
+    For each source, determines which ideal images/epochs were never
+    actually observed, plus the source's first ideal ("primary") and first
+    observed ("detection") image.
+
+    Args:
+        src_skyrg_df: Output of `_dedupe_closest_skyregion_per_epoch`, one
+            row per (source, ideal image), sorted by 'source'.
+        lists_df: Per-source 'img_list'/'epoch_list' columns (the actually
+            observed images/epochs), indexed by int32 source code.
+        img_mult: Number of unique images.
+        epoch_mult: Number of unique epochs.
+
+    Returns:
+        img_diff_series: Per-source list of missing ideal images, indexed
+            by source, name 'img_diff'. Only sources with >=1 missing
+            image are present.
+        per_source_df: Per-source 'detection' (first observed image) and
+            'in_primary' (whether the source was detected in its first
+            ideal image) columns, indexed by source.
+    """
+    # For each (source, ideal image)/(source, ideal epoch) pair, test
+    # whether it was ever actually observed by encoding the pair as one
+    # combined key (source * multiplier + value) and binary-searching
+    # it (np.searchsorted) against a sorted array of observed keys.
+    source_arr = src_skyrg_df["source"].to_numpy()
+    skyreg_img_arr = src_skyrg_df["skyreg_img_list"].to_numpy()
+    skyreg_epoch_arr = src_skyrg_df["skyreg_epoch"].to_numpy()
+    del src_skyrg_df
+
+    # Find the points in source_arr where the source changes
+    split_points = np.flatnonzero(np.diff(source_arr)) + 1
+    group_start_idx = np.concatenate(([0], split_points))
+    group_source = source_arr[group_start_idx]
+    # "primary" = first (chronologically earliest) ideal image per source.
+    primary_arr = skyreg_img_arr[group_start_idx]
+    del group_start_idx
+
+    # Long-format "observed" (source, image)/(source, epoch) pairs, built by
+    # exploding the small (one row per source) img_list/epoch_list columns.
+    obs_img_long = lists_df["img_list"].explode()
+    obs_epoch_long = lists_df["epoch_list"].explode()
+    # Encode each observed pair as a unique int64 key
+    obs_img_keys = np.unique(
+        obs_img_long.index.to_numpy().astype(np.int64) * img_mult
+        + obs_img_long.to_numpy().astype(np.int64)
+    )
+    obs_epoch_keys = np.unique(
+        obs_epoch_long.index.to_numpy().astype(np.int64) * epoch_mult
+        + obs_epoch_long.to_numpy().astype(np.int64)
+    )
+    del obs_img_long, obs_epoch_long
+
+    # Now do the same for the ideal pairs, and test whether each is present in the
+    # observed keys. The result is a boolean array, True where the ideal pair was observed.
+    ideal_img_key = source_arr.astype(np.int64) * img_mult + skyreg_img_arr.astype(np.int64)
+    in_img_list = _isin_sorted(ideal_img_key, obs_img_keys)
+    del ideal_img_key
+    ideal_epoch_key = source_arr.astype(np.int64) * epoch_mult + skyreg_epoch_arr.astype(np.int64)
+    in_epoch_list = _isin_sorted(ideal_epoch_key, obs_epoch_keys)
+    del ideal_epoch_key, skyreg_epoch_arr
+    # An ideal image only counts as missing if the source was seen neither in that image nor
+    # anywhere in that epoch (avoids false positives from overlapping sky-regions sharing an epoch)
+    missing_mask = ~in_img_list & ~in_epoch_list
+    del in_img_list, in_epoch_list
+
+    missing_source = source_arr[missing_mask]
+    missing_img = skyreg_img_arr[missing_mask]
+    del skyreg_img_arr, missing_mask
+
+    # missing_source is a subset of the already sorted source_arr,
+    # so it's still sorted — group it straight back into per-source lists
+    # without needing to re-sort.
+    if len(missing_source) > 0:
+        m_split_points = np.flatnonzero(np.diff(missing_source)) + 1
+        m_group_source = missing_source[np.concatenate(([0], m_split_points))]
+        img_diff_groups = np.split(missing_img, m_split_points)
+    else:
+        m_group_source = np.array([], dtype=source_arr.dtype)
+        img_diff_groups = []
+    del missing_source, missing_img, source_arr
+
+    # img_diff_series is indexed by source (only sources with ≥1 missing image),
+    # values are arrays of missing images.
+    img_diff_series = pd.Series(
+        img_diff_groups, index=pd.Index(m_group_source, name="source"), name="img_diff",
+    )
+    del m_group_source, img_diff_groups
+
+    # "detection" = first (chronologically earliest) *observed* image per source.
+    detection_series = lists_df["img_list"].str[0]
+    primary_key = group_source.astype(np.int64) * img_mult + primary_arr.astype(np.int64)
+    in_primary_arr = _isin_sorted(primary_key, obs_img_keys)
+    del primary_key, obs_img_keys, obs_epoch_keys, primary_arr
+
+    per_source_df = pd.DataFrame(
+        {
+            "detection": detection_series,
+            "in_primary": pd.Series(in_primary_arr, index=pd.Index(group_source, name="source")),
+        }
+    )
+    del detection_series, in_primary_arr, group_source
+
+    return img_diff_series, per_source_df
 
 def get_src_skyregion_merged_df(
-    sources_df: dd.DataFrame, images_df: pd.DataFrame, skyreg_df: pd.DataFrame
-) -> pd.DataFrame:
+    sources_df: dd.DataFrame, images_df: pd.DataFrame, skyreg_df: pd.DataFrame, n_cpu: int
+) -> dd.DataFrame:
     """
     Analyses the current sources_df to determine what the 'ideal coverage'
     for each source should be. In other words, what images is the source
@@ -930,149 +1151,101 @@ def get_src_skyregion_merged_df(
         skyreg_df:
             Contains the sky regions of the pipeline run. I.e. all
             sky region objects for the run loaded into a dataframe.
+        n_cpu:
+            The number of dask workers.
 
     Returns:
         DataFrame containing missing image information (see source code for
             dataframe format).
     """
     # Output format:
-    # +----------+----------------------------------+-----------+------------+
-    # |   source | img_list                         |   wavg_ra |   wavg_dec |
-    # |----------+----------------------------------+-----------+------------+
-    # |      278 | ['VAST_0127-73A.EPOCH01.I.fits'] |  22.2929  |   -71.8717 |
-    # |      702 | ['VAST_0127-73A.EPOCH01.I.fits'] |  28.8125  |   -69.3547 |
-    # |      844 | ['VAST_0127-73A.EPOCH01.I.fits'] |  17.3152  |   -72.346  |
-    # |      934 | ['VAST_0127-73A.EPOCH01.I.fits'] |   9.75754 |   -72.9629 |
-    # |     1290 | ['VAST_0127-73A.EPOCH01.I.fits'] |  20.8455  |   -76.8269 |
-    # +----------+----------------------------------+-----------+------------+
-    # ------------------------------------------------------------------+
-    #  skyreg_img_list                                                  |
-    # ------------------------------------------------------------------+
-    #  ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
-    #  ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
-    #  ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
-    #  ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
-    #  ['VAST_0127-73A.EPOCH01.I.fits', 'VAST_0127-73A.EPOCH08.I.fits'] |
-    # ------------------------------------------------------------------+
-    # ----------------------------------+------------------------------+
-    #  img_diff                         | primary                      |
-    # ----------------------------------+------------------------------+
-    #  ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
-    #  ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
-    #  ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
-    #  ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
-    #  ['VAST_0127-73A.EPOCH08.I.fits'] | VAST_0127-73A.EPOCH01.I.fits |
-    # ----------------------------------+------------------------------+
-    # ------------------------------+--------------+
-    #  detection                    | in_primary   |
-    # ------------------------------+--------------|
-    #  VAST_0127-73A.EPOCH01.I.fits | True         |
-    #  VAST_0127-73A.EPOCH01.I.fits | True         |
-    #  VAST_0127-73A.EPOCH01.I.fits | True         |
-    #  VAST_0127-73A.EPOCH01.I.fits | True         |
-    #  VAST_0127-73A.EPOCH01.I.fits | True         |
-    # ------------------------------+--------------+
+    # +--------------+-----------+------------+
+    # |   source     |   wavg_ra |   wavg_dec |
+    # |--------------+-----------+------------+
+    # | 222BSmZCCu4e |  22.2929  |   -71.8717 |
+    # | 222juojpk42L |  28.8125  |   -69.3547 |
+    # | 222BSmZCCu4f |  17.3152  |   -72.346  |
+    # | 222oo8Gj53r6 |  9.75754  |   -72.9629 |
+    # | g2KSTpuVJthm |  20.8455  |   -76.8269 |
+    # +--------------+-----------+------------+
+    # --------------------------------+------------------------------+--------------+
+    #  img_diff                       | detection                    | in_primary   |
+    # --------------------------------+------------------------------+--------------|
+    #  'VAST_0127-73A.EPOCH08.I.fits' | VAST_0127-73A.EPOCH01.I.fits | True         |
+    #  'VAST_0127-73A.EPOCH08.I.fits' | VAST_0127-73A.EPOCH01.I.fits | True         |
+    #  'VAST_0127-73A.EPOCH08.I.fits' | VAST_0127-73A.EPOCH01.I.fits | True         |
+    #  'VAST_0127-73A.EPOCH08.I.fits' | VAST_0127-73A.EPOCH01.I.fits | True         |
+    #  'VAST_0127-73A.EPOCH08.I.fits' | VAST_0127-73A.EPOCH01.I.fits | True         |
+    # --------------------------------+------------------------------+--------------+
     logger.info("Creating ideal source coverage df...")
 
     merged_timer = StopWatch()
 
-    skyreg_df = skyreg_df.drop(["x", "y", "z", "width_ra", "width_dec"], axis=1)
-
-    skyreg_df = skyreg_df.join(
-        pd.DataFrame(images_df.groupby("skyreg_id")[["skyreg_id", "name", "epoch", "datetime"]]
-                              .apply(get_names_and_epochs)),
-        on="id",
+    sources_df, image_names, skyreg_img_df = _build_compact_indices(
+        sources_df, images_df
     )
 
-    # calculate some metrics on sources
-    # compute only some necessary metrics in the groupby
-    timer = StopWatch()
-    srcs_df = parallel_groupby_coord(sources_df)
-    logger.debug('Groupby-apply time: %.2f seconds', timer.reset())
-
+    coords_df, lists_df = parallel_groupby_coord(sources_df)
+    # coords_df: wavg_ra/wavg_dec, used by _crossmatch_sources_to_skyregions.
+    # lists_df: img_list/epoch_list, used by _compute_missing_images.
     del sources_df
 
+    # Use compact int32 source code instead of the ShortUUID string for the
+    # rest of this function.
+    source_ids = coords_df.index.to_numpy()
+    source_to_idx = pd.Series(np.arange(len(source_ids), dtype=np.int32), index=source_ids)
+    coords_df.index = np.arange(len(source_ids), dtype=np.int32)
+    coords_df.index.name = "source"
+    lists_df.index = lists_df.index.map(source_to_idx)
+    lists_df.index.name = "source"
+
     # crossmatch sources with sky regions up to the max sky region radius
-    skyreg_coords = SkyCoord(
-        ra=skyreg_df.centre_ra, dec=skyreg_df.centre_dec, unit="deg"
-    )
-    srcs_coords = SkyCoord(
-        ra=srcs_df["wavg_ra"],
-        dec=srcs_df["wavg_dec"],
-        unit="deg")
-    skyreg_idx, srcs_idx, sep, _ = srcs_coords.search_around_sky(
-        skyreg_coords, skyreg_df.xtr_radius.max() * u.deg
-    )
-    skyreg_df = skyreg_df.drop(
-        columns=[
-            "centre_ra",
-            "centre_dec"]).set_index("id")
-
-    # select rows where separation is less than sky region radius
-    # drop not more useful columns and groupby source id
-    # compute list of images
-    src_skyrg_df = (
-        pd.DataFrame(
-            {
-                "source": srcs_df.iloc[srcs_idx].index,
-                "id": skyreg_df.iloc[skyreg_idx].index,
-                "sep": sep.to("deg").value,
-            }
-        )
-        .merge(skyreg_df, left_on="id", right_index=True)
-        .query("sep < xtr_radius")
-        .drop(columns=["id", "xtr_radius"])
-        .explode("skyreg_img_epoch_list")
-    )
-
+    src_skyrg_df = _crossmatch_sources_to_skyregions(coords_df, skyreg_df, skyreg_img_df)
     del skyreg_df
 
-    src_skyrg_df[["skyreg_img_list", "skyreg_epoch", "skyreg_datetime"]] = pd.DataFrame(
-        src_skyrg_df["skyreg_img_epoch_list"].tolist(), index=src_skyrg_df.index
+    # drop duplicates of the same source and sky region for the same epoch, keeping only the closest match
+    src_skyrg_df = _dedupe_closest_skyregion_per_epoch(src_skyrg_df)
+
+    # Compute missing images. per source (img_diff_series) and per source detection image
+    img_diff_series, per_source_df = _compute_missing_images(
+        src_skyrg_df, lists_df, len(image_names), len(pd.unique(images_df["epoch"]))
+    )
+    # img_diff_series: per-source list of missing ideal images.
+    # per_source_df: has per-source 'detection' (first observed image) and
+    # 'in_primary' (whether the source was detected in its first ideal image) columns.
+    del src_skyrg_df, lists_df
+
+    # Join coords with detection/in_primary, then inner-join img_diff — the
+    # inner join filters down to only sources with >=1 missing image.
+    srcs_df = coords_df.join(per_source_df, how="inner")
+    del coords_df, per_source_df
+    srcs_df = srcs_df.join(img_diff_series, how="inner")
+    del img_diff_series
+
+    # Convert int32 image codes back to the original image name strings for the final output.
+    srcs_df["detection"] = image_names[srcs_df["detection"].to_numpy()]
+    srcs_df.index = source_ids[srcs_df.index.to_numpy()]
+    srcs_df.index.name = "source"
+
+    # Convert srcs_df to a Dask DataFrame and explode 'img_diff' to one row per missing image.
+    exploded_npartitions = calculate_n_partitions(srcs_df, n_cpu=n_cpu)
+    srcs_df = dd.from_pandas(srcs_df, npartitions=exploded_npartitions)
+    srcs_df = srcs_df.reset_index()[
+        ["source", "wavg_ra", "wavg_dec", "img_diff", "detection", "in_primary"]
+    ].explode("img_diff")
+
+    def _convert_img_diff_names(partition: pd.DataFrame) -> pd.DataFrame:
+        """Vectorized int32-code -> image-name lookup for one partition"""
+        partition = partition.copy()
+        partition["img_diff"] = image_names[partition["img_diff"].to_numpy().astype(np.int32)]
+        return partition
+
+    srcs_df = srcs_df.map_partitions(
+        _convert_img_diff_names, meta=srcs_df._meta.assign(img_diff=pd.Series(dtype=object)),
     )
 
-    src_skyrg_df = src_skyrg_df.drop("skyreg_img_epoch_list", axis=1)
-
-    src_skyrg_df = (
-        src_skyrg_df.sort_values(["source", "sep"])
-        .drop_duplicates(["source", "skyreg_epoch"])
-        .sort_values(by="skyreg_datetime")
-        .drop(["sep", "skyreg_datetime"], axis=1)
-    )
-    # annoyingly epoch needs to be not a list to drop duplicates
-    # but then we need to sum the epochs into a list
-    src_skyrg_df["skyreg_epoch"] = src_skyrg_df["skyreg_epoch"].apply(
-        lambda x: [
-            x,
-        ]
-    )
-
-    src_skyrg_df = src_skyrg_df.groupby("source").sum(
-        numeric_only=False
-    )  # sum because we need to preserve order
-
-    # merge into main df and compare the images
-    srcs_df = srcs_df.merge(src_skyrg_df, left_index=True, right_index=True)
-
-    del src_skyrg_df
-
-    srcs_df["img_diff"] = srcs_df[
-        ["img_list", "skyreg_img_list", "epoch_list", "skyreg_epoch"]
-    ].apply(get_image_list_diff, axis=1)
-
-    srcs_df = srcs_df.loc[srcs_df["img_diff"].apply(len) > 0]
-
-    srcs_df = srcs_df.drop(["epoch_list", "skyreg_epoch"], axis=1)
-
-    srcs_df["primary"] = srcs_df["skyreg_img_list"].apply(lambda x: x[0])
-
-    srcs_df["detection"] = srcs_df["img_list"].apply(lambda x: x[0])
-
-    srcs_df["in_primary"] = srcs_df[["primary", "img_list"]].apply(
-        check_primary_image, axis=1
-    )
-
-    srcs_df = srcs_df.drop(["img_list", "skyreg_img_list", "primary"], axis=1)
+    srcs_df = srcs_df.persist()
+    wait(srcs_df)
 
     logger.info("Ideal source coverage time: %.2f seconds", merged_timer.reset())
 

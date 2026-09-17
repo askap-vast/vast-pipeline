@@ -652,8 +652,7 @@ def forced_extraction(
     # | VAST_2118-06A.EPOCH03x.I.fits |  0.165395 | 2019-10-29 10:01:20.500000+00:00 |             319.652 |              -6.2989 |               6.7401 |
     # | VAST_2118-06A.EPOCH02.I.fits  |  0.16323  | 2019-10-30 08:31:20.200000+00:00 |             319.652 |              -6.2989 |               6.7401 |
 
-    # Explode out the img_diff column.
-    extr_df = extr_df.explode("img_diff").reset_index()
+    extr_df = extr_df.reset_index()
     total_to_extract = extr_df.shape[0].compute()
     logger.info("%d forced measurements to extract", total_to_extract)
 
