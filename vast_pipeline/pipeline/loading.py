@@ -530,14 +530,20 @@ def copy_upload_associations(
         "dr": "dr"
     }
 
-    def upload(df, Association, mapping, batch_size):
-        logger.info(
-            "Uploading partition of %d associations in batches of %d",
-            len(df),
-            batch_size
-        )
+    def upload(
+        df: pd.DataFrame,
+        mapping: Dict[str, str],
+        batch_size: int,
+    ) -> int:
+        """Upload a single partition of associations."""
 
-        df["db_id"] = df.apply(lambda _: str(uuid4()), axis=1)
+        if df.empty:
+            return 0
+        # Make a copy of df here to avoid modifying a view ofthe original associations_df dataframe
+        # This should have only a small additional memory overhead per partition
+        df = df.copy()
+        # Assign a list of unique database IDs to the "db_id" column
+        df["db_id"] = [str(uuid4()) for _ in range(len(df))]
         copy_upload_model(
             df,
             Association,
@@ -545,22 +551,27 @@ def copy_upload_associations(
             batch_size=batch_size
         )
 
-    associations_df = associations_df[columns_to_upload].map_partitions(
-        upload,
-        Association,
-        mapping,
-        batch_size,
-        enforce_metadata=False,
-        meta={}
-    )
+        return len(df)
 
     timer = StopWatch()
-    associations_df.compute()
+    n_associations = (
+        associations_df[columns_to_upload]
+        .map_partitions(
+        upload,
+        mapping,
+        batch_size,
+        meta=("n_uploaded", "int64")
+        )
+        .compute()
+        .sum()
+    )
+
     logger.info(
         "Uploaded %d associations in %.1f s",
         n_associations,
         timer.reset()
     )
+
     del associations_df
 
 
