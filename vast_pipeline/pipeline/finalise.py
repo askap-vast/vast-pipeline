@@ -348,18 +348,14 @@ def final_operations(
     if calculate_pairs:
         # optimize measurement pair DataFrame and save to parquet file
         timer.reset()
-        # ingest to dask data frames
-        srcs_df.index.name = "source_id"
-        srcs_df = dd.from_pandas(srcs_df, npartitions=n_partitions).persist()
+
         columns = ['id_a', 'id_b', 'flux_int_a', 'flux_int_err_a', 'flux_peak_a',
        'flux_peak_err_a', 'image_name_a', 'flux_int_b', 'flux_int_err_b',
        'flux_peak_b', 'flux_peak_err_b', 'image_name_b', 'vs_peak', 'vs_int',
        'm_peak', 'm_int']
 
-        measurement_pairs_df = dd.read_parquet(pairs_dir_tmp, columns=columns, index='source') \
-                                 .merge(srcs_df, how="left", left_index=True, right_index=True) \
-                                 .rename(columns={"id_a": "meas_id_a", "id_b": "meas_id_b"}) \
-                                 .reset_index()
+        measurement_pairs_df = dd.read_parquet(pairs_dir_tmp, columns=columns, index=False) \
+                                 .rename(columns={"id_a": "meas_id_a", "id_b": "meas_id_b", "source": "source_id"})
 
         # try to optimize measurement pair DataFrame and save to parquet file
         # fall back to original dtypes if downcasting fails due to inconsistent issue
