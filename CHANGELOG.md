@@ -58,6 +58,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- V2: Generate UUIDs in Associations upload more efficiently [#900](https://github.com/askap-vast/vast-pipeline/pull/900)
+- V2: Avoid expendive merge with sources_df when writing our measurement paird [#900](https://github.com/askap-vast/vast-pipeline/pull/900)
 - V2: Fix association upload to work with dask > 2025.5.0 [#879](https://github.com/askap-vast/vast-pipeline/pull/879)
 - V2: Fixed memory leaks caused by nested delays [#854](https://github.com/askap-vast/vast-pipeline/pull/854)
 - V2: Fixed duplicate source ID error by switching from sources_df.repartition() to sources_df.shuffle() in pipeline.finalise.final_operations [#845](https://github.com/askap-vast/vast-pipeline/pull/845)
@@ -95,6 +97,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Removed Aladin lite display containing RACS and other ASKAP HIPS images [#874](https://github.com/askap-vast/vast-pipeline/pull/874)
 
 #### List of PRs
+- [#900](https://github.com/askap-vast/vast-pipeline/pull/900): fix: V2: Optimisations of finalise step
 - [#893](https://github.com/askap-vast/vast-pipeline/pull/893): feat: V2: Parallelise ingest of measurements
 - [#880](https://github.com/askap-vast/vast-pipeline/pull/880): fix: V2: Ensure external dependencies pass when etxternal websites are down
 - [#879](https://github.com/askap-vast/vast-pipeline/pull/879): fix: V2: Update dependencies to work with latest python 3.11&3.12 and pin them
