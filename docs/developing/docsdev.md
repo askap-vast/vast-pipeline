@@ -63,7 +63,7 @@ Custom javascript and css files are also stored in this directory and are enable
       - theme/css/extra.css
     extra_javascript:
       - theme/js/extra.js
-      - https://polyfill.io/v3/polyfill.min.js?features=es6
+      - https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6
       - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
     ```
 

@@ -4,7 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), with an added `List of PRs` section and links to the relevant PRs on the individual updates. This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/v1.2.0...HEAD)
+## [Unreleased](https://github.com/askap-vast/vast-pipeline/compare/v1.3.0...HEAD)
+
+#### Added
+
+#### Changed
+
+#### Fixed
+
+#### Removed
+
+#### List of PRs
+
+
+## [1.3.0](https://github.com/askap-vast/vast-pipeline/releases/v1.3.0) (2026-07-28)
 
 #### Added
 
@@ -71,6 +84,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - V2: Fix bug when deleting source tags from database which are referenced by multiple sources [#803](https://github.com/askap-vast/vast-pipeline/pull/803)
 - Fixed incorrect error ellipse calculation [#792](https://github.com/askap-vast/vast-pipeline/pull/792)
 - V2: Fix incorrect calculation of the new_high_sigma parameter [#714](https://github.com/askap-vast/vast-pipeline/pull/714)
+- Fix incorrect variable name bug introduced by #840 [#896](https://github.com/askap-vast/vast-pipeline/pull/896)
 - Fix and optimise forced measurement deletion [#888](https://github.com/askap-vast/vast-pipeline/pull/888)
 - Fix bug introduced by #884 regarding error handling of external query table [#885](https://github.com/askap-vast/vast-pipeline/pull/885)
 - Fixed external query breaking due to spaces in URLs [#884](https://github.com/askap-vast/vast-pipeline/pull/884)
@@ -121,6 +135,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [#801](https://github.com/askap-vast/vast-pipeline/pull/801): docs, dep: v2: Updated docs dependencies and fixed outdated information and various warnings
 - [#714](https://github.com/askap-vast/vast-pipeline/pull/714): fix: V2: Correctly calculate new_high_sigma parameter 
 - [#798](https://github.com/askap-vast/vast-pipeline/pull/798): dep: V2: Update dependencies to deal with dependabot reccomendations and to prepare for V2 upgrades.
+
+- [#896](https://github.com/askap-vast/vast-pipeline/pull/896): Fix incorrect variable name bug introduced by #840
+- [#890](https://github.com/askap-vast/vast-pipeline/pull/891): fix: Update ci-docs github actions to be compatible with new poetry
 - [#889](https://github.com/askap-vast/vast-pipeline/pull/889): fix: Ensure external dependencies pass when etxternal websites are down
 - [#888](https://github.com/askap-vast/vast-pipeline/pull/888): fix: Move forced measurement deletion to delete_run and optimise it
 - [#885](https://github.com/askap-vast/vast-pipeline/pull/885): fix: Fix bug introduced by #884 regarding error handling of external query table
