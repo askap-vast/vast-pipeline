@@ -272,7 +272,6 @@ def finalise_forced_dfs(
 def parallel_extraction(
     df: pd.DataFrame,
     df_images: pd.DataFrame,
-    df_sources: pd.DataFrame,
     min_sigma: float,
     edge_buffer: float,
     cluster_threshold: float,
@@ -293,9 +292,6 @@ def parallel_extraction(
             'beam_bmin', 'beam_bpa', 'background_path', 'rms_min', 'datetime',
             'skyreg__centre_ra', 'skyreg__centre_dec', 'skyreg__xtr_radius'
             and 'name' as the index.
-        df_sources:
-            dataframe derived from the measurement data with columns 'source',
-            'image', 'flux_peak'.
         min_sigma:
             minimum sigma value to drop forced extracted measurements.
         edge_buffer:
@@ -315,28 +311,15 @@ def parallel_extraction(
             'component_id', 'name', 'flux_int', 'flux_int_err'
     """
     # explode the lists in 'img_diff' column (this will make a copy of the df)
-    # NOTE: Need to persist here since Dask loses futures after all the
-    # previous merges. Ideally this should be removed and we only persist at the
-    # end of new_sources.
     out = (
         df.rename(columns={"img_diff": "image", "source": "source_tmp_id"})
         # merge the rms_min column from df_images
         .merge(df_images[["rms_min"]], left_on="image", right_on="name", how="left")
         .rename(columns={"rms_min": "image_rms_min"})
-        # merge the measurements columns 'source', 'image', 'flux_peak'
-        .merge(
-            df_sources,
-            left_on=["source_tmp_id", "detection"],
-            right_on=["source", "image"],
-            how="left",
-        )
-        .drop(columns=["image_y", "source"])
-        .rename(columns={"image_x": "image"})
-        .persist()
     )
 
     # drop the source for which we would have no hope of detecting
-    max_snr = out["flux_peak"].values / out["image_rms_min"].values
+    max_snr = out["flux_peak"] / out["image_rms_min"]
     out = out.loc[max_snr > min_sigma].reset_index(drop=True)
 
     # drop some columns that are no longer needed and the df should look like
@@ -685,7 +668,6 @@ def forced_extraction(
     extr_df = parallel_extraction(
         extr_df,
         images_df,
-        sources_df[['source', 'image', 'flux_peak']],
         min_sigma,
         edge_buffer,
         cluster_threshold,
