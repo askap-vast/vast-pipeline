@@ -42,6 +42,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- V2: Optimise rms calculation in new_sources [#901](https://github.com/askap-vast/vast-pipeline/pull/901)
 - V2: Optimise missing source calculation to use vectorised numpy operations [#899](https://github.com/askap-vast/vast-pipeline/pull/899)
 - V2: Pin package repos for compatibility with latest Python 3.11 & 3.12 [#879](https://github.com/askap-vast/vast-pipeline/pull/879)
 - V2: Revert back to parallel association upload [#852](https://github.com/askap-vast/vast-pipeline/pull/852)
@@ -112,6 +113,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Removed Aladin lite display containing RACS and other ASKAP HIPS images [#874](https://github.com/askap-vast/vast-pipeline/pull/874)
 
 #### List of PRs
+- [#901](https://github.com/askap-vast/vast-pipeline/pull/901): fix: V2: Optimisations of new_sources step
 - [#900](https://github.com/askap-vast/vast-pipeline/pull/900): fix: V2: Optimisations of finalise step
 - [#899](https://github.com/askap-vast/vast-pipeline/pull/899): feat: V2: Optimise missing source calculation
 - [#893](https://github.com/askap-vast/vast-pipeline/pull/893): feat: V2: Parallelise ingest of measurements
