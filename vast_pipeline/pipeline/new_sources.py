@@ -235,15 +235,6 @@ def parallel_get_new_high_sigma(
         A DataFrame indexed by source id and containing a single 'new_high_sigma' column.
         The column will contain 'NaN' entires for sources that fail.
     """
-
-    # Get a list of input images.
-    #uniq_img_diff = (
-    #    df['img_diff_rms_path'].unique()
-    #    .compute()
-    #    .to_list()
-   #)
-
-    #cols = ['img_diff_rms_path', 'flux_peak', 'source', 'wavg_ra', 'wavg_dec']
     
     def process_group(df_group):
         return get_image_rms_measurements(df_group, edge_buffer=edge_buffer)
