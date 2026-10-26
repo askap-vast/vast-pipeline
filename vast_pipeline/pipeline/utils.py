@@ -769,7 +769,8 @@ def parallel_groupby_coord(df: dd.DataFrame,) -> Tuple[pd.DataFrame, pd.DataFram
     Produces two separate per-source DataFrames in a single Dask compute pass:
 
     * **coords_df** — lightweight numeric frame (one float per column) used
-      for the AstroPy sky crossmatch: ``wavg_ra``, ``wavg_dec``.
+      for the AstroPy sky crossmatch: ``wavg_ra``, ``wavg_dec``. Also
+      includes ``flux_peak`` which is used downstream in the pipeline.
     * **lists_df** — heavyweight frame holding Python list columns
       ``img_list`` and ``epoch_list``, only needed for the "missing image"
       computation in ``get_src_skyregion_merged_df``.  Keeping it separate
@@ -788,13 +789,14 @@ def parallel_groupby_coord(df: dd.DataFrame,) -> Tuple[pd.DataFrame, pd.DataFram
     """
 
     coord_cols = [
-        'source', 'interim_ew', 'weight_ew', 'interim_ns', 'weight_ns',
+        'source', 'interim_ew', 'weight_ew', 'interim_ns', 'weight_ns', 'flux_peak',
     ]
     coord_agg = {
         'interim_ew': 'sum',
         'weight_ew': 'sum',
         'interim_ns': 'sum',
         'weight_ns': 'sum',
+        'flux_peak': 'first',
     }
     coord_groups = df[coord_cols].groupby('source').agg(coord_agg)
 
@@ -1231,7 +1233,7 @@ def get_src_skyregion_merged_df(
     exploded_npartitions = calculate_n_partitions(srcs_df, n_cpu=n_cpu)
     srcs_df = dd.from_pandas(srcs_df, npartitions=exploded_npartitions)
     srcs_df = srcs_df.reset_index()[
-        ["source", "wavg_ra", "wavg_dec", "img_diff", "detection", "in_primary"]
+        ["source", "wavg_ra", "wavg_dec", "img_diff", "detection", "in_primary", "flux_peak"]
     ].explode("img_diff")
 
     def _convert_img_diff_names(partition: pd.DataFrame) -> pd.DataFrame:
