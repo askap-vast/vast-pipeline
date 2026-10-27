@@ -11,7 +11,6 @@
 
 {% block head %}
 
-<link rel='stylesheet' href='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.css' />
 <link rel="stylesheet" href="{% static 'vendor/js9/js9-allinone.css' %}" />
 <link rel="stylesheet" href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" />
 <link rel="stylesheet" href="{% static 'vendor/datatables-buttons/buttons.bootstrap4.min.css' %}" />
@@ -153,12 +152,14 @@
 
     <!-- JS9 First Detection -->
     <div class="col-xl-4 d-flex">
-      <div class="card shadow mb-4 flex-fill">
+      <div class="card shadow mb-4 flex-fill" style="min-width: 0;">
         <div class="card-header py-3">
           <h6 class="m-0 font-weight-bold text-primary">First Detection Postage Stamp</h6>
         </div>
         <div class="card-body">
-          <div class="JS9" id="JS9_{{ cutout_measurements|length|add:"1" }}" data-width="450px" data-height="360px"></div>
+          <div id="firstDetectionContainer" style="width: 100%;">
+            <div class="JS9" id="JS9_{{ cutout_measurements|length|add:"1" }}" data-width="100%" data-height="360px"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -235,6 +236,35 @@
         if (typeof A === 'undefined' || !A.init) {
           return setTimeout(startAladin, 100);
         }
+        
+        const RANKED_SURVEYS = [
+          'CDS/P/DECaLS/DR5/color',
+          'CDS/P/DECaPS/DR2/color',
+          'CDS/P/VISTA/VVV/DR4/ColorJYZ',
+          'CDS/P/ZTF/DR7/color',
+          'CDS/P/PanSTARRS/DR1/color-i-r-g',
+          'CDS/P/Skymapper-color-IRG',
+          'CDS/P/2MASS/color',
+          'CDS/P/DSS/color',
+        ];
+
+        async function coversPosition(id, ra, dec) {
+          const url = 'https://alasky.cds.unistra.fr/MocServer/query'
+            + `?ID=${encodeURIComponent(id)}&RA=${ra}&DEC=${dec}&SR=0.001&fmt=json&get=id`;
+          try {
+            const res = await fetch(url);
+            if (!res.ok) return false;
+            const ids = await res.json();
+            return Array.isArray(ids) && ids.length > 0;
+          } catch { return false; }
+        }
+
+        async function pickBestSurvey(ra, dec) {
+          // query in parallel, then take the first hit in rank order
+          const hits = await Promise.all(RANKED_SURVEYS.map(id => coversPosition(id, ra, dec)));
+          return RANKED_SURVEYS[hits.indexOf(true)] ?? 'CDS/P/DSS/color';
+        }
+        
 
         A.init.then(() => {
           const targetCoords = "{{ source.aladin_ra }}%20{{ source.aladin_dec }}";
@@ -246,12 +276,18 @@
           const targetRad = 0.0020833333333333333;
 
           const aladin = A.aladin('#aladin-lite-div', {
-            survey: 'CDS/P/DSS/color',
-            target: targetCoords,
             fov: zoomLevel,
             useProxy: false,
+            showStatusBar: false,
             log: false
           });
+          
+          pickBestSurvey(targetRA, targetDec).then(best => {
+            aladin.setImageSurvey(best);
+            document.getElementById('surveySelect').value = best;  // keep the dropdown in sync
+          });
+          
+          aladin.gotoRaDec(targetRA, targetDec);
 
           const overlay = A.graphicOverlay({ color: '#ffffff', lineWidth: 2, name: 'Source position' });
           aladin.addOverlay(overlay);
@@ -378,13 +414,13 @@
     <div class="col-xl-6 mb-4">
       <div class="card shadow mb-4 h-100">
         <div class="card-header py-3">
-          <h6 class="m-0 font-weight-bold text-primary">External Search Results (30 arcsec)</h6>
+          <h6 class="m-0 font-weight-bold text-primary">Crossmatch Results (30 arcsec)</h6>
         </div>
         <div class="card-body small">
           <div class="table-responsive">
             <table class="table table-sm table-bordered table-striped table-hover" id="externalResultsTable"
               width="100%" cellspacing="0" data-server-side="false"
-              data-ajax="{% url 'vast_pipeline:api_utils-external-search' %}?coord={{ source.wavg_ra_hms }}{{ source.wavg_dec_dms }}&catalogues=I/355/gaiadr3,IV/39,B/psr/psr,VIII/65,J/ApJS/255/30,II/365&format=datatables&keep=otype_long,database">
+              data-ajax="{% url 'vast_pipeline:api_utils-external-search' %}?coord={{ source.wavg_ra_hms|urlencode }}{{ source.wavg_dec_dms|urlencode }}&catalogues=I/355/gaiadr3,IV/39,B/psr/psr,VIII/65,J/ApJS/255/30,II/365&exclude_run={{ source.run_id }}&format=datatables&keep=otype_long,database">
               <thead>
                 <tr>
                   <th data-data="object_name">ID</th>
@@ -566,14 +602,17 @@
 {{ datatables|json_script:"datatable-conf" }}
 <script src="{% static 'js/datatables-pipeline.js' %}"></script>
 
+<script>
+  // Show Django messages (errors, timeout warnings) returned by the external search
+  $('#externalResultsTable').on('xhr.dt', function (e, settings, json) {
+    if (json && json.messages) {
+      showPopupMessage(json.messages);
+    }
+  });
+</script>
+
 <!-- Bokeh scripts -->
 <script src="{% static 'vendor/bokehjs/bokeh.min.js' %}"></script>
-
-<!-- Aladin -->
-{{ source|json_script:"data-aladin" }}
-<script type='text/javascript' src='https://aladin.u-strasbg.fr/AladinLite/api/v2/latest/aladin.min.js' charset='utf-8'>
-</script>
-<script src="{% static 'js/aladin-script.min.js' %}"></script>
 
 <script src="{% static 'js/clipboard-copy.min.js' %}"></script>
 <script src="{% static 'js/source-fav.min.js' %}" apiSourceFavUrl="{% url 'vast_pipeline:api_sources_favs-list' %}" id="SourceFavScript"></script>
@@ -628,7 +667,24 @@
   }
 
   // when JS9 is ready, load the cutout images into the correct display panels
+  const FIRST_DET_DISPLAY = "JS9_{{ cutout_measurements|length|add:"1" }}";
+  const FIRST_DET_MAX_HEIGHT = 450;  // px; stops it becoming huge when the column is full-width
+
+  function fitFirstDetectionDisplay() {
+    const container = document.getElementById("firstDetectionContainer");
+    const width = Math.floor(container.clientWidth);
+    if (width < 10) return;  // hidden or not laid out yet
+    const height = Math.min(width, FIRST_DET_MAX_HEIGHT);
+    const current = JS9.ResizeDisplay({ display: FIRST_DET_DISPLAY });  // no size args => returns {width, height}
+    if (current.width === width && current.height === height) return;
+    JS9.ResizeDisplay(width, height, { display: FIRST_DET_DISPLAY });
+  }
   $(document).on("JS9:ready", async function () {
+  fitFirstDetectionDisplay();
+  // refit whenever the card changes width: window resizes *and* the sb-admin sidebar toggle
+  new ResizeObserver(fitFirstDetectionDisplay).observe(
+    document.getElementById("firstDetectionContainer")
+  );
     var measurementData = JSON.parse(document.getElementById("data-js9").textContent);
     var firstDetectionMeasurementData = JSON.parse(document.getElementById("data-js9-first-detection").textContent);
     const last_id = measurementData.length + 1;

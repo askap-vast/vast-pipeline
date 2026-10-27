@@ -150,18 +150,21 @@ def plot_lightcurve(
 
     # TODO add vs and m metrics to graph edges
     # create plot
-    fig_graph = figure(
-        plot_width=PLOT_HEIGHT,
-        plot_height=PLOT_HEIGHT,
-        x_range=Range1d(-1.1, 1.1),
-        y_range=Range1d(-1.1, 1.1),
-        x_axis_type=None,
-        y_axis_type=None,
-        sizing_mode="fixed",
-    )
     hover_tool_lc_callback = None
     measurement_pairs = source.get_measurement_pairs()
+    fig_graph = None
+
     if len(measurement_pairs) > 0:
+        fig_graph = figure(
+            plot_width=PLOT_HEIGHT,
+            plot_height=PLOT_HEIGHT,
+            x_range=Range1d(-1.1, 1.1),
+            y_range=Range1d(-1.1, 1.1),
+            x_axis_type=None,
+            y_axis_type=None,
+            sizing_mode="fixed",
+        )
+
         candidate_measurement_pairs_df = pd.DataFrame(measurement_pairs).query(
             f"m_{metric_suffix}.abs() >= {m_abs_min} and vs_{metric_suffix}.abs() >= {vs_abs_min}"
         ).reset_index()
@@ -308,8 +311,11 @@ def plot_lightcurve(
         callback=hover_tool_lc_callback,
     )
     fig_lc.add_tools(hover_tool_lc)
-
-    plot_row = row(fig_lc, fig_graph, sizing_mode="stretch_width")
+    
+    if fig_graph is not None:
+        plot_row = row(fig_lc, fig_graph, sizing_mode="stretch_width")
+    else:
+        plot_row = row(fig_lc, sizing_mode="stretch_width")
     plot_row.css_classes.append("mx-auto")
     return plot_row
 

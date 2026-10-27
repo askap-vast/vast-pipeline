@@ -363,3 +363,5 @@ MEDIA_ROOT = env("MEDIA_ROOT", cast=str, default=None)
 
 ALADIN_ZOOM = env("ALADIN_ZOOM", cast=float, default=0.017)
 ALADIN_RADIUS = env("ALADIN_RADIUS", cast=float, default=0.6)
+
+EXTERNAL_SEARCH_TIMEOUT = env('EXTERNAL_SEARCH_TIMEOUT', cast=float, default=15)
