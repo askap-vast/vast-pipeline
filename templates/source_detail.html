@@ -235,6 +235,35 @@
         if (typeof A === 'undefined' || !A.init) {
           return setTimeout(startAladin, 100);
         }
+        
+        const RANKED_SURVEYS = [
+          'CDS/P/DECaLS/DR5/color',
+          'CDS/P/DECaPS/DR2/color',
+          'CDS/P/VISTA/VVV/DR4/ColorJYZ',
+          'CDS/P/ZTF/DR7/color',
+          'CDS/P/PanSTARRS/DR1/color-i-r-g',
+          'CDS/P/Skymapper-color-IRG',
+          'CDS/P/2MASS/color',
+          'CDS/P/DSS/color',
+        ];
+
+        async function coversPosition(id, ra, dec) {
+          const url = 'https://alasky.cds.unistra.fr/MocServer/query'
+            + `?ID=${encodeURIComponent(id)}&RA=${ra}&DEC=${dec}&SR=0.001&fmt=json&get=id`;
+          try {
+            const res = await fetch(url);
+            if (!res.ok) return false;
+            const ids = await res.json();
+            return Array.isArray(ids) && ids.length > 0;
+          } catch { return false; }
+        }
+
+        async function pickBestSurvey(ra, dec) {
+          // query in parallel, then take the first hit in rank order
+          const hits = await Promise.all(RANKED_SURVEYS.map(id => coversPosition(id, ra, dec)));
+          return RANKED_SURVEYS[hits.indexOf(true)] ?? 'CDS/P/DSS/color';
+        }
+        
 
         A.init.then(() => {
           const targetCoords = "{{ source.aladin_ra }}%20{{ source.aladin_dec }}";
@@ -246,10 +275,14 @@
           const targetRad = 0.0020833333333333333;
 
           const aladin = A.aladin('#aladin-lite-div', {
-            survey: 'CDS/P/DSS/color',
             fov: zoomLevel,
             useProxy: false,
             log: false
+          });
+          
+          pickBestSurvey(targetRA, targetDec).then(best => {
+            aladin.setImageSurvey(best);
+            document.getElementById('surveySelect').value = best;  // keep the dropdown in sync
           });
           
           aladin.gotoRaDec(targetRA, targetDec);
