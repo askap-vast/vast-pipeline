@@ -235,31 +235,17 @@ def parallel_get_new_high_sigma(
         A DataFrame indexed by source id and containing a single 'new_high_sigma' column.
         The column will contain 'NaN' entires for sources that fail.
     """
-
-    # Get a list of input images.
-    uniq_img_diff = (
-        df['img_diff_rms_path'].unique()
-        .compute()
-        .to_list()
-    )
-
-    cols = ['img_diff_rms_path', 'flux_peak', 'source', 'wavg_ra', 'wavg_dec']
     
     def process_group(df_group):
         return get_image_rms_measurements(df_group, edge_buffer=edge_buffer)
 
-    out = df[cols].groupby("img_diff_rms_path")[cols] \
-                  .apply(
-                    process_group,
-                    meta={'source': str, 'true_sigma': float}) \
-                  .persist()
+    out = df.groupby("img_diff_rms_path") \
+            .apply(process_group, meta={'source': str, 'true_sigma': float})
 
-    # Remove duplicate sources and only keep high sigma
-    out = out.sort_values('true_sigma', ascending=True) \
-             .drop_duplicates('source', keep='last') \
+    out = out.groupby('source').agg({'true_sigma': 'max'}) \
              .rename(columns={'true_sigma': 'new_high_sigma'}) \
-             .set_index('source') \
              .persist()
+
     logger.debug("Setup out df persisting...")
     wait(out)
     logger.debug("Finished persisting out df")
@@ -268,7 +254,6 @@ def parallel_get_new_high_sigma(
 
 
 def new_sources(
-    sources_df: dd.DataFrame,
     missing_sources_df: dd.DataFrame,
     min_sigma: float,
     edge_buffer: float,
@@ -281,8 +266,6 @@ def new_sources(
     snr value the source would have in non-detected images is also calculated.
 
     Args:
-        sources_df:
-            The sources found from the association step.
         missing_sources_df:
             The dataframe containing the 'missing detections' for each source.
             See the source code comments for the layout of this dataframe.
@@ -386,19 +369,6 @@ def new_sources(
         new_sources_df.img_diff_time < new_sources_df.detection_time
     ]
 
-    # merge the detection fluxes in
-    new_sources_df = new_sources_df.merge(
-        sources_df[['source', 'image', 'flux_peak']],
-        left_on=['source', 'detection'], right_on=['source', 'image'],
-        how='left'
-    ).drop(columns=['image'])
-
-    # NOTE: Need to persist here since dask loses futures after all the previous
-    # merges. Ideally this should be removed and we only persist at the end of
-    # new_sources.
-    new_sources_df = new_sources_df.persist()
-    wait(new_sources_df)
-
     logger.debug("Time to reset and merge image info and merge detection "
                  "fluxes into new_sources_df: "
                  f"{debug_timer.reset()}s"
@@ -407,8 +377,8 @@ def new_sources(
     # calculate the sigma of the source if it was placed in the
     # minimum rms region of the previous images
     new_sources_df['diff_sigma'] = (
-        new_sources_df['flux_peak'].values
-        / new_sources_df['img_diff_rms_min'].values
+        new_sources_df['flux_peak']
+        / new_sources_df['img_diff_rms_min']
     )
 
     # keep those that are above the user specified threshold
@@ -434,8 +404,9 @@ def new_sources(
     # the source location and calculate the corresponding S/N
 
     logger.debug("Getting new_high_sigma measurements...")
+    cols = ['img_diff_rms_path', 'flux_peak', 'source', 'wavg_ra', 'wavg_dec']
     new_sources_df = parallel_get_new_high_sigma(
-        new_sources_df, edge_buffer=edge_buffer
+        new_sources_df[cols], edge_buffer=edge_buffer
     )
 
     logger.debug(f"Time to get rms measurements: {debug_timer.reset()}s")

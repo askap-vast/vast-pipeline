@@ -268,6 +268,7 @@ class Pipeline:
             "weight_ew",
             "interim_ns",
             "weight_ns",
+            "flux_peak",
         ]
         # need to make sure no forced measurments are being passed which
         # could happen in add mode, otherwise the wrong detection image is
@@ -286,7 +287,6 @@ class Pipeline:
         # STEP #4 New source analysis
         logger.info("Running step #4: new source analysis...")
         new_sources_df = new_sources(
-            sources_df,
             missing_sources_df,
             self.config["new_sources"]["min_sigma"],
             self.config["source_monitoring"]["edge_buffer_scale"],
