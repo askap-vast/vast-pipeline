@@ -591,31 +591,35 @@ def forced_extraction(
     timer = StopWatch()
 
     # get all the skyregions and related images
-    cols = [
-        "id",
-        "name",
-        "measurements_path",
-        "path",
-        "noise_path",
-        "beam_bmaj",
-        "beam_bmin",
-        "beam_bpa",
-        "background_path",
-        "rms_min",
-        "datetime",
-        "skyreg__centre_ra",
-        "skyreg__centre_dec",
-        "skyreg__xtr_radius",
-    ]
+    cols = {
+        "id": "object",
+        "name": "object",
+        "measurements_path": "object",
+        "path": "object",
+        "noise_path": "object",
+        "beam_bmaj": "float32",
+        "beam_bmin": "float32",
+        "beam_bpa": "float32",
+        "background_path": "object",
+        "rms_min": "float32",
+        "datetime": "datetime64[ns, UTC]",
+        "skyreg__centre_ra": "float32",
+        "skyreg__centre_dec": "float32",
+        "skyreg__xtr_radius": "float32",
+    }
 
-    images_df = pd.DataFrame(
-        list(
-            Image.objects.filter(run=p_run)
-            .select_related("skyreg")
-            .order_by("datetime")
-            .values(*tuple(cols))
+    images_df = (
+        pd.DataFrame(
+            list(
+                Image.objects.filter(run=p_run)
+                .select_related("skyreg")
+                .order_by("datetime")
+                .values(*tuple(cols.keys()))
+            )
         )
-    ).set_index("name")
+        .set_index("name")
+        .astype({k: v for k, v in cols.items() if k != "name"})
+    )
 
     # | name                          |   id     | measurements_path   | path         | noise_path   |
     # |:------------------------------|---------:|:--------------------|:-------------|:-------------|
