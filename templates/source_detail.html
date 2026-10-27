@@ -152,12 +152,14 @@
 
     <!-- JS9 First Detection -->
     <div class="col-xl-4 d-flex">
-      <div class="card shadow mb-4 flex-fill">
+      <div class="card shadow mb-4 flex-fill" style="min-width: 0;">
         <div class="card-header py-3">
           <h6 class="m-0 font-weight-bold text-primary">First Detection Postage Stamp</h6>
         </div>
         <div class="card-body">
-          <div class="JS9" id="JS9_{{ cutout_measurements|length|add:"1" }}" data-width="450px" data-height="360px"></div>
+          <div id="firstDetectionContainer" style="width: 100%;">
+            <div class="JS9" id="JS9_{{ cutout_measurements|length|add:"1" }}" data-width="100%" data-height="360px"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -655,7 +657,24 @@
   }
 
   // when JS9 is ready, load the cutout images into the correct display panels
+  const FIRST_DET_DISPLAY = "JS9_{{ cutout_measurements|length|add:"1" }}";
+  const FIRST_DET_MAX_HEIGHT = 450;  // px; stops it becoming huge when the column is full-width
+
+  function fitFirstDetectionDisplay() {
+    const container = document.getElementById("firstDetectionContainer");
+    const width = Math.floor(container.clientWidth);
+    if (width < 10) return;  // hidden or not laid out yet
+    const height = Math.min(width, FIRST_DET_MAX_HEIGHT);
+    const current = JS9.ResizeDisplay({ display: FIRST_DET_DISPLAY });  // no size args => returns {width, height}
+    if (current.width === width && current.height === height) return;
+    JS9.ResizeDisplay(width, height, { display: FIRST_DET_DISPLAY });
+  }
   $(document).on("JS9:ready", async function () {
+  fitFirstDetectionDisplay();
+  // refit whenever the card changes width: window resizes *and* the sb-admin sidebar toggle
+  new ResizeObserver(fitFirstDetectionDisplay).observe(
+    document.getElementById("firstDetectionContainer")
+  );
     var measurementData = JSON.parse(document.getElementById("data-js9").textContent);
     var firstDetectionMeasurementData = JSON.parse(document.getElementById("data-js9-first-detection").textContent);
     const last_id = measurementData.length + 1;
