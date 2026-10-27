@@ -247,11 +247,12 @@
 
           const aladin = A.aladin('#aladin-lite-div', {
             survey: 'CDS/P/DSS/color',
-            target: targetCoords,
             fov: zoomLevel,
             useProxy: false,
             log: false
           });
+          
+          aladin.gotoRaDec(targetRA, targetDec);
 
           const overlay = A.graphicOverlay({ color: '#ffffff', lineWidth: 2, name: 'Source position' });
           aladin.addOverlay(overlay);
