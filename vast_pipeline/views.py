@@ -50,7 +50,7 @@ from rest_framework.authentication import (
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import serializers
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, wait
 
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.contrib.auth.decorators import login_required
@@ -2559,10 +2559,11 @@ class UtilitiesSet(ViewSet):
         return [
             {
                 "object_name": f"ASKAP {src.name}",
+                #"object_name": f"Source {src.id}",
                 "database": f"Pipeline run: {src.run.name}",
                 "separation_arcsec": src.distance,
                 "otype": "",
-                "otype_long": f"Source in pipeline run {src.run.name}",
+                "otype_long": "",
                 "ra_hms": deg2hms(src.wavg_ra, hms_format=True),
                 "dec_dms": deg2dms(src.wavg_dec, dms_format=True),
                 "object_url": request.build_absolute_uri(
@@ -2666,20 +2667,31 @@ class UtilitiesSet(ViewSet):
             logger.exception(f"Unable to get pipeline source results: {str(e)}")
             results = []
 
-        with ThreadPoolExecutor(max_workers=len(tasks)) as executor:
-            futures = {executor.submit(fn): name for name, fn in tasks.items()}
-            for future in as_completed(futures):
-                try:
-                    result = future.result()
-                    results += result
-                except Exception as e:
-                    messages.error(
-                        request,
-                        f"Unable to get {futures[future]} query results: {str(e)}"
-                    )
-                    logger.exception(
-                        f"Unable to get {futures[future]} query results: {str(e)}"
-                    )
+        executor = ThreadPoolExecutor(max_workers=len(tasks))
+        futures = {executor.submit(fn): name for name, fn in tasks.items()}
+        done, not_done = wait(futures, timeout=settings.EXTERNAL_SEARCH_TIMEOUT)
+        executor.shutdown(wait=False)
+
+        for future in done:
+            try:
+                results += future.result()
+            except Exception as e:
+                messages.error(
+                    request,
+                    f"Unable to get {futures[future]} query results: {str(e)}"
+                )
+                logger.exception(
+                    f"Unable to get {futures[future]} query results: {str(e)}"
+                )
+
+        timed_out = sorted(futures[f] for f in not_done)
+        if timed_out:
+            msg = (
+                f"External search timed out after {settings.EXTERNAL_SEARCH_TIMEOUT}s"
+                f" for {', '.join(timed_out)}."
+            )
+            messages.warning(request, msg)
+            logger.warning(msg)
 
         # The below code will remove duplicates from the DAS results
         # However, I'm not sure if that's actually the best way forward -
@@ -2708,8 +2720,18 @@ class UtilitiesSet(ViewSet):
                     logger.error(f"Record {i} FAILED: {error}")
                     logger.error(f"Data: {results[i]}")
             raise serializers.ValidationError(serializer.errors)
-        return Response(serializer.data)
-
+        data = serializer.data
+        if request.accepted_renderer.format == "datatables":
+            # Render the queued Django messages so the page can show them now,
+            # rather than on the next page load. Supplying recordsTotal makes
+            # the DatatablesRenderer pass this dict through unchanged.
+            data = {
+                "data": data,
+                "recordsTotal": len(data),
+                "recordsFiltered": len(data),
+                "messages": render_to_string("messages.html", {}, request),
+            }
+        return Response(data)
 
 class SourcePlotsSet(ViewSet):
     authentication_classes = [SessionAuthentication, BasicAuthentication]

@@ -153,8 +153,6 @@ def plot_lightcurve(
     hover_tool_lc_callback = None
     measurement_pairs = source.get_measurement_pairs()
     fig_graph = None
-    
-    print(measurement_pairs)
 
     if len(measurement_pairs) > 0:
         fig_graph = figure(

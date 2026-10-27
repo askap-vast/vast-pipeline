@@ -602,6 +602,15 @@
 {{ datatables|json_script:"datatable-conf" }}
 <script src="{% static 'js/datatables-pipeline.js' %}"></script>
 
+<script>
+  // Show Django messages (errors, timeout warnings) returned by the external search
+  $('#externalResultsTable').on('xhr.dt', function (e, settings, json) {
+    if (json && json.messages) {
+      showPopupMessage(json.messages);
+    }
+  });
+</script>
+
 <!-- Bokeh scripts -->
 <script src="{% static 'vendor/bokehjs/bokeh.min.js' %}"></script>
 
