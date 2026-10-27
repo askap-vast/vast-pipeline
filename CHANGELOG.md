@@ -8,14 +8,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Automatically select best available survey to be displayed in Aladin viewer on source webpage [#902](https://github.com/askap-vast/vast-pipeline/pull/902)
+- Added crossmatch to all other pipeline runs to be displayed in crossmatch results table on source webpage [#902](https://github.com/askap-vast/vast-pipeline/pull/902)
+
 #### Changed
 
+- Remove measurement pairs display from source webpage if they do not exist [#902](https://github.com/askap-vast/vast-pipeline/pull/902)
+- Renamed "External Search Results" to "Crossmatch Results" on source webpage [#902](https://github.com/askap-vast/vast-pipeline/pull/902)
+
+
 #### Fixed
+
+- Fixed source webpage incorrect coordinate parsing that broke Aladin display for Northern sources and also impacted the external search results [#902](https://github.com/askap-vast/vast-pipeline/pull/902)
+- Fixed Aladin being loaded twice on source webpage [#902](https://github.com/askap-vast/vast-pipeline/pull/902)
+- Fixed source webpage to remove JS9 overhang for first detection cutout [#902](https://github.com/askap-vast/vast-pipeline/pull/902)
+- Add an external search timeout and appropriate error handling [#902](https://github.com/askap-vast/vast-pipeline/pull/902)
 
 #### Removed
 
 #### List of PRs
-
+- [#902](https://github.com/askap-vast/vast-pipeline/pull/902): fix, feat: Various fixes and upgrades to the source webpage
 
 ## [1.3.0](https://github.com/askap-vast/vast-pipeline/releases/v1.3.0) (2026-07-28)
 
