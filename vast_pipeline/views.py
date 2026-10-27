@@ -2544,6 +2544,34 @@ class UtilitiesSet(ViewSet):
             )
             return []
 
+    def _run_pipeline_query(self, coord, radius, exclude_run, request):
+        """Find sources from other pipeline runs within the search radius.
+
+        Returns records in the same format as the external queries so they can
+        be merged into the external search results.
+        """
+        qs = Source.objects.cone_search(
+            coord.ra.deg, coord.dec.deg, radius.to("deg").value
+        ).select_related("run")
+        if exclude_run:
+            qs = qs.exclude(run_id=exclude_run)
+
+        return [
+            {
+                "object_name": f"ASKAP {src.name}",
+                "database": f"Pipeline run: {src.run.name}",
+                "separation_arcsec": src.distance,
+                "otype": "",
+                "otype_long": f"Source in pipeline run {src.run.name}",
+                "ra_hms": deg2hms(src.wavg_ra, hms_format=True),
+                "dec_dms": deg2dms(src.wavg_dec, dms_format=True),
+                "object_url": request.build_absolute_uri(
+                    reverse("vast_pipeline:source_detail", args=[src.id])
+                ),
+            }
+            for src in qs
+        ]
+
     @rest_framework.decorators.action(methods=["get"], detail=False)
     def external_search(self, request: Request) -> Response:
         """Perform a cone search with external providers (e.g. SIMBAD, NED, TNS) and
@@ -2576,6 +2604,7 @@ class UtilitiesSet(ViewSet):
         radius_string = request.query_params.get("radius", "30arcsec")
         cats = request.query_params.get("catalogues")
         catalogues = cats.split(",") if cats else ["I/355/gaiadr3"]
+        exclude_run = request.query_params.get("exclude_run")
 
         # validate inputs
         try:
@@ -2630,7 +2659,13 @@ class UtilitiesSet(ViewSet):
                                 ),
         }
 
-        results = []
+        try:
+            results = self._run_pipeline_query(coord, radius, exclude_run, request)
+        except Exception as e:
+            messages.error(request, f"Unable to get pipeline source results: {str(e)}")
+            logger.exception(f"Unable to get pipeline source results: {str(e)}")
+            results = []
+
         with ThreadPoolExecutor(max_workers=len(tasks)) as executor:
             futures = {executor.submit(fn): name for name, fn in tasks.items()}
             for future in as_completed(futures):

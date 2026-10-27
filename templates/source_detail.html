@@ -278,6 +278,7 @@
           const aladin = A.aladin('#aladin-lite-div', {
             fov: zoomLevel,
             useProxy: false,
+            showStatusBar: false,
             log: false
           });
           
@@ -413,13 +414,13 @@
     <div class="col-xl-6 mb-4">
       <div class="card shadow mb-4 h-100">
         <div class="card-header py-3">
-          <h6 class="m-0 font-weight-bold text-primary">External Search Results (30 arcsec)</h6>
+          <h6 class="m-0 font-weight-bold text-primary">Crossmatch Results (30 arcsec)</h6>
         </div>
         <div class="card-body small">
           <div class="table-responsive">
             <table class="table table-sm table-bordered table-striped table-hover" id="externalResultsTable"
               width="100%" cellspacing="0" data-server-side="false"
-              data-ajax="{% url 'vast_pipeline:api_utils-external-search' %}?coord={{ source.wavg_ra_hms|urlencode }}{{ source.wavg_dec_dms|urlencode }}&catalogues=I/355/gaiadr3,IV/39,B/psr/psr,VIII/65,J/ApJS/255/30,II/365&format=datatables&keep=otype_long,database">
+              data-ajax="{% url 'vast_pipeline:api_utils-external-search' %}?coord={{ source.wavg_ra_hms|urlencode }}{{ source.wavg_dec_dms|urlencode }}&catalogues=I/355/gaiadr3,IV/39,B/psr/psr,VIII/65,J/ApJS/255/30,II/365&exclude_run={{ source.run_id }}&format=datatables&keep=otype_long,database">
               <thead>
                 <tr>
                   <th data-data="object_name">ID</th>
