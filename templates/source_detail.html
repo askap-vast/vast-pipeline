@@ -235,7 +235,11 @@
     </div>
 
     <!-- Load Aladin asynchronously -->
-    <script async defer src="https://aladin.cds.unistra.fr/AladinLite/api/v3/latest/aladin.js" charset="utf-8"></script>
+    <script type="module">
+      import A from "{% static 'vendor/aladin-lite/aladin.js' %}";
+      window.A = A;
+      startAladin();
+    </script>
 
     <script>
     window.addEventListener('load', function() {

@@ -190,6 +190,10 @@ function modules() {
   var bokehJSwidgets = gulp.src('./node_modules/@bokeh/bokehjs/build/js/bokeh-widgets.min.js')
     .pipe(gulp.dest(paths.vendor + '/bokehjs'));
 
+  // Aladin Lite (self-hosted, pinned version)
+  var aladinLite = gulp.src('./node_modules/aladin-lite/dist/aladin.js')
+    .pipe(gulp.dest(paths.vendor + '/aladin-lite'));
+
   // SB Admin 2 Bootstrap template
   var bootstrapSbAdmin2 = gulp.src([
     './node_modules/startbootstrap-sb-admin-2/js/*.js',
