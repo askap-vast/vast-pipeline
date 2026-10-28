@@ -332,9 +332,16 @@ function watchFiles() {
 }
 
 // Define complex tasks
+function sampjs(cb) {
+  const src = fs.readFileSync('./node_modules/sampjs/samp.js', 'utf8')
+    .replace(/^\s*module\.exports\s*=.*$/m, '');
+  fs.mkdirSync(paths.vendor + '/sampjs', { recursive: true });
+  fs.writeFileSync(paths.vendor + '/sampjs/samp.js', src);
+  cb();
+}
 const js9 = gulp.series(js9Dir, js9MakeConfig, js9Make, js9MakeInst, js9Config)
 const assets = gulp.parallel(gulp.series(scssTask, cssTask), jsTask)
-const vendor = gulp.series(clean, gulp.parallel(modules, js9))
+const vendor = gulp.series(clean, gulp.parallel(modules, sampjs, js9))
 const build = gulp.series(vendor, assets);
 const watch = gulp.series(assets, gulp.parallel(watchFiles, browserSync));
 
