@@ -2558,9 +2558,8 @@ class UtilitiesSet(ViewSet):
 
         return [
             {
-                "object_name": f"ASKAP {src.name}",
-                #"object_name": f"Source {src.id}",
-                "database": f"Pipeline run: {src.run.name}",
+                "object_name": f"Source {src.id}",
+                "database": f"Internal",
                 "separation_arcsec": src.distance,
                 "otype": "",
                 "otype_long": "",
