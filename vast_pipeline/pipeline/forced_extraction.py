@@ -2,12 +2,12 @@ import os
 import logging
 import datetime
 import gc
+import shutil
 import uuid
 
 import numpy as np
 import pandas as pd
 import dask.dataframe as dd
-import dask.bag as db
 from glob import glob
 
 from astropy import units as u
@@ -15,8 +15,7 @@ from astropy.coordinates import SkyCoord
 from django.conf import settings
 from pyarrow.parquet import read_schema
 from typing import List, Tuple, Dict, Optional
-from dask.delayed import delayed
-from dask.distributed import wait
+from dask.distributed import get_client, wait
 
 from vast_pipeline.models import Image, Run
 from vast_pipeline.pipeline.loading import copy_upload_measurements
@@ -108,23 +107,31 @@ def _forcedphot_preload(image: str,
 
 def extract_from_image(
     df: pd.DataFrame,
-    data: pd.DataFrame,
+    df_images: pd.DataFrame,
+    p_run_path: str,
+    add_mode: bool,
     edge_buffer: float,
     cluster_threshold: float,
     allow_nan: bool,
     **kwargs,
-) -> Dict:
+) -> pd.DataFrame:
     """
     Extract the flux, its errors and chi squared data from the image
-    files (image FIT, background and noise files) and return a dictionary
-    with the dataframe and image name
+    files (image FIT, background and noise files) and return the dataframe
+    with the extracted data added.
 
     Args:
         df:
             input dataframe with columns [source_tmp_id, wavg_ra, wavg_dec,
             image_name, flux_peak]
-        data:
-            dataframe with columns pointing to image paths
+        df_images:
+            dataframe indexed by image name with columns 'id',
+            'measurements_path', 'path', 'noise_path', 'beam_bmaj',
+            'beam_bmin', 'beam_bpa', 'background_path' and 'datetime'.
+        p_run_path:
+            the system path of the pipeline run output.
+        add_mode:
+            True when the pipeline is running in add image mode.
         edge_buffer:
             flag to pass to ForcedPhot.measure method
         cluster_threshold:
@@ -133,12 +140,25 @@ def extract_from_image(
             flag to pass to ForcedPhot.measure method
 
     Returns:
-        Dictionary with input dataframe with added columns (flux_int,
-            flux_int_err, chi_squared_fit) and image name.
+        Input dataframe with added columns (flux_int, flux_int_err,
+            chi_squared_fit and those added by finalise_forced_dfs).
     """
     timer = StopWatch()
 
-    data = data.to_dict(orient='records')[0]
+    # Each partition must contain the rows for exactly one image.
+    assert df['image_name'].nunique() == 1, (
+        "extract_from_image expects a single image per partition"
+    )
+    image_name = df['image_name'].iloc[0]
+    parquet_meta = get_data_from_parquet(
+        (df_images.at[image_name, "measurements_path"], df_images.at[image_name, "id"]),
+        p_run_path,
+        add_mode,
+    )
+    _img_cols = ["id", "path", "background_path", "noise_path",
+                 "beam_bmaj", "beam_bmin", "beam_bpa", "datetime"]
+    data = {**parquet_meta, **{col: df_images.at[image_name, col] for col in _img_cols}}
+
     image = data.pop('path')
     # create the skycoord obj to pass to the forced extraction
     # see usage https://github.com/dlakaplan/forced_phot
@@ -246,7 +266,8 @@ def finalise_forced_dfs(
             name, bmaj, bmin, pa, image_id, time.
     """
 
-    image = df['image_name'].iloc[0]
+    # df can be empty if every measurement for the image was filtered out
+    image = df['image_name'].iloc[0] if len(df) > 0 else ""
     # make up the measurements name from the image island_id and component_id
     df["island_id"] = np.char.add(
         prefix, np.arange(max_id, max_id + df.shape[0]).astype(str)
@@ -269,6 +290,40 @@ def finalise_forced_dfs(
     return df
 
 
+def _make_extract_meta(input_meta: pd.DataFrame, df_images: pd.DataFrame) -> pd.DataFrame:
+    """
+    Build the output metadata of extract_from_image for Dask by running
+    the real column-adding code (finalise_forced_dfs) on a single dummy row.
+
+    Args:
+        input_meta:
+            Metadata of the per-image parquet dataframe, with columns
+            [source_tmp_id, wavg_ra, wavg_dec, flux_peak, image_name].
+        df_images:
+            dataframe indexed by image name, used to get the dtypes of the
+            beam, id and datetime values.
+
+    Returns:
+        Empty dataframe with the columns and dtypes returned by
+            extract_from_image.
+    """
+    dummy = dd.utils.meta_nonempty(input_meta).iloc[:1].copy()
+    dummy["flux_int"] = np.float64(1.0)
+    dummy["flux_int_err"] = np.float64(1.0)
+    dummy["chi_squared_fit"] = np.float64(1.0)
+    row = df_images.iloc[0]
+    return finalise_forced_dfs(
+        dummy,
+        prefix="island_",
+        max_id=1,
+        beam_bmaj=row["beam_bmaj"],
+        beam_bmin=row["beam_bmin"],
+        beam_bpa=row["beam_bpa"],
+        id=row["id"],
+        datetime=row["datetime"],
+    ).iloc[:0]
+
+
 def parallel_extraction(
     df: pd.DataFrame,
     df_images: pd.DataFrame,
@@ -285,7 +340,7 @@ def parallel_extraction(
     Args:
         df:
             dataframe with columns 'wavg_ra', 'wavg_dec', 'img_diff',
-            'detection'
+            'detection', 'flux_peak'
         df_images:
             dataframe with the images data and columns 'id',
             'measurements_path', 'path', 'noise_path', 'beam_bmaj',
@@ -310,91 +365,96 @@ def parallel_extraction(
             'source_tmp_id', 'ra', 'dec', 'image', 'flux_peak', 'island_id',
             'component_id', 'name', 'flux_int', 'flux_int_err'
     """
-    # explode the lists in 'img_diff' column (this will make a copy of the df)
-    out = (
-        df.rename(columns={"img_diff": "image", "source": "source_tmp_id"})
-        # merge the rms_min column from df_images
-        .merge(df_images[["rms_min"]], left_on="image", right_on="name", how="left")
-        .rename(columns={"rms_min": "image_rms_min"})
+
+    # Look up the int32 image index and rms_min for each img_diff in df.
+    image_names_index = df_images.index
+    image_rms_min = df_images["rms_min"].to_numpy()
+
+    def _add_image_idx(part: pd.DataFrame) -> pd.DataFrame:
+        idx = image_names_index.get_indexer(part["img_diff"])
+        if (idx < 0).any():
+            raise ValueError("img_diff contains image names not found in df_images")
+        return part.assign(
+            image_idx=idx.astype(np.int32),
+            rms_min=image_rms_min[idx],
+        )
+
+    out = df.rename(columns={"source": "source_tmp_id"})
+    out_meta = out._meta.assign(
+        image_idx=np.empty(0, dtype=np.int32),
+        rms_min=np.empty(0, dtype=image_rms_min.dtype),
     )
+    out = out.map_partitions(_add_image_idx, meta=out_meta)
 
     # drop the source for which we would have no hope of detecting
-    max_snr = out["flux_peak"] / out["image_rms_min"]
-    out = out.loc[max_snr > min_sigma].reset_index(drop=True)
-
-    # drop some columns that are no longer needed and the df should look like
-    # out
-    # |   | source_tmp_id | wavg_ra | wavg_dec | image_name       | flux_peak |
-    # |--:|--------------:|--------:|---------:|:-----------------|----------:|
-    # | 0 |  223b8Lp4Sdp3 | 317.607 | -8.66952 | VAST_2118-06A... |    11.555 |
-    # | 1 |  22LyLU54pBPm | 323.803 | -2.6899  | VAST_2118-06A... |     2.178 |
-    # | 2 |  23Vif6cLMQ5C | 316.147 | -3.11408 | VAST_2118-06A... |     6.815 |
-    # | 3 |  zzyc7GFJreMg | 322.094 | -4.44977 | VAST_2118-06A... |     1.879 |
-    # | 4 |  225RNzDTJ3MR | 321.734 | -6.82934 | VAST_2118-06A... |     1.61  |
-
-    out = out.drop(["image_rms_min", "detection"], axis=1).rename(
-        columns={"image": "image_name"}
+    out = (
+        out[out["flux_peak"] / out["rms_min"] > min_sigma]
+        .drop(columns=["rms_min", "img_diff"])
     )
-    out = out.set_index("image_name", sorted=False).persist()
+
+    # out after this point looks like:
+    # |   | source_tmp_id | wavg_ra | wavg_dec | image_idx | flux_peak |
+    # |--:|--------------:|--------:|---------:|----------:|----------:|
+    # | 0 |  223b8Lp4Sdp3 | 317.607 | -8.66952 | 1042      |    11.555 |
+    # | 1 |  22LyLU54pBPm | 323.803 | -2.6899  | 1043      |     2.178 |
+    # | 2 |  23Vif6cLMQ5C | 316.147 | -3.11408 | 1044      |     6.815 |
+    # | 3 |  zzyc7GFJreMg | 322.094 | -4.44977 | 1045      |     1.879 |
+    # | 4 |  225RNzDTJ3MR | 321.734 | -6.82934 | 1046      |     1.61  |
+
+    out = out.persist()
     logger.info("Persisting out df...")
     wait(out)
     logger.info("Persisted out df")
 
-    # get the unique images to extract from
-    unique_images_to_extract = out.index.unique().compute().tolist()
+    # Shuffle by image_idx so all rows for a given image land in exactly one
+    # partition (deterministic hash), then write one parquet per image via
+    # map_partitions to a temporary location.
+    _tmp_dir = os.path.join(p_run_path, "_forced_extract_tmp")
+    os.makedirs(_tmp_dir, exist_ok=True)
 
-    # create a list of all the measurements parquet files to extract data from,
-    # such as prefix and max_id
-    list_meas_parquets = list(
-        map(
-            lambda image_name: (
-                df_images.at[image_name, "measurements_path"],
-                df_images.at[image_name, "id"],
-            ),
-            unique_images_to_extract,
-        )
-    )
+    def _write_image_files(df, tmp_dir, images_index):
+        for image_idx_val, group in df.groupby("image_idx"):
+            image_name = images_index[image_idx_val]
+            path = os.path.join(tmp_dir, image_name.replace(".", "_") + ".parquet")
+            out_group = group.drop(columns=["image_idx"]).copy()
+            out_group["image_name"] = image_name
+            out_group.to_parquet(path, index=False)
+        return pd.DataFrame()
 
-    # Get the columns that have a fixed value from the measurements parquets
-    # - this will be computed, which should be fine for a moderate number of images
-    df_cols = ["id", "path", "background_path", "noise_path", "beam_bmaj", "beam_bmin", "beam_bpa", "datetime"]
-    measurements_parquet_data = (
-        db.from_sequence(list_meas_parquets, npartitions=len(list_meas_parquets))
-        .map(get_data_from_parquet, p_run_path, add_mode)
-        .to_dataframe()
-        .merge(df_images[df_cols], on="id", how="left")
-        .compute()
-        .reset_index(drop=True)
-    )
+    out = out.shuffle("image_idx", npartitions=len(df_images), shuffle_method="p2p")
+    out.map_partitions(_write_image_files, _tmp_dir, df_images.index,
+                       meta=pd.DataFrame()).compute()
 
-    @delayed
-    def generate_df(name):
-        return out.loc[name].compute().reset_index()
-    df_per_image=[generate_df(n) for n in unique_images_to_extract]
-    
+    del out
 
-    # Do the forced extraction work by combining the two delayed lists above then
-    # running extract_from_image on the tuple of delayed futures.
-    # Persist at this point uning the number of io workers.
-    func_d = [
-        delayed(extract_from_image)(
-            image_df,
-            measurements_parquet_data.loc[[idx]],
-            edge_buffer=edge_buffer,
-            cluster_threshold=cluster_threshold,
-            allow_nan=allow_nan
-        )
-        for idx, image_df in enumerate(df_per_image)
-        ]
+    # Scatter df_images to the cluster once, broadcasting a single copy to
+    # every worker. Without this, passing df_images directly to
+    # map_partitions copies the whole DataFrame in every one of the
+    # ~len(df_images) extraction tasks graph nodes, which are all
+    # held for the full duration of the extraction run.
+    df_images_future = get_client().scatter(df_images, broadcast=True)
 
-    df_out = dd.from_delayed(func_d).persist()
-    logger.info("Generating df_out from delayeds and persisting...")
-    wait(df_out)
-    logger.info("Finished persisting df_out")
+    per_image_ddf = dd.read_parquet(_tmp_dir, split_row_groups=False, blocksize=None)
+    extract_meta = _make_extract_meta(per_image_ddf._meta, df_images)
 
-    del out, func_d, df_per_image, measurements_parquet_data
+    out = per_image_ddf.map_partitions(
+        extract_from_image,
+        df_images_future,
+        p_run_path,
+        add_mode,
+        edge_buffer=edge_buffer,
+        cluster_threshold=cluster_threshold,
+        allow_nan=allow_nan,
+        meta=extract_meta,
+    ).persist()
 
-    return df_out
+    logger.info("Running extraction and persisting...")
+    wait(out)
+    logger.info("Finished persisting out")
+    logger.info("Cleaning up temporary files...")
+    shutil.rmtree(_tmp_dir, ignore_errors=True)
+
+    return out
 
 
 def save_and_upload_forced_df(forced_df: pd.DataFrame,
