@@ -38,6 +38,14 @@
     <h1 class="h3 mb-2 text-gray-800"><strong>Source:</strong> {{ source.name }}</h1>
     <div class="">
       {% include 'source_fav_button.html' %}
+      <a href="#" id="sendToAladinBtn" role="button"
+        class="d-none d-sm-inline-block btn btn-sm btn-info btn-icon-split shadow-sm"
+        title="Centre and lock all views in Aladin Desktop on this source. Aladin Desktop must be running; approve the connection prompt the first time.">
+        <span class="icon text-white-600">
+          <i class="fas fa-satellite-dish fa-sm"></i>
+        </span>
+        <span class="text">Aladin Desktop</span>
+      </a>
       <a href="https://das.datacentral.org.au/das?RA={{ source.aladin_ra|floatformat:6 }}&DEC={{ source.aladin_dec|floatformat:6 }}&FOV=2.0&ERR=10.0"
         class="d-none d-sm-inline-block btn btn-sm btn-info btn-icon-split shadow-sm" target="_blank"
         title="Data Central cone search with a 10 arcsec radius.">
@@ -227,7 +235,11 @@
     </div>
 
     <!-- Load Aladin asynchronously -->
-    <script async defer src="https://aladin.cds.unistra.fr/AladinLite/api/v3/latest/aladin.js" charset="utf-8"></script>
+    <script type="module">
+      import A from "{% static 'vendor/aladin-lite/aladin.js' %}";
+      window.A = A;
+      startAladin();
+    </script>
 
     <script>
     window.addEventListener('load', function() {
@@ -597,6 +609,51 @@
 <script src="{% static 'vendor/datatables-buttons/buttons.html5.min.js' %}"></script>
 <script src="{% static 'vendor/datatables-buttons/buttons.flash.min.js' %}"></script>
 <script src="{% static 'vendor/jszip/jszip.min.js' %}"></script>
+
+<script src="{% static 'vendor/sampjs/samp.js' %}"></script>
+<script src="{% static 'js/samp-aladin.min.js' %}"></script>
+<!-- Send this source to Aladin Desktop over SAMP -->
+<script src="{% static 'vendor/sampjs/samp.js' %}"></script>
+<script src="{% static 'js/samp-aladin.min.js' %}"></script>
+<script>
+  (function () {
+    const btn = document.getElementById('sendToAladinBtn');
+    if (!btn) return;  // button is hidden on very small screens, but guard anyway
+    const label = btn.querySelector('.text');
+    const DEFAULT_LABEL = label.textContent;
+
+    // Source position and field of view, from the json_script block already on the page
+    const RA = {{ source.wavg_ra|floatformat:8 }};
+    const DEC = {{ source.wavg_dec|floatformat:8 }};
+    const FOV_ARCMIN = 5.0;
+
+    const MESSAGES = {
+      'ok':        'Sent to Aladin',
+      'no-aladin': 'Aladin not connected',
+      'no-hub':    'Is Aladin Desktop running?',
+      'error':     'SAMP error (see console)',
+    };
+
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();  // don't jump to "#"
+      if (btn.classList.contains('disabled')) return;
+
+      btn.classList.add('disabled');
+      btn.setAttribute('aria-disabled', 'true');
+      label.textContent = 'Sending…';
+
+      sendToAladinDesktop(RA, DEC, FOV_ARCMIN, (status, err) => {
+        if (err) console.error('SAMP:', err);
+        label.textContent = MESSAGES[status] || MESSAGES.error;
+        setTimeout(() => {
+          label.textContent = DEFAULT_LABEL;
+          btn.classList.remove('disabled');
+          btn.removeAttribute('aria-disabled');
+        }, 3000);
+      });
+    });
+  })();
+</script>
 
 <!-- Datatable scripts -->
 {{ datatables|json_script:"datatable-conf" }}

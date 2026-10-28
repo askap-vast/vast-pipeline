@@ -8,11 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
+- Added button for Aladin SAMP connection [#903](https://github.com/askap-vast/vast-pipeline/pull/903)
 - Automatically select best available survey to be displayed in Aladin viewer on source webpage [#902](https://github.com/askap-vast/vast-pipeline/pull/902)
 - Added crossmatch to all other pipeline runs to be displayed in crossmatch results table on source webpage [#902](https://github.com/askap-vast/vast-pipeline/pull/902)
 
 #### Changed
 
+- Switched to a locally hosted version of aladin-lite [#903](https://github.com/askap-vast/vast-pipeline/pull/903)
+- Updated formatting of internal sources in "Crossmatch Results" table [#903](https://github.com/askap-vast/vast-pipeline/pull/903)
 - Remove measurement pairs display from source webpage if they do not exist [#902](https://github.com/askap-vast/vast-pipeline/pull/902)
 - Renamed "External Search Results" to "Crossmatch Results" on source webpage [#902](https://github.com/askap-vast/vast-pipeline/pull/902)
 
@@ -27,6 +30,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### Removed
 
 #### List of PRs
+
+- [#903](https://github.com/askap-vast/vast-pipeline/pull/903): fix, feat: Implement Aladin SAMP connection on source webpages
 - [#902](https://github.com/askap-vast/vast-pipeline/pull/902): fix, feat: Various fixes and upgrades to the source webpage
 
 ## [1.3.0](https://github.com/askap-vast/vast-pipeline/releases/v1.3.0) (2026-07-28)
