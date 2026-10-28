@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Switched to a locally hosted version of aladin-lite [#903](https://github.com/askap-vast/vast-pipeline/pull/903)
 - Updated formatting of internal sources in "Crossmatch Results" table [#903](https://github.com/askap-vast/vast-pipeline/pull/903)
 - Remove measurement pairs display from source webpage if they do not exist [#902](https://github.com/askap-vast/vast-pipeline/pull/902)
 - Renamed "External Search Results" to "Crossmatch Results" on source webpage [#902](https://github.com/askap-vast/vast-pipeline/pull/902)
