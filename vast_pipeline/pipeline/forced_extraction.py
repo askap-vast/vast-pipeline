@@ -97,10 +97,9 @@ def _forcedphot_preload(image: str,
     Returns:
         A tuple containing the HDU lists
     """
-    with get_io_semaphore():
-        image_hdul = open_fits(image, memmap=memmap)
-        background_hdul = open_fits(background, memmap=memmap)
-        noise_hdul = open_fits(noise, memmap=memmap)
+    image_hdul = open_fits(image, memmap=memmap)
+    background_hdul = open_fits(background, memmap=memmap)
+    noise_hdul = open_fits(noise, memmap=memmap)
 
     return image_hdul, background_hdul, noise_hdul
 
@@ -169,40 +168,48 @@ def extract_from_image(
     num_sources = len(df)
     logger.debug("Will fit %d sources for %s...", num_sources, image)
 
-    # load the image, background and noisemaps into memory
-    # a dedicated function may seem unneccesary, but will be useful if we
-    # split the load to a separate thread.
-    forcedphot_input = _forcedphot_preload(image,
-                                           data.pop('background_path'),
-                                           data.pop('noise_path'),
-                                           memmap=False
-                                           )
-    FP_timer = StopWatch()
-    FP = ForcedPhot(*forcedphot_input, use_numba=True)
-    logger.debug("%s - Time to init FP: %.3f s", image,  FP_timer.reset())
+    with get_io_semaphore():
+        # load the image, background and noisemaps into memory
+        # a dedicated function may seem unneccesary, but will be useful if we
+        # split the load to a separate thread.
+        forcedphot_input = _forcedphot_preload(image,
+                                               data.pop('background_path'),
+                                               data.pop('noise_path'),
+                                               memmap=False
+                                               )
+        FP_timer = StopWatch()
+        FP = ForcedPhot(*forcedphot_input, use_numba=True)
+        logger.debug("%s - Time to init FP: %.3f s", image,  FP_timer.reset())
 
-    # This should ultimately be removed in v2, but for now I am keeping the
-    # option to use clustering in order to keep things backward-compatible.
-    # NOTE: PR #816 is the V2 upgrade - but I'm leaving this as is for now
-    # while the best way to do this is worked out.
-    use_clusters = True
-    if cluster_threshold == 0:
-        use_clusters = False
+        # This should ultimately be removed in v2, but for now I am keeping the
+        # option to use clustering in order to keep things backward-compatible.
+        # NOTE: PR #816 is the V2 upgrade - but I'm leaving this as is for now
+        # while the best way to do this is worked out.
+        use_clusters = True
+        if cluster_threshold == 0:
+            use_clusters = False
 
-    flux, flux_err, chisq, DOF, cluster_id = FP.measure(
-        P_islands,
-        cluster_threshold=cluster_threshold,
-        allow_nan=allow_nan,
-        edge_buffer=edge_buffer,
-        use_clusters=use_clusters
-    )
-    logger.debug("%s - Time to measure FP: %.3fs", image, FP_timer.reset())
+        flux, flux_err, chisq, DOF, cluster_id = FP.measure(
+            P_islands,
+            cluster_threshold=cluster_threshold,
+            allow_nan=allow_nan,
+            edge_buffer=edge_buffer,
+            use_clusters=use_clusters
+        )
+        logger.debug("%s - Time to measure FP: %.3fs", image, FP_timer.reset())
+        # Explicitly close the FITS HDULists rather than relying on gc to
+        # collect and close them - keeps file handles/buffers from lingering
+        # for longer than necessary across the many extraction tasks.
+        for hdul in forcedphot_input:
+            hdul.close()
+        del FP, forcedphot_input
+        gc.collect()
     
     num_fits = np.sum(flux>0.0)
 
     logger.debug("%s: Obtained %d measurements "
                  "(%d sources outside of image range)."
-                 ,image ,num_fits ,num_sources-num_fits)
+                 , image, num_fits, num_sources-num_fits)
 
     df['flux_int'] = flux * 1.e3
     df['flux_int_err'] = flux_err * 1.e3
@@ -401,11 +408,6 @@ def parallel_extraction(
     # | 3 |  zzyc7GFJreMg | 322.094 | -4.44977 | 1045      |     1.879 |
     # | 4 |  225RNzDTJ3MR | 321.734 | -6.82934 | 1046      |     1.61  |
 
-    out = out.persist()
-    logger.info("Persisting out df...")
-    wait(out)
-    logger.info("Persisted out df")
-
     # Shuffle by image_idx so all rows for a given image land in exactly one
     # partition (deterministic hash), then write one parquet per image via
     # map_partitions to a temporary location.
@@ -422,8 +424,8 @@ def parallel_extraction(
         return pd.DataFrame()
 
     out = out.shuffle("image_idx", npartitions=len(df_images), shuffle_method="p2p")
-    out.map_partitions(_write_image_files, _tmp_dir, df_images.index,
-                       meta=pd.DataFrame()).compute()
+    _ = out.map_partitions(_write_image_files, _tmp_dir, image_names_index,
+                           meta=pd.DataFrame()).compute()
 
     del out
 
