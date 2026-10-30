@@ -14,7 +14,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from django.conf import settings
 from pyarrow.parquet import read_schema
-from typing import List, Tuple, Dict, Optional
+from typing import Any, List, Tuple, Dict, Optional, Union
 from dask.distributed import get_client, wait
 
 from vast_pipeline.models import Image, Run
@@ -101,7 +101,32 @@ def _forcedphot_preload(image: str,
     return image_hdul, background_hdul, noise_hdul
 
 
-def extract_from_image(
+def _forced_epoch(epoch_dtype: Any) -> Union[int, float, str, None]:
+    """
+    Get the sentinel 'epoch' value for forced measurements.
+
+    Numeric sentinels are made with the dtype's scalar type (e.g. np.int32)
+    so a column assigned the value keeps that dtype.
+
+    Args:
+        epoch_dtype:
+            dtype of the 'epoch' column in sources_df.
+
+    Returns:
+        -1 for integer dtypes, -1.0 for float dtypes, "FORCED" for string or
+            object dtypes and None (missing) for anything else.
+    """
+    if pd.api.types.is_integer_dtype(epoch_dtype):
+        return epoch_dtype.type(-1)
+    if pd.api.types.is_float_dtype(epoch_dtype):
+        return epoch_dtype.type(-1.0)
+    if (pd.api.types.is_string_dtype(epoch_dtype)
+            or pd.api.types.is_object_dtype(epoch_dtype)):
+        return "FORCED"
+    return None
+
+
+def extract_from_image_and_save(
     df: pd.DataFrame,
     df_images: pd.DataFrame,
     p_run_path: str,
@@ -112,7 +137,8 @@ def extract_from_image(
     p_run_id: str,
     cfg_err_ra: float,
     cfg_err_dec: float,
-    output_columns: List[str],
+    sources_meta: pd.DataFrame,
+    do_upload: bool,
 ) -> pd.DataFrame:
     """
     Extract the flux, its errors and chi squared data from the image
@@ -144,13 +170,19 @@ def extract_from_image(
             the minimum RA error from the config file (in degrees).
         cfg_err_dec:
             the minimum declination error from the config file (in degrees).
-        output_columns:
-            list of columns to return, as expected for concatenation
-            into sources_df.
+        sources_meta:
+            empty dataframe with the columns and dtypes of the sources_df.
+            Its columns, excluding 'epoch', are the columns returned for
+            concatenation into sources_df, and the dtype of 'epoch' is used
+            to set the epoch of the forced measurements.
+        do_upload:
+            whether to upload the measurements to the database. Decided
+            by the caller as the Dask workers do not know if they are
+            running in a test environment.
 
     Returns:
         Dataframe of the forced measurements for the image, containing the
-            columns in `output_columns`. The measurements are also written
+            columns in `sources_meta`. The measurements are also written
             to a per-image parquet in the run directory (and uploaded to
             the database unless running in a test environment).
     """
@@ -158,7 +190,7 @@ def extract_from_image(
 
     # Each partition must contain the rows for exactly one image.
     assert df['image_name'].nunique() == 1, (
-        "extract_from_image expects a single image per partition"
+        "extract_from_image_and_save expects a single image per partition"
     )
     image_name = df['image_name'].iloc[0]
     measurements_path = df_images.at[image_name, "measurements_path"]
@@ -246,8 +278,11 @@ def extract_from_image(
         cfg_err_ra=cfg_err_ra,
         cfg_err_dec=cfg_err_dec,
         columns=read_schema(measurements_path).names,
-        output_columns=output_columns,
+        output_columns=[c for c in sources_meta.columns if c != "epoch"],
+        do_upload=do_upload,
     )
+    # Set epoch for merge with sources_df
+    df["epoch"] = _forced_epoch(sources_meta["epoch"].dtype)
 
     logger.debug("%s - Total extraction time: %ds", image, timer.reset())
 
@@ -333,7 +368,7 @@ def parallel_extraction_and_upload(
     parquet and uploading them to the database for each image.
 
     The rows are first split into one temporary parquet per image, then
-    `extract_from_image` is run on each of them.
+    `extract_from_image_and_save` is run on each of them.
 
     Args:
         df:
@@ -362,8 +397,7 @@ def parallel_extraction_and_upload(
             The minimum declination error from the config file (in degrees).
         sources_meta:
             Empty dataframe with the columns and dtypes of the output, used
-            as the Dask metadata for the result. Its columns are also the
-            columns returned for each image.
+            as the Dask metadata for the result.
 
     Returns:
         Persisted dask dataframe of the forced extracted measurements with
@@ -436,7 +470,7 @@ def parallel_extraction_and_upload(
     per_image_ddf = dd.read_parquet(_tmp_dir, split_row_groups=False, blocksize=None)
 
     out = per_image_ddf.map_partitions(
-        extract_from_image,
+        extract_from_image_and_save,
         df_images_future,
         p_run.path,
         add_mode,
@@ -446,7 +480,8 @@ def parallel_extraction_and_upload(
         p_run.id,
         cfg_err_ra=cfg_err_ra,
         cfg_err_dec=cfg_err_dec,
-        output_columns=list(sources_meta.columns),
+        sources_meta=sources_meta,
+        do_upload=not __TESTING__,
         meta=sources_meta,
     ).persist()
 
@@ -466,7 +501,8 @@ def save_and_upload_forced_df(forced_df: pd.DataFrame,
                               columns: List[str],
                               output_columns: List[str],
                               cfg_err_ra: float,
-                              cfg_err_dec: float):
+                              cfg_err_dec: float,
+                              do_upload: bool):
     """
     Upload the forced extraction measurements to the database and save
     them to parquets.
@@ -489,6 +525,8 @@ def save_and_upload_forced_df(forced_df: pd.DataFrame,
             The minimum RA error from the config file (in degrees).
         cfg_err_dec:
             The minimum declination error from the config file (in degrees).
+        do_upload:
+            Whether to upload the measurements to the database.
 
     Returns:
         The forced measurements, with the 'time' column renamed to
@@ -548,7 +586,7 @@ def save_and_upload_forced_df(forced_df: pd.DataFrame,
     remaining = list(set(forced_df.columns) - set(columns))
     forced_df = forced_df[columns + remaining]
 
-    if not __TESTING__:
+    if do_upload:
         copy_upload_measurements(forced_df)
 
     forced_df = forced_df.rename(columns={"source_tmp_id": "source"})
@@ -728,7 +766,7 @@ def forced_extraction(
         )
 
     # Dask needs type metadata for map_partitions
-    sources_meta = dd.utils.make_meta(sources_df).drop(['epoch', 'interim_ns', 'interim_ew'], axis=1)
+    sources_meta = dd.utils.make_meta(sources_df).drop(['interim_ns', 'interim_ew'], axis=1)
 
     timer.reset()
     extr_df = parallel_extraction_and_upload(
@@ -745,21 +783,6 @@ def forced_extraction(
         sources_meta=sources_meta,
     )
     logger.info("Completed parallel extraction step.")
-
-    # Calculate epoch column for extr_df
-    if sources_df['epoch'].dtype == 'object':
-        extr_df["epoch"] = "FORCED"
-    elif sources_df['epoch'].dtype == 'int':
-        extr_df["epoch"] = -1
-    elif sources_df['epoch'].dtype == 'float':
-        extr_df["epoch"] = -1.0
-    else:
-        extr_df["epoch"] = sources_df['epoch'].compute().iloc[0]
-
-    logger.info("Persisting extr_df...")
-    extr_df = extr_df.persist()
-    wait(extr_df)
-    logger.info("Persisted extr_df.")
 
     sources_df = dd.concat(
         [sources_df, extr_df],
