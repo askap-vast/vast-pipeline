@@ -40,15 +40,14 @@ logger = logging.getLogger(__name__)
 
 
 def get_data_from_parquet(
-    file_and_image_id: Tuple[str, int], p_run_path: str, add_mode: bool = False
+    file: str, p_run_path: str, add_mode: bool = False
 ) -> Dict:
     """
-    Get the prefix, max id and image id from the measurements parquets
+    Get the prefix and max id from the measurements parquets
 
     Args:
-        file_and_image_id:
-            a tuple containing the path of the measurements parquet file and
-            the image ID.
+        file:
+            the path of the measurements parquet file.
         p_run_path:
             Pipeline run path to get forced parquet in case of add mode.
         add_mode:
@@ -56,10 +55,8 @@ def get_data_from_parquet(
             needs to be used instead.
 
     Returns:
-        Dictionary with prefix string, an interger max_id and a string with the
-            id of the image.
+        Dictionary with the island_id prefix string and an integer max_id.
     """
-    file, image_id = file_and_image_id
     if add_mode:
         image_name = file.split("/")[-2]
         forced_parquet = os.path.join(
@@ -68,7 +65,7 @@ def get_data_from_parquet(
         if os.path.isfile(forced_parquet):
             file = forced_parquet
     # get max component id from parquet file
-    df = pd.read_parquet(file, columns=["island_id", "image_id"])
+    df = pd.read_parquet(file, columns=["island_id"])
     if len(df) > 0:
         prefix = df["island_id"].iloc[0].rsplit("_", maxsplit=1)[0] + "_"
         max_id = (
@@ -78,7 +75,7 @@ def get_data_from_parquet(
     else:
         prefix = "island_"
         max_id = 1
-    return {"prefix": prefix, "max_id": max_id, "id": image_id}
+    return {"prefix": prefix, "max_id": max_id}
 
 
 def _forcedphot_preload(image: str,
@@ -112,7 +109,10 @@ def extract_from_image(
     edge_buffer: float,
     cluster_threshold: float,
     allow_nan: bool,
-    **kwargs,
+    p_run_id: str,
+    cfg_err_ra: float,
+    cfg_err_dec: float,
+    output_columns: List[str],
 ) -> pd.DataFrame:
     """
     Extract the flux, its errors and chi squared data from the image
@@ -137,10 +137,22 @@ def extract_from_image(
             flag to pass to ForcedPhot.measure method
         allow_nan:
             flag to pass to ForcedPhot.measure method
+        p_run_id:
+            ID of the pipeline run. Used to generate forced extraction
+            measurement names.
+        cfg_err_ra:
+            the minimum RA error from the config file (in degrees).
+        cfg_err_dec:
+            the minimum declination error from the config file (in degrees).
+        output_columns:
+            list of columns to return, as expected for concatenation
+            into sources_df.
 
     Returns:
-        Input dataframe with added columns (flux_int, flux_int_err,
-            chi_squared_fit and those added by finalise_forced_dfs).
+        Dataframe of the forced measurements for the image, containing the
+            columns in `output_columns`. The measurements are also written
+            to a per-image parquet in the run directory (and uploaded to
+            the database unless running in a test environment).
     """
     timer = StopWatch()
 
@@ -149,14 +161,11 @@ def extract_from_image(
         "extract_from_image expects a single image per partition"
     )
     image_name = df['image_name'].iloc[0]
-    parquet_meta = get_data_from_parquet(
-        (df_images.at[image_name, "measurements_path"], df_images.at[image_name, "id"]),
-        p_run_path,
-        add_mode,
-    )
+    measurements_path = df_images.at[image_name, "measurements_path"]
+    data = get_data_from_parquet(measurements_path, p_run_path, add_mode)
     _img_cols = ["id", "path", "background_path", "noise_path",
                  "beam_bmaj", "beam_bmin", "beam_bpa", "datetime"]
-    data = {**parquet_meta, **{col: df_images.at[image_name, col] for col in _img_cols}}
+    data.update({col: df_images.at[image_name, col] for col in _img_cols})
 
     image = data.pop('path')
     # create the skycoord obj to pass to the forced extraction
@@ -225,10 +234,20 @@ def extract_from_image(
         (df['flux_int'] != 0)
         & (df['flux_int_err'] != 0)
         & (df['chi_squared_fit'] != np.inf)
-        & (df['chi_squared_fit'] != np.nan)
+        & (df['chi_squared_fit'].notna())
     ]
 
     df = finalise_forced_dfs(df, **data)
+    df = save_and_upload_forced_df(
+        df,
+        p_run_path,
+        p_run_id,
+        add_mode=add_mode,
+        cfg_err_ra=cfg_err_ra,
+        cfg_err_dec=cfg_err_dec,
+        columns=read_schema(measurements_path).names,
+        output_columns=output_columns,
+    )
 
     logger.debug("%s - Total extraction time: %ds", image, timer.reset())
 
@@ -296,42 +315,7 @@ def finalise_forced_dfs(
 
     return df
 
-
-def _make_extract_meta(input_meta: pd.DataFrame, df_images: pd.DataFrame) -> pd.DataFrame:
-    """
-    Build the output metadata of extract_from_image for Dask by running
-    the real column-adding code (finalise_forced_dfs) on a single dummy row.
-
-    Args:
-        input_meta:
-            Metadata of the per-image parquet dataframe, with columns
-            [source_tmp_id, wavg_ra, wavg_dec, flux_peak, image_name].
-        df_images:
-            dataframe indexed by image name, used to get the dtypes of the
-            beam, id and datetime values.
-
-    Returns:
-        Empty dataframe with the columns and dtypes returned by
-            extract_from_image.
-    """
-    dummy = dd.utils.meta_nonempty(input_meta).iloc[:1].copy()
-    dummy["flux_int"] = np.float64(1.0)
-    dummy["flux_int_err"] = np.float64(1.0)
-    dummy["chi_squared_fit"] = np.float64(1.0)
-    row = df_images.iloc[0]
-    return finalise_forced_dfs(
-        dummy,
-        prefix="island_",
-        max_id=1,
-        beam_bmaj=row["beam_bmaj"],
-        beam_bmin=row["beam_bmin"],
-        beam_bpa=row["beam_bpa"],
-        id=row["id"],
-        datetime=row["datetime"],
-    ).iloc[:0]
-
-
-def parallel_extraction(
+def parallel_extraction_and_upload(
     df: pd.DataFrame,
     df_images: pd.DataFrame,
     min_sigma: float,
@@ -339,21 +323,27 @@ def parallel_extraction(
     cluster_threshold: float,
     allow_nan: bool,
     add_mode: bool,
-    p_run_path: str,
+    p_run: Run,
+    cfg_err_ra: float,
+    cfg_err_dec: float,
+    sources_meta: pd.DataFrame,
 ) -> pd.DataFrame:
     """
-    Parallelize forced extraction with Dask
+    Parallelize forced extraction with Dask, writing the measurements to
+    parquet and uploading them to the database for each image.
+
+    The rows are first split into one temporary parquet per image, then
+    `extract_from_image` is run on each of them.
 
     Args:
         df:
-            dataframe with columns 'wavg_ra', 'wavg_dec', 'img_diff',
-            'detection', 'flux_peak'
+            dask dataframe with columns 'source', 'wavg_ra', 'wavg_dec',
+            'img_diff' and 'flux_peak'.
         df_images:
             dataframe with the images data and columns 'id',
             'measurements_path', 'path', 'noise_path', 'beam_bmaj',
-            'beam_bmin', 'beam_bpa', 'background_path', 'rms_min', 'datetime',
-            'skyreg__centre_ra', 'skyreg__centre_dec', 'skyreg__xtr_radius'
-            and 'name' as the index.
+            'beam_bmin', 'beam_bpa', 'background_path', 'rms_min' and
+            'datetime', and 'name' as the index.
         min_sigma:
             minimum sigma value to drop forced extracted measurements.
         edge_buffer:
@@ -364,13 +354,20 @@ def parallel_extraction(
             flag to pass to ForcedPhot.measure method.
         add_mode:
             True when the pipeline is running in add image mode.
-        p_run_path:
-            The system path of the pipeline run output.
+        p_run:
+            The pipeline Run object.
+        cfg_err_ra:
+            The minimum RA error from the config file (in degrees).
+        cfg_err_dec:
+            The minimum declination error from the config file (in degrees).
+        sources_meta:
+            Empty dataframe with the columns and dtypes of the output, used
+            as the Dask metadata for the result. Its columns are also the
+            columns returned for each image.
 
     Returns:
-        Dataframe with forced extracted measurements data, columns are
-            'source_tmp_id', 'ra', 'dec', 'image', 'flux_peak', 'island_id',
-            'component_id', 'name', 'flux_int', 'flux_int_err'
+        Persisted dask dataframe of the forced extracted measurements with
+            the columns of `sources_meta`.
     """
 
     # Look up the int32 image index and rms_min for each img_diff in df.
@@ -411,7 +408,7 @@ def parallel_extraction(
     # Shuffle by image_idx so all rows for a given image land in exactly one
     # partition (deterministic hash), then write one parquet per image via
     # map_partitions to a temporary location.
-    _tmp_dir = os.path.join(p_run_path, "_forced_extract_tmp")
+    _tmp_dir = os.path.join(p_run.path, "_forced_extract_tmp")
     os.makedirs(_tmp_dir, exist_ok=True)
 
     def _write_image_files(df, tmp_dir, images_index):
@@ -437,17 +434,20 @@ def parallel_extraction(
     df_images_future = get_client().scatter(df_images, broadcast=True)
 
     per_image_ddf = dd.read_parquet(_tmp_dir, split_row_groups=False, blocksize=None)
-    extract_meta = _make_extract_meta(per_image_ddf._meta, df_images)
 
     out = per_image_ddf.map_partitions(
         extract_from_image,
         df_images_future,
-        p_run_path,
+        p_run.path,
         add_mode,
-        edge_buffer=edge_buffer,
-        cluster_threshold=cluster_threshold,
-        allow_nan=allow_nan,
-        meta=extract_meta,
+        edge_buffer,
+        cluster_threshold,
+        allow_nan,
+        p_run.id,
+        cfg_err_ra=cfg_err_ra,
+        cfg_err_dec=cfg_err_dec,
+        output_columns=list(sources_meta.columns),
+        meta=sources_meta,
     ).persist()
 
     logger.info("Running extraction and persisting...")
@@ -466,8 +466,7 @@ def save_and_upload_forced_df(forced_df: pd.DataFrame,
                               columns: List[str],
                               output_columns: List[str],
                               cfg_err_ra: float,
-                              cfg_err_dec: float,
-                              do_upload: bool = True):
+                              cfg_err_dec: float):
     """
     Upload the forced extraction measurements to the database and save
     them to parquets.
@@ -477,10 +476,9 @@ def save_and_upload_forced_df(forced_df: pd.DataFrame,
             Dataframe containing the forced extracted measurements.
             This should be sorted and partitioned by filename.
         p_run_path:
-            The system path of the pipeline run output.
+            Path to the pipeline run.
         p_run_id:
             ID of the pipeline run.
-            Used to generate forced extraction source names.
         add_mode:
             True when the pipeline is running in add image mode.
         columns:
@@ -491,8 +489,11 @@ def save_and_upload_forced_df(forced_df: pd.DataFrame,
             The minimum RA error from the config file (in degrees).
         cfg_err_dec:
             The minimum declination error from the config file (in degrees).
-        do_upload:
-            If True - do the db upload step.
+
+    Returns:
+        The forced measurements, with the 'time' column renamed to
+            'datetime', a 'related' column added and only the columns in
+            `output_columns` kept.
     """
 
     def _update_forced_measurements(df: pd.DataFrame) -> pd.DataFrame:
@@ -547,7 +548,7 @@ def save_and_upload_forced_df(forced_df: pd.DataFrame,
     remaining = list(set(forced_df.columns) - set(columns))
     forced_df = forced_df[columns + remaining]
 
-    if do_upload:
+    if not __TESTING__:
         copy_upload_measurements(forced_df)
 
     forced_df = forced_df.rename(columns={"source_tmp_id": "source"})
@@ -652,7 +653,7 @@ def forced_extraction(
 
     timer = StopWatch()
 
-    # get all the skyregions and related images
+    # get all the images in the run
     cols = {
         "id": "object",
         "name": "object",
@@ -665,16 +666,12 @@ def forced_extraction(
         "background_path": "object",
         "rms_min": "float32",
         "datetime": "datetime64[ns, UTC]",
-        "skyreg__centre_ra": "float32",
-        "skyreg__centre_dec": "float32",
-        "skyreg__xtr_radius": "float32",
     }
 
     images_df = (
         pd.DataFrame(
             list(
                 Image.objects.filter(run=p_run)
-                .select_related("skyreg")
                 .order_by("datetime")
                 .values(*tuple(cols.keys()))
             )
@@ -695,11 +692,11 @@ def forced_extraction(
     # | VAST_2118-06A.EPOCH03x.I.fits |  0.00470991 |  0.00300502 |   -83.1128 | path/to/file      |
     # | VAST_2118-06A.EPOCH02.I.fits  |  0.00351331 |  0.00308565 |    77.2395 | path/to/file      |
 
-    # | name                          |   rms_min | datetime                         |   skyreg__centre_ra |   skyreg__centre_dec |   skyreg__xtr_radius |
-    # |:------------------------------|----------:|:---------------------------------|--------------------:|---------------------:|---------------------:|
-    # | VAST_2118-06A.EPOCH01.I.fits  |  0.173946 | 2019-08-27 18:12:16.700000+00:00 |             319.652 |              -6.2989 |               6.7401 |
-    # | VAST_2118-06A.EPOCH03x.I.fits |  0.165395 | 2019-10-29 10:01:20.500000+00:00 |             319.652 |              -6.2989 |               6.7401 |
-    # | VAST_2118-06A.EPOCH02.I.fits  |  0.16323  | 2019-10-30 08:31:20.200000+00:00 |             319.652 |              -6.2989 |               6.7401 |
+    # | name                          |   rms_min | datetime                         |
+    # |:------------------------------|----------:|:---------------------------------|
+    # | VAST_2118-06A.EPOCH01.I.fits  |  0.173946 | 2019-08-27 18:12:16.700000+00:00 |
+    # | VAST_2118-06A.EPOCH03x.I.fits |  0.165395 | 2019-10-29 10:01:20.500000+00:00 |
+    # | VAST_2118-06A.EPOCH02.I.fits  |  0.16323  | 2019-10-30 08:31:20.200000+00:00 |
 
     extr_df = extr_df.reset_index()
     total_to_extract = extr_df.shape[0].compute()
@@ -730,8 +727,11 @@ def forced_extraction(
             f" (from {total_to_extract} total)"
         )
 
+    # Dask needs type metadata for map_partitions
+    sources_meta = dd.utils.make_meta(sources_df).drop(['epoch', 'interim_ns', 'interim_ew'], axis=1)
+
     timer.reset()
-    extr_df = parallel_extraction(
+    extr_df = parallel_extraction_and_upload(
         extr_df,
         images_df,
         min_sigma,
@@ -739,28 +739,12 @@ def forced_extraction(
         cluster_threshold,
         allow_nan,
         add_mode,
-        p_run.path,
+        p_run,
+        cfg_err_ra,
+        cfg_err_dec,
+        sources_meta=sources_meta,
     )
     logger.info("Completed parallel extraction step.")
-
-    # Dask needs type metadata for map_partitions
-    sources_meta = dd.utils.make_meta(sources_df).drop(['epoch', 'interim_ns', 'interim_ew'], axis=1)
-    # Get expected database measurements schema
-    columns = read_schema(images_df.iloc[0]["measurements_path"]).names
-
-    logger.debug("Building save and upload...")
-    extr_df = extr_df.map_partitions(save_and_upload_forced_df,
-                                     p_run_path=p_run.path,
-                                     p_run_id=p_run.id,
-                                     add_mode=add_mode,
-                                     cfg_err_ra=cfg_err_ra,
-                                     cfg_err_dec=cfg_err_dec,
-                                     columns=columns,
-                                     output_columns=sources_meta.columns,
-                                     do_upload=(not __TESTING__),
-                                     enforce_metadata=False,
-                                     meta=sources_meta)
-
 
     # Calculate epoch column for extr_df
     if sources_df['epoch'].dtype == 'object':
