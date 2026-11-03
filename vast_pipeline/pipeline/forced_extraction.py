@@ -22,7 +22,7 @@ from vast_pipeline.pipeline.loading import copy_upload_measurements
 from vast_pipeline.daskmanager.manager import get_io_semaphore
 
 from forced_phot import ForcedPhot
-from ..utils.utils import StopWatch
+from ..utils.utils import StopWatch, maybe_delete_file_or_dir
 from vast_pipeline.image.utils import open_fits
 
 # NOTE: We check here to see if we're in a testing environment.
@@ -105,9 +105,6 @@ def _forced_epoch(epoch_dtype: Any) -> Union[int, float, str, None]:
     """
     Get the sentinel 'epoch' value for forced measurements.
 
-    Numeric sentinels are made with the dtype's scalar type (e.g. np.int32)
-    so a column assigned the value keeps that dtype.
-
     Args:
         epoch_dtype:
             dtype of the 'epoch' column in sources_df.
@@ -142,7 +139,7 @@ def extract_from_image_and_save(
 ) -> pd.DataFrame:
     """
     Extract the flux, its errors and chi squared data from the image
-    files (image FIT, background and noise files) and return the dataframe
+    files (image, background and noise FITS files) and return the dataframe
     with the extracted data added.
 
     Args:
@@ -284,7 +281,7 @@ def extract_from_image_and_save(
     # Set epoch for merge with sources_df
     df["epoch"] = _forced_epoch(sources_meta["epoch"].dtype)
 
-    logger.debug("%s - Total extraction time: %ds", image, timer.reset())
+    logger.debug("%s - Total extraction and upload time: %ds", image, timer.reset())
 
     return df
 
@@ -300,7 +297,7 @@ def finalise_forced_dfs(
     datetime: datetime.datetime,
 ) -> pd.DataFrame:
     """
-    Compute populate leftover columns for the dataframe with forced
+    Populate leftover columns for the dataframe with forced
     photometry data given the input parameters
 
     Args:
@@ -364,7 +361,7 @@ def parallel_extraction_and_upload(
     sources_meta: pd.DataFrame,
 ) -> pd.DataFrame:
     """
-    Parallelize forced extraction with Dask, writing the measurements to
+    Parallelise forced extraction with Dask, writing the measurements to
     parquet and uploading them to the database for each image.
 
     The rows are first split into one temporary parquet per image, then
@@ -443,6 +440,7 @@ def parallel_extraction_and_upload(
     # partition (deterministic hash), then write one parquet per image via
     # map_partitions to a temporary location.
     _tmp_dir = os.path.join(p_run.path, "_forced_extract_tmp")
+    maybe_delete_file_or_dir(_tmp_dir)
     os.makedirs(_tmp_dir, exist_ok=True)
 
     def _write_image_files(df, tmp_dir, images_index):
@@ -489,7 +487,7 @@ def parallel_extraction_and_upload(
     wait(out)
     logger.info("Finished persisting out")
     logger.info("Cleaning up temporary files...")
-    shutil.rmtree(_tmp_dir, ignore_errors=True)
+    maybe_delete_file_or_dir(_tmp_dir)
 
     return out
 
