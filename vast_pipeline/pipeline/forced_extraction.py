@@ -2,7 +2,6 @@ import os
 import logging
 import datetime
 import gc
-import shutil
 import uuid
 
 import numpy as np
@@ -13,11 +12,10 @@ from glob import glob
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from django.conf import settings
-from pyarrow.parquet import read_schema
 from typing import Any, List, Tuple, Dict, Optional, Union
 from dask.distributed import get_client, wait
 
-from vast_pipeline.models import Image, Run
+from vast_pipeline.models import Image, Measurement, Run
 from vast_pipeline.pipeline.loading import copy_upload_measurements
 from vast_pipeline.daskmanager.manager import get_io_semaphore
 
@@ -37,6 +35,12 @@ from vast_pipeline.image.utils import open_fits
 __TESTING__ = settings.TESTING
 
 logger = logging.getLogger(__name__)
+
+# Columns of the forced measurement parquets: the Measurement model fields,
+# plus the non-model columns that the measurement parquets also carry.
+FORCED_PARQUET_COLUMNS = [f.attname for f in Measurement._meta.concrete_fields] + [
+    "weight_ew", "weight_ns", "time", "psf_bmaj", "psf_bmin", "psf_pa",
+]
 
 
 def get_data_from_parquet(
@@ -62,7 +66,7 @@ def get_data_from_parquet(
         forced_parquet = os.path.join(
             p_run_path, f"forced_measurements_{image_name}.parquet"
         )
-        if os.path.isfile(forced_parquet):
+        if os.path.exists(forced_parquet):
             file = forced_parquet
     # get max component id from parquet file
     df = pd.read_parquet(file, columns=["island_id"])
@@ -217,64 +221,56 @@ def extract_from_image_and_save(
                                                )
         FP_timer = StopWatch()
         FP = ForcedPhot(*forcedphot_input, use_numba=True)
-        logger.debug("%s - Time to init FP: %.3f s", image,  FP_timer.reset())
-
-        # This should ultimately be removed in v2, but for now I am keeping the
-        # option to use clustering in order to keep things backward-compatible.
-        # NOTE: PR #816 is the V2 upgrade - but I'm leaving this as is for now
-        # while the best way to do this is worked out.
-        use_clusters = True
-        if cluster_threshold == 0:
-            use_clusters = False
-
-        flux, flux_err, chisq, DOF, cluster_id = FP.measure(
-            P_islands,
-            cluster_threshold=cluster_threshold,
-            allow_nan=allow_nan,
-            edge_buffer=edge_buffer,
-            use_clusters=use_clusters
-        )
-        logger.debug("%s - Time to measure FP: %.3fs", image, FP_timer.reset())
-        # Explicitly close the FITS HDULists rather than relying on gc to
-        # collect and close them - keeps file handles/buffers from lingering
-        # for longer than necessary across the many extraction tasks.
         for hdul in forcedphot_input:
             hdul.close()
-        del FP, forcedphot_input
+        del forcedphot_input
         gc.collect()
-    
-    num_fits = np.sum(flux>0.0)
+        logger.debug("%s - Time to init FP: %.3f s", image,  FP_timer.reset())
+
+    # This should ultimately be removed in v2, but for now I am keeping the
+    # option to use clustering in order to keep things backward-compatible.
+    # NOTE: PR #816 is the V2 upgrade - but I'm leaving this as is for now
+    # while the best way to do this is worked out.
+    use_clusters = True
+    if cluster_threshold == 0:
+        use_clusters = False
+
+    flux, flux_err, chisq, DOF, cluster_id = FP.measure(
+        P_islands,
+        cluster_threshold=cluster_threshold,
+        allow_nan=allow_nan,
+        edge_buffer=edge_buffer,
+        use_clusters=use_clusters
+    )
+    logger.debug("%s - Time to measure FP: %.3fs", image, FP_timer.reset())
+    del FP
+
+    # Out-of-image sources come back as exactly 0, unmeasurable ones as NaN.
+    keep = (
+        np.isfinite(flux) & np.isfinite(flux_err) & np.isfinite(chisq)
+        & (flux != 0) & (flux_err != 0)
+    )
+    num_fits = int(keep.sum())
 
     logger.debug("%s: Obtained %d measurements "
-                 "(%d sources outside of image range)."
-                 , image, num_fits, num_sources-num_fits)
+                 "(%d sources outside of image range or unmeasurable).",
+                 image, num_fits, num_sources - num_fits)
 
-    df['flux_int'] = flux * 1.e3
-    df['flux_int_err'] = flux_err * 1.e3
-    df['chi_squared_fit'] = chisq
-    
-    values = {
-        'flux_int': 0,
-        'flux_int_err': 0
-    }
-    df = df.fillna(value=values)
-
-    df = df[
-        (df['flux_int'] != 0)
-        & (df['flux_int_err'] != 0)
-        & (df['chi_squared_fit'] != np.inf)
-        & (df['chi_squared_fit'].notna())
-    ]
+    df = df[keep].assign(
+        flux_int=flux[keep] * 1.e3,
+        flux_int_err=flux_err[keep] * 1.e3,
+        chi_squared_fit=chisq[keep],
+    )
 
     df = finalise_forced_dfs(df, **data)
     df = save_and_upload_forced_df(
         df,
         p_run_path,
         p_run_id,
+        image_name=image_name,
         add_mode=add_mode,
         cfg_err_ra=cfg_err_ra,
         cfg_err_dec=cfg_err_dec,
-        columns=read_schema(measurements_path).names,
         output_columns=[c for c in sources_meta.columns if c != "epoch"],
         do_upload=do_upload,
     )
@@ -283,7 +279,11 @@ def extract_from_image_and_save(
 
     logger.debug("%s - Total extraction and upload time: %ds", image, timer.reset())
 
-    return df
+    # Match sources_df; datetimes are left alone as their tz/unit can differ.
+    df = df[sources_meta.columns]
+    return df.astype(
+        {c: t for c, t in sources_meta.dtypes.items() if t.kind != "M"}
+    )
 
 
 def finalise_forced_dfs(
@@ -336,9 +336,9 @@ def finalise_forced_dfs(
     # assign all the other columns
     # convert fluxes to mJy
     # store source bmaj and bmin in arcsec
-    df["bmaj"] = beam_bmaj * 3600.0
-    df["bmin"] = beam_bmin * 3600.0
-    df["pa"] = beam_bpa
+    df["bmaj"] = float(beam_bmaj) * 3600.0
+    df["bmin"] = float(beam_bmin) * 3600.0
+    df["pa"] = float(beam_bpa)
     # add image id and time
     df["image_id"] = id
     df["time"] = datetime
@@ -458,6 +458,12 @@ def parallel_extraction_and_upload(
 
     del out
 
+    # dd.read_parquet raises on a directory with no parquet files.
+    if not glob(os.path.join(_tmp_dir, "*.parquet")):
+        logger.info("No forced measurements to extract.")
+        maybe_delete_file_or_dir(_tmp_dir)
+        return dd.from_pandas(sources_meta, npartitions=1)
+
     # Scatter df_images to the cluster once, broadcasting a single copy to
     # every worker. Without this, passing df_images directly to
     # map_partitions copies the whole DataFrame in every one of the
@@ -495,8 +501,8 @@ def parallel_extraction_and_upload(
 def save_and_upload_forced_df(forced_df: pd.DataFrame,
                               p_run_path: str,
                               p_run_id: str,
+                              image_name: str,
                               add_mode: bool,
-                              columns: List[str],
                               output_columns: List[str],
                               cfg_err_ra: float,
                               cfg_err_dec: float,
@@ -513,10 +519,11 @@ def save_and_upload_forced_df(forced_df: pd.DataFrame,
             Path to the pipeline run.
         p_run_id:
             ID of the pipeline run.
+        image_name:
+            Name of the image the measurements belong to. Passed explicitly
+            as `forced_df` can be empty.
         add_mode:
             True when the pipeline is running in add image mode.
-        columns:
-            List of expected columns from the database schema.
         output_columns:
             List of output columns expected for concat into sources_df
         cfg_err_ra:
@@ -544,7 +551,9 @@ def save_and_upload_forced_df(forced_df: pd.DataFrame,
             The forced extraction dataframe updated with defaults.
         """
         df["name"] = df["name"] + f"_f_{p_run_id}"
-        df["id"] = df.apply(lambda _: str(uuid.uuid4()), axis=1)
+        df["id"] = pd.Series(
+            [str(uuid.uuid4()) for _ in range(len(df))], index=df.index, dtype=object
+        )
         default_pos_err = settings.POS_DEFAULT_MIN_ERROR / 3600.0
         df["ra_err"] = default_pos_err
         df["dec_err"] = default_pos_err
@@ -581,15 +590,19 @@ def save_and_upload_forced_df(forced_df: pd.DataFrame,
         return df
 
     forced_df = _update_forced_measurements(forced_df)
-    remaining = list(set(forced_df.columns) - set(columns))
-    forced_df = forced_df[columns + remaining]
+    # The trailing columns are only needed to build the returned dataframe.
+    forced_df = forced_df[
+        FORCED_PARQUET_COLUMNS + ["source_tmp_id", "d2d", "dr", "image"]
+    ]
 
     if do_upload:
         copy_upload_measurements(forced_df)
 
     forced_df = forced_df.rename(columns={"source_tmp_id": "source"})
 
-    write_forced_parquet(forced_df, run_path=p_run_path, add_mode=add_mode)
+    write_forced_parquet(
+        forced_df, image_name, run_path=p_run_path, add_mode=add_mode
+    )
 
     # Required to rename this column for the image add mode.
     forced_df = forced_df.rename(columns={"time": "datetime"})
@@ -602,13 +615,18 @@ def save_and_upload_forced_df(forced_df: pd.DataFrame,
 
 
 def write_forced_parquet(
-        df: pd.DataFrame, run_path: str, add_mode: bool = False) -> None:
+        df: pd.DataFrame, image: str, run_path: str, add_mode: bool = False
+) -> None:
     """
-    Write a single parquet file per image for forced measurements.
+    Write a single parquet file per image for forced measurements. Nothing
+    is written if there are no measurements.
 
     Args:
         df:
             Dataframe containing the extracted measurements for a single image.
+            May be empty.
+        image:
+            The name of the image the measurements belong to.
         run_path:
             The run path of the pipeline run.
         add_mode:
@@ -617,10 +635,8 @@ def write_forced_parquet(
     Returns:
         None
     """
-    image = df["image"].unique().tolist()
-    # Ensure our dataframe only has one image
-    assert len(image) == 1
-    image = image[0]
+    if df.empty:
+        return
 
     fname = os.path.join(
         run_path, "forced_measurements_" + image.replace(".", "_") + ".parquet"
@@ -629,7 +645,15 @@ def write_forced_parquet(
     if os.path.isfile(fname) and add_mode:
         exist_df = pd.read_parquet(fname)
         out_df = pd.concat([exist_df, out_df])
-    out_df.to_parquet(fname, index=False)
+    # Write then rename so a crash never leaves a truncated parquet behind.
+    tmp_fname = fname + ".tmp"
+    try:
+        out_df.to_parquet(tmp_fname, index=False)
+        os.replace(tmp_fname, fname)
+    except BaseException:
+        if os.path.exists(tmp_fname):
+            os.remove(tmp_fname)
+        raise
 
 
 def forced_extraction(
@@ -764,7 +788,9 @@ def forced_extraction(
         )
 
     # Dask needs type metadata for map_partitions
-    sources_meta = dd.utils.make_meta(sources_df).drop(['interim_ns', 'interim_ew'], axis=1)
+    sources_meta = dd.utils.make_meta(sources_df).drop(
+        columns=['interim_ns', 'interim_ew'], errors="ignore"
+    )
 
     timer.reset()
     extr_df = parallel_extraction_and_upload(
