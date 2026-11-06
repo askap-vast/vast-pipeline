@@ -44,6 +44,14 @@ def parse_or_nan(x):
         return float('NaN')
 
 
+def as_object_cols(df):
+    # read_csv infers int64/float64, but the pipeline holds str ids and lists.
+    cols = {c: object for c in ('source', 'source_skyc1', 'related', 'related_skyc1') if c in df}
+    if 'd2d' in df:
+        cols['d2d'] = float
+    return df.astype(cols)
+
+
 class OneToManyBasicTest(SimpleTestCase):
     '''
     Tests for one_to_many_basic in association.py
@@ -125,7 +133,9 @@ class OneToManyBasicTest(SimpleTestCase):
             header=0
         )
 
-        skyc2_srcs, sources_df = one_to_many_basic(skyc2_srcs, sources_df)
+        skyc2_srcs, sources_df = one_to_many_basic(
+            as_object_cols(skyc2_srcs), sources_df
+        )
 
         # Note the testing is more complex here as the source indexes are now
         # randomly generated UUIDs, so we can't test the source_skyc1 column
@@ -236,7 +246,7 @@ class OneToManyAdvancedTest(SimpleTestCase):
         )
 
         temp_srcs, sources_df = one_to_many_advanced(
-            temp_srcs,
+            as_object_cols(temp_srcs),
             sources_df,
             method='advanced'
         )
@@ -296,7 +306,7 @@ class OneToManyAdvancedTest(SimpleTestCase):
         )
 
         temp_srcs, sources_df = one_to_many_advanced(
-            temp_srcs,
+            as_object_cols(temp_srcs),
             sources_df,
             method='deruiter'
         )
@@ -458,7 +468,9 @@ class ManyToOneAdvancedTest(SimpleTestCase):
             header=0
         )
 
-        temp_srcs_out = many_to_one_advanced(temp_srcs)
+        temp_srcs_out = many_to_one_advanced(
+            temp_srcs.astype({'related_skyc1': object})
+        )
 
         self.assertTrue(temp_srcs_out.equals(self.temp_srcs_ind_rel))
 
@@ -557,7 +569,7 @@ class BasicAssociationTest(TestHelpers):
         limit = Angle(10, unit='arcsec')
 
         sources_df, skyc1_srcs = basic_association(
-            sources_df, skyc1_srcs, skyc1, skyc2_srcs, skyc2, limit,
+            sources_df, skyc1_srcs, skyc1, as_object_cols(skyc2_srcs), skyc2, limit,
         )
 
         self.check_col(sources_df, self.sources_df_no_new)
@@ -594,7 +606,7 @@ class BasicAssociationTest(TestHelpers):
         limit = Angle(0, unit='arcsec')
 
         sources_df, skyc1_srcs = basic_association(
-            sources_df, skyc1_srcs, skyc1, skyc2_srcs, skyc2, limit
+            sources_df, skyc1_srcs, skyc1, as_object_cols(skyc2_srcs), skyc2, limit
         )
 
         self.check_col(sources_df, self.sources_df_all)
@@ -631,7 +643,7 @@ class BasicAssociationTest(TestHelpers):
         limit = Angle(10, unit='arcsec')
 
         sources_df, skyc1_srcs = basic_association(
-            sources_df, skyc1_srcs, skyc1, skyc2_srcs, skyc2, limit
+            sources_df, skyc1_srcs, skyc1, as_object_cols(skyc2_srcs), skyc2, limit
         )
 
         self.check_col(sources_df, self.sources_df_basic_out)
