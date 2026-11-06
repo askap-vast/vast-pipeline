@@ -293,12 +293,14 @@ class Pipeline:
             p_run,
         )
 
-        # Drop column no longer required in missing_sources_df.
-        missing_sources_df = missing_sources_df.drop(["in_primary"], axis=1)
-
         # STEP #5: Run forced extraction/photometry if asked
         if self.config["source_monitoring"]["monitor"]:
             logger.info("Running step #5: forced photometry...")
+            # Only the columns of missing sources we need.
+            missing_sources_df = missing_sources_df[
+                ["source", "wavg_ra", "wavg_dec", "img_diff", "flux_peak"]
+            ].persist()
+            wait(missing_sources_df)
             (sources_df, nr_forced_measurements) = forced_extraction(
                 sources_df,
                 self.config["measurements"]["ra_uncertainty"] / 3600.0,

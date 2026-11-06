@@ -8,19 +8,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Added
 
-#### Changed
-
-#### Fixed
-
-#### Removed
-
-#### List of PRs
-
-
-## [1.3.0](https://github.com/askap-vast/vast-pipeline/releases/v1.3.0) (2026-07-28)
-
-#### Added
-
 - V2: Parallelise ingest of measurments to database [#893](https://github.com/askap-vast/vast-pipeline/pull/893)
 - V2: Forward logging from Dask workers to the client [#877](https://github.com/askap-vast/vast-pipeline/pull/877)
 - V2: Added functionality to throttle parallel database uploads [#852](https://github.com/askap-vast/vast-pipeline/pull/852)
@@ -29,19 +16,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - V2: Migrate pipeline to used a Dask.distributed.LocalCluster throughout [#816](https://github.com/askap-vast/vast-pipeline/pull/816)
 - V2: Add Dask.distributed support
 - V2: Use `django-postgres-copy` for database uploads [#803](https://github.com/askap-vast/vast-pipeline/pull/803)
-- Added Fink Rubin alerts to external query table on source webpage [#884](https://github.com/askap-vast/vast-pipeline/pull/884)
-- Added custom Aladin lite display to source webpages [#874](https://github.com/askap-vast/vast-pipeline/pull/874)
-- Added Vizier crossmatches to source webpages via Data Central API [#874](https://github.com/askap-vast/vast-pipeline/pull/874)
-- Added Fink crossmatches to source webpages [#874](https://github.com/askap-vast/vast-pipeline/pull/874)
-- Added source cutout cache and corresponding helper functions [#869](https://github.com/askap-vast/vast-pipeline/pull/869)
-- Added image.utils.get_fits_header to only fetch header when initialising Image object [#841](https://github.com/askap-vast/vast-pipeline/pull/841)
-- Added more detailed warnings about the use of Condon Errors throughout the docs and code [#806](https://github.com/askap-vast/vast-pipeline/pull/806)
-- Added processing configuration parameters to the run configuration documentation [#805](https://github.com/askap-vast/vast-pipeline/pull/805)
-- Added option to disable forced photometry clustering [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
-- Added additional logging to forced extraction step [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
 
 #### Changed
 
+- V2: Save per image pre-load data for forced extraction to temporary parquet directory [#904](https://github.com/askap-vast/vast-pipeline/pull/904)
+- V2: Move parquet creation and database upload into same function that computes forced measurements [#904](https://github.com/askap-vast/vast-pipeline/pull/904)
 - V2: Optimise rms calculation in new_sources [#901](https://github.com/askap-vast/vast-pipeline/pull/901)
 - V2: Optimise missing source calculation to use vectorised numpy operations [#899](https://github.com/askap-vast/vast-pipeline/pull/899)
 - V2: Pin package repos for compatibility with latest Python 3.11 & 3.12 [#879](https://github.com/askap-vast/vast-pipeline/pull/879)
@@ -56,6 +35,68 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - V2: Updated docs dependencies and fixed outdated information and various warnings [#801](https://github.com/askap-vast/vast-pipeline/pull/801)
 - V2: Reorganise new_high_sigma calculation into dedicated function [#714](https://github.com/askap-vast/vast-pipeline/pull/714)
 - V2: Update dependencies to fix dependabot warnings and prepare for Dask distributed implementation.
+
+#### Fixed
+
+- V2: Generate UUIDs in forced extraction more efficiently [#904](https://github.com/askap-vast/vast-pipeline/pull/904)
+- V2: Generate UUIDs in Associations upload more efficiently [#900](https://github.com/askap-vast/vast-pipeline/pull/900)
+- V2: Avoid expendive merge with sources_df when writing our measurement paird [#900](https://github.com/askap-vast/vast-pipeline/pull/900)
+- V2: Fix association upload to work with dask > 2025.5.0 [#879](https://github.com/askap-vast/vast-pipeline/pull/879)
+- V2: Fixed memory leaks caused by nested delays [#854](https://github.com/askap-vast/vast-pipeline/pull/854)
+- V2: Fixed duplicate source ID error by switching from sources_df.repartition() to sources_df.shuffle() in pipeline.finalise.final_operations [#845](https://github.com/askap-vast/vast-pipeline/pull/845)
+- V2: Tentative fix for image upload memory leak via garbage collect [#845](https://github.com/askap-vast/vast-pipeline/pull/845)
+- V2: Fixed dd.concat memory blow-up in pipeline.forced_extraction.forced_extraction by persisting both dataframes prior [#845](https://github.com/askap-vast/vast-pipeline/pull/845)
+- V2: Pair metrics working with V2 dask LocalCluster changes [#817](https://github.com/askap-vast/vast-pipeline/pull/817)
+- V2: Fixed missing JS9 overlays on source webpage [#809](https://github.com/askap-vast/vast-pipeline/pull/809)
+- V2: Fix bug when deleting source tags from database which are referenced by multiple sources [#803](https://github.com/askap-vast/vast-pipeline/pull/803)
+- V2: Fix incorrect calculation of the new_high_sigma parameter [#714](https://github.com/askap-vast/vast-pipeline/pull/714)
+
+#### Removed
+
+#### List of PRs
+
+- [#904](https://github.com/askap-vast/vast-pipeline/pull/904): fix: V2: Optimisations of forced_extraction step
+- [#901](https://github.com/askap-vast/vast-pipeline/pull/901): fix: V2: Optimisations of new_sources step
+- [#900](https://github.com/askap-vast/vast-pipeline/pull/900): fix: V2: Optimisations of finalise step
+- [#899](https://github.com/askap-vast/vast-pipeline/pull/899): feat: V2: Optimise missing source calculation
+- [#893](https://github.com/askap-vast/vast-pipeline/pull/893): feat: V2: Parallelise ingest of measurements
+- [#880](https://github.com/askap-vast/vast-pipeline/pull/880): fix: V2: Ensure external dependencies pass when etxternal websites are down
+- [#879](https://github.com/askap-vast/vast-pipeline/pull/879): fix: V2: Update dependencies to work with latest python 3.11&3.12 and pin them
+- [#877](https://github.com/askap-vast/vast-pipeline/pull/877): feat: V2: Capture worker logs by client
+- [#854](https://github.com/askap-vast/vast-pipeline/pull/854): fix: V2: Fixed memory leaks caused by nested delays
+- [#852](https://github.com/askap-vast/vast-pipeline/pull/852): feat: V2: Switch worker throttling to use Dask Semaphore and add Dask cluster memory usage logging
+- [#846](https://github.com/askap-vast/vast-pipeline/pull/846): fix: V2: Compute associations prior to upload and persist srcs_df in final pairs calculation
+- [#845](https://github.com/askap-vast/vast-pipeline/pull/845): fix: V2: Fix memory leaks and duplicate source ID issue
+- [#844](https://github.com/askap-vast/vast-pipeline/pull/844): fix: V2: Change measurements and association DB indices to UUIDs
+- [#843](https://github.com/askap-vast/vast-pipeline/pull/843): feat: V2: Enable specification of Dask worker memory limits
+- [#833](https://github.com/askap-vast/vast-pipeline/pull/833): feat: V2: Limit associations upload to using num_io_workers
+- [#829](https://github.com/askap-vast/vast-pipeline/pull/829): feat: V2: Allow user specification of dask dashboard paramters and add some further logging to dask setup
+- [#817](https://github.com/askap-vast/vast-pipeline/pull/817): fix: V2: Updates to pairs calculation to make it work with Dask `LocalCluster`.
+- [#816](https://github.com/askap-vast/vast-pipeline/pull/816): feat: V2: Update to use Dask `LocalCluster` throughout.
+- [#808](https://github.com/askap-vast/vast-pipeline/pull/808): feat: V2: Add DaskManager for setting up a Dask `LocalCluster` using Dask.Distributed.
+- [#803](https://github.com/askap-vast/vast-pipeline/pull/803): feat: V2: Change to UUID indexes and use `django-postgres-copy`.
+- [#801](https://github.com/askap-vast/vast-pipeline/pull/801): docs, dep: v2: Updated docs dependencies and fixed outdated information and various warnings
+- [#714](https://github.com/askap-vast/vast-pipeline/pull/714): fix: V2: Correctly calculate new_high_sigma parameter 
+- [#798](https://github.com/askap-vast/vast-pipeline/pull/798): dep: V2: Update dependencies to deal with dependabot reccomendations and to prepare for V2 upgrades.
+
+
+## [1.3.0](https://github.com/askap-vast/vast-pipeline/releases/v1.3.0) (2026-07-28)
+
+#### Added
+
+- Added Fink Rubin alerts to external query table on source webpage [#884](https://github.com/askap-vast/vast-pipeline/pull/884)
+- Added custom Aladin lite display to source webpages [#874](https://github.com/askap-vast/vast-pipeline/pull/874)
+- Added Vizier crossmatches to source webpages via Data Central API [#874](https://github.com/askap-vast/vast-pipeline/pull/874)
+- Added Fink crossmatches to source webpages [#874](https://github.com/askap-vast/vast-pipeline/pull/874)
+- Added source cutout cache and corresponding helper functions [#869](https://github.com/askap-vast/vast-pipeline/pull/869)
+- Added image.utils.get_fits_header to only fetch header when initialising Image object [#841](https://github.com/askap-vast/vast-pipeline/pull/841)
+- Added more detailed warnings about the use of Condon Errors throughout the docs and code [#806](https://github.com/askap-vast/vast-pipeline/pull/806)
+- Added processing configuration parameters to the run configuration documentation [#805](https://github.com/askap-vast/vast-pipeline/pull/805)
+- Added option to disable forced photometry clustering [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
+- Added additional logging to forced extraction step [#788](https://github.com/askap-vast/vast-pipeline/pull/788)
+
+#### Changed
+
 - Update external query tests to work when external sites are down [#889](https://github.com/askap-vast/vast-pipeline/pull/889)
 - Changed execution of external queries to run in parallel [#884](https://github.com/askap-vast/vast-pipeline/pull/884)
 - Changed loading of source cutouts to utilise caching [#869](https://github.com/askap-vast/vast-pipeline/pull/869)
@@ -73,18 +114,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
-- V2: Generate UUIDs in Associations upload more efficiently [#900](https://github.com/askap-vast/vast-pipeline/pull/900)
-- V2: Avoid expendive merge with sources_df when writing our measurement paird [#900](https://github.com/askap-vast/vast-pipeline/pull/900)
-- V2: Fix association upload to work with dask > 2025.5.0 [#879](https://github.com/askap-vast/vast-pipeline/pull/879)
-- V2: Fixed memory leaks caused by nested delays [#854](https://github.com/askap-vast/vast-pipeline/pull/854)
-- V2: Fixed duplicate source ID error by switching from sources_df.repartition() to sources_df.shuffle() in pipeline.finalise.final_operations [#845](https://github.com/askap-vast/vast-pipeline/pull/845)
-- V2: Tentative fix for image upload memory leak via garbage collect [#845](https://github.com/askap-vast/vast-pipeline/pull/845)
-- V2: Fixed dd.concat memory blow-up in pipeline.forced_extraction.forced_extraction by persisting both dataframes prior [#845](https://github.com/askap-vast/vast-pipeline/pull/845)
-- V2: Pair metrics working with V2 dask LocalCluster changes [#817](https://github.com/askap-vast/vast-pipeline/pull/817)
-- V2: Fixed missing JS9 overlays on source webpage [#809](https://github.com/askap-vast/vast-pipeline/pull/809)
-- V2: Fix bug when deleting source tags from database which are referenced by multiple sources [#803](https://github.com/askap-vast/vast-pipeline/pull/803)
 - Fixed incorrect error ellipse calculation [#792](https://github.com/askap-vast/vast-pipeline/pull/792)
-- V2: Fix incorrect calculation of the new_high_sigma parameter [#714](https://github.com/askap-vast/vast-pipeline/pull/714)
 - Fix incorrect variable name bug introduced by #840 [#896](https://github.com/askap-vast/vast-pipeline/pull/896)
 - Fix and optimise forced measurement deletion [#888](https://github.com/askap-vast/vast-pipeline/pull/888)
 - Fix bug introduced by #884 regarding error handling of external query table [#885](https://github.com/askap-vast/vast-pipeline/pull/885)
@@ -113,31 +143,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Removed Aladin lite display containing RACS and other ASKAP HIPS images [#874](https://github.com/askap-vast/vast-pipeline/pull/874)
 
 #### List of PRs
-- [#901](https://github.com/askap-vast/vast-pipeline/pull/901): fix: V2: Optimisations of new_sources step
-- [#900](https://github.com/askap-vast/vast-pipeline/pull/900): fix: V2: Optimisations of finalise step
-- [#899](https://github.com/askap-vast/vast-pipeline/pull/899): feat: V2: Optimise missing source calculation
-- [#893](https://github.com/askap-vast/vast-pipeline/pull/893): feat: V2: Parallelise ingest of measurements
-- [#880](https://github.com/askap-vast/vast-pipeline/pull/880): fix: V2: Ensure external dependencies pass when etxternal websites are down
-- [#879](https://github.com/askap-vast/vast-pipeline/pull/879): fix: V2: Update dependencies to work with latest python 3.11&3.12 and pin them
-- [#877](https://github.com/askap-vast/vast-pipeline/pull/877): feat: V2: Capture worker logs by client
-- [#854](https://github.com/askap-vast/vast-pipeline/pull/854): fix: V2: Fixed memory leaks caused by nested delays
-- [#852](https://github.com/askap-vast/vast-pipeline/pull/852): feat: V2: Switch worker throttling to use Dask Semaphore and add Dask cluster memory usage logging
-- [#846](https://github.com/askap-vast/vast-pipeline/pull/846): fix: V2: Compute associations prior to upload and persist srcs_df in final pairs calculation
-- [#845](https://github.com/askap-vast/vast-pipeline/pull/845): fix: V2: Fix memory leaks and duplicate source ID issue
-- [#844](https://github.com/askap-vast/vast-pipeline/pull/844): fix: V2: Change measurements and association DB indices to UUIDs
-- [#843](https://github.com/askap-vast/vast-pipeline/pull/843): feat: V2: Enable specification of Dask worker memory limits
-- [#833](https://github.com/askap-vast/vast-pipeline/pull/833): feat: V2: Limit associations upload to using num_io_workers
-- [#829](https://github.com/askap-vast/vast-pipeline/pull/829): feat: V2: Allow user specification of dask dashboard paramters and add some further logging to dask setup
-- [#817](https://github.com/askap-vast/vast-pipeline/pull/817): fix: V2: Updates to pairs calculation to make it work with Dask `LocalCluster`.
-- [#816](https://github.com/askap-vast/vast-pipeline/pull/816): feat: V2: Update to use Dask `LocalCluster` throughout.
+
 - [#809](https://github.com/askap-vast/vast-pipeline/pull/809): fix: Fix missing JS9 overlays on source webpage
-- [#808](https://github.com/askap-vast/vast-pipeline/pull/808): feat: V2: Add DaskManager for setting up a Dask `LocalCluster` using Dask.Distributed.
-- [#803](https://github.com/askap-vast/vast-pipeline/pull/803): feat: V2: Change to UUID indexes and use `django-postgres-copy`.
 - [#792](https://github.com/askap-vast/vast-pipeline/pull/792): fix: Simplify and correct error ellipse calculation.
 - [#801](https://github.com/askap-vast/vast-pipeline/pull/801): docs, dep: v2: Updated docs dependencies and fixed outdated information and various warnings
-- [#714](https://github.com/askap-vast/vast-pipeline/pull/714): fix: V2: Correctly calculate new_high_sigma parameter 
-- [#798](https://github.com/askap-vast/vast-pipeline/pull/798): dep: V2: Update dependencies to deal with dependabot reccomendations and to prepare for V2 upgrades.
-
 - [#896](https://github.com/askap-vast/vast-pipeline/pull/896): Fix incorrect variable name bug introduced by #840
 - [#890](https://github.com/askap-vast/vast-pipeline/pull/891): fix: Update ci-docs github actions to be compatible with new poetry
 - [#889](https://github.com/askap-vast/vast-pipeline/pull/889): fix: Ensure external dependencies pass when etxternal websites are down

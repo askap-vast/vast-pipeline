@@ -474,6 +474,20 @@ def calculate_workers_and_partitions(
 
     return num_workers, n_partitions
 
+def maybe_delete_file_or_dir(path: Union[str, Path]) -> None:
+    """
+    Delete a file or directory if it exists.
+    Args:
+        path: The path to the file or directory to delete.
+    Returns:
+        None
+    """
+    if type(path) is str:
+        path = Path(path)
+    if path.exists():
+        delete_file_or_dir(path)
+
+
 def delete_file_or_dir(path: Union[str, Path]) -> None:
     """
     Delete a file or directory.

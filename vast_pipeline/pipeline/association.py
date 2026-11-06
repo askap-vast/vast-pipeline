@@ -1410,7 +1410,7 @@ def parallel_association(
         "d2d": "f",
         "dr": "f",
         "related": "O",
-        "epoch": "i",
+        "epoch": images_df["epoch"].dtype,
         "interim_ew": "f",
         "interim_ns": "f",
     }
