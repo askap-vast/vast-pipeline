@@ -190,6 +190,10 @@ function modules() {
   var bokehJSwidgets = gulp.src('./node_modules/@bokeh/bokehjs/build/js/bokeh-widgets.min.js')
     .pipe(gulp.dest(paths.vendor + '/bokehjs'));
 
+  // Aladin Lite (self-hosted, pinned version)
+  var aladinLite = gulp.src('./node_modules/aladin-lite/dist/aladin.js')
+    .pipe(gulp.dest(paths.vendor + '/aladin-lite'));
+
   // SB Admin 2 Bootstrap template
   var bootstrapSbAdmin2 = gulp.src([
     './node_modules/startbootstrap-sb-admin-2/js/*.js',
@@ -332,9 +336,16 @@ function watchFiles() {
 }
 
 // Define complex tasks
+function sampjs(cb) {
+  const src = fs.readFileSync('./node_modules/sampjs/samp.js', 'utf8')
+    .replace(/^\s*module\.exports\s*=.*$/m, '');
+  fs.mkdirSync(paths.vendor + '/sampjs', { recursive: true });
+  fs.writeFileSync(paths.vendor + '/sampjs/samp.js', src);
+  cb();
+}
 const js9 = gulp.series(js9Dir, js9MakeConfig, js9Make, js9MakeInst, js9Config)
 const assets = gulp.parallel(gulp.series(scssTask, cssTask), jsTask)
-const vendor = gulp.series(clean, gulp.parallel(modules, js9))
+const vendor = gulp.series(clean, gulp.parallel(modules, sampjs, js9))
 const build = gulp.series(vendor, assets);
 const watch = gulp.series(assets, gulp.parallel(watchFiles, browserSync));
 

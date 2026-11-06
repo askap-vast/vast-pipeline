@@ -16,6 +16,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - V2: Migrate pipeline to used a Dask.distributed.LocalCluster throughout [#816](https://github.com/askap-vast/vast-pipeline/pull/816)
 - V2: Add Dask.distributed support
 - V2: Use `django-postgres-copy` for database uploads [#803](https://github.com/askap-vast/vast-pipeline/pull/803)
+- Added button for Aladin SAMP connection [#903](https://github.com/askap-vast/vast-pipeline/pull/903)
+- Automatically select best available survey to be displayed in Aladin viewer on source webpage [#902](https://github.com/askap-vast/vast-pipeline/pull/902)
+- Added crossmatch to all other pipeline runs to be displayed in crossmatch results table on source webpage [#902](https://github.com/askap-vast/vast-pipeline/pull/902)
 
 #### Changed
 
@@ -35,6 +38,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - V2: Updated docs dependencies and fixed outdated information and various warnings [#801](https://github.com/askap-vast/vast-pipeline/pull/801)
 - V2: Reorganise new_high_sigma calculation into dedicated function [#714](https://github.com/askap-vast/vast-pipeline/pull/714)
 - V2: Update dependencies to fix dependabot warnings and prepare for Dask distributed implementation.
+- Switched to a locally hosted version of aladin-lite [#903](https://github.com/askap-vast/vast-pipeline/pull/903)
+- Updated formatting of internal sources in "Crossmatch Results" table [#903](https://github.com/askap-vast/vast-pipeline/pull/903)
+- Remove measurement pairs display from source webpage if they do not exist [#902](https://github.com/askap-vast/vast-pipeline/pull/902)
+- Renamed "External Search Results" to "Crossmatch Results" on source webpage [#902](https://github.com/askap-vast/vast-pipeline/pull/902)
 
 #### Fixed
 
@@ -50,6 +57,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - V2: Fixed missing JS9 overlays on source webpage [#809](https://github.com/askap-vast/vast-pipeline/pull/809)
 - V2: Fix bug when deleting source tags from database which are referenced by multiple sources [#803](https://github.com/askap-vast/vast-pipeline/pull/803)
 - V2: Fix incorrect calculation of the new_high_sigma parameter [#714](https://github.com/askap-vast/vast-pipeline/pull/714)
+- Fixed source webpage incorrect coordinate parsing that broke Aladin display for Northern sources and also impacted the external search results [#902](https://github.com/askap-vast/vast-pipeline/pull/902)
+- Fixed Aladin being loaded twice on source webpage [#902](https://github.com/askap-vast/vast-pipeline/pull/902)
+- Fixed source webpage to remove JS9 overhang for first detection cutout [#902](https://github.com/askap-vast/vast-pipeline/pull/902)
+- Add an external search timeout and appropriate error handling [#902](https://github.com/askap-vast/vast-pipeline/pull/902)
 
 #### Removed
 
@@ -78,7 +89,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [#801](https://github.com/askap-vast/vast-pipeline/pull/801): docs, dep: v2: Updated docs dependencies and fixed outdated information and various warnings
 - [#714](https://github.com/askap-vast/vast-pipeline/pull/714): fix: V2: Correctly calculate new_high_sigma parameter 
 - [#798](https://github.com/askap-vast/vast-pipeline/pull/798): dep: V2: Update dependencies to deal with dependabot reccomendations and to prepare for V2 upgrades.
-
+- [#903](https://github.com/askap-vast/vast-pipeline/pull/903): fix, feat: Implement Aladin SAMP connection on source webpages
+- [#902](https://github.com/askap-vast/vast-pipeline/pull/902): fix, feat: Various fixes and upgrades to the source webpage
 
 ## [1.3.0](https://github.com/askap-vast/vast-pipeline/releases/v1.3.0) (2026-07-28)
 
