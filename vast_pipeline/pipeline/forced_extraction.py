@@ -6,21 +6,31 @@ import uuid
 
 import numpy as np
 import pandas as pd
+import pyarrow as pa
 import dask.dataframe as dd
+import dask.config as dc
 from glob import glob
+from pathlib import Path
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from django.conf import settings
 from typing import Any, List, Tuple, Dict, Optional, Union
 from dask.distributed import get_client, wait
+from pyarrow.parquet import ParquetDataset
 
 from vast_pipeline.models import Image, Measurement, Run
 from vast_pipeline.pipeline.loading import copy_upload_measurements
-from vast_pipeline.daskmanager.manager import get_io_semaphore
+from vast_pipeline.daskmanager.manager import DaskManager, get_io_semaphore
 
 from forced_phot import ForcedPhot
-from ..utils.utils import StopWatch, maybe_delete_file_or_dir
+from ..utils.utils import (
+    StopWatch,
+    maybe_delete_file_or_dir,
+    create_dir,
+    count_parquet_rows,
+    read_parquet_one_partition_per_file,
+)
 from vast_pipeline.image.utils import open_fits
 
 # NOTE: We check here to see if we're in a testing environment.
@@ -34,6 +44,8 @@ from vast_pipeline.image.utils import open_fits
 # that case.
 __TESTING__ = settings.TESTING
 
+_TMP_DIR = "_forced_extract_tmp"
+
 logger = logging.getLogger(__name__)
 
 # Columns of the forced measurement parquets: the Measurement model fields,
@@ -41,7 +53,6 @@ logger = logging.getLogger(__name__)
 FORCED_PARQUET_COLUMNS = [f.attname for f in Measurement._meta.concrete_fields] + [
     "weight_ew", "weight_ns", "time", "psf_bmaj", "psf_bmin", "psf_pa",
 ]
-
 
 def get_data_from_parquet(
     file: str, p_run_path: str, add_mode: bool = False
@@ -140,6 +151,7 @@ def extract_from_image_and_save(
     cfg_err_dec: float,
     sources_meta: pd.DataFrame,
     do_upload: bool,
+    post_extract_dir: Path,
 ) -> pd.DataFrame:
     """
     Extract the flux, its errors and chi squared data from the image
@@ -180,12 +192,17 @@ def extract_from_image_and_save(
             whether to upload the measurements to the database. Decided
             by the caller as the Dask workers do not know if they are
             running in a test environment.
+        post_extract_dir:
+            Directory to write the forced measurements for the image to as a
+            parquet with the columns in `sources_meta`, for concatenation
+            into sources_df.
 
     Returns:
-        Dataframe of the forced measurements for the image, containing the
-            columns in `sources_meta`. The measurements are also written
-            to a per-image parquet in the run directory (and uploaded to
-            the database unless running in a test environment).
+        An empty dataframe. The measurements are written to a parquet in
+            `post_extract_dir`, to a per-image parquet in the run directory
+            (and uploaded to the database unless running in a test
+            environment). No parquet is written to `post_extract_dir` if
+            there are no measurements.
     """
     timer = StopWatch()
 
@@ -279,11 +296,15 @@ def extract_from_image_and_save(
 
     logger.debug("%s - Total extraction and upload time: %ds", image, timer.reset())
 
-    # Match sources_df; datetimes are left alone as their tz/unit can differ.
-    df = df[sources_meta.columns]
-    return df.astype(
-        {c: t for c, t in sources_meta.dtypes.items() if t.kind != "M"}
+    df = df[sources_meta.columns].astype(
+        {c: t for c, t in sources_meta.dtypes.items()}
     )
+    if not df.empty:
+        df.to_parquet(
+            os.path.join(post_extract_dir, image_name.replace(".", "_") + ".parquet"),
+            index=False,
+        )
+    return pd.DataFrame()
 
 
 def finalise_forced_dfs(
@@ -359,7 +380,8 @@ def parallel_extraction_and_upload(
     cfg_err_ra: float,
     cfg_err_dec: float,
     sources_meta: pd.DataFrame,
-) -> pd.DataFrame:
+    tmp_path: Path,
+) -> Path:
     """
     Parallelise forced extraction with Dask, writing the measurements to
     parquet and uploading them to the database for each image.
@@ -393,12 +415,14 @@ def parallel_extraction_and_upload(
         cfg_err_dec:
             The minimum declination error from the config file (in degrees).
         sources_meta:
-            Empty dataframe with the columns and dtypes of the output, used
-            as the Dask metadata for the result.
+            Empty dataframe with the columns and dtypes of the output.
+        tmp_path:
+            Path to the temporary directory for storing intermediate parquet files.
 
     Returns:
-        Persisted dask dataframe of the forced extracted measurements with
-            the columns of `sources_meta`.
+        Directory of per-image parquets of the forced extracted measurements
+            with the columns of `sources_meta`. Contains no parquets if there
+            were no measurements.
     """
 
     # Look up the int32 image index and rms_min for each img_diff in df.
@@ -439,9 +463,7 @@ def parallel_extraction_and_upload(
     # Shuffle by image_idx so all rows for a given image land in exactly one
     # partition (deterministic hash), then write one parquet per image via
     # map_partitions to a temporary location.
-    _tmp_dir = os.path.join(p_run.path, "_forced_extract_tmp")
-    maybe_delete_file_or_dir(_tmp_dir)
-    os.makedirs(_tmp_dir, exist_ok=True)
+    pre_extract_parquet = create_dir(tmp_path / "pre_extract.parquet", overwrite=True)
 
     def _write_image_files(df, tmp_dir, images_index):
         for image_idx_val, group in df.groupby("image_idx"):
@@ -453,16 +475,17 @@ def parallel_extraction_and_upload(
         return pd.DataFrame()
 
     out = out.shuffle("image_idx", npartitions=len(df_images), shuffle_method="p2p")
-    _ = out.map_partitions(_write_image_files, _tmp_dir, image_names_index,
+    _ = out.map_partitions(_write_image_files, pre_extract_parquet, image_names_index,
                            meta=pd.DataFrame()).compute()
 
     del out
 
+    post_extract_parquet = create_dir(tmp_path / "post_extract.parquet", overwrite=True)
+
     # dd.read_parquet raises on a directory with no parquet files.
-    if not glob(os.path.join(_tmp_dir, "*.parquet")):
+    if not glob(os.path.join(pre_extract_parquet, "*.parquet")):
         logger.info("No forced measurements to extract.")
-        maybe_delete_file_or_dir(_tmp_dir)
-        return dd.from_pandas(sources_meta, npartitions=1)
+        return post_extract_parquet
 
     # Scatter df_images to the cluster once, broadcasting a single copy to
     # every worker. Without this, passing df_images directly to
@@ -471,7 +494,7 @@ def parallel_extraction_and_upload(
     # held for the full duration of the extraction run.
     df_images_future = get_client().scatter(df_images, broadcast=True)
 
-    per_image_ddf = dd.read_parquet(_tmp_dir, split_row_groups=False, blocksize=None)
+    per_image_ddf = read_parquet_one_partition_per_file(pre_extract_parquet)
 
     out = per_image_ddf.map_partitions(
         extract_from_image_and_save,
@@ -486,16 +509,16 @@ def parallel_extraction_and_upload(
         cfg_err_dec=cfg_err_dec,
         sources_meta=sources_meta,
         do_upload=not __TESTING__,
-        meta=sources_meta,
-    ).persist()
+        post_extract_dir=post_extract_parquet,
+        meta=pd.DataFrame(),
+    )
 
-    logger.info("Running extraction and persisting...")
-    wait(out)
-    logger.info("Finished persisting out")
-    logger.info("Cleaning up temporary files...")
-    maybe_delete_file_or_dir(_tmp_dir)
+    logger.info("Running extraction")
+    _ = out.compute()
 
-    return out
+    del out, per_image_ddf, df_images_future
+
+    return post_extract_parquet
 
 
 def save_and_upload_forced_df(forced_df: pd.DataFrame,
@@ -657,11 +680,11 @@ def write_forced_parquet(
 
 
 def forced_extraction(
-    sources_df: dd.DataFrame,
+    sources_df_ckpt: str,
     cfg_err_ra: float,
     cfg_err_dec: float,
     p_run: Run,
-    extr_df: dd.DataFrame,
+    extr_df_ckpt: str,
     min_sigma: float,
     edge_buffer: float,
     cluster_threshold: float,
@@ -669,14 +692,16 @@ def forced_extraction(
     add_mode: bool,
     done_images_df: pd.DataFrame,
     done_source_ids: List[int],
-) -> Tuple[pd.DataFrame, int]:
+    dm: DaskManager,
+    forced_sources_ckpt: str,
+) -> int:
     """
     Check and extract expected measurements, and associated them with the
     related source(s).
 
     Args:
-        sources_df:
-            Dataframe containing all the extracted measurements and
+        sources_df_ckpt:
+            Checkpoint path to the dataframe containing all the extracted measurements and
             associations (product from association step).
         cfg_err_ra:
             The minimum RA error from the config file (in degrees).
@@ -684,10 +709,9 @@ def forced_extraction(
             The minimum declination error from the config file (in degrees).
         p_run:
             The pipeline run object.
-        extr_df:
-            The dataframe containing the information on what sources are
-            missing from which images (output from
-            get_src_skyregion_merged_df in main.py).
+        extr_df_ckpt:
+            Checkpoint path to the dataframe containing the information on what sources are
+            missing from which images (output from get_src_skyregion_merged_df in main.py).
         min_sigma:
             Minimum sigma value to drop forced extracted measurements.
         edge_buffer:
@@ -704,14 +728,20 @@ def forced_extraction(
         done_source_ids:
             List of the source ids that were already present in the previous
             run (used in add image mode).
+        dm:
+            The Dask manager, used to checkpoint the combined sources.
+        forced_sources_ckpt:
+            Checkpoint path to write the sources with the forced measurements
+            added to.
 
     Returns:
-        The `sources_df` with the extracted sources added.
         The total number of forced measurements present in the run.
     """
     logger.info("Starting force extraction step.")
 
     timer = StopWatch()
+
+    tmp_path = create_dir(os.path.join(p_run.path, _TMP_DIR), overwrite=True)
 
     # get all the images in the run
     cols = {
@@ -740,6 +770,8 @@ def forced_extraction(
         .astype({k: v for k, v in cols.items() if k != "name"})
     )
 
+    images_df["datetime"] = pd.to_datetime(images_df["datetime"]).dt.tz_localize(None)
+
     # | name                          |   id     | measurements_path   | path         | noise_path   |
     # |:------------------------------|---------:|:--------------------|:-------------|:-------------|
     # | VAST_2118-06A.EPOCH01.I.fits  | iTsHMUy3 | path/to/file        | path/to/file | path/to/file |
@@ -758,8 +790,8 @@ def forced_extraction(
     # | VAST_2118-06A.EPOCH03x.I.fits |  0.165395 | 2019-10-29 10:01:20.500000+00:00 |
     # | VAST_2118-06A.EPOCH02.I.fits  |  0.16323  | 2019-10-30 08:31:20.200000+00:00 |
 
-    extr_df = extr_df.reset_index()
-    total_to_extract = extr_df.shape[0].compute()
+    # Count rows from the parquet footers so extr_df is never computed.
+    total_to_extract = count_parquet_rows(extr_df_ckpt)
     logger.info("%d forced measurements to extract", total_to_extract)
 
     if add_mode:
@@ -772,6 +804,8 @@ def forced_extraction(
         # 3. A new relation has been created and they need the forced
         # measuremnts filled in (actually covered by 2.)
         logger.info("Running extraction in add mode...")
+        extr_df = dd.read_parquet(extr_df_ckpt, index=False)
+
         extr_df = dd.concat(
             [
                 extr_df[~extr_df["img_diff"].isin(done_images_df["name"])],
@@ -782,18 +816,35 @@ def forced_extraction(
             ]
         )
 
+        # Create a temporary extr_df_ckpt to store the filtered DataFrame
+        extr_df_ckpt = Path(tmp_path / "extr_df.parquet")
+        maybe_delete_file_or_dir(extr_df_ckpt)
+        extr_df.to_parquet(extr_df_ckpt)
+
+        new_to_extract = count_parquet_rows(extr_df_ckpt)
         logger.info(
-            f"{extr_df.shape[0].compute()} new measurements to force extract"
+            f"{new_to_extract} new measurements to force extract"
             f" (from {total_to_extract} total)"
         )
 
-    # Dask needs type metadata for map_partitions
-    sources_meta = dd.utils.make_meta(sources_df).drop(
-        columns=['interim_ns', 'interim_ew'], errors="ignore"
-    )
+    # Derive sources_meta purely from the parquet footer.
+    _src_schema = ParquetDataset(sources_df_ckpt).schema
+    sources_meta = _src_schema.empty_table().to_pandas()
+    # sources_sorted_ckpt stores 'source' as the parquet index field; bring it
+    # back as a regular column so it appears in output_columns passed to
+    # parallel_extraction (extr_df must have 'source' as a column to set_index
+    # on later).
+    if sources_meta.index.name is not None:
+        sources_meta = sources_meta.reset_index()
+    sources_meta = sources_meta.drop(columns=['interim_ns', 'interim_ew'], errors="ignore")
 
     timer.reset()
-    extr_df = parallel_extraction_and_upload(
+    extr_df = dd.read_parquet(
+        extr_df_ckpt,
+        columns=["source", "wavg_ra", "wavg_dec", "img_diff", "flux_peak"],
+        index=False,
+    )
+    post_extract_parquet = parallel_extraction_and_upload(
         extr_df,
         images_df,
         min_sigma,
@@ -804,36 +855,49 @@ def forced_extraction(
         p_run,
         cfg_err_ra,
         cfg_err_dec,
-        sources_meta=sources_meta,
+        sources_meta,
+        tmp_path,
     )
     logger.info("Completed parallel extraction step.")
+    del extr_df, images_df
 
-    sources_df = dd.concat(
-        [sources_df, extr_df],
-        interleave_partitions=True
-    )
+    # All rows of a source are in one file; concat below relies on that.
+    sources_df = read_parquet_one_partition_per_file(sources_df_ckpt, index="source")
 
-    # Wait for the forced extraction step to complete
-    # NOTE: Ideally we would have some optimised way of sorting sources_df
-    # by source id at this point to avoid needing to `set_index` on it
-    # during the finalise step.
-    logger.info("Persisting sources_df...")
-    sources_df = sources_df.persist()
-    wait(sources_df)
-    logger.info("Persisted sources_df")
+    def _concat_partition_pair(s: pd.DataFrame, e: pd.DataFrame) -> pd.DataFrame:
+        """Concatenate a sources partition with its forced measurements."""
+        return pd.concat([s, e])
 
-    del extr_df
-    gc.collect()
-
-    # get the number of forced extractions for the run
-    forced_parquets = glob(os.path.join(p_run.path, "forced_measurements*.parquet"))
-    if forced_parquets:
-        n_forced = (
-            dd.read_parquet(forced_parquets, columns=["id"]).count().compute().values[0]
+    # Every image may have had all of its measurements filtered out.
+    if glob(os.path.join(post_extract_parquet, "*.parquet")):
+        extr_df = dd.read_parquet(
+            post_extract_parquet,
+            index="source",
+            split_row_groups=False,
+            blocksize=None,
         )
+
+        npartitions = sources_df.npartitions
+        logger.info("Sorting results by source (%d partitions)...", npartitions)
+        with dc.set({"dataframe.shuffle.method": "p2p"}):
+            extr_df = extr_df.shuffle(npartitions=npartitions, on_index=True)
+
+        sources_df = dd.map_partitions(
+            _concat_partition_pair, sources_df, extr_df, meta=sources_df._meta
+        )
+
+        n_forced = count_parquet_rows(post_extract_parquet)
     else:
+        logger.info("No forced measurements were extracted.")
         n_forced = 0
+
+    dm.checkpoint(
+        {forced_sources_ckpt: sources_df},
+        schema={"related": pa.list_(pa.string())},
+    )
+    del sources_df, extr_df
+    maybe_delete_file_or_dir(tmp_path)
 
     logger.info("Total forced extraction time: %.2f seconds", timer.reset_init())
 
-    return sources_df, n_forced
+    return n_forced

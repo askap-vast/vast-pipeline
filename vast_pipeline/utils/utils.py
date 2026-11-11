@@ -12,8 +12,10 @@ import math as m
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
+import pyarrow.dataset as pa_ds
 
 from datetime import datetime
+from glob import glob
 from typing import Any, Dict, Tuple, Union, Optional
 from pathlib import Path
 from psutil import cpu_count
@@ -504,6 +506,71 @@ def delete_file_or_dir(path: Union[str, Path]) -> None:
         shutil.rmtree(path)
     else:
         raise ValueError(f"Path {path} is not a file or directory.")
+
+
+def create_dir(path: Union[str, Path], overwrite: bool = False) -> Path:
+    """
+    Create a directory, including any missing parents.
+    Args:
+        path: The path of the directory to create.
+        overwrite: If True, delete any existing file or directory at the
+            path before creating it. If False, an existing directory is
+            left untouched.
+    Returns:
+        The path of the directory as a Path object.
+    """
+    path = Path(path)
+    if overwrite:
+        maybe_delete_file_or_dir(path)
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def count_parquet_rows(path: Union[str, Path]) -> int:
+    """
+    Count the rows in a parquet file or directory of parquet files using
+    only the file footers, without reading any data.
+
+    Args:
+        path: The path to a parquet file or a directory of parquet files.
+
+    Returns:
+        The total number of rows.
+    """
+    return pa_ds.dataset(path, format="parquet").count_rows()
+
+
+def read_parquet_one_partition_per_file(
+    path: Union[str, Path], **kwargs: Any
+) -> dd.DataFrame:
+    """
+    Read a directory of parquet files so no file is split across partitions.
+
+    Needed when the partitioning is meaningful, e.g. all rows of a source were
+    hash-shuffled into the same file and must not be split across partitions.
+
+    Args:
+        path: The directory of parquet files.
+        **kwargs: Passed to `dd.read_parquet`.
+
+    Returns:
+        The dask dataframe.
+
+    Raises:
+        RuntimeError: If there are more partitions than parquet files.
+            Fewer is fine, e.g. when `filters` drop files.
+    """
+    ddf = dd.read_parquet(
+        path, split_row_groups=False, blocksize=None, **kwargs
+    )
+    n_files = len(glob(os.path.join(path, "*.parquet")))
+    if ddf.npartitions > n_files:
+        raise RuntimeError(
+            f"{path} has {n_files} parquet files but was read as "
+            f"{ddf.npartitions} partitions."
+        )
+    return ddf
+
 
 def copy_file_or_dir(src: Union[str, Path], dst: Union[str, Path]) -> None:
     """

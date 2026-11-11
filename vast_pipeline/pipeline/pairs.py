@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import pyarrow as pa
 
+from vast_pipeline.utils.utils import read_parquet_one_partition_per_file
 logger = logging.getLogger(__name__)
 
 PAIRS_SCHEMA = [
@@ -67,7 +68,10 @@ def calculate_measurement_pair_aggregate_metrics(
     columns = ["source", f"vs_abs_significant_max_{flux_type}", f"m_abs_significant_max_{flux_type}"]
     filters = [(f"vs_abs_significant_max_{flux_type}", ">=", min_vs)]
 
-    pair_filtered = dd.read_parquet(pairs_parquet_dir, columns=columns, filters=filters)
+    # The aggregation below is per partition so a source must not be split.
+    pair_filtered = read_parquet_one_partition_per_file(
+        pairs_parquet_dir, columns=columns, filters=filters
+    )
 
     def _get_max_flux(partition):
         partition=partition.reset_index(drop=True)
@@ -142,9 +146,18 @@ def calculate_measurement_pair_metrics(
             m_peak, m_int - variability modulation index
     """
 
-    # select relevant columns
-    df_pairs = df[["id", "flux_int", "flux_int_err",
-               "flux_peak", "flux_peak_err", "image", "datetime"]].rename(columns={"image": "image_name"})
+    # Select columns inside map_partitions so Dask can't push the projection
+    # into the read and fuse files, which would multiply the pairs per partition.
+    pair_cols = ["id", "flux_int", "flux_int_err",
+                 "flux_peak", "flux_peak_err", "image", "datetime"]
+
+    def _select_columns(partition):
+        return partition[pair_cols].rename(columns={"image": "image_name"})
+
+    df_pairs = df.map_partitions(
+        _select_columns,
+        meta=_select_columns(df._meta),
+    )
 
     # keep record of divisions
     source_divisions = df_pairs.divisions

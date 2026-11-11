@@ -674,7 +674,9 @@ def parallel_groupby(df: dd.DataFrame) -> dd.DataFrame:
     metrics using Dask and returns the resulting dataframe.
 
     Args:
-        df: The sources dataframe produced by the previous pipeline stages.
+        df: The sources dataframe produced by the previous pipeline stages,
+            indexed by 'source'. All the rows of a source must be in the same
+            partition so no shuffle is needed.
 
     Returns:
         The source dataframe with the calculated metric columns.
@@ -730,13 +732,18 @@ def parallel_groupby(df: dd.DataFrame) -> dd.DataFrame:
 
     groupby_df = df[columns]
 
-    out = groupby_df.groupby('source').apply(groupby_funcs,
-                                             meta=out_col_dtype)
+    meta = pd.DataFrame(
+        {col: pd.Series(dtype=dtype) for col, dtype in out_col_dtype.items()},
+        index=pd.Index([], name='source'),
+    )
 
-    # For some reason this gets lost - stupid Dask.
-    out.index = out.index.rename('source')
+    def _groupby_partition(part: pd.DataFrame) -> pd.DataFrame:
+        if part.empty:
+            return meta.copy()
+        res = part.groupby('source').apply(groupby_funcs)
+        return res[list(meta.columns)]
 
-    return out
+    return groupby_df.map_partitions(_groupby_partition, meta=meta)
 
 
 def calc_ave_coord(grp: pd.DataFrame) -> pd.Series:
@@ -1181,8 +1188,6 @@ def get_src_skyregion_merged_df(
     # --------------------------------+------------------------------+--------------+
     logger.info("Creating ideal source coverage df...")
 
-    merged_timer = StopWatch()
-
     sources_df, image_names, skyreg_img_df = _build_compact_indices(
         sources_df, images_df
     )
@@ -1245,11 +1250,6 @@ def get_src_skyregion_merged_df(
     srcs_df = srcs_df.map_partitions(
         _convert_img_diff_names, meta=srcs_df._meta.assign(img_diff=pd.Series(dtype=object)),
     )
-
-    srcs_df = srcs_df.persist()
-    wait(srcs_df)
-
-    logger.info("Ideal source coverage time: %.2f seconds", merged_timer.reset())
 
     return srcs_df
 

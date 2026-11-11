@@ -13,11 +13,13 @@ from django.conf import settings
 from typing import List, Dict, Tuple
 
 from vast_pipeline.models import Run
+from vast_pipeline.daskmanager.manager import DaskManager
 from vast_pipeline.utils.utils import (
     StopWatch,
     optimise_numeric,
     delete_file_or_dir,
-    calculate_n_partitions
+    calculate_n_partitions,
+    read_parquet_one_partition_per_file,
 )
 from vast_pipeline.pipeline.loading import (
     update_sources,
@@ -41,9 +43,10 @@ __TESTING__ = settings.TESTING
 logger = logging.getLogger(__name__)
 
 def final_operations(
-    sources_df: dd.DataFrame,
+    sources_df_ckpt: str,
     p_run: Run,
-    new_sources_df: pd.DataFrame,
+    new_sources_ckpt: str,
+    dm: DaskManager,
     calculate_pairs: bool,
     source_aggregate_pair_metrics_min_abs_vs: float,
     add_mode: bool,
@@ -59,16 +62,18 @@ def final_operations(
     - Uploads associations and writes parquet.
 
     Args:
-        sources_df:
-            The main sources_df dataframe produced from the pipeline.
-            Contains all measurements and the association information.
-            The `id` column is the Measurement object primary key that has
-            already been saved to the database.
+        sources_df_ckpt:
+            Checkpoint path to the main sources_df dataframe produced from
+            the pipeline. Contains all measurements and the association
+            information. The `id` column is the Measurement object primary
+            key that has already been saved to the database.
         p_run:
             The pipeline Run object of which the sources are associated with.
-        new_sources_df:
-            The new sources dataframe, only contains the
-            'new_source_high_sigma' column (source_id is the index).
+        new_sources_ckpt:
+            Checkpoint path to the new sources dataframe, which only contains
+            the 'new_high_sigma' column (source_id is the index).
+        dm:
+            The Dask manager, used to restart the cluster when needed.
         calculate_pairs:
             Whether to calculate the measurement pairs and their 2-epoch
             metrics, Vs and m.
@@ -93,29 +98,18 @@ def final_operations(
     """
     timer = StopWatch()
 
+    # Each source must stay within one partition for the pair calculation.
+    sources_df = read_parquet_one_partition_per_file(sources_df_ckpt)
+    new_sources_df = pd.read_parquet(new_sources_ckpt)
+
     # calculate source fields
     logger.info("Calculating statistics for sources...")
     log_total_memory_usage()
 
-    npartitions = calculate_n_partitions(
-        sources_df,
-        partition_size_mb=upload_chunk_size_mb
-    )
-
-    with dc.set({"dataframe.shuffle.method": "p2p"}):
-        sources_df = sources_df.set_index("source") \
-                               .shuffle(npartitions=npartitions, on_index=True)
-
     srcs_df = parallel_groupby(sources_df)
 
-    mem_usage = get_df_memory_usage(srcs_df)
-    logger.info('Groupby-apply time: %.2f seconds', timer.reset())
-    logger.debug(f"Initial srcs_df memory: {mem_usage}MB")
-    log_total_memory_usage()
-
-    # Add new high sigma
-    srcs_df = dd.merge(
-        srcs_df,
+    # Add new high sigma. new_sources_df is small so it is merged as pandas.
+    srcs_df = srcs_df.merge(
         new_sources_df,
         left_index=True,
         right_index=True,
@@ -127,6 +121,8 @@ def final_operations(
     # until the associations and related parques are written.
     # This would simplify the merge with maesurement pairs below as well.
     srcs_df = srcs_df.compute()
+
+    dm.restart_workers()
 
     mem_usage = get_df_memory_usage(srcs_df)
     logger.debug(f"srcs_df memory after adding new sources: {mem_usage}MB")
@@ -140,7 +136,7 @@ def final_operations(
     srcs_df["n_neighbour_dist"] = d2d.deg
 
     # add new sources
-    srcs_df["new"] = srcs_df.index.isin(new_sources_df.index.compute().values)
+    srcs_df["new"] = srcs_df.index.isin(new_sources_df.index.values)
 
     mem_usage = get_df_memory_usage(srcs_df)
     logger.debug(f"srcs_df memory after nearest-neighbour: {mem_usage}MB")
@@ -154,7 +150,7 @@ def final_operations(
         pairs_dir_tmp = os.path.join(pairs_dir, "tmp")
         n_partitions, source_divisions = calculate_measurement_pair_metrics(sources_df, pairs_dir_tmp)
         logger.info('Measurement pair metrics time: %.2f seconds', timer.reset())
-
+        logger.info("Measurement pair n_partitions: %d", n_partitions)
         # calculate measurement pair metric aggregates for sources by finding
         # the row indices of the aggregate max of the abs(m) metric for each
         # flux type.
@@ -309,36 +305,39 @@ def final_operations(
     # update measurements with sources to get associations
     # Can compute here since associations df is small - this also saves a compute later on
     # since drop_duplicates in copy_upload_associations doesn't work as we want with dask dataframes
-    associations_df = sources_df.reset_index().loc[:, ['source', 'id', 'd2d', 'dr']].compute()
+    associations_df = read_parquet_one_partition_per_file(sources_df_ckpt, index=False, columns=['source', 'id', 'd2d', 'dr'])
 
-    del sources_df
-
-    mem_usage = get_df_memory_usage(associations_df)
-    logger.debug(f"sources_df memory after merge: {mem_usage}MB")
     log_total_memory_usage()
 
     if add_mode:
+        associations_df_computed = associations_df.compute()
         # Load old associations so the already uploaded ones can be removed
         old_associations = pd.read_parquet(previous_parquets["associations"]).rename(
             columns={"meas_id": "id", "source_id": "source"}
         )
         associations_df_upload = pd.concat(
-            [associations_df, old_associations],
+            [associations_df_computed, old_associations],
             ignore_index=True
         ).drop_duplicates(keep=False)
         logger.debug(f"Add mode: #{associations_df_upload.shape[0]} associations to upload.")
+        # Write the deduplicated rows out and re-read them lazily so
+        # copy_upload_associations always receives a Dask DataFrame to
+        # stream-upload from.
+        dedup_ckpt = os.path.join(p_run.path, "associations_dedup_tmp.parquet")
+        associations_df_upload.to_parquet(dedup_ckpt, index=False)
+        del associations_df_upload
+        associations_df_upload = dd.read_parquet(dedup_ckpt, index=False)
     else:
         associations_df_upload = associations_df
 
     # upload associations into DB
     if not __TESTING__:
-        associations_df_upload = dd.from_pandas(associations_df_upload).repartition(partition_size=f'{upload_chunk_size_mb}MB')
         copy_upload_associations(associations_df_upload)
         del associations_df_upload
 
     # write associations to parquet file
     associations_df.rename(columns={"id": "meas_id", "source": "source_id"}) \
-                   .to_parquet(os.path.join(p_run.path, "associations.parquet"))
+                   .to_parquet(os.path.join(p_run.path, "associations.parquet"), write_index=False)
 
     del associations_df
 

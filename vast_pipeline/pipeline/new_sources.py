@@ -243,18 +243,13 @@ def parallel_get_new_high_sigma(
             .apply(process_group, meta={'source': str, 'true_sigma': float})
 
     out = out.groupby('source').agg({'true_sigma': 'max'}) \
-             .rename(columns={'true_sigma': 'new_high_sigma'}) \
-             .persist()
-
-    logger.debug("Setup out df persisting...")
-    wait(out)
-    logger.debug("Finished persisting out df")
+             .rename(columns={'true_sigma': 'new_high_sigma'})
 
     return out
 
 
 def new_sources(
-    missing_sources_df: dd.DataFrame,
+    new_sources_df: dd.DataFrame,
     min_sigma: float,
     edge_buffer: float,
     p_run: Run,
@@ -266,8 +261,8 @@ def new_sources(
     snr value the source would have in non-detected images is also calculated.
 
     Args:
-        missing_sources_df:
-            The dataframe containing the 'missing detections' for each source.
+        new_sources_df:
+            The dataframe containing the 'new sources' for each source.
             See the source code comments for the layout of this dataframe.
         min_sigma:
             The minimum sigma value acceptable when compared to the minimum
@@ -279,7 +274,7 @@ def new_sources(
             The pipeline run.
 
     Returns:
-        A DataFrame indexed by source id and containing a single 'new_high_sigma' column.
+        A DataFrame indexed by source id and containing a single 'new_high_sigma' column for the new sources.
         The column will contain 'NaN' entires for sources that fail.
     """
     # Missing sources df layout
@@ -326,19 +321,8 @@ def new_sources(
         ).values(*tuple(cols))
     )).set_index('name')
 
-    # Get rid of sources that are not 'new', i.e. sources which the
-    # first sky region image is not in the image list
-    new_sources_df = missing_sources_df[
-        missing_sources_df['in_primary'] == False
-    ].drop(
-        columns=['in_primary']
-    )
-
     # Check if the previous sources would have actually been seen
     # i.e. are the previous images sensitive enough
-
-    # save the index before exploding
-    new_sources_df = new_sources_df.reset_index()
 
     # Merge the respective image information to the df
     new_sources_df = new_sources_df.merge(
