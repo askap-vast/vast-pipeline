@@ -1,8 +1,10 @@
 # Original code from https://github.com/MoonVision/django-dask-demo
 
+import asyncio
 import logging
 import random
 import time
+from collections import Counter
 from typing import Dict, Optional, Union
 
 import dask.dataframe as dd
@@ -10,7 +12,10 @@ import pandas as pd
 import pyarrow as pa
 from dask.distributed import Client, LocalCluster, Semaphore, WorkerPlugin
 from distributed.comm import CommClosedError
+from distributed.core import rpc
 from django.conf import settings as s
+
+from ..utils.utils import StopWatch
 from . import config # noqa: F401
 
 logger = logging.getLogger(__name__)
@@ -251,8 +256,15 @@ class DaskManager(metaclass=Singleton):
         Args:
             timeout: Seconds to wait for workers to shut down and come back
                 online after restarting. Defaults to 30.
+
+        Raises:
+            RuntimeError: If no workers are online after the restart.
         """
         logger.info("Restarting Dask workers to clear memory...")
+        timer = StopWatch()
+
+        # The live count, as workers can be lost since `num_workers` was cached.
+        expected_workers = len(self.client.scheduler_info(-1)["workers"])
 
         try:
             self.client.restart(timeout=timeout)
@@ -278,9 +290,29 @@ class DaskManager(metaclass=Singleton):
             time.sleep(10)
             self.client.restart(timeout=timeout * 2)
 
+        # client.restart can return before the new workers have registered.
+        try:
+            self.client.wait_for_workers(
+                n_workers=expected_workers, timeout=timeout
+            )
+        except TimeoutError:
+            n_available = len(self.client.scheduler_info(-1)["workers"])
+            if n_available == 0:
+                raise RuntimeError(
+                    "No Dask workers are available after restart."
+                )
+            logger.warning(
+                "Only %d of %d Dask workers are available after restart; "
+                "continuing with %d.",
+                n_available,
+                expected_workers,
+                n_available,
+            )
+
         self.num_workers = len(self.client.scheduler_info(-1)["workers"].keys())
         logger.info(
-            "Dask workers restarted successfully. %d workers available.",
+            "Dask workers restarted successfully in %.1f s. %d workers available.",
+            timer.reset(),
             self.num_workers,
         )
 
