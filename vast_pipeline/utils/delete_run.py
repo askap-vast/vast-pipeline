@@ -62,7 +62,13 @@ def delete_pipeline_run_raw_sql(p_run, source_batch_size=10000, delete_images=Fa
                 for image_id_tuple in unique_image_ids:
                     image_id = image_id_tuple[0]
                     try:
+                        sql_cmd = (
+                            "DELETE FROM vast_pipeline_imagecutout WHERE measurement_id IN "
+                            f"(SELECT id FROM vast_pipeline_measurement WHERE image_id = {image_id});"
+                        )
+                        _run_raw_sql(sql_cmd, cursor)
                         sql_cmd = f"DELETE FROM vast_pipeline_measurement WHERE image_id = {image_id};"
+                        _run_raw_sql(sql_cmd, cursor)
                         _run_raw_sql(sql_cmd, cursor)
                     except Exception as e:
                         logger.error("%s %d", e, image_id)
