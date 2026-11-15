@@ -8,6 +8,9 @@ import dask.bag as db
 from glob import glob
 
 from astropy import units as u
+from astropy.io import fits
+from astropy.wcs import WCS
+from astropy.wcs.utils import pixel_to_skycoord
 from astropy.coordinates import SkyCoord
 from django.conf import settings
 from pyarrow.parquet import read_schema
@@ -160,8 +163,16 @@ def extract_from_image(
     if cluster_threshold == 0:
         use_clusters=False
 
+    hdr = fits.getheader(image,1) # This shouldn't be hardcoded!!!
+    w = WCS(hdr, naxis=2)
+    x0, y0 = hdr["NAXIS1"] / 2, hdr["NAXIS2"] / 2
+    c0 = pixel_to_skycoord(x0, y0, w).icrs
+    c1 = pixel_to_skycoord(x0, y0 + 100, w).icrs
+    img_pa = c0.position_angle(c1).to(u.deg)
+
     flux, flux_err, chisq, DOF, cluster_id = FP.measure(
         P_islands,
+        position_angles=hdr["BPA"] * u.deg - img_pa,
         cluster_threshold=cluster_threshold,
         allow_nan=allow_nan,
         edge_buffer=edge_buffer,

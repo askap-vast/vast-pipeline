@@ -10,6 +10,7 @@ import pandas as pd
 from django.conf import settings
 from astropy.io import fits
 from astropy.table import Table
+from astropy.coordinates import SkyCoord
 from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales, wcs_to_celestial_frame
 from typing import Dict
@@ -181,6 +182,12 @@ class FitsImage(Image):
         lon, lat = wcs.wcs_pix2world(pix_centre, 1)[0]
         centre = SkyCoord(lon, lat, unit="deg", frame=wcs_to_celestial_frame(wcs)).icrs
         self.ra, self.dec = centre.ra.deg, centre.dec.deg
+        
+        # Correct for Galactic fields
+        x0, y0 = pix_centre[0]
+        lon, lat = wcs.wcs_pix2world([[x0, y0], [x0, y0 + 100]], 1).T
+        c = SkyCoord(lon, lat, unit="deg", frame=wcs_to_celestial_frame(wcs)).icrs
+        self.beam_bpa = (self.beam_bpa + c[0].position_angle(c[1]).deg) % 180
 
         # The field-of-view (in pixels) is assumed to be a circle in the centre
         # of the image. This may be an ellipse on the sky, eg MOST images.
