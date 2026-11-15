@@ -127,10 +127,13 @@ class Command(BaseCommand):
                 p_run.save()
 
             timer.reset()
-            delete_pipeline_run_raw_sql(
-                p_run,
-                delete_images=options['delete_images'],
-                source_batch_size=options['source_batch_size'])
+            try:
+                delete_pipeline_run_raw_sql(
+                    p_run,
+                    delete_images=options['delete_images'],
+                    source_batch_size=options['source_batch_size'])
+            except Exception as e:
+                raise CommandError(f"Failed to delete run {p_run.name}, rolled back: {e}")
             t = timer.reset()
             logger.info("Time to delete run from database: %.2f sec", t)
 
