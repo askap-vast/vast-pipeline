@@ -691,7 +691,8 @@
           scalemax: 0.002,
           color: 'gray',
           invert: true,
-          onload: () => {
+          onload: (im) => {
+            JS9.SetWCSSys("ICRS", { display: im });
             return resolve();
           }
         }, {
