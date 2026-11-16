@@ -8,7 +8,6 @@ import dask.bag as db
 from glob import glob
 
 from astropy import units as u
-from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.wcs.utils import pixel_to_skycoord
 from astropy.coordinates import SkyCoord
