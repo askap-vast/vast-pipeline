@@ -42,17 +42,9 @@ def calc_de_ruiter(df: pd.DataFrame) -> np.ndarray:
     Returns:
         Array containing the de Ruiter radius for all rows in the df.
     """
-    ra_1 = df['ra_skyc1'].values
-    ra_2 = df['ra_skyc2'].values
-
-    # avoid wrapping issues
-    ra_1[ra_1 > 270.] -= 180.
-    ra_2[ra_2 > 270.] -= 180.
-    ra_1[ra_1 < 90.] += 180.
-    ra_2[ra_2 < 90.] += 180.
-
-    ra_1 = np.deg2rad(ra_1)
-    ra_2 = np.deg2rad(ra_2)
+    dra = np.deg2rad(
+        (df['ra_skyc1'].values - df['ra_skyc2'].values + 180.) % 360. - 180.
+    )
 
     ra_1_err = np.deg2rad(df['uncertainty_ew_skyc1'].values)
     ra_2_err = np.deg2rad(df['uncertainty_ew_skyc2'].values)
@@ -63,7 +55,7 @@ def calc_de_ruiter(df: pd.DataFrame) -> np.ndarray:
     dec_1_err = np.deg2rad(df['uncertainty_ns_skyc1'].values)
     dec_2_err = np.deg2rad(df['uncertainty_ns_skyc2'].values)
 
-    dr1 = (ra_1 - ra_2) * (ra_1 - ra_2)
+    dr1 = dra * dra
     dr1_1 = np.cos((dec_1 + dec_2) / 2.)
     dr1 *= dr1_1 * dr1_1
     dr1 /= ra_1_err * ra_1_err + ra_2_err * ra_2_err
