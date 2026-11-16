@@ -357,30 +357,6 @@ def parallel_extraction(
 
     # get the unique images to extract from
     timer = StopWatch()
-    unique_images_to_extract = out['image_name'].unique().tolist()
-    logger.info(f"Time to set up unique images extraction: {timer.reset()}")
-    
-    logger.info(len(unique_images_to_extract))
-    logger.info(len(out))
-    
-
-    # create a list of dictionaries with image file paths and dataframes
-    # with data related to each images
-    def image_data_func(image_name: str) -> Dict[str, Any]:
-        # `out` refers to the `out` declared in nearest enclosing scope
-        nonlocal out
-        return {
-            'image_id': df_images.at[image_name, 'id'],
-            'image': df_images.at[image_name, 'path'],
-            'background': df_images.at[image_name, 'background_path'],
-            'noise': df_images.at[image_name, 'noise_path'],
-            'df': out[out['image_name'] == image_name]
-        }
-    timer.reset()
-    list_to_map_orig = list(map(image_data_func, unique_images_to_extract))
-    logger.info(f"Time to create list_to_map: {timer.reset()}")
-    
-    timer.reset()
     groups = dict(tuple(out.groupby('image_name', sort=False)))
     logger.info(f"Time to set up updated unique images extraction: {timer.reset()}")
     def image_data_func(image_name: str) -> Dict[str, Any]:
@@ -394,11 +370,7 @@ def parallel_extraction(
     
     timer.reset()
     list_to_map = list(map(image_data_func, unique_images_to_extract))
-    logger.info(f"Time to create updated list_to_map: {timer.reset()}")
-    
-    for i in range(len(list_to_map)):
-        assert list_to_map[i]['df'].equals(list_to_map_orig[i]['df'])    
-    
+    logger.debug(f"Time to create list_to_map: {timer.reset()}")
     
     # create a list of all the measurements parquet files to extract data from,
     # such as prefix and max_id
