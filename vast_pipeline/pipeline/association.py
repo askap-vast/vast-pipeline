@@ -1145,7 +1145,7 @@ def association(
                 'No new images found, stopping association%s.', skyreg_tag
             )
             sources_df['interim_ew'] = (
-                sources_df['ra_source'].values * sources_df['weight_ew'].values
+                _unwrapped_ra(sources_df, 'ra_source') * sources_df['weight_ew'].values
             )
             sources_df['interim_ns'] = (
                 sources_df['dec_source'].values * sources_df['weight_ns'].values
@@ -1216,6 +1216,14 @@ def association(
         skyc1_srcs['dec'].values,
         unit=(u.deg, u.deg)
     )
+    
+    def _unwrapped_ra(df, col='ra'):
+        ra = df[col].to_numpy()
+        ref = df.groupby('source')[col].transform('first').to_numpy()
+        return ref + (ra - ref + 180.) % 360. - 180.
+    
+    sources_df['interim_ew'] = _unwrapped_ra(sources_df) * sources_df['weight_ew'].values
+    sources_df['interim_ns'] = sources_df['dec'].values * sources_df['weight_ns'].values
 
     iter_timer = StopWatch()
     epochs = unique_epochs[start_epoch:]
@@ -1261,6 +1269,7 @@ def association(
 
         
         iter_timer.reset()
+        n_before = len(sources_df)
         if method == 'basic':
             sources_df, skyc1_srcs = basic_association(
                 sources_df,
@@ -1304,100 +1313,31 @@ def association(
         )
 
         # account for RA wrapping
-        iter_timer.reset()
-        ra = sources_df.ra.values
-        dec = sources_df.dec.values
-        ra_wrap_mask = ra <= 0.1 # Why is this 0.1 and not 0.0? Is this the cause of issue 711?
-        ra[ra_wrap_mask] = ra[ra_wrap_mask]+360.
-
-        sources_df['interim_ew'] = (
-            ra * sources_df['weight_ew'].values
-        )
-        sources_df['interim_ns'] = (
-            sources_df['dec'].values * sources_df['weight_ns'].values
-        )
-
-        tmp_srcs_df = (
-            sources_df.loc[
-                (sources_df['source'] != -1) & (sources_df['forced'] == False),
-                [
-                    'ra', 'dec', 'uncertainty_ew', 'uncertainty_ns',
-                    'source', 'interim_ew', 'interim_ns', 'weight_ew',
-                    'weight_ns'
-                ]
-            ]
-            .groupby('source', sort=False)
-        )
-        logger.debug(
-            'Time to handle RA wrapping: %.2f%s',
-            iter_timer.reset(),
-            skyreg_tag
+        touched = sources_df['source'].isin(
+            sources_df['source'].iloc[n_before:].unique()
+        ).to_numpy()
+        sub = sources_df.loc[
+            touched, ['source', 'ra', 'dec', 'weight_ew', 'weight_ns', 'forced']
+        ].copy()
+        sub['interim_ew'] = _unwrapped_ra(sub) * sub['weight_ew'].to_numpy()
+        sub['interim_ns'] = sub['dec'].to_numpy() * sub['weight_ns'].to_numpy()
+        sources_df.loc[touched, ['interim_ew', 'interim_ns']] = (
+            sub[['interim_ew', 'interim_ns']].to_numpy()
         )
 
-        weight_ew = tmp_srcs_df['weight_ew'].sum()
-        weight_ns = tmp_srcs_df['weight_ns'].sum()
+        sums = sub[~sub['forced']].groupby('source', sort=False)[
+            ['interim_ew', 'interim_ns', 'weight_ew', 'weight_ns']
+        ].sum()
+        weighted_df = pd.DataFrame({
+            'ra': (sums['interim_ew'] / sums['weight_ew']) % 360.,
+            'uncertainty_ew': 1. / np.sqrt(sums['weight_ew']),
+            'dec': sums['interim_ns'] / sums['weight_ns'],
+            'uncertainty_ns': 1. / np.sqrt(sums['weight_ns']),
+        }).reset_index()
 
-        wm_ra = tmp_srcs_df['interim_ew'].sum() / weight_ew
-        wm_uncertainty_ew = 1. / np.sqrt(weight_ew)
-
-        wm_dec = tmp_srcs_df['interim_ns'].sum() / weight_ns
-        wm_uncertainty_ns = 1. / np.sqrt(weight_ns)
-
-        weighted_df = (
-            pd.concat(
-                [wm_ra, wm_uncertainty_ew, wm_dec, wm_uncertainty_ns],
-                axis=1,
-                sort=False
-            )
-            .reset_index()
-            .rename(
-                columns={
-                    0: 'ra',
-                    'weight_ew': 'uncertainty_ew',
-                    1: 'dec',
-                    'weight_ns': 'uncertainty_ns'
-            })
-        )
-
-        # correct the RA wrapping
-        weighted_ra = weighted_df.ra.values
-        ra_wrap_mask = weighted_ra >= 360.
-        weighted_df.loc[
-            ra_wrap_mask, 'ra'
-        ] = weighted_ra[ra_wrap_mask] - 360.
-
-        logger.debug(
-            'Time to recalculate wavg coordinates: %.2f%s',
-            iter_timer.reset(),
-            skyreg_tag
-        )
-
-        logger.info(
-            'Finalising base sources catalogue ready for next iteration%s...',
-            skyreg_tag
-        )
-
-        # merge the weighted ra and dec and replace the values
-        skyc1_srcs = skyc1_srcs.merge(
-            weighted_df,
-            on='source',
-            how='left',
-            suffixes=('', '_skyc2')
-        )
-        del tmp_srcs_df, weighted_df
-
-        skyc1_srcs['ra'] = skyc1_srcs['ra_skyc2']
-        skyc1_srcs['dec'] = skyc1_srcs['dec_skyc2']
-        skyc1_srcs['uncertainty_ew'] = skyc1_srcs['uncertainty_ew_skyc2']
-        skyc1_srcs['uncertainty_ns'] = skyc1_srcs['uncertainty_ns_skyc2']
-        skyc1_srcs = skyc1_srcs.drop(
-            [
-                'ra_skyc2',
-                'dec_skyc2',
-                'uncertainty_ew_skyc2',
-                'uncertainty_ns_skyc2'
-            ], axis=1
-        )
+        skyc1_srcs = skyc1_srcs.merge(weighted_df, on='source', how='left', suffixes=('', '_skyc2'))
+        for col in ['ra', 'dec', 'uncertainty_ew', 'uncertainty_ns']:
+            skyc1_srcs[col] = skyc1_srcs.pop(col + '_skyc2').fillna(skyc1_srcs[col])
 
         # generate new sky coord ready for next iteration
         skyc1 = SkyCoord(
@@ -1408,11 +1348,13 @@ def association(
 
         # and update relations in skyc1
         skyc1_srcs = skyc1_srcs.drop('related', axis=1)
-        relations_unique = pd.DataFrame(
-            sources_df[sources_df['related'].notna()]
+        relations_unique = (
+            sources_df.loc[sources_df['related'].notna(), ['source', 'related']]
             .explode('related')
+            .drop_duplicates()
             .groupby('source')['related']
-            .apply(lambda x: x.unique().tolist())
+            .agg(list)
+            .to_frame()
         )
 
         skyc1_srcs = skyc1_srcs.merge(
