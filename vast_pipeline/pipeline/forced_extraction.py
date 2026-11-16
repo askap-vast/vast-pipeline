@@ -377,10 +377,8 @@ def parallel_extraction(
             'df': out[out['image_name'] == image_name]
         }
     timer.reset()
-    list_to_map = list(map(image_data_func, unique_images_to_extract))
+    list_to_map_orig = list(map(image_data_func, unique_images_to_extract))
     logger.info(f"Time to create list_to_map: {timer.reset()}")
-    
-    list_to_map_vals_orig = list_to_map['df']
     
     timer.reset()
     groups = dict(tuple(out.groupby('image_name', sort=False)))
@@ -398,10 +396,8 @@ def parallel_extraction(
     list_to_map = list(map(image_data_func, unique_images_to_extract))
     logger.info(f"Time to create updated list_to_map: {timer.reset()}")
     
-    list_to_map_vals_new = list_to_map['df']
-    
-    assert list_to_map_vals_new == list_to_map_vals_orig
-    
+    for i in range(len(list_to_map)):
+        assert list_to_map[i]['df'].equals(list_to_map_orig[i]['df'])    
     
     
     # create a list of all the measurements parquet files to extract data from,
