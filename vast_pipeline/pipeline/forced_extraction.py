@@ -367,11 +367,11 @@ def parallel_extraction(
             'noise': df_images.at[image_name, 'noise_path'],
             'df': groups[image_name],
         }
-    
+
     timer.reset()
     list_to_map = list(map(image_data_func, unique_images_to_extract))
     logger.debug(f"Time to create list_to_map: {timer.reset()}")
-    
+
     # create a list of all the measurements parquet files to extract data from,
     # such as prefix and max_id
     list_meas_parquets = list(map(
