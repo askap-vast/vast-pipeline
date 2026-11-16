@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Changed
 
+- Optimised forced extraction setup [#905](https://github.com/askap-vast/vast-pipeline/pull/905)
 - Only use numba in forced photometry if the byteorder doesn't need changing [#906](https://github.com/askap-vast/vast-pipeline/pull/906)
 - Switched to a locally hosted version of aladin-lite [#903](https://github.com/askap-vast/vast-pipeline/pull/903)
 - Updated formatting of internal sources in "Crossmatch Results" table [#903](https://github.com/askap-vast/vast-pipeline/pull/903)
@@ -32,7 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### Removed
 
 #### List of PRs
-
+- [#905](https://github.com/askap-vast/vast-pipeline/pull/905): fix: Optimised forced extraction setup
 - [#906](https://github.com/askap-vast/vast-pipeline/pull/906): fix, feat: Improved numba handling and correctly handle Galactic-aligned images
 - [#903](https://github.com/askap-vast/vast-pipeline/pull/903): fix, feat: Implement Aladin SAMP connection on source webpages
 - [#902](https://github.com/askap-vast/vast-pipeline/pull/902): fix, feat: Various fixes and upgrades to the source webpage
