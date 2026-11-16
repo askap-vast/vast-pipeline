@@ -5,7 +5,7 @@ import os
 from glob import glob
 from tqdm import tqdm
 import dask.dataframe as dd
-from django.db import connection
+from django.db import connection, transaction
 from vast_pipeline.utils.utils import StopWatch
 
 logger = logging.getLogger(__name__)
@@ -21,6 +21,7 @@ def _run_raw_sql(command, cursor, debug=False, log=True, dry_run=False):
     
     return
 
+@transaction.atomic
 def delete_pipeline_run_raw_sql(p_run, source_batch_size=10000, delete_images=False):
     p_run_id = p_run.pk
 
@@ -61,12 +62,13 @@ def delete_pipeline_run_raw_sql(p_run, source_batch_size=10000, delete_images=Fa
                 # ...and delete the measurements associated with them
                 for image_id_tuple in unique_image_ids:
                     image_id = image_id_tuple[0]
-                    try:
-                        sql_cmd = f"DELETE FROM vast_pipeline_measurement WHERE image_id = {image_id};"
-                        _run_raw_sql(sql_cmd, cursor)
-                    except Exception as e:
-                        logger.error("%s %d", e, image_id)
-                        pass
+                    sql_cmd = (
+                        "DELETE FROM vast_pipeline_imagecutout WHERE measurement_id IN "
+                        f"(SELECT id FROM vast_pipeline_measurement WHERE image_id = {image_id});"
+                    )
+                    _run_raw_sql(sql_cmd, cursor)
+                    sql_cmd = f"DELETE FROM vast_pipeline_measurement WHERE image_id = {image_id};"
+                    _run_raw_sql(sql_cmd, cursor)
 
             # Delete link between run and images for all images
             sql_cmd = f"DELETE FROM vast_pipeline_image_run WHERE run_id = {p_run_id} AND image_id IN ({image_id_str});"
@@ -75,13 +77,8 @@ def delete_pipeline_run_raw_sql(p_run, source_batch_size=10000, delete_images=Fa
             # Delete images that are uniquely associated with the run
             if delete_images:
                 if len(unique_image_ids) > 0:
-                    try:
-                        sql_cmd = f"DELETE FROM vast_pipeline_image WHERE id IN ({unique_image_id_str});"
-                        _run_raw_sql(sql_cmd, cursor)
-                    except Exception as e:
-                        logger.error("%s %d", e, image_id_str)
-                        pass
-
+                    sql_cmd = f"DELETE FROM vast_pipeline_image WHERE id IN ({unique_image_id_str});"
+                    _run_raw_sql(sql_cmd, cursor)
             
             t = timer.reset()
             logger.info("Time to iterate over %d image ids: %f seconds", n_image_ids, t)
