@@ -761,7 +761,7 @@ def calc_ave_coord(grp: pd.DataFrame) -> pd.Series:
     grp = grp.sort_values(by='datetime')
     d['img_list'] = grp['image'].values.tolist()
     d['epoch_list'] = grp['epoch'].values.tolist()
-    d['wavg_ra'] = grp['interim_ew'].sum() / grp['weight_ew'].sum()
+    d['wavg_ra'] = (grp['interim_ew'].sum() / grp['weight_ew'].sum()) % 360.
     d['wavg_dec'] = grp['interim_ns'].sum() / grp['weight_ns'].sum()
 
     return pd.Series(d)
