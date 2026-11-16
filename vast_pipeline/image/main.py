@@ -187,7 +187,7 @@ class FitsImage(Image):
         x0, y0 = pix_centre[0]
         lon, lat = wcs.wcs_pix2world([[x0, y0], [x0, y0 + 100]], 1).T
         c = SkyCoord(lon, lat, unit="deg", frame=wcs_to_celestial_frame(wcs)).icrs
-        self.beam_bpa = (self.beam_bpa + c[0].position_angle(c[1]).deg) % 180
+        self.beam_bpa = (self.beam_bpa - c[0].position_angle(c[1]).deg) % 180
 
         # The field-of-view (in pixels) is assumed to be a circle in the centre
         # of the image. This may be an ellipse on the sky, eg MOST images.

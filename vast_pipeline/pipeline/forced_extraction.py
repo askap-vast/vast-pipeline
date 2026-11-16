@@ -153,8 +153,14 @@ def extract_from_image(
                                            noise,
                                            memmap=False
                                            )
+    
+    if forcedphot_input[0][0].data.dtype.byteorder != '=':
+        use_numba=False
+    else:
+        use_numba=True
+
     FP_timer = StopWatch()
-    FP = ForcedPhot(*forcedphot_input, use_numba=True)
+    FP = ForcedPhot(*forcedphot_input, use_numba=use_numba)
     logger.debug(f"{image} - Time to init FP: {FP_timer.reset()} s")
 
     # This should ultimately be removed in v2, but for now I am keeping the
@@ -163,7 +169,7 @@ def extract_from_image(
     if cluster_threshold == 0:
         use_clusters=False
 
-    hdr = fits.getheader(image,1) # This shouldn't be hardcoded!!!
+    hdr = forcedphot_input[0][0].header
     w = WCS(hdr, naxis=2)
     x0, y0 = hdr["NAXIS1"] / 2, hdr["NAXIS2"] / 2
     c0 = pixel_to_skycoord(x0, y0, w).icrs
