@@ -297,6 +297,18 @@ LOGGING = {
             "level": "ERROR",
             "handlers": ['console'],
         },
+        # 'Batched Comm Closed' tracebacks logged whenever workers restart.
+        'distributed.batched': {
+            "level": "WARNING",
+        },
+        # Logged when a worker is reaped twice during a restart; harmless.
+        'distributed.process': {
+            "level": "ERROR",
+        },
+        # A connection dropped mid-handshake, e.g. a worker killed in a restart.
+        'distributed.comm.tcp': {
+            "level": "WARNING",
+        },
         'postgres_copy.copy_from': {
             "level": "INFO",
             "propogate": True,
