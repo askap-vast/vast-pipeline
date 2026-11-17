@@ -1045,6 +1045,10 @@ def advanced_association(
 
     return sources_df, skyc1_srcs
 
+def _unwrapped_ra(df, col='ra'):
+    ra = df[col].to_numpy()
+    ref = df.groupby('source')[col].transform('first').to_numpy()
+    return ref + (ra - ref + 180.) % 360. - 180.
 
 def association(
     images_df: pd.DataFrame,
@@ -1216,12 +1220,7 @@ def association(
         skyc1_srcs['dec'].values,
         unit=(u.deg, u.deg)
     )
-    
-    def _unwrapped_ra(df, col='ra'):
-        ra = df[col].to_numpy()
-        ref = df.groupby('source')[col].transform('first').to_numpy()
-        return ref + (ra - ref + 180.) % 360. - 180.
-    
+
     sources_df['interim_ew'] = _unwrapped_ra(sources_df) * sources_df['weight_ew'].values
     sources_df['interim_ns'] = sources_df['dec'].values * sources_df['weight_ns'].values
 
