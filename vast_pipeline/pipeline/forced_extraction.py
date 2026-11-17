@@ -356,6 +356,8 @@ def parallel_extraction(
     )
 
     # get the unique images to extract from
+    unique_images_to_extract = out['image_name'].unique().tolist()
+
     timer = StopWatch()
     groups = dict(tuple(out.groupby('image_name', sort=False)))
     logger.info(f"Time to set up updated unique images extraction: {timer.reset()}")
