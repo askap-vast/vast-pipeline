@@ -30,6 +30,11 @@ dask_config['distributed']['multiprocessing-method'] = 'spawn'
 dask_config['distributed']['admin']['log-length'] = 0
 dask_config['distributed']['admin']['low-level-log-length'] = 0
 
+# LocalCluster closes any worker still missing this long after it was removed
+# from the scheduler. A restart removes every worker, so if one is in progress
+# when the timer fires the workers and their nannies are killed for good.
+dask_config['distributed'].setdefault('deploy', {})['lost-worker-timeout'] = '365 days'
+
 # Add logging config
 # See: https://docs.dask.org/en/latest/how-to/debug.html#logs
 dask_config['logging'] = {}
