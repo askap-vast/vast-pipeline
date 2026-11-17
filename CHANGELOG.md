@@ -24,6 +24,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 #### Fixed
 
+- Fix incorrect RA wrapping throughout pipeline [#907](https://github.com/askap-vast/vast-pipeline/pull/907)
+- Fix incorrect forced photometry filtering [#907](https://github.com/askap-vast/vast-pipeline/pull/907)
 - Fix incorrect argument name and force associations to respect worker limits [#905](https://github.com/askap-vast/vast-pipeline/pull/905)
 - Correctly handle fields that are not aligned to have North facing up [#906](https://github.com/askap-vast/vast-pipeline/pull/906)
 - Fixed source webpage incorrect coordinate parsing that broke Aladin display for Northern sources and also impacted the external search results [#902](https://github.com/askap-vast/vast-pipeline/pull/902)
@@ -34,6 +36,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### Removed
 
 #### List of PRs
+- [#907](https://github.com/askap-vast/vast-pipeline/pull/907): fix: Fix incorrect RA wrapping and incorrect forced photometry filtering
 - [#905](https://github.com/askap-vast/vast-pipeline/pull/905): fix: Optimised forced extraction setup and fix unbounded worker allocation in associations
 - [#906](https://github.com/askap-vast/vast-pipeline/pull/906): fix, feat: Improved numba handling and correctly handle Galactic-aligned images
 - [#903](https://github.com/askap-vast/vast-pipeline/pull/903): fix, feat: Implement Aladin SAMP connection on source webpages
