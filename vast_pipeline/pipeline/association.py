@@ -1656,7 +1656,7 @@ def parallel_association(
             id_incr_par_assoc=id_incr_par_assoc,
             parallel=True,
             meta=meta
-        ).compute(n_workers=n_workers, scheduler='processes')
+        ).compute(num_workers=n_workers, scheduler='processes')
     )
 
     # results are the normal dataframe of results with the columns:
