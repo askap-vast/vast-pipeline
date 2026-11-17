@@ -205,7 +205,7 @@ def extract_from_image(
         (df['flux_int'] != 0)
         & (df['flux_int_err'] != 0)
         & (df['chi_squared_fit'] != np.inf)
-        & (df['chi_squared_fit'] != np.nan)
+        & (df['chi_squared_fit'].notna())
     ]
 
     logger.debug(f"{image} - Total extraction time: {timer.reset()}s")
