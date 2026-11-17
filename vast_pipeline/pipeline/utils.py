@@ -703,31 +703,31 @@ def parallel_groupby(df: dd.DataFrame) -> dd.DataFrame:
     ]
     out_col_dtype = {
         "img_list": "O",
-        "n_meas_forced": "i",
-        "n_meas": "i",
-        "n_meas_sel": "i",
-        "n_sibl": "i",
-        "wavg_ra": "f",
-        "wavg_dec": "f",
-        "avg_compactness": "f",
-        "min_snr": "f",
-        "max_snr": "f",
-        "wavg_uncertainty_ew": "f",
-        "wavg_uncertainty_ns": "f",
-        "avg_flux_int": "f",
-        "avg_flux_peak": "f",
-        "max_flux_peak": "f",
-        "max_flux_int": "f",
-        "min_flux_peak": "f",
-        "min_flux_int": "f",
-        "min_flux_peak_isl_ratio": "f",
-        "min_flux_int_isl_ratio": "f",
-        "v_int": "f",
-        "v_peak": "f",
-        "eta_int": "f",
-        "eta_peak": "f",
+        "n_meas_forced": "i8",
+        "n_meas": "i8",
+        "n_meas_sel": "i8",
+        "n_sibl": "i8",
+        "wavg_ra": "f8",
+        "wavg_dec": "f8",
+        "avg_compactness": "f8",
+        "min_snr": "f8",
+        "max_snr": "f8",
+        "wavg_uncertainty_ew": "f8",
+        "wavg_uncertainty_ns": "f8",
+        "avg_flux_int": "f4",
+        "avg_flux_peak": "f4",
+        "max_flux_peak": "f4",
+        "max_flux_int": "f4",
+        "min_flux_peak": "f4",
+        "min_flux_int": "f4",
+        "min_flux_peak_isl_ratio": "f4",
+        "min_flux_int_isl_ratio": "f4",
+        "v_int": "f8",
+        "v_peak": "f8",
+        "eta_int": "f8",
+        "eta_peak": "f8",
         "related_list": "O",
-        "n_rel": "i",
+        "n_rel": "i8",
     }
 
     groupby_df = df[columns]
@@ -1789,7 +1789,7 @@ def reconstruct_association_dfs(
             "uncertainty_ew_source",
             "uncertainty_ns_source",
         ]
-    ]
+    ].copy()
 
     # Create the unique skyc1_srcs dataframe.
     skyc1_srcs = (
@@ -1855,6 +1855,11 @@ def reconstruct_association_dfs(
     sources_df = sources_df.drop(
         ["uncertainty_ew_source", "uncertainty_ns_source"], axis=1
     ).reset_index(drop=True)
+
+    # The previous parquets store the time in ms but new measurements are in
+    # us, and concatenating tz-aware columns of different units gives object.
+    for df in (sources_df, skyc1_srcs):
+        df["datetime"] = pd.to_datetime(df["datetime"], utc=True).dt.as_unit("us")
 
     return sources_df, skyc1_srcs
 

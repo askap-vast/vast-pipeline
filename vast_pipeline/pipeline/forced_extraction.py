@@ -292,13 +292,17 @@ def extract_from_image_and_save(
         do_upload=do_upload,
     )
     # Set epoch for merge with sources_df
-    df["epoch"] = _forced_epoch(sources_meta["epoch"].dtype)
+    df = df.assign(epoch=_forced_epoch(sources_meta["epoch"].dtype))
 
     logger.debug("%s - Total extraction and upload time: %ds", image, timer.reset())
 
-    df = df[sources_meta.columns].astype(
-        {c: t for c, t in sources_meta.dtypes.items()}
-    )
+    df = df[sources_meta.columns].copy()
+    # Image datetimes are naive UTC here, but sources_df may be tz-aware.
+    for c, t in sources_meta.dtypes.items():
+        if t.kind == "M":
+            col = pd.to_datetime(df[c], utc=True)
+            df[c] = col.dt.tz_convert(t.tz) if getattr(t, "tz", None) else col.dt.tz_localize(None)
+    df = df.astype({c: t for c, t in sources_meta.dtypes.items()})
     if not df.empty:
         df.to_parquet(
             os.path.join(post_extract_dir, image_name.replace(".", "_") + ".parquet"),

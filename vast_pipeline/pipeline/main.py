@@ -23,7 +23,7 @@ from django.db import transaction
 
 from vast_pipeline.daskmanager.manager import DaskManager
 from vast_pipeline.models import Run
-from vast_pipeline.utils.utils import calculate_n_partitions
+from vast_pipeline.utils.utils import calculate_n_partitions, maybe_delete_file_or_dir
 from .association import association, parallel_association
 from .config import PipelineConfig
 from .new_sources import new_sources
@@ -141,6 +141,9 @@ class Pipeline:
         Returns:
             None
         """
+        logger.info("Cleaning up any previous unused checkpoints")
+        maybe_delete_file_or_dir(self._ckpt_dir)
+
         logger.info(f"Epoch based association: {self.config.epoch_based}")
         if self.add_mode:
             logger.info("Running in image add mode.")
@@ -402,6 +405,8 @@ class Pipeline:
         )
 
         log_total_memory_usage()
+
+        maybe_delete_file_or_dir(self._ckpt_dir)
 
         # calculate number processed images
         nr_img_processed = len(images)
