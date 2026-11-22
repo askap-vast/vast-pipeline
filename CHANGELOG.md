@@ -23,6 +23,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 
 #### Fixed
+
+- Correctly wrap the weighted RA [#908](https://github.com/askap-vast/vast-pipeline/pull/908)
 - Use reset_queries inside db upload to stop debug logging being stored in memory [#908](https://github.com/askap-vast/vast-pipeline/pull/908)
 - Set chunksize=1, forcing the parallel association to be parallelised for small numbers of skyregion groups [#908](https://github.com/askap-vast/vast-pipeline/pull/908)
 - Fix incorrect RA wrapping throughout pipeline [#907](https://github.com/askap-vast/vast-pipeline/pull/907)
