@@ -23,7 +23,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 
 #### Fixed
-
+- Use reset_queries inside db upload to stop debug logging being stored in memory [#908](https://github.com/askap-vast/vast-pipeline/pull/908)
+- Set chunksize=1, forcing the parallel association to be parallelised for small numbers of skyregion groups [#908](https://github.com/askap-vast/vast-pipeline/pull/908)
 - Fix incorrect RA wrapping throughout pipeline [#907](https://github.com/askap-vast/vast-pipeline/pull/907)
 - Fix incorrect forced photometry filtering [#907](https://github.com/askap-vast/vast-pipeline/pull/907)
 - Fix incorrect argument name and force associations to respect worker limits [#905](https://github.com/askap-vast/vast-pipeline/pull/905)
@@ -36,6 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 #### Removed
 
 #### List of PRs
+- [#908](https://github.com/askap-vast/vast-pipeline/pull/908) fix: Various speedups and suggested by Claude. Also fixes some further RA wrapping issues.
 - [#907](https://github.com/askap-vast/vast-pipeline/pull/907): fix: Fix incorrect RA wrapping and incorrect forced photometry filtering
 - [#905](https://github.com/askap-vast/vast-pipeline/pull/905): fix: Optimised forced extraction setup and fix unbounded worker allocation in associations
 - [#906](https://github.com/askap-vast/vast-pipeline/pull/906): fix, feat: Improved numba handling and correctly handle Galactic-aligned images
