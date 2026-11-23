@@ -622,7 +622,7 @@ def groupby_funcs(df: pd.DataFrame) -> pd.Series:
         d['wavg_ra'] = (
             df.loc[non_forced_sel, 'interim_ew'].sum() /
             df.loc[non_forced_sel, 'weight_ew'].sum()
-        )
+        ) % 360
         d['wavg_dec'] = (
             df.loc[non_forced_sel, 'interim_ns'].sum() /
             df.loc[non_forced_sel, 'weight_ns'].sum()
@@ -644,7 +644,7 @@ def groupby_funcs(df: pd.DataFrame) -> pd.Series:
         )
 
     else:
-        d['wavg_ra'] = df['interim_ew'].sum() / df['weight_ew'].sum()
+        d['wavg_ra'] = df['interim_ew'].sum() / df['weight_ew'].sum() % 360
         d['wavg_dec'] = df['interim_ns'].sum() / df['weight_ns'].sum()
         d['avg_compactness'] = df['compactness'].mean()
         d['min_snr'] = df['snr'].min()

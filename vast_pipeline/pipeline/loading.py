@@ -62,6 +62,7 @@ def bulk_upload_model(
             break
         out_bulk = djmodel.objects.bulk_create(items)
         logger.info('Bulk created #%i %s', len(out_bulk), djmodel.__name__)
+        reset_queries()
         # save the DB ids to return
         if return_ids:
             bulk_ids.extend(list(map(lambda i: i.id, out_bulk)))

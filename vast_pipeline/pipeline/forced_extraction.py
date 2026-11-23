@@ -514,13 +514,10 @@ def write_forced_parquet(
         run_path,
         'forced_measurements_' + n.replace('.', '_') + '.parquet'
     )
-    # Avoid saving the maping to a list since this copies the the entire
-    # DataFrame which can already be very large in memory at this point.
-    dfs = map(lambda x: (df[df['image'] == x], get_fname(x)), images)
 
-    # Write parquets
-    for this_df, fname in dfs:
-        write_group_to_parquet(this_df, fname, add_mode)
+    for image, this_df in df.groupby('image', sort=False, observed=True):
+        write_group_to_parquet(this_df, get_fname(image), add_mode)
+    
     pass
 
 
