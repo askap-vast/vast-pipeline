@@ -304,7 +304,7 @@ class Pipeline:
             "weight_ns",
             "flux_peak",
         ]
-        
+
         images_df = images_df.drop(columns=["image_dj"]).rename(columns={'image_name': 'name', 'image_datetime': 'datetime'})
         # need to make sure no forced measurments are being passed which
         # could happen in add mode, otherwise the wrong detection image is

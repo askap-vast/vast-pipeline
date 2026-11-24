@@ -260,6 +260,10 @@ class DaskManager(metaclass=Singleton):
         Raises:
             RuntimeError: If no workers are online after the restart.
         """
+        if not s.DASK_RESTART_WORKERS:
+            logger.debug("Dask worker restarts are disabled; skipping.")
+            return
+
         logger.info("Restarting Dask workers to clear memory...")
         timer = StopWatch()
 
