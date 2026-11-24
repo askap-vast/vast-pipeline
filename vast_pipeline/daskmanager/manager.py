@@ -3,9 +3,16 @@
 import logging
 import random
 import time
+from typing import Dict, Optional, Union
 
+import dask.dataframe as dd
+import pandas as pd
+import pyarrow as pa
 from dask.distributed import Client, LocalCluster, Semaphore, WorkerPlugin
+from distributed.comm import CommClosedError
 from django.conf import settings as s
+
+from ..utils.utils import StopWatch
 from . import config # noqa: F401
 
 logger = logging.getLogger(__name__)
@@ -96,7 +103,7 @@ class LogWorkerNamePlugin(WorkerPlugin):
         logger = logging.getLogger('')
         logger.setLevel(logging.DEBUG)
         # Find the existing StreamHandler and remove it
-        for handler in logger.handlers:
+        for handler in list(logger.handlers):
             if isinstance(handler, logging.StreamHandler):
                 logger.removeHandler(handler)
         # Add the QuietStreamHandler to suppress stderr output
@@ -134,8 +141,13 @@ class DaskManager(metaclass=Singleton):
             except Exception:
                 logger.warning('Could not connect to Dask Cluster at %s - starting locally instead', client_ip)
                 self.client = _start_cluster()
-        
-        self.num_workers = len(self.client.scheduler_info()['workers'].keys())
+
+        # A cluster started in the background may not have registered workers yet.
+        self.client.wait_for_workers(n_workers=1, timeout=60)
+
+    @property
+    def num_workers(self) -> int:
+        return len(self.client.scheduler_info(-1)["workers"])
 
     def persist(self, collection):
         return self.client.persist(collection)
@@ -164,14 +176,153 @@ class DaskManager(metaclass=Singleton):
 
     def restart(self):
         """Restart the cluster and flush all memory"""
-        self.client.restart()
+        self.restart_workers()
+
+    def checkpoint(
+        self,
+        checkpoints: Dict[str, Union[pd.DataFrame, dd.DataFrame]],
+        schema: Optional[Dict[str, pa.DataType]] = None,
+    ) -> None:
+        """Save dataframes to parquet on disk.
+
+        Each entry in `checkpoints` maps an output path to a DataFrame (either
+        pandas or Dask).  Dask DataFrames are written as a directory of part
+        files; pandas DataFrames are written as a single file.
+
+        Args:
+            checkpoints:
+                Mapping of output path (str or path-like) to DataFrame.  Dask
+                DataFrames are written with ``overwrite=True`` so the call is
+                idempotent across re-runs.
+            schema:
+                Optional ``{field_name: pa.DataType}`` dict for columns whose
+                types cannot be inferred correctly (e.g. list-typed columns
+                such as ``'related'``).  Only the listed fields are included in
+                the partial schema passed to ``to_parquet``; all other column
+                types are inferred normally by Dask.
+        """
+        logger.info("Checkpointing %d dataframe(s) to disk...", len(checkpoints))
+
+        for path, df in checkpoints.items():
+            path = str(path)
+            if isinstance(df, dd.DataFrame):
+                logger.info("Writing Dask DataFrame to parquet directory: %s", path)
+                # write_index: preserve named indexes (e.g. 'source') but drop
+                # unnamed integer indexes.
+                write_index = df._meta.index.name is not None
+                df.to_parquet(path, overwrite=True, write_index=write_index, schema=schema)
+            elif isinstance(df, pd.DataFrame):
+                logger.info("Writing pandas DataFrame to parquet file: %s", path)
+                df.to_parquet(path)
+            else:
+                raise TypeError(
+                    f"Expected a pandas or Dask DataFrame for path '{path}', "
+                    f"got {type(df).__name__}"
+                )
+
+    def checkpoint_and_restart(
+        self,
+        checkpoints: Dict[str, Union[pd.DataFrame, dd.DataFrame]],
+        schema: Optional[Dict[str, pa.DataType]] = None,
+        timeout: int = 30,
+    ) -> None:
+        """Save dataframes to parquet on disk then restart all workers.
+
+        Runs :meth:`checkpoint` followed by :meth:`restart_workers`, clearing
+        all in-memory futures.  The caller is responsible for reloading the
+        saved parquets after this method returns, e.g. with
+        ``dd.read_parquet(path)``.
+
+        Args:
+            checkpoints: See :meth:`checkpoint`.
+            schema: See :meth:`checkpoint`.
+            timeout:
+                Seconds to wait for workers to come back online after
+                restarting.  Passed through to :meth:`restart_workers`.
+        """
+        self.checkpoint(checkpoints, schema=schema)
+        self.restart_workers(timeout=timeout)
+
+    def restart_workers(self, timeout: int = 30) -> None:
+        """Restart all workers to clear their memory between pipeline steps.
+
+        Logs the current cluster memory state, restarts all workers (clearing
+        all persisted data and cancelling every future held by any client), and
+        updates the cached worker count.
+
+        This should only be called once all required persisted Dask futures for
+        the current step have been computed and their results saved (e.g. to
+        parquet or returned as pandas DataFrames). Any persisted data that has
+        not been materialised will be lost.
+
+        Args:
+            timeout: Seconds to wait for workers to shut down and come back
+                online after restarting. Defaults to 30.
+
+        Raises:
+            RuntimeError: If no workers are online after the restart.
+        """
+        if not s.DASK_RESTART_WORKERS:
+            logger.debug("Dask worker restarts are disabled; skipping.")
+            return
+
+        logger.info("Restarting Dask workers to clear memory...")
+        timer = StopWatch()
+
+        expected_workers = self.num_workers
+
+        try:
+            self.client.restart(timeout=timeout)
+        except CommClosedError:
+            # The scheduler's batched TCP comm to a dying worker can be closed
+            # mid-restart.  Wait briefly for the scheduler to settle, then
+            # retry once.
+            logger.warning(
+                "CommClosedError during worker restart; waiting 5 s and retrying..."
+            )
+            time.sleep(5)
+            self.client.restart(timeout=timeout)
+        except TimeoutError:
+            # Workers did not shut down within `timeout` seconds (likely still
+            # draining I/O or GC).  Wait for the nanny SIGKILL cycle to
+            # complete (another `timeout` seconds) and retry once.
+            logger.warning(
+                "Worker restart timed out after %d s; waiting and retrying with "
+                "%d s timeout...",
+                timeout,
+                timeout * 2,
+            )
+            time.sleep(10)
+            self.client.restart(timeout=timeout * 2)
+
+        # client.restart can return before the new workers have registered.
+        try:
+            self.client.wait_for_workers(
+                n_workers=expected_workers, timeout=timeout
+            )
+        except TimeoutError:
+            n_available = len(self.client.scheduler_info(-1)["workers"])
+            if n_available == 0:
+                raise RuntimeError(
+                    "No Dask workers are available after restart."
+                )
+            logger.warning(
+                "Only %d of %d Dask workers are available after restart; "
+                "continuing with %d.",
+                n_available,
+                expected_workers,
+                n_available,
+            )
+
+        logger.info(
+            "Dask workers restarted successfully in %.1f s. %d workers available.",
+            timer.reset(),
+            self.num_workers,
+        )
 
     def shutdown(self):
         """Shut down the cluster safely"""
         logger.info("Shutting down Dask Cluster")
-
-        logger.info("Cancelling futures...")
-        self.client.cancel(self.client.futures)
 
         logger.info("Retiring workers...")
         self.client.retire_workers()

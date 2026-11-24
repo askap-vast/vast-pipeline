@@ -31,6 +31,8 @@ from vast_pipeline.utils.utils import (
 
 logger = logging.getLogger(__name__)
 
+POSITION_COLS = ("ra", "dec", "interim_ew", "interim_ns", "weight_ew", "weight_ns")
+
 
 def calc_de_ruiter(df: pd.DataFrame) -> np.ndarray:
     """
@@ -941,6 +943,16 @@ def advanced_association(
     return sources_df, skyc1_srcs
 
 
+def _set_float_dtypes(df: pd.DataFrame) -> pd.DataFrame:
+    """Cast floats to float32, except the position columns which stay float64."""
+    return df.astype(
+        {
+            c: "float64" if c in POSITION_COLS else "float32"
+            for c in df.select_dtypes(include="floating").columns
+        }
+    )
+
+
 def association(
     images_df: pd.DataFrame,
     limit: Angle,
@@ -1041,8 +1053,10 @@ def association(
             sources_df["interim_ns"] = (
                 sources_df["dec_source"].values * sources_df["weight_ns"].values
             )
-            return sources_df.drop(["ra", "dec"], axis=1).rename(
-                columns={"ra_source": "ra", "dec_source": "dec"}
+            return _set_float_dtypes(
+                sources_df.drop(["ra", "dec"], axis=1).rename(
+                    columns={"ra_source": "ra", "dec_source": "dec"}
+                )
             )
         logger.info(f"Found {images_df.shape[0]} images to add to the run{skyreg_tag}.")
         # re-get the unique epochs
@@ -1106,7 +1120,7 @@ def association(
                 "related",
                 "epoch",
             ]
-        ]
+        ].copy()
         skyc1_srcs["interim_ew"] = (
             skyc1_srcs["ra"].values * skyc1_srcs["weight_ew"].values
         )
@@ -1114,7 +1128,7 @@ def association(
             skyc1_srcs["dec"].values * skyc1_srcs["weight_ns"].values
         )
 
-        return skyc1_srcs.drop(["ra_source", "dec_source"], axis=1)
+        return _set_float_dtypes(skyc1_srcs.drop(["ra_source", "dec_source"], axis=1))
 
     skyc1 = SkyCoord(
         skyc1_srcs["ra"].values, skyc1_srcs["dec"].values, unit=(u.deg, u.deg)
@@ -1348,7 +1362,7 @@ def association(
         "Total association time: %.2f seconds%s.", timer.reset_init(), skyreg_tag
     )
 
-    return sources_df
+    return _set_float_dtypes(sources_df)
 
 
 def parallel_association(
@@ -1386,33 +1400,35 @@ def parallel_association(
 
     timer = StopWatch()
 
+    # Dask writes parquet with a schema taken from this meta, so the dtypes
+    # must match the real output (see `_set_float_dtypes`).
     meta = {
         "id": f"U{UUID_LEN_MEAS}",
-        "uncertainty_ew": "f",
-        "weight_ew": "f",
-        "uncertainty_ns": "f",
-        "weight_ns": "f",
-        "flux_int": "f",
-        "flux_int_err": "f",
-        "flux_int_isl_ratio": "f",
-        "flux_peak": "f",
-        "flux_peak_err": "f",
-        "flux_peak_isl_ratio": "f",
+        "uncertainty_ew": "f4",
+        "weight_ew": "f8",
+        "uncertainty_ns": "f4",
+        "weight_ns": "f8",
+        "flux_int": "f4",
+        "flux_int_err": "f4",
+        "flux_int_isl_ratio": "f4",
+        "flux_peak": "f4",
+        "flux_peak_err": "f4",
+        "flux_peak_isl_ratio": "f4",
         "forced": "?",
-        "compactness": "f",
+        "compactness": "f4",
         "has_siblings": "?",
-        "snr": "f",
+        "snr": "f4",
         "image": "U",
-        "datetime": "datetime64[ns]",
+        "datetime": "datetime64[us, UTC]",
         "source": f"U{UUID_LEN_SOURCE}",
-        "ra": "f",
-        "dec": "f",
-        "d2d": "f",
-        "dr": "f",
+        "ra": "f8",
+        "dec": "f8",
+        "d2d": "f4",
+        "dr": "f4",
         "related": "O",
         "epoch": images_df["epoch"].dtype,
-        "interim_ew": "f",
-        "interim_ns": "f",
+        "interim_ew": "f8",
+        "interim_ns": "f8",
     }
 
     # Need to serialise the image_dj django models so they can be passed to the Dask cluster
@@ -1436,8 +1452,8 @@ def parallel_association(
             done_images_df=done_images_df,
             parallel=True,
             meta=meta
-        ).persist()
-    wait(results)
+        )
+
     del images_df, images_dd
     # results are the normal dataframe of results with the columns:
     # 'id', 'uncertainty_ew', 'weight_ew', 'uncertainty_ns', 'weight_ns',
@@ -1466,10 +1482,8 @@ def parallel_association(
     #          3712  RV9KsSoiumCMU3
     #          3713  PwEnpyALZXGHk8
 
-    # reset the index of the final corrected and collapsed result and compute into the cluster
-    # also sort by epoch to avoid unsorted output which can occur due to
-    # what appear to be race conditions in map_partitions above.
-    results = results.reset_index(drop=True).sort_values(['epoch', 'datetime']).persist()
+    # Reset the index of the final corrected and collapsed result and compute into the cluster
+    results = results.reset_index(drop=True).persist()
     wait(results)
 
     logger.info("Total parallel association time: %.2f seconds", timer.reset_init())

@@ -18,8 +18,6 @@ import psutil
 import tempfile
 import itertools
 
-from dask.distributed import wait
-
 from typing import Any, List, Optional, Dict, Tuple
 from astropy.coordinates import SkyCoord, Angle
 from django.conf import settings
@@ -30,7 +28,7 @@ from multiprocessing import Pool
 from vast_pipeline.image.main import FitsImage, SelavyImage
 from vast_pipeline.image.utils import open_fits
 from vast_pipeline.utils.utils import (
-    eq_to_cart, StopWatch, optimise_numeric, copy_file_or_dir,
+    eq_to_cart, optimise_numeric, copy_file_or_dir,
     delete_file_or_dir, generate_shortuuid, UUID_LEN_SOURCE, calculate_n_partitions
 )
 from vast_pipeline.models import (
@@ -674,7 +672,9 @@ def parallel_groupby(df: dd.DataFrame) -> dd.DataFrame:
     metrics using Dask and returns the resulting dataframe.
 
     Args:
-        df: The sources dataframe produced by the previous pipeline stages.
+        df: The sources dataframe produced by the previous pipeline stages,
+            indexed by 'source'. All the rows of a source must be in the same
+            partition so no shuffle is needed.
 
     Returns:
         The source dataframe with the calculated metric columns.
@@ -701,42 +701,47 @@ def parallel_groupby(df: dd.DataFrame) -> dd.DataFrame:
     ]
     out_col_dtype = {
         "img_list": "O",
-        "n_meas_forced": "i",
-        "n_meas": "i",
-        "n_meas_sel": "i",
-        "n_sibl": "i",
-        "wavg_ra": "f",
-        "wavg_dec": "f",
-        "avg_compactness": "f",
-        "min_snr": "f",
-        "max_snr": "f",
-        "wavg_uncertainty_ew": "f",
-        "wavg_uncertainty_ns": "f",
-        "avg_flux_int": "f",
-        "avg_flux_peak": "f",
-        "max_flux_peak": "f",
-        "max_flux_int": "f",
-        "min_flux_peak": "f",
-        "min_flux_int": "f",
-        "min_flux_peak_isl_ratio": "f",
-        "min_flux_int_isl_ratio": "f",
-        "v_int": "f",
-        "v_peak": "f",
-        "eta_int": "f",
-        "eta_peak": "f",
+        "n_meas_forced": "i8",
+        "n_meas": "i8",
+        "n_meas_sel": "i8",
+        "n_sibl": "i8",
+        "wavg_ra": "f8",
+        "wavg_dec": "f8",
+        "avg_compactness": "f8",
+        "min_snr": "f8",
+        "max_snr": "f8",
+        "wavg_uncertainty_ew": "f8",
+        "wavg_uncertainty_ns": "f8",
+        "avg_flux_int": "f4",
+        "avg_flux_peak": "f4",
+        "max_flux_peak": "f4",
+        "max_flux_int": "f4",
+        "min_flux_peak": "f4",
+        "min_flux_int": "f4",
+        "min_flux_peak_isl_ratio": "f4",
+        "min_flux_int_isl_ratio": "f4",
+        "v_int": "f8",
+        "v_peak": "f8",
+        "eta_int": "f8",
+        "eta_peak": "f8",
         "related_list": "O",
-        "n_rel": "i",
+        "n_rel": "i8",
     }
 
     groupby_df = df[columns]
 
-    out = groupby_df.groupby('source').apply(groupby_funcs,
-                                             meta=out_col_dtype)
+    meta = pd.DataFrame(
+        {col: pd.Series(dtype=dtype) for col, dtype in out_col_dtype.items()},
+        index=pd.Index([], name='source'),
+    )
 
-    # For some reason this gets lost - stupid Dask.
-    out.index = out.index.rename('source')
+    def _groupby_partition(part: pd.DataFrame) -> pd.DataFrame:
+        if part.empty:
+            return meta.copy()
+        res = part.groupby('source').apply(groupby_funcs)
+        return res[list(meta.columns)]
 
-    return out
+    return groupby_df.map_partitions(_groupby_partition, meta=meta)
 
 
 def calc_ave_coord(grp: pd.DataFrame) -> pd.Series:
@@ -782,38 +787,44 @@ def parallel_groupby_coord(df: dd.DataFrame,) -> Tuple[pd.DataFrame, pd.DataFram
     difficult to do with a persisted dataframe. So it is computed.
 
     Args:
-        df: The sources dataframe.
+        df: The sources dataframe. All the rows of a source must be in the
+            same partition, in chronological order.
 
     Returns:
         Tuple of (coords_df, lists_df) — both indexed by source id.
     """
-
-    coord_cols = [
-        'source', 'interim_ew', 'weight_ew', 'interim_ns', 'weight_ns', 'flux_peak',
-    ]
-    coord_agg = {
+    agg = {
         'interim_ew': 'sum',
         'weight_ew': 'sum',
         'interim_ns': 'sum',
         'weight_ns': 'sum',
         'flux_peak': 'first',
+        'image': list,
+        'epoch': list,
     }
-    coord_groups = df[coord_cols].groupby('source').agg(coord_agg)
-
-    list_cols = ['source', 'image', 'epoch']
-    list_agg = {'image': list, 'epoch': list}
-    list_groups = df[list_cols].groupby('source').agg(list_agg)
-
-    coords_raw, lists_raw = dask.compute(coord_groups, list_groups)
-
-    coords_df = coords_raw
-    coords_df['wavg_ra'] = coords_df['interim_ew'] / coords_df['weight_ew']
-    coords_df['wavg_dec'] = coords_df['interim_ns'] / coords_df['weight_ns']
-    coords_df = coords_df.drop(
-        columns=['interim_ew', 'weight_ew', 'interim_ns', 'weight_ns']
+    meta = pd.DataFrame(
+        {
+            col: pd.Series(dtype=object if func is list else df._meta[col].dtype)
+            for col, func in agg.items()
+        },
+        index=pd.Index([], name='source', dtype=df._meta['source'].dtype),
     )
 
-    lists_df = lists_raw.rename(columns={'image': 'img_list', 'epoch': 'epoch_list'})
+    def _groupby_partition(part: pd.DataFrame) -> pd.DataFrame:
+        if part.empty:
+            return meta.copy()
+        return part.groupby('source').agg(agg)[list(meta.columns)]
+
+    groups = df.map_partitions(_groupby_partition, meta=meta).compute().sort_index()
+
+    coords_df = groups[['flux_peak']].copy()
+    coords_df['wavg_ra'] = groups['interim_ew'] / groups['weight_ew']
+    coords_df['wavg_dec'] = groups['interim_ns'] / groups['weight_ns']
+
+    lists_df = groups[['image', 'epoch']].rename(
+        columns={'image': 'img_list', 'epoch': 'epoch_list'}
+    )
+    del groups
 
     return coords_df, lists_df
 
@@ -1146,7 +1157,8 @@ def get_src_skyregion_merged_df(
     Args:
         sources_df:
             The output of the association  step containing the
-            measurements associated into sources.
+            measurements associated into sources. All the rows of a source
+            must be in the same partition.
         images_df:
             Contains the images of the pipeline run. I.e. all image
             objects for the run loaded into a dataframe.
@@ -1181,7 +1193,12 @@ def get_src_skyregion_merged_df(
     # --------------------------------+------------------------------+--------------+
     logger.info("Creating ideal source coverage df...")
 
-    merged_timer = StopWatch()
+    # Each source's first flux and detection image come from its earliest row.
+    # So sort sourced_df by epoch, datetime here.
+    sources_df = sources_df.map_partitions(
+        lambda part: part.sort_values(["epoch", "datetime"], kind="stable"),
+        meta=sources_df._meta,
+    )
 
     sources_df, image_names, skyreg_img_df = _build_compact_indices(
         sources_df, images_df
@@ -1245,11 +1262,6 @@ def get_src_skyregion_merged_df(
     srcs_df = srcs_df.map_partitions(
         _convert_img_diff_names, meta=srcs_df._meta.assign(img_diff=pd.Series(dtype=object)),
     )
-
-    srcs_df = srcs_df.persist()
-    wait(srcs_df)
-
-    logger.info("Ideal source coverage time: %.2f seconds", merged_timer.reset())
 
     return srcs_df
 
@@ -1789,7 +1801,7 @@ def reconstruct_association_dfs(
             "uncertainty_ew_source",
             "uncertainty_ns_source",
         ]
-    ]
+    ].copy()
 
     # Create the unique skyc1_srcs dataframe.
     skyc1_srcs = (
@@ -1855,6 +1867,11 @@ def reconstruct_association_dfs(
     sources_df = sources_df.drop(
         ["uncertainty_ew_source", "uncertainty_ns_source"], axis=1
     ).reset_index(drop=True)
+
+    # The previous parquets store the time in ms but new measurements are in
+    # us, and concatenating tz-aware columns of different units gives object.
+    for df in (sources_df, skyc1_srcs):
+        df["datetime"] = pd.to_datetime(df["datetime"], utc=True).dt.as_unit("us")
 
     return sources_df, skyc1_srcs
 
