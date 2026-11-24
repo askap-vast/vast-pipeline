@@ -39,7 +39,6 @@ from .utils import (
     group_skyregions,
     get_parallel_assoc_image_df,
     write_parquets,
-    get_df_memory_usage,
     log_total_memory_usage,
     add_run_to_img
 )
@@ -256,7 +255,7 @@ class Pipeline:
                 done_images_df,
             )
 
-            # Scatter sources_df to the cluster
+            # Scatter sources_df to the cluster - they will be repartitioned later by source
             sources_df = dd.from_pandas(
                 sources_df.reset_index(drop=True),
                 npartitions=self.dm.num_workers
@@ -273,8 +272,7 @@ class Pipeline:
             sources_df = sources_df.shuffle(on="source", npartitions=sources_npartitions)
 
         # Checkpoint sources_df to disk and restart workers to clear cluster
-        # memory before step #3.  sources_df is written as a lazy Dask graph
-        # so the computation runs once during the write.
+        # memory before step #3.
         logger.info("Checkpointing sources_df after step #2...")
         self.dm.checkpoint_and_restart(
             {self._sources_ckpt: sources_df},
@@ -283,8 +281,7 @@ class Pipeline:
 
         log_total_memory_usage()
 
-        # Unique unforced measurements; one measurement can be copied to several
-        # sources, so this is not the row count.
+        # Get number of unique unforced measurements
         nr_selavy_measurements = int(
             dd.read_parquet(
                 self._sources_ckpt,
@@ -307,10 +304,11 @@ class Pipeline:
             "weight_ns",
             "flux_peak",
         ]
+        
+        images_df = images_df.drop(columns=["image_dj"]).rename(columns={'image_name': 'name', 'image_datetime': 'datetime'})
         # need to make sure no forced measurments are being passed which
         # could happen in add mode, otherwise the wrong detection image is
         # assigned.
-        images_df = images_df.drop(columns=["image_dj"]).rename(columns={'image_name': 'name', 'image_datetime': 'datetime'})
         unforced_df = read_parquet_one_partition_per_file(
                 self._sources_ckpt,
                 columns=missing_source_cols,
