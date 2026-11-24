@@ -789,38 +789,44 @@ def parallel_groupby_coord(df: dd.DataFrame,) -> Tuple[pd.DataFrame, pd.DataFram
     difficult to do with a persisted dataframe. So it is computed.
 
     Args:
-        df: The sources dataframe.
+        df: The sources dataframe. All the rows of a source must be in the
+            same partition, in chronological order.
 
     Returns:
         Tuple of (coords_df, lists_df) — both indexed by source id.
     """
-
-    coord_cols = [
-        'source', 'interim_ew', 'weight_ew', 'interim_ns', 'weight_ns', 'flux_peak',
-    ]
-    coord_agg = {
+    agg = {
         'interim_ew': 'sum',
         'weight_ew': 'sum',
         'interim_ns': 'sum',
         'weight_ns': 'sum',
         'flux_peak': 'first',
+        'image': list,
+        'epoch': list,
     }
-    coord_groups = df[coord_cols].groupby('source').agg(coord_agg)
-
-    list_cols = ['source', 'image', 'epoch']
-    list_agg = {'image': list, 'epoch': list}
-    list_groups = df[list_cols].groupby('source').agg(list_agg)
-
-    coords_raw, lists_raw = dask.compute(coord_groups, list_groups)
-
-    coords_df = coords_raw
-    coords_df['wavg_ra'] = coords_df['interim_ew'] / coords_df['weight_ew']
-    coords_df['wavg_dec'] = coords_df['interim_ns'] / coords_df['weight_ns']
-    coords_df = coords_df.drop(
-        columns=['interim_ew', 'weight_ew', 'interim_ns', 'weight_ns']
+    meta = pd.DataFrame(
+        {
+            col: pd.Series(dtype=object if func is list else df._meta[col].dtype)
+            for col, func in agg.items()
+        },
+        index=pd.Index([], name='source', dtype=df._meta['source'].dtype),
     )
 
-    lists_df = lists_raw.rename(columns={'image': 'img_list', 'epoch': 'epoch_list'})
+    def _groupby_partition(part: pd.DataFrame) -> pd.DataFrame:
+        if part.empty:
+            return meta.copy()
+        return part.groupby('source').agg(agg)[list(meta.columns)]
+
+    groups = df.map_partitions(_groupby_partition, meta=meta).compute().sort_index()
+
+    coords_df = groups[['flux_peak']].copy()
+    coords_df['wavg_ra'] = groups['interim_ew'] / groups['weight_ew']
+    coords_df['wavg_dec'] = groups['interim_ns'] / groups['weight_ns']
+
+    lists_df = groups[['image', 'epoch']].rename(
+        columns={'image': 'img_list', 'epoch': 'epoch_list'}
+    )
+    del groups
 
     return coords_df, lists_df
 
@@ -1153,7 +1159,8 @@ def get_src_skyregion_merged_df(
     Args:
         sources_df:
             The output of the association  step containing the
-            measurements associated into sources.
+            measurements associated into sources. All the rows of a source
+            must be in the same partition.
         images_df:
             Contains the images of the pipeline run. I.e. all image
             objects for the run loaded into a dataframe.
@@ -1187,6 +1194,13 @@ def get_src_skyregion_merged_df(
     #  'VAST_0127-73A.EPOCH08.I.fits' | VAST_0127-73A.EPOCH01.I.fits | True         |
     # --------------------------------+------------------------------+--------------+
     logger.info("Creating ideal source coverage df...")
+
+    # Each source's first flux and detection image come from its earliest row.
+    # So sort sourced_df by epoch, datetime here.
+    sources_df = sources_df.map_partitions(
+        lambda part: part.sort_values(["epoch", "datetime"], kind="stable"),
+        meta=sources_df._meta,
+    )
 
     sources_df, image_names, skyreg_img_df = _build_compact_indices(
         sources_df, images_df

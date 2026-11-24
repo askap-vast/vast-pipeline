@@ -99,7 +99,7 @@ def final_operations(
     timer = StopWatch()
 
     # Each source must stay within one partition for the pair calculation.
-    sources_df = read_parquet_one_partition_per_file(sources_df_ckpt)
+    sources_df = read_parquet_one_partition_per_file(sources_df_ckpt, index="source")
     new_sources_df = pd.read_parquet(new_sources_ckpt)
 
     # calculate source fields

@@ -23,7 +23,11 @@ from django.db import transaction
 
 from vast_pipeline.daskmanager.manager import DaskManager
 from vast_pipeline.models import Run
-from vast_pipeline.utils.utils import calculate_n_partitions, maybe_delete_file_or_dir
+from vast_pipeline.utils.utils import (
+    calculate_n_partitions,
+    maybe_delete_file_or_dir,
+    read_parquet_one_partition_per_file,
+)
 from .association import association, parallel_association
 from .config import PipelineConfig
 from .new_sources import new_sources
@@ -93,7 +97,6 @@ class Pipeline:
         # steps.  Cleaned up at the end of a successful run.
         self._ckpt_dir: str = os.path.join(self.config["run"]["path"], "_checkpoints")
         self._sources_ckpt: str = os.path.join(self._ckpt_dir, "sources_df.parquet")
-        self._sources_sorted_ckpt: str = os.path.join(self._ckpt_dir, "sources_df_sorted.parquet")
         self._new_sources_ckpt: str = os.path.join(self._ckpt_dir, "new_sources_df.parquet")
         self._missing_sources_ckpt: str = os.path.join(self._ckpt_dir, "missing_sources_df.parquet")
         self._pre_sigma_ckpt: str = os.path.join(self._ckpt_dir, "pre_sigma_df.parquet")
@@ -254,27 +257,41 @@ class Pipeline:
             )
 
             # Scatter sources_df to the cluster
-            npartitions = calculate_n_partitions(sources_df,
-                                                 n_cpu=self.dm.num_workers,
-                                                 partition_size_mb=15)
             sources_df = dd.from_pandas(
                 sources_df.reset_index(drop=True),
-                npartitions=npartitions
-            ).sort_values(['epoch', 'datetime'])
+                npartitions=self.dm.num_workers
+            )
+
+        # Hash-partition by source so each source is whole within one partition
+        # for steps #3-#6. x2 leaves room for the forced measurements in step #5.
+        sources_npartitions = calculate_n_partitions(
+            sources_df,
+            n_cpu=self.dm.num_workers,
+            partition_size_mb=10,
+        ) * 2
+        with dc.set({"dataframe.shuffle.method": "p2p"}):
+            sources_df = sources_df.shuffle(on="source", npartitions=sources_npartitions)
 
         # Checkpoint sources_df to disk and restart workers to clear cluster
         # memory before step #3.  sources_df is written as a lazy Dask graph
-        # (no prior persist) so the computation runs once during the write.
+        # so the computation runs once during the write.
         logger.info("Checkpointing sources_df after step #2...")
         self.dm.checkpoint_and_restart(
-            {self._sources_ckpt: sources_df.repartition(npartitions=self.dm.num_workers)},
+            {self._sources_ckpt: sources_df},
             schema={"related": pa.list_(pa.string())},
         )
 
         log_total_memory_usage()
 
-        # Obtain the number of selavy measurements for the run
-        nr_selavy_measurements = dd.read_parquet(self._sources_ckpt, columns=["id"]).nunique().compute().shape[0]
+        # Unique unforced measurements; one measurement can be copied to several
+        # sources, so this is not the row count.
+        nr_selavy_measurements = int(
+            dd.read_parquet(
+                self._sources_ckpt,
+                columns=["id"],
+                filters=[("forced", "==", False)],
+            )["id"].nunique().compute()
+        )
 
         # STEP #3: Merge sky regions and sources ready for
         # steps 4 and 5 below.
@@ -294,7 +311,7 @@ class Pipeline:
         # could happen in add mode, otherwise the wrong detection image is
         # assigned.
         images_df = images_df.drop(columns=["image_dj"]).rename(columns={'image_name': 'name', 'image_datetime': 'datetime'})
-        unforced_df = dd.read_parquet(
+        unforced_df = read_parquet_one_partition_per_file(
                 self._sources_ckpt,
                 columns=missing_source_cols,
                 filters=[("forced", "==", False)],
@@ -312,33 +329,6 @@ class Pipeline:
         logger.info("Checkpointing missing_sources_df after step #3...")
         self.dm.checkpoint_and_restart({self._missing_sources_ckpt: missing_sources_df})
         del missing_sources_df
-
-        # Count partitions for sources_df (Times by 2 for adding the forced measurements in step #5)
-        sources_df_ckpt = dd.read_parquet(self._sources_ckpt)
-        sources_npartitions = calculate_n_partitions(
-            sources_df_ckpt,
-            n_cpu=self.dm.num_workers,
-            partition_size_mb=10,
-        ) * 2
-
-        # Count selavy measurements now that step #3 has consumed sources_ckpt
-        # in epoch/datetime order.  Simultaneously sort sources_ckpt by source
-        # and checkpoint the result so steps #5 and #6 can skip their own
-        # set_index + shuffle on the larger combined DataFrame.
-        nr_selavy_measurements = (
-            dd.read_parquet(self._sources_ckpt, columns=["id"])["id"].nunique().compute()
-        )
-
-        sources_sorted = dd.read_parquet(self._sources_ckpt, index="source")
-
-        with dc.set({"dataframe.shuffle.method": "p2p"}):
-            sources_sorted = sources_sorted.shuffle(
-                npartitions=sources_npartitions, on_index=True
-            )
-        self.dm.checkpoint_and_restart(
-            {self._sources_sorted_ckpt: sources_sorted},
-            schema={"related": pa.list_(pa.string())},
-        )
 
         # STEP #4 New source analysis
         logger.info("Running step #4: new source analysis...")
@@ -365,7 +355,7 @@ class Pipeline:
         if self.config["source_monitoring"]["monitor"]:
             logger.info("Running step #5: forced photometry...")
             nr_forced_measurements = forced_extraction(
-                self._sources_sorted_ckpt,
+                self._sources_ckpt,
                 self.config["measurements"]["ra_uncertainty"] / 3600.0,
                 self.config["measurements"]["dec_uncertainty"] / 3600.0,
                 p_run,
@@ -384,7 +374,7 @@ class Pipeline:
             log_total_memory_usage()
             step6_sources_ckpt = self._forced_sources_ckpt
         else:
-            step6_sources_ckpt = self._sources_sorted_ckpt
+            step6_sources_ckpt = self._sources_ckpt
 
         log_total_memory_usage()
 

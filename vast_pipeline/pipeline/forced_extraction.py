@@ -834,10 +834,7 @@ def forced_extraction(
     # Derive sources_meta purely from the parquet footer.
     _src_schema = ParquetDataset(sources_df_ckpt).schema
     sources_meta = _src_schema.empty_table().to_pandas()
-    # sources_sorted_ckpt stores 'source' as the parquet index field; bring it
-    # back as a regular column so it appears in output_columns passed to
-    # parallel_extraction (extr_df must have 'source' as a column to set_index
-    # on later).
+    # make sure 'source' is a regular column here since it is the index of the checkpointed DataFrame.
     if sources_meta.index.name is not None:
         sources_meta = sources_meta.reset_index()
     sources_meta = sources_meta.drop(columns=['interim_ns', 'interim_ew'], errors="ignore")
