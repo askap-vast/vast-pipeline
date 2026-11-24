@@ -141,8 +141,13 @@ class DaskManager(metaclass=Singleton):
             except Exception:
                 logger.warning('Could not connect to Dask Cluster at %s - starting locally instead', client_ip)
                 self.client = _start_cluster()
-        
-        self.num_workers = len(self.client.scheduler_info()['workers'].keys())
+
+        # A cluster started in the background may not have registered workers yet.
+        self.client.wait_for_workers(n_workers=1, timeout=60)
+
+    @property
+    def num_workers(self) -> int:
+        return len(self.client.scheduler_info(-1)["workers"])
 
     def persist(self, collection):
         return self.client.persist(collection)
@@ -264,8 +269,7 @@ class DaskManager(metaclass=Singleton):
         logger.info("Restarting Dask workers to clear memory...")
         timer = StopWatch()
 
-        # The live count, as workers can be lost since `num_workers` was cached.
-        expected_workers = len(self.client.scheduler_info(-1)["workers"])
+        expected_workers = self.num_workers
 
         try:
             self.client.restart(timeout=timeout)
@@ -310,7 +314,6 @@ class DaskManager(metaclass=Singleton):
                 n_available,
             )
 
-        self.num_workers = len(self.client.scheduler_info(-1)["workers"].keys())
         logger.info(
             "Dask workers restarted successfully in %.1f s. %d workers available.",
             timer.reset(),
