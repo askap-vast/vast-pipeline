@@ -15,8 +15,8 @@ from pathlib import Path
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from django.conf import settings
-from typing import Any, List, Tuple, Dict, Optional, Union
-from dask.distributed import get_client, wait
+from typing import Any, List, Dict, Optional, Union
+from dask.distributed import get_client
 from pyarrow.parquet import ParquetDataset
 
 from vast_pipeline.models import Image, Measurement, Run

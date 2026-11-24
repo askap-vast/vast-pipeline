@@ -5,7 +5,6 @@ import warnings
 import pandas as pd
 import pyarrow as pa
 import dask.dataframe as dd
-import dask.config as dc
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -18,7 +17,6 @@ from vast_pipeline.utils.utils import (
     StopWatch,
     optimise_numeric,
     delete_file_or_dir,
-    calculate_n_partitions,
     read_parquet_one_partition_per_file,
 )
 from vast_pipeline.pipeline.loading import (

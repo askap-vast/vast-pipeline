@@ -15,7 +15,6 @@ import pandas as pd
 import pyarrow as pa
 
 from dask import dataframe as dd
-from dask.distributed import wait
 import dask.config as dc
 
 from django.conf import settings

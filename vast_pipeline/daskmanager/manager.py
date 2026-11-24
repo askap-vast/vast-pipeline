@@ -1,10 +1,8 @@
 # Original code from https://github.com/MoonVision/django-dask-demo
 
-import asyncio
 import logging
 import random
 import time
-from collections import Counter
 from typing import Dict, Optional, Union
 
 import dask.dataframe as dd
@@ -12,7 +10,6 @@ import pandas as pd
 import pyarrow as pa
 from dask.distributed import Client, LocalCluster, Semaphore, WorkerPlugin
 from distributed.comm import CommClosedError
-from distributed.core import rpc
 from django.conf import settings as s
 
 from ..utils.utils import StopWatch
