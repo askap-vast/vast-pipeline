@@ -69,5 +69,12 @@
     "gulp-sourcemaps": "^2.6.5",
     "gulp-uglify": "3.0.2",
     "merge-stream": "2.0.0"
+  },
+  "overrides": {
+    "js9": {
+      "engine.io": {
+        "cookie": "0.7.2"
+      }
+    }
   }
 }
